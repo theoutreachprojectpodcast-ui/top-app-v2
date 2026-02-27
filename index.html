@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>The Outreach Project — Resource Network</title>
+  <link rel="stylesheet" href="./styles.css" />
+
+  <!-- tiny helper style so icons look right even if your CSS doesn't have it yet -->
+  <style>
+    .actionIconImg, .navIconImg{
+      width: 22px; height: 22px; object-fit: contain; display:inline-block;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="app">
+
+    <!-- Top Bar -->
+    <header class="topbar">
+      <div class="brand">
+        <img src="assets/op-logo-silver.png" alt="The Outreach Project" class="brandLogo">
+        <div class="brandText">
+          <div class="brandName">THE OUTREACH PROJECT</div>
+          <div class="brandTag">Veteran &amp; First Responder Resource Network</div>
+        </div>
+      </div>
+
+      <div class="topbarActions">
+        <button class="chip" id="openProfileBtn" type="button" title="Profile">Profile</button>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <div class="shell">
+
+      <!-- HOME -->
+      <section id="homeSection" class="section isActive" aria-label="Home">
+
+        <div class="card profileCard">
+          <div class="profileLeft">
+            <div class="avatar" id="avatarCircle" aria-hidden="true"></div>
+
+            <div class="profileMeta">
+              <div class="profileName" id="profileName">Welcome.</div>
+              <div class="profileSub">
+                <span class="pill" id="profileRole">Supporter</span>
+                <span class="dot">•</span>
+                <span id="profileLoc">Set your location</span>
+              </div>
+              <div class="profilePrompt">How can we assist you today?</div>
+            </div>
+          </div>
+
+          <div class="profileRight">
+            <button class="btnSoft" id="editProfileBtn" type="button">Edit</button>
+          </div>
+        </div>
+
+        <div class="actionsGrid">
+          <button class="actionBtn" id="actionFindSupport" type="button">
+            <span class="actionIcon">🔎</span>
+            <span class="actionText">
+              <span class="actionTitle">Find Support</span>
+              <span class="actionDesc">Search nonprofits by state, city, and services.</span>
+            </span>
+          </button>
+
+          <button class="actionBtn" id="actionTrusted" type="button">
+            <span class="actionIcon">
+              <img class="actionIconImg" src="assets/top_trusted_icon_64.png" alt="Trusted">
+            </span>
+            <span class="actionText">
+              <span class="actionTitle">Trusted Resources</span>
+              <span class="actionDesc">Go straight to verified resources with direct links.</span>
+            </span>
+          </button>
+
+          <button class="actionBtn" id="actionCommunity" type="button">
+            <span class="actionIcon">👥</span>
+            <span class="actionText">
+              <span class="actionTitle">Community</span>
+              <span class="actionDesc">Connect, share, and get support with others.</span>
+            </span>
+          </button>
+
+          <button class="actionBtn" id="actionPodcast" type="button">
+            <span class="actionIcon">🎙️</span>
+            <span class="actionText">
+              <span class="actionTitle">TOP Podcast</span>
+              <span class="actionDesc">Listen and meet the organizations behind the mission.</span>
+            </span>
+          </button>
+        </div>
+
+        <div class="card directoryCard" id="directorySectionAnchor">
+          <div class="cardHeader">
+            <div>
+              <h2 class="h2">Nonprofit Directory</h2>
+              <p class="muted">Find support near you — nationwide.</p>
+            </div>
+          </div>
+
+          <form class="formGrid" onsubmit="return false;">
+            <div class="field">
+              <label for="stateSelect">State <span class="req">*</span></label>
+              <select id="stateSelect"></select>
+            </div>
+
+            <div class="field">
+              <label for="qInput">City or Organization</label>
+              <input id="qInput" type="text" placeholder="e.g., Las Vegas or Freedom Alliance" />
+            </div>
+
+            <div class="field">
+              <label for="serviceSelect">Service Area</label>
+              <select id="serviceSelect">
+                <option value="">All service areas</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="audienceSelect">Filter</label>
+              <select id="audienceSelect">
+                <option value="all">All</option>
+                <option value="veteran">Veterans</option>
+                <option value="first_responder">First Responders</option>
+              </select>
+            </div>
+          </form>
+
+          <div class="btnRow">
+            <button id="searchBtn" class="btnPrimary" type="button">Search</button>
+            <button id="clearBtn" class="btnSoft" type="button">Clear</button>
+          </div>
+
+          <div id="status" class="status"></div>
+          <div id="meta" class="meta"></div>
+          <div id="results" class="results"></div>
+
+          <div class="pagination">
+            <button id="prevBtn" class="btnSoft" type="button">Prev</button>
+            <span id="pageLabel" class="pageLabel">Page 1</span>
+            <button id="nextBtn" class="btnSoft" type="button">Next</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- TRUSTED -->
+      <section id="trustedSection" class="section" aria-label="Trusted Resources">
+        <div class="card">
+          <div class="cardHeader">
+            <div>
+              <h2 class="h2">Trusted Resources</h2>
+              <p class="muted">Verified resources with direct links (site + socials + contact when available).</p>
+            </div>
+          </div>
+
+          <div class="btnRow" style="margin-top:0;">
+            <button id="trustedRefreshBtn" class="btnPrimary" type="button">Refresh</button>
+            <button id="trustedMoreBtn" class="btnSoft" type="button">Load more</button>
+          </div>
+
+          <div id="trustedStatus" class="status"></div>
+          <div id="trustedResults" class="results"></div>
+        </div>
+      </section>
+
+      <!-- COMMUNITY -->
+<section id="communitySection" class="section" aria-label="Community">
+  <div class="card">
+    <div class="cardHeader">
+      <div>
+        <h2 class="h2">Community</h2>
+        <p class="muted">Connect, share, and get support with others. (Preview)</p>
+      </div>
+    </div>
+
+    <!-- Composer (preview) -->
+    <div class="card" style="margin-top:12px;">
+      <div class="cardHeader" style="padding-bottom:10px;">
+        <div>
+          <div class="h2" style="font-size:16px;">Post to the board</div>
+          <p class="muted" style="margin-top:4px;">Coming soon — this is a UI preview.</p>
+        </div>
+      </div>
+
+      <div class="formGrid" style="grid-template-columns:1fr;">
+        <div class="field">
+          <label for="communityPost" class="muted">Message</label>
+          <textarea id="communityPost" rows="3" placeholder="Share an update, ask for help, or recommend a resource…" disabled></textarea>
+        </div>
+      </div>
+
+      <div class="btnRow" style="margin-top:0;">
+        <button class="btnPrimary" type="button" disabled>Post</button>
+        <button class="btnSoft" type="button" disabled>Add Photo</button>
+      </div>
+    </div>
+
+    <!-- Feed (preview) -->
+    <div class="card" style="margin-top:12px;">
+      <div class="cardHeader" style="padding-bottom:10px;">
+        <div>
+          <div class="h2" style="font-size:16px;">Message Board</div>
+          <p class="muted" style="margin-top:4px;">Example posts — we’ll wire this to real data later.</p>
+        </div>
+      </div>
+
+      <div class="results">
+        <div class="resultCard">
+          <div class="resultTop">
+            <div>
+              <div class="resultName">Pinned: How to use Trusted Resources</div>
+              <div class="resultSub">TOP Team • Today</div>
+            </div>
+          </div>
+          <div class="meta" style="margin-top:8px;">
+            Start in Trusted for verified orgs with direct links. If you’re unsure what fits, post here and we’ll point you in the right direction.
+          </div>
+        </div>
+
+        <div class="resultCard">
+          <div class="resultTop">
+            <div>
+              <div class="resultName">Looking for peer support in Texas</div>
+              <div class="resultSub">Supporter • 2h ago</div>
+            </div>
+          </div>
+          <div class="meta" style="margin-top:8px;">
+            Any recommendations for veteran-friendly counseling near San Antonio? Prefer in-person but open to telehealth.
+          </div>
+        </div>
+
+        <div class="resultCard">
+          <div class="resultTop">
+            <div>
+              <div class="resultName">Resource share: emergency financial help</div>
+              <div class="resultSub">Community Member • Yesterday</div>
+            </div>
+          </div>
+          <div class="meta" style="margin-top:8px;">
+            If you’re in a tight spot this month, check Trusted + “Find Info” for local options. Don’t wait alone.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="btnRow" style="margin-top:12px;">
+      <button class="btnSoft" id="communityBackBtn" type="button">Back to Home</button>
+    </div>
+  </div>
+</section>
+
+      <!-- FAVORITES -->
+      <section id="favoritesSection" class="section" aria-label="Favorites">
+        <div class="card">
+          <div class="cardHeader">
+            <div>
+              <h2 class="h2">Favorites</h2>
+              <p class="muted">Your saved resources (stored locally on this device).</p>
+            </div>
+          </div>
+
+          <div class="btnRow" style="margin-top:0;">
+            <button id="favClearBtn" class="btnSoft" type="button">Clear favorites</button>
+          </div>
+
+          <div id="favoritesEmpty" class="status">No favorites yet. Tap ☆ on any org card to save it.</div>
+          <div id="favoritesList" class="results"></div>
+        </div>
+      </section>
+
+      <!-- PROFILE -->
+      <section id="profileSection" class="section" aria-label="Profile">
+        <div class="card">
+          <div class="cardHeader">
+            <div>
+              <h2 class="h2">Profile</h2>
+              <p class="muted">Saved locally on this device (no login required yet).</p>
+            </div>
+          </div>
+
+          <div class="formGrid">
+            <div class="field">
+              <label for="profileNameInput">Name</label>
+              <input id="profileNameInput" type="text" placeholder="e.g., Jonathan" />
+            </div>
+
+            <div class="field">
+              <label for="profileRoleSelect">Role</label>
+              <select id="profileRoleSelect">
+                <option value="Supporter">Supporter</option>
+                <option value="Veteran">Veteran</option>
+                <option value="First Responder">First Responder</option>
+                <option value="Organization">Organization</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="profileCityInput">City</label>
+              <input id="profileCityInput" type="text" placeholder="e.g., San Antonio" />
+            </div>
+
+            <div class="field">
+              <label for="profileStateInput">State</label>
+              <input id="profileStateInput" type="text" placeholder="e.g., TX" maxlength="2" />
+            </div>
+          </div>
+
+          <div class="btnRow">
+            <button id="saveProfileBtn" class="btnPrimary" type="button">Save</button>
+            <button id="resetProfileBtn" class="btnSoft" type="button">Reset</button>
+          </div>
+
+          <div id="profileMeta" class="status"></div>
+        </div>
+      </section>
+
+      <!-- (optional) MESSAGES placeholder so app.js doesn't care if it exists -->
+      <section id="messagesSection" class="section" aria-label="Messages"></section>
+
+    </div>
+
+    <nav class="bottomNav bottomNav4" aria-label="Primary">
+      <button class="navItem isActive" data-nav="home" type="button">
+        <span class="navIcon">🏠</span><span class="navLabel">Home</span>
+      </button>
+      <button class="navItem" data-nav="trusted" type="button">
+        <span class="navIcon">
+          <img class="navIconImg" src="assets/top_trusted_icon_64.png" alt="Trusted">
+        </span>
+        <span class="navLabel">Trusted</span>
+      </button>
+      <button class="navItem" data-nav="favorites" type="button">
+        <span class="navIcon">☆</span><span class="navLabel">Favorites</span>
+      </button>
+      <button class="navItem" data-nav="profile" type="button">
+        <span class="navIcon">👤</span><span class="navLabel">Profile</span>
+      </button>
+    </nav>
+
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
