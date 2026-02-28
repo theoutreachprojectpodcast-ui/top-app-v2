@@ -1,8 +1,11 @@
 /* ===============================
-   THE OUTREACH PROJECT — APP LOGIC (V2 / 4-NAV) — FINAL CLEAN SWEEP
-   - Directory lives ONLY on Home (nonprofits_search_all_v2)
-   - Trusted uses FAST PATH: nonprofit_profiles (trusted) + nonprofits (details)
-   - Favorites star: corner (☆ / ★)
+   THE OUTREACH PROJECT — APP LOGIC (V2 / 4-NAV)
+   ✅ OPERATION "SLOW DOWN / NO CRASH" — REBUILD (STABLE)
+   - Directory runs ONLY when user presses Search (no auto-search on state change)
+   - Debounced search (settle time)
+   - Single-flight + latest-result-wins (prevents overlapping queries / race conditions)
+   - 25 per page
+   - EXACT count shown (no ~) via HEAD-only count query (safer)
    =============================== */
 
 /** ====== CONFIG ====== **/
@@ -143,11 +146,50 @@ const els = {
 
 let currentPage = 1;
 
-/* ====== Helpers ====== */
+/* ====== OPERATION SLOW DOWN / NO CRASH ====== */
+const SEARCH_DEBOUNCE_MS = 600;
+let searchTimer = null;
+let activeSearchId = 0;
+let isSearching = false;
+
 function setStatus(msg) { if (els.status) els.status.textContent = msg || ""; }
 function setMeta(msg) { if (els.meta) els.meta.textContent = msg || ""; }
 function setTrustedStatus(msg) { if (els.trustedStatus) els.trustedStatus.textContent = msg || ""; }
 
+function setControlsSearching(on) {
+  isSearching = !!on;
+
+  if (els.searchBtn) {
+    els.searchBtn.disabled = on;
+    els.searchBtn.textContent = on ? "Searching…" : "Search";
+  }
+  if (els.clearBtn) els.clearBtn.disabled = on;
+
+  if (els.stateSelect) els.stateSelect.disabled = on;
+  if (els.qInput) els.qInput.disabled = on;
+  if (els.serviceSelect) els.serviceSelect.disabled = on;
+  if (els.audienceSelect) els.audienceSelect.disabled = on;
+
+  if (els.prevBtn) els.prevBtn.disabled = on || currentPage <= 1;
+  if (els.nextBtn) els.nextBtn.disabled = on; // fixed after results
+}
+
+function scheduleSearch({ resetPage = false, reason = "search" } = {}) {
+  clearTimeout(searchTimer);
+  if (resetPage) currentPage = 1;
+
+  const mySearchId = ++activeSearchId;
+
+  if (reason !== "page") {
+    setMeta("Press Search to run your filters.");
+  }
+
+  searchTimer = setTimeout(() => {
+    runSearch(mySearchId);
+  }, SEARCH_DEBOUNCE_MS);
+}
+
+/* ====== Helpers ====== */
 function scrollToDirectory() {
   els.directoryAnchor?.scrollIntoView({ behavior: "smooth", block: "start" });
   setTimeout(() => els.stateSelect?.focus(), 200);
@@ -226,10 +268,8 @@ function loadFavs() {
     return Array.isArray(arr) ? arr : [];
   } catch { return []; }
 }
-
 function saveFavs(arr) { localStorage.setItem(FAV_KEY, JSON.stringify(arr)); }
 function isFav(ein) { return loadFavs().includes(String(ein)); }
-
 function toggleFav(ein) {
   const id = String(ein);
   const favs = loadFavs();
@@ -258,7 +298,6 @@ function buildDirectoryLinks(r, isTrusted) {
     if (x) links.push({ label: "X", url: x });
     if (li) links.push({ label: "LinkedIn", url: li });
   }
-
   return links;
 }
 
@@ -277,7 +316,6 @@ function buildTrustedLinksFromMerged(r) {
   if (yt) links.push({ label: "YouTube", url: yt });
   if (x) links.push({ label: "X", url: x });
   if (li) links.push({ label: "LinkedIn", url: li });
-
   return links;
 }
 
@@ -350,12 +388,14 @@ function renderMeta(totalCount, page, gotRows) {
   const from = (page - 1) * PAGE_SIZE + 1;
   const to = from + Math.max(0, (gotRows || 0) - 1);
 
-  setStatus(gotRows ? `Showing ${from}-${to}${totalCount ? ` (of ~${totalCount})` : ""}` : "No results found.");
+  if (gotRows) setStatus(`Showing ${from}-${to} (of ${totalCount})`);
+  else setStatus("No results found.");
+
   setMeta(`Page ${page} • ${PAGE_SIZE} per page`);
 
   if (els.pageLabel) els.pageLabel.textContent = `Page ${page}`;
-  if (els.prevBtn) els.prevBtn.disabled = page <= 1;
-  if (els.nextBtn) els.nextBtn.disabled = gotRows < PAGE_SIZE;
+  if (els.prevBtn) els.prevBtn.disabled = isSearching || page <= 1;
+  if (els.nextBtn) els.nextBtn.disabled = isSearching || (gotRows < PAGE_SIZE);
 }
 
 /* ====== SEARCH (directory) ====== */
@@ -374,7 +414,25 @@ function buildSearchParams() {
   };
 }
 
-async function runSearch() {
+function applyFiltersToQuery(q, params) {
+  q = q.eq(COL.state, params.state);
+
+  if (params.q) {
+    const term = params.q.replace(/,/g, " ");
+    q = q.or(`${COL.name}.ilike.%${term}%,${COL.city}.ilike.%${term}%`);
+  }
+
+  if (params.serviceLetter) q = q.ilike(COL.ntee, `${params.serviceLetter}%`);
+
+  if (params.audience === "veteran") q = q.eq(COL.serves_veterans, true);
+  else if (params.audience === "first_responder") q = q.eq(COL.serves_first, true);
+
+  return q;
+}
+
+async function runSearch(searchId) {
+  const myId = searchId;
+
   try {
     if (!sb) {
       setStatus("Supabase client not initialized.");
@@ -383,13 +441,16 @@ async function runSearch() {
     }
 
     const params = buildSearchParams();
+
     if (!params.state) {
       setStatus("Please select a state.");
       setMeta("");
+      if (els.results) els.results.innerHTML = "";
       return;
     }
 
-    setStatus("Searching…");
+    setControlsSearching(true);
+    setStatus("Hold on tight — resources on the way…");
     setMeta("");
 
     const from = (params.page - 1) * PAGE_SIZE;
@@ -401,39 +462,75 @@ async function runSearch() {
       COL.website, COL.instagram, COL.facebook, COL.youtube, COL.x, COL.linkedin
     ].join(",");
 
-    let query = sb
+    // STEP 1: page results (fast)
+    let pageQuery = sb
       .from(DIRECTORY_SOURCE)
-      .select(selectCols, { count: "estimated" })
-      .eq(COL.state, params.state)
+      .select(selectCols)
       .range(from, to);
 
-    if (params.q) {
-      const term = params.q.replace(/,/g, " ");
-      query = query.or(`${COL.name}.ilike.%${term}%,${COL.city}.ilike.%${term}%`);
-    }
+    pageQuery = applyFiltersToQuery(pageQuery, params);
 
-    if (params.serviceLetter) query = query.ilike(COL.ntee, `${params.serviceLetter}%`);
+    const { data: rows, error: pageErr } = await pageQuery;
 
-    if (params.audience === "veteran") query = query.eq(COL.serves_veterans, true);
-    else if (params.audience === "first_responder") query = query.eq(COL.serves_first, true);
+    // latest-result-wins
+    if (myId !== activeSearchId) return;
 
-    const { data, error, count } = await query;
+    if (pageErr) {
+      console.error("Supabase page error:", pageErr);
 
-    if (error) {
-      setStatus(`Error: ${error.message}`);
-      setMeta("Open DevTools Console for details.");
-      console.error("Supabase error:", error);
+      const msg = String(pageErr.message || "").toLowerCase();
+      if (msg.includes("statement timeout")) {
+        setStatus("That search is too broad. Add a keyword or service area and try again.");
+        setMeta("");
+      } else {
+        setStatus("Search failed. Please try again.");
+        setMeta("");
+      }
+
       if (els.results) els.results.innerHTML = "";
       return;
     }
 
-    renderResults(data || []);
-    renderMeta(count || 0, params.page, (data || []).length);
+    const data = rows || [];
+    renderResults(data);
+
+    // STEP 2: exact count (HEAD-only, lighter than full count on the page query)
+    // NOTE: This can still be heavy on huge states — but it’s the safest “exact count” version.
+    let countQuery = sb
+      .from(DIRECTORY_SOURCE)
+      .select(COL.ein, { count: "exact", head: true });
+
+    countQuery = applyFiltersToQuery(countQuery, params);
+
+    const { count, error: countErr } = await countQuery;
+
+    if (myId !== activeSearchId) return;
+
+    if (countErr) {
+      // Don’t show user an error — we can still show results + paging without count
+      console.warn("Count failed (hidden from user):", countErr);
+      // fallback meta without count
+      const shownFrom = data.length ? (from + 1) : 0;
+      const shownTo = from + data.length;
+      if (data.length) setStatus(`Showing ${shownFrom}-${shownTo}`);
+      else setStatus("No results found.");
+      setMeta(`Page ${params.page} • ${PAGE_SIZE} per page`);
+      if (els.pageLabel) els.pageLabel.textContent = `Page ${params.page}`;
+      if (els.prevBtn) els.prevBtn.disabled = isSearching || params.page <= 1;
+      if (els.nextBtn) els.nextBtn.disabled = isSearching || (data.length < PAGE_SIZE);
+      return;
+    }
+
+    renderMeta(typeof count === "number" ? count : 0, params.page, data.length);
 
   } catch (e) {
-    setStatus(`JS Error: ${e?.message || e}`);
-    setMeta("Open DevTools Console for stack trace.");
+    if (myId !== activeSearchId) return;
     console.error(e);
+    setStatus("Search failed. Please try again.");
+    setMeta("");
+    if (els.results) els.results.innerHTML = "";
+  } finally {
+    if (myId === activeSearchId) setControlsSearching(false);
   }
 }
 
@@ -466,7 +563,7 @@ async function hydrateTrustedCache() {
     .limit(500);
 
   if (pErr) {
-    setTrustedStatus(`Error: ${pErr.message}`);
+    setTrustedStatus("Unable to load trusted resources right now.");
     console.error(pErr);
     trustedLoaded = true;
     return;
@@ -493,7 +590,7 @@ async function hydrateTrustedCache() {
     .in("ein", eins);
 
   if (oErr) {
-    setTrustedStatus(`Error: ${oErr.message}`);
+    setTrustedStatus("Unable to load trusted resources right now.");
     console.error(oErr);
     trustedLoaded = true;
     return;
@@ -544,7 +641,7 @@ async function loadTrustedPage({ reset=false } = {}) {
     trustedOffset += slice.length;
 
   } catch (e) {
-    setTrustedStatus(`JS Error: ${e?.message || e}`);
+    setTrustedStatus("Unable to load trusted resources right now.");
     console.error(e);
   }
 }
@@ -675,13 +772,9 @@ function renderResultsInto(rows, mountEl) {
 
 /* ====== NAV ====== */
 function setActiveNav(nav) {
-  // highlight bottom nav
   els.navItems.forEach(b => b.classList.toggle("isActive", b.dataset.nav === nav));
-
-  // hide all sections
   Object.values(els.sections).forEach(s => s?.classList.remove("isActive"));
 
-  // show selected
   if (nav === "home") els.sections.home?.classList.add("isActive");
   if (nav === "trusted") els.sections.trusted?.classList.add("isActive");
   if (nav === "favorites") els.sections.favorites?.classList.add("isActive");
@@ -735,7 +828,6 @@ function wireEvents() {
   // Bottom nav
   els.navItems.forEach(btn => btn.addEventListener("click", () => {
     setActiveNav(btn.dataset.nav);
-
     if (btn.dataset.nav === "favorites") renderFavorites();
     if (btn.dataset.nav === "trusted") loadTrustedPage({ reset: true });
   }));
@@ -748,32 +840,50 @@ function wireEvents() {
     await loadTrustedPage({ reset: true });
   });
 
-  els.actionCommunity?.addEventListener("click", () => {
-    setActiveNav("community");
-  });
-
-  els.communityBackBtn?.addEventListener("click", () => {
-    setActiveNav("home");
-  });
+  els.actionCommunity?.addEventListener("click", () => setActiveNav("community"));
+  els.communityBackBtn?.addEventListener("click", () => setActiveNav("home"));
 
   els.actionPodcast?.addEventListener("click", () => {
     if (PODCAST_URL) window.open(PODCAST_URL, "_blank", "noopener");
   });
 
-  // Search / clear
-  els.searchBtn?.addEventListener("click", () => { currentPage = 1; runSearch(); });
-
-  els.stateSelect?.addEventListener("change", () => {
-    if (!els.stateSelect.value) return;
-    currentPage = 1;
-    runSearch();
+  // ✅ Search ONLY on button click
+  els.searchBtn?.addEventListener("click", () => {
+    scheduleSearch({ resetPage: true, reason: "search" });
   });
 
+  // ✅ State change does NOT query
+  els.stateSelect?.addEventListener("change", () => {
+    currentPage = 1;
+    if (!els.stateSelect.value) {
+      if (els.results) els.results.innerHTML = "";
+      setStatus("");
+      setMeta("");
+      return;
+    }
+    setStatus("Filters ready. Press Search.");
+    setMeta("");
+  });
+
+  // When filters change, prompt user to press Search
+  els.serviceSelect?.addEventListener("change", () => {
+    currentPage = 1;
+    if (els.stateSelect?.value) setStatus("Filters changed. Press Search.");
+  });
+
+  els.audienceSelect?.addEventListener("change", () => {
+    currentPage = 1;
+    if (els.stateSelect?.value) setStatus("Filters changed. Press Search.");
+  });
+
+  // Clear
   els.clearBtn?.addEventListener("click", () => {
     if (els.qInput) els.qInput.value = "";
     if (els.audienceSelect) els.audienceSelect.value = "all";
     if (els.serviceSelect) els.serviceSelect.value = "";
+    if (els.stateSelect) els.stateSelect.value = "";
     currentPage = 1;
+
     if (els.results) els.results.innerHTML = "";
     setStatus("");
     setMeta("");
@@ -782,14 +892,16 @@ function wireEvents() {
 
   // Pagination
   els.prevBtn?.addEventListener("click", () => {
+    if (isSearching) return;
     if (currentPage <= 1) return;
     currentPage -= 1;
-    runSearch();
+    scheduleSearch({ resetPage: false, reason: "page" });
   });
 
   els.nextBtn?.addEventListener("click", () => {
+    if (isSearching) return;
     currentPage += 1;
-    runSearch();
+    scheduleSearch({ resetPage: false, reason: "page" });
   });
 
   // Trusted buttons
