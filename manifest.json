@@ -1,14 +1,19 @@
 {
   "name": "The Outreach Project",
   "short_name": "TOP",
-  "start_url": ".",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
   "icons": [
     {
-      "src": "assets/icon-1024.png",
+      "src": "./assets/icon-1024.png",
       "sizes": "1024x1024",
+      "type": "image/png"
+    },
+    {
+      "src": "./assets/icon-512.png",
+      "sizes": "512x512",
       "type": "image/png"
     }
   ]

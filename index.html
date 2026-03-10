@@ -4,17 +4,17 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>The Outreach Project — Resource Network</title>
-  <!-- Link Preview / Social Preview -->
-<meta property="og:title" content="The Outreach Project — Resource Network">
-<meta property="og:description" content="Find trusted nonprofits serving veterans and first responders nationwide.">
-<meta property="og:image" content="/assets/op-preview.png">
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://top-app-v3.vercel.app">
 
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="The Outreach Project — Resource Network">
-<meta name="twitter:description" content="Connecting veterans and first responders with trusted nonprofit resources nationwide.">
-<meta name="twitter:image" content="/assets/op-preview.png">
+  <meta property="og:title" content="The Outreach Project — Resource Network">
+  <meta property="og:description" content="Find trusted nonprofits serving veterans and first responders nationwide.">
+  <meta property="og:image" content="/assets/op-preview.png">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://top-app-v3.vercel.app">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="The Outreach Project — Resource Network">
+  <meta name="twitter:description" content="Connecting veterans and first responders with trusted nonprofit resources nationwide.">
+  <meta name="twitter:image" content="/assets/op-preview.png">
 
   <link rel="stylesheet" href="./styles.css?v=5" />
   <link rel="manifest" href="./manifest.json" />
@@ -24,8 +24,12 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
   <style>
-    .actionIconImg, .navIconImg{
-      width: 22px; height: 22px; object-fit: contain; display:inline-block;
+    .actionIconImg,
+    .navIconImg {
+      width: 22px;
+      height: 22px;
+      object-fit: contain;
+      display: inline-block;
       vertical-align: middle;
     }
   </style>
@@ -54,7 +58,6 @@
 
       <!-- HOME -->
       <section id="homeSection" class="section isActive" aria-label="Home">
-
         <div class="card profileCard">
           <div class="profileLeft">
             <div class="avatar" id="avatarCircle" aria-hidden="true"></div>
@@ -274,10 +277,27 @@
       <!-- SPONSORS -->
       <section id="sponsorsSection" class="section" aria-label="Sponsors">
         <div class="sponsorPanel">
-          <div class="cardHeader">
-            <div>
-              <h2 class="h2">Proudly Supported By</h2>
-              <p class="muted">Member-exclusive partner perks and promotions.</p>
+
+          <div class="sponsorHero">
+            <div class="sponsorHeroText">
+              <p class="sponsorEyebrow">Partner With The Outreach Project</p>
+              <h2 class="sponsorHeroTitle">Support the mission. Stand behind the community.</h2>
+              <p class="sponsorHeroDesc">
+                Businesses and organizations supporting our mission to connect veterans and first responders
+                with trusted resources, stories, and community support.
+              </p>
+
+              <div class="sponsorHeroActions">
+                <a
+                  class="sponsorCtaBtn"
+                  href="https://www.theoutreach-project.com/sponsorship-packages"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Become a Sponsor →
+                </a>
+                <p class="sponsorTierHint">Foundational • Impact • Community partnership tiers available</p>
+              </div>
             </div>
           </div>
 
@@ -290,16 +310,17 @@
           </div>
 
           <div id="sponsorsContent">
+
             <div class="tierBlock">
-              <div class="tierHeader">
-                <img class="tierBadge" src="assets/badges/foundational.png" alt="Foundational">
+              <div class="tierHeader tierHeaderPlain">
                 <div>
-                  <div class="tierTitle">Foundational Sponsors</div>
-                  <div class="tierSub muted">Premium partners supporting the mission.</div>
+                  <div class="tierTitle">FOUNDATIONAL SPONSORS</div>
+                  <div class="tierSub muted">Leading partners helping power the mission.</div>
                 </div>
               </div>
+              <div class="tierDivider"></div>
 
-              <div class="sponsorGrid">
+              <div class="sponsorGrid sponsorGridFoundational">
                 <a class="sponsorTile" href="https://www.ropesolutions.com/" target="_blank" rel="noopener noreferrer">
                   <div class="sponsorLogoWrap">
                     <img src="assets/sponsors/rope.png" class="sponsorLogo" alt="Rope Solutions">
@@ -323,13 +344,13 @@
             </div>
 
             <div class="tierBlock">
-              <div class="tierHeader">
-                <img class="tierBadge" src="assets/badges/impact.png" alt="Impact">
+              <div class="tierHeader tierHeaderPlain">
                 <div>
-                  <div class="tierTitle">Impact Sponsors</div>
-                  <div class="tierSub muted">Fueling reach and growth.</div>
+                  <div class="tierTitle">IMPACT SPONSORS</div>
+                  <div class="tierSub muted">Organizations helping expand the reach of the platform.</div>
                 </div>
               </div>
+              <div class="tierDivider"></div>
 
               <div class="sponsorGrid">
                 <a class="sponsorTile" href="https://ruckingrealtygroup.com/" target="_blank" rel="noopener noreferrer">
@@ -341,17 +362,27 @@
                     <div class="sponsorOffer">Member perk: free home selling info booklet (demo)</div>
                   </div>
                 </a>
+
+                <a class="sponsorTile" href="https://ironsoldierscoffeeco.com/" target="_blank" rel="noopener noreferrer">
+                  <div class="sponsorLogoWrap">
+                    <img src="assets/sponsors/iron-soldiers.png" class="sponsorLogo" alt="Iron Soldiers Coffee Company">
+                  </div>
+                  <div class="sponsorMeta">
+                    <div class="sponsorName">Iron Soldiers Coffee Company</div>
+                    <div class="sponsorOffer">Impact Sponsor Promo: 5% off your purchase when you enter code IRONOUTREACH at checkout.</div>
+                  </div>
+                </a>
               </div>
             </div>
 
             <div class="tierBlock">
-              <div class="tierHeader">
-                <img class="tierBadge" src="assets/badges/community.png" alt="Community">
+              <div class="tierHeader tierHeaderPlain">
                 <div>
-                  <div class="tierTitle">Community Sponsors</div>
-                  <div class="tierSub muted">Local partners powering the community.</div>
+                  <div class="tierTitle">COMMUNITY SPONSORS</div>
+                  <div class="tierSub muted">Businesses and organizations standing with the community behind the mission.</div>
                 </div>
               </div>
+              <div class="tierDivider"></div>
 
               <div class="sponsorGrid">
                 <a class="sponsorTile" href="https://eduardopicodesigns.com/" target="_blank" rel="noopener noreferrer">
@@ -385,6 +416,7 @@
                 </a>
               </div>
             </div>
+
           </div>
         </div>
       </section>
@@ -488,9 +520,7 @@
         </div>
 
         <div class="demoTools">
-          <button id="demoResetBtn" class="demoResetBtn" type="button">
-            Reset Demo
-          </button>
+          <button id="demoResetBtn" class="demoResetBtn" type="button">Reset Demo</button>
         </div>
       </section>
     </div>
@@ -612,9 +642,12 @@
         const btn = document.querySelector('.navItem[data-nav="' + navKey + '"]');
         if (btn) btn.click();
       }
-      window.addEventListener('DOMContentLoaded', () => {
-        const openProfileBtn = document.getElementById('openProfileBtn');
-        if (openProfileBtn) openProfileBtn.addEventListener('click', () => go('profile'));
+
+      window.addEventListener("DOMContentLoaded", () => {
+        const openProfileBtn = document.getElementById("openProfileBtn");
+        if (openProfileBtn) {
+          openProfileBtn.addEventListener("click", () => go("profile"));
+        }
       });
     })();
   </script>

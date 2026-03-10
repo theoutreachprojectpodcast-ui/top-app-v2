@@ -470,26 +470,48 @@ function renderProfile() {
   const p = loadProfile();
   applyTheme(p.theme);
 
-  const roleText = p.tier === "member" ? "⭐ Member" : "Supporter";
+  const member = String(p.tier || "").toLowerCase() === "member";
+  const roleText = member ? "⭐ Member" : "Supporter";
 
-  if (els.profileName) els.profileName.textContent = p.name?.trim() || "Welcome back.";
-  if (els.profilePrompt) els.profilePrompt.textContent = p.banner || "How can we assist you today?";
-
-  if (els.profileRoleHome) els.profileRoleHome.textContent = roleText;
-  if (els.profileRoleDisplay) els.profileRoleDisplay.textContent = roleText;
-
-  if (els.profileDisplayName) els.profileDisplayName.textContent = p.name?.trim() || "Welcome back.";
-  if (els.profileDisplayEmail) {
-    els.profileDisplayEmail.textContent = p.email
-      ? p.email
-      : "Add your email in Edit so we can keep you updated.";
+  /* HOME CARD */
+  if (els.profileName) {
+    els.profileName.textContent = p.name?.trim() || "Welcome back.";
   }
+
+  if (els.profilePrompt) {
+    els.profilePrompt.textContent = p.banner?.trim() || "How can we assist you today?";
+  }
+
+  if (els.profileRoleHome) {
+    els.profileRoleHome.textContent = roleText;
+  }
+
+  if (els.profileLoc) {
+    els.profileLoc.textContent = p.email?.trim() || "Set your location";
+  }
+
+  /* PROFILE PAGE */
+  if (els.profileDisplayName) {
+    els.profileDisplayName.textContent = p.name?.trim() || "Welcome back.";
+  }
+
+  if (els.profileRoleDisplay) {
+    els.profileRoleDisplay.textContent = roleText;
+  }
+
+  if (els.profileDisplayEmail) {
+    els.profileDisplayEmail.textContent = p.email?.trim() || "Set your location";
+  }
+
   if (els.profileDisplayBanner) {
-    els.profileDisplayBanner.textContent = p.banner || "How can we assist you today?";
+    els.profileDisplayBanner.textContent = p.banner?.trim() || "How can we assist you today?";
   }
 
   const photoSrc = p.photoDataUrl || "assets/top_profile_circle_1024.png";
-  if (els.profilePhotoImg) els.profilePhotoImg.src = photoSrc;
+
+  if (els.profilePhotoImg) {
+    els.profilePhotoImg.src = photoSrc;
+  }
 
   if (els.avatarCircle) {
     const initials = initialsFromName(p.name || "OP");
@@ -1332,7 +1354,7 @@ function wireEvents() {
 
   els.editSaveBtn?.addEventListener("click", async () => {
     const p = loadProfile();
-    p.name = (els.editName?.value || "").trim() || p.name || "Welcome back.";
+    p.name = (els.editName?.value || "").trim() || "Welcome back.";
     p.email = (els.editEmail?.value || "").trim();
     p.banner = (els.editBanner?.value || "").trim() || "How can we assist you today?";
     saveProfile(p);
