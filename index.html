@@ -4,14 +4,25 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>The Outreach Project — Resource Network</title>
-  <link rel="stylesheet" href="./styles.css" />
-  <link rel="manifest" href="/manifest.json">
-<link rel="apple-touch-icon" href="/assets/icon-1024.png">
-<meta name="theme-color" content="#0f172a">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <!-- Link Preview / Social Preview -->
+<meta property="og:title" content="The Outreach Project — Resource Network">
+<meta property="og:description" content="Find trusted nonprofits serving veterans and first responders nationwide.">
+<meta property="og:image" content="/assets/op-preview.png">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://top-app-v3.vercel.app">
 
-  <!-- tiny helper style so icons look right even if your CSS doesn't have it yet -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="The Outreach Project — Resource Network">
+<meta name="twitter:description" content="Connecting veterans and first responders with trusted nonprofit resources nationwide.">
+<meta name="twitter:image" content="/assets/op-preview.png">
+
+  <link rel="stylesheet" href="./styles.css?v=5" />
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="apple-touch-icon" href="./assets/icon-1024.png" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
   <style>
     .actionIconImg, .navIconImg{
       width: 22px; height: 22px; object-fit: contain; display:inline-block;
@@ -20,7 +31,7 @@
   </style>
 </head>
 
-<body>
+<body data-theme="clean">
   <main class="app">
 
     <!-- Top Bar -->
@@ -51,11 +62,11 @@
             <div class="profileMeta">
               <div class="profileName" id="profileName">Welcome.</div>
               <div class="profileSub">
-                <span class="pill" id="profileRole">Supporter</span>
+                <span id="profileRoleHome">Supporter</span>
                 <span class="dot">•</span>
                 <span id="profileLoc">Set your location</span>
               </div>
-              <div class="profilePrompt">How can we assist you today?</div>
+              <div class="profilePrompt" id="profilePrompt">How can we assist you today?</div>
             </div>
           </div>
 
@@ -65,11 +76,11 @@
         </div>
 
         <div class="actionsGrid">
-          <button class="actionBtn" id="actionFindSupport" type="button">
-            <span class="actionIcon">🔎</span>
+          <button class="actionBtn" id="actionSponsors" type="button">
+            <span class="actionIcon">🤝</span>
             <span class="actionText">
-              <span class="actionTitle">Find Support</span>
-              <span class="actionDesc">Search nonprofits by state, city, and services.</span>
+              <span class="actionTitle">Sponsors <span class="miniLock" id="sponsorsLock" aria-hidden="true">🔒</span></span>
+              <span class="actionDesc">The organizations that fuel the mission.</span>
             </span>
           </button>
 
@@ -86,7 +97,7 @@
           <button class="actionBtn" id="actionCommunity" type="button">
             <span class="actionIcon">👥</span>
             <span class="actionText">
-              <span class="actionTitle">Community</span>
+              <span class="actionTitle">Community <span class="miniLock" id="communityLock" aria-hidden="true">🔒</span></span>
               <span class="actionDesc">Connect, share, and get support with others.</span>
             </span>
           </button>
@@ -158,7 +169,10 @@
         <div class="card">
           <div class="cardHeader">
             <div>
-              <h2 class="h2">Trusted Resources</h2>
+              <h2 class="h2 trustedHeader">
+                <img src="./assets/top_trusted_icon_64.png" alt="Trusted Badge" class="trustedBadgeIcon">
+                Trusted Resources
+              </h2>
               <p class="muted">Verified resources with direct links (site + socials + contact when available).</p>
             </div>
           </div>
@@ -174,159 +188,311 @@
       </section>
 
       <!-- COMMUNITY -->
-<section id="communitySection" class="section" aria-label="Community">
-  <div class="card">
-    <div class="cardHeader">
-      <div>
-        <h2 class="h2">Community</h2>
-        <p class="muted">Connect, share, and get support with others. (Preview)</p>
-      </div>
-    </div>
-
-    <!-- Composer (preview) -->
-    <div class="card" style="margin-top:12px;">
-      <div class="cardHeader" style="padding-bottom:10px;">
-        <div>
-          <div class="h2" style="font-size:16px;">Post to the board</div>
-          <p class="muted" style="margin-top:4px;">Coming soon — this is a UI preview.</p>
-        </div>
-      </div>
-
-      <div class="formGrid" style="grid-template-columns:1fr;">
-        <div class="field">
-          <label for="communityPost" class="muted">Message</label>
-          <textarea id="communityPost" rows="3" placeholder="Share an update, ask for help, or recommend a resource…" disabled></textarea>
-        </div>
-      </div>
-
-      <div class="btnRow" style="margin-top:0;">
-        <button class="btnPrimary" type="button" disabled>Post</button>
-        <button class="btnSoft" type="button" disabled>Add Photo</button>
-      </div>
-    </div>
-
-    <!-- Feed (preview) -->
-    <div class="card" style="margin-top:12px;">
-      <div class="cardHeader" style="padding-bottom:10px;">
-        <div>
-          <div class="h2" style="font-size:16px;">Message Board</div>
-          <p class="muted" style="margin-top:4px;">Example posts — we’ll wire this to real data later.</p>
-        </div>
-      </div>
-
-      <div class="results">
-        <div class="resultCard">
-          <div class="resultTop">
-            <div>
-              <div class="resultName">Pinned: How to use Trusted Resources</div>
-              <div class="resultSub">TOP Team • Today</div>
-            </div>
-          </div>
-          <div class="meta" style="margin-top:8px;">
-            Start in Trusted for verified orgs with direct links. If you’re unsure what fits, post here and we’ll point you in the right direction.
-          </div>
-        </div>
-
-        <div class="resultCard">
-          <div class="resultTop">
-            <div>
-              <div class="resultName">Looking for peer support in Texas</div>
-              <div class="resultSub">Supporter • 2h ago</div>
-            </div>
-          </div>
-          <div class="meta" style="margin-top:8px;">
-            Any recommendations for veteran-friendly counseling near San Antonio? Prefer in-person but open to telehealth.
-          </div>
-        </div>
-
-        <div class="resultCard">
-          <div class="resultTop">
-            <div>
-              <div class="resultName">Resource share: emergency financial help</div>
-              <div class="resultSub">Community Member • Yesterday</div>
-            </div>
-          </div>
-          <div class="meta" style="margin-top:8px;">
-            If you’re in a tight spot this month, check Trusted + “Find Info” for local options. Don’t wait alone.
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="btnRow" style="margin-top:12px;">
-      <button class="btnSoft" id="communityBackBtn" type="button">Back to Home</button>
-    </div>
-  </div>
-</section>
-
-      <!-- FAVORITES -->
-      <section id="favoritesSection" class="section" aria-label="Favorites">
+      <section id="communitySection" class="section" aria-label="Community">
         <div class="card">
           <div class="cardHeader">
             <div>
-              <h2 class="h2">Favorites</h2>
-              <p class="muted">Your saved resources (stored locally on this device).</p>
+              <h2 class="h2">Community</h2>
+              <p class="muted">Connect, share, and get support with others. (Preview)</p>
             </div>
           </div>
 
-          <div class="btnRow" style="margin-top:0;">
-            <button id="favClearBtn" class="btnSoft" type="button">Clear favorites</button>
+          <div class="card" style="margin-top:12px;">
+            <div class="cardHeader" style="padding-bottom:10px;">
+              <div>
+                <div class="h2" style="font-size:16px;">Post to the board</div>
+                <p class="muted" style="margin-top:4px;">Coming soon — this is a UI preview.</p>
+              </div>
+            </div>
+
+            <div class="formGrid" style="grid-template-columns:1fr;">
+              <div class="field">
+                <label for="communityPost" class="muted">Message</label>
+                <textarea id="communityPost" rows="3" placeholder="Share an update, ask for help, or recommend a resource…" disabled></textarea>
+              </div>
+            </div>
+
+            <div class="btnRow" style="margin-top:0;">
+              <button class="btnPrimary" type="button" disabled>Post</button>
+              <button class="btnSoft" type="button" disabled>Add Photo</button>
+            </div>
           </div>
 
-          <div id="favoritesEmpty" class="status">No favorites yet. Tap ☆ on any org card to save it.</div>
-          <div id="favoritesList" class="results"></div>
+          <div class="card" style="margin-top:12px;">
+            <div class="cardHeader" style="padding-bottom:10px;">
+              <div>
+                <div class="h2" style="font-size:16px;">Message Board</div>
+                <p class="muted" style="margin-top:4px;">Example posts — we’ll wire this to real data later.</p>
+              </div>
+            </div>
+
+            <div class="results">
+              <div class="resultCard">
+                <div class="resultTop">
+                  <div>
+                    <div class="resultName">Pinned: How to use Trusted Resources</div>
+                    <div class="resultSub">TOP Team • Today</div>
+                  </div>
+                </div>
+                <div class="meta" style="margin-top:8px;">
+                  Start in Trusted for verified orgs with direct links. If you’re unsure what fits, post here and we’ll point you in the right direction.
+                </div>
+              </div>
+
+              <div class="resultCard">
+                <div class="resultTop">
+                  <div>
+                    <div class="resultName">Looking for peer support in Texas</div>
+                    <div class="resultSub">Supporter • 2h ago</div>
+                  </div>
+                </div>
+                <div class="meta" style="margin-top:8px;">
+                  Any recommendations for veteran-friendly counseling near San Antonio? Prefer in-person but open to telehealth.
+                </div>
+              </div>
+
+              <div class="resultCard">
+                <div class="resultTop">
+                  <div>
+                    <div class="resultName">Resource share: emergency financial help</div>
+                    <div class="resultSub">Community Member • Yesterday</div>
+                  </div>
+                </div>
+                <div class="meta" style="margin-top:8px;">
+                  If you’re in a tight spot this month, check Trusted + “Find Info” for local options. Don’t wait alone.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="btnRow" style="margin-top:12px;">
+            <button class="btnSoft" id="communityBackBtn" type="button">Back to Home</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SPONSORS -->
+      <section id="sponsorsSection" class="section" aria-label="Sponsors">
+        <div class="sponsorPanel">
+          <div class="cardHeader">
+            <div>
+              <h2 class="h2">Proudly Supported By</h2>
+              <p class="muted">Member-exclusive partner perks and promotions.</p>
+            </div>
+          </div>
+
+          <div id="sponsorsLockedNote" class="lockedNote" hidden>
+            <div class="lockedTitle">Members Only</div>
+            <div class="lockedText">
+              Join to unlock sponsor promos, coupons, merch drops, and +5 bonus giveaway entries.
+            </div>
+            <button class="btnPrimary" id="sponsorsUpgradeBtn" type="button">Become a Member</button>
+          </div>
+
+          <div id="sponsorsContent">
+            <div class="tierBlock">
+              <div class="tierHeader">
+                <img class="tierBadge" src="assets/badges/foundational.png" alt="Foundational">
+                <div>
+                  <div class="tierTitle">Foundational Sponsors</div>
+                  <div class="tierSub muted">Premium partners supporting the mission.</div>
+                </div>
+              </div>
+
+              <div class="sponsorGrid">
+                <a class="sponsorTile" href="https://www.ropesolutions.com/" target="_blank" rel="noopener noreferrer">
+                  <div class="sponsorLogoWrap">
+                    <img src="assets/sponsors/rope.png" class="sponsorLogo" alt="Rope Solutions">
+                  </div>
+                  <div class="sponsorMeta">
+                    <div class="sponsorName">Rope Solutions</div>
+                    <div class="sponsorOffer">Member perk: 15% off leadership training · Code: TOP15</div>
+                  </div>
+                </a>
+
+                <a class="sponsorTile" href="https://gamedaymenshealth.com/san-antonio" target="_blank" rel="noopener noreferrer">
+                  <div class="sponsorLogoWrap">
+                    <img src="assets/sponsors/gmh.png" class="sponsorLogo" alt="Gameday Men's Health">
+                  </div>
+                  <div class="sponsorMeta">
+                    <div class="sponsorName">Gameday Men's Health</div>
+                    <div class="sponsorOffer">Member perk: BOGO consult or 15% off (demo)</div>
+                  </div>
+                </a>
+              </div>
+            </div>
+
+            <div class="tierBlock">
+              <div class="tierHeader">
+                <img class="tierBadge" src="assets/badges/impact.png" alt="Impact">
+                <div>
+                  <div class="tierTitle">Impact Sponsors</div>
+                  <div class="tierSub muted">Fueling reach and growth.</div>
+                </div>
+              </div>
+
+              <div class="sponsorGrid">
+                <a class="sponsorTile" href="https://ruckingrealtygroup.com/" target="_blank" rel="noopener noreferrer">
+                  <div class="sponsorLogoWrap">
+                    <img src="assets/sponsors/rucking.png" class="sponsorLogo" alt="Rucking Realty Group">
+                  </div>
+                  <div class="sponsorMeta">
+                    <div class="sponsorName">Rucking Realty Group</div>
+                    <div class="sponsorOffer">Member perk: free home selling info booklet (demo)</div>
+                  </div>
+                </a>
+              </div>
+            </div>
+
+            <div class="tierBlock">
+              <div class="tierHeader">
+                <img class="tierBadge" src="assets/badges/community.png" alt="Community">
+                <div>
+                  <div class="tierTitle">Community Sponsors</div>
+                  <div class="tierSub muted">Local partners powering the community.</div>
+                </div>
+              </div>
+
+              <div class="sponsorGrid">
+                <a class="sponsorTile" href="https://eduardopicodesigns.com/" target="_blank" rel="noopener noreferrer">
+                  <div class="sponsorLogoWrap">
+                    <img src="assets/sponsors/eduardo.png" class="sponsorLogo" alt="Eduardo Pico Designs">
+                  </div>
+                  <div class="sponsorMeta">
+                    <div class="sponsorName">Eduardo Pico Designs</div>
+                    <div class="sponsorOffer">Member perk: 10% off design services (demo)</div>
+                  </div>
+                </a>
+
+                <a class="sponsorTile" href="https://www.warsendmerch.com/" target="_blank" rel="noopener noreferrer">
+                  <div class="sponsorLogoWrap">
+                    <img src="assets/sponsors/warsend.png" class="sponsorLogo" alt="Wars End Merch">
+                  </div>
+                  <div class="sponsorMeta">
+                    <div class="sponsorName">Wars End Merch</div>
+                    <div class="sponsorOffer">Member perk: 15% off gear drop (demo)</div>
+                  </div>
+                </a>
+
+                <a class="sponsorTile" href="https://www.braintreatmentcenterashburn.com/?utm_source=ig&utm_medium=social&utm_content=link_in_bio" target="_blank" rel="noopener noreferrer">
+                  <div class="sponsorLogoWrap">
+                    <img src="assets/sponsors/brain.png" class="sponsorLogo" alt="Brain Treatment Center">
+                  </div>
+                  <div class="sponsorMeta">
+                    <div class="sponsorName">Brain Treatment Center</div>
+                    <div class="sponsorOffer">Member perk: complimentary consultation (demo)</div>
+                  </div>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CONTACT -->
+      <section id="contactSection" class="section" aria-label="Contact">
+        <div class="card">
+          <div class="cardHeader">
+            <div>
+              <h2 class="h2">Contact Us</h2>
+              <p class="muted">If you’re in crisis or unsure which organization is best, reach out. We’ll help.</p>
+            </div>
+          </div>
+
+          <div class="contactGrid">
+            <div class="contactCard">
+              <div class="contactTitle">Need help right now?</div>
+              <div class="contactText muted">If you or someone else is in immediate danger, call your local emergency number.</div>
+              <div class="contactText muted">In the U.S., you can call or text <strong>988</strong> for the Suicide &amp; Crisis Lifeline.</div>
+            </div>
+
+            <div class="contactCard">
+              <div class="contactTitle">Ask The Outreach Project for guidance</div>
+              <div class="contactText muted">Tell us what you’re dealing with and we’ll point you toward trusted resources.</div>
+              <a class="btnPrimary" href="mailto:hello@theoutreach-project.com?subject=Need%20Help%20Finding%20Support" target="_blank" rel="noopener">Email The Team</a>
+              <div class="contactText muted" style="margin-top:10px;"></div>
+            </div>
+          </div>
         </div>
       </section>
 
       <!-- PROFILE -->
       <section id="profileSection" class="section" aria-label="Profile">
-        <div class="card">
+        <div class="card profileHero">
+          <div class="profileHeroRow">
+            <div class="profilePhotoWrap">
+              <img id="profilePhotoImg" class="profilePhotoImg" src="assets/top_profile_circle_1024.png" alt="Profile">
+              <button id="profileEditBtn" class="btnSoft btnTiny" type="button">Edit</button>
+            </div>
+
+            <div class="profileHeroText">
+              <div class="profileNameRow">
+                <div id="profileDisplayName" class="profileDisplayName"></div>
+                <div id="profileRoleDisplay" class="profileRole"></div>
+                <div id="profileBadges" class="profileBadges"></div>
+                <div id="profileDisplayEmail" class="profileDisplayEmail muted">Add your email in Edit so we can keep you updated.</div>
+                <div id="profileDisplayBanner" class="profileDisplayBanner">How can we assist you today?</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" id="profileSavedCard">
           <div class="cardHeader">
             <div>
-              <h2 class="h2">Profile</h2>
-              <p class="muted">Saved locally on this device (no login required yet).</p>
+              <h2 class="h2">Saved Organizations</h2>
+              <p class="muted">Your starred nonprofits and trusted resources live here.</p>
+            </div>
+          </div>
+          <div id="profileFavoritesEmpty" class="emptyState">
+            <div class="emptyText">No saved organizations yet. Star a nonprofit or trusted resource to keep it here.</div>
+          </div>
+          <div id="profileFavoritesList" class="results"></div>
+        </div>
+
+        <div class="card" id="memberFeedCard" hidden>
+          <div class="cardHeader">
+            <div>
+              <h2 class="h2">Member Feed</h2>
+              <p class="muted">Early drops, sponsor perks, merch, and giveaways.</p>
+            </div>
+          </div>
+          <div id="memberFeedList" class="feedList"></div>
+        </div>
+
+        <div class="card" id="supporterUpsellCard">
+          <div class="cardHeader">
+            <div>
+              <h2 class="h2">Join The Outreach Project</h2>
+              <p class="muted">Become a Member for exclusive sponsor promos, early drops, +5 giveaway entries, and customization.</p>
             </div>
           </div>
 
-          <div class="formGrid">
-            <div class="field">
-              <label for="profileNameInput">Name</label>
-              <input id="profileNameInput" type="text" placeholder="e.g., Jonathan" />
-            </div>
+          <div class="priceRow">
+            <div class="priceBig">$5.99</div>
+            <div class="priceSmall muted">per year</div>
+          </div>
 
-            <div class="field">
-              <label for="profileRoleSelect">Role</label>
-              <select id="profileRoleSelect">
-                <option value="Supporter">Supporter</option>
-                <option value="Veteran">Veteran</option>
-                <option value="First Responder">First Responder</option>
-                <option value="Organization">Organization</option>
-              </select>
-            </div>
-
-            <div class="field">
-              <label for="profileCityInput">City</label>
-              <input id="profileCityInput" type="text" placeholder="e.g., San Antonio" />
-            </div>
-
-            <div class="field">
-              <label for="profileStateInput">State</label>
-              <input id="profileStateInput" type="text" placeholder="e.g., TX" maxlength="2" />
-            </div>
+          <div class="bullets">
+            <div class="bullet">✔ Exclusive sponsor promo codes & coupons</div>
+            <div class="bullet">✔ +5 bonus entries into giveaways & sweepstakes</div>
+            <div class="bullet">✔ Early YouTube drops (member early access)</div>
+            <div class="bullet">✔ App customization (themes & banner)</div>
           </div>
 
           <div class="btnRow">
-            <button id="saveProfileBtn" class="btnPrimary" type="button">Save</button>
-            <button id="resetProfileBtn" class="btnSoft" type="button">Reset</button>
+            <button id="becomeMemberBtn" class="btnPrimary" type="button">Become a Member</button>
           </div>
 
-          <div id="profileMeta" class="status"></div>
+          <div class="status" id="memberStatusNote"></div>
+        </div>
+
+        <div class="demoTools">
+          <button id="demoResetBtn" class="demoResetBtn" type="button">
+            Reset Demo
+          </button>
         </div>
       </section>
-
-      <!-- (optional) MESSAGES placeholder so app.js doesn't care if it exists -->
-      <section id="messagesSection" class="section" aria-label="Messages"></section>
-
     </div>
 
     <nav class="bottomNav bottomNav4" aria-label="Primary">
@@ -339,17 +505,170 @@
         </span>
         <span class="navLabel">Trusted</span>
       </button>
-      <button class="navItem" data-nav="favorites" type="button">
-        <span class="navIcon">☆</span><span class="navLabel">Favorites</span>
-      </button>
       <button class="navItem" data-nav="profile" type="button">
         <span class="navIcon">👤</span><span class="navLabel">Profile</span>
       </button>
+      <button class="navItem" data-nav="contact" type="button">
+        <span class="navIcon">✉️</span><span class="navLabel">Contact</span>
+      </button>
     </nav>
+
+    <!-- UPGRADE MODAL -->
+    <div class="modalOverlay" id="upgradeModal" hidden>
+      <div class="modalCard" role="dialog" aria-modal="true" aria-label="Upgrade">
+        <div class="modalHeader">
+          <div class="modalTitle">Join The Outreach Project</div>
+          <button class="modalClose" id="upgradeCloseBtn" type="button" aria-label="Close">✕</button>
+        </div>
+
+        <div class="modalBody">
+          <div class="modalSub">Become a Member to unlock sponsor promos, community access, customization, early drops, and +5 giveaway entries.</div>
+          <div id="demoPayNote" class="muted" style="margin-top:10px;font-weight:800;"></div>
+
+          <div class="priceRow" style="margin-top:12px;">
+            <div class="priceBig">$5.99</div>
+            <div class="priceSmall muted">per year</div>
+          </div>
+
+          <div class="bullets" style="margin-top:12px;">
+            <div class="bullet">✔ Exclusive sponsor promo codes & coupons</div>
+            <div class="bullet">✔ +5 bonus entries into giveaways & sweepstakes</div>
+            <div class="bullet">✔ Early YouTube drops (member early access)</div>
+            <div class="bullet">✔ App customization (themes & banner)</div>
+          </div>
+        </div>
+
+        <div class="modalFooter">
+          <button class="btnSoft" id="upgradeCancelBtn" type="button">Continue as Supporter</button>
+          <button class="btnPrimary" id="upgradeConfirmBtn" type="button">Become a Member</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- EDIT PROFILE MODAL -->
+    <div class="modalOverlay" id="editModal" hidden>
+      <div class="modalCard" role="dialog" aria-modal="true" aria-label="Edit Profile">
+        <div class="modalHeader">
+          <div class="modalTitle">Edit Profile</div>
+          <button class="modalClose" id="editCloseBtn" type="button" aria-label="Close">✕</button>
+        </div>
+
+        <div class="modalBody">
+          <div class="formGrid">
+            <div class="field">
+              <label for="editName">Name</label>
+              <input id="editName" type="text" placeholder="e.g., Jonathan" />
+            </div>
+
+            <div class="field">
+              <label for="editEmail">Email</label>
+              <input id="editEmail" type="email" placeholder="you@email.com" />
+            </div>
+
+            <div class="field">
+              <label for="editBanner">Banner Text</label>
+              <input id="editBanner" type="text" placeholder="How can we assist you today?" />
+            </div>
+
+            <div class="field">
+              <label for="editPhoto">Profile Picture</label>
+              <input id="editPhoto" type="file" accept="image/*" />
+              <div class="muted" style="margin-top:6px;">(Stored locally for demo.)</div>
+            </div>
+
+            <div class="field" id="themeField">
+              <label>Background Theme (Members)</label>
+              <div class="chipRow">
+                <button class="chip" type="button" data-theme="clean">Clean</button>
+                <button class="chip" type="button" data-theme="topo">Topo</button>
+                <button class="chip" type="button" data-theme="cinematic">Cinematic</button>
+              </div>
+              <div class="muted" style="margin-top:6px;">Theme selection is a Member feature.</div>
+            </div>
+
+            <div class="field">
+              <label>Badges (Demo)</label>
+              <div class="chipRow">
+                <button class="chip" type="button" data-badge="veteran">Veteran</button>
+                <button class="chip" type="button" data-badge="youtube">YouTube Fan</button>
+              </div>
+              <div class="muted" style="margin-top:6px;">Verification can be added later (ID.me, etc.).</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modalFooter">
+          <button class="btnSoft" id="editCancelBtn" type="button">Cancel</button>
+          <button class="btnPrimary" id="editSaveBtn" type="button">Save</button>
+        </div>
+      </div>
+    </div>
 
   </main>
 
+  <script>
+    (function () {
+      function go(navKey) {
+        const btn = document.querySelector('.navItem[data-nav="' + navKey + '"]');
+        if (btn) btn.click();
+      }
+      window.addEventListener('DOMContentLoaded', () => {
+        const openProfileBtn = document.getElementById('openProfileBtn');
+        if (openProfileBtn) openProfileBtn.addEventListener('click', () => go('profile'));
+      });
+    })();
+  </script>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="./app.js"></script>
+
+  <script>
+    (function () {
+      function closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (!modal) return;
+        modal.hidden = true;
+        document.body.style.overflow = "";
+      }
+
+      function wireModal(modalId, map) {
+        const modal = document.getElementById(modalId);
+        if (!modal) return;
+
+        modal.addEventListener("click", (e) => {
+          if (e.target === modal) closeModal(modalId);
+        });
+
+        Object.entries(map).forEach(([btnId, action]) => {
+          const btn = document.getElementById(btnId);
+          if (!btn) return;
+          btn.addEventListener("click", (e) => {
+            try { action(e); } catch (_) {}
+          });
+        });
+      }
+
+      window.addEventListener("DOMContentLoaded", () => {
+        wireModal("editModal", {
+          editCloseBtn: () => closeModal("editModal"),
+          editCancelBtn: () => closeModal("editModal"),
+          editSaveBtn: () => closeModal("editModal")
+        });
+
+        wireModal("upgradeModal", {
+          upgradeCloseBtn: () => closeModal("upgradeModal"),
+          upgradeCancelBtn: () => closeModal("upgradeModal"),
+          upgradeConfirmBtn: () => closeModal("upgradeModal")
+        });
+
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape") {
+            closeModal("editModal");
+            closeModal("upgradeModal");
+          }
+        });
+      });
+    })();
+  </script>
 </body>
 </html>
