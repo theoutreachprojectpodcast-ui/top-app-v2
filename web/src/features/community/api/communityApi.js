@@ -1,0 +1,204 @@
+import { mapCommunityPostRow } from "@/features/community/mappers/mapCommunityPost";
+import { APPROVED_POSTS_SEED } from "@/features/community/data/communitySeed";
+
+const POSTS_TABLE = "community_posts";
+const LIKES_TABLE = "community_post_likes";
+
+const LS_PENDING = "top_community_pending_submissions";
+const LS_LOCAL_APPROVED = "top_community_local_approved_posts";
+const LS_LIKES = "top_community_liked_posts";
+
+function readJson(key, fallback) {
+  if (typeof window === "undefined") return fallback;
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return fallback;
+    return JSON.parse(raw);
+  } catch {
+    return fallback;
+  }
+}
+
+function writeJson(key, value) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    /* ignore */
+  }
+}
+
+function getLikedSet(userId) {
+  const all = readJson(LS_LIKES, {});
+  const set = new Set(all[userId] || []);
+  return set;
+}
+
+function saveLikedSet(userId, set) {
+  const all = readJson(LS_LIKES, {});
+  all[userId] = Array.from(set);
+  writeJson(LS_LIKES, all);
+}
+
+export function getRelativeTime(iso) {
+  const t = new Date(iso).getTime();
+  if (Number.isNaN(t)) return "";
+  const diff = Date.now() - t;
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return "just now";
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 48) return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  if (d < 14) return `${d}d ago`;
+  return new Date(iso).toLocaleDateString();
+}
+
+export async function fetchApprovedFeedFromSupabase(supabase) {
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from(POSTS_TABLE)
+    .select("*")
+    .eq("status", "approved")
+    .order("created_at", { ascending: false })
+    .limit(50);
+  if (error) return [];
+  return (data || []).map(mapCommunityPostRow).filter(Boolean);
+}
+
+export function loadLocalApprovedPosts() {
+  const list = readJson(LS_LOCAL_APPROVED, []);
+  return Array.isArray(list) ? list.map(mapCommunityPostRow).filter(Boolean) : [];
+}
+
+export function loadPendingSubmissionsLocal() {
+  const list = readJson(LS_PENDING, []);
+  return Array.isArray(list) ? list : [];
+}
+
+export function savePendingSubmissionsLocal(list) {
+  writeJson(LS_PENDING, list);
+}
+
+export function approvePendingLocal(pendingId) {
+  const pending = loadPendingSubmissionsLocal();
+  const item = pending.find((p) => p.id === pendingId);
+  if (!item) return { ok: false };
+  const nextPending = pending.filter((p) => p.id !== pendingId);
+  savePendingSubmissionsLocal(nextPending);
+  const approved = loadLocalApprovedPosts();
+  const post = mapCommunityPostRow({
+    ...item,
+    status: "approved",
+    reviewed_at: new Date().toISOString(),
+    reviewed_by: "demo-moderator",
+  });
+  approved.unshift(post);
+  writeJson(LS_LOCAL_APPROVED, approved);
+  return { ok: true, post };
+}
+
+export function rejectPendingLocal(pendingId, reason = "") {
+  const pending = loadPendingSubmissionsLocal();
+  const next = pending.filter((p) => p.id !== pendingId);
+  savePendingSubmissionsLocal(next);
+  return { ok: true, reason };
+}
+
+/**
+ * Public feed: approved only. Merges seed + Supabase + locally approved demo posts.
+ */
+export async function fetchPublicCommunityFeed(supabase) {
+  const seed = APPROVED_POSTS_SEED.map(mapCommunityPostRow);
+  const remote = await fetchApprovedFeedFromSupabase(supabase);
+  const localApproved = loadLocalApprovedPosts();
+  const byId = new Map();
+  [...seed, ...remote, ...localApproved].forEach((p) => {
+    if (p && p.id && p.status === "approved") byId.set(p.id, p);
+  });
+  return Array.from(byId.values()).sort((a, b) => {
+    const ta = new Date(a.createdAt).getTime();
+    const tb = new Date(b.createdAt).getTime();
+    return tb - ta;
+  });
+}
+
+export function isPostLiked(userId, postId) {
+  return getLikedSet(userId).has(postId);
+}
+
+/** Toggle like for demo; displayCount = seed/base count + 1 when this user has liked */
+export function togglePostLike(userId, postId, baseCount) {
+  const set = getLikedSet(userId);
+  const was = set.has(postId);
+  if (was) set.delete(postId);
+  else set.add(postId);
+  saveLikedSet(userId, set);
+  const liked = !was;
+  const displayCount = Math.max(0, Number(baseCount) || 0) + (liked ? 1 : 0);
+  return { liked, displayCount };
+}
+
+export function sharePostDemo(post) {
+  const text = `${post.title ? `${post.title} — ` : ""}${post.body.slice(0, 160)}${post.body.length > 160 ? "…" : ""}`;
+  const url = typeof window !== "undefined" ? window.location.href : "";
+  if (typeof navigator !== "undefined" && navigator.share) {
+    return navigator.share({ title: "The Outreach Project — Community", text, url }).catch(() => copyShare(text, url));
+  }
+  return copyShare(text, url);
+}
+
+function copyShare(text, url) {
+  const payload = `${text}\n${url}`.trim();
+  if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+    return navigator.clipboard.writeText(payload).then(() => ({ ok: true, method: "clipboard" }));
+  }
+  return Promise.resolve({ ok: false, method: "none" });
+}
+
+export async function submitCommunityStory(supabase, payload) {
+  const record = {
+    author_id: payload.author_id,
+    author_name: payload.author_name,
+    author_avatar_url: payload.author_avatar_url || "",
+    title: payload.title || "",
+    body: payload.body,
+    nonprofit_ein: payload.nonprofit_ein || null,
+    nonprofit_name: payload.nonprofit_name || "",
+    category: payload.category || "success_story",
+    show_author_name: payload.show_author_name !== false,
+    link_url: payload.link_url || "",
+    status: "submitted",
+    like_count: 0,
+    share_count: 0,
+  };
+
+  const localRecord = {
+    id: `pending-${Date.now()}`,
+    created_at: new Date().toISOString(),
+    ...record,
+  };
+
+  if (!supabase) {
+    const pending = loadPendingSubmissionsLocal();
+    pending.unshift(localRecord);
+    savePendingSubmissionsLocal(pending);
+    return { ok: true, localOnly: true, id: localRecord.id };
+  }
+
+  const { data, error } = await supabase.from(POSTS_TABLE).insert(record).select("id").maybeSingle();
+  if (!error) {
+    return { ok: true, localOnly: false, id: data?.id };
+  }
+
+  const pending = loadPendingSubmissionsLocal();
+  pending.unshift({ ...localRecord, supabase_error: error.message });
+  savePendingSubmissionsLocal(pending);
+  return {
+    ok: true,
+    localOnly: true,
+    warning: "Saved locally for review—cloud table may not be deployed yet.",
+    id: localRecord.id,
+  };
+}
+

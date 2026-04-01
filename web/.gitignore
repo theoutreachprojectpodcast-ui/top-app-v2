@@ -1,0 +1,6 @@
+node_modules
+.next
+.env*.local
+
+# Generated from repo-root ../assets by scripts/sync-public-assets.mjs
+public/assets

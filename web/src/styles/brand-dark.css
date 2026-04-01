@@ -1,0 +1,84 @@
+:root {
+  /* Dark mode rebalanced toward charcoal/graphite */
+  --color-bg-primary: #07090b;
+  --color-bg-secondary: #0d1013;
+  --color-surface: #15191d;
+  --color-surface-elevated: #1b2026;
+  --color-surface-soft: #101419;
+
+  --color-gold-primary: #bf862b;
+  --color-gold-highlight: #e2ae4d;
+  --color-gold-shadow: #7c5316;
+
+  --color-cyan-primary: #2ab9ca;
+  --color-cyan-bright: #67d9e6;
+  --color-cyan-muted: #1a8f9f;
+  --color-accent-interactive: #2ab9ca;
+  --color-accent-interactive-soft: rgba(42, 185, 202, 0.26);
+
+  --color-text-primary: #e8eaed;
+  --color-text-secondary: #9ea5ae;
+  --color-border: #293139;
+  --color-border-soft: #20272f;
+
+  --glow-cyan: 0 0 10px rgba(46, 211, 230, 0.45), 0 0 18px rgba(46, 211, 230, 0.15);
+  --glow-gold: 0 0 10px rgba(224, 168, 67, 0.35);
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+}
+
+body {
+  background: linear-gradient(180deg, #06080a 0%, #07090c 52%, #050709 100%);
+  color: var(--color-text-primary);
+  font-family: var(--font-body), "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  position: relative;
+  isolation: isolate;
+}
+
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
+body::before {
+  background:
+    linear-gradient(180deg, rgba(5, 6, 8, 0.68), rgba(5, 6, 8, 0.8)),
+    radial-gradient(58% 52% at 50% -5%, rgba(42, 185, 202, 0.03), transparent 58%),
+    radial-gradient(78% 54% at 80% 10%, rgba(226, 174, 77, 0.028), transparent 62%);
+}
+
+body::after {
+  opacity: 0.14;
+  background-image: url("/assets/backgrounds/bg_topo.png");
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  mix-blend-mode: luminosity;
+  filter: saturate(0.18) contrast(1.07) brightness(0.64);
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-heading), var(--font-body), "Segoe UI", sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--color-cyan-bright);
+  outline-offset: 2px;
+  box-shadow: var(--glow-cyan);
+}

@@ -1,0 +1,90 @@
+import { queryTrustedOrgsByEin } from "@/lib/supabase/queries";
+
+const DEMO_USER_KEY = "top_app_demo_user_id";
+const PROFILE_TABLE = "top_app_user_profiles";
+const SAVED_EIN_TABLE = "top_app_saved_org_eins";
+
+export function getOrCreateDemoUserId() {
+  if (typeof window === "undefined") return "demo-user";
+  try {
+    let id = window.localStorage.getItem(DEMO_USER_KEY);
+    if (!id) {
+      id = `demo-${globalThis.crypto?.randomUUID?.() || String(Date.now())}`;
+      window.localStorage.setItem(DEMO_USER_KEY, id);
+    }
+    return id;
+  } catch {
+    return "demo-user";
+  }
+}
+
+function rowToProfile(row) {
+  if (!row) return null;
+  return {
+    firstName: row.first_name ?? "",
+    lastName: row.last_name ?? "",
+    email: row.email ?? "",
+    membershipStatus: String(row.membership_status ?? "supporter").toLowerCase(),
+    banner: row.banner ?? "",
+    avatarUrl: row.avatar_url ?? "",
+    theme: row.theme ?? "clean",
+    savedOrgEins: [],
+  };
+}
+
+export async function fetchProfileByUserId(supabase, userId) {
+  if (!supabase || !userId) return null;
+  const { data, error } = await supabase.from(PROFILE_TABLE).select("*").eq("user_id", userId).maybeSingle();
+  if (error || !data) return null;
+  return rowToProfile(data);
+}
+
+export async function upsertProfileByUserId(supabase, userId, profile) {
+  if (!supabase || !userId) return;
+  const row = {
+    user_id: userId,
+    first_name: profile.firstName ?? "",
+    last_name: profile.lastName ?? "",
+    email: profile.email ?? "",
+    membership_status: profile.membershipStatus ?? "supporter",
+    banner: profile.banner ?? "",
+    avatar_url: profile.avatarUrl ?? "",
+    theme: profile.theme ?? "clean",
+    updated_at: new Date().toISOString(),
+  };
+  const { error } = await supabase.from(PROFILE_TABLE).upsert(row, { onConflict: "user_id" });
+  if (error) throw error;
+}
+
+export async function fetchSavedOrgEinList(supabase, userId) {
+  if (!supabase || !userId) return [];
+  const { data, error } = await supabase
+    .from(SAVED_EIN_TABLE)
+    .select("ein,sort_order")
+    .eq("user_id", userId)
+    .order("sort_order", { ascending: true });
+  if (error || !Array.isArray(data)) return [];
+  return data.map((r) => String(r.ein)).filter(Boolean);
+}
+
+export async function replaceSavedOrgEinList(supabase, userId, eins) {
+  if (!supabase || !userId) return;
+  const { error: delErr } = await supabase.from(SAVED_EIN_TABLE).delete().eq("user_id", userId);
+  if (delErr) throw delErr;
+  const list = (eins || []).map((e) => String(e)).filter(Boolean);
+  if (!list.length) return;
+  const rows = list.map((ein, i) => ({
+    user_id: userId,
+    ein,
+    sort_order: i,
+  }));
+  const { error } = await supabase.from(SAVED_EIN_TABLE).insert(rows);
+  if (error) throw error;
+}
+
+export async function fetchSavedOrganizationsByEin(supabase, eins) {
+  if (!supabase || !eins?.length) return [];
+  const { data, error } = await queryTrustedOrgsByEin(supabase, eins);
+  if (error || !Array.isArray(data)) return [];
+  return data;
+}

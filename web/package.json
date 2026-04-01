@@ -1,0 +1,29 @@
+{
+  "name": "web",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.33.0",
+  "scripts": {
+    "prebuild": "node scripts/sync-public-assets.mjs",
+    "predev": "node scripts/sync-public-assets.mjs",
+    "dev": "next dev",
+    "dev:3001": "next dev -p 3001 -H 127.0.0.1",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "enrich:logos": "node scripts/enrich-nonprofit-logos.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.101.0",
+    "lucide-react": "^0.469.0",
+    "next": "16.2.1",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.1",
+    "tailwindcss": "^4"
+  }
+}

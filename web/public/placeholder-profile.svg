@@ -1,0 +1,21 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#102A30"/>
+      <stop offset="1" stop-color="#0B1F24"/>
+    </linearGradient>
+    <linearGradient id="shirt" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2A4F58"/>
+      <stop offset="1" stop-color="#1A3640"/>
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" rx="128" fill="url(#bg)"/>
+  <circle cx="128" cy="92" r="42" fill="#C89C73"/>
+  <path d="M78 212c6-34 26-52 50-52s44 18 50 52H78z" fill="url(#shirt)"/>
+  <path d="M88 98c0-28 19-48 40-48 19 0 33 13 40 31-7-5-15-9-26-10-10-1-25 2-37 14-5 5-10 8-17 13v0z" fill="#1F1B19"/>
+  <ellipse cx="112" cy="92" rx="4" ry="3.5" fill="#2A1C12"/>
+  <ellipse cx="144" cy="92" rx="4" ry="3.5" fill="#2A1C12"/>
+  <path d="M116 112c3 4 7 6 12 6s9-2 12-6" stroke="#7D5133" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="128" cy="128" r="122.5" stroke="#1F3A40" stroke-width="11"/>
+</svg>
+
