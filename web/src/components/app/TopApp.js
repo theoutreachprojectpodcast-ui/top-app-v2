@@ -175,15 +175,14 @@ export default function TopApp({ initialNav = "home" }) {
 
   return (
     <main className={`topApp theme-${profile.theme}`}>
-      <BrandMark size="header" />
+      <div className="headerBrandStack">
+        <BrandMark size="header" />
+        <p className="headerBrandSubtitle">Veteran First Responder Resource Network</p>
+      </div>
       <header className="topbar">
         <HeaderInner className="topbarInner">
           <div className="topbarZone topbarLeft" aria-hidden="true" />
-          <div className="topbarZone topbarCenter">
-            <div className="headerBrandCopy">
-              <p className="headerBrandSubtitle">Veteran First Responder Resource Network</p>
-            </div>
-          </div>
+          <div className="topbarZone topbarCenter" aria-hidden="true" />
           <div className="topbarZone topbarRight">
             <div className="topbarActionsCluster">
               <button className="btnSoft sponsorBtn" onClick={() => setNav("sponsors")} type="button">

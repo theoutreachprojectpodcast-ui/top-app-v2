@@ -19,15 +19,14 @@ const NAV_ITEMS = [
 export default function AppShell({ activeNav, children }) {
   return (
     <div className="appShell appShell--subpage">
-      <BrandMark size="header" />
+      <div className="headerBrandStack">
+        <BrandMark size="header" />
+        <p className="headerBrandSubtitle">Veteran First Responder Resource Network</p>
+      </div>
       <header className="subpageTopbar">
         <HeaderInner className="topbarInner">
           <div className="topbarZone topbarLeft" aria-hidden="true" />
-          <div className="topbarZone topbarCenter">
-            <div className="headerBrandCopy">
-              <p className="headerBrandSubtitle">Veteran First Responder Resource Network</p>
-            </div>
-          </div>
+          <div className="topbarZone topbarCenter" aria-hidden="true" />
           <div className="topbarZone topbarRight">
             <div className="topbarActionsCluster">
               <Link className="btnSoft sponsorBtn" href="/">
