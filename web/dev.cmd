@@ -1,11 +1,10 @@
 @echo off
-REM Double-click or run from Command Prompt: syncs assets then starts Next.js.
-cd /d "%~dp0"
-pnpm.cmd run dev
+REM Launches the product from the repository root (canonical: pnpm dev).
+cd /d "%~dp0.."
+pnpm.cmd dev
 if errorlevel 1 (
   echo.
-  echo pnpm failed. Try: npm run dev
-  echo Or install deps: pnpm.cmd install
+  echo Run from repo root: pnpm install ^&^& pnpm dev
   pause
   exit /b 1
 )

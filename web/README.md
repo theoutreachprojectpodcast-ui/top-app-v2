@@ -48,36 +48,36 @@ corepack prepare pnpm@10.33.0 --activate
 
 **Then (all platforms):**
 
+Work from the **repository root** (parent of `web/`). The workspace is defined there.
+
 1. Install dependencies:
 
 ```bash
 pnpm install
 ```
 
-(If you do not use pnpm, `npm install` still works for this package.)
-
-2. Create env file from template:
+2. Create env file from template (paths are relative to `web/`):
 
 ```bash
-cp .env.local.example .env.local
+cp web/.env.local.example web/.env.local
 ```
 
-3. Fill in values in `.env.local`:
+3. Fill in values in `web/.env.local`:
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
-4. Run development server:
+4. Run the dev server (**canonical**):
 
 ```bash
 pnpm dev
 ```
 
-**Windows:** There must be a **space** between `pnpm` and `dev`. The command is **`pnpm dev`**, not `pnpm cmd.dev` (that looks for a non-existent command named `cmd.dev`). If you prefer the long form: **`pnpm run cmd.dev`** — we ship a script with that name as an alias.
+Opens **http://localhost:3000**. If port 3000 is in use, free it or run `pnpm --filter web dev:alt` for port 3001.
 
-Or double-click **`dev.cmd`** in this folder (uses `pnpm run dev`).
+**Windows:** Use a **space**: `pnpm dev` (not `pnpm` + `dev` merged into one token). Double-click **`web/dev.cmd`** to run `pnpm dev` from the repo root.
 
-Open [http://localhost:3000](http://localhost:3000).
+**Do not** use `npm run dev` at the repository root — there is no npm package there. Only **`pnpm dev`** from the root is supported for the full product.
 
 ## Route Skeleton (Phase 2)
 
