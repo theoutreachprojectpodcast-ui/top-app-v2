@@ -2,13 +2,10 @@
 
 import Image from "next/image";
 
-const SIZE_MAP = {
-  header: 88,
-  profile: 44,
-};
+const PROFILE_PX = 44;
 
-/** Default logo; drop `public/assets/brand-anchor.png` (synced from repo `assets/`) or set NEXT_PUBLIC_BRAND_LOGO_PATH. */
-const DEFAULT_LOGO = "/assets/op-logo-silver.png";
+/** Synced from repo `assets/brand-logo-full.png`. Override with `NEXT_PUBLIC_BRAND_LOGO_PATH` or `src`. */
+const DEFAULT_LOGO = "/assets/brand-logo-full.png";
 
 export default function BrandMark({
   size = "header",
@@ -16,23 +13,29 @@ export default function BrandMark({
   alt = "The Outreach Project",
   src,
 }) {
-  const px = SIZE_MAP[size] || SIZE_MAP.header;
   const logoSrc = src || (typeof process !== "undefined" && process.env.NEXT_PUBLIC_BRAND_LOGO_PATH) || DEFAULT_LOGO;
 
-  return (
-    <div
-      className={`brandMark brandMark-${size} brandMarkFrame ${className}`.trim()}
-      style={{ width: px, height: px }}
-    >
-      <div className="brandMarkInner">
+  if (size === "header") {
+    return (
+      <div className={`brandMark brandMark-header ${className}`.trim()}>
         <Image
           src={logoSrc}
           alt={alt}
-          fill
-          sizes={`${px}px`}
-          className="brandMarkImg"
-          priority={size === "header"}
+          width={512}
+          height={512}
+          priority
+          className="brandMarkImg brandMarkImg--header"
+          sizes="(max-width: 760px) 180px, 240px"
         />
+      </div>
+    );
+  }
+
+  const px = PROFILE_PX;
+  return (
+    <div className={`brandMark brandMark-${size} brandMarkFrame ${className}`.trim()} style={{ width: px, height: px }}>
+      <div className="brandMarkInner">
+        <Image src={logoSrc} alt={alt} fill sizes={`${px}px`} className="brandMarkImg" />
       </div>
     </div>
   );

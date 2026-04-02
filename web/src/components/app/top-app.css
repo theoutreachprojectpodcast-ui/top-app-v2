@@ -3,7 +3,7 @@
   --content-gutter: 40px;
   --footer-nav-max-width: 760px;
   --header-floating-offset: 24px;
-  --header-floating-height: 248px;
+  --header-floating-height: 268px;
   --header-fade-height: 56px;
   min-height: 100vh;
   background: transparent;
@@ -126,6 +126,17 @@
   object-fit: contain;
   object-position: center;
   padding: 8%;
+  background: transparent !important;
+}
+/* Header: full emblem, no circular frame — PNG alpha preserved */
+.brandMarkImg--header {
+  display: block;
+  width: auto;
+  height: clamp(72px, 11vw, 104px);
+  max-width: min(260px, 78vw);
+  object-fit: contain;
+  object-position: center bottom;
+  padding: 0;
   background: transparent !important;
 }
 .brandTag {
@@ -1261,7 +1272,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   .topApp {
     --content-gutter: 24px;
     --header-floating-offset: 14px;
-    --header-floating-height: 200px;
+    --header-floating-height: 220px;
     --header-fade-height: 48px;
   }
   .siteContainer, .shell { width: min(var(--content-max-width), calc(100% - var(--content-gutter))); }
@@ -1272,9 +1283,9 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   .topbarLeft { display: none; }
   .topbarCenter { order: 1; }
   .topbarRight { order: 2; justify-content: center; }
-  .brandMark-header {
-    width: 72px !important;
-    height: 72px !important;
+  .brandMarkImg--header {
+    height: clamp(56px, 22vw, 80px) !important;
+    max-width: min(220px, 88vw) !important;
   }
   .headerBrandLockup {
     gap: 8px;
