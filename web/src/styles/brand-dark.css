@@ -1,28 +1,34 @@
 :root {
-  /* Dark mode rebalanced toward charcoal/graphite */
-  --color-bg-primary: #07090b;
-  --color-bg-secondary: #0d1013;
-  --color-surface: #15191d;
-  --color-surface-elevated: #1b2026;
-  --color-surface-soft: #101419;
+  --font-body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-heading: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
-  --color-gold-primary: #bf862b;
-  --color-gold-highlight: #e2ae4d;
-  --color-gold-shadow: #7c5316;
+  /* Deep charcoal base — subtle cool tint, not teal-dominant */
+  --color-bg-primary: #040506;
+  --color-bg-secondary: #0a0b0d;
+  --color-surface: #121316;
+  --color-surface-elevated: #18191c;
+  --color-surface-soft: #0e0f12;
 
-  --color-cyan-primary: #2ab9ca;
-  --color-cyan-bright: #67d9e6;
-  --color-cyan-muted: #1a8f9f;
-  --color-accent-interactive: #2ab9ca;
-  --color-accent-interactive-soft: rgba(42, 185, 202, 0.26);
+  /* Gold / warm metallic — primary accent */
+  --color-gold-primary: #b8892e;
+  --color-gold-highlight: #e4bc5c;
+  --color-gold-shadow: #6a4a12;
+  --color-gold-muted: rgba(228, 188, 92, 0.14);
 
-  --color-text-primary: #e8eaed;
-  --color-text-secondary: #9ea5ae;
-  --color-border: #293139;
-  --color-border-soft: #20272f;
+  /* Cyan / teal — interactive & focus only */
+  --color-cyan-primary: #2a9aaa;
+  --color-cyan-bright: #5ec8d6;
+  --color-cyan-muted: #1f6f7a;
+  --color-accent-interactive: #3aadb8;
+  --color-accent-interactive-soft: rgba(58, 173, 184, 0.22);
 
-  --glow-cyan: 0 0 10px rgba(46, 211, 230, 0.45), 0 0 18px rgba(46, 211, 230, 0.15);
-  --glow-gold: 0 0 10px rgba(224, 168, 67, 0.35);
+  --color-text-primary: #eceef1;
+  --color-text-secondary: #969ca5;
+  --color-border: #2a2c31;
+  --color-border-soft: #1f2126;
+
+  --glow-cyan: 0 0 12px rgba(80, 200, 215, 0.28), 0 0 22px rgba(80, 200, 215, 0.08);
+  --glow-gold: 0 0 14px rgba(228, 188, 92, 0.32), 0 0 24px rgba(228, 188, 92, 0.1);
 
   --space-1: 4px;
   --space-2: 8px;
@@ -34,7 +40,7 @@
 }
 
 body {
-  background: linear-gradient(180deg, #06080a 0%, #07090c 52%, #050709 100%);
+  background: linear-gradient(180deg, #030405 0%, #060708 48%, #040506 100%);
   color: var(--color-text-primary);
   font-family: var(--font-body), "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   position: relative;
@@ -52,19 +58,19 @@ body::after {
 
 body::before {
   background:
-    linear-gradient(180deg, rgba(5, 6, 8, 0.68), rgba(5, 6, 8, 0.8)),
-    radial-gradient(58% 52% at 50% -5%, rgba(42, 185, 202, 0.03), transparent 58%),
-    radial-gradient(78% 54% at 80% 10%, rgba(226, 174, 77, 0.028), transparent 62%);
+    linear-gradient(180deg, rgba(4, 5, 6, 0.75), rgba(4, 5, 6, 0.88)),
+    radial-gradient(55% 48% at 50% -8%, rgba(228, 188, 92, 0.04), transparent 55%),
+    radial-gradient(70% 50% at 92% 6%, rgba(184, 137, 46, 0.03), transparent 58%);
 }
 
 body::after {
-  opacity: 0.14;
+  opacity: 0.09;
   background-image: url("/assets/backgrounds/bg_topo.png");
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
   mix-blend-mode: luminosity;
-  filter: saturate(0.18) contrast(1.07) brightness(0.64);
+  filter: saturate(0.12) contrast(1.05) brightness(0.52);
 }
 
 h1, h2, h3, h4 {
@@ -78,7 +84,7 @@ select:focus-visible,
 textarea:focus-visible,
 button:focus-visible,
 a:focus-visible {
-  outline: 2px solid var(--color-cyan-bright);
+  outline: 2px solid var(--color-accent-interactive);
   outline-offset: 2px;
   box-shadow: var(--glow-cyan);
 }

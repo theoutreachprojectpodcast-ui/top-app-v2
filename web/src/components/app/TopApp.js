@@ -5,7 +5,7 @@ import Container from "@/components/layout/Container";
 import Avatar from "@/components/shared/Avatar";
 import MembershipBadge from "@/components/shared/MembershipBadge";
 import IconWrap from "@/components/shared/IconWrap";
-import BrandMark from "@/components/BrandMark";
+import HeaderBrandLockup from "@/components/layout/HeaderBrandLockup";
 import AccountInfoCard from "@/features/profile/components/AccountInfoCard";
 import MembershipUpgradeCard from "@/features/profile/components/MembershipUpgradeCard";
 import NonprofitCard from "@/features/nonprofits/components/NonprofitCard";
@@ -139,35 +139,23 @@ export default function TopApp() {
     <main className={`topApp theme-${profile.theme}`}>
       <header className="topbar">
         <Container className="topbarInner">
-          <div className="topbarZone topbarLeft" aria-hidden="true">
-            <button className="btnSoft sponsorBtnGhost" type="button" tabIndex={-1}>
-              <AppIcon name="sponsors" />
-              Become a Sponsor
-            </button>
-            {!isLoggedIn && (
-              <button className="btnSoft sponsorBtnGhost" type="button" tabIndex={-1}>
-                <AppIcon name="profile" />
-                Sign In
-              </button>
-            )}
-          </div>
+          <div className="topbarZone topbarLeft" aria-hidden="true" />
           <div className="topbarZone topbarCenter">
-            <div className="brandBlock">
-              <BrandMark size="header" />
-              <div className="brandTag">Veteran First Responder Resource Network</div>
-            </div>
+            <HeaderBrandLockup />
           </div>
           <div className="topbarZone topbarRight">
-            <button className="btnSoft sponsorBtn" onClick={() => setNav("sponsors")} type="button">
-              <AppIcon name="sponsors" />
-              Become a Sponsor
-            </button>
-            {!isLoggedIn && (
-              <button className="btnSoft sponsorBtn" onClick={() => setOverlay("signin")} type="button">
-                <AppIcon name="profile" />
-                Sign In
+            <div className="topbarActionsCluster">
+              <button className="btnSoft sponsorBtn" onClick={() => setNav("sponsors")} type="button">
+                <AppIcon name="sponsors" />
+                Become a Sponsor
               </button>
-            )}
+              {!isLoggedIn && (
+                <button className="btnSoft sponsorBtn" onClick={() => setOverlay("signin")} type="button">
+                  <AppIcon name="profile" />
+                  Sign In
+                </button>
+              )}
+            </div>
           </div>
         </Container>
       </header>

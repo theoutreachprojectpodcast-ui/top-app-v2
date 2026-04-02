@@ -2,6 +2,8 @@
 
 Next.js web app for the resource network. Legacy static files (`index.html`, `app.js`) remain at the repo root for reference; **the product you run in development is `web/`**.
 
+**Source of truth:** [github.com/theoutreachprojectpodcast-ui/top-app-v2](https://github.com/theoutreachprojectpodcast-ui/top-app-v2). Ship changes with `git commit` and `git push origin main` (or your branch + PR) so GitHub always reflects the latest product.
+
 ## Development launch
 
 From the **repository root** (this folder):
