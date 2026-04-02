@@ -22,8 +22,8 @@ export default function BrandMark({
         <img
           src={logoSrc}
           alt={alt}
-          width={512}
-          height={512}
+          width={768}
+          height={768}
           className="brandMarkImg brandMarkImg--header"
           decoding="async"
           fetchPriority="high"
