@@ -5,9 +5,9 @@
   "packageManager": "pnpm@10.33.0",
   "scripts": {
     "prebuild": "node scripts/sync-public-assets.mjs",
-    "predev": "node scripts/sync-public-assets.mjs",
-    "dev": "next dev",
-    "dev:3001": "next dev -p 3001 -H 127.0.0.1",
+    "dev": "node scripts/sync-public-assets.mjs && next dev",
+    "dev:3001": "node scripts/sync-public-assets.mjs && next dev -p 3001 -H 127.0.0.1",
+    "cmd.dev": "node scripts/sync-public-assets.mjs && next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",

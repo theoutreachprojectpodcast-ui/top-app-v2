@@ -73,6 +73,10 @@ cp .env.local.example .env.local
 pnpm dev
 ```
 
+**Windows:** There must be a **space** between `pnpm` and `dev`. The command is **`pnpm dev`**, not `pnpm cmd.dev` (that looks for a non-existent command named `cmd.dev`). If you prefer the long form: **`pnpm run cmd.dev`** — we ship a script with that name as an alias.
+
+Or double-click **`dev.cmd`** in this folder (uses `pnpm run dev`).
+
 Open [http://localhost:3000](http://localhost:3000).
 
 ## Route Skeleton (Phase 2)
