@@ -2,9 +2,6 @@
   --font-body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-heading: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
-  /* Header logo: `screen` hides black matting on dark UIs when PNG has no alpha. Use `normal` if your PNG has transparency. */
-  --brand-logo-blend: screen;
-
   /* Deep charcoal base — subtle cool tint, not teal-dominant */
   --color-bg-primary: #040506;
   --color-bg-secondary: #0a0b0d;

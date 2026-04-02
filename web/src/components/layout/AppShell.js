@@ -1,6 +1,5 @@
 import Link from "next/link";
-import Container from "@/components/layout/Container";
-import HeaderBrandLockup from "@/components/layout/HeaderBrandLockup";
+import BrandMark from "@/components/BrandMark";
 import IconWrap from "@/components/shared/IconWrap";
 
 const SPONSOR_ICON = "M4 6h16v12H4z M4 10h16";
@@ -13,17 +12,20 @@ const NAV_ITEMS = [
 ];
 
 /**
- * Sub-routes shell: same three-zone header as the main app (1fr | auto | 1fr) for visual continuity.
- * Sponsor links home; full sponsor flow lives on the main experience.
+ * Sub-routes shell: logo is a bare img (client) above the bar row; no Container wrapper on header row.
  */
 export default function AppShell({ activeNav, children }) {
   return (
     <div className="appShell appShell--subpage">
       <header className="subpageTopbar">
-        <Container className="topbarInner">
+        <BrandMark size="header" />
+        <div className="siteContainer topbarInner">
           <div className="topbarZone topbarLeft" aria-hidden="true" />
           <div className="topbarZone topbarCenter">
-            <HeaderBrandLockup />
+            <div className="headerBrandCopy">
+              <p className="headerBrandTitle">The Outreach Project</p>
+              <p className="headerBrandSubtitle">Veteran First Responder Resource Network</p>
+            </div>
           </div>
           <div className="topbarZone topbarRight">
             <div className="topbarActionsCluster">
@@ -33,7 +35,7 @@ export default function AppShell({ activeNav, children }) {
               </Link>
             </div>
           </div>
-        </Container>
+        </div>
       </header>
 
       <main className="content content--subpage">{children}</main>

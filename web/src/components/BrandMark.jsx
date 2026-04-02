@@ -4,7 +4,7 @@ import Image from "next/image";
 
 const PROFILE_PX = 44;
 
-/** Committed under `web/public/` so it always exists without asset sync. Override with `NEXT_PUBLIC_BRAND_LOGO_PATH` or `src`. */
+/** Committed under `web/public/`. Override with `NEXT_PUBLIC_BRAND_LOGO_PATH` or `src`. */
 const DEFAULT_LOGO = "/brand-logo-full.png";
 
 export default function BrandMark({
@@ -16,19 +16,16 @@ export default function BrandMark({
   const logoSrc = src || (typeof process !== "undefined" && process.env.NEXT_PUBLIC_BRAND_LOGO_PATH) || DEFAULT_LOGO;
 
   if (size === "header") {
-    // Native <img> keeps true PNG alpha; next/image can add a wrapper/placeholder that reads as a dark box.
     return (
-      <div className={`brandMark brandMark-header ${className}`.trim()}>
-        <img
-          src={logoSrc}
-          alt={alt}
-          width={768}
-          height={768}
-          className="brandMarkImg brandMarkImg--header"
-          decoding="async"
-          fetchPriority="high"
-        />
-      </div>
+      <img
+        src={logoSrc}
+        alt={alt}
+        width={768}
+        height={768}
+        decoding="async"
+        fetchPriority="high"
+        className={`brandMarkImg brandMarkImg--header ${className}`.trim()}
+      />
     );
   }
 

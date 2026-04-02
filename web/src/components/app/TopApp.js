@@ -3,9 +3,9 @@
 import { useMemo, useState } from "react";
 import Container from "@/components/layout/Container";
 import Avatar from "@/components/shared/Avatar";
+import BrandMark from "@/components/BrandMark";
 import MembershipBadge from "@/components/shared/MembershipBadge";
 import IconWrap from "@/components/shared/IconWrap";
-import HeaderBrandLockup from "@/components/layout/HeaderBrandLockup";
 import AccountInfoCard from "@/features/profile/components/AccountInfoCard";
 import MembershipUpgradeCard from "@/features/profile/components/MembershipUpgradeCard";
 import NonprofitCard from "@/features/nonprofits/components/NonprofitCard";
@@ -138,10 +138,14 @@ export default function TopApp() {
   return (
     <main className={`topApp theme-${profile.theme}`}>
       <header className="topbar">
-        <Container className="topbarInner">
+        <BrandMark size="header" />
+        <div className="siteContainer topbarInner">
           <div className="topbarZone topbarLeft" aria-hidden="true" />
           <div className="topbarZone topbarCenter">
-            <HeaderBrandLockup />
+            <div className="headerBrandCopy">
+              <p className="headerBrandTitle">The Outreach Project</p>
+              <p className="headerBrandSubtitle">Veteran First Responder Resource Network</p>
+            </div>
           </div>
           <div className="topbarZone topbarRight">
             <div className="topbarActionsCluster">
@@ -157,7 +161,7 @@ export default function TopApp() {
               )}
             </div>
           </div>
-        </Container>
+        </div>
       </header>
       <div className="topbarOcclusion" aria-hidden="true" />
 

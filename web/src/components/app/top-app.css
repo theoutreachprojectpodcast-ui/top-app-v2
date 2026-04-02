@@ -44,7 +44,8 @@
   width: min(var(--content-max-width), calc(100% - var(--content-gutter)));
   margin: 0 auto;
 }
-.topbar .siteContainer {
+.topbar .siteContainer,
+.subpageTopbar .siteContainer {
   pointer-events: auto;
 }
 .topbarInner {
@@ -74,35 +75,6 @@
   justify-content: flex-end;
   gap: 10px;
 }
-.headerBrandLockup {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 0;
-  max-width: min(100%, 480px);
-  min-height: 0;
-}
-/* Fixed above header chrome + occlusion — no frame, no fill */
-.headerLogoFloat {
-  position: fixed;
-  top: calc(var(--header-floating-offset, 20px) + 4px + env(safe-area-inset-top, 0px));
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 97;
-  pointer-events: none;
-  background: none;
-  border: none;
-  box-shadow: none;
-  padding: 0;
-  margin: 0;
-  backdrop-filter: none;
-}
-.headerLogoFloat .brandMark-header {
-  background: none;
-  filter: none;
-}
 .headerBrandCopy {
   display: flex;
   flex-direction: column;
@@ -110,6 +82,8 @@
   gap: 8px;
   margin-top: clamp(118px, 24vw, 188px);
   padding: 0 8px;
+  max-width: min(100%, 480px);
+  text-align: center;
   pointer-events: auto;
 }
 .headerBrandTitle {
@@ -137,11 +111,6 @@
   position: relative;
   flex-shrink: 0;
 }
-.brandMark-header {
-  background: transparent;
-  box-shadow: none;
-  line-height: 0;
-}
 .brandMarkFrame {
   border-radius: 50%;
   padding: 3px;
@@ -166,10 +135,16 @@
   padding: 8%;
   background: transparent !important;
 }
-/* Header emblem: ~150% prior size, no frame. Blend mode removes solid black “matte” when PNG is RGB-only. */
-.brandMarkImg--header {
+/* Header: bare <img> only — fixed, no wrapper, no blend tricks (PNG alpha) */
+img.brandMarkImg--header {
+  position: fixed;
+  top: calc(var(--header-floating-offset, 20px) + 4px + env(safe-area-inset-top, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 97;
+  pointer-events: none;
   display: block;
-  width: auto !important;
+  width: auto;
   height: clamp(108px, 16.5vw, 156px);
   min-width: 72px;
   max-width: min(390px, 92vw);
@@ -183,9 +158,7 @@
   background: none !important;
   background-color: transparent !important;
   box-shadow: none;
-  mix-blend-mode: var(--brand-logo-blend, screen);
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
+  mix-blend-mode: normal;
 }
 .brandTag {
   font-size: 24px;
@@ -1331,7 +1304,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   .topbarLeft { display: none; }
   .topbarCenter { order: 1; }
   .topbarRight { order: 2; justify-content: center; }
-  .brandMarkImg--header {
+  img.brandMarkImg--header {
     height: clamp(84px, 33vw, 120px) !important;
     max-width: min(330px, 92vw) !important;
   }
