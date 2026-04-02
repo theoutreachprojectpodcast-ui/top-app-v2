@@ -16,17 +16,17 @@ export default function BrandMark({
   const logoSrc = src || (typeof process !== "undefined" && process.env.NEXT_PUBLIC_BRAND_LOGO_PATH) || DEFAULT_LOGO;
 
   if (size === "header") {
+    // Native <img> keeps true PNG alpha; next/image can add a wrapper/placeholder that reads as a dark box.
     return (
       <div className={`brandMark brandMark-header ${className}`.trim()}>
-        <Image
+        <img
           src={logoSrc}
           alt={alt}
           width={512}
           height={512}
-          priority
-          unoptimized
           className="brandMarkImg brandMarkImg--header"
-          sizes="(max-width: 760px) 180px, 240px"
+          decoding="async"
+          fetchPriority="high"
         />
       </div>
     );
