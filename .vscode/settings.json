@@ -1,0 +1,23 @@
+{
+  "terminal.integrated.profiles.windows": {
+    "PowerShell + pnpm (full repo)": {
+      "source": "PowerShell",
+      "args": [
+        "-NoExit",
+        "-Command",
+        ". '${workspaceFolder}/web/scripts/pnpm-powershell.ps1'"
+      ],
+      "icon": "terminal-powershell"
+    },
+    "PowerShell + pnpm (web is workspace root)": {
+      "source": "PowerShell",
+      "args": [
+        "-NoExit",
+        "-Command",
+        ". '${workspaceFolder}/scripts/pnpm-powershell.ps1'"
+      ],
+      "icon": "terminal-powershell"
+    }
+  },
+  "terminal.integrated.defaultProfile.windows": "PowerShell + pnpm (full repo)"
+}
