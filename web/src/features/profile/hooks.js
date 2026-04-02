@@ -1,9 +1,16 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { FAV_KEY, PROFILE_KEY } from "@/lib/constants";
+import { AUTH_KEY, FAV_KEY, PROFILE_KEY } from "@/lib/constants";
 import { loadJson, saveJson } from "@/lib/storage";
 import { defaultProfile } from "@/lib/utils";
+import {
+  createInitialProfile,
+  getMembershipMeta,
+  profileFromLegacy,
+  toLocalShape,
+  toLocalStorageProfile,
+} from "@/features/profile/mappers";
 import {
   fetchProfileByUserId,
   fetchSavedOrgEinList,
@@ -13,44 +20,15 @@ import {
   upsertProfileByUserId,
 } from "@/features/profile/api";
 
-function toLocalShape(profile) {
-  return {
-    firstName: profile.firstName || "",
-    lastName: profile.lastName || "",
-    email: profile.email || "",
-    membershipStatus: profile.membershipStatus || "supporter",
-    banner: profile.banner || "How can we assist you today?",
-    avatarUrl: profile.avatarUrl || "",
-    theme: profile.theme || "clean",
-    savedOrgEins: Array.isArray(profile.savedOrgEins) ? profile.savedOrgEins : [],
-  };
-}
-
-function profileFromLegacy(localProfile) {
-  const first = String(localProfile.firstName || "").trim();
-  const last = String(localProfile.lastName || "").trim();
-  const legacyName = String(localProfile.name || "").trim();
-  const isPlaceholderLegacyName = /^(welcome\s*back\.?|supporter|your\s+name)$/i.test(legacyName);
-  const [legacyFirst = "", ...legacyRest] = legacyName.split(/\s+/).filter(Boolean);
-  return {
-    firstName: first || (!isPlaceholderLegacyName && legacyFirst ? legacyFirst : ""),
-    lastName: last || (!isPlaceholderLegacyName ? legacyRest.join(" ") : ""),
-    email: String(localProfile.email || "").trim(),
-    membershipStatus: String(localProfile.membershipStatus || localProfile.tier || "supporter").toLowerCase(),
-    banner: String(localProfile.banner || "How can we assist you today?").trim(),
-    avatarUrl: String(localProfile.photoDataUrl || localProfile.avatarUrl || "").trim(),
-    theme: String(localProfile.theme || "clean").trim() || "clean",
-    savedOrgEins: [],
-  };
-}
-
 export function useProfileData(supabase) {
   const hydratedRef = useRef(false);
   const syncingRef = useRef(false);
   const [userId, setUserId] = useState("demo-user");
   const [loadingProfile, setLoadingProfile] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [profileError, setProfileError] = useState("");
-  const [profile, setProfile] = useState(() => profileFromLegacy(defaultProfile()));
+  const [profileSource, setProfileSource] = useState("local");
+  const [profile, setProfile] = useState(() => createInitialProfile());
   const [favoriteEins, setFavoriteEins] = useState([]);
   const [savedOrganizations, setSavedOrganizations] = useState([]);
 
@@ -62,7 +40,17 @@ export function useProfileData(supabase) {
   useEffect(() => {
     const legacy = loadJson(PROFILE_KEY, defaultProfile());
     const storedFavs = loadJson(FAV_KEY, []);
+    const authState = loadJson(AUTH_KEY, { isAuthenticated: false });
+    const authenticated = !!authState?.isAuthenticated;
     queueMicrotask(() => {
+      setIsAuthenticated(authenticated);
+      if (!authenticated) {
+        setProfile(createInitialProfile());
+        setFavoriteEins([]);
+        setLoadingProfile(false);
+        hydratedRef.current = true;
+        return;
+      }
       setProfile(profileFromLegacy(legacy || {}));
       setFavoriteEins(Array.isArray(storedFavs) ? storedFavs : []);
     });
@@ -77,6 +65,7 @@ export function useProfileData(supabase) {
           const dbProfile = await fetchProfileByUserId(supabase, userId);
           if (dbProfile) {
             setProfile((prev) => ({ ...prev, ...toLocalShape(dbProfile) }));
+            setProfileSource("supabase");
           }
           const dbEins = await fetchSavedOrgEinList(supabase, userId);
           if (dbEins.length) setFavoriteEins(dbEins);
@@ -88,22 +77,16 @@ export function useProfileData(supabase) {
         setLoadingProfile(false);
       }
     }
-    if (userId) bootstrap();
-  }, [supabase, userId]);
+    if (userId && isAuthenticated) bootstrap();
+    if (!isAuthenticated) {
+      hydratedRef.current = true;
+      setLoadingProfile(false);
+    }
+  }, [supabase, userId, isAuthenticated]);
 
   useEffect(() => {
     if (!hydratedRef.current) return;
-    saveJson(PROFILE_KEY, {
-      name: `${profile.firstName} ${profile.lastName}`.trim(),
-      email: profile.email,
-      tier: profile.membershipStatus === "member" ? "member" : "supporter",
-      membershipStatus: profile.membershipStatus,
-      firstName: profile.firstName,
-      lastName: profile.lastName,
-      banner: profile.banner,
-      photoDataUrl: profile.avatarUrl || "",
-      avatarUrl: profile.avatarUrl || "",
-    });
+    saveJson(PROFILE_KEY, toLocalStorageProfile(profile));
   }, [profile]);
 
   useEffect(() => {
@@ -112,8 +95,16 @@ export function useProfileData(supabase) {
   }, [favoriteEins]);
 
   useEffect(() => {
+    saveJson(AUTH_KEY, { isAuthenticated });
+  }, [isAuthenticated]);
+
+  useEffect(() => {
     async function loadSavedOrgCards() {
       if (!supabase) return;
+      if (!isAuthenticated) {
+        setSavedOrganizations([]);
+        return;
+      }
       try {
         const cards = await fetchSavedOrganizationsByEin(supabase, favoriteEins);
         setSavedOrganizations(cards);
@@ -122,11 +113,11 @@ export function useProfileData(supabase) {
       }
     }
     loadSavedOrgCards();
-  }, [supabase, favoriteEins]);
+  }, [supabase, favoriteEins, isAuthenticated]);
 
   async function persistProfile(next) {
     setProfile(next);
-    if (!supabase) return;
+    if (!supabase || !isAuthenticated) return;
     try {
       await upsertProfileByUserId(supabase, userId, next);
     } catch {
@@ -141,7 +132,7 @@ export function useProfileData(supabase) {
 
   async function setFavoriteEinList(nextEins) {
     setFavoriteEins(nextEins);
-    if (!supabase || syncingRef.current) return;
+    if (!supabase || syncingRef.current || !isAuthenticated) return;
     syncingRef.current = true;
     try {
       await replaceSavedOrgEinList(supabase, userId, nextEins);
@@ -170,6 +161,51 @@ export function useProfileData(supabase) {
     }
   }
 
+  async function createAccount({ firstName = "", lastName = "", email = "", password = "" } = {}) {
+    const safeFirst = String(firstName || "").trim();
+    const safeLast = String(lastName || "").trim();
+    const safeEmail = String(email || "").trim();
+    if (!safeFirst || !safeLast || !safeEmail || String(password || "").trim().length < 6) {
+      return { ok: false, message: "Please complete all fields. Password must be at least 6 characters." };
+    }
+    const next = {
+      ...createInitialProfile(),
+      firstName: safeFirst,
+      lastName: safeLast,
+      email: safeEmail,
+      membershipStatus: "supporter",
+      banner: "Welcome to The Outreach Project.",
+    };
+    setIsAuthenticated(true);
+    setProfile(next);
+    try {
+      if (supabase) await upsertProfileByUserId(supabase, userId, next);
+    } catch {
+      /* local-first demo flow */
+    }
+    return { ok: true };
+  }
+
+  async function signInWithEmail(email = "") {
+    const safeEmail = String(email || "").trim();
+    if (!safeEmail) return { ok: false, message: "Enter your email to continue." };
+    const next = {
+      ...profile,
+      email: safeEmail,
+      banner: profile.banner || "How can we assist you today?",
+    };
+    setIsAuthenticated(true);
+    setProfile(next);
+    return { ok: true };
+  }
+
+  function signOut() {
+    setIsAuthenticated(false);
+    setProfile(createInitialProfile());
+    setFavoriteEins([]);
+    setSavedOrganizations([]);
+  }
+
   function toggleFavoriteEin(ein) {
     const id = String(ein);
     const next = favoriteEins.includes(id) ? favoriteEins.filter((x) => x !== id) : [id, ...favoriteEins];
@@ -177,18 +213,22 @@ export function useProfileData(supabase) {
   }
 
   const fullName = useMemo(() => `${profile.firstName} ${profile.lastName}`.trim(), [profile.firstName, profile.lastName]);
-  const greetingName = fullName || "Josh Melching";
-  const isMember = profile.membershipStatus === "member";
+  const greetingName = fullName || "Supporter";
+  const membership = useMemo(() => getMembershipMeta(profile.membershipStatus), [profile.membershipStatus]);
+  const isMember = membership.isMember;
 
   return {
     userId,
+    isAuthenticated,
     loadingProfile,
     profileError,
+    profileSource,
     profile,
     setProfile,
     persistProfile,
     fullName,
     greetingName,
+    membership,
     isMember,
     favoriteEins,
     toggleFavoriteEin,
@@ -196,5 +236,8 @@ export function useProfileData(supabase) {
     savedOrganizations,
     setMembershipStatus,
     resetDemo,
+    createAccount,
+    signInWithEmail,
+    signOut,
   };
 }

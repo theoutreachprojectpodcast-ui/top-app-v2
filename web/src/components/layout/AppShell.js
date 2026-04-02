@@ -1,12 +1,14 @@
 import Link from "next/link";
 import BrandMark from "@/components/BrandMark";
 import IconWrap from "@/components/shared/IconWrap";
+import HeaderInner from "@/components/layout/HeaderInner";
 
 const SPONSOR_ICON = "M4 6h16v12H4z M4 10h16";
 
 const NAV_ITEMS = [
   { href: "/", key: "home", label: "Home" },
-  { href: "/trusted", key: "trusted", label: "Trusted" },
+  { href: "/trusted", key: "trusted", label: "Proven Allies" },
+  { href: "/community", key: "community", label: "Community" },
   { href: "/profile", key: "profile", label: "Profile" },
   { href: "/contact", key: "contact", label: "Contact" },
 ];
@@ -17,13 +19,12 @@ const NAV_ITEMS = [
 export default function AppShell({ activeNav, children }) {
   return (
     <div className="appShell appShell--subpage">
+      <BrandMark size="header" />
       <header className="subpageTopbar">
-        <BrandMark size="header" />
-        <div className="siteContainer topbarInner">
+        <HeaderInner className="topbarInner">
           <div className="topbarZone topbarLeft" aria-hidden="true" />
           <div className="topbarZone topbarCenter">
             <div className="headerBrandCopy">
-              <p className="headerBrandTitle">The Outreach Project</p>
               <p className="headerBrandSubtitle">Veteran First Responder Resource Network</p>
             </div>
           </div>
@@ -35,7 +36,7 @@ export default function AppShell({ activeNav, children }) {
               </Link>
             </div>
           </div>
-        </div>
+        </HeaderInner>
       </header>
 
       <main className="content content--subpage">{children}</main>

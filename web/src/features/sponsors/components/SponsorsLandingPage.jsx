@@ -1,6 +1,7 @@
 "use client";
 
 import { FEATURED_SPONSORS } from "@/features/sponsors/data/featuredSponsors";
+import FeaturedSponsorsSection from "@/features/sponsors/components/FeaturedSponsorsSection";
 
 function ChannelChip({ icon, label }) {
   return (
@@ -27,21 +28,7 @@ export default function SponsorsLandingPage({ onExploreOptions }) {
         </div>
       </section>
 
-      <section className="card sponsorSection">
-        <h3>Featured sponsors</h3>
-        <p className="sponsorSectionLead">Mission-aligned partners helping expand reach and credibility.</p>
-        <div className="sponsorFeaturedGrid">
-          {FEATURED_SPONSORS.map((s) => (
-            <div key={s.id} className="sponsorFeaturedCard">
-              <div className="sponsorFeaturedMark" aria-hidden="true">{s.initials}</div>
-              <div className="sponsorFeaturedBody">
-                <strong>{s.name}</strong>
-                <span>{s.tag}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+      <FeaturedSponsorsSection sponsors={FEATURED_SPONSORS} />
 
       <section className="card sponsorSection">
         <h3>Why sponsor</h3>

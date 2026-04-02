@@ -40,7 +40,7 @@ const PLACEMENT_OPTIONS = [
   "All of the above",
 ];
 
-export default function SponsorApplicationForm({ supabase, selectedTierId, onSelectTier }) {
+export default function SponsorApplicationForm({ supabase, selectedTierId, onSelectTier, variant = "page" }) {
   const [form, setForm] = useState(INITIAL_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [status, setStatus] = useState("");
@@ -133,7 +133,7 @@ export default function SponsorApplicationForm({ supabase, selectedTierId, onSel
   }
 
   return (
-    <section className="card sponsorSection">
+    <section className={variant === "modal" ? "sponsorSection" : "card sponsorSection"}>
       <h3>Sponsor Questionnaire & Application</h3>
       <p>Complete this form to reserve your sponsorship tier and start onboarding.</p>
 
@@ -163,24 +163,26 @@ export default function SponsorApplicationForm({ supabase, selectedTierId, onSel
 
         <section className="applySection">
           <h4>Section 3 - Sponsorship Interest</h4>
-          <div className="applyOptionGroup">
-            <label className="applyOption">
+          <div className="dsChoiceGroup">
+            <label className="dsChoice dsChoice--radio">
               <input
                 type="radio"
                 name="family"
                 checked={tierFamily === SPONSOR_FAMILY.SUPPORT}
                 onChange={() => setTier("support-1000")}
               />
-              <span>Support Sponsor tiers ($1,000 / $2,500 / $5,000)</span>
+              <span className="dsChoice__control" />
+              <span className="dsChoice__text">Support Sponsor tiers ($1,000 / $2,500 / $5,000)</span>
             </label>
-            <label className="applyOption">
+            <label className="dsChoice dsChoice--radio">
               <input
                 type="radio"
                 name="family"
                 checked={tierFamily === SPONSOR_FAMILY.INTEGRATED}
                 onChange={() => setTier("integrated-15000-basic")}
               />
-              <span>Integrated Sponsorship tiers ($15,000 / $20,000 / $25,000)</span>
+              <span className="dsChoice__control" />
+              <span className="dsChoice__text">Integrated Sponsorship tiers ($15,000 / $20,000 / $25,000)</span>
             </label>
           </div>
           <select value={tier.id} onChange={(e) => setTier(e.target.value)}>
@@ -197,15 +199,16 @@ export default function SponsorApplicationForm({ supabase, selectedTierId, onSel
           <textarea rows={3} placeholder="Why do you want to sponsor The Outreach Project?" value={form.sponsor_interest_notes} onChange={(e) => setForm((f) => ({ ...f, sponsor_interest_notes: e.target.value }))} />
           <textarea rows={2} placeholder="What audience are you hoping to reach?" value={form.audience_goals} onChange={(e) => setForm((f) => ({ ...f, audience_goals: e.target.value }))} />
           <textarea rows={2} placeholder="What products, services, or mission should be highlighted?" value={form.highlights_requested} onChange={(e) => setForm((f) => ({ ...f, highlights_requested: e.target.value }))} />
-          <div className="applyCheckList">
+          <div className="dsChoiceGroup">
             {PLACEMENT_OPTIONS.map((option) => (
-              <label className="applyCheck" key={option}>
+              <label className="dsChoice dsChoice--checkbox" key={option}>
                 <input
                   type="checkbox"
                   checked={(form.placements_requested || []).includes(option)}
                   onChange={(e) => updatePlacement(option, e.target.checked)}
                 />
-                <span>{option}</span>
+                <span className="dsChoice__control" />
+                <span className="dsChoice__text">{option}</span>
               </label>
             ))}
           </div>
@@ -226,14 +229,16 @@ export default function SponsorApplicationForm({ supabase, selectedTierId, onSel
 
         <section className="applySection">
           <h4>Section 6 - Agreement / Confirmation</h4>
-          <div className="applyCheckList">
-            <label className="applyCheck">
+          <div className="dsChoiceGroup">
+            <label className="dsChoice dsChoice--checkbox">
               <input type="checkbox" checked={form.agreed_to_terms} onChange={(e) => setForm((f) => ({ ...f, agreed_to_terms: e.target.checked }))} />
-              <span>We align with The Outreach Project values and understand sponsorship is subject to review and onboarding.</span>
+              <span className="dsChoice__control" />
+              <span className="dsChoice__text">We align with The Outreach Project values and understand sponsorship is subject to review and onboarding.</span>
             </label>
-            <label className="applyCheck">
+            <label className="dsChoice dsChoice--checkbox">
               <input type="checkbox" checked={form.agreed_demo_payment} onChange={(e) => setForm((f) => ({ ...f, agreed_demo_payment: e.target.checked }))} />
-              <span>We acknowledge this is a demo payment flow placeholder until live billing is enabled.</span>
+              <span className="dsChoice__control" />
+              <span className="dsChoice__text">We acknowledge this is a demo payment flow placeholder until live billing is enabled.</span>
             </label>
           </div>
         </section>

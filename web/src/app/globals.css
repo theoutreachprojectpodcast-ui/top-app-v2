@@ -88,30 +88,47 @@ a {
   line-height: 1.5;
 }
 
-.bottomNav {
+.appShell--subpage .bottomNav {
   position: fixed;
-  left: 0;
-  right: 0;
+  left: 50%;
+  transform: translateX(-50%);
   bottom: 0;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  width: min(1200px, calc(100% - 48px));
+  display: flex;
   gap: 8px;
   background: var(--color-bg-secondary);
   border-top: 1px solid var(--color-border);
-  padding: 10px 12px 14px;
+  padding: 10px 24px 14px;
+  justify-content: center;
 }
 
-.navItem {
+.appShell--subpage .navItem {
   text-align: center;
   font-size: 13px;
   font-weight: 600;
   color: var(--color-text-secondary);
   border-radius: 999px;
   padding: 8px 10px;
+  min-width: 116px;
+  white-space: nowrap;
 }
 
-.navItem.isActive {
+.appShell--subpage .navItem.isActive {
   color: var(--color-gold-highlight);
   background: var(--color-gold-muted);
   border: 1px solid rgba(228, 188, 92, 0.22);
+}
+
+@media (max-width: 760px) {
+  .appShell--subpage .bottomNav {
+    width: calc(100% - 24px);
+    justify-content: space-between;
+  }
+
+  .appShell--subpage .navItem {
+    min-width: 0;
+    flex: 1 1 0;
+    font-size: 12px;
+    padding: 8px 6px;
+  }
 }

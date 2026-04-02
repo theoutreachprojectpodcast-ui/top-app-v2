@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import Container from "@/components/layout/Container";
+import { useEffect, useMemo, useState } from "react";
+import HeaderInner from "@/components/layout/HeaderInner";
+import FooterInner from "@/components/layout/FooterInner";
 import Avatar from "@/components/shared/Avatar";
 import BrandMark from "@/components/BrandMark";
-import MembershipBadge from "@/components/shared/MembershipBadge";
 import IconWrap from "@/components/shared/IconWrap";
 import AccountInfoCard from "@/features/profile/components/AccountInfoCard";
 import MembershipUpgradeCard from "@/features/profile/components/MembershipUpgradeCard";
@@ -16,6 +16,7 @@ import SponsorHub from "@/features/sponsors/components/SponsorHub";
 import ProfileHeader from "@/features/profile/components/ProfileHeader";
 import ProfileQuickStats from "@/features/profile/components/ProfileQuickStats";
 import SavedOrganizationsList from "@/features/profile/components/SavedOrganizationsList";
+import ProfileSummaryPanel from "@/features/profile/components/ProfileSummaryPanel";
 import { useDirectorySearch } from "@/hooks/useDirectorySearch";
 import { useProfileData } from "@/features/profile/hooks";
 import { useTrustedResources } from "@/hooks/useTrustedResources";
@@ -36,26 +37,43 @@ function AppIcon({ name }) {
   return <IconWrap path={icons[name] || icons.search} />;
 }
 
-export default function TopApp() {
+export default function TopApp({ initialNav = "home" }) {
   const sb = useMemo(() => getSupabaseClient(), []);
-  const [nav, setNav] = useState("home");
+  const [nav, setNav] = useState(initialNav);
   const [overlay, setOverlay] = useState(null);
   const [editDraft, setEditDraft] = useState(null);
+  const [authMode, setAuthMode] = useState("signin");
+  const [authDraft, setAuthDraft] = useState({ firstName: "", lastName: "", email: "", password: "" });
+  const [authError, setAuthError] = useState("");
+  const [authStatus, setAuthStatus] = useState("");
+  const [contactDraft, setContactDraft] = useState({ firstName: "", lastName: "", email: "", phone: "", message: "" });
+  const [contactStatus, setContactStatus] = useState("");
+  const [contactError, setContactError] = useState("");
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [nav]);
 
   const {
     userId,
+    isAuthenticated,
     loadingProfile,
     profileError,
+    profileSource,
     profile,
     persistProfile,
     fullName,
     greetingName,
+    membership,
     isMember,
     favoriteEins,
     toggleFavoriteEin,
     savedOrganizations,
     setMembershipStatus,
     resetDemo,
+    createAccount,
+    signInWithEmail,
+    signOut,
   } = useProfileData(sb);
   const { filters, setFilters, results, status, meta, page, canGoNext, runSearch, clearSearch } = useDirectorySearch(sb);
   const { trusted, trustedStatus, loadTrusted } = useTrustedResources(sb);
@@ -109,41 +127,60 @@ export default function TopApp() {
   }
 
   function openSponsors() {
-    if (!isMember) return setOverlay("upgrade");
     setNav("sponsors");
   }
 
   function openCommunity() {
-    if (!isMember) return setOverlay("upgrade");
     setNav("community");
   }
-
-  const membershipLabel = profile.membershipStatus === "member"
-    ? "Member Active"
-    : profile.membershipStatus === "demo"
-      ? "Demo Member"
-      : "Supporter Access";
-  const membershipHint = isMember
-    ? "You have full access to member-only areas and saved organizations."
-    : profile.membershipStatus === "demo"
-      ? "Demo mode enabled. Upgrade to activate full member benefits."
-      : "Upgrade to unlock member-only sponsors, community access, and saved resources.";
   const fallbackSavedOrganizations = useMemo(() => {
     const byEin = new Map([...results, ...trusted].map((r) => [String(rowEin(r)), r]));
     return favoriteEins.map((ein) => byEin.get(String(ein)) || { ein, orgName: `Saved organization (${ein})`, city: "", state: "" });
   }, [favoriteEins, results, trusted]);
   const savedOrgsToRender = savedOrganizations.length ? savedOrganizations : fallbackSavedOrganizations;
-  const isLoggedIn = !!String(profile.email || "").trim();
+  const isLoggedIn = isAuthenticated;
+
+  async function onAuthSubmit() {
+    setAuthError("");
+    setAuthStatus("");
+    const result = authMode === "signup"
+      ? await createAccount(authDraft)
+      : await signInWithEmail(authDraft.email);
+    if (!result?.ok) {
+      setAuthError(result?.message || "Unable to continue right now.");
+      return;
+    }
+    setAuthStatus(authMode === "signup" ? "Account created. Welcome in." : "Signed in successfully.");
+    setOverlay(null);
+  }
+
+  function onContactSubmit(e) {
+    e.preventDefault();
+    setContactError("");
+    setContactStatus("");
+    const required = ["firstName", "lastName", "email", "message"];
+    for (const field of required) {
+      if (!String(contactDraft[field] || "").trim()) {
+        setContactError("Please complete all required fields.");
+        return;
+      }
+    }
+    const subject = encodeURIComponent(`Contact Request — ${contactDraft.firstName} ${contactDraft.lastName}`);
+    const body = encodeURIComponent(
+      `Name: ${contactDraft.firstName} ${contactDraft.lastName}\nEmail: ${contactDraft.email}\nPhone: ${contactDraft.phone || "Not provided"}\n\nMessage:\n${contactDraft.message}`
+    );
+    window.location.href = `mailto:hello@theoutreach-project.com?subject=${subject}&body=${body}`;
+    setContactStatus("Your email draft is ready to send.");
+  }
 
   return (
     <main className={`topApp theme-${profile.theme}`}>
+      <BrandMark size="header" />
       <header className="topbar">
-        <BrandMark size="header" />
-        <div className="siteContainer topbarInner">
+        <HeaderInner className="topbarInner">
           <div className="topbarZone topbarLeft" aria-hidden="true" />
           <div className="topbarZone topbarCenter">
             <div className="headerBrandCopy">
-              <p className="headerBrandTitle">The Outreach Project</p>
               <p className="headerBrandSubtitle">Veteran First Responder Resource Network</p>
             </div>
           </div>
@@ -154,14 +191,14 @@ export default function TopApp() {
                 Become a Sponsor
               </button>
               {!isLoggedIn && (
-                <button className="btnSoft sponsorBtn" onClick={() => setOverlay("signin")} type="button">
+                <button className="btnSoft sponsorBtn" onClick={() => { setAuthMode("signin"); setOverlay("signin"); }} type="button">
                   <AppIcon name="profile" />
                   Sign In
                 </button>
               )}
             </div>
           </div>
-        </div>
+        </HeaderInner>
       </header>
       <div className="topbarOcclusion" aria-hidden="true" />
 
@@ -171,38 +208,57 @@ export default function TopApp() {
             <>
               <div className="card cardHero">
                 <div className="row space">
-                  <div className="welcomePanel">
-                    <Avatar src={profile.avatarUrl || "/assets/top_profile_circle_1024.png"} alt="Profile avatar" />
-                    <div className="welcomeCopy">
-                      <p className="introTagline">Welcome back</p>
-                      <h2>{greetingName}</h2>
-                      <MembershipBadge isMember={isMember} icon={<AppIcon name="profile" />} label={membershipLabel} />
-                      <p>{membershipHint}</p>
-                      <p>{favoriteEins.length} saved organizations</p>
+                  {isAuthenticated ? (
+                    <ProfileSummaryPanel
+                      avatarSrc={profile.avatarUrl}
+                      greetingName={greetingName}
+                      isMember={isMember}
+                      membershipLabel={membership.label}
+                      membershipHint={membership.hint}
+                      savedCount={favoriteEins.length}
+                      icon={<AppIcon name="profile" />}
+                    />
+                  ) : (
+                    <div className="guestWelcomePanel">
+                      <p className="introTagline">Welcome</p>
+                      <h2>Find trusted support, faster.</h2>
+                      <p>Explore nonprofits, proven allies, sponsors, and community stories. Create an account to save resources and personalize your journey.</p>
                     </div>
-                  </div>
+                  )}
                 </div>
                 <div className="row wrap">
                   <button className="btnSoft" type="button" onClick={() => { setNav("trusted"); loadTrusted(true); }}>
                     <AppIcon name="trusted" />
                     Open Proven Allies
                   </button>
-                  <button className="btnSoft" type="button" onClick={openEdit}>
-                    <AppIcon name="profile" />
-                    Edit Profile
-                  </button>
-                  {!isMember && (
+                  {isAuthenticated ? (
+                    <button className="btnSoft" type="button" onClick={openEdit}>
+                      <AppIcon name="profile" />
+                      Edit Profile
+                    </button>
+                  ) : (
+                    <button className="btnSoft" type="button" onClick={() => { setAuthMode("signup"); setOverlay("signin"); }}>
+                      <AppIcon name="profile" />
+                      Create Account
+                    </button>
+                  )}
+                  {!isMember && isAuthenticated && (
                     <button className="btnPrimary" type="button" onClick={() => setOverlay("upgrade")}>
                       Become a Member
+                    </button>
+                  )}
+                  {!isAuthenticated && (
+                    <button className="btnPrimary" type="button" onClick={() => { setAuthMode("signup"); setOverlay("signin"); }}>
+                      Become a Supporter
                     </button>
                   )}
                 </div>
               </div>
 
               <div className="grid4">
-                <button className="card action" onClick={openSponsors} type="button"><AppIcon name="sponsors" />Sponsors {!isMember ? "🔒" : ""}</button>
+                <button className="card action" onClick={openSponsors} type="button"><AppIcon name="sponsors" />Sponsors</button>
                 <button className="card action" onClick={() => { setNav("trusted"); loadTrusted(true); }} type="button"><AppIcon name="trusted" />Proven Allies</button>
-                <button className="card action" onClick={openCommunity} type="button"><AppIcon name="community" />Community {!isMember ? "🔒" : ""}</button>
+                <button className="card action" onClick={openCommunity} type="button"><AppIcon name="community" />Community</button>
                 <button className="card action" onClick={() => window.open(PODCAST_URL, "_blank", "noopener")} type="button"><AppIcon name="podcast" />Podcast</button>
               </div>
 
@@ -273,7 +329,14 @@ export default function TopApp() {
               isMember={isMember}
               fullName={fullName}
               profile={profile}
-              onRequestUpgrade={() => setOverlay("upgrade")}
+              onRequestUpgrade={() => {
+                if (!isAuthenticated) {
+                  setAuthMode("signup");
+                  setOverlay("signin");
+                  return;
+                }
+                setOverlay("upgrade");
+              }}
             />
           )}
         </section>
@@ -321,12 +384,23 @@ export default function TopApp() {
 
       {nav === "profile" && (
         <section className="shell">
+          {!isAuthenticated ? (
+            <div className="card">
+              <h3><AppIcon name="profile" />Create your account</h3>
+              <p>Set up your profile to save organizations, personalize support pathways, and unlock member-ready features.</p>
+              <div className="row wrap">
+                <button className="btnPrimary" type="button" onClick={() => { setAuthMode("signup"); setOverlay("signin"); }}>Start onboarding</button>
+                <button className="btnSoft" type="button" onClick={() => setNav("home")}>Back to home</button>
+              </div>
+            </div>
+          ) : (
+            <>
           <ProfileHeader
             avatarSrc={profile.avatarUrl || "/assets/top_profile_circle_1024.png"}
-            fullName={fullName || "Josh Melching"}
+            fullName={fullName || "Supporter"}
             email={profile.email}
             bio={profile.banner}
-            membershipLabel={membershipLabel}
+            membershipLabel={membership.label}
             isMember={isMember}
             icon={<AppIcon name="profile" />}
             onEdit={openEdit}
@@ -343,15 +417,18 @@ export default function TopApp() {
             </div>
           )}
 
-          <ProfileQuickStats savedCount={favoriteEins.length} membershipLabel={membershipLabel} />
+          <ProfileQuickStats savedCount={favoriteEins.length} membershipLabel={membership.label} />
           <AccountInfoCard
             firstName={profile.firstName}
             lastName={profile.lastName}
             email={profile.email}
             userId={userId}
+            profileSource={profileSource}
           />
           <MembershipUpgradeCard
             isMember={isMember}
+            membershipLabel={membership.label}
+            membershipHint={membership.hint}
             onUpgrade={() => setOverlay("upgrade")}
           />
           <SavedOrganizationsList organizations={savedOrgsToRender} onToggleFavorite={toggleFavoriteEin} isMember={isMember} />
@@ -360,8 +437,11 @@ export default function TopApp() {
               <button className="btnSoft" onClick={() => setMembershipStatus("supporter")} type="button">Set Supporter</button>
               <button className="btnSoft" onClick={resetDemo} type="button">Reset Demo</button>
               <button className="btnSoft" onClick={() => setMembershipStatus("member")} type="button">Set Member</button>
+              <button className="btnSoft" onClick={signOut} type="button">Sign Out</button>
             </div>
           </div>
+            </>
+          )}
         </section>
       )}
 
@@ -373,29 +453,47 @@ export default function TopApp() {
             <p>In the U.S., call or text 988 for the Suicide & Crisis Lifeline.</p>
             <a className="btnPrimary" href="mailto:hello@theoutreach-project.com?subject=Need%20Help%20Finding%20Support">Email The Team</a>
           </div>
+          <div className="card">
+            <h3>Send us a message</h3>
+            <form className="contactForm" onSubmit={onContactSubmit}>
+              <div className="form">
+                <input placeholder="First Name *" value={contactDraft.firstName} onChange={(e) => setContactDraft((d) => ({ ...d, firstName: e.target.value }))} />
+                <input placeholder="Last Name *" value={contactDraft.lastName} onChange={(e) => setContactDraft((d) => ({ ...d, lastName: e.target.value }))} />
+                <input placeholder="Email *" type="email" value={contactDraft.email} onChange={(e) => setContactDraft((d) => ({ ...d, email: e.target.value }))} />
+                <input placeholder="Phone Number" value={contactDraft.phone} onChange={(e) => setContactDraft((d) => ({ ...d, phone: e.target.value }))} />
+              </div>
+              <textarea rows={6} placeholder="Message *" value={contactDraft.message} onChange={(e) => setContactDraft((d) => ({ ...d, message: e.target.value }))} />
+              {contactError ? <p className="applyError">{contactError}</p> : null}
+              {contactStatus ? <p className="applyStatus">{contactStatus}</p> : null}
+              <div className="row wrap">
+                <button className="btnPrimary" type="submit">Submit Message</button>
+              </div>
+            </form>
+          </div>
         </section>
       )}
 
       <footer className="siteFooter">
-        <Container className="footerInner">
+        <FooterInner className="footerInner">
           <div>
             <div className="brandName">THE OUTREACH PROJECT</div>
             <p className="footerNote">Mission-first resource navigation for veterans, first responders, and supporters.</p>
           </div>
           <p className="footerNote">Trust-driven support, built for clarity under pressure.</p>
-        </Container>
+        </FooterInner>
       </footer>
 
       <div className="footerDockBackdrop" aria-hidden="true" />
       <div className="footerDock">
-        <Container className="footerNavInner">
+        <FooterInner className="footerNavInner">
           <nav className="bottomNav" aria-label="Primary navigation">
             <button className={`navItem ${nav === "home" ? "isActive" : ""}`} onClick={() => setNav("home")} type="button">Home</button>
             <button className={`navItem ${nav === "trusted" ? "isActive" : ""}`} onClick={() => { setNav("trusted"); if (!trusted.length) loadTrusted(true); }} type="button">Proven Allies</button>
+            <button className={`navItem ${nav === "community" ? "isActive" : ""}`} onClick={() => setNav("community")} type="button">Community</button>
             <button className={`navItem ${nav === "profile" ? "isActive" : ""}`} onClick={() => setNav("profile")} type="button">Profile</button>
             <button className={`navItem ${nav === "contact" ? "isActive" : ""}`} onClick={() => setNav("contact")} type="button">Contact</button>
           </nav>
-        </Container>
+        </FooterInner>
       </div>
 
       {overlay === "upgrade" && (
@@ -437,10 +535,25 @@ export default function TopApp() {
       {overlay === "signin" && (
         <div className="modalOverlay" onClick={() => setOverlay(null)}>
           <div className="modalCard" onClick={(e) => e.stopPropagation()}>
-            <h3>Sign In</h3>
-            <p>Authentication is coming next. For now, add your email in Edit Profile to personalize this demo account.</p>
+            <h3>{authMode === "signup" ? "Create account" : "Sign in"}</h3>
+            <p>{authMode === "signup" ? "Start with a simple supporter account. You can upgrade to Member anytime." : "Use your email to continue in this demo experience."}</p>
+            {authMode === "signup" && (
+              <>
+                <input value={authDraft.firstName} onChange={(e) => setAuthDraft((d) => ({ ...d, firstName: e.target.value }))} placeholder="First Name" />
+                <input value={authDraft.lastName} onChange={(e) => setAuthDraft((d) => ({ ...d, lastName: e.target.value }))} placeholder="Last Name" />
+              </>
+            )}
+            <input value={authDraft.email} onChange={(e) => setAuthDraft((d) => ({ ...d, email: e.target.value }))} placeholder="Email" type="email" />
+            {authMode === "signup" && (
+              <input value={authDraft.password} onChange={(e) => setAuthDraft((d) => ({ ...d, password: e.target.value }))} placeholder="Password" type="password" />
+            )}
+            {authError ? <p className="applyError">{authError}</p> : null}
+            {authStatus ? <p className="applyStatus">{authStatus}</p> : null}
             <div className="row">
-              <button className="btnPrimary" onClick={() => { setNav("profile"); setOverlay("edit"); }} type="button">Open Edit Profile</button>
+              <button className="btnPrimary" onClick={onAuthSubmit} type="button">{authMode === "signup" ? "Create Account" : "Sign In"}</button>
+              <button className="btnSoft" onClick={() => setAuthMode((m) => (m === "signup" ? "signin" : "signup"))} type="button">
+                {authMode === "signup" ? "I already have an account" : "Create an account"}
+              </button>
               <button className="btnSoft" onClick={() => setOverlay(null)} type="button">Close</button>
             </div>
           </div>
