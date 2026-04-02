@@ -97,7 +97,7 @@
   box-shadow: none;
   padding: 0;
   margin: 0;
-  isolation: isolate;
+  backdrop-filter: none;
 }
 .headerLogoFloat .brandMark-header {
   background: none;
@@ -166,7 +166,7 @@
   padding: 8%;
   background: transparent !important;
 }
-/* Header emblem: ~150% prior size, no frame — true alpha composites over page */
+/* Header emblem: ~150% prior size, no frame. Blend mode removes solid black “matte” when PNG is RGB-only. */
 .brandMarkImg--header {
   display: block;
   width: auto !important;
@@ -183,8 +183,7 @@
   background: none !important;
   background-color: transparent !important;
   box-shadow: none;
-  filter: none;
-  mix-blend-mode: normal;
+  mix-blend-mode: var(--brand-logo-blend, screen);
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
 }
