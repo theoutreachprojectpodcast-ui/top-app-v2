@@ -25,5 +25,6 @@ Open **http://localhost:3000** (dev server uses `--hostname localhost --port 300
 
 ### Troubleshooting
 
-- **Port 3000 in use:** stop the other process or run `pnpm --filter web dev:alt`.
+- **Port 3000 in use:** Next exits with “Another next dev server is already running.” Stop the old PID (message shows `taskkill /PID … /F` on Windows) or run `pnpm --filter web dev:alt`.
+- **Asset sync warnings:** If `[sync-public-assets] copy failed` appears, something is locking `web/public/assets` (often **OneDrive**). The dev server still starts; fix locks or pause sync for that folder. Production builds on CI still fail the copy if `CI=true` (set by most hosts).
 - **pnpm “Ignored build scripts” (e.g. sharp):** run `pnpm approve-builds` in the repo root if image optimization fails after install.

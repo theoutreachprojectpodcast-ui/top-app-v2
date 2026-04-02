@@ -14,6 +14,19 @@ try {
   process.exit(0);
 }
 
-await fs.mkdir(path.join(webRoot, "public"), { recursive: true });
-await fs.cp(src, dest, { recursive: true, force: true });
-console.log("[sync-public-assets] copied ../assets -> public/assets");
+try {
+  await fs.mkdir(path.join(webRoot, "public"), { recursive: true });
+  await fs.cp(src, dest, { recursive: true, force: true });
+  console.log("[sync-public-assets] copied ../assets -> public/assets");
+} catch (err) {
+  const msg = err instanceof Error ? err.message : String(err);
+  const strict = process.env.CI === "true" || process.env.STRICT_ASSET_SYNC === "1";
+  console.error("[sync-public-assets] copy failed:", msg);
+  if (strict) {
+    process.exit(1);
+  }
+  console.warn("[sync-public-assets] continuing (set CI=true or STRICT_ASSET_SYNC=1 to fail the build)");
+  console.warn("[sync-public-assets] tip: close apps locking web/public; OneDrive can block copies");
+}
+
+process.exit(0);
