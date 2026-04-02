@@ -131,11 +131,12 @@
 /* Header: full emblem, no circular frame — PNG alpha preserved */
 .brandMarkImg--header {
   display: block;
-  width: auto;
+  width: auto !important;
   height: clamp(72px, 11vw, 104px);
+  min-width: 48px;
   max-width: min(260px, 78vw);
   object-fit: contain;
-  object-position: center bottom;
+  object-position: center center;
   padding: 0;
   background: transparent !important;
 }
