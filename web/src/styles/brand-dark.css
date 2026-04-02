@@ -37,10 +37,13 @@
   --space-5: 20px;
   --space-6: 24px;
   --space-8: 32px;
+
+  /* Full-bleed topo texture (synced from repo assets/backgrounds/) */
+  --bg-texture-image: url("/assets/backgrounds/bg_topographic_brand.png");
 }
 
 body {
-  background: linear-gradient(180deg, #030405 0%, #060708 48%, #040506 100%);
+  background: linear-gradient(180deg, #080808 0%, #0c0c0c 45%, #0a0a0a 100%);
   color: var(--color-text-primary);
   font-family: var(--font-body), "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   position: relative;
@@ -57,20 +60,21 @@ body::after {
 }
 
 body::before {
+  /* Darken + soften so busy contour lines don’t fight UI (charcoal base ~#0A0A0A) */
   background:
-    linear-gradient(180deg, rgba(4, 5, 6, 0.75), rgba(4, 5, 6, 0.88)),
-    radial-gradient(55% 48% at 50% -8%, rgba(228, 188, 92, 0.04), transparent 55%),
-    radial-gradient(70% 50% at 92% 6%, rgba(184, 137, 46, 0.03), transparent 58%);
+    linear-gradient(180deg, rgba(8, 8, 8, 0.82), rgba(10, 10, 10, 0.92)),
+    radial-gradient(55% 52% at 50% -6%, rgba(228, 188, 92, 0.035), transparent 56%),
+    radial-gradient(72% 48% at 88% 8%, rgba(184, 137, 46, 0.025), transparent 58%);
 }
 
 body::after {
-  opacity: 0.09;
-  background-image: url("/assets/backgrounds/bg_topo.png");
+  opacity: 0.16;
+  background-image: var(--bg-texture-image);
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
   mix-blend-mode: luminosity;
-  filter: saturate(0.12) contrast(1.05) brightness(0.52);
+  filter: saturate(0.18) contrast(1.06) brightness(0.5);
 }
 
 h1, h2, h3, h4 {

@@ -1,0 +1,1 @@
+Background texture (bg_topographic_brand.png): derived from an Unsplash photograph by jonakoh (filename reference: jonakoh-unsplash). Per Unsplash License: https://unsplash.com/license
