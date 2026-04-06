@@ -14,14 +14,19 @@ import ProvenAllyApplicationForm from "@/features/proven-allies/components/Prove
 import CommunityPage from "@/features/community/components/CommunityPage";
 import SponsorHub from "@/features/sponsors/components/SponsorHub";
 import ProfileHeader from "@/features/profile/components/ProfileHeader";
+import ProfileIdentitySection from "@/features/profile/components/ProfileIdentitySection";
 import ProfileQuickStats from "@/features/profile/components/ProfileQuickStats";
 import SavedOrganizationsList from "@/features/profile/components/SavedOrganizationsList";
 import ProfileSummaryPanel from "@/features/profile/components/ProfileSummaryPanel";
 import { useDirectorySearch } from "@/hooks/useDirectorySearch";
 import { useProfileData } from "@/features/profile/hooks";
 import { useTrustedResources } from "@/hooks/useTrustedResources";
+import DirectoryCategoryQuickPick from "@/features/directory/components/DirectoryCategoryQuickPick";
+import MembershipAtAGlance from "@/features/membership/components/MembershipAtAGlance";
+import ColorSchemeToggle from "@/components/app/ColorSchemeToggle";
 import { PODCAST_URL, SERVICE_OPTIONS, STATES } from "@/lib/constants";
 import { getSupabaseClient } from "@/lib/supabase/client";
+import { avatarFallbackUrl } from "@/lib/avatarFallback";
 import { rowEin } from "@/lib/utils";
 
 function AppIcon({ name }) {
@@ -29,7 +34,8 @@ function AppIcon({ name }) {
     sponsors: "M4 6h16v12H4z M4 10h16",
     trusted: "M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6z",
     community: "M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6m8 0a3 3 0 1 1 0-6 3 3 0 0 1 0 6M3 19c0-2.8 2.8-4 5-4s5 1.2 5 4m3 0c0-2.4 2.3-3.5 5-3.5 2.1 0 5 1 5 3.5",
-    podcast: "M12 4a6 6 0 0 1 6 6v4a2 2 0 0 1-4 0v-4a2 2 0 1 0-4 0v10a2 2 0 1 1-4 0V10a6 6 0 0 1 6-6",
+    podcast:
+      "M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3zm7 8v2a7 7 0 0 1-14 0v-2M12 19v3",
     search: "M11 4a7 7 0 1 1 0 14 7 7 0 0 1 0-14m9 16-4-4",
     profile: "M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4m-7 8c.5-3.5 3.5-5.5 7-5.5s6.5 2 7 5.5",
     contact: "M3 6h18v12H3z M3 7l9 7 9-7",
@@ -177,7 +183,6 @@ export default function TopApp({ initialNav = "home" }) {
     <main className={`topApp theme-${profile.theme}`}>
       <div className="headerBrandStack">
         <BrandMark size="header" />
-        <p className="headerBrandSubtitle">Veteran First Responder Resource Network</p>
       </div>
       <header className="topbar">
         <HeaderInner className="topbarInner">
@@ -185,6 +190,7 @@ export default function TopApp({ initialNav = "home" }) {
           <div className="topbarZone topbarCenter" aria-hidden="true" />
           <div className="topbarZone topbarRight">
             <div className="topbarActionsCluster">
+              <ColorSchemeToggle />
               <button className="btnSoft sponsorBtn" onClick={() => setNav("sponsors")} type="button">
                 <AppIcon name="sponsors" />
                 Become a Sponsor
@@ -209,7 +215,7 @@ export default function TopApp({ initialNav = "home" }) {
                 <div className="row space">
                   {isAuthenticated ? (
                     <ProfileSummaryPanel
-                      avatarSrc={profile.avatarUrl}
+                      avatarSrc={profile.avatarUrl || avatarFallbackUrl(userId)}
                       greetingName={greetingName}
                       isMember={isMember}
                       membershipLabel={membership.label}
@@ -254,22 +260,38 @@ export default function TopApp({ initialNav = "home" }) {
                 </div>
               </div>
 
-              <div className="grid4">
-                <button className="card action" onClick={openSponsors} type="button"><AppIcon name="sponsors" />Sponsors</button>
-                <button className="card action" onClick={() => { setNav("trusted"); loadTrusted(true); }} type="button"><AppIcon name="trusted" />Proven Allies</button>
-                <button className="card action" onClick={openCommunity} type="button"><AppIcon name="community" />Community</button>
-                <button className="card action" onClick={() => window.open(PODCAST_URL, "_blank", "noopener")} type="button"><AppIcon name="podcast" />Podcast</button>
+              <div className="welcomeActionLayout">
+                <button className="card action welcomeSponsorsFeatured" onClick={openSponsors} type="button">
+                  <AppIcon name="sponsors" />
+                  <span className="welcomeActionLabel">Sponsors</span>
+                  <span className="welcomeActionHint">Mission partners &amp; support tiers</span>
+                </button>
+                <div className="welcomeActionTriplet">
+                  <button className="card action welcomeTripletBtn" onClick={() => { setNav("trusted"); loadTrusted(true); }} type="button">
+                    <AppIcon name="trusted" />
+                    <span className="welcomeActionLabel">Proven Allies</span>
+                  </button>
+                  <button className="card action welcomeTripletBtn" onClick={openCommunity} type="button">
+                    <AppIcon name="community" />
+                    <span className="welcomeActionLabel">Community</span>
+                  </button>
+                  <button className="card action welcomeTripletBtn" onClick={() => window.open(PODCAST_URL, "_blank", "noopener")} type="button">
+                    <AppIcon name="podcast" />
+                    <span className="welcomeActionLabel">Podcasts</span>
+                  </button>
+                </div>
               </div>
 
               <div className="card">
                 <h3><AppIcon name="search" />Nonprofit Directory</h3>
+                <DirectoryCategoryQuickPick value={filters.service} onChange={(letter) => setFilters((f) => ({ ...f, service: letter }))} />
                 <div className="form">
                   <select value={filters.state} onChange={(e) => setFilters((f) => ({ ...f, state: e.target.value }))}>
                     {STATES.map(([v, label]) => <option key={v} value={v}>{label}</option>)}
                   </select>
                   <input placeholder="City or Organization" value={filters.q} onChange={(e) => setFilters((f) => ({ ...f, q: e.target.value }))} />
-                  <select value={filters.service} onChange={(e) => setFilters((f) => ({ ...f, service: e.target.value }))}>
-                    {SERVICE_OPTIONS.map(([v, label]) => <option key={v} value={v}>{label}</option>)}
+                  <select value={filters.service} onChange={(e) => setFilters((f) => ({ ...f, service: e.target.value }))} aria-label="Service category letter">
+                    {SERVICE_OPTIONS.map(([v, label]) => <option key={v || "all"} value={v}>{label}</option>)}
                   </select>
                   <select value={filters.audience} onChange={(e) => setFilters((f) => ({ ...f, audience: e.target.value }))}>
                     <option value="all">All</option>
@@ -344,8 +366,15 @@ export default function TopApp({ initialNav = "home" }) {
       {nav === "trusted" && (
         <section className="shell">
           <div className="card">
-            <h3><AppIcon name="trusted" />Proven Allies</h3>
-            <p>Curated organizations with trusted alignment and mission-driven support.</p>
+            <div className="ds-page-intro" style={{ borderBottom: "none", marginBottom: 0, paddingBottom: 0 }}>
+              <h2>
+                <AppIcon name="trusted" />
+                Proven Allies
+              </h2>
+              <p className="ds-page-intro__lead">
+                Curated organizations with trusted alignment and mission-driven support.
+              </p>
+            </div>
             <div className="row">
               <button className="btnPrimary" onClick={() => loadTrusted(true)} type="button">Refresh</button>
               <button className="btnSoft" onClick={() => loadTrusted(false)} type="button">Load More</button>
@@ -383,6 +412,15 @@ export default function TopApp({ initialNav = "home" }) {
 
       {nav === "profile" && (
         <section className="shell">
+          <MembershipAtAGlance
+            isAuthenticated={isAuthenticated}
+            currentTierKey={profile.membershipStatus}
+            onSelectTier={(id) => setMembershipStatus(id)}
+            onRequestSignIn={() => {
+              setAuthMode("signup");
+              setOverlay("signin");
+            }}
+          />
           {!isAuthenticated ? (
             <div className="card">
               <h3><AppIcon name="profile" />Create your account</h3>
@@ -395,15 +433,19 @@ export default function TopApp({ initialNav = "home" }) {
           ) : (
             <>
           <ProfileHeader
-            avatarSrc={profile.avatarUrl || "/assets/top_profile_circle_1024.png"}
+            avatarSrc={profile.avatarUrl || avatarFallbackUrl(userId)}
             fullName={fullName || "Supporter"}
             email={profile.email}
             bio={profile.banner}
+            missionStatement={profile.missionStatement}
+            identityRole={profile.identityRole}
             membershipLabel={membership.label}
             isMember={isMember}
             icon={<AppIcon name="profile" />}
             onEdit={openEdit}
           />
+
+          <ProfileIdentitySection profile={profile} onEdit={openEdit} savedCount={favoriteEins.length} />
 
           {loadingProfile && (
             <div className="card">
@@ -432,10 +474,8 @@ export default function TopApp({ initialNav = "home" }) {
           />
           <SavedOrganizationsList organizations={savedOrgsToRender} onToggleFavorite={toggleFavoriteEin} isMember={isMember} />
           <div className="card">
-            <div className="row">
-              <button className="btnSoft" onClick={() => setMembershipStatus("supporter")} type="button">Set Supporter</button>
+            <div className="row wrap">
               <button className="btnSoft" onClick={resetDemo} type="button">Reset Demo</button>
-              <button className="btnSoft" onClick={() => setMembershipStatus("member")} type="button">Set Member</button>
               <button className="btnSoft" onClick={signOut} type="button">Sign Out</button>
             </div>
           </div>
@@ -510,19 +550,43 @@ export default function TopApp({ initialNav = "home" }) {
 
       {overlay === "edit" && (
         <div className="modalOverlay" onClick={() => setOverlay(null)}>
-          <div className="modalCard" onClick={(e) => e.stopPropagation()}>
-            <h3>Edit Profile</h3>
-            <Avatar src={editDraft.avatarUrl || "/assets/top_profile_circle_1024.png"} alt="Profile preview" />
-            <input value={editDraft.firstName || ""} onChange={(e) => setEditDraft((d) => ({ ...d, firstName: e.target.value }))} placeholder="First Name" />
-            <input value={editDraft.lastName || ""} onChange={(e) => setEditDraft((d) => ({ ...d, lastName: e.target.value }))} placeholder="Last Name" />
-            <input value={editDraft.email} onChange={(e) => setEditDraft((d) => ({ ...d, email: e.target.value }))} placeholder="Email" />
-            <input value={editDraft.banner} onChange={(e) => setEditDraft((d) => ({ ...d, banner: e.target.value }))} placeholder="Add Your Bio" />
-            <input
-              className="profileFileInput"
-              type="file"
-              accept="image/*"
-              onChange={(e) => onProfileImageSelected(e.target.files?.[0])}
-            />
+          <div className="modalCard modalCard--profileEdit" onClick={(e) => e.stopPropagation()}>
+            <h3>Edit profile</h3>
+            <p className="ds-page-intro__lead" style={{ margin: 0 }}>
+              Core account fields sync when cloud is available; identity details below are always saved locally.
+            </p>
+            <Avatar src={editDraft.avatarUrl || avatarFallbackUrl(userId)} alt="Profile preview" />
+            <label className="profilePhotoUploadLabel">
+              <span className="profilePhotoUploadTitle">Profile photo</span>
+              <span className="profilePhotoUploadHint">Upload or replace the image shown on your profile and membership card.</span>
+              <input
+                className="profileFileInput"
+                type="file"
+                accept="image/*"
+                onChange={(e) => onProfileImageSelected(e.target.files?.[0])}
+              />
+            </label>
+            <input value={editDraft.firstName || ""} onChange={(e) => setEditDraft((d) => ({ ...d, firstName: e.target.value }))} placeholder="First name" />
+            <input value={editDraft.lastName || ""} onChange={(e) => setEditDraft((d) => ({ ...d, lastName: e.target.value }))} placeholder="Last name" />
+            <input value={editDraft.email} onChange={(e) => setEditDraft((d) => ({ ...d, email: e.target.value }))} placeholder="Email" type="email" />
+            <input value={editDraft.banner || ""} onChange={(e) => setEditDraft((d) => ({ ...d, banner: e.target.value }))} placeholder="Short tagline (shown under your name)" />
+            <fieldset className="profileEditFieldset">
+              <legend>Identity &amp; contribution</legend>
+              <p className="profileEditFieldsetHint">These fields power the Identity &amp; contribution card on your profile.</p>
+              <textarea rows={3} value={editDraft.missionStatement || ""} onChange={(e) => setEditDraft((d) => ({ ...d, missionStatement: e.target.value }))} placeholder="Mission or personal statement" />
+              <input value={editDraft.identityRole || ""} onChange={(e) => setEditDraft((d) => ({ ...d, identityRole: e.target.value }))} placeholder="Role (e.g. Veteran, First Responder, Nonprofit leader)" />
+              <div className="form">
+                <input value={editDraft.city || ""} onChange={(e) => setEditDraft((d) => ({ ...d, city: e.target.value }))} placeholder="City" />
+                <input value={editDraft.state || ""} onChange={(e) => setEditDraft((d) => ({ ...d, state: e.target.value }))} placeholder="State (e.g. TX)" />
+              </div>
+              <input value={editDraft.organizationAffiliation || ""} onChange={(e) => setEditDraft((d) => ({ ...d, organizationAffiliation: e.target.value }))} placeholder="Organization affiliation" />
+              <input value={editDraft.serviceBackground || ""} onChange={(e) => setEditDraft((d) => ({ ...d, serviceBackground: e.target.value }))} placeholder="Service background (branch, years, role)" />
+              <input value={editDraft.causes || ""} onChange={(e) => setEditDraft((d) => ({ ...d, causes: e.target.value }))} placeholder="Causes you care about (comma-separated)" />
+              <input value={editDraft.skills || ""} onChange={(e) => setEditDraft((d) => ({ ...d, skills: e.target.value }))} placeholder="Skills / ways you help (comma-separated)" />
+              <input value={editDraft.volunteerInterests || ""} onChange={(e) => setEditDraft((d) => ({ ...d, volunteerInterests: e.target.value }))} placeholder="Volunteer interests (comma-separated)" />
+              <input value={editDraft.supportInterests || ""} onChange={(e) => setEditDraft((d) => ({ ...d, supportInterests: e.target.value }))} placeholder="Support and outreach interests" />
+              <textarea rows={2} value={editDraft.contributionSummary || ""} onChange={(e) => setEditDraft((d) => ({ ...d, contributionSummary: e.target.value }))} placeholder="How you contribute on this platform" />
+            </fieldset>
             <div className="row">
               <button className="btnSoft" onClick={() => setOverlay(null)} type="button">Cancel</button>
               <button className="btnPrimary" onClick={async () => { await persistProfile({ ...profile, ...editDraft }); setOverlay(null); }} type="button">Save</button>

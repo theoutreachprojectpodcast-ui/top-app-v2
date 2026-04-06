@@ -11,6 +11,7 @@ import {
   getCommunityMemberById,
 } from "@/features/community/api/communityApi";
 import { mapCommunityMemberProfile } from "@/features/community/mappers/memberProfileMapper";
+import { avatarFallbackUrl } from "@/lib/avatarFallback";
 
 export default function CommunityMemberProfileModal({ supabase, memberId, onClose }) {
   const [favoriteRows, setFavoriteRows] = useState([]);
@@ -55,7 +56,7 @@ export default function CommunityMemberProfileModal({ supabase, memberId, onClos
         </div>
 
         <section className="communityMemberProfileHeader">
-          <Avatar src={profile.avatarUrl || "/assets/top_profile_circle_1024.png"} alt={profile.name} className="communityMemberProfileAvatar" />
+          <Avatar src={profile.avatarUrl || avatarFallbackUrl(memberId)} alt={profile.name} className="communityMemberProfileAvatar" />
           <div className="communityMemberProfileMeta">
             <p className="introTagline">Community member</p>
             <h4>{profile.name}</h4>

@@ -1,12 +1,14 @@
 export function GoldPrimaryButton({ children = "Primary Action", ...props }) {
   return (
     <button
-      className="rounded-full border px-4 py-2 font-semibold"
+      className="rounded-xl border px-4 py-2 font-semibold"
       style={{
-        background: "linear-gradient(180deg, var(--color-gold-highlight), var(--color-gold-primary))",
-        borderColor: "var(--color-gold-shadow)",
-        color: "#1c1305",
-        boxShadow: "var(--glow-gold)",
+        background: "var(--color-accent)",
+        borderColor: "color-mix(in srgb, var(--color-accent-hover) 65%, #0d1a0f 35%)",
+        color: "#ffffff",
+        minHeight: 42,
+        boxShadow:
+          "0 1px 2px rgba(0, 0, 0, 0.05), 0 2px 10px color-mix(in srgb, var(--color-accent) 18%, transparent)",
       }}
       {...props}
     >
@@ -20,9 +22,10 @@ export function ResourceCard({ title, location, children }) {
     <article
       style={{
         background: "var(--color-surface)",
-        border: "1px solid var(--color-border)",
-        borderRadius: 14,
-        padding: 14,
+        border: "1px solid var(--color-border-subtle)",
+        borderRadius: 18,
+        padding: 20,
+        boxShadow: "var(--shadow-card)",
       }}
     >
       <h3 style={{ margin: 0, color: "var(--color-text-primary)" }}>{title}</h3>
@@ -38,11 +41,12 @@ export function SearchInput(props) {
       placeholder="City or Organization"
       style={{
         width: "100%",
-        borderRadius: 10,
-        border: "1px solid var(--color-border)",
-        background: "rgba(11, 31, 36, 0.7)",
+        borderRadius: 12,
+        border: "1px solid var(--color-border-subtle)",
+        background: "var(--color-bg-card)",
         color: "var(--color-text-primary)",
-        padding: "10px 12px",
+        padding: "11px 14px",
+        minHeight: 44,
       }}
       {...props}
     />
@@ -55,7 +59,7 @@ export function MissionModal({ title, body, actions }) {
       style={{
         position: "fixed",
         inset: 0,
-        background: "rgba(3, 8, 10, 0.72)",
+        background: "color-mix(in srgb, var(--color-text-primary) 45%, transparent)",
         display: "grid",
         placeItems: "center",
         padding: 16,
@@ -64,11 +68,11 @@ export function MissionModal({ title, body, actions }) {
       <div
         style={{
           width: "min(560px, 100%)",
-          background: "linear-gradient(180deg, var(--color-bg-secondary), var(--color-bg-primary))",
-          border: "1px solid var(--color-border)",
-          borderRadius: 16,
-          padding: 16,
-          boxShadow: "0 14px 40px rgba(0, 0, 0, 0.5)",
+          background: "linear-gradient(180deg, var(--color-bg-card) 0%, var(--color-bg-card-hover) 100%)",
+          border: "1px solid var(--color-border-subtle)",
+          borderRadius: 18,
+          padding: 20,
+          boxShadow: "var(--shadow-card-hover)",
         }}
       >
         <h3 style={{ margin: 0 }}>{title}</h3>
@@ -78,4 +82,3 @@ export function MissionModal({ title, body, actions }) {
     </div>
   );
 }
-

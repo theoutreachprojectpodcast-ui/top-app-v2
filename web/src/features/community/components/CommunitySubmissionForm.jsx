@@ -79,17 +79,20 @@ export default function CommunitySubmissionForm({
       <p className="communitySubmitLead">
         Stories are read by our team first. Only approved, mission-aligned posts are published—keeping this space safe and useful.
       </p>
-      <form className="communitySubmitForm" onSubmit={onSubmit}>
+      <form className="communitySubmitForm communitySubmitForm--ds" onSubmit={onSubmit}>
+        <label className="fieldLabel">Title <span className="fieldOptional">(optional)</span></label>
         <input
-          placeholder="Title (optional)"
+          placeholder="Give your story a short headline"
           value={form.title}
           onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
         />
+        <label className="fieldLabel">Submission type</label>
         <select value={form.post_type} onChange={(e) => setForm((f) => ({ ...f, post_type: e.target.value }))}>
           {SUBMISSION_TYPES.map(([value, label]) => (
             <option key={value} value={value}>{label}</option>
           ))}
         </select>
+        <label className="fieldLabel">Your story</label>
         <textarea
           rows={5}
           required
@@ -97,41 +100,48 @@ export default function CommunitySubmissionForm({
           value={form.body}
           onChange={(e) => setForm((f) => ({ ...f, body: e.target.value }))}
         />
+        <label className="fieldLabel">Nonprofit or resource <span className="fieldOptional">(optional)</span></label>
         <input
-          placeholder="Nonprofit or resource referenced (optional)"
+          placeholder="Organization you want to mention"
           value={form.nonprofit_name}
           onChange={(e) => setForm((f) => ({ ...f, nonprofit_name: e.target.value }))}
         />
+        <label className="fieldLabel">Story category</label>
         <select value={form.category} onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}>
           {STORY_CATEGORIES.map(([value, label]) => (
             <option key={value} value={value}>{label}</option>
           ))}
         </select>
+        <label className="fieldLabel">Related link <span className="fieldOptional">(optional)</span></label>
         <input
-          placeholder="Link (optional — for future use)"
+          placeholder="https://…"
           value={form.link_url}
           onChange={(e) => setForm((f) => ({ ...f, link_url: e.target.value }))}
         />
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e) => onPhotoSelected(e.target.files?.[0])}
-        />
+        <label className="profilePhotoUploadLabel communityStoryPhotoLabel">
+          <span className="profilePhotoUploadTitle">Cover image</span>
+          <span className="profilePhotoUploadHint">
+            Optional photo with your story. Inline preview today; secure bucket upload will use the story media schema when enabled.
+          </span>
+          <input type="file" accept="image/*" onChange={(e) => onPhotoSelected(e.target.files?.[0])} />
+        </label>
         {form.photo_url ? (
           <div className="communityUploadPreview">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={form.photo_url} alt="Selected upload preview" />
           </div>
         ) : null}
-        <FormCheckbox
-          checked={form.show_author_name}
-          onChange={(e) => setForm((f) => ({ ...f, show_author_name: e.target.checked }))}
-        >
-          Show my name if this story is published
-        </FormCheckbox>
+        <div className="dsChoiceGroup">
+          <FormCheckbox
+            checked={form.show_author_name}
+            onChange={(e) => setForm((f) => ({ ...f, show_author_name: e.target.checked }))}
+          >
+            Show my name if this story is published
+          </FormCheckbox>
+        </div>
         {error ? <p className="applyError">{error}</p> : null}
         {status ? <p className="applyStatus">{status}</p> : null}
-        <div className="row wrap">
+        <div className="row wrap communitySubmitActions">
           <button type="button" className="btnSoft" onClick={onClose}>Close</button>
           <button type="submit" className="btnPrimary" disabled={busy}>{busy ? "Submitting…" : "Submit for review"}</button>
         </div>
@@ -139,4 +149,3 @@ export default function CommunitySubmissionForm({
     </div>
   );
 }
-

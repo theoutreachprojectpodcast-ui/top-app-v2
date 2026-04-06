@@ -2,6 +2,7 @@ import NonprofitCardMedia from "@/features/nonprofits/components/NonprofitCardMe
 import NonprofitVerificationBadge from "@/features/nonprofits/components/NonprofitVerificationBadge";
 import NonprofitStatusBadge from "@/features/nonprofits/components/NonprofitStatusBadge";
 import NonprofitSocialLinks from "@/features/nonprofits/components/NonprofitSocialLinks";
+import NonprofitIcon from "@/features/nonprofits/components/NonprofitIcon";
 
 export default function NonprofitCard({
   card,
@@ -36,31 +37,40 @@ export default function NonprofitCard({
 
   return (
     <article
-      className={`resultCard tier-${card.tier} category-${card.category?.key || "unknownGeneral"} ${clickableUrl ? "resultCard--clickable" : ""}`}
+      className={`resultCard tier-${card.tier} category-${card.category?.key || "unknownGeneral"} ${clickableUrl ? "resultCard--clickable" : ""} ${isProvenCard ? "resultCard--proven" : ""}`}
       onClick={onCardClick}
       onKeyDown={onCardKeyDown}
       role={clickableUrl ? "link" : undefined}
       tabIndex={clickableUrl ? 0 : undefined}
       aria-label={clickableUrl ? `Open ${card.name} profile` : undefined}
     >
-      <div className="nonprofitCardMain">
+      <div className={`nonprofitCardMain${isProvenCard ? " nonprofitCardMain--proven" : ""}`}>
         <NonprofitCardMedia
           category={card.category}
           tier={card.tier}
+          logoUrl={card.logoUrl}
+          layout={isProvenCard ? "proven" : "default"}
         />
-        <div className="nonprofitContentCol">
+        <div className={`nonprofitContentCol${isProvenCard ? " nonprofitContentCol--proven" : ""}`}>
           <div className="nonprofitTitleRow">
-            <strong>{card.name}</strong>
+            <span className="nonprofitOrgName">{card.name}</span>
             {isMember && !!favoriteKey && onToggleFavorite && (
               <button className="favBtn" onClick={() => onToggleFavorite(favoriteKey)} type="button">
                 {isFavorite ? "★" : "☆"}
               </button>
             )}
           </div>
-          <div className="nonprofitMetaRow">
+          <div className={`nonprofitMetaRow${isProvenCard ? " nonprofitMetaRow--proven" : ""}`}>
             <NonprofitStatusBadge status={card.status} />
             {!isProvenCard && <NonprofitVerificationBadge tier={card.tier} />}
-            <span className="nonprofitCategoryLabel">{card.category.label}</span>
+            {isProvenCard && card.category ? (
+              <span className="nonprofitCategoryWithIcon" title={card.category.label}>
+                <NonprofitIcon category={card.category} size={17} variant="default" />
+                <span className="nonprofitCategoryLabel">{card.category.label}</span>
+              </span>
+            ) : (
+              <span className="nonprofitCategoryLabel">{card.category.label}</span>
+            )}
           </div>
           <p className="nonprofitLocation">{card.location}</p>
           {!!card.description && <p className="nonprofitDescription">{card.description}</p>}

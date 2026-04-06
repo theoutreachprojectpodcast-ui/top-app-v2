@@ -1,5 +1,10 @@
 import { TRUSTED_PAGE_SIZE } from "@/lib/constants";
 import { mapTrustedRow } from "@/lib/supabase/mappers";
+import {
+  PROVEN_ALLIES_TABLE,
+  isMissingProvenAlliesTable,
+  mapProvenAlliesDbRowToTrustedRow,
+} from "@/lib/supabase/provenAlliesCatalog";
 import { queryTrustedOrgsByEin } from "@/lib/supabase/queries";
 
 async function runQuery(factory) {
@@ -11,9 +16,10 @@ async function runQuery(factory) {
 }
 
 function normalizeEin(value) {
-  const digits = String(value ?? "").replace(/\D/g, "");
-  if (!digits) return "";
-  return digits.padStart(9, "0");
+  let d = String(value ?? "").replace(/\D/g, "");
+  if (!d) return "";
+  if (d.length > 9) d = d.slice(-9);
+  return d.padStart(9, "0");
 }
 
 function stripLeadingZeros(value) {
@@ -34,7 +40,29 @@ function normalizeDomain(url = "") {
 }
 
 export async function fetchTrustedResources(supabase) {
-  // Use broad profile fetch to avoid schema-specific filter failures.
+  if (supabase) {
+    const catalog = await runQuery(() =>
+      supabase
+        .from(PROVEN_ALLIES_TABLE)
+        .select("*")
+        .eq("listing_status", "active")
+        .order("sort_order", { ascending: true })
+        .order("display_name", { ascending: true })
+    );
+    if (!catalog.error && Array.isArray(catalog.data)) {
+      return (catalog.data || []).map(mapProvenAlliesDbRowToTrustedRow).filter((row) => {
+        const ein = String(row?.ein ?? "").trim();
+        const name = String(row?.orgName ?? "").trim();
+        const web = String(row?.website ?? "").trim();
+        return !!(ein || name || web);
+      });
+    }
+    if (catalog.error && !isMissingProvenAlliesTable(catalog.error)) {
+      throw catalog.error;
+    }
+  }
+
+  // Legacy: nonprofit_profiles + directory joins when `proven_allies` is not deployed.
   const profileResult = await runQuery(() => supabase.from("nonprofit_profiles").select("*").limit(1000));
   if (profileResult.error) throw profileResult.error;
 
@@ -83,11 +111,25 @@ export async function fetchTrustedResources(supabase) {
       const org = orgMap.get(rawKey) || orgMap.get(normalizedKey) || orgMap.get(unpaddedKey) || {};
       return mapTrustedRow(p, org);
     })
-    .filter((row) => row.orgName)
-    .sort((a, b) => a.orgName.localeCompare(b.orgName, undefined, { sensitivity: "base" }));
+    .filter((row) => {
+      const ein = String(row?.ein ?? "").trim();
+      const name = String(row?.orgName ?? "").trim();
+      const web = String(row?.website ?? "").trim();
+      return !!(ein || name || web);
+    })
+    .sort((a, b) => {
+      const sortKey = (r) =>
+        String(r.orgName || "").trim() || String(r.ein || "").trim() || "\uFFFF";
+      return sortKey(a).localeCompare(sortKey(b), undefined, { sensitivity: "base" });
+    });
 
   // If many profile rows still don't resolve rich org fields, backfill from directory snapshot.
-  const unresolved = rows.filter((r) => !r.city || !r.state || !r.nteeCode || !r.orgName || r.orgName === "Unknown Organization");
+  const unresolved = rows.filter((r) => {
+    const noRealName =
+      !String(r.orgName || "").trim() ||
+      /^unknown organization$/i.test(String(r.orgName || "").trim());
+    return !r.city || !r.state || !r.nteeCode || noRealName;
+  });
   if (unresolved.length) {
     const directorySnapshot = await runQuery(() =>
       supabase

@@ -1,0 +1,358 @@
+/* =============================================================================
+   The Outreach Project — brand theme (light-first)
+   Semantic tokens + legacy aliases for existing components.
+   ============================================================================= */
+
+/* --- Core brand palette (reference) --- */
+:root {
+  --brand-green-700: #188a20;
+  --brand-green-600: #22a52b;
+  --brand-green-500: #32c43b;
+  --brand-green-400: #55d85c;
+  --brand-green-300: #83e387;
+
+  color-scheme: light;
+  --topbar-occlusion-spot: rgba(17, 23, 20, 0.06);
+
+  --font-body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-heading: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+
+  /* Semantic surfaces — light */
+  --color-bg-app: #f5f7f6;
+  --color-bg-subtle: #eef2ef;
+  --color-bg-elevated: #ffffff;
+  --color-bg-muted: #e7ece8;
+  --color-bg-card: #ffffff;
+  --color-bg-card-hover: #f8faf8;
+
+  --color-border-subtle: #d6ddd8;
+  --color-border-strong: #bec8c1;
+
+  --color-text-primary: #111714;
+  --color-text-secondary: #4f5d55;
+  --color-text-muted: #728077;
+
+  --color-accent: #22a52b;
+  --color-accent-hover: #188a20;
+  --color-accent-soft: rgba(34, 165, 43, 0.1);
+  --color-link: #188a20;
+  --color-focus-ring: rgba(50, 196, 59, 0.3);
+
+  --color-success: #1fa64a;
+  --color-warning: #c58a18;
+  --color-error: #c94b49;
+  --color-info: #2c7be5;
+  --color-overlay: rgba(17, 23, 20, 0.48);
+  --color-shadow: rgba(17, 23, 20, 0.08);
+  --color-navbar: color-mix(in srgb, var(--color-bg-subtle) 92%, transparent);
+  --color-input: var(--color-bg-card);
+  --color-input-border: var(--color-border-subtle);
+  --color-ring: var(--color-focus-ring);
+  --texture-opacity: 0.035;
+
+  /* Map legacy structure */
+  --color-bg-primary: var(--color-bg-app);
+  --color-bg-secondary: var(--color-bg-subtle);
+  --color-surface: var(--color-bg-card);
+  --color-surface-elevated: var(--color-bg-card-hover);
+  --color-surface-soft: var(--color-bg-subtle);
+  --color-surface-muted: color-mix(in srgb, var(--color-bg-muted) 92%, var(--color-bg-card) 8%);
+  --color-surface-card: var(--color-bg-card);
+  --color-surface-card-deep: var(--color-bg-card-hover);
+  --color-surface-raised: var(--color-bg-card-hover);
+
+  --color-background-base: var(--color-bg-app);
+  --color-background-elevated: var(--color-bg-elevated);
+  --color-background-card: var(--color-bg-card);
+
+  --color-border: var(--color-border-subtle);
+  --color-border-soft: color-mix(in srgb, var(--color-border-subtle) 65%, var(--color-bg-card) 35%);
+  --color-border-active: color-mix(in srgb, var(--color-accent) 38%, var(--color-border-subtle) 62%);
+
+  /* Legacy gold/teal → brand green (single accent system) */
+  --color-gold-primary: var(--color-accent-hover);
+  --color-gold-highlight: var(--color-accent);
+  --color-gold-shadow: #146018;
+  --color-gold-soft: var(--color-accent-soft);
+  --color-gold-muted: rgba(34, 165, 43, 0.14);
+
+  --color-cyan-primary: var(--color-accent-hover);
+  --color-cyan-bright: var(--color-accent);
+  --color-cyan-muted: var(--color-accent-hover);
+  --color-teal-primary: var(--color-accent-hover);
+  --color-teal-bright: var(--color-accent);
+  --color-teal-soft: var(--color-accent-soft);
+  --color-accent-interactive: var(--color-accent);
+  --color-accent-interactive-soft: color-mix(in srgb, var(--color-accent) 22%, transparent);
+
+  --color-destructive: var(--color-error);
+
+  --glow-accent: 0 1px 2px rgba(17, 23, 20, 0.04), 0 4px 14px rgba(34, 165, 43, 0.12);
+  --glow-cyan: 0 0 0 1px color-mix(in srgb, var(--color-accent) 18%, transparent), 0 2px 12px rgba(34, 165, 43, 0.1);
+  --glow-gold: var(--glow-accent);
+
+  --shadow-card: 0 4px 18px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(17, 23, 20, 0.04);
+  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(17, 23, 20, 0.05);
+
+  --color-scrollbar-track: color-mix(in srgb, var(--color-bg-subtle) 96%, var(--color-bg-app) 4%);
+  --color-scrollbar-thumb: color-mix(in srgb, var(--color-border-strong) 55%, var(--color-bg-muted) 45%);
+  --color-scrollbar-thumb-hover: color-mix(in srgb, var(--color-accent) 22%, var(--color-border-strong) 78%);
+  --color-scrollbar-corner: var(--color-bg-subtle);
+
+  /* Typography */
+  --text-page-title: clamp(1.75rem, 2.4vw, 2.125rem);
+  --text-section-title: clamp(1.25rem, 1.5vw, 1.375rem);
+  --text-card-title: 1.125rem;
+  --text-card-section: clamp(1.05rem, 1.25vw, 1.125rem);
+  --text-body: 0.9375rem;
+  --text-body-sm: 0.9375rem;
+  --text-body-lg: 1rem;
+  --text-caption: 0.8125rem;
+  --text-metadata: 0.8125rem;
+  --text-eyebrow: 0.6875rem;
+  --text-button: 0.875rem;
+
+  --line-page-title: 1.18;
+  --line-section-title: 1.27;
+  --line-card-title: 1.33;
+  --line-body: 1.47;
+
+  /* Spacing scale */
+  --ds-space-1: 4px;
+  --ds-space-2: 8px;
+  --ds-space-3: 12px;
+  --ds-space-4: 16px;
+  --ds-space-5: 20px;
+  --ds-space-6: 24px;
+  --ds-space-8: 32px;
+  --ds-space-10: 40px;
+  --ds-space-12: 48px;
+  --ds-space-16: 64px;
+  --ds-section-gap: 24px;
+
+  --radius-input: 12px;
+  --radius-card: 18px;
+  --radius-button: 12px;
+  --radius-pill: 999px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  --bg-texture-image: url("/assets/backgrounds/bg_topographic_brand.png");
+
+  /* Subtle neutral noise (SVG feTurbulence) */
+  --texture-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+}
+
+/* --- Dark mode --- */
+:root[data-color-scheme="dark"],
+.dark {
+  color-scheme: dark;
+  --topbar-occlusion-spot: rgba(0, 0, 0, 0.28);
+
+  --color-bg-app: #101412;
+  --color-bg-subtle: #161c19;
+  --color-bg-elevated: #1b2320;
+  --color-bg-muted: #232d28;
+  --color-bg-card: #1b2320;
+  --color-bg-card-hover: #232d28;
+
+  --color-border-subtle: #2c3832;
+  --color-border-strong: #3a4841;
+
+  --color-text-primary: #f3f6f4;
+  --color-text-secondary: #c5d0c9;
+  --color-text-muted: #91a198;
+
+  --color-accent: #55d85c;
+  --color-accent-hover: #83e387;
+  --color-accent-soft: rgba(85, 216, 92, 0.14);
+  --color-link: #83e387;
+  --color-focus-ring: rgba(131, 227, 135, 0.34);
+  --color-success: #32c43b;
+  --color-warning: #d4a12a;
+  --color-error: #d96866;
+  --color-info: #5a9bff;
+  --color-overlay: rgba(10, 14, 12, 0.62);
+  --color-shadow: rgba(0, 0, 0, 0.26);
+  --color-navbar: color-mix(in srgb, var(--color-bg-subtle) 86%, transparent);
+  --color-input: var(--color-bg-card);
+  --color-input-border: var(--color-border-subtle);
+  --color-ring: var(--color-focus-ring);
+  --texture-opacity: 0.045;
+
+  --color-bg-primary: var(--color-bg-app);
+  --color-bg-secondary: var(--color-bg-subtle);
+  --color-surface: var(--color-bg-card);
+  --color-surface-elevated: var(--color-bg-card-hover);
+  --color-surface-soft: var(--color-bg-subtle);
+  --color-surface-muted: color-mix(in srgb, var(--color-bg-muted) 88%, var(--color-bg-card) 12%);
+  --color-surface-card: var(--color-bg-card);
+  --color-surface-card-deep: color-mix(in srgb, var(--color-bg-card) 70%, var(--color-bg-app) 30%);
+  --color-surface-raised: var(--color-bg-card-hover);
+
+  --color-background-base: var(--color-bg-app);
+  --color-background-elevated: var(--color-bg-elevated);
+  --color-background-card: var(--color-bg-card);
+
+  --color-border: var(--color-border-subtle);
+  --color-border-soft: color-mix(in srgb, var(--color-border-subtle) 75%, transparent 25%);
+  --color-border-active: color-mix(in srgb, var(--color-accent) 42%, var(--color-border-subtle) 58%);
+
+  --color-gold-primary: var(--color-accent-hover);
+  --color-gold-highlight: var(--color-accent);
+  --color-gold-shadow: #2a5c2e;
+  --color-gold-soft: var(--color-accent-soft);
+  --color-gold-muted: rgba(85, 216, 92, 0.16);
+
+  --color-cyan-primary: var(--color-accent-hover);
+  --color-cyan-bright: var(--color-accent);
+  --color-cyan-muted: var(--color-accent-hover);
+  --color-teal-primary: var(--color-accent-hover);
+  --color-teal-bright: var(--color-accent);
+  --color-teal-soft: var(--color-accent-soft);
+  --color-accent-interactive: var(--color-accent);
+  --color-accent-interactive-soft: color-mix(in srgb, var(--color-accent) 26%, transparent);
+
+  --glow-accent: 0 2px 8px rgba(0, 0, 0, 0.35), 0 0 20px rgba(85, 216, 92, 0.08);
+  --glow-cyan: 0 0 0 1px color-mix(in srgb, var(--color-accent) 24%, transparent), 0 2px 16px rgba(85, 216, 92, 0.12);
+  --glow-gold: var(--glow-accent);
+
+  --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  --shadow-card-hover: 0 12px 32px rgba(0, 0, 0, 0.24), 0 0 0 1px rgba(255, 255, 255, 0.06);
+
+  --color-scrollbar-track: rgba(16, 20, 18, 0.92);
+  --color-scrollbar-thumb: color-mix(in srgb, var(--color-border-strong) 70%, var(--color-text-muted) 30%);
+  --color-scrollbar-thumb-hover: color-mix(in srgb, var(--color-accent) 28%, var(--color-border-strong) 72%);
+  --color-scrollbar-corner: var(--color-bg-app);
+}
+
+body {
+  background-color: var(--color-bg-app);
+  background-image:
+    radial-gradient(ellipse 120% 80% at 50% -20%, color-mix(in srgb, var(--color-accent) 6%, transparent), transparent 55%),
+    radial-gradient(ellipse 70% 50% at 100% 0%, color-mix(in srgb, var(--color-bg-muted) 35%, transparent), transparent 50%),
+    linear-gradient(180deg, var(--color-bg-subtle) 0%, var(--color-bg-app) 45%, var(--color-bg-app) 100%);
+  color: var(--color-text-primary);
+  font-family: var(--font-body), "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  position: relative;
+  isolation: isolate;
+}
+
+:root[data-color-scheme="dark"] body,
+.dark body {
+  background-image:
+    radial-gradient(ellipse 100% 70% at 50% -15%, color-mix(in srgb, var(--color-accent) 9%, transparent), transparent 52%),
+    radial-gradient(ellipse 55% 45% at 95% 8%, color-mix(in srgb, var(--color-bg-muted) 25%, transparent), transparent 55%),
+    linear-gradient(165deg, var(--color-bg-subtle) 0%, var(--color-bg-app) 40%, var(--color-bg-app) 100%);
+}
+
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Soft wash + optional topo (large surfaces only — low contrast) */
+body::before {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--color-bg-elevated) 22%, transparent), transparent 42%);
+  opacity: 1;
+}
+
+:root[data-color-scheme="dark"] body::before,
+.dark body::before {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 38%);
+}
+
+body::after {
+  opacity: var(--texture-opacity, 0.035);
+  background-image: var(--texture-noise), var(--bg-texture-image);
+  background-size: 180px 180px, cover;
+  background-position: 0 0, center;
+  background-repeat: repeat, no-repeat;
+  mix-blend-mode: multiply;
+  filter: contrast(1.02) brightness(1.02);
+}
+
+:root[data-color-scheme="dark"] body::after,
+.dark body::after {
+  opacity: var(--texture-opacity, 0.045);
+  mix-blend-mode: soft-light;
+  filter: saturate(0.12) contrast(1.05) brightness(0.72);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-heading), var(--font-body), "Segoe UI", sans-serif;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--color-focus-ring);
+}
+
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-scrollbar-thumb) var(--color-scrollbar-track);
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--color-scrollbar-track);
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--color-scrollbar-thumb);
+  border-radius: 999px;
+  border: 2px solid var(--color-scrollbar-track);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--color-scrollbar-thumb-hover);
+}
+
+*::-webkit-scrollbar-corner {
+  background: var(--color-scrollbar-corner);
+}
+
+/* Nonprofit category colors — icons/labels only */
+:root {
+  --np-recreationSports: #d8a85a;
+  --np-artsCulture: #d78b6a;
+  --np-publicBenefit: #9fb1d1;
+  --np-religionSpirituality: #b193d6;
+  --np-healthWellness: #67b9a8;
+  --np-education: #7ea4da;
+  --np-humanServices: #c7a77a;
+  --np-veteransMilitary: #6ea8cf;
+  --np-firstRespondersSafety: #d57b62;
+  --np-communityDevelopment: #8eaebf;
+  --np-environmentAnimals: #73af7f;
+  --np-youthDevelopment: #91be93;
+  --np-crisisEmergency: #cf7b7b;
+  --np-advocacyPolicyRights: #c68dc9;
+  --np-unknownGeneral: #9ea6b1;
+}
+
+

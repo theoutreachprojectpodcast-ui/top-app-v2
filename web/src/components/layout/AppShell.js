@@ -1,9 +1,7 @@
 import Link from "next/link";
 import BrandMark from "@/components/BrandMark";
-import IconWrap from "@/components/shared/IconWrap";
 import HeaderInner from "@/components/layout/HeaderInner";
-
-const SPONSOR_ICON = "M4 6h16v12H4z M4 10h16";
+import SubpageTopbarActions from "@/components/layout/SubpageTopbarActions";
 
 const NAV_ITEMS = [
   { href: "/", key: "home", label: "Home" },
@@ -21,19 +19,13 @@ export default function AppShell({ activeNav, children }) {
     <div className="appShell appShell--subpage">
       <div className="headerBrandStack">
         <BrandMark size="header" />
-        <p className="headerBrandSubtitle">Veteran First Responder Resource Network</p>
       </div>
       <header className="subpageTopbar">
         <HeaderInner className="topbarInner">
           <div className="topbarZone topbarLeft" aria-hidden="true" />
           <div className="topbarZone topbarCenter" aria-hidden="true" />
           <div className="topbarZone topbarRight">
-            <div className="topbarActionsCluster">
-              <Link className="btnSoft sponsorBtn" href="/">
-                <IconWrap path={SPONSOR_ICON} />
-                Become a Sponsor
-              </Link>
-            </div>
+            <SubpageTopbarActions />
           </div>
         </HeaderInner>
       </header>

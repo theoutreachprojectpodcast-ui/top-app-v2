@@ -173,8 +173,8 @@ export function useProfileData(supabase) {
       firstName: safeFirst,
       lastName: safeLast,
       email: safeEmail,
-      membershipStatus: "supporter",
-      banner: "Welcome to The Outreach Project.",
+      membershipStatus: "support",
+      banner: "Hi, I’m Andy",
     };
     setIsAuthenticated(true);
     setProfile(next);
@@ -192,7 +192,7 @@ export function useProfileData(supabase) {
     const next = {
       ...profile,
       email: safeEmail,
-      banner: profile.banner || "How can we assist you today?",
+      banner: profile.banner || "Hi, I’m Andy",
     };
     setIsAuthenticated(true);
     setProfile(next);

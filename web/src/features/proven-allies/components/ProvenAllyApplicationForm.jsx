@@ -1,11 +1,17 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { FormCheckbox, FormRadio } from "@/components/forms/FormChoice";
 import {
   searchDirectoryOrganizations,
   submitProvenAllyApplication,
 } from "@/features/proven-allies/api/provenAllyApplicationApi";
+import {
+  completeProvenAllyApplicationFeeDemo,
+  startProvenAllyApplicationPayment,
+} from "@/features/proven-allies/domain/applicationPaymentAdapter";
 import { SERVICE_OPTIONS, STATES } from "@/lib/constants";
+import { parseEinStrict } from "@/lib/supabase/provenAlliesCatalog";
 
 const FEE_AMOUNT = 49;
 
@@ -17,6 +23,7 @@ const INITIAL_FORM = {
   organization_path: "existing",
   organization_name: "",
   organization_id: "",
+  organization_ein: "",
   website: "",
   city: "",
   state: "",
@@ -64,6 +71,7 @@ export default function ProvenAllyApplicationForm({ supabase, onClose }) {
       form.acknowledged_review_process;
     if (!baseValid) return false;
     if (form.organization_path === "existing" && !form.organization_id) return false;
+    if (form.organization_path === "new" && !parseEinStrict(form.organization_ein)) return false;
     return feePaid;
   }, [form, feePaid]);
 
@@ -85,6 +93,7 @@ export default function ProvenAllyApplicationForm({ supabase, onClose }) {
     setForm((f) => ({
       ...f,
       organization_id: org.id,
+      organization_ein: org.ein || org.id || "",
       organization_name: org.name,
       website: f.website || org.website || "",
       city: f.city || org.city || "",
@@ -93,14 +102,25 @@ export default function ProvenAllyApplicationForm({ supabase, onClose }) {
     setStatus(`Selected ${org.name}.`);
   }
 
-  function payDemoFee() {
+  /**
+   * FUTURE_PAYMENT_PROVIDER: startProvenAllyApplicationPayment will call your backend to create a charge/session.
+   * Today we complete the demo ledger only after the adapter reports readiness.
+   */
+  async function payApplicationFee() {
+    setStatus("");
+    await startProvenAllyApplicationPayment({ amountUsd: FEE_AMOUNT, applicationDraft: form });
+    const result = await completeProvenAllyApplicationFeeDemo({ amountUsd: FEE_AMOUNT });
+    if (!result.ok) {
+      setError("Could not record fee status.");
+      return;
+    }
     setFeePaid(true);
     setForm((f) => ({
       ...f,
-      application_fee_status: "demo_paid",
-      payment_demo_status: "demo_paid",
+      application_fee_status: result.application_fee_status,
+      payment_demo_status: result.payment_demo_status,
     }));
-    setStatus("Demo application fee marked as paid.");
+    setStatus("Application fee recorded (demo). Connect Stripe or another provider to collect live payments.");
   }
 
   async function onSubmit(e) {
@@ -146,25 +166,35 @@ export default function ProvenAllyApplicationForm({ supabase, onClose }) {
 
           <section className="applySection">
             <h4>Organization Path</h4>
-            <div className="applyOptionGroup">
-              <label className="applyOption">
-                <input
-                  type="radio"
-                  name="path"
-                  checked={form.organization_path === "existing"}
-                  onChange={() => setForm((f) => ({ ...f, organization_path: "existing", organization_id: "" }))}
-                />
-                <span>I am already listed in the directory.</span>
-              </label>
-              <label className="applyOption">
-                <input
-                  type="radio"
-                  name="path"
-                  checked={form.organization_path === "new"}
-                  onChange={() => setForm((f) => ({ ...f, organization_path: "new", organization_id: "" }))}
-                />
-                <span>I am a new organization.</span>
-              </label>
+            <div className="dsChoiceGroup provenApplyChoiceGroup">
+              <FormRadio
+                name="organization_path"
+                checked={form.organization_path === "existing"}
+                onChange={() =>
+                  setForm((f) => ({
+                    ...f,
+                    organization_path: "existing",
+                    organization_id: "",
+                    organization_ein: "",
+                  }))
+                }
+              >
+                I am already listed in the directory.
+              </FormRadio>
+              <FormRadio
+                name="organization_path"
+                checked={form.organization_path === "new"}
+                onChange={() =>
+                  setForm((f) => ({
+                    ...f,
+                    organization_path: "new",
+                    organization_id: "",
+                    organization_ein: "",
+                  }))
+                }
+              >
+                I am a new organization.
+              </FormRadio>
             </div>
 
             {form.organization_path === "existing" && (
@@ -193,6 +223,13 @@ export default function ProvenAllyApplicationForm({ supabase, onClose }) {
             <h4>Organization Info</h4>
             <div className="form">
               <input placeholder="Organization name" value={form.organization_name} onChange={(e) => setForm((f) => ({ ...f, organization_name: e.target.value }))} />
+              {form.organization_path === "new" ? (
+                <input
+                  placeholder="Federal EIN (9 digits)"
+                  value={form.organization_ein}
+                  onChange={(e) => setForm((f) => ({ ...f, organization_ein: e.target.value }))}
+                />
+              ) : null}
               <input placeholder="Website" value={form.website} onChange={(e) => setForm((f) => ({ ...f, website: e.target.value }))} />
               <input placeholder="City" value={form.city} onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))} />
               <select value={form.state} onChange={(e) => setForm((f) => ({ ...f, state: e.target.value }))}>
@@ -218,39 +255,34 @@ export default function ProvenAllyApplicationForm({ supabase, onClose }) {
 
           <section className="applySection">
             <h4>Alignment & Standards</h4>
-            <div className="applyCheckList">
-              <label className="applyCheck">
-                <input
-                  type="checkbox"
-                  checked={form.agreed_to_values}
-                  onChange={(e) => setForm((f) => ({ ...f, agreed_to_values: e.target.checked }))}
-                />
-                <span>We align with The Outreach Project values and mission standards.</span>
-              </label>
-              <label className="applyCheck">
-                <input
-                  type="checkbox"
-                  checked={form.agreed_info_accuracy}
-                  onChange={(e) => setForm((f) => ({ ...f, agreed_info_accuracy: e.target.checked }))}
-                />
-                <span>We confirm submitted information is accurate to the best of our knowledge.</span>
-              </label>
-              <label className="applyCheck">
-                <input
-                  type="checkbox"
-                  checked={form.acknowledged_review_process}
-                  onChange={(e) => setForm((f) => ({ ...f, acknowledged_review_process: e.target.checked }))}
-                />
-                <span>We acknowledge this application enters structured review before approval.</span>
-              </label>
+            <div className="dsChoiceGroup provenApplyCheckGroup">
+              <FormCheckbox checked={form.agreed_to_values} onChange={(e) => setForm((f) => ({ ...f, agreed_to_values: e.target.checked }))}>
+                We align with The Outreach Project values and mission standards.
+              </FormCheckbox>
+              <FormCheckbox checked={form.agreed_info_accuracy} onChange={(e) => setForm((f) => ({ ...f, agreed_info_accuracy: e.target.checked }))}>
+                We confirm submitted information is accurate to the best of our knowledge.
+              </FormCheckbox>
+              <FormCheckbox
+                checked={form.acknowledged_review_process}
+                onChange={(e) => setForm((f) => ({ ...f, acknowledged_review_process: e.target.checked }))}
+              >
+                We acknowledge this application enters structured review before approval.
+              </FormCheckbox>
             </div>
           </section>
 
-          <section className="applySection applyFeeCard">
-            <h4>Application Fee (Demo)</h4>
-            <p>Application Fee: ${FEE_AMOUNT}</p>
-            <p>Status: {feePaid ? "Demo Paid" : "Unpaid"}</p>
-            {!feePaid && <button className="btnPrimary" type="button" onClick={payDemoFee}>Pay Application Fee (Demo)</button>}
+          <section className="applySection applyFeeCard" data-integration="payment-placeholder">
+            <h4>Application fee</h4>
+            <p className="applyFeeAmount">Amount: ${FEE_AMOUNT} USD</p>
+            <p className="applyFeeStatus">Status: {feePaid ? "Recorded (demo)" : "Unpaid"}</p>
+            <p className="applyFeeNote">
+              FUTURE_PAYMENT_PROVIDER: this will open hosted checkout when wired. The payment adapter module is the integration seam for Stripe or another provider.
+            </p>
+            {!feePaid && (
+              <button className="btnPrimary" type="button" onClick={() => void payApplicationFee()}>
+                Pay application fee (demo)
+              </button>
+            )}
           </section>
 
           <section className="applySection">

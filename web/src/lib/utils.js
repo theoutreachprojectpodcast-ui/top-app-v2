@@ -6,9 +6,20 @@ export function defaultProfile() {
     email: "",
     tier: "supporter",
     theme: "clean",
-    banner: "How can we assist you today?",
+    banner: "Hi, I’m Andy",
     photoDataUrl: "",
     badges: { veteran: false, youtube: false },
+    identityRole: "",
+    missionStatement: "",
+    organizationAffiliation: "",
+    serviceBackground: "",
+    city: "",
+    state: "",
+    causes: "",
+    skills: "",
+    volunteerInterests: "",
+    supportInterests: "",
+    contributionSummary: "",
   };
 }
 

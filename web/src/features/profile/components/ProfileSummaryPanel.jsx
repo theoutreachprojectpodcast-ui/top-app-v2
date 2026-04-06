@@ -1,5 +1,6 @@
 import Avatar from "@/components/shared/Avatar";
 import MembershipBadge from "@/components/shared/MembershipBadge";
+import { avatarFallbackUrl } from "@/lib/avatarFallback";
 
 export default function ProfileSummaryPanel({
   avatarSrc,
@@ -11,8 +12,8 @@ export default function ProfileSummaryPanel({
   icon,
 }) {
   return (
-    <div className="welcomePanel">
-      <Avatar src={avatarSrc || "/assets/top_profile_circle_1024.png"} alt="Profile avatar" />
+    <div className="welcomePanel welcomePanel--homeSummary">
+      <Avatar src={avatarSrc || avatarFallbackUrl("profile-summary")} alt="Profile avatar" sizes="140px" />
       <div className="welcomeCopy">
         <p className="introTagline">Welcome back</p>
         <h2>{greetingName}</h2>

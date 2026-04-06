@@ -5,6 +5,11 @@ import {
   COMMUNITY_MEMBERS_SEED,
 } from "@/features/community/data/communitySeed";
 import { queryTrustedOrgsByEin } from "@/lib/supabase/queries";
+import {
+  buildCommunityShareUrl,
+  shareCommunityPostNative,
+  trackCommunityShareEvent,
+} from "@/features/community/domain/shareActions";
 
 const POSTS_TABLE = "community_posts";
 const LIKES_TABLE = "community_post_likes";
@@ -210,12 +215,18 @@ export function togglePostLike(userId, postId, baseCount) {
 }
 
 export function sharePostDemo(post) {
-  const text = `${post.title ? `${post.title} — ` : ""}${post.body.slice(0, 160)}${post.body.length > 160 ? "…" : ""}`;
-  const url = typeof window !== "undefined" ? window.location.href : "";
+  const url = buildCommunityShareUrl({ postId: post.id, title: post.title });
+  const summary = `${post.title ? `${post.title} — ` : ""}${String(post.body || "").slice(0, 160)}${String(post.body || "").length > 160 ? "…" : ""}`;
+  trackCommunityShareEvent({ event: "community_share_attempt", postId: post.id, channel: "ui" });
   if (typeof navigator !== "undefined" && navigator.share) {
-    return navigator.share({ title: "The Outreach Project — Community", text, url }).catch(() => copyShare(text, url));
+    return shareCommunityPostNative({ postId: post.id, title: post.title || "Community story", summary })
+      .then((r) => {
+        if (r.ok) trackCommunityShareEvent({ event: "community_share_complete", postId: post.id, channel: r.channel });
+        return r;
+      })
+      .catch(() => copyShare(summary, url));
   }
-  return copyShare(text, url);
+  return copyShare(summary, url);
 }
 
 function copyShare(text, url) {

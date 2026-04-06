@@ -1,3 +1,5 @@
+import { formatOrganizationDisplayName } from "@/lib/formatOrgName";
+
 function firstNonEmpty(...values) {
   for (const value of values) {
     const text = String(value ?? "").trim();
@@ -37,39 +39,6 @@ function parseLocation(location = "") {
   };
 }
 
-function nameFromWebsite(url = "") {
-  const value = String(url || "").trim();
-  if (!value) return "";
-  try {
-    const host = new URL(/^https?:\/\//i.test(value) ? value : `https://${value}`).hostname
-      .replace(/^www\./i, "")
-      .split(".")[0];
-    const safe = host.replace(/[-_]+/g, " ").trim();
-    if (!safe) return "";
-    return safe.replace(/\b\w/g, (ch) => ch.toUpperCase());
-  } catch {
-    return "";
-  }
-}
-
-function toDisplayOrganizationName(value = "") {
-  const raw = String(value || "").trim();
-  if (!raw) return "";
-  const withSpaces = raw
-    .replace(/[_-]+/g, " ")
-    .replace(/([a-z])([A-Z])/g, "$1 $2")
-    .replace(/\s+/g, " ")
-    .trim();
-  return withSpaces
-    .split(" ")
-    .map((token) => {
-      if (!token) return token;
-      if (/^[A-Z0-9&]+$/.test(token) && token.length <= 4) return token;
-      return `${token.charAt(0).toUpperCase()}${token.slice(1).toLowerCase()}`;
-    })
-    .join(" ");
-}
-
 export function mapDirectoryRow(row = {}) {
   return {
     ein: String(row.ein ?? row.EIN ?? "").trim(),
@@ -96,7 +65,6 @@ export function mapDirectoryRow(row = {}) {
 
 export function mapTrustedRow(profile = {}, org = {}) {
   const website = firstNonEmpty(profile.website, org.website);
-  const websiteName = nameFromWebsite(website);
   const parsedProfileLocation = parseLocation(profile.location || profile.city_state || profile.cityState || "");
   const city = firstNonEmpty(org.city, profile.city, profile.address_city, parsedProfileLocation.city);
   const state = firstNonEmpty(org.state, profile.state, profile.address_state, parsedProfileLocation.state);
@@ -111,19 +79,23 @@ export function mapTrustedRow(profile = {}, org = {}) {
   ).toLowerCase();
   return {
     ein: String(profile.ein ?? org.ein ?? "").trim(),
-    orgName: toDisplayOrganizationName(firstNonEmpty(
-      profile.display_name_override,
-      profile.organization_name,
-      profile.legal_name,
-      profile.title,
-      profile.org_name,
-      org.name,
-      org.organization_name,
-      org.org_name,
-      profile.name,
-      websiteName,
-      "Unknown Organization"
-    )),
+    // Do not use website hostname as a title. Leave empty when no real name so enrichment/registry
+    // can read profile/org fields instead of locking onto "Unknown Organization".
+    orgName: (() => {
+      const rawTitle = firstNonEmpty(
+        profile.display_name_override,
+        profile.organization_name,
+        profile.legal_name,
+        profile.org_name,
+        profile.name,
+        profile.title,
+        org.organization_name,
+        org.org_name,
+        org.name,
+        org.NAME
+      );
+      return rawTitle ? formatOrganizationDisplayName(rawTitle) : "";
+    })(),
     city: String(city).trim(),
     state: String(state).trim(),
     nteeCode: String(firstNonEmpty(org.ntee_code, profile.ntee_code)).trim(),

@@ -6,8 +6,8 @@ export default function FeaturedSponsorsSection({ sponsors = [] }) {
   return (
     <section className="card sponsorSection sponsorFeaturedSection">
       <div className="sponsorSectionHead">
-        <h3>Featured sponsors</h3>
-        <span className="sponsorFeaturedValuePill">Premium placements</span>
+        <h3>Mission partners</h3>
+        <span className="sponsorFeaturedValuePill">Current sponsors</span>
       </div>
       <p className="sponsorSectionLead">
         Curated sponsor spotlights with custom brand visuals, designed to honor each partner identity while staying mission-aligned.

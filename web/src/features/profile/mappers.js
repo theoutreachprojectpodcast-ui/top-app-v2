@@ -1,10 +1,38 @@
 import { defaultProfile } from "@/lib/utils";
+import {
+  getMembershipTierDefinition,
+  normalizeMembershipTierKey,
+} from "@/features/membership/membershipTiers";
+
+/** Extended profile fields stored locally (and merged client-side with Supabase core fields). */
+const PROFILE_EXTENSION_KEYS = [
+  "identityRole",
+  "missionStatement",
+  "organizationAffiliation",
+  "serviceBackground",
+  "city",
+  "state",
+  "causes",
+  "skills",
+  "volunteerInterests",
+  "supportInterests",
+  "contributionSummary",
+];
+
+function extensionDefaults() {
+  return Object.fromEntries(PROFILE_EXTENSION_KEYS.map((k) => [k, ""]));
+}
+
+function readExtensions(source = {}) {
+  const out = extensionDefaults();
+  for (const key of PROFILE_EXTENSION_KEYS) {
+    out[key] = String(source[key] ?? "").trim();
+  }
+  return out;
+}
 
 export function normalizeMembershipStatus(value) {
-  const normalized = String(value || "supporter").toLowerCase().trim();
-  if (normalized === "member") return "member";
-  if (normalized === "demo") return "demo";
-  return "supporter";
+  return normalizeMembershipTierKey(value);
 }
 
 export function profileFromLegacy(localProfile = {}) {
@@ -19,10 +47,11 @@ export function profileFromLegacy(localProfile = {}) {
     lastName: last || (!isPlaceholderLegacyName ? legacyRest.join(" ") : ""),
     email: String(localProfile.email || "").trim(),
     membershipStatus: normalizeMembershipStatus(localProfile.membershipStatus || localProfile.tier),
-    banner: String(localProfile.banner || "How can we assist you today?").trim(),
+    banner: String(localProfile.banner || "Hi, I’m Andy").trim(),
     avatarUrl: String(localProfile.photoDataUrl || localProfile.avatarUrl || "").trim(),
     theme: String(localProfile.theme || "clean").trim() || "clean",
     savedOrgEins: Array.isArray(localProfile.savedOrgEins) ? localProfile.savedOrgEins : [],
+    ...readExtensions(localProfile),
   };
 }
 
@@ -31,16 +60,19 @@ export function createInitialProfile() {
 }
 
 export function toLocalStorageProfile(profile) {
+  const t = normalizeMembershipStatus(profile.membershipStatus);
+  const legacyTier = t === "member" ? "member" : "supporter";
   return {
     name: `${profile.firstName} ${profile.lastName}`.trim(),
     email: profile.email,
-    tier: profile.membershipStatus === "member" ? "member" : "supporter",
+    tier: legacyTier,
     membershipStatus: profile.membershipStatus,
     firstName: profile.firstName,
     lastName: profile.lastName,
     banner: profile.banner,
     photoDataUrl: profile.avatarUrl || "",
     avatarUrl: profile.avatarUrl || "",
+    ...readExtensions(profile),
   };
 }
 
@@ -50,7 +82,7 @@ export function toLocalShape(profile) {
     lastName: profile.lastName || "",
     email: profile.email || "",
     membershipStatus: normalizeMembershipStatus(profile.membershipStatus),
-    banner: profile.banner || "How can we assist you today?",
+    banner: profile.banner || "Hi, I’m Andy",
     avatarUrl: profile.avatarUrl || "",
     theme: profile.theme || "clean",
     savedOrgEins: Array.isArray(profile.savedOrgEins) ? profile.savedOrgEins : [],
@@ -59,29 +91,14 @@ export function toLocalShape(profile) {
 
 export function getMembershipMeta(status) {
   const normalized = normalizeMembershipStatus(status);
-  if (normalized === "member") {
-    return {
-      status: normalized,
-      isMember: true,
-      label: "Member Active",
-      hint: "You have full access to member-only areas and saved organizations.",
-      cta: "Manage membership",
-    };
-  }
-  if (normalized === "demo") {
-    return {
-      status: normalized,
-      isMember: false,
-      label: "Demo Member",
-      hint: "Demo mode enabled. Upgrade to activate full member benefits.",
-      cta: "Upgrade to full member",
-    };
-  }
+  const def = getMembershipTierDefinition(normalized);
+  const isMember = def.isMember;
   return {
-    status: "supporter",
-    isMember: false,
-    label: "Supporter Access",
-    hint: "Upgrade to unlock member-only sponsors, community access, and saved resources.",
-    cta: "Become a member",
+    status: normalized,
+    isMember,
+    label: def.label,
+    hint: def.hint,
+    benefits: def.benefits,
+    cta: isMember ? "Manage membership" : "Upgrade",
   };
 }

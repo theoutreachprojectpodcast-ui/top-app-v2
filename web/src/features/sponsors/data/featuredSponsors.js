@@ -1,59 +1,133 @@
-/** Demo / placeholder featured sponsors for the sponsor landing view. */
-function sponsorAvatar(bg, fg, label) {
-  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='360' height='360'><rect width='100%' height='100%' fill='${bg}'/><circle cx='180' cy='138' r='74' fill='${fg}' opacity='0.22'/><text x='50%' y='58%' dominant-baseline='middle' text-anchor='middle' font-family='Segoe UI, Arial, sans-serif' font-size='92' fill='${fg}' font-weight='700'>${label}</text></svg>`;
-  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+/**
+ * Featured sponsors — logos via Clearbit where a public domain exists; hero imagery is stock (Unsplash) with warm grading.
+ * Social URLs are public marketing links only; verify before production campaigns.
+ */
+
+function unsplash(photoPath, w = 1400) {
+  return `https://images.unsplash.com/${photoPath}?auto=format&fit=crop&w=${w}&q=78`;
 }
 
-function sponsorBg(a, b, title) {
-  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='1400' height='760'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%' stop-color='${a}'/><stop offset='100%' stop-color='${b}'/></linearGradient></defs><rect width='100%' height='100%' fill='url(#g)'/><rect x='52' y='52' width='1296' height='656' rx='22' fill='rgba(6,9,12,0.28)' stroke='rgba(236,238,241,0.22)'/><text x='84' y='126' font-family='Segoe UI, Arial, sans-serif' font-size='52' fill='rgba(255,255,255,0.9)' font-weight='700'>${title}</text></svg>`;
-  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+function clearbitLogo(domain) {
+  return `https://logo.clearbit.com/${domain}`;
 }
 
 export const FEATURED_SPONSORS = [
   {
-    id: "1",
-    name: "Summit Ridge Security",
-    tag: "Veteran-founded",
-    initials: "SR",
-    logoIcon: "SR",
+    id: "rope-solutions",
+    name: "Rope Solutions",
+    tag: "Mission partner",
+    industry: "Training & readiness",
+    tierLabel: "Featured sponsor",
+    tagline: "Trusted rope access and technical training for high-consequence teams.",
+    ctaLabel: "Website pending approval",
+    ctaUrl: null,
+    websitePending: true,
+    logoUrl: null,
+    warmVariant: "gold",
+    backgroundImageUrl: unsplash("photo-1504307651254-35680f356dfd"),
+    socialLinks: {},
+  },
+  {
+    id: "gameday-mens-health",
+    name: "Gameday Men’s Health",
+    tag: "Men’s wellness",
+    industry: "Men’s health clinics",
+    tierLabel: "Featured sponsor",
+    tagline: "Men’s health clinics focused on testosterone therapy, vitality, and proactive care.",
+    ctaLabel: "Visit website",
+    ctaUrl: "https://gamedaymenshealth.com/",
+    logoUrl: clearbitLogo("gamedaymenshealth.com"),
+    warmVariant: "copper",
+    backgroundImageUrl: unsplash("photo-1576091160399-112ba8d25d1d"),
+    socialLinks: {
+      website: "https://gamedaymenshealth.com/",
+      instagram: "https://www.instagram.com/gamedaymenshealth/",
+      facebook: "https://www.facebook.com/gamedaymenshealth",
+      linkedin: "https://www.linkedin.com/company/gameday-mens-health",
+    },
+  },
+  {
+    id: "rucking-realty",
+    name: "Rucking Realty Group",
+    tag: "Veteran-led real estate",
+    industry: "Real estate",
     tierLabel: "Mission sponsor",
-    tagline: "Operational resilience solutions supporting first-responder communities.",
-    ctaLabel: "Sponsor spotlight",
-    ctaUrl: "https://example.com/summit-ridge",
-    brandPrimary: "#d7a957",
-    brandSecondary: "#2f8f96",
-    profileImageUrl: sponsorAvatar("#243944", "#f5d698", "SR"),
-    backgroundImageUrl: sponsorBg("#1d3d47", "#2e6675", "Summit Ridge Security"),
+    tagline: "Service-minded real estate guidance for military, veterans, and first-responder families.",
+    ctaLabel: "Visit website",
+    ctaUrl: "https://ruckingrealtygroup.com/",
+    logoUrl: clearbitLogo("ruckingrealtygroup.com"),
+    warmVariant: "amber",
+    backgroundImageUrl: unsplash("photo-1560518883-ce09059eeffa"),
+    socialLinks: {
+      website: "https://ruckingrealtygroup.com/",
+      facebook: "https://www.facebook.com/ruckingrealtygroup",
+      instagram: "https://www.instagram.com/ruckingrealtygroup/",
+    },
   },
   {
-    id: "2",
-    name: "Harborline Health",
-    tag: "Behavioral health",
-    initials: "HH",
-    logoIcon: "HH",
+    id: "iron-soldiers-coffee",
+    name: "Iron Soldiers Coffee Company",
+    tag: "Veteran-owned",
+    industry: "Coffee & retail",
     tierLabel: "Featured support",
-    tagline: "Mental wellness networks for veterans, families, and frontline professionals.",
-    ctaLabel: "Visit sponsor",
-    ctaUrl: "https://example.com/harborline",
-    brandPrimary: "#7db7d9",
-    brandSecondary: "#4a6d8a",
-    profileImageUrl: sponsorAvatar("#24344a", "#b8ddff", "HH"),
-    backgroundImageUrl: sponsorBg("#264966", "#537fa3", "Harborline Health"),
+    tagline: "Veteran-owned coffee fueling community and giving back to those who serve.",
+    ctaLabel: "Visit website",
+    ctaUrl: "https://ironsoldierscoffeeco.com/",
+    logoUrl: clearbitLogo("ironsoldierscoffeeco.com"),
+    warmVariant: "rust",
+    backgroundImageUrl: unsplash("photo-1497935586351-b67a49e012bf"),
+    socialLinks: {
+      website: "https://ironsoldierscoffeeco.com/",
+      instagram: "https://www.instagram.com/ironsoldierscoffee/",
+      facebook: "https://www.facebook.com/IronSoldiersCoffee",
+    },
   },
   {
-    id: "3",
-    name: "Atlas Gear Co.",
-    tag: "Outdoor + resilience",
-    initials: "AG",
-    logoIcon: "AG",
-    tierLabel: "Premier support",
-    tagline: "Field-ready equipment and recovery programs for high-stress service roles.",
-    ctaLabel: "Learn more",
-    ctaUrl: "https://example.com/atlas-gear",
-    brandPrimary: "#e4bc5c",
-    brandSecondary: "#6d4a2d",
-    profileImageUrl: sponsorAvatar("#3b2f24", "#f6d39d", "AG"),
-    backgroundImageUrl: sponsorBg("#5f3d25", "#8f6138", "Atlas Gear Co."),
+    id: "eduardo-pico-designs",
+    name: "Eduardo Pico Designs",
+    tag: "Creative partner",
+    industry: "Design & branding",
+    tierLabel: "Creative sponsor",
+    tagline: "Brand and digital design for mission-driven organizations and founders.",
+    ctaLabel: "Visit website",
+    ctaUrl: "https://eduardopicodesigns.com/",
+    logoUrl: clearbitLogo("eduardopicodesigns.com"),
+    warmVariant: "teal",
+    backgroundImageUrl: unsplash("photo-1552664730-d307ca884978"),
+    socialLinks: {
+      website: "https://eduardopicodesigns.com/",
+    },
+  },
+  {
+    id: "wars-end-merch",
+    name: "War’s End Merch",
+    tag: "Apparel & impact",
+    industry: "Apparel",
+    tierLabel: "Mission retail",
+    tagline: "Apparel and goods that amplify stories of service, recovery, and resilience.",
+    ctaLabel: "Visit website",
+    ctaUrl: "https://www.warsendmerch.com/",
+    logoUrl: clearbitLogo("warsendmerch.com"),
+    warmVariant: "rose",
+    backgroundImageUrl: unsplash("photo-1523381210434-271e8be1f52b"),
+    socialLinks: {},
+  },
+  {
+    id: "brain-treatment-center",
+    name: "Brain Treatment Center",
+    tag: "Clinical care",
+    industry: "Neurological health",
+    tierLabel: "Healthcare partner",
+    tagline: "Advanced neurological care pathways supporting recovery and quality of life.",
+    ctaLabel: "Visit website",
+    ctaUrl: "https://braintreatmentcenter.com/",
+    logoUrl: clearbitLogo("braintreatmentcenter.com"),
+    warmVariant: "sage",
+    backgroundImageUrl: unsplash("photo-1579684385127-1ef15d508118"),
+    socialLinks: {
+      website: "https://braintreatmentcenter.com/",
+      facebook: "https://www.facebook.com/braintreatmentcenter",
+      linkedin: "https://www.linkedin.com/company/brain-treatment-center",
+    },
   },
 ];
-

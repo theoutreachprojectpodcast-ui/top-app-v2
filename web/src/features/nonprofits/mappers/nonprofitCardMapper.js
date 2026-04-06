@@ -1,6 +1,13 @@
 import { mapNonprofitCategory } from "@/features/nonprofits/mappers/categoryMapper";
 import { getNonprofitVerificationTier } from "@/lib/nonprofits/verification";
 import { mapNonprofitStatus } from "@/features/nonprofits/mappers/nonprofitStatusMapper";
+import { mergeProvenAllyPresentation } from "@/features/trusted-resources/provenAllyPresentation";
+import {
+  formatOrganizationDisplayName,
+  humanizeProvenAllySlug,
+  isPlaceholderOrgName,
+  normalizeOrganizationWhitespace,
+} from "@/lib/formatOrgName";
 import { rowCity, rowEin, rowName, rowNtee, rowState } from "@/lib/utils";
 import { nteeToService } from "@/lib/utils";
 import { mapNonprofitLinks } from "@/features/nonprofits/mappers/nonprofitLinksMapper";
@@ -11,6 +18,38 @@ function firstNonEmpty(...values) {
     if (text) return text;
   }
   return "";
+}
+
+/** safeText uses "—" for empty; skip that so we can fall through to profile/org fields */
+function firstNonEmptyDisplay(...values) {
+  for (const value of values) {
+    const text = String(value ?? "").trim();
+    if (text && text !== "—") return text;
+  }
+  return "";
+}
+
+function firstNonEmptyDisplayNoPlaceholder(...values) {
+  for (const value of values) {
+    const text = String(value ?? "").trim();
+    if (!text || text === "—" || isPlaceholderOrgName(text)) continue;
+    return text;
+  }
+  return "";
+}
+
+/** Curated + universal proven-ally formatting whenever the row is a proven ally, not only on the trusted tab */
+function needsProvenAllyPresentation(row = {}, source) {
+  if (source === "trusted") return true;
+  if (row?.isTrusted || row?.is_trusted) return true;
+  const prof = row?.raw?.profile;
+  if (prof?.is_trusted === true || prof?.is_proven_ally === true) return true;
+  if (String(prof?.proven_ally_status || "").toLowerCase() === "approved") return true;
+  const rawRow = row?.raw;
+  if (rawRow && typeof rawRow === "object" && !prof) {
+    if (rawRow.is_trusted === true || rawRow.is_proven_ally === true) return true;
+  }
+  return false;
 }
 
 function parseLocation(value = "") {
@@ -59,56 +98,70 @@ function resolveTrustedLocation(row = {}, profile = {}) {
   return { city: parsed.city, state: parsed.state, raw: rawLocation };
 }
 
-function formatDisplayName(value = "") {
-  const raw = String(value || "").trim();
-  if (!raw) return "";
-  const normalized = raw
-    .replace(/[_-]+/g, " ")
-    .replace(/([a-z])([A-Z])/g, "$1 $2")
-    .replace(/\s+/g, " ")
-    .trim();
-  return normalized
-    .split(" ")
-    .map((token) => {
-      if (!token) return token;
-      if (/^[A-Z0-9&]+$/.test(token) && token.length <= 4) return token;
-      return `${token.charAt(0).toUpperCase()}${token.slice(1).toLowerCase()}`;
-    })
-    .join(" ");
-}
-
 export function mapNonprofitCardRow(row = {}, source = "directory") {
-  const profile = row?.raw?.profile || {};
-  const trustedLocation = resolveTrustedLocation(row, profile);
-  const resolvedCity = firstNonEmpty(rowCity(row), row.city, row.address_city, profile.city, profile.address_city, trustedLocation.city);
-  const resolvedState = firstNonEmpty(rowState(row), row.state, row.address_state, profile.state, profile.address_state, trustedLocation.state);
-  const resolvedName = firstNonEmpty(
-    rowName(row),
-    row.orgName,
-    row.organization_name,
-    row.display_name_override,
-    profile.organization_name,
-    profile.legal_name,
-    profile.title,
-    profile.org_name,
-    profile.name,
-    "Unknown Organization"
+  const applyProvenPresentation = needsProvenAllyPresentation(row, source);
+  const baseRow = applyProvenPresentation ? mergeProvenAllyPresentation(row) : row;
+  const profile = baseRow?.raw?.profile || {};
+  const trustedLocation = resolveTrustedLocation(baseRow, profile);
+  const resolvedCity = firstNonEmpty(
+    baseRow.city,
+    rowCity(baseRow),
+    baseRow.address_city,
+    profile.city,
+    profile.address_city,
+    trustedLocation.city
   );
+  const resolvedState = firstNonEmpty(
+    baseRow.state,
+    rowState(baseRow),
+    baseRow.address_state,
+    profile.state,
+    profile.address_state,
+    trustedLocation.state
+  );
+  const orgRaw = baseRow.raw?.org || {};
+  const resolvedName = baseRow.canonicalDisplayName
+    ? normalizeOrganizationWhitespace(baseRow.canonicalDisplayName)
+    : firstNonEmptyDisplayNoPlaceholder(
+        baseRow.orgName,
+        rowName(baseRow),
+        baseRow.display_name_override,
+        orgRaw.organization_name,
+        orgRaw.org_name,
+        orgRaw.name,
+        orgRaw.NAME,
+        profile.display_name_override,
+        profile.organization_name,
+        profile.legal_name,
+        profile.title,
+        profile.org_name,
+        profile.name
+      );
 
   const patchedRow = {
-    ...row,
+    ...baseRow,
     orgName: resolvedName,
+    provenCategoryKey: baseRow.provenCategoryKey,
     city: resolvedCity,
     state: resolvedState,
-    nonprofit_type: firstNonEmpty(row.nonprofit_type, row.nonprofitType, profile.nonprofit_type, profile.category, profile.organization_type),
-    serves_veterans: row.serves_veterans ?? row.servesVeterans ?? String(firstNonEmpty(profile.who_you_serve, profile.veteran_support_experience)).toLowerCase().includes("veteran"),
+    nonprofit_type: firstNonEmpty(
+      baseRow.nonprofit_type,
+      baseRow.nonprofitType,
+      profile.nonprofit_type,
+      profile.category,
+      profile.organization_type
+    ),
+    serves_veterans:
+      baseRow.serves_veterans ??
+      baseRow.servesVeterans ??
+      String(firstNonEmpty(profile.who_you_serve, profile.veteran_support_experience)).toLowerCase().includes("veteran"),
     serves_first_responders:
-      row.serves_first_responders ??
-      row.servesFirstResponders ??
+      baseRow.serves_first_responders ??
+      baseRow.servesFirstResponders ??
       String(firstNonEmpty(profile.who_you_serve, profile.first_responder_support_experience)).toLowerCase().includes("first responder"),
     ntee_code: firstNonEmpty(
-      row.ntee_code,
-      row.nteeCode,
+      baseRow.ntee_code,
+      baseRow.nteeCode,
       profile.ntee_code,
       profile.ntee,
       profile.category_code,
@@ -123,9 +176,8 @@ export function mapNonprofitCardRow(row = {}, source = "directory") {
   const nteeCode = rowNtee(patchedRow);
   const status = mapNonprofitStatus(patchedRow, source, tier);
   const resolvedEin = rowEin(patchedRow);
-  const displayName = formatDisplayName(resolvedName || "Unknown Organization");
   const trustedDescription =
-    source === "trusted"
+    applyProvenPresentation
       ? String(
         patchedRow?.description ??
         patchedRow?.summary ??
@@ -136,24 +188,45 @@ export function mapNonprofitCardRow(row = {}, source = "directory") {
       ).trim()
       : "";
   const links = mapNonprofitLinks(patchedRow);
-  const computedDescription = trustedDescription || (source === "trusted" ? "" : nteeToService(nteeCode));
+  let computedDescription = trustedDescription || (applyProvenPresentation ? "" : nteeToService(nteeCode));
+  if (applyProvenPresentation && computedDescription.length > 300) {
+    computedDescription = `${computedDescription.slice(0, 297)}…`;
+  }
+  let displayName;
+  if (baseRow.canonicalDisplayName) {
+    displayName = normalizeOrganizationWhitespace(baseRow.canonicalDisplayName);
+  } else if (resolvedName && !isPlaceholderOrgName(resolvedName)) {
+    displayName = formatOrganizationDisplayName(resolvedName);
+  } else if (baseRow.provenAllySlug) {
+    displayName = humanizeProvenAllySlug(baseRow.provenAllySlug);
+  } else if (String(resolvedEin || "").trim()) {
+    displayName = `Proven ally (EIN ${resolvedEin})`;
+  } else {
+    displayName = "Proven ally";
+  }
+  const locationLine =
+    firstNonEmpty(
+      baseRow.provenDisplayLocation,
+      [resolvedCity, resolvedState].filter(Boolean).join(", "),
+      trustedLocation.raw
+    ) || (applyProvenPresentation ? "National" : "Unknown Location");
   return {
-    id: row.id || resolvedEin || displayName,
+    id: baseRow.id || resolvedEin || displayName,
     ein: resolvedEin,
     name: displayName,
     city,
     state,
-    location: [city, state].filter(Boolean).join(", ") || trustedLocation.raw || "Unknown Location",
+    location: locationLine,
     category,
     tier,
     status,
     description: computedDescription,
-    logoUrl: String(row.logoUrl ?? row.logo_url ?? "").trim(),
-    cityImageUrl: String(row.cityImageUrl ?? row.fallback_city_image_url ?? row.city_image_url ?? "").trim(),
+    logoUrl: String(baseRow.logoUrl ?? baseRow.logo_url ?? "").trim(),
+    cityImageUrl: String(baseRow.cityImageUrl ?? baseRow.fallback_city_image_url ?? baseRow.city_image_url ?? "").trim(),
     fallbackLocation: [city, state].filter(Boolean).join(", ") || state || city || "Unknown Location",
     links,
     primaryLink: links.find((l) => l.type === "website")?.url || links[0]?.url || "",
-    raw: row,
+    raw: baseRow,
   };
 }
 

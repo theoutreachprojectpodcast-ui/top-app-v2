@@ -1,41 +1,52 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: ["class", '[data-color-scheme="dark"]'],
   content: [
     "./src/app/**/*.{js,jsx,ts,tsx,mdx}",
     "./src/components/**/*.{js,jsx,ts,tsx,mdx}",
     "./src/hooks/**/*.{js,jsx,ts,tsx,mdx}",
+    "./src/features/**/*.{js,jsx,ts,tsx,mdx}",
   ],
   theme: {
     extend: {
       colors: {
-        gold: {
-          DEFAULT: "#C58B2A",
-          light: "#E0A843",
-          dark: "#8A5E1A",
-        },
-        cyan: {
-          DEFAULT: "#2ED3E6",
-          light: "#6FE7F5",
-          dark: "#1AA3B5",
-        },
-        bg: {
-          primary: "#0B1F24",
-          secondary: "#102A30",
-          surface: "#15333A",
-        },
-        text: {
-          primary: "#E6F1F2",
-          secondary: "#9FB4B8",
-        },
-        border: "#1F3A40",
+        app: "var(--color-bg-app)",
+        subtle: "var(--color-bg-subtle)",
+        card: "var(--color-bg-card)",
+        "card-hover": "var(--color-bg-card-hover)",
+        muted: "var(--color-bg-muted)",
+        "border-subtle": "var(--color-border-subtle)",
+        "border-strong": "var(--color-border-strong)",
+        "text-primary": "var(--color-text-primary)",
+        "text-secondary": "var(--color-text-secondary)",
+        "text-muted": "var(--color-text-muted)",
+        accent: "var(--color-accent)",
+        "accent-hover": "var(--color-accent-hover)",
+        "accent-soft": "var(--color-accent-soft)",
+        link: "var(--color-link)",
+        "focus-ring": "var(--color-focus-ring)",
+        success: "var(--color-success)",
+        warning: "var(--color-warning)",
+        error: "var(--color-error)",
+        info: "var(--color-info)",
       },
       boxShadow: {
-        "glow-cyan": "0 0 12px #2ED3E6, 0 0 24px rgba(46, 211, 230, 0.25)",
-        "glow-gold": "0 0 10px rgba(224, 168, 67, 0.35)",
-        "depth-card": "0 8px 20px rgba(0, 0, 0, 0.35)",
+        card: "var(--shadow-card)",
+        "card-hover": "var(--shadow-card-hover)",
+        accent: "var(--glow-accent)",
+      },
+      borderRadius: {
+        input: "var(--radius-input)",
+        card: "var(--radius-card)",
+        button: "var(--radius-button)",
+      },
+      ringColor: {
+        DEFAULT: "var(--color-focus-ring)",
+      },
+      backgroundColor: {
+        navbar: "var(--color-navbar)",
       },
     },
   },
   plugins: [],
 };
-

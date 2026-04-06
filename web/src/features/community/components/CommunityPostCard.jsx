@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Avatar from "@/components/shared/Avatar";
+import { avatarFallbackUrl } from "@/lib/avatarFallback";
 import CommunitySocialActions from "@/features/community/components/CommunitySocialActions";
 import { sharePostDemo } from "@/features/community/api/communityApi";
 
@@ -25,7 +26,7 @@ const POST_TYPE_LABEL = {
 export default function CommunityPostCard({ post, onToggleLike }) {
   const [shareBusy, setShareBusy] = useState(false);
   const displayName = post.showAuthorName ? post.authorName : "Community member";
-  const avatarSrc = post.authorAvatarUrl || "/assets/top_profile_circle_1024.png";
+  const avatarSrc = post.authorAvatarUrl || avatarFallbackUrl(post.authorId || post.id);
   const cat = CATEGORY_LABEL[post.category] || "Story";
 
   async function onShare() {
@@ -39,23 +40,27 @@ export default function CommunityPostCard({ post, onToggleLike }) {
 
   return (
     <article className="communityPostCard">
-      <div className="communityPostHead">
+      <div className="communityPostTop">
         <Avatar src={avatarSrc} alt={displayName} className="communityPostAvatar" />
         <div className="communityPostMeta">
           <div className="communityPostAuthorRow">
-            <strong>{displayName}</strong>
+            <strong className="communityPostAuthorName">{displayName}</strong>
             <span className="communityPostBadge">{cat}</span>
-            {post.postType ? <span className="communityPostTypeBadge">{POST_TYPE_LABEL[post.postType] || "Update"}</span> : null}
+            {post.postType ? (
+              <span className="communityPostTypeBadge">{POST_TYPE_LABEL[post.postType] || "Update"}</span>
+            ) : null}
           </div>
-          <time className="communityPostTime" dateTime={post.createdAt}>{post.relativeTime}</time>
+          <time className="communityPostTime" dateTime={post.createdAt}>
+            {post.relativeTime}
+          </time>
+          {post.title ? <h4 className="communityPostTitle">{post.title}</h4> : null}
         </div>
       </div>
-      {post.title ? <h4 className="communityPostTitle">{post.title}</h4> : null}
       <p className="communityPostBody">{post.body}</p>
       {post.photoUrl ? (
         <div className="communityPostMedia">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={post.photoUrl} alt={post.title || "Community shared photo"} />
+          <img src={post.photoUrl} alt="" />
         </div>
       ) : null}
       {post.nonprofitName ? (
