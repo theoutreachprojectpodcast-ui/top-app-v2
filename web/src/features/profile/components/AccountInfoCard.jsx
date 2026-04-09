@@ -12,6 +12,7 @@ export default function AccountInfoCard({
   membershipTier = "",
   membershipBillingStatus = "",
   displayName = "",
+  manageBillingSlot = null,
 }) {
   const name = [firstName, lastName].filter(Boolean).join(" ").trim() || displayName;
   return (
@@ -37,11 +38,12 @@ export default function AccountInfoCard({
         <br />
         {membershipBillingStatus ? String(membershipBillingStatus) : "—"}
       </p>
-      <p style={{ marginBottom: 0 }}>
+      <p>
         <strong>Profile data source</strong>
         <br />
         {sourceLabel(profileSource)}
       </p>
+      {manageBillingSlot ? <div style={{ marginTop: 12 }}>{manageBillingSlot}</div> : null}
     </div>
   );
 }

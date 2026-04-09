@@ -1,15 +1,11 @@
 import Stripe from "stripe";
 import { createSupabaseAdminClient, profileTableName } from "@/lib/supabase/admin";
+import { getProfileRowByStripeCustomerId } from "@/lib/profile/serverProfile";
 import { headers } from "next/headers";
 
 export const runtime = "nodejs";
 
-async function syncSubscription(admin, sub, customerId) {
-  const meta = sub.metadata || {};
-  const workosUserId = meta.workos_user_id;
-  if (!workosUserId) return;
-
-  const tier = String(meta.membership_tier || "member").toLowerCase();
+function mapStripeSubStatus(status) {
   const statusMap = {
     active: "active",
     trialing: "active",
@@ -20,17 +16,75 @@ async function syncSubscription(admin, sub, customerId) {
     incomplete_expired: "canceled",
     paused: "past_due",
   };
-  const billingStatus = statusMap[sub.status] || "pending";
+  return statusMap[status] || "pending";
+}
+
+/**
+ * @param {import('@supabase/supabase-js').SupabaseClient} admin
+ * @param {import('stripe').Stripe} stripe
+ */
+async function resolveWorkosUserId(admin, sub, customerId) {
+  const meta = sub.metadata || {};
+  const direct = meta.workos_user_id;
+  if (direct) return String(direct);
+
+  if (customerId) {
+    const byCustomer = await getProfileRowByStripeCustomerId(admin, customerId);
+    if (byCustomer?.workos_user_id) return String(byCustomer.workos_user_id);
+  }
+
+  const profileId = meta.torp_profile_id;
+  if (profileId) {
+    const { data, error } = await admin
+      .from(profileTableName())
+      .select("workos_user_id")
+      .eq("id", profileId)
+      .maybeSingle();
+    if (!error && data?.workos_user_id) return String(data.workos_user_id);
+  }
+
+  return null;
+}
+
+/**
+ * @param {import('@supabase/supabase-js').SupabaseClient} admin
+ */
+async function syncSubscription(admin, sub, customerId, { forceEnded = false } = {}) {
+  const cust = customerId || (typeof sub.customer === "string" ? sub.customer : sub.customer?.id) || "";
+  const workosUserId = await resolveWorkosUserId(admin, sub, cust);
+  if (!workosUserId) {
+    console.warn("[torp] webhook: could not resolve profile for subscription", sub.id);
+    return;
+  }
+
+  const table = profileTableName();
+  const ended = forceEnded || sub.status === "canceled" || sub.status === "incomplete_expired";
+
+  if (ended) {
+    const patch = {
+      membership_tier: "free",
+      membership_status: "canceled",
+      stripe_subscription_id: null,
+      updated_at: new Date().toISOString(),
+    };
+    if (cust) patch.stripe_customer_id = cust;
+    await admin.from(table).update(patch).eq("workos_user_id", workosUserId);
+    return;
+  }
+
+  const tier = String(sub.metadata?.membership_tier || "member").toLowerCase();
+  const safeTier = ["support", "member", "sponsor"].includes(tier) ? tier : "member";
+  const billingStatus = mapStripeSubStatus(sub.status);
 
   const patch = {
-    stripe_customer_id: customerId || undefined,
+    stripe_customer_id: cust || undefined,
     stripe_subscription_id: sub.id,
-    membership_tier: ["support", "member", "sponsor"].includes(tier) ? tier : "member",
+    membership_tier: safeTier,
     membership_status: billingStatus,
     updated_at: new Date().toISOString(),
   };
 
-  await admin.from(profileTableName()).update(patch).eq("workos_user_id", workosUserId);
+  await admin.from(table).update(patch).eq("workos_user_id", workosUserId);
 }
 
 export async function POST(request) {
@@ -65,19 +119,50 @@ export async function POST(request) {
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object;
+        const workos = session.metadata?.workos_user_id;
+        const cust = typeof session.customer === "string" ? session.customer : session.customer?.id;
+        const profileId = session.metadata?.torp_profile_id;
+
+        if (cust && workos) {
+          await admin
+            .from(profileTableName())
+            .update({ stripe_customer_id: cust, updated_at: new Date().toISOString() })
+            .eq("workos_user_id", workos);
+        } else if (cust && profileId) {
+          await admin
+            .from(profileTableName())
+            .update({ stripe_customer_id: cust, updated_at: new Date().toISOString() })
+            .eq("id", profileId);
+        }
+
         const subId =
           typeof session.subscription === "string" ? session.subscription : session.subscription?.id;
         if (subId) {
           const sub = await stripe.subscriptions.retrieve(subId);
-          const cust = typeof session.customer === "string" ? session.customer : session.customer?.id;
           await syncSubscription(admin, sub, cust);
         }
         break;
       }
-      case "customer.subscription.updated":
+      case "customer.subscription.created":
+      case "customer.subscription.updated": {
+        const sub = event.data.object;
+        const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer?.id;
+        await syncSubscription(admin, sub, customerId);
+        break;
+      }
       case "customer.subscription.deleted": {
         const sub = event.data.object;
         const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer?.id;
+        await syncSubscription(admin, sub, customerId, { forceEnded: true });
+        break;
+      }
+      case "invoice.paid":
+      case "invoice.payment_failed": {
+        const inv = event.data.object;
+        const subId = typeof inv.subscription === "string" ? inv.subscription : inv.subscription?.id;
+        if (!subId) break;
+        const sub = await stripe.subscriptions.retrieve(subId);
+        const customerId = typeof inv.customer === "string" ? inv.customer : inv.customer?.id;
         await syncSubscription(admin, sub, customerId);
         break;
       }

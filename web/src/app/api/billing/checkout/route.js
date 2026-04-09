@@ -2,18 +2,34 @@ import { withAuth } from "@workos-inc/authkit-nextjs";
 import Stripe from "stripe";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
-import { appBaseUrl, priceIdForTier, stripeSecretConfigured } from "@/lib/billing/stripeConfig";
+import { appBaseUrl, priceIdForTier, stripeCheckoutConfigured } from "@/lib/billing/stripeConfig";
 
 const PAID = new Set(["support", "member", "sponsor"]);
 
 export async function POST(request) {
-  if (!stripeSecretConfigured()) {
+  if (!stripeCheckoutConfigured()) {
     return Response.json({ error: "billing_not_configured" }, { status: 503 });
   }
 
   const auth = await withAuth();
   if (!auth.user) {
     return Response.json({ error: "unauthorized" }, { status: 401 });
+  }
+
+  const admin = createSupabaseAdminClient();
+  if (!admin) {
+    return Response.json({ error: "server_storage_unavailable" }, { status: 503 });
+  }
+
+  const profileRow = await getProfileRowByWorkOSId(admin, auth.user.id);
+  if (!profileRow) {
+    return Response.json(
+      {
+        error: "profile_required",
+        message: "Your account profile was not found. Sign in again or complete onboarding first.",
+      },
+      { status: 403 },
+    );
   }
 
   let body;
@@ -35,12 +51,14 @@ export async function POST(request) {
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
   const base = appBaseUrl();
-  const admin = createSupabaseAdminClient();
-  let customerId = null;
-  if (admin) {
-    const row = await getProfileRowByWorkOSId(admin, auth.user.id);
-    customerId = row?.stripe_customer_id || null;
-  }
+  const customerId = profileRow.stripe_customer_id ? String(profileRow.stripe_customer_id).trim() : null;
+  const profileId = profileRow.id ? String(profileRow.id) : "";
+
+  const metadata = {
+    workos_user_id: auth.user.id,
+    membership_tier: tier,
+    ...(profileId ? { torp_profile_id: profileId } : {}),
+  };
 
   try {
     const session = await stripe.checkout.sessions.create({
@@ -51,15 +69,9 @@ export async function POST(request) {
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${base}/onboarding?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${base}/onboarding?checkout=cancel`,
-      metadata: {
-        workos_user_id: auth.user.id,
-        membership_tier: tier,
-      },
+      metadata,
       subscription_data: {
-        metadata: {
-          workos_user_id: auth.user.id,
-          membership_tier: tier,
-        },
+        metadata,
       },
     });
 

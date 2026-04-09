@@ -103,3 +103,7 @@ Opens **http://localhost:3000**. If port 3000 is in use, free it or run `pnpm --
 ## Community (tORP v0.3)
 
 Supabase-backed community posts, moderation statuses, RLS, and API routes are documented in [`docs/COMMUNITY_v0.3.md`](docs/COMMUNITY_v0.3.md).
+
+## Billing — Stripe + persistent profiles (tORP v0.3)
+
+WorkOS identity, Supabase `torp_profiles`, Checkout, webhooks, and Customer Portal are documented in [`docs/BILLING_STRIPE_v0.3.md`](docs/BILLING_STRIPE_v0.3.md).

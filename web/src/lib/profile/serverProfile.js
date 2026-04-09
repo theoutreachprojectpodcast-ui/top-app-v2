@@ -10,6 +10,14 @@ export async function getProfileRowByWorkOSId(admin, workosUserId) {
   return data;
 }
 
+/** @param {import('@supabase/supabase-js').SupabaseClient} admin */
+export async function getProfileRowByStripeCustomerId(admin, stripeCustomerId) {
+  if (!admin || !stripeCustomerId) return null;
+  const { data, error } = await admin.from(TABLE()).select("*").eq("stripe_customer_id", stripeCustomerId).maybeSingle();
+  if (error || !data) return null;
+  return data;
+}
+
 /**
  * Profile safe for browser — no internal ids.
  * @param {Record<string, unknown>} row

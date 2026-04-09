@@ -8,6 +8,7 @@ import Avatar from "@/components/shared/Avatar";
 import BrandMark from "@/components/BrandMark";
 import IconWrap from "@/components/shared/IconWrap";
 import AccountInfoCard from "@/features/profile/components/AccountInfoCard";
+import ManageBillingButton from "@/features/profile/components/ManageBillingButton";
 import MembershipUpgradeCard from "@/features/profile/components/MembershipUpgradeCard";
 import NonprofitCard from "@/features/nonprofits/components/NonprofitCard";
 import { mapNonprofitCardRow } from "@/features/nonprofits/mappers/nonprofitCardMapper";
@@ -579,6 +580,14 @@ function TopAppInner({ initialNav = "home" }) {
             membershipTier={profile.membershipTier || profile.membershipStatus}
             membershipBillingStatus={profile.membershipBillingStatus}
             profileSource={profileSource}
+            manageBillingSlot={
+              sessionKind === "workos" ? (
+                <ManageBillingButton
+                  stripeReady={!!authBackend?.stripe}
+                  hasStripeCustomer={!!profile.stripeCustomerIdSet}
+                />
+              ) : null
+            }
           />
           <MembershipUpgradeCard
             isMember={isMember}

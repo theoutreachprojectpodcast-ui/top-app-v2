@@ -24,17 +24,32 @@ export async function POST(request) {
   const tier = typeof body.membershipTier === "string" ? body.membershipTier.toLowerCase() : "free";
   const safeTier = TIERS.has(tier) ? tier : "free";
 
-  const billingStatus =
+  const existing = await getProfileRowByWorkOSId(admin, auth.user.id);
+
+  const requestedBillingStatus =
     safeTier === "free" ? "none" : typeof body.membershipStatus === "string" ? body.membershipStatus : "pending";
+
+  /** If Stripe webhooks already advanced billing, do not overwrite with "pending". */
+  let membership_status = requestedBillingStatus;
+  let membership_tier = safeTier;
+  if (existing && safeTier !== "free") {
+    const live = String(existing.membership_status || "").toLowerCase();
+    if (live === "active" || live === "past_due" || live === "incomplete") {
+      membership_status = live;
+      const existingTier = String(existing.membership_tier || "").toLowerCase();
+      if (TIERS.has(existingTier) && existingTier !== "free") {
+        membership_tier = existingTier;
+      }
+    }
+  }
 
   const row = {
     onboarding_completed: true,
-    membership_tier: safeTier,
-    membership_status: billingStatus,
+    membership_tier,
+    membership_status,
     updated_at: new Date().toISOString(),
   };
 
-  const existing = await getProfileRowByWorkOSId(admin, auth.user.id);
   if (!existing) {
     const insertRow = {
       workos_user_id: auth.user.id,

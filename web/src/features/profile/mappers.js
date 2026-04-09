@@ -64,6 +64,8 @@ export function createInitialProfile() {
     membershipTier: "free",
     membershipBillingStatus: "none",
     onboardingCompleted: true,
+    stripeCustomerIdSet: false,
+    stripeSubscriptionIdSet: false,
   };
 }
 
@@ -130,6 +132,8 @@ export function profileFromApiDto(dto = {}) {
     volunteerInterests: String(dto.volunteerInterests || "").trim(),
     supportInterests: String(dto.supportInterests || "").trim(),
     contributionSummary: String(dto.contributionSummary || "").trim(),
+    stripeCustomerIdSet: !!dto.stripeCustomerIdSet,
+    stripeSubscriptionIdSet: !!dto.stripeSubscriptionIdSet,
   };
 }
 
