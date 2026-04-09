@@ -1,6 +1,6 @@
 "use client";
 
-import { FEATURED_SPONSORS } from "@/features/sponsors/data/featuredSponsors";
+import Link from "next/link";
 import FeaturedSponsorsSection from "@/features/sponsors/components/FeaturedSponsorsSection";
 
 function ChannelChip({ icon, label }) {
@@ -12,23 +12,24 @@ function ChannelChip({ icon, label }) {
   );
 }
 
-export default function SponsorsLandingPage({ onExploreOptions }) {
+export default function SponsorsLandingPage({ sponsors = [] }) {
   return (
     <div className="sponsorPage sponsorLanding">
       <section className="card cardHero sponsorHero sponsorHero--compact">
         <p className="introTagline">Partners</p>
-        <h2>Stand with veterans & first responders</h2>
+        <h2>Partner with a trusted community platform</h2>
         <p className="sponsorHeroBlurb">
-          Join brands backing trusted resources, podcast storytelling, and digital support for those who serve.
+          Join mission-aligned brands, businesses, and organizations supporting trusted resources, storytelling, and community impact.
         </p>
         <div className="row wrap">
-          <button className="btnPrimary" type="button" onClick={onExploreOptions}>
+          <Link className="btnPrimary" href="/sponsors/options">
             Explore sponsorship options
-          </button>
+          </Link>
+          <Link className="btnSoft" href="/sponsors/apply">
+            Become a sponsor
+          </Link>
         </div>
       </section>
-
-      <FeaturedSponsorsSection sponsors={FEATURED_SPONSORS} />
 
       <section className="card sponsorSection">
         <h3>Why sponsor</h3>
@@ -49,14 +50,17 @@ export default function SponsorsLandingPage({ onExploreOptions }) {
         </details>
       </section>
 
+      <FeaturedSponsorsSection sponsors={sponsors} />
+
       <section className="card sponsorCtaBand">
         <div>
           <h3>Ready to explore tiers?</h3>
           <p className="sponsorSectionLead">Compare packages, then apply when you are ready.</p>
         </div>
-        <button className="btnPrimary" type="button" onClick={onExploreOptions}>
-          Become a sponsor
-        </button>
+        <div className="row wrap">
+          <Link className="btnSoft" href="/sponsors/options">Explore Sponsorship Options</Link>
+          <Link className="btnPrimary" href="/sponsors/apply">Become a Sponsor</Link>
+        </div>
       </section>
     </div>
   );

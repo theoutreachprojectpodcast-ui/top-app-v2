@@ -68,12 +68,12 @@ export default function ProfileIdentitySection({ profile, onEdit, savedCount = 0
       {(causes.length > 0 || skills.length > 0 || volunteer.length > 0) && (
         <div className="ds-chip-row" aria-label="Focus tags">
           {causes.map((t) => (
-            <span className="ds-chip ds-chip--gold" key={`c-${t}`}>
+            <span className="ds-chip ds-chip--emphasis" key={`c-${t}`}>
               {t}
             </span>
           ))}
           {skills.map((t) => (
-            <span className="ds-chip ds-chip--teal" key={`s-${t}`}>
+            <span className="ds-chip ds-chip--accent" key={`s-${t}`}>
               {t}
             </span>
           ))}

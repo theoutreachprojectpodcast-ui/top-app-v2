@@ -124,7 +124,7 @@ export async function submitProvenAllyApplication(supabase, payload) {
       localOnly: false,
       crmLead,
       warning:
-        "Application submitted. Add a valid 9-digit EIN so this organization can be linked in the proven allies catalog.",
+        "Application submitted. Add a valid 9-digit EIN so this organization can be linked in the Trusted Resources catalog.",
     };
   }
 
@@ -138,7 +138,7 @@ export async function submitProvenAllyApplication(supabase, payload) {
         ok: true,
         localOnly: false,
         crmLead,
-        warning: "Application submitted. Deploy the `proven_allies` table to store catalog rows in Supabase.",
+        warning: "Application submitted. Deploy the Trusted Resources catalog table (`proven_allies`) in Supabase to store listing rows.",
       };
     }
     return {

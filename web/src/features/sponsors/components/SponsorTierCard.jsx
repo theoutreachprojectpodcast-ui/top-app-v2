@@ -1,8 +1,7 @@
 import { formatUsd } from "@/features/sponsors/data/sponsorTiers";
 
 export default function SponsorTierCard({ tier, selected, onSelect }) {
-  const topPlacements = (tier.placements || []).slice(0, 3);
-  const extraPlacements = (tier.placements || []).slice(3);
+  const placements = tier.placements || [];
   return (
     <article className={`sponsorTierCard ${selected ? "isSelected" : ""}`}>
       <div className="sponsorTierCardTop">
@@ -14,16 +13,11 @@ export default function SponsorTierCard({ tier, selected, onSelect }) {
       </div>
 
       <div className="sponsorTierCardGrow">
-        <ul className="sponsorBenefitList">
-          {topPlacements.map((item) => (
-            <li key={`${tier.id}-${item}`}>{item}</li>
-          ))}
-        </ul>
-        {extraPlacements.length ? (
+        {placements.length ? (
           <details className="sponsorTierDetails">
-            <summary>View full placements</summary>
+            <summary>View Full Placements</summary>
             <ul className="sponsorBenefitList">
-              {extraPlacements.map((item) => (
+              {placements.map((item) => (
                 <li key={`${tier.id}-extra-${item}`}>{item}</li>
               ))}
             </ul>

@@ -6,6 +6,7 @@ import {
   mapProvenAlliesDbRowToTrustedRow,
 } from "@/lib/supabase/provenAlliesCatalog";
 import { queryTrustedOrgsByEin } from "@/lib/supabase/queries";
+import { attachDirectoryAndEnrichmentToTrustedRows } from "@/features/trusted-resources/trustedDirectoryJoin";
 
 async function runQuery(factory) {
   try {
@@ -50,12 +51,13 @@ export async function fetchTrustedResources(supabase) {
         .order("display_name", { ascending: true })
     );
     if (!catalog.error && Array.isArray(catalog.data)) {
-      return (catalog.data || []).map(mapProvenAlliesDbRowToTrustedRow).filter((row) => {
+      const mapped = (catalog.data || []).map(mapProvenAlliesDbRowToTrustedRow).filter((row) => {
         const ein = String(row?.ein ?? "").trim();
         const name = String(row?.orgName ?? "").trim();
         const web = String(row?.website ?? "").trim();
         return !!(ein || name || web);
       });
+      return attachDirectoryAndEnrichmentToTrustedRows(supabase, mapped);
     }
     if (catalog.error && !isMissingProvenAlliesTable(catalog.error)) {
       throw catalog.error;

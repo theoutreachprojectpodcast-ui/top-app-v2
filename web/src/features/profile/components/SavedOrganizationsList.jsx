@@ -5,7 +5,7 @@ export default function SavedOrganizationsList({ organizations, onToggleFavorite
     <div className="card">
       <h3>Saved Organizations</h3>
       {!organizations.length ? (
-        <p>No saved organizations yet. Star an organization from Directory or Proven Allies.</p>
+        <p>No saved organizations yet. Star an organization from Directory or Trusted Resources.</p>
       ) : (
         <div className="results">
           {organizations.map((org) => (

@@ -1,4 +1,4 @@
--- Proven Ally application intake table (demo + future-ready review pipeline)
+-- Trusted Resource application intake table (demo + future-ready review pipeline)
 create table if not exists public.proven_ally_applications (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),

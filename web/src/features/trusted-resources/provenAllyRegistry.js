@@ -1,15 +1,15 @@
 /**
- * Canonical Proven Ally registry — single source of truth for display metadata.
+ * Canonical Trusted Resources registry — single source of truth for display metadata (internal module: provenAllyRegistry).
  * Match order: EIN (row + profile + org) → official website hostname → strict name keys (+ host stems).
  *
  * Social URLs: include only org-verified presences. Partial overrides (e.g. Instagram only) use socialOverrides.
  *
- * ── Adding / importing a new Proven Ally ─────────────────────────────────────
+ * ── Adding / importing a new Trusted Resource ─────────────────────────────────
  * 1. Add a record below with: eins (from IRS/profile), nameKeys (legal + common DB variants),
  *    slug, displayName (exact public-facing title — this string is shown verbatim in the UI),
  *    provenCategoryKey, shortDescription, locationLabel, website, ntee_code, nonprofit_type.
  * 2. Run: pnpm verify:proven-allies  (must pass before merge; wired into prebuild).
- * 3. Spot-check the Proven Allies tab: name, category, location, description, links.
+ * 3. Spot-check the Trusted Resources tab: name, category, location, description, links.
  */
 
 /** IRS EIN is 9 digits; DBs may pad or concatenate — normalize to exactly 9 digits. */

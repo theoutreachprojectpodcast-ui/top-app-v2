@@ -1,7 +1,10 @@
-import { formatOrganizationDisplayName } from "@/lib/formatOrgName";
+import { resolveTrustedResourceDisplayName, sanitizeOrganizationNameForDisplay } from "@/lib/entityDisplayName";
 
-export const PROVEN_ALLIES_TABLE =
+/** Supabase Trusted Resources catalog (legacy table name `proven_allies`). */
+export const TRUSTED_RESOURCES_TABLE =
   (typeof process !== "undefined" && process.env.NEXT_PUBLIC_PROVEN_ALLIES_TABLE) || "proven_allies";
+
+export const PROVEN_ALLIES_TABLE = TRUSTED_RESOURCES_TABLE;
 
 /** Match trusted-resources/api.js EIN keying for joins. */
 export function normalizeEin(value) {
@@ -26,14 +29,20 @@ export function isMissingProvenAlliesTable(error) {
 }
 
 /**
- * Maps a `proven_allies` DB row into the trusted feed shape. Always flows through
- * `mergeProvenAllyPresentation` so `provenAllyRegistry` can enrich by EIN / website / name.
+ * Maps a Trusted Resources catalog (`proven_allies`) DB row into the feed shape.
+ * Rows are joined to the public directory + enrichment in `trustedDirectoryJoin.js`, then
+ * `mergeTrustedResourcesPresentation` + `provenAllyRegistry` enrich by EIN / website / name.
  * Do not set `canonicalDisplayName` here — the registry owns canonical titles when matched.
  */
 export function mapProvenAlliesDbRowToTrustedRow(db = {}) {
   const ein = normalizeEin(db.ein);
   const displayNameRaw = String(db.display_name || "").trim();
-  const orgNameFromDb = displayNameRaw ? formatOrganizationDisplayName(displayNameRaw) : "";
+  const orgNameFromDb = resolveTrustedResourceDisplayName({
+    candidateNames: displayNameRaw ? [displayNameRaw] : [],
+    trustedResourceSlug: String(db.slug || "").trim(),
+    websiteUrl: String(db.website_url || "").trim(),
+    emptyFallback: "",
+  });
   const loc =
     String(db.location_label || "").trim() ||
     [String(db.city || "").trim(), String(db.state || "").trim()].filter(Boolean).join(", ");
@@ -43,6 +52,8 @@ export function mapProvenAlliesDbRowToTrustedRow(db = {}) {
   return {
     ein,
     orgName: orgNameFromDb,
+    display_name: displayNameRaw,
+    catalog_display_name: displayNameRaw,
     website: String(db.website_url || "").trim(),
     logoUrl: String(db.logo_url || "").trim(),
     city: String(db.city || "").trim(),
@@ -121,7 +132,7 @@ export function buildPendingProvenAllyRowFromApplication(payload = {}, applicati
 
   return {
     ein,
-    display_name: formatOrganizationDisplayName(displayName),
+    display_name: sanitizeOrganizationNameForDisplay(displayName, { trustCanonical: false }),
     website_url: String(payload.website || "").trim() || null,
     logo_url: null,
     city: String(payload.city || "").trim() || null,

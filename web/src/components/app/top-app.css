@@ -167,7 +167,7 @@ img.brandMarkImg--header {
   border-radius: var(--radius-pill);
   border: 1px solid var(--color-border-subtle);
   background: var(--color-bg-card);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 2px var(--color-shadow);
 }
 .themeToggle:hover {
   background: var(--color-bg-card-hover);
@@ -205,10 +205,10 @@ img.brandMarkImg--header {
 }
 .cardHero {
   background:
-    radial-gradient(120% 140% at 12% -18%, color-mix(in srgb, var(--color-accent) 12%, transparent), transparent 52%),
-    radial-gradient(80% 60% at 88% 0%, color-mix(in srgb, var(--color-accent) 8%, transparent), transparent 45%),
+    radial-gradient(120% 140% at 12% -18%, color-mix(in srgb, var(--color-bg-muted) 38%, transparent), transparent 52%),
+    radial-gradient(80% 60% at 88% 0%, color-mix(in srgb, var(--color-border-strong) 22%, transparent), transparent 46%),
     linear-gradient(180deg, var(--color-surface-elevated) 0%, var(--color-surface-card-deep) 100%);
-  border-color: color-mix(in srgb, var(--color-border) 85%, var(--color-accent-hover) 15%);
+  border-color: var(--color-border-strong);
 }
 .welcomePanel {
   display: flex;
@@ -311,7 +311,7 @@ img.brandMarkImg--header {
   border: 1px solid var(--color-border);
 }
 .membershipBadge.isMember {
-  background: linear-gradient(180deg, var(--color-accent-soft), color-mix(in srgb, var(--color-accent) 16%, transparent));
+  background: var(--color-bg-card-hover);
   border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-border) 55%);
   color: var(--color-accent-hover);
 }
@@ -384,11 +384,11 @@ img.brandMarkImg--header {
   min-height: 72px;
   padding: var(--ds-space-5, 20px) var(--ds-space-5, 20px);
   border-radius: var(--radius-card, 16px);
-  border: 1px solid color-mix(in srgb, var(--color-accent-hover) 42%, var(--color-border));
+  border: 1px solid var(--color-border-strong);
   background:
-    linear-gradient(135deg, color-mix(in srgb, var(--color-accent) 14%, transparent), color-mix(in srgb, var(--color-accent) 10%, transparent)),
+    linear-gradient(135deg, var(--color-bg-subtle), var(--color-bg-card-hover)),
     var(--color-surface-raised);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 8%, transparent);
+  box-shadow: inset 0 0 0 1px var(--color-border-subtle);
   flex-direction: column;
   align-items: flex-start;
   gap: 6px;
@@ -451,7 +451,11 @@ img.brandMarkImg--header {
   border-radius: 12px;
   border: 1px solid color-mix(in srgb, var(--cat-border, var(--np-unknownGeneral)) 38%, var(--color-border));
   background:
-    linear-gradient(165deg, var(--cat-tint, rgba(158, 166, 177, 0.12)), rgba(10, 13, 17, 0.92));
+    linear-gradient(
+      165deg,
+      var(--cat-tint, rgba(158, 166, 177, 0.12)),
+      color-mix(in srgb, var(--color-bg-card) 94%, var(--color-bg-app) 6%)
+    );
   color: var(--color-text-primary);
   padding: 10px 10px 9px;
   cursor: pointer;
@@ -570,9 +574,9 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 }
 .btnPrimary {
   background: var(--color-accent);
-  color: #ffffff;
-  border-color: color-mix(in srgb, var(--color-accent-hover) 65%, #0d1a0f 35%);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05), 0 2px 10px color-mix(in srgb, var(--color-accent) 18%, transparent);
+  color: var(--color-on-accent);
+  border-color: color-mix(in srgb, var(--color-accent-hover) 55%, var(--color-text-primary) 45%);
+  box-shadow: 0 1px 2px var(--color-shadow), 0 2px 12px color-mix(in srgb, var(--color-text-primary) 12%, transparent);
 }
 .btnPrimary:hover {
   background: var(--color-accent-hover);
@@ -598,6 +602,15 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   background: var(--color-bg-card-hover);
   border-color: color-mix(in srgb, var(--color-accent) 35%, var(--color-border) 65%);
   box-shadow: 0 0 0 1px var(--color-accent-soft);
+}
+.btnBlack--findInfo {
+  border-color: color-mix(in srgb, var(--color-text-primary) 12%, var(--color-border) 88%);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--color-text-primary) 5%, transparent),
+    0 1px 0 color-mix(in srgb, var(--color-text-primary) 4%, transparent);
+}
+.btnBlack--findInfo:hover {
+  border-color: color-mix(in srgb, var(--color-accent) 28%, var(--color-border) 72%);
 }
 .iconWrap {
   width: 22px;
@@ -645,7 +658,36 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   display: grid;
   grid-template-columns: 62px minmax(0, 1fr);
   align-items: start;
-  column-gap: 12px;
+  column-gap: 14px;
+}
+.nonprofitCardMain--directoryBalance {
+  align-items: center;
+}
+.nonprofitCardMain--hitStack {
+  position: relative;
+  isolation: isolate;
+}
+.nonprofitCardHitLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+}
+.nonprofitCardHitLayer:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-accent) 80%, transparent);
+  outline-offset: 3px;
+  z-index: 3;
+}
+.nonprofitCardMain--hitStack .nonprofitCardMediaSlot,
+.nonprofitCardMain--hitStack .nonprofitContentCol {
+  position: relative;
+  z-index: 1;
+  pointer-events: none;
+}
+.nonprofitCardMain--hitStack .favBtn {
+  position: relative;
+  z-index: 2;
+  pointer-events: auto;
 }
 .nonprofitCardMain--proven {
   grid-template-columns: 64px minmax(0, 1fr);
@@ -658,20 +700,67 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   display: flex;
   justify-content: center;
 }
+.nonprofitCardMediaSlot {
+  display: flex;
+  justify-content: center;
+  width: 62px;
+  flex: 0 0 62px;
+  position: relative;
+  z-index: 1;
+}
 .nonprofitCardMedia--proven {
   align-self: start;
 }
 .nonprofitIconBadge--logo {
-  padding: 5px;
+  padding: 0;
   overflow: hidden;
 }
-.nonprofitLogoImg {
-  width: 48px;
-  height: 48px;
-  object-fit: contain;
+.nonprofitLogoPlate {
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  overflow: hidden;
   display: block;
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--color-bg-muted) 85%, var(--color-text-primary) 15%);
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.nonprofitLogoImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  border-radius: 999px;
+  background: transparent;
+  filter: none;
+}
+:root .nonprofitLogoImg--tone-lightmono {
+  /* White/near-white logos can disappear on light mode; render as dark mark. */
+  filter: invert(1) brightness(0.32) contrast(1.08);
+}
+:root .nonprofitLogoImg--tone-darkmono {
+  /* Dark monochrome logos are already readable on light backgrounds. */
+  filter: none;
+}
+:root[data-color-scheme="dark"] .nonprofitLogoPlate,
+.dark .nonprofitLogoPlate {
+  background: transparent;
+  box-shadow: none;
+}
+:root[data-color-scheme="dark"] .nonprofitLogoImg,
+.dark .nonprofitLogoImg {
+  filter: none;
+}
+:root[data-color-scheme="dark"] .nonprofitLogoImg--tone-lightmono,
+.dark .nonprofitLogoImg--tone-lightmono {
+  /* White marks are already readable on dark mode; avoid extra processing. */
+  filter: none;
+}
+:root[data-color-scheme="dark"] .nonprofitLogoImg--tone-darkmono,
+.dark .nonprofitLogoImg--tone-darkmono {
+  /* Disable auto inversion to avoid false positives on dark-themed brand marks. */
+  filter: none;
 }
 .nonprofitIconBadge {
   width: 58px;
@@ -721,7 +810,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   place-items: center;
   text-align: center;
   padding: 8px;
-  background: radial-gradient(circle at 50% 20%, var(--color-accent-soft), var(--color-bg-muted));
+  background: radial-gradient(circle at 50% 20%, var(--color-bg-card-hover), var(--color-bg-muted));
 }
 .nonprofitAvatarFallback span {
   color: var(--color-text-secondary);
@@ -746,6 +835,28 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   align-content: start;
   row-gap: 3px;
 }
+.nonprofitContentCol--directory {
+  row-gap: 8px;
+}
+.nonprofitContentCol--directory .nonprofitTitleRow {
+  align-items: center;
+  margin-bottom: 2px;
+}
+.nonprofitContentCol--directory .nonprofitMetaRow {
+  margin-top: 0;
+}
+.nonprofitContentCol--directory .nonprofitTypeLine {
+  margin-top: 0;
+}
+.nonprofitContentCol--directory .nonprofitLocation {
+  margin-top: 0;
+}
+.nonprofitContentCol--directory .nonprofitCardTagline {
+  margin-top: 0;
+}
+.nonprofitContentCol--directory .nonprofitDescription {
+  margin-top: 4px;
+}
 .nonprofitContentCol--proven {
   row-gap: 7px;
 }
@@ -758,11 +869,14 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 }
 .nonprofitOrgName {
   font-size: var(--text-card-title);
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 0.01em;
-  line-height: 1.35;
+  line-height: 1.3;
   text-wrap: balance;
   color: var(--color-text-primary);
+}
+.resultCard--profileLink:hover .nonprofitOrgName {
+  color: color-mix(in srgb, var(--color-accent-hover) 55%, var(--color-text-primary) 45%);
 }
 .resultCard--proven {
   padding: var(--ds-space-5, 20px) var(--ds-space-4, 16px);
@@ -808,11 +922,21 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   margin-top: 12px;
 }
 .nonprofitMetaRow {
-  margin-top: 2px;
-  margin-bottom: 2px;
+  margin-top: 0;
+  margin-bottom: 0;
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
+}
+.nonprofitCategoryText {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  line-height: 1.35;
+  max-width: 100%;
 }
 .nonprofitCategoryLabel {
   margin: 0;
@@ -823,9 +947,13 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 }
 .nonprofitLocation {
   margin: 0;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  font-size: var(--text-body-sm);
 }
 .nonprofitDescription {
-  margin: 4px 0 0;
+  margin: 2px 0 0;
+  line-height: 1.5;
 }
 .nonprofitActionRow {
   margin-top: 10px;
@@ -833,6 +961,27 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   gap: 8px;
   flex-wrap: wrap;
   justify-content: flex-start;
+}
+.nonprofitActionRow--cardFooter {
+  position: relative;
+  z-index: 2;
+  pointer-events: auto;
+  margin-top: 20px;
+  margin-left: calc(62px + 14px);
+  padding-top: 14px;
+  border-top: 1px solid color-mix(in srgb, var(--color-border-subtle) 72%, transparent);
+  align-items: center;
+  gap: 10px;
+}
+.resultCard--proven .nonprofitActionRow--cardFooter {
+  margin-left: calc(64px + 14px);
+}
+@media (max-width: 520px) {
+  .nonprofitActionRow--cardFooter {
+    margin-left: 0;
+    margin-top: 16px;
+    padding-top: 12px;
+  }
 }
 .nonprofitSocialLinks {
   display: inline-flex;
@@ -887,7 +1036,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   padding: 12px;
   display: grid;
   gap: 8px;
-  background: rgba(14, 17, 22, 0.78);
+  background: var(--color-surface-muted);
 }
 .applySection h4 {
   margin: 0;
@@ -936,11 +1085,11 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   cursor: pointer;
 }
 .applyFeeCard {
-  border-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--color-accent) 12%, transparent), rgba(14, 17, 22, 0.8));
+  border-color: var(--color-border-subtle);
+  background: linear-gradient(180deg, var(--color-bg-subtle), var(--color-bg-card));
 }
 .applyError {
-  color: #ff9b9b;
+  color: var(--color-error);
   margin: 0;
 }
 .applyStatus {
@@ -966,11 +1115,12 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   border-color: color-mix(in srgb, var(--color-accent) 56%, transparent);
   background: color-mix(in srgb, var(--color-accent) 15%, transparent);
 }
+.badgeTrustedResource,
 .badgeProvenAlly {
   color: var(--color-accent);
-  border-color: color-mix(in srgb, var(--color-accent) 62%, transparent);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--color-accent) 18%, transparent), color-mix(in srgb, var(--color-accent) 8%, transparent));
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 12%, transparent);
+  border-color: color-mix(in srgb, var(--color-accent) 42%, var(--color-border-subtle));
+  background: var(--color-bg-card-hover);
+  box-shadow: inset 0 0 0 1px var(--color-border-subtle);
 }
 .resultCard p { margin: 6px 0 0; color: var(--color-text-secondary); font-size: var(--text-body-sm); line-height: 1.5; }
 .favBtn {
@@ -981,6 +1131,28 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   line-height: 1;
   min-width: 44px;
   min-height: 44px;
+}
+.favBtn--on {
+  color: color-mix(in srgb, var(--color-accent) 88%, var(--color-text-primary) 12%);
+  border-color: color-mix(in srgb, var(--color-accent) 42%, var(--color-border) 58%);
+  background: color-mix(in srgb, var(--color-accent-soft) 55%, var(--color-surface-muted) 45%);
+}
+.favBtn--muted {
+  opacity: 0.72;
+}
+.favBtn--muted:hover,
+.favBtn--muted:focus-visible {
+  opacity: 1;
+  border-color: var(--color-border-active);
+}
+.nonprofitCardTagline {
+  margin: 6px 0 0;
+  font-size: var(--text-caption);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  line-height: 1.45;
+  font-style: italic;
+  max-width: 62ch;
 }
 .footerDockBackdrop {
   position: fixed;
@@ -1069,7 +1241,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 .modalOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(10, 14, 20, 0.65);
+  background: var(--color-overlay-backdrop);
   backdrop-filter: blur(6px);
   display: grid;
   place-items: center;
@@ -1169,7 +1341,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   top: 1px;
   width: 4px;
   height: 9px;
-  border: solid #ffffff;
+  border: solid var(--color-on-accent);
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
 }
@@ -1184,7 +1356,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 }
 .sponsorPage {
   display: grid;
-  gap: 14px;
+  gap: 18px;
 }
 .sponsorLanding .sponsorHero h2 {
   font-size: clamp(22px, 2.8vw, 30px);
@@ -1201,10 +1373,11 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   max-width: 52ch;
 }
 .sponsorSectionLead {
-  margin: 0 0 10px;
+  margin: 0 0 14px;
   color: var(--color-text-secondary);
   font-size: 14px;
-  max-width: 56ch;
+  max-width: 68ch;
+  line-height: 1.55;
 }
 .sponsorSelectionHint {
   margin: 0;
@@ -1288,7 +1461,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 }
 .sponsorFeaturedSpotlight {
   position: relative;
-  border: 1px solid color-mix(in srgb, var(--sponsor-brand-primary, #e4bc5c) 35%, var(--color-border) 65%);
+  border: 1px solid color-mix(in srgb, var(--sponsor-brand-primary, var(--color-accent)) 35%, var(--color-border) 65%);
   border-radius: 16px;
   overflow: hidden;
   min-height: 210px;
@@ -1307,8 +1480,8 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(120deg, rgba(9, 12, 16, 0.9) 0%, rgba(9, 12, 16, 0.62) 56%, rgba(9, 12, 16, 0.78) 100%),
-    radial-gradient(circle at 10% 8%, color-mix(in srgb, var(--sponsor-brand-primary, #e4bc5c) 28%, transparent), transparent 44%);
+    linear-gradient(120deg, color-mix(in srgb, var(--color-bg-app) 88%, transparent) 0%, color-mix(in srgb, var(--color-bg-app) 55%, transparent) 56%, color-mix(in srgb, var(--color-bg-app) 72%, transparent) 100%),
+    radial-gradient(circle at 10% 8%, color-mix(in srgb, var(--sponsor-brand-primary, var(--color-accent)) 22%, transparent), transparent 44%);
 }
 .sponsorFeaturedContent,
 .sponsorFeaturedProfileWrap {
@@ -1357,9 +1530,9 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   display: grid;
   place-items: center;
   font-weight: 800;
-  color: color-mix(in srgb, var(--sponsor-brand-primary, #e4bc5c) 72%, #f4f7ff 28%);
-  border: 1px solid color-mix(in srgb, var(--sponsor-brand-primary, #e4bc5c) 45%, #ffffff 10%);
-  background: linear-gradient(180deg, rgba(12, 15, 20, 0.88), rgba(11, 14, 18, 0.95));
+  color: color-mix(in srgb, var(--sponsor-brand-primary, var(--color-accent)) 70%, var(--color-text-primary) 30%);
+  border: 1px solid color-mix(in srgb, var(--sponsor-brand-primary, var(--color-accent)) 42%, var(--color-border-subtle) 58%);
+  background: linear-gradient(180deg, var(--color-bg-card-hover), var(--color-bg-card));
 }
 .sponsorFeaturedTitleBlock h4 {
   margin: 0;
@@ -1460,8 +1633,8 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
-  border-color: color-mix(in srgb, var(--color-accent) 28%, transparent);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--color-accent) 10%, transparent), rgba(14, 17, 22, 0.92));
+  border-color: var(--color-border-subtle);
+  background: linear-gradient(180deg, var(--color-bg-subtle), var(--color-bg-card));
 }
 .sponsorCtaBand h3 {
   margin: 0 0 4px;
@@ -1486,10 +1659,10 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   letter-spacing: 0.04em;
 }
 .sponsorTierGrid {
-  margin-top: 10px;
+  margin-top: 12px;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+  gap: 14px;
   align-items: stretch;
 }
 .sponsorTierGrid > * {
@@ -1499,8 +1672,8 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 .sponsorTierCard {
   border: 1px solid var(--color-border);
   border-radius: 14px;
-  background: rgba(12, 16, 20, 0.9);
-  padding: 12px;
+  background: linear-gradient(180deg, var(--color-bg-card) 0%, color-mix(in srgb, var(--color-bg-card) 86%, var(--color-bg-subtle) 14%) 100%);
+  padding: 14px;
   flex: 1;
   width: 100%;
   display: flex;
@@ -1526,7 +1699,9 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 }
 .sponsorTierCard.isSelected {
   border-color: color-mix(in srgb, var(--color-accent) 64%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 20%, transparent), 0 10px 22px rgba(0, 0, 0, 0.34);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 20%, transparent),
+    0 10px 22px color-mix(in srgb, var(--color-text-primary) 34%, transparent);
 }
 .sponsorTierFamily {
   margin: 0;
@@ -1573,7 +1748,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   border: 1px solid var(--color-border-soft);
   border-radius: 10px;
   padding: 0 10px;
-  background: rgba(10, 12, 16, 0.55);
+  background: var(--color-bg-subtle);
 }
 .sponsorTierDetails summary {
   cursor: pointer;
@@ -1604,7 +1779,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 }
 .sponsorTimeline {
   list-style: none;
-  margin: 14px 0 0;
+  margin: 16px 0 0;
   padding: 0;
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -1612,8 +1787,8 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 }
 .sponsorTimelineStep {
   text-align: center;
-  padding: 0 10px;
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0 12px;
+  border-right: 1px solid var(--color-border-soft);
 }
 .sponsorTimelineStep:last-child {
   border-right: 0;
@@ -1622,9 +1797,9 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   width: 48px;
   height: 48px;
   margin: 0 auto 10px;
-  border-radius: 999px;
-  border: 1px solid var(--color-border);
-  background: rgba(14, 18, 23, 0.95);
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 35%, var(--color-border));
+  background: color-mix(in srgb, var(--color-accent) 12%, var(--color-bg-card));
   display: grid;
   place-items: center;
   color: var(--color-accent);
@@ -1740,10 +1915,11 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   margin-top: 4px;
 }
 .sponsorPaymentCard {
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 12px;
   padding: 12px;
-  background: rgba(12, 16, 20, 0.86);
+  background: var(--color-bg-card);
+  box-shadow: var(--shadow-card);
 }
 .sponsorPaymentCard h4 {
   margin: 0 0 6px;
@@ -1767,19 +1943,28 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 }
 .communityApprovedPill {
   color: var(--color-text-secondary);
-  background: rgba(14, 18, 23, 0.9);
+  background: var(--color-bg-card-hover);
+  border-color: var(--color-border-subtle);
 }
 .communityModeratorPill {
   color: var(--color-accent);
-  border-color: color-mix(in srgb, var(--color-accent) 46%, transparent);
-  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  border-color: color-mix(in srgb, var(--color-accent) 55%, var(--color-border-subtle));
+  background: var(--color-bg-card);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 18%, transparent);
 }
-.communityModControls {
-  align-items: center;
+.card.communitySection {
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-card);
+  background: linear-gradient(180deg, var(--color-bg-card) 0%, var(--color-bg-card-hover) 100%);
 }
-.communityModControls select {
-  width: auto;
-  min-width: 220px;
+.communityAdminDivider {
+  border: 0;
+  border-top: 1px dashed var(--color-border-strong);
+  margin: 2px 0 0;
+}
+.communityAdminZone {
+  display: grid;
+  gap: 12px;
 }
 .communitySectionHead {
   display: flex;
@@ -1788,6 +1973,13 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   gap: 10px;
   margin-bottom: 10px;
   flex-wrap: wrap;
+  padding-bottom: var(--ds-space-3, 12px);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+.communitySectionHead h3 {
+  margin: 0;
+  font-size: var(--text-section-title);
+  font-weight: 800;
 }
 .communityConnectionsPanel {
   padding: 14px 16px;
@@ -1884,11 +2076,11 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 .communityRequestPill {
   display: inline-flex;
   border-radius: 999px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-border-subtle);
   padding: 4px 10px;
   font-size: 11px;
   color: var(--color-text-secondary);
-  background: rgba(16, 18, 22, 0.9);
+  background: var(--color-bg-card-hover);
 }
 .communityRequestPill.isRequested {
   color: var(--color-accent);
@@ -1910,6 +2102,186 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 .communityPage {
   display: grid;
   gap: var(--ds-space-6, 24px);
+}
+.communityHeroTop {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  column-gap: var(--ds-space-3, 12px);
+  row-gap: var(--ds-space-2, 8px);
+  margin-bottom: var(--ds-space-3, 12px);
+}
+.communityHeroIcon {
+  line-height: 0;
+  padding-top: 1px;
+}
+.communityHeroTitles {
+  min-width: 0;
+  display: grid;
+  gap: var(--ds-space-1, 4px);
+}
+.communityHeroTitles .introTagline {
+  margin: 0;
+}
+.communityHeroTitles h2 {
+  margin: 0;
+  font-size: clamp(24px, 2.7vw, 32px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  color: var(--color-text-primary);
+}
+
+/* ── Community admin / moderation (clear hierarchy, theme-native surfaces) ── */
+.communityAdminSection {
+  display: grid;
+  gap: var(--ds-space-4, 16px);
+  padding: var(--ds-space-5, 20px) var(--ds-space-5, 20px) var(--ds-space-6, 24px);
+  border-radius: var(--radius-card);
+  border: 1px solid var(--color-border-strong);
+  background: linear-gradient(180deg, var(--color-bg-subtle) 0%, var(--color-bg-app) 100%);
+  box-shadow: var(--shadow-card);
+}
+.communityAdminSection__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--ds-space-4, 16px);
+  padding-bottom: var(--ds-space-3, 12px);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+.communityAdminSection__header h3 {
+  margin: 0;
+  font-size: var(--text-section-title);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary);
+}
+.communityAdminSection__subtitle {
+  margin: 6px 0 0;
+  max-width: 62ch;
+  font-size: var(--text-body-sm);
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+.communityAdminRolePill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 45%, var(--color-border-subtle));
+  background: var(--color-bg-card);
+}
+.communityAdminCard {
+  border-radius: calc(var(--radius-card) - 4px);
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-bg-card);
+  padding: var(--ds-space-4, 16px);
+  box-shadow: 0 1px 0 var(--color-veil-06);
+}
+.communityAdminCard--notice {
+  background: var(--color-surface-muted);
+  border-style: dashed;
+}
+.communityAdminCard--active {
+  padding: var(--ds-space-5, 20px);
+  box-shadow: var(--shadow-card);
+}
+.communityModToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ds-space-3, 12px);
+  margin: var(--ds-space-4, 16px) 0 var(--ds-space-3, 12px);
+  padding: var(--ds-space-3, 12px) var(--ds-space-4, 16px);
+  border-radius: var(--radius-input);
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-subtle);
+}
+.communityModToolbar select {
+  min-width: 220px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-bg-card);
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 600;
+}
+.communityModToolbar select:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+.communityModHint {
+  margin: 0 0 var(--ds-space-3, 12px);
+  font-size: var(--text-body-sm);
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+  max-width: 72ch;
+}
+.communityModEmpty {
+  margin: 0;
+  font-size: var(--text-body-sm);
+  line-height: 1.55;
+  color: var(--color-text-secondary);
+}
+.communityModList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--ds-space-3, 12px);
+}
+.communityModItem {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--ds-space-4, 16px);
+  padding: var(--ds-space-4, 16px);
+  border-radius: var(--radius-input);
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-bg-subtle);
+  box-shadow: 0 1px 0 var(--color-veil-06);
+}
+.communityModItem > div:first-child {
+  flex: 1 1 280px;
+  min-width: 0;
+}
+.communityModItem strong {
+  display: block;
+  font-size: var(--text-body);
+  color: var(--color-text-primary);
+  margin-bottom: 6px;
+}
+.communityModPreview {
+  margin: 0 0 8px;
+  font-size: var(--text-body-sm);
+  line-height: 1.45;
+  color: var(--color-text-secondary);
+}
+.communityModMeta {
+  display: inline-block;
+  font-size: var(--text-caption);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: capitalize;
+}
+.communityModItem .row {
+  flex: 0 0 auto;
+  align-items: center;
+}
+.communityModItem .btnPrimary {
+  min-width: 108px;
+}
+.communityModItem .btnSoft {
+  min-width: 92px;
 }
 .communityFeed {
   display: grid;
@@ -2264,24 +2636,25 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   position: relative;
   border-radius: 18px;
   overflow: hidden;
-  min-height: 220px;
+  min-height: 236px;
   border: 1px solid var(--color-border-soft);
+  cursor: pointer;
 }
 .sponsorPremiumCardBg {
   position: absolute;
   inset: 0;
   background-size: cover;
   background-position: center;
-  filter: saturate(0.88) contrast(1.08) brightness(0.72);
+  filter: saturate(0.92) contrast(1.04) brightness(0.68);
 }
 .sponsorPremiumCardScrim {
   position: absolute;
   inset: 0;
-  background: linear-gradient(125deg, rgba(8, 10, 14, 0.94) 0%, rgba(8, 10, 14, 0.55) 48%, rgba(8, 10, 14, 0.82) 100%);
+  background: linear-gradient(125deg, rgba(7, 10, 14, 0.96) 0%, rgba(7, 10, 14, 0.66) 48%, rgba(7, 10, 14, 0.9) 100%);
 }
 .sponsorPremiumCard--gold .sponsorPremiumCardScrim {
   background: linear-gradient(125deg, rgba(12, 10, 8, 0.93) 0%, rgba(18, 14, 10, 0.55) 50%, rgba(14, 11, 8, 0.88) 100%),
-    radial-gradient(circle at 90% 20%, color-mix(in srgb, var(--color-accent) 12%, transparent), transparent 42%);
+    radial-gradient(circle at 90% 20%, rgba(255, 255, 255, 0.04), transparent 42%);
 }
 .sponsorPremiumCard--copper .sponsorPremiumCardScrim {
   background: linear-gradient(125deg, rgba(16, 10, 8, 0.94) 0%, rgba(20, 12, 8, 0.52) 50%, rgba(14, 9, 7, 0.9) 100%),
@@ -2297,7 +2670,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 }
 .sponsorPremiumCard--teal .sponsorPremiumCardScrim {
   background: linear-gradient(125deg, rgba(8, 12, 14, 0.94) 0%, rgba(8, 14, 16, 0.52) 50%, rgba(7, 11, 13, 0.9) 100%),
-    radial-gradient(circle at 70% 12%, color-mix(in srgb, var(--color-accent) 14%, transparent), transparent 46%);
+    radial-gradient(circle at 70% 12%, rgba(255, 255, 255, 0.035), transparent 46%);
 }
 .sponsorPremiumCard--rose .sponsorPremiumCardScrim {
   background: linear-gradient(125deg, rgba(14, 9, 11, 0.93) 0%, rgba(16, 10, 12, 0.54) 50%, rgba(12, 7, 9, 0.88) 100%),
@@ -2305,12 +2678,12 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 }
 .sponsorPremiumCard--sage .sponsorPremiumCardScrim {
   background: linear-gradient(125deg, rgba(8, 11, 10, 0.94) 0%, rgba(9, 13, 12, 0.54) 50%, rgba(7, 10, 10, 0.9) 100%),
-    radial-gradient(circle at 88% 78%, rgba(100, 140, 120, 0.14), transparent 48%);
+    radial-gradient(circle at 88% 78%, rgba(255, 255, 255, 0.04), transparent 48%);
 }
 .sponsorPremiumCardInner {
   position: relative;
   z-index: 1;
-  padding: var(--ds-space-5, 20px);
+  padding: var(--ds-space-5, 22px);
   display: grid;
   gap: 14px;
   min-height: 220px;
@@ -2335,34 +2708,62 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 .sponsorPremiumTag {
   font-size: 11px;
   font-weight: 700;
-  color: var(--color-text-secondary);
+  color: rgba(241, 245, 249, 0.92);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 999px;
   padding: 4px 10px;
-  background: rgba(10, 13, 17, 0.65);
+  background: rgba(8, 12, 16, 0.72);
 }
 .sponsorPremiumBrand {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   gap: 14px;
-  align-items: start;
+  align-items: center;
 }
 .sponsorPremiumLogoShell {
-  width: 56px;
-  height: 56px;
-  border-radius: 14px;
-  background: rgba(10, 13, 17, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  width: 58px;
+  height: 58px;
+  border-radius: 999px;
+  background: rgba(8, 12, 16, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   display: grid;
   place-items: center;
   overflow: hidden;
   flex-shrink: 0;
 }
+.sponsorPremiumLogoShell--tone-lightmono {
+  background: rgba(10, 14, 18, 0.95);
+}
+.sponsorPremiumLogoShell--tone-darkmono {
+  background: rgba(242, 246, 250, 0.98);
+}
 .sponsorPremiumLogoImg {
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  padding: 6px;
+  object-fit: cover;
+  border-radius: 999px;
+}
+:root .sponsorPremiumLogoImg--tone-lightmono {
+  filter: invert(1) brightness(0.34) contrast(1.08);
+}
+:root .sponsorPremiumLogoImg--tone-darkmono {
+  filter: none;
+}
+:root[data-color-scheme="dark"] .sponsorPremiumLogoShell--tone-lightmono,
+.dark .sponsorPremiumLogoShell--tone-lightmono {
+  background: rgba(12, 16, 20, 0.9);
+}
+:root[data-color-scheme="dark"] .sponsorPremiumLogoShell--tone-darkmono,
+.dark .sponsorPremiumLogoShell--tone-darkmono {
+  background: rgba(236, 244, 250, 0.96);
+}
+:root[data-color-scheme="dark"] .sponsorPremiumLogoImg--tone-lightmono,
+.dark .sponsorPremiumLogoImg--tone-lightmono {
+  filter: none;
+}
+:root[data-color-scheme="dark"] .sponsorPremiumLogoImg--tone-darkmono,
+.dark .sponsorPremiumLogoImg--tone-darkmono {
+  filter: invert(1) brightness(1.24) contrast(1.06);
 }
 .sponsorPremiumWordmark {
   font-size: 11px;
@@ -2377,6 +2778,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   font-size: clamp(1.1rem, 2.2vw, 1.45rem);
   font-weight: 800;
   line-height: 1.25;
+  color: #f8fafc;
 }
 .sponsorPremiumIndustry {
   margin: 4px 0 6px;
@@ -2384,36 +2786,38 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   font-weight: 700;
   letter-spacing: 0.07em;
   text-transform: uppercase;
-  color: var(--color-accent);
+  color: color-mix(in srgb, var(--color-accent) 82%, #f8fafc 18%);
 }
 .sponsorPremiumTagline {
   margin: 0;
   font-size: var(--text-body-sm);
   line-height: 1.5;
-  color: color-mix(in srgb, var(--color-text-secondary) 92%, #fff 8%);
+  color: rgba(233, 240, 247, 0.9);
   max-width: 58ch;
 }
 .sponsorPremiumFooter {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  justify-content: flex-start;
+  gap: 10px;
+  margin-top: 8px;
 }
 .sponsorPremiumSocial {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  justify-content: flex-start;
 }
 .sponsorPremiumSocialLink {
   display: grid;
   place-items: center;
   width: 36px;
   height: 36px;
-  border-radius: 10px;
+  border-radius: 9px;
   border: 1px solid rgba(255, 255, 255, 0.14);
-  color: var(--color-text-primary);
-  background: rgba(10, 13, 17, 0.55);
+  color: #f8fafc;
+  background: rgba(8, 12, 16, 0.74);
   transition: border-color 160ms ease, color 160ms ease;
 }
 .sponsorPremiumSocialLink:hover {
@@ -2423,18 +2827,204 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 .sponsorPremiumPending {
   font-size: var(--text-body-sm);
   font-weight: 600;
+  color: rgba(233, 240, 247, 0.88);
+}
+.sponsorExpandableGrid {
+  display: grid;
+  gap: 12px;
+}
+.sponsorDetailCard {
+  border: 1px solid var(--color-border-soft);
+  border-radius: 12px;
+  background: linear-gradient(180deg, var(--color-bg-card) 0%, var(--color-bg-subtle) 100%);
+  padding: 0 14px;
+}
+.sponsorDetailCard summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  list-style: none;
+  padding: 12px 0;
+}
+.sponsorDetailCard summary::-webkit-details-marker {
+  display: none;
+}
+.sponsorDetailCard p {
+  margin: 0 0 10px;
+  color: var(--color-text-secondary);
+  line-height: 1.55;
+}
+.sponsorDetailCard[open] {
+  padding-bottom: 12px;
+}
+.sponsorAdminDivider {
+  margin: 8px 2px;
+  border: 0;
+  border-top: 1px solid var(--color-border-strong);
+  opacity: 0.95;
+}
+.sponsorAdminSection {
+  border: 1px solid var(--color-border-strong);
+  background: linear-gradient(180deg, var(--color-bg-card) 0%, var(--color-bg-subtle) 100%);
+}
+.sponsorAdminSectionHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--color-border-soft);
+}
+.sponsorAdminBadge {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  padding: 5px 10px;
+}
+.sponsorAdminGrid {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: minmax(0, 320px) minmax(0, 1fr);
+  gap: 12px;
+}
+.sponsorAdminList {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+.sponsorAdminListItem {
+  border: 1px solid var(--color-border-soft);
+  border-radius: 10px;
+  padding: 10px;
+  text-align: left;
+  display: grid;
+  gap: 4px;
+  color: var(--color-text-primary);
+  background: var(--color-bg-card);
+}
+.sponsorAdminListItem.isActive {
+  border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-border));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 20%, transparent);
+}
+.sponsorAdminDetail {
+  border: 1px solid var(--color-border-soft);
+  border-radius: 12px;
+  background: var(--color-bg-card);
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+.sponsorAdminDetail h4 {
+  margin: 0;
+}
+.sponsorAdminMeta {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+.sponsorAdminActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.sponsorAdminStatus {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid var(--color-border-soft);
+}
+.sponsorAdminStatus--submitted { color: #94a3b8; }
+.sponsorAdminStatus--in_review { color: #38bdf8; }
+.sponsorAdminStatus--more_info_requested { color: #f59e0b; }
+.sponsorAdminStatus--approved { color: #22c55e; }
+.sponsorAdminStatus--denied { color: #ef4444; }
+.sponsorAdminStatus--returned_for_revision { color: #fb7185; }
+.sponsorAdminEmpty {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+.sponsorAdminEditorToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+.sponsorAdminEditorToolbar select {
+  min-width: 260px;
+}
+.sponsorAdminSelectorGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.sponsorAdminSelectCard {
+  border: 1px solid var(--color-border-soft);
+  border-radius: 12px;
+  background: var(--color-bg-card);
+  color: var(--color-text-primary);
+  padding: 12px;
+  text-align: left;
+  display: grid;
+  gap: 4px;
+}
+.sponsorAdminSelectCard.isActive {
+  border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-border));
+}
+.sponsorAdminEditorGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 12px;
+}
+.sponsorAdminField {
+  display: grid;
+  gap: 6px;
+}
+.sponsorAdminField > span {
+  font-size: 12px;
   color: var(--color-text-secondary);
 }
-.sponsorPremiumCtaBtn {
-  padding: 10px 18px;
-  font-size: var(--text-body-sm);
+.sponsorProfileHero {
+  min-height: 220px;
+  display: grid;
+  align-items: end;
+}
+.sponsorProfileIdentity {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+}
+.sponsorProfileTitle {
+  margin: 0;
+  color: #f8fafc;
+}
+.sponsorProfileGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
 }
 
-/* Moderation queue preview (staging) */
+/* Moderation queue preview (staging) — same surface system as live admin card */
 .moderationQueuePreview {
   margin-top: var(--ds-space-5, 20px);
-  border: 1px solid color-mix(in srgb, var(--color-accent) 22%, var(--color-border));
-  background: linear-gradient(180deg, rgba(12, 16, 20, 0.92), rgba(8, 11, 14, 0.98));
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-card);
+  background: linear-gradient(180deg, var(--color-bg-card) 0%, var(--color-bg-subtle) 100%);
+  box-shadow: var(--shadow-card);
+  padding: var(--ds-space-5, 20px);
 }
 .moderationQueuePreviewHead {
   display: flex;
@@ -2442,46 +3032,64 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   align-items: flex-start;
   gap: 12px;
   flex-wrap: wrap;
+  padding-bottom: var(--ds-space-3, 12px);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+.moderationQueuePreviewHead h3 {
+  margin: 0;
+  font-size: var(--text-section-title);
+  font-weight: 800;
+  color: var(--color-text-primary);
 }
 .moderationQueuePreviewLead {
   margin: 8px 0 0;
   font-size: var(--text-body-sm);
   color: var(--color-text-secondary);
   max-width: 70ch;
+  line-height: 1.5;
 }
 .moderationQueuePreviewBadge {
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--color-accent);
-  border: 1px solid color-mix(in srgb, var(--color-accent) 35%, transparent);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 999px;
-  padding: 4px 10px;
+  padding: 5px 11px;
   height: fit-content;
+  background: var(--color-bg-subtle);
 }
 .moderationQueuePreviewToolbar {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin: 16px 0;
+  margin: var(--ds-space-4, 16px) 0;
+  padding: var(--ds-space-3, 12px);
+  border-radius: var(--radius-input);
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-subtle);
 }
 .moderationQueuePreviewTable {
   display: grid;
   gap: 0;
-  border: 1px solid var(--color-border-soft);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 12px;
   overflow: hidden;
   font-size: var(--text-body-sm);
+  background: var(--color-bg-card);
 }
 .moderationQueuePreviewRow {
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(0, 0.9fr) minmax(0, 0.7fr) minmax(0, 1fr);
   gap: 10px;
-  padding: 10px 12px;
+  padding: 12px 14px;
   align-items: center;
-  border-bottom: 1px solid var(--color-border-soft);
-  background: rgba(10, 13, 17, 0.4);
+  border-bottom: 1px solid var(--color-border-subtle);
+  background: var(--color-bg-card);
+}
+.moderationQueuePreviewRow:nth-child(even) {
+  background: var(--color-bg-subtle);
 }
 .moderationQueuePreviewRow:last-child {
   border-bottom: none;
@@ -2492,39 +3100,40 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--color-text-muted);
-  background: rgba(12, 16, 20, 0.95);
+  background: var(--color-bg-muted);
 }
 .modStatusPill {
   display: inline-flex;
   border-radius: 999px;
-  padding: 3px 8px;
+  padding: 4px 9px;
   font-size: 10px;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 .modStatusPill--pending {
-  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+  background: var(--color-bg-card-hover);
   color: var(--color-accent);
-  border: 1px solid color-mix(in srgb, var(--color-accent) 28%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 40%, var(--color-border-subtle));
 }
 .modStatusPill--review {
-  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
-  color: var(--color-accent);
-  border: 1px solid color-mix(in srgb, var(--color-accent) 28%, transparent);
+  background: var(--color-bg-card-hover);
+  color: var(--color-accent-hover);
+  border: 1px solid color-mix(in srgb, var(--color-accent-hover) 35%, var(--color-border-subtle));
 }
 .modStatusPill--ok {
-  background: rgba(90, 150, 110, 0.14);
-  color: #9dccb0;
-  border: 1px solid rgba(120, 180, 140, 0.25);
+  background: var(--color-bg-card-hover);
+  color: var(--color-success);
+  border: 1px solid color-mix(in srgb, var(--color-success) 35%, var(--color-border-subtle));
 }
 .modFlagPill {
   font-size: 10px;
   font-weight: 700;
   color: var(--color-text-secondary);
-  border: 1px dashed rgba(255, 255, 255, 0.2);
+  border: 1px dashed var(--color-border-strong);
   border-radius: 8px;
-  padding: 2px 8px;
+  padding: 3px 8px;
+  background: var(--color-bg-subtle);
 }
 .modActionCells {
   display: flex;
@@ -2570,10 +3179,11 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   color: var(--color-text-secondary);
 }
 .communityMemberProfileSection {
-  border: 1px solid var(--color-border-soft);
+  border: 1px solid var(--color-border-subtle);
   border-radius: 12px;
   padding: 12px;
-  background: rgba(12, 16, 20, 0.65);
+  background: var(--color-bg-subtle);
+  box-shadow: inset 0 1px 0 var(--color-veil-06);
   display: grid;
   gap: 10px;
 }
@@ -2689,7 +3299,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   .sponsorTimelineStep {
     text-align: left;
     border-right: 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 1px solid var(--color-border-soft);
     padding: 12px 0;
     display: flex;
     gap: 12px;
@@ -2711,6 +3321,18 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
     flex-direction: column;
     align-items: stretch;
   }
+  .sponsorAdminGrid {
+    grid-template-columns: 1fr;
+  }
+  .sponsorAdminEditorGrid,
+  .sponsorProfileGrid,
+  .sponsorAdminSelectorGrid {
+    grid-template-columns: 1fr;
+  }
+  .sponsorPremiumFooter {
+    flex-direction: column;
+    align-items: flex-start;
+  }
   .sponsorStickyApplyInner {
     flex-direction: column;
     align-items: stretch;
@@ -2719,7 +3341,11 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
     width: 100%;
     min-width: 0;
   }
-  .communityModControls select {
+  .communityModToolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .communityModToolbar select {
     width: 100%;
     min-width: 0;
   }
@@ -2733,4 +3359,200 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   .communityMemberProfileHeader {
     grid-template-columns: 1fr;
   }
+}
+
+/* ── Nonprofit directory profile (standalone route) ── */
+.nonprofitTypeLine {
+  margin: 4px 0 0;
+  font-size: var(--text-caption);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  line-height: 1.35;
+}
+.nonprofitProfileShell {
+  min-height: 100vh;
+  padding-bottom: var(--ds-space-10, 40px);
+}
+.nonprofitProfileTopbarInner.topbarInner {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: "left center right";
+  align-items: center;
+}
+.nonprofitProfileTopbarInner .topbarLeft {
+  grid-area: left;
+  justify-content: flex-start;
+}
+.nonprofitProfileTopbarInner .topbarCenter {
+  grid-area: center;
+}
+.nonprofitProfileTopbarInner .topbarRight {
+  grid-area: right;
+}
+.nonprofitProfileBack {
+  text-decoration: none;
+}
+.nonprofitProfileOuter {
+  width: 100%;
+}
+.nonprofitProfileBody {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 0;
+  width: 100%;
+}
+.nonprofitProfileTitleBlock {
+  flex: 1;
+  min-width: 0;
+}
+.nonprofitProfileFavSlot {
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+.nonprofitProfileSignInHint {
+  font-size: var(--text-caption);
+  font-weight: 600;
+  white-space: nowrap;
+  padding: 8px 12px;
+  min-height: auto;
+}
+.nonprofitProfileEnrichRow {
+  margin-top: var(--ds-space-4, 16px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.nonprofitProfileEnrichNote {
+  margin: 0;
+  font-size: var(--text-caption);
+  color: var(--color-text-secondary);
+  line-height: 1.45;
+}
+.nonprofitProfileStatus {
+  color: var(--color-text-secondary);
+  font-size: var(--text-body-sm);
+}
+.nonprofitProfileLayout {
+  display: grid;
+  gap: var(--ds-space-5, 20px);
+}
+.nonprofitProfileHero {
+  overflow: hidden;
+  padding: 0;
+  border: 1px solid var(--color-border-strong);
+  box-shadow: var(--shadow-card);
+}
+.nonprofitProfileHeroInner {
+  padding: var(--ds-space-6, 24px);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--color-bg-card) 88%, transparent), var(--color-bg-card));
+}
+.nonprofitProfileIdentity {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ds-space-4, 16px);
+  flex-wrap: wrap;
+}
+.nonprofitProfileLogo {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  border-radius: 12px;
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-subtle);
+  padding: 6px;
+}
+.nonprofitProfileIconWrap {
+  width: 72px;
+  height: 72px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border-subtle);
+}
+.nonprofitProfileTitle {
+  margin: 0;
+  font-size: clamp(1.35rem, 3vw, 1.85rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--color-text-primary);
+}
+.nonprofitProfileTagline {
+  margin: 8px 0 0;
+  font-size: var(--text-body);
+  color: var(--color-text-secondary);
+  line-height: 1.45;
+  max-width: 60ch;
+}
+.nonprofitProfileNameOnSite {
+  margin: 6px 0 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-muted, var(--color-text-secondary));
+  line-height: 1.35;
+  max-width: 60ch;
+}
+.nonprofitProfileMetaChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: var(--ds-space-4, 16px);
+}
+.nonprofitProfileChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-bg-subtle);
+}
+.nonprofitProfileActions {
+  padding: var(--ds-space-5, 20px);
+  border: 1px solid var(--color-border-strong);
+  box-shadow: var(--shadow-card);
+}
+.nonprofitProfileSectionTitle {
+  margin: 0 0 var(--ds-space-3, 12px);
+  font-size: var(--text-card-section);
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+.nonprofitProfileActionRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.nonprofitProfilePanel {
+  padding: var(--ds-space-5, 20px);
+  border: 1px solid var(--color-border-subtle);
+  box-shadow: var(--shadow-card);
+}
+.nonprofitProfileHeadline {
+  margin: 0;
+  font-size: var(--text-body-lg);
+  font-weight: 650;
+  line-height: 1.45;
+  color: var(--color-text-primary);
+}
+.nonprofitProfileProse {
+  margin: 0;
+  font-size: var(--text-body-sm);
+  line-height: 1.55;
+  color: var(--color-text-secondary);
+  white-space: pre-wrap;
+}
+.nonprofitProfileProse--long {
+  font-size: var(--text-body);
+  color: var(--color-text-primary);
+}
+.nonprofitProfileProvenance {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--color-text-muted);
 }

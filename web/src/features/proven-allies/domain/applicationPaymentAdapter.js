@@ -1,5 +1,5 @@
 /**
- * Payment provider integration boundary — Proven Ally application fee.
+ * Payment provider integration boundary — Trusted Resource application fee.
  * Replace startProvenAllyApplicationPayment with Stripe (or other) client/server flow when ready.
  */
 

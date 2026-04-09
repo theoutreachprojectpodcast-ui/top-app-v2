@@ -1,6 +1,7 @@
 const DIRECTORY_SOURCE = "nonprofits_search_app_v1";
 const TRUSTED_PROFILES_SOURCE = "nonprofit_profiles";
 const TRUSTED_ORGS_SOURCE = "nonprofits";
+const DIRECTORY_ENRICHMENT_SOURCE = "nonprofit_directory_enrichment";
 
 export function applyDirectoryFilters(query, filters) {
   let q = query.eq("state", filters.state);
@@ -50,4 +51,27 @@ export async function queryTrustedOrgsByEin(supabase, eins) {
     .from(TRUSTED_ORGS_SOURCE)
     .select("ein,name,city,state,ntee_code,logo_url,verification_tier,verification_source")
     .in("ein", eins);
+}
+
+/** Normalized 9-digit EINs only */
+export async function queryDirectoryEnrichmentByEins(supabase, normalizedEins = []) {
+  if (!normalizedEins.length) return { data: [], error: null };
+  return supabase.from(DIRECTORY_ENRICHMENT_SOURCE).select("*").in("ein", normalizedEins);
+}
+
+export async function queryDirectoryEnrichmentByEin(supabase, normalizedEin) {
+  if (!normalizedEin) return { data: null, error: null };
+  return supabase.from(DIRECTORY_ENRICHMENT_SOURCE).select("*").eq("ein", normalizedEin).maybeSingle();
+}
+
+/**
+ * Resolve a directory row by EIN from URL param (9 digits or dashed).
+ */
+export async function queryDirectoryOrgByEin(supabase, einRaw) {
+  const digits = String(einRaw ?? "").replace(/\D/g, "");
+  if (digits.length !== 9) return { data: null, error: null };
+  const dashed = `${digits.slice(0, 2)}-${digits.slice(2)}`;
+  const res = await supabase.from(DIRECTORY_SOURCE).select("*").eq("ein", digits).maybeSingle();
+  if (res.data) return res;
+  return supabase.from(DIRECTORY_SOURCE).select("*").eq("ein", dashed).maybeSingle();
 }

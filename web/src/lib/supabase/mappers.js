@@ -1,4 +1,5 @@
-import { formatOrganizationDisplayName } from "@/lib/formatOrgName";
+import { sanitizeOrganizationNameForDisplay } from "@/lib/entityDisplayName";
+import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
 
 function firstNonEmpty(...values) {
   for (const value of values) {
@@ -40,9 +41,23 @@ function parseLocation(location = "") {
 }
 
 export function mapDirectoryRow(row = {}) {
+  const einRaw = String(row.ein ?? row.EIN ?? "").trim();
+  const einNorm = normalizeEinDigits(einRaw);
+  const identityOk = einNorm.length === 9 && row.ein_identity_verified !== false;
   return {
-    ein: String(row.ein ?? row.EIN ?? "").trim(),
-    orgName: String(row.org_name ?? row.name ?? row.NAME ?? "Unknown Organization").trim(),
+    ein: einRaw,
+    einNormalized: einNorm,
+    einIdentityVerified: identityOk,
+    identityVerifiedAt: row.identity_verified_at ?? null,
+    orgName: String(
+      row.canonical_display_name ??
+      row.display_name ??
+      row.org_name ??
+      row.organization_name ??
+      row.name ??
+      row.NAME ??
+      "Unknown Organization"
+    ).trim(),
     city: String(row.city ?? row.CITY ?? "").trim(),
     state: String(row.state ?? row.STATE ?? "").trim(),
     nteeCode: String(row.ntee_code ?? row.ntee ?? row.NTEE_CODE ?? "").trim(),
@@ -59,6 +74,41 @@ export function mapDirectoryRow(row = {}) {
     youtubeUrl: row.youtube_url ?? row.youtube ?? "",
     xUrl: row.x_url ?? row.twitter ?? "",
     linkedinUrl: row.linkedin_url ?? row.linkedin ?? "",
+    tiktokUrl: row.tiktok_url ?? row.tiktok ?? "",
+    headline: String(row.headline ?? "").trim(),
+    tagline: String(row.tagline ?? "").trim(),
+    shortDescription: String(row.short_description ?? "").trim(),
+    longDescription: String(row.long_description ?? "").trim(),
+    missionStatement: String(row.mission_statement ?? "").trim(),
+    serviceArea: String(row.service_area ?? "").trim(),
+    foundedYear: row.founded_year ?? null,
+    heroImageUrl: String(row.hero_image_url ?? "").trim(),
+    thumbnailUrl: String(row.thumbnail_url ?? "").trim(),
+    publicSlug: String(row.public_slug ?? "").trim(),
+    metadataSource: String(row.metadata_source ?? "").trim(),
+    profileEnrichedAt: row.profile_enriched_at ?? null,
+    lastVerifiedAt: row.last_verified_at ?? null,
+    facebookVerified: !!row.facebook_verified,
+    instagramVerified: !!row.instagram_verified,
+    linkedinVerified: !!row.linkedin_verified,
+    xVerified: !!row.x_verified,
+    youtubeVerified: !!row.youtube_verified,
+    tiktokVerified: !!row.tiktok_verified,
+    displayNameOnSite: String(row.display_name_on_site ?? "").trim(),
+    canonicalDisplayName: String(row.canonical_display_name ?? "").trim(),
+    websiteVerifiedName: String(row.website_verified_name ?? "").trim(),
+    irsName: String(row.irs_name ?? "").trim(),
+    legalName: String(row.legal_name ?? "").trim(),
+    namingConfidence: row.naming_confidence ?? null,
+    namingSourceSummary: String(row.naming_source_summary ?? "").trim(),
+    namingStatus: String(row.naming_status ?? "").trim(),
+    namingLastCheckedAt: row.naming_last_checked_at ?? null,
+    namingVerifiedAt: row.naming_verified_at ?? null,
+    namingReviewRequired: !!row.naming_review_required,
+    researchStatus: String(row.research_status ?? "").trim(),
+    researchConfidence: row.research_confidence ?? null,
+    sourceSummary: String(row.source_summary ?? "").trim(),
+    webSearchSupplemented: !!row.web_search_supplemented,
     raw: row,
   };
 }
@@ -88,13 +138,12 @@ export function mapTrustedRow(profile = {}, org = {}) {
         profile.legal_name,
         profile.org_name,
         profile.name,
-        profile.title,
         org.organization_name,
         org.org_name,
         org.name,
         org.NAME
       );
-      return rawTitle ? formatOrganizationDisplayName(rawTitle) : "";
+      return rawTitle ? sanitizeOrganizationNameForDisplay(rawTitle, { trustCanonical: false }) : "";
     })(),
     city: String(city).trim(),
     state: String(state).trim(),

@@ -19,7 +19,7 @@ export function useTrustedResources(supabase) {
       }
       return;
     }
-    setTrustedStatus("Loading proven allies...");
+    setTrustedStatus("Loading trusted resources…");
 
     let cache = trustedCache;
     let offset = reset ? 0 : trustedOffset;
@@ -34,14 +34,14 @@ export function useTrustedResources(supabase) {
           setTrustedCache([]);
           setTrustedOffset(0);
         }
-        setTrustedStatus("Unable to load proven allies right now.");
+        setTrustedStatus("Unable to load trusted resources right now.");
         return;
       }
     }
 
     const slice = getTrustedSlice(cache, offset);
     if (!slice.length) {
-      setTrustedStatus(offset === 0 ? "No proven allies found yet." : "No more proven allies.");
+      setTrustedStatus(offset === 0 ? "No trusted resources found yet." : "No more trusted resources.");
       return;
     }
 

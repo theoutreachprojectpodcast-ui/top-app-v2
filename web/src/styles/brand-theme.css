@@ -43,12 +43,20 @@
   --color-error: #c94b49;
   --color-info: #2c7be5;
   --color-overlay: rgba(17, 23, 20, 0.48);
+  --color-overlay-backdrop: rgba(17, 23, 20, 0.45);
   --color-shadow: rgba(17, 23, 20, 0.08);
+  --color-on-accent: #ffffff;
+  /* Subtle UI lines on light surfaces (replaces slate #0f172a RGBA shortcuts) */
+  --color-veil-06: color-mix(in srgb, var(--color-text-primary) 6%, transparent);
+  --color-veil-08: color-mix(in srgb, var(--color-text-primary) 8%, transparent);
+  --color-veil-10: color-mix(in srgb, var(--color-text-primary) 10%, transparent);
+  --color-veil-12: color-mix(in srgb, var(--color-text-primary) 12%, transparent);
   --color-navbar: color-mix(in srgb, var(--color-bg-subtle) 92%, transparent);
   --color-input: var(--color-bg-card);
   --color-input-border: var(--color-border-subtle);
   --color-ring: var(--color-focus-ring);
-  --texture-opacity: 0.035;
+  /* Topo + noise: visible contour lines on #F5F7F6 without competing with content */
+  --texture-opacity: 0.078;
 
   /* Map legacy structure */
   --color-bg-primary: var(--color-bg-app);
@@ -87,12 +95,13 @@
 
   --color-destructive: var(--color-error);
 
-  --glow-accent: 0 1px 2px rgba(17, 23, 20, 0.04), 0 4px 14px rgba(34, 165, 43, 0.12);
-  --glow-cyan: 0 0 0 1px color-mix(in srgb, var(--color-accent) 18%, transparent), 0 2px 12px rgba(34, 165, 43, 0.1);
+  --glow-accent: 0 1px 2px rgba(17, 23, 20, 0.06), 0 4px 16px rgba(17, 23, 20, 0.08);
+  --glow-cyan: 0 0 0 1px color-mix(in srgb, var(--color-border-subtle) 80%, transparent), 0 2px 10px rgba(17, 23, 20, 0.06);
   --glow-gold: var(--glow-accent);
 
   --shadow-card: 0 4px 18px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(17, 23, 20, 0.04);
   --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(17, 23, 20, 0.05);
+  --shadow-bottom-nav: 0 -8px 32px color-mix(in srgb, var(--color-text-primary) 15%, transparent);
 
   --color-scrollbar-track: color-mix(in srgb, var(--color-bg-subtle) 96%, var(--color-bg-app) 4%);
   --color-scrollbar-thumb: color-mix(in srgb, var(--color-border-strong) 55%, var(--color-bg-muted) 45%);
@@ -153,21 +162,22 @@
 :root[data-color-scheme="dark"],
 .dark {
   color-scheme: dark;
-  --topbar-occlusion-spot: rgba(0, 0, 0, 0.28);
+  --topbar-occlusion-spot: rgba(255, 255, 255, 0.04);
 
-  --color-bg-app: #101412;
-  --color-bg-subtle: #161c19;
-  --color-bg-elevated: #1b2320;
-  --color-bg-muted: #232d28;
-  --color-bg-card: #1b2320;
-  --color-bg-card-hover: #232d28;
+  /* Charcoal foundation — neutral grays only (no green / olive wash on surfaces) */
+  --color-bg-app: #121212;
+  --color-bg-subtle: #181818;
+  --color-bg-elevated: #1f1f1f;
+  --color-bg-muted: #2a2a2a;
+  --color-bg-card: #1e1e1e;
+  --color-bg-card-hover: #2a2a2a;
 
-  --color-border-subtle: #2c3832;
-  --color-border-strong: #3a4841;
+  --color-border-subtle: #383838;
+  --color-border-strong: #4a4a4a;
 
-  --color-text-primary: #f3f6f4;
-  --color-text-secondary: #c5d0c9;
-  --color-text-muted: #91a198;
+  --color-text-primary: #f0f0f0;
+  --color-text-secondary: #b6b6b6;
+  --color-text-muted: #8a8a8a;
 
   --color-accent: #55d85c;
   --color-accent-hover: #83e387;
@@ -178,22 +188,29 @@
   --color-warning: #d4a12a;
   --color-error: #d96866;
   --color-info: #5a9bff;
-  --color-overlay: rgba(10, 14, 12, 0.62);
-  --color-shadow: rgba(0, 0, 0, 0.26);
-  --color-navbar: color-mix(in srgb, var(--color-bg-subtle) 86%, transparent);
+  --color-overlay: rgba(0, 0, 0, 0.62);
+  --color-overlay-backdrop: rgba(0, 0, 0, 0.68);
+  --color-shadow: rgba(0, 0, 0, 0.32);
+  --color-on-accent: #0f1412;
+  --color-veil-06: rgba(255, 255, 255, 0.06);
+  --color-veil-08: rgba(255, 255, 255, 0.08);
+  --color-veil-10: rgba(255, 255, 255, 0.1);
+  --color-veil-12: rgba(255, 255, 255, 0.12);
+  --color-navbar: color-mix(in srgb, var(--color-bg-subtle) 88%, transparent);
   --color-input: var(--color-bg-card);
   --color-input-border: var(--color-border-subtle);
   --color-ring: var(--color-focus-ring);
-  --texture-opacity: 0.045;
+  /* Dark: overlay blend needs a higher base than light multiply */
+  --texture-opacity: 0.1;
 
   --color-bg-primary: var(--color-bg-app);
   --color-bg-secondary: var(--color-bg-subtle);
   --color-surface: var(--color-bg-card);
   --color-surface-elevated: var(--color-bg-card-hover);
   --color-surface-soft: var(--color-bg-subtle);
-  --color-surface-muted: color-mix(in srgb, var(--color-bg-muted) 88%, var(--color-bg-card) 12%);
+  --color-surface-muted: color-mix(in srgb, var(--color-bg-muted) 82%, var(--color-bg-card) 18%);
   --color-surface-card: var(--color-bg-card);
-  --color-surface-card-deep: color-mix(in srgb, var(--color-bg-card) 70%, var(--color-bg-app) 30%);
+  --color-surface-card-deep: color-mix(in srgb, var(--color-bg-app) 35%, var(--color-bg-card) 65%);
   --color-surface-raised: var(--color-bg-card-hover);
 
   --color-background-base: var(--color-bg-app);
@@ -206,7 +223,7 @@
 
   --color-gold-primary: var(--color-accent-hover);
   --color-gold-highlight: var(--color-accent);
-  --color-gold-shadow: #2a5c2e;
+  --color-gold-shadow: #1a1f1d;
   --color-gold-soft: var(--color-accent-soft);
   --color-gold-muted: rgba(85, 216, 92, 0.16);
 
@@ -219,14 +236,16 @@
   --color-accent-interactive: var(--color-accent);
   --color-accent-interactive-soft: color-mix(in srgb, var(--color-accent) 26%, transparent);
 
-  --glow-accent: 0 2px 8px rgba(0, 0, 0, 0.35), 0 0 20px rgba(85, 216, 92, 0.08);
-  --glow-cyan: 0 0 0 1px color-mix(in srgb, var(--color-accent) 24%, transparent), 0 2px 16px rgba(85, 216, 92, 0.12);
+  /* Depth from neutral shadow only — accent is not a glow source */
+  --glow-accent: 0 2px 10px rgba(0, 0, 0, 0.45), 0 1px 2px rgba(0, 0, 0, 0.35);
+  --glow-cyan: 0 0 0 1px color-mix(in srgb, var(--color-border-strong) 55%, transparent), 0 2px 12px rgba(0, 0, 0, 0.35);
   --glow-gold: var(--glow-accent);
 
   --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.04);
   --shadow-card-hover: 0 12px 32px rgba(0, 0, 0, 0.24), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  --shadow-bottom-nav: 0 -8px 40px rgba(0, 0, 0, 0.55);
 
-  --color-scrollbar-track: rgba(16, 20, 18, 0.92);
+  --color-scrollbar-track: #1a1a1a;
   --color-scrollbar-thumb: color-mix(in srgb, var(--color-border-strong) 70%, var(--color-text-muted) 30%);
   --color-scrollbar-thumb-hover: color-mix(in srgb, var(--color-accent) 28%, var(--color-border-strong) 72%);
   --color-scrollbar-corner: var(--color-bg-app);
@@ -234,10 +253,11 @@
 
 body {
   background-color: var(--color-bg-app);
+  /* No accent in page fill — neutral depth only (green = UI accent only) */
   background-image:
-    radial-gradient(ellipse 120% 80% at 50% -20%, color-mix(in srgb, var(--color-accent) 6%, transparent), transparent 55%),
-    radial-gradient(ellipse 70% 50% at 100% 0%, color-mix(in srgb, var(--color-bg-muted) 35%, transparent), transparent 50%),
-    linear-gradient(180deg, var(--color-bg-subtle) 0%, var(--color-bg-app) 45%, var(--color-bg-app) 100%);
+    radial-gradient(ellipse 120% 85% at 50% -18%, color-mix(in srgb, var(--color-text-primary) 5%, transparent), transparent 58%),
+    radial-gradient(ellipse 72% 52% at 100% 0%, color-mix(in srgb, var(--color-bg-muted) 42%, transparent), transparent 52%),
+    linear-gradient(180deg, var(--color-bg-subtle) 0%, var(--color-bg-app) 48%, var(--color-bg-app) 100%);
   color: var(--color-text-primary);
   font-family: var(--font-body), "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   position: relative;
@@ -247,9 +267,9 @@ body {
 :root[data-color-scheme="dark"] body,
 .dark body {
   background-image:
-    radial-gradient(ellipse 100% 70% at 50% -15%, color-mix(in srgb, var(--color-accent) 9%, transparent), transparent 52%),
-    radial-gradient(ellipse 55% 45% at 95% 8%, color-mix(in srgb, var(--color-bg-muted) 25%, transparent), transparent 55%),
-    linear-gradient(165deg, var(--color-bg-subtle) 0%, var(--color-bg-app) 40%, var(--color-bg-app) 100%);
+    radial-gradient(ellipse 100% 72% at 50% -14%, rgba(255, 255, 255, 0.045), transparent 54%),
+    radial-gradient(ellipse 58% 48% at 96% 6%, rgba(255, 255, 255, 0.028), transparent 56%),
+    linear-gradient(168deg, var(--color-bg-subtle) 0%, var(--color-bg-app) 42%, var(--color-bg-app) 100%);
 }
 
 body::before,
@@ -263,30 +283,34 @@ body::after {
 
 /* Soft wash + optional topo (large surfaces only — low contrast) */
 body::before {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--color-bg-elevated) 22%, transparent), transparent 42%);
+  background:
+    radial-gradient(ellipse 80% 55% at 50% 0%, color-mix(in srgb, var(--color-bg-card) 18%, transparent), transparent 70%),
+    linear-gradient(180deg, color-mix(in srgb, var(--color-bg-elevated) 26%, transparent), transparent 44%);
   opacity: 1;
 }
 
 :root[data-color-scheme="dark"] body::before,
 .dark body::before {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 38%);
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 0%, rgba(255, 255, 255, 0.035), transparent 65%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 40%);
 }
 
 body::after {
-  opacity: var(--texture-opacity, 0.035);
+  opacity: var(--texture-opacity, 0.078);
   background-image: var(--texture-noise), var(--bg-texture-image);
   background-size: 180px 180px, cover;
   background-position: 0 0, center;
   background-repeat: repeat, no-repeat;
   mix-blend-mode: multiply;
-  filter: contrast(1.02) brightness(1.02);
+  filter: contrast(1.14) brightness(1.05);
 }
 
 :root[data-color-scheme="dark"] body::after,
 .dark body::after {
-  opacity: var(--texture-opacity, 0.045);
-  mix-blend-mode: soft-light;
-  filter: saturate(0.12) contrast(1.05) brightness(0.72);
+  opacity: var(--texture-opacity, 0.1);
+  mix-blend-mode: overlay;
+  filter: grayscale(1) contrast(1.14) brightness(0.9);
 }
 
 h1,
@@ -334,6 +358,35 @@ html {
 
 *::-webkit-scrollbar-corner {
   background: var(--color-scrollbar-corner);
+}
+
+/* Optional: extra topo depth on large bands (not for cards/forms — opt-in per section) */
+.torp-band-texture {
+  position: relative;
+  isolation: isolate;
+}
+.torp-band-texture::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: calc(var(--texture-opacity, 0.078) * 0.92);
+  background-image: var(--texture-noise), var(--bg-texture-image);
+  background-size: 180px 180px, cover;
+  background-position: 0 0, center;
+  background-repeat: repeat, no-repeat;
+  mix-blend-mode: multiply;
+  filter: contrast(1.12) brightness(1.04);
+}
+:root[data-color-scheme="dark"] .torp-band-texture::before,
+.dark .torp-band-texture::before {
+  mix-blend-mode: overlay;
+  filter: grayscale(1) contrast(1.12) brightness(0.88);
+}
+.torp-band-texture > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* Nonprofit category colors — icons/labels only */

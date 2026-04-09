@@ -36,9 +36,13 @@ export default function CommunityPage({
   return (
     <div className="communityPage">
       <section className="card cardHero communityHero">
-        <div className="communityHeroIcon" aria-hidden="true"><CommunityIcon /></div>
-        <p className="introTagline">Community</p>
-        <h2>Stories worth sharing—carefully reviewed</h2>
+        <div className="communityHeroTop">
+          <div className="communityHeroIcon" aria-hidden="true"><CommunityIcon /></div>
+          <div className="communityHeroTitles">
+            <p className="introTagline">Community</p>
+            <h2>Stories worth sharing—carefully reviewed</h2>
+          </div>
+        </div>
         <p className="communityHeroText">
           A calm space for mission-aligned experiences: finding support, thanking organizations, and encouraging others.
           Every story is reviewed before it appears here.
@@ -86,16 +90,17 @@ export default function CommunityPage({
           ))}
         </div>
       </section>
-
-      <CommunityModerationPanel
-        key={modPanelKey}
-        supabase={supabase}
-        userId={userId}
-        canModerate={canModerate}
-        onFeedChanged={refresh}
-      />
-
-      <ModerationQueuePreview />
+      <hr className="communityAdminDivider" aria-hidden="true" />
+      <section className="communityAdminZone" aria-label="Community admin tools">
+        <CommunityModerationPanel
+          key={modPanelKey}
+          supabase={supabase}
+          userId={userId}
+          canModerate={canModerate}
+          onFeedChanged={refresh}
+        />
+        <ModerationQueuePreview />
+      </section>
 
       {submitOpen ? (
         <div className="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="community-submit-title" onClick={() => setSubmitOpen(false)}>

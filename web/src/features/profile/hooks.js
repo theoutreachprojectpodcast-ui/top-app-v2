@@ -11,10 +11,12 @@ import {
   toLocalShape,
   toLocalStorageProfile,
 } from "@/features/profile/mappers";
+import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
 import {
   fetchProfileByUserId,
   fetchSavedOrgEinList,
   fetchSavedOrganizationsByEin,
+  DEMO_USER_KEY,
   getOrCreateDemoUserId,
   replaceSavedOrgEinList,
   upsertProfileByUserId,
@@ -52,7 +54,8 @@ export function useProfileData(supabase) {
         return;
       }
       setProfile(profileFromLegacy(legacy || {}));
-      setFavoriteEins(Array.isArray(storedFavs) ? storedFavs : []);
+      const rawFavs = Array.isArray(storedFavs) ? storedFavs : [];
+      setFavoriteEins([...new Set(rawFavs.map((e) => normalizeEinDigits(e)).filter((e) => e.length === 9))]);
     });
   }, []);
 
@@ -131,11 +134,12 @@ export function useProfileData(supabase) {
   }
 
   async function setFavoriteEinList(nextEins) {
-    setFavoriteEins(nextEins);
+    const normalized = [...new Set((nextEins || []).map((e) => normalizeEinDigits(e)).filter((e) => e.length === 9))];
+    setFavoriteEins(normalized);
     if (!supabase || syncingRef.current || !isAuthenticated) return;
     syncingRef.current = true;
     try {
-      await replaceSavedOrgEinList(supabase, userId, nextEins);
+      await replaceSavedOrgEinList(supabase, userId, normalized);
     } catch {
       setProfileError("Saved organizations updated locally, but cloud sync failed.");
     } finally {
@@ -144,20 +148,49 @@ export function useProfileData(supabase) {
   }
 
   async function resetDemo() {
+    const localKeysToClear = [
+      PROFILE_KEY,
+      FAV_KEY,
+      AUTH_KEY,
+      DEMO_USER_KEY,
+      "top_sponsor_applications_demo",
+      "top_proven_ally_applications_demo",
+      "top_community_pending_submissions",
+      "top_community_local_approved_posts",
+      "top_community_liked_posts",
+      "top_community_connection_requests",
+      "torp-color-scheme",
+    ];
+    const sessionKeysToClear = ["torp-directory-session-v1"];
+
+    if (typeof window !== "undefined") {
+      for (const key of localKeysToClear) {
+        try {
+          window.localStorage.removeItem(key);
+        } catch {
+          // ignore
+        }
+      }
+      for (const key of sessionKeysToClear) {
+        try {
+          window.sessionStorage.removeItem(key);
+        } catch {
+          // ignore
+        }
+      }
+    }
+
     const fresh = profileFromLegacy(defaultProfile());
     setProfile(fresh);
     setFavoriteEins([]);
     setSavedOrganizations([]);
     setProfileError("");
+    setIsAuthenticated(false);
+    setUserId("demo-user");
     try {
       await replaceSavedOrgEinList(supabase, userId, []);
     } catch {
       /* local reset still applies */
-    }
-    try {
-      if (supabase) await upsertProfileByUserId(supabase, userId, fresh);
-    } catch {
-      /* ignore */
     }
   }
 
@@ -207,7 +240,8 @@ export function useProfileData(supabase) {
   }
 
   function toggleFavoriteEin(ein) {
-    const id = String(ein);
+    const id = normalizeEinDigits(ein);
+    if (id.length !== 9) return;
     const next = favoriteEins.includes(id) ? favoriteEins.filter((x) => x !== id) : [id, ...favoriteEins];
     setFavoriteEinList(next);
   }

@@ -150,7 +150,7 @@ export default function ProvenAllyApplicationForm({ supabase, onClose }) {
   return (
     <div className="modalOverlay" onClick={onClose}>
       <div className="modalCard provenApplyModal" onClick={(e) => e.stopPropagation()}>
-        <h3>Apply to Become a Proven Ally</h3>
+        <h3>Apply to Become a Trusted Resource</h3>
         <p>Structured review for organizations committed to trusted, mission-first support.</p>
 
         <form className="provenApplyForm" onSubmit={onSubmit}>
@@ -242,14 +242,14 @@ export default function ProvenAllyApplicationForm({ supabase, onClose }) {
           </section>
 
           <section className="applySection">
-            <h4>Why You Should Be a Proven Ally</h4>
-            <textarea rows={3} placeholder="Why would your organization be a strong Proven Ally?" value={form.why_good_fit} onChange={(e) => setForm((f) => ({ ...f, why_good_fit: e.target.value }))} />
+            <h4>Why you should be a Trusted Resource</h4>
+            <textarea rows={3} placeholder="Why would your organization be a strong Trusted Resource?" value={form.why_good_fit} onChange={(e) => setForm((f) => ({ ...f, why_good_fit: e.target.value }))} />
             <textarea rows={3} placeholder="Who do you serve?" value={form.who_you_serve} onChange={(e) => setForm((f) => ({ ...f, who_you_serve: e.target.value }))} />
             <textarea rows={3} placeholder="What services do you provide?" value={form.services_offered} onChange={(e) => setForm((f) => ({ ...f, services_offered: e.target.value }))} />
             <textarea rows={3} placeholder="Veteran support experience" value={form.veteran_support_experience} onChange={(e) => setForm((f) => ({ ...f, veteran_support_experience: e.target.value }))} />
             <textarea rows={3} placeholder="First responder support experience" value={form.first_responder_support_experience} onChange={(e) => setForm((f) => ({ ...f, first_responder_support_experience: e.target.value }))} />
             <textarea rows={3} placeholder="Community impact" value={form.community_impact} onChange={(e) => setForm((f) => ({ ...f, community_impact: e.target.value }))} />
-            <textarea rows={3} placeholder="Why do you want to join Proven Allies?" value={form.why_join_proven_allies} onChange={(e) => setForm((f) => ({ ...f, why_join_proven_allies: e.target.value }))} />
+            <textarea rows={3} placeholder="Why do you want to join Trusted Resources?" value={form.why_join_proven_allies} onChange={(e) => setForm((f) => ({ ...f, why_join_proven_allies: e.target.value }))} />
             <textarea rows={2} placeholder="References or links" value={form.references_or_links} onChange={(e) => setForm((f) => ({ ...f, references_or_links: e.target.value }))} />
           </section>
 

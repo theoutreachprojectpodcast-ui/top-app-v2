@@ -1,26 +1,31 @@
 "use client";
 
-import { useState } from "react";
-import BecomeASponsorPage from "@/features/sponsors/components/BecomeASponsorPage";
+import { useEffect, useState } from "react";
+import { listSponsorsCatalog, mapSponsorsToCardModels } from "@/features/sponsors/api/sponsorCatalogApi";
+import SponsorAdminEditorSection from "@/features/sponsors/components/SponsorAdminEditorSection";
+import SponsorAdminReviewSection from "@/features/sponsors/components/SponsorAdminReviewSection";
 import SponsorsLandingPage from "@/features/sponsors/components/SponsorsLandingPage";
-import { SPONSOR_TIERS } from "@/features/sponsors/data/sponsorTiers";
 
 export default function SponsorHub({ supabase }) {
-  const [step, setStep] = useState("landing");
-  const [selectedTierId, setSelectedTierId] = useState(SPONSOR_TIERS[0].id);
+  const [sponsors, setSponsors] = useState([]);
+
+  async function loadSponsors() {
+    const rows = await listSponsorsCatalog(supabase);
+    setSponsors(rows);
+  }
+
+  useEffect(() => {
+    loadSponsors();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [supabase]);
 
   return (
-    <>
-      {step === "landing" ? (
-        <SponsorsLandingPage onExploreOptions={() => setStep("options")} />
-      ) : (
-        <BecomeASponsorPage
-          supabase={supabase}
-          selectedTierId={selectedTierId}
-          onSelectTier={setSelectedTierId}
-        />
-      )}
-    </>
+    <div className="sponsorPage">
+      <SponsorsLandingPage sponsors={mapSponsorsToCardModels(sponsors)} />
+      <hr className="sponsorAdminDivider" aria-hidden="true" />
+      <SponsorAdminEditorSection supabase={supabase} sponsors={sponsors} onSaved={loadSponsors} />
+      <SponsorAdminReviewSection supabase={supabase} />
+    </div>
   );
 }
 

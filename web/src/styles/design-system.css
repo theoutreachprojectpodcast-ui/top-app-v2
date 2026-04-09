@@ -83,12 +83,14 @@
   color: var(--color-text-secondary);
 }
 
+.ds-chip--accent,
 .ds-chip--teal {
   border-color: color-mix(in srgb, var(--color-accent) 38%, var(--color-border));
   background: var(--color-accent-soft);
   color: var(--color-text-primary);
 }
 
+.ds-chip--emphasis,
 .ds-chip--gold {
   border-color: color-mix(in srgb, var(--color-accent-hover) 40%, var(--color-border));
   background: var(--color-accent-soft);

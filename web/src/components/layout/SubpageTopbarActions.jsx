@@ -6,10 +6,10 @@ import IconWrap from "@/components/shared/IconWrap";
 
 const SPONSOR_ICON = "M4 6h16v12H4z M4 10h16";
 
-export default function SubpageTopbarActions() {
+export default function SubpageTopbarActions({ showThemeToggle = true }) {
   return (
     <div className="topbarActionsCluster">
-      <ColorSchemeToggle />
+      {showThemeToggle ? <ColorSchemeToggle /> : null}
       <Link className="btnSoft sponsorBtn" href="/">
         <IconWrap path={SPONSOR_ICON} />
         Become a Sponsor

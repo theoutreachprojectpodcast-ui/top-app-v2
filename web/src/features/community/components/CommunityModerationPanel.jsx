@@ -10,7 +10,7 @@ import {
 } from "@/features/community/api/communityApi";
 
 /**
- * Demo-only moderation surface so the moderation-first model is visible without a full admin app.
+ * Moderation queue: cloud primary, local demo fallback. Visible admin surface for both themes.
  */
 export default function CommunityModerationPanel({ supabase, userId, canModerate, onFeedChanged }) {
   const [pending, setPending] = useState(() => loadPendingSubmissionsLocal());
@@ -39,27 +39,6 @@ export default function CommunityModerationPanel({ supabase, userId, canModerate
     reload();
   }, [reload]);
 
-  if (!canModerate) {
-    return (
-      <details className="communityModPanel">
-        <summary>Review queue</summary>
-        <p className="communityModEmpty">Moderator access is required to review submitted stories.</p>
-      </details>
-    );
-  }
-
-  if (!pending.length && !cloudPending.length && !loadingCloud) {
-    return (
-      <details className="communityModPanel" open>
-        <summary>Review queue (demo)</summary>
-        <p className="communityModEmpty">No pending submissions. New stories appear here after user submission.</p>
-        <div className="row wrap">
-          <button type="button" className="btnSoft" onClick={reload}>Refresh Queue</button>
-        </div>
-      </details>
-    );
-  }
-
   const showCloudQueue = queueFilter === "all" || queueFilter === "submitted" || queueFilter === "under_review";
   const showLocalQueue = queueFilter === "all" || queueFilter === "local";
   const filteredCloudPending =
@@ -69,108 +48,153 @@ export default function CommunityModerationPanel({ supabase, userId, canModerate
   const totalFiltered = (showCloudQueue ? filteredCloudPending.length : 0) + (showLocalQueue ? pending.length : 0);
 
   return (
-    <details className="communityModPanel" open>
-      <summary>
-        Review queue — {totalFiltered} pending
-      </summary>
-      <p className="communityModHint">
-        Moderation-first: posts remain hidden until approved. Cloud queue is primary, local queue is demo fallback.
-      </p>
-      <div className="row wrap communityModControls">
-        <select value={queueFilter} onChange={(e) => setQueueFilter(e.target.value)} aria-label="Filter review queue">
-          <option value="all">All queues</option>
-          <option value="submitted">Submitted only</option>
-          <option value="under_review">Under review only</option>
-          <option value="local">Local demo queue only</option>
-        </select>
-        <button type="button" className="btnSoft" onClick={reload} disabled={loadingCloud}>
-          {loadingCloud ? "Refreshing…" : "Refresh Queue"}
-        </button>
-      </div>
-      {cloudError ? <p className="applyError">{cloudError}</p> : null}
-      {showCloudQueue && filteredCloudPending.length ? (
-        <ul className="communityModList">
-          {filteredCloudPending.map((p) => (
-            <li key={`cloud-${p.id}`} className="communityModItem">
-              <div>
-                <strong>{p.title || "Untitled"}</strong>
-                <p className="communityModPreview">{String(p.body || "").slice(0, 160)}{String(p.body || "").length > 160 ? "…" : ""}</p>
-                <span className="communityModMeta">{p.authorName} · {p.status}</span>
-              </div>
-              <div className="row wrap">
-                <button
-                  type="button"
-                  className="btnSoft"
-                  onClick={async () => {
-                    await reviewSubmission(supabase, {
-                      postId: p.id,
-                      action: "reject",
-                      reviewerId: userId,
-                      rejectionReason: "Did not meet moderation guidelines.",
-                    });
-                    await reload();
-                    onFeedChanged?.();
-                  }}
-                >
-                  Reject
-                </button>
-                <button
-                  type="button"
-                  className="btnPrimary"
-                  onClick={async () => {
-                    await reviewSubmission(supabase, {
-                      postId: p.id,
-                      action: "approve",
-                      reviewerId: userId,
-                    });
-                    await reload();
-                    onFeedChanged?.();
-                  }}
-                >
-                  Approve
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
+    <section className="communityAdminSection" aria-labelledby="community-mod-heading">
+      <header className="communityAdminSection__header">
+        <div>
+          <h3 id="community-mod-heading">Story review</h3>
+          <p className="communityAdminSection__subtitle">
+            Approve or reject submissions before they appear in the community feed. Cloud queue is primary; local storage is a
+            demo fallback when Supabase is unavailable.
+          </p>
+        </div>
+        {canModerate ? <span className="communityAdminRolePill">Moderator</span> : null}
+      </header>
+
+      {!canModerate ? (
+        <div className="communityAdminCard communityAdminCard--notice">
+          <p className="communityModEmpty">Moderator access is required to review submitted stories.</p>
+        </div>
       ) : null}
-      {showLocalQueue ? (
-      <ul className="communityModList">
-        {pending.map((p) => (
-          <li key={p.id} className="communityModItem">
-            <div>
-              <strong>{p.title || "Untitled"}</strong>
-              <p className="communityModPreview">{String(p.body || "").slice(0, 160)}{String(p.body || "").length > 160 ? "…" : ""}</p>
-              <span className="communityModMeta">{p.author_name} · {p.status}</span>
-            </div>
-            <div className="row wrap">
-              <button
-                type="button"
-                className="btnSoft"
-                onClick={() => {
-                  rejectPendingLocal(p.id);
-                  reload();
-                }}
-              >
-                Reject
-              </button>
-              <button
-                type="button"
-                className="btnPrimary"
-                onClick={() => {
-                  approvePendingLocal(p.id);
-                  reload();
-                  onFeedChanged?.();
-                }}
-              >
-                Approve
-              </button>
-            </div>
-          </li>
-        ))}
-      </ul>
+
+      {canModerate && !pending.length && !cloudPending.length && !loadingCloud ? (
+        <div className="communityAdminCard communityAdminCard--active">
+          <p className="communityModEmpty">No pending submissions. New stories appear here after members submit.</p>
+          <div className="communityModToolbar">
+            <button type="button" className="btnSoft" onClick={reload}>
+              Refresh queue
+            </button>
+          </div>
+        </div>
       ) : null}
-    </details>
+
+      {canModerate && (pending.length > 0 || cloudPending.length > 0 || loadingCloud) ? (
+        <div className="communityAdminCard communityAdminCard--active">
+          <p className="communityModHint">
+            {loadingCloud && !filteredCloudPending.length && !pending.length && showCloudQueue ? (
+              <>Loading moderation queue…</>
+            ) : (
+              <>
+                <strong>{totalFiltered}</strong> item{totalFiltered === 1 ? "" : "s"} in view — moderation-first: posts stay hidden
+                until approved.
+              </>
+            )}
+          </p>
+          <div className="communityModToolbar">
+            <select value={queueFilter} onChange={(e) => setQueueFilter(e.target.value)} aria-label="Filter review queue">
+              <option value="all">All queues</option>
+              <option value="submitted">Submitted only</option>
+              <option value="under_review">Under review only</option>
+              <option value="local">Local demo queue only</option>
+            </select>
+            <button type="button" className="btnSoft" onClick={reload} disabled={loadingCloud}>
+              {loadingCloud ? "Refreshing…" : "Refresh queue"}
+            </button>
+          </div>
+          {cloudError ? <p className="applyError">{cloudError}</p> : null}
+          {showCloudQueue && filteredCloudPending.length ? (
+            <ul className="communityModList">
+              {filteredCloudPending.map((p) => (
+                <li key={`cloud-${p.id}`} className="communityModItem">
+                  <div>
+                    <strong>{p.title || "Untitled"}</strong>
+                    <p className="communityModPreview">
+                      {String(p.body || "").slice(0, 160)}
+                      {String(p.body || "").length > 160 ? "…" : ""}
+                    </p>
+                    <span className="communityModMeta">
+                      {p.authorName} · {p.status}
+                    </span>
+                  </div>
+                  <div className="row wrap">
+                    <button
+                      type="button"
+                      className="btnSoft"
+                      onClick={async () => {
+                        await reviewSubmission(supabase, {
+                          postId: p.id,
+                          action: "reject",
+                          reviewerId: userId,
+                          rejectionReason: "Did not meet moderation guidelines.",
+                        });
+                        await reload();
+                        onFeedChanged?.();
+                      }}
+                    >
+                      Reject
+                    </button>
+                    <button
+                      type="button"
+                      className="btnPrimary"
+                      onClick={async () => {
+                        await reviewSubmission(supabase, {
+                          postId: p.id,
+                          action: "approve",
+                          reviewerId: userId,
+                        });
+                        await reload();
+                        onFeedChanged?.();
+                      }}
+                    >
+                      Approve
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          {showLocalQueue && pending.length ? (
+            <ul className="communityModList">
+              {pending.map((p) => (
+                <li key={p.id} className="communityModItem">
+                  <div>
+                    <strong>{p.title || "Untitled"}</strong>
+                    <p className="communityModPreview">
+                      {String(p.body || "").slice(0, 160)}
+                      {String(p.body || "").length > 160 ? "…" : ""}
+                    </p>
+                    <span className="communityModMeta">
+                      {p.author_name} · {p.status}
+                    </span>
+                  </div>
+                  <div className="row wrap">
+                    <button
+                      type="button"
+                      className="btnSoft"
+                      onClick={() => {
+                        rejectPendingLocal(p.id);
+                        reload();
+                      }}
+                    >
+                      Reject
+                    </button>
+                    <button
+                      type="button"
+                      className="btnPrimary"
+                      onClick={() => {
+                        approvePendingLocal(p.id);
+                        reload();
+                        onFeedChanged?.();
+                      }}
+                    >
+                      Approve
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+      ) : null}
+    </section>
   );
 }
-

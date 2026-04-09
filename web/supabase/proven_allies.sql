@@ -1,4 +1,5 @@
--- Canonical catalog row for each Proven Ally (public listing + application pipeline).
+-- Trusted Resources catalog (public listing + application pipeline).
+-- Table name `proven_allies` is legacy; the app treats this as the single Trusted Resources repository (see TRUSTED_RESOURCES_TABLE in code).
 -- Favorites are per-user in the app; they are not stored here.
 create table if not exists public.proven_allies (
   id uuid primary key default gen_random_uuid(),

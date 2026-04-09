@@ -13,10 +13,10 @@ export default function TrustedPage() {
                 <path d={SHIELD} />
               </svg>
             </span>
-            Proven Allies
+            Trusted Resources
           </h2>
           <p className="ds-page-intro__lead">
-            The full directory experience lives on the home app. Open the site root and tap <strong>Proven Allies</strong>{" "}
+            The full directory experience lives on the home app. Open the site root and tap <strong>Trusted Resources</strong>{" "}
             in the dock for curated, verified organizations.
           </p>
         </div>

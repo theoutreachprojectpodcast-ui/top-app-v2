@@ -74,7 +74,14 @@ export default function CommunityMemberProfileModal({ supabase, memberId, onClos
             <div className="results">
               {profile.favorites.map((row) => {
                 const card = mapNonprofitCardRow(row, "directory");
-                return <NonprofitCard key={`member-fav-${member.id}-${card.ein || card.id}`} card={card} actionMode="directory" isMember={false} />;
+                return (
+                  <NonprofitCard
+                    key={`member-fav-${member.id}-${card.ein || card.id}`}
+                    card={card}
+                    actionMode="directory"
+                    favoritesEnabled={false}
+                  />
+                );
               })}
             </div>
           )}

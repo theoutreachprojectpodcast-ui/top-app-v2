@@ -1,5 +1,5 @@
 export default function NonprofitStatusBadge({ status }) {
-  if (!status?.isProvenAlly) return null;
-  return <span className="nonprofitBadge badgeProvenAlly">{status.label || "Proven Ally"}</span>;
+  if (!(status?.isTrustedResource ?? status?.isProvenAlly)) return null;
+  return <span className="nonprofitBadge badgeTrustedResource">{status.label || "Trusted Resource"}</span>;
 }
 

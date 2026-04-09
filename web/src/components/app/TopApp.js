@@ -24,10 +24,11 @@ import { useTrustedResources } from "@/hooks/useTrustedResources";
 import DirectoryCategoryQuickPick from "@/features/directory/components/DirectoryCategoryQuickPick";
 import MembershipAtAGlance from "@/features/membership/components/MembershipAtAGlance";
 import ColorSchemeToggle from "@/components/app/ColorSchemeToggle";
-import { PODCAST_URL, SERVICE_OPTIONS, STATES } from "@/lib/constants";
+import { SERVICE_OPTIONS, STATES } from "@/lib/constants";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { avatarFallbackUrl } from "@/lib/avatarFallback";
 import { rowEin } from "@/lib/utils";
+import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
 
 function AppIcon({ name }) {
   const icons = {
@@ -141,10 +142,19 @@ export default function TopApp({ initialNav = "home" }) {
   }
   const fallbackSavedOrganizations = useMemo(() => {
     const byEin = new Map([...results, ...trusted].map((r) => [String(rowEin(r)), r]));
-    return favoriteEins.map((ein) => byEin.get(String(ein)) || { ein, orgName: `Saved organization (${ein})`, city: "", state: "" });
+    return favoriteEins.map((ein) => byEin.get(String(ein)) || { ein, orgName: "Saved organization", city: "", state: "" });
   }, [favoriteEins, results, trusted]);
   const savedOrgsToRender = savedOrganizations.length ? savedOrganizations : fallbackSavedOrganizations;
   const isLoggedIn = isAuthenticated;
+  const favoriteEinSet = useMemo(
+    () => new Set((favoriteEins || []).map((e) => normalizeEinDigits(e)).filter((e) => e.length === 9)),
+    [favoriteEins]
+  );
+
+  function openSignInOverlay() {
+    setAuthMode("signin");
+    setOverlay("signin");
+  }
 
   async function onAuthSubmit() {
     setAuthError("");
@@ -227,14 +237,14 @@ export default function TopApp({ initialNav = "home" }) {
                     <div className="guestWelcomePanel">
                       <p className="introTagline">Welcome</p>
                       <h2>Find trusted support, faster.</h2>
-                      <p>Explore nonprofits, proven allies, sponsors, and community stories. Create an account to save resources and personalize your journey.</p>
+                      <p>Explore nonprofits, trusted resources, sponsors, and community stories. Create an account to save resources and personalize your journey.</p>
                     </div>
                   )}
                 </div>
                 <div className="row wrap">
                   <button className="btnSoft" type="button" onClick={() => { setNav("trusted"); loadTrusted(true); }}>
                     <AppIcon name="trusted" />
-                    Open Proven Allies
+                    Open Trusted Resources
                   </button>
                   {isAuthenticated ? (
                     <button className="btnSoft" type="button" onClick={openEdit}>
@@ -269,13 +279,13 @@ export default function TopApp({ initialNav = "home" }) {
                 <div className="welcomeActionTriplet">
                   <button className="card action welcomeTripletBtn" onClick={() => { setNav("trusted"); loadTrusted(true); }} type="button">
                     <AppIcon name="trusted" />
-                    <span className="welcomeActionLabel">Proven Allies</span>
+                    <span className="welcomeActionLabel">Trusted Resources</span>
                   </button>
                   <button className="card action welcomeTripletBtn" onClick={openCommunity} type="button">
                     <AppIcon name="community" />
                     <span className="welcomeActionLabel">Community</span>
                   </button>
-                  <button className="card action welcomeTripletBtn" onClick={() => window.open(PODCAST_URL, "_blank", "noopener")} type="button">
+                  <button className="card action welcomeTripletBtn" onClick={() => { window.location.href = "/podcasts"; }} type="button">
                     <AppIcon name="podcast" />
                     <span className="welcomeActionLabel">Podcasts</span>
                   </button>
@@ -318,14 +328,16 @@ export default function TopApp({ initialNav = "home" }) {
                   {results.map((r) => {
                     const card = mapNonprofitCardRow(r, "directory");
                     const ein = card.ein;
+                    const einKey = normalizeEinDigits(ein);
                     return (
                       <NonprofitCard
                         key={`${ein}-${card.name}`}
                         card={card}
                         actionMode="directory"
-                        isMember={isMember}
-                        isFavorite={favoriteEins.includes(String(ein))}
+                        favoritesEnabled={isAuthenticated}
+                        isFavorite={einKey.length === 9 && favoriteEinSet.has(einKey)}
                         onToggleFavorite={toggleFavoriteEin}
+                        onRequestSignIn={!isAuthenticated ? openSignInOverlay : undefined}
                       />
                     );
                   })}
@@ -369,7 +381,7 @@ export default function TopApp({ initialNav = "home" }) {
             <div className="ds-page-intro" style={{ borderBottom: "none", marginBottom: 0, paddingBottom: 0 }}>
               <h2>
                 <AppIcon name="trusted" />
-                Proven Allies
+                Trusted Resources
               </h2>
               <p className="ds-page-intro__lead">
                 Curated organizations with trusted alignment and mission-driven support.
@@ -378,7 +390,7 @@ export default function TopApp({ initialNav = "home" }) {
             <div className="row">
               <button className="btnPrimary" onClick={() => loadTrusted(true)} type="button">Refresh</button>
               <button className="btnSoft" onClick={() => loadTrusted(false)} type="button">Load More</button>
-              <button className="btnSoft" onClick={() => setOverlay("applyProvenAlly")} type="button">Apply to Become a Proven Ally</button>
+              <button className="btnSoft" onClick={() => setOverlay("applyProvenAlly")} type="button">Apply to Become a Trusted Resource</button>
             </div>
             <p>{trustedStatus}</p>
             <div className="results">
@@ -386,7 +398,7 @@ export default function TopApp({ initialNav = "home" }) {
                 <div className="emptyState">
                   <AppIcon name="trusted" />
                   <div>
-                    <strong>No proven allies loaded yet</strong>
+                    <strong>No trusted resources loaded yet</strong>
                     <p>Press Refresh to pull the latest verified organizations.</p>
                   </div>
                 </div>
@@ -394,14 +406,16 @@ export default function TopApp({ initialNav = "home" }) {
               {trusted.map((r) => {
                 const card = mapNonprofitCardRow(r, "trusted");
                 const ein = card.ein;
+                const einKey = normalizeEinDigits(ein);
                 return (
                   <NonprofitCard
                     key={`trusted-${ein}-${card.name}`}
                     card={card}
                     actionMode="proven"
-                    isMember={isMember}
-                    isFavorite={favoriteEins.includes(String(ein))}
+                    favoritesEnabled={isAuthenticated}
+                    isFavorite={einKey.length === 9 && favoriteEinSet.has(einKey)}
                     onToggleFavorite={toggleFavoriteEin}
+                    onRequestSignIn={!isAuthenticated ? openSignInOverlay : undefined}
                   />
                 );
               })}
@@ -527,7 +541,7 @@ export default function TopApp({ initialNav = "home" }) {
         <FooterInner className="footerNavInner">
           <nav className="bottomNav" aria-label="Primary navigation">
             <button className={`navItem ${nav === "home" ? "isActive" : ""}`} onClick={() => setNav("home")} type="button">Home</button>
-            <button className={`navItem ${nav === "trusted" ? "isActive" : ""}`} onClick={() => { setNav("trusted"); if (!trusted.length) loadTrusted(true); }} type="button">Proven Allies</button>
+            <button className={`navItem ${nav === "trusted" ? "isActive" : ""}`} onClick={() => { setNav("trusted"); if (!trusted.length) loadTrusted(true); }} type="button">Trusted Resources</button>
             <button className={`navItem ${nav === "community" ? "isActive" : ""}`} onClick={() => setNav("community")} type="button">Community</button>
             <button className={`navItem ${nav === "profile" ? "isActive" : ""}`} onClick={() => setNav("profile")} type="button">Profile</button>
             <button className={`navItem ${nav === "contact" ? "isActive" : ""}`} onClick={() => setNav("contact")} type="button">Contact</button>

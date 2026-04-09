@@ -1,5 +1,5 @@
 /**
- * Featured sponsors — logos via Clearbit where a public domain exists; hero imagery is stock (Unsplash) with warm grading.
+ * Featured sponsors — logos via Clearbit where a public domain exists; background imagery is category-aligned to each sponsor profile.
  * Social URLs are public marketing links only; verify before production campaigns.
  */
 
@@ -24,7 +24,7 @@ export const FEATURED_SPONSORS = [
     websitePending: true,
     logoUrl: null,
     warmVariant: "gold",
-    backgroundImageUrl: unsplash("photo-1504307651254-35680f356dfd"),
+    backgroundImageUrl: unsplash("photo-1581092921461-7d65ca45f8aa"),
     socialLinks: {},
   },
   {
@@ -38,7 +38,7 @@ export const FEATURED_SPONSORS = [
     ctaUrl: "https://gamedaymenshealth.com/",
     logoUrl: clearbitLogo("gamedaymenshealth.com"),
     warmVariant: "copper",
-    backgroundImageUrl: unsplash("photo-1576091160399-112ba8d25d1d"),
+    backgroundImageUrl: unsplash("photo-1579684453423-f84349ef60b0"),
     socialLinks: {
       website: "https://gamedaymenshealth.com/",
       instagram: "https://www.instagram.com/gamedaymenshealth/",
@@ -57,7 +57,7 @@ export const FEATURED_SPONSORS = [
     ctaUrl: "https://ruckingrealtygroup.com/",
     logoUrl: clearbitLogo("ruckingrealtygroup.com"),
     warmVariant: "amber",
-    backgroundImageUrl: unsplash("photo-1560518883-ce09059eeffa"),
+    backgroundImageUrl: unsplash("photo-1564013799919-ab600027ffc6"),
     socialLinks: {
       website: "https://ruckingrealtygroup.com/",
       facebook: "https://www.facebook.com/ruckingrealtygroup",
@@ -75,7 +75,7 @@ export const FEATURED_SPONSORS = [
     ctaUrl: "https://ironsoldierscoffeeco.com/",
     logoUrl: clearbitLogo("ironsoldierscoffeeco.com"),
     warmVariant: "rust",
-    backgroundImageUrl: unsplash("photo-1497935586351-b67a49e012bf"),
+    backgroundImageUrl: unsplash("photo-1447933601403-0c6688de566e"),
     socialLinks: {
       website: "https://ironsoldierscoffeeco.com/",
       instagram: "https://www.instagram.com/ironsoldierscoffee/",
@@ -93,7 +93,7 @@ export const FEATURED_SPONSORS = [
     ctaUrl: "https://eduardopicodesigns.com/",
     logoUrl: clearbitLogo("eduardopicodesigns.com"),
     warmVariant: "teal",
-    backgroundImageUrl: unsplash("photo-1552664730-d307ca884978"),
+    backgroundImageUrl: unsplash("photo-1454165804606-c3d57bc86b40"),
     socialLinks: {
       website: "https://eduardopicodesigns.com/",
     },
@@ -109,7 +109,7 @@ export const FEATURED_SPONSORS = [
     ctaUrl: "https://www.warsendmerch.com/",
     logoUrl: clearbitLogo("warsendmerch.com"),
     warmVariant: "rose",
-    backgroundImageUrl: unsplash("photo-1523381210434-271e8be1f52b"),
+    backgroundImageUrl: unsplash("photo-1441986300917-64674bd600d8"),
     socialLinks: {},
   },
   {
@@ -123,7 +123,7 @@ export const FEATURED_SPONSORS = [
     ctaUrl: "https://braintreatmentcenter.com/",
     logoUrl: clearbitLogo("braintreatmentcenter.com"),
     warmVariant: "sage",
-    backgroundImageUrl: unsplash("photo-1579684385127-1ef15d508118"),
+    backgroundImageUrl: unsplash("photo-1530026186672-2cd00ffc50fe"),
     socialLinks: {
       website: "https://braintreatmentcenter.com/",
       facebook: "https://www.facebook.com/braintreatmentcenter",

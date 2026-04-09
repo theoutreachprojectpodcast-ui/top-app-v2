@@ -9,7 +9,7 @@ export default function SavedOrganizationCard({ organization, onToggleFavorite }
     <NonprofitCard
       card={card}
       actionMode="saved"
-      isMember={true}
+      favoritesEnabled={true}
       isFavorite={true}
       onToggleFavorite={onToggleFavorite}
     />

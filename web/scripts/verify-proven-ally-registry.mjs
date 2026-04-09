@@ -1,12 +1,12 @@
 /**
- * Proven Ally registry gate — run after any change to provenAllyRegistry.js (also runs on prebuild).
+ * Trusted Resources registry gate — run after any change to provenAllyRegistry.js (also runs on prebuild).
  *
  * Manual review checklist for NEW records:
  * - Confirm displayName matches the org’s official public name (card shows this string verbatim).
  * - Confirm EIN(s) against IRS / profile; add common DB variants if needed.
  * - Add nameKeys for legal name, DBA, and typical directory misspellings.
  * - Confirm website + socialOverrides are official only.
- * - Load Proven Allies in the app and visually verify the card.
+ * - Load Trusted Resources in the app and visually verify the card.
  */
 
 import { pathToFileURL } from "node:url";
@@ -142,7 +142,7 @@ for (const r of PROVEN_ALLY_CANONICAL_RECORDS) {
 }
 
 if (errors.length) {
-  console.error("Proven Ally registry verification failed:\n");
+  console.error("Trusted Resources registry verification failed:\n");
   for (const e of errors) console.error(`  • ${e}`);
   console.error(
     "\nFix provenAllyRegistry.js, then run: pnpm verify:proven-allies\n"
@@ -151,5 +151,5 @@ if (errors.length) {
 }
 
 console.log(
-  `Proven Ally registry OK — ${PROVEN_ALLY_CANONICAL_RECORDS.length} canonical record(s). New entries still need a UI spot-check on the Proven Allies tab.`
+  `Trusted Resources registry OK — ${PROVEN_ALLY_CANONICAL_RECORDS.length} canonical record(s). New entries still need a UI spot-check on the Trusted Resources tab.`
 );

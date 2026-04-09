@@ -1,4 +1,4 @@
-import { Globe, Instagram, Youtube, Linkedin, Facebook, Twitter } from "lucide-react";
+import { Globe, Instagram, Youtube, Linkedin, Facebook, Twitter, Video } from "lucide-react";
 
 const ICONS = {
   website: Globe,
@@ -7,6 +7,7 @@ const ICONS = {
   youtube: Youtube,
   linkedin: Linkedin,
   x: Twitter,
+  tiktok: Video,
 };
 
 export default function NonprofitSocialLinks({ links = [] }) {
@@ -19,6 +20,7 @@ export default function NonprofitSocialLinks({ links = [] }) {
           <a
             key={`${link.type}-${link.url}`}
             className="nonprofitSocialLink"
+            data-torp-card-interactive
             href={link.url}
             target="_blank"
             rel="noopener noreferrer"

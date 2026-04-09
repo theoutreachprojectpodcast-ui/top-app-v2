@@ -1,4 +1,4 @@
--- Proven Ally applications table for demo + future review workflow.
+-- Trusted Resource applications table for demo + future review workflow.
 create table if not exists public.proven_ally_applications (
   id bigint generated always as identity primary key,
   created_at timestamptz not null default now(),

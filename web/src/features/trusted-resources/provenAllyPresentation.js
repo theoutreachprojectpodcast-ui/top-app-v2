@@ -1,12 +1,14 @@
 /**
- * Proven Allies presentation: canonical registry (EIN + strict name match) + universal enrichment + category fallback.
+ * Trusted Resources presentation layer.
+ * Canonical curated metadata lives in `provenAllyRegistry.js` (legacy filename; product domain is Trusted Resources only).
+ * DB catalog table: `proven_allies` — see `trustedDirectoryJoin.js` for directory + enrichment joins.
  */
 
 import {
-  formatOrganizationDisplayName,
   isPlaceholderOrgName,
   normalizeOrganizationWhitespace,
 } from "@/lib/formatOrgName";
+import { sanitizeOrganizationNameForDisplay } from "@/lib/entityDisplayName";
 import { safeUrl } from "@/lib/utils";
 import { mapNonprofitCategory, NONPROFIT_CATEGORY_MAP } from "@/features/nonprofits/mappers/categoryMapper";
 import { matchCanonicalProvenAlly } from "@/features/trusted-resources/provenAllyRegistry";
@@ -32,6 +34,7 @@ function applyCanonicalRecord(row, record) {
   const next = { ...row };
   next.canonicalDisplayName = record.displayName;
   next.orgName = record.displayName;
+  next.trustedResourceSlug = record.slug;
   next.provenAllySlug = record.slug;
   next.provenDisplayLocation = record.locationLabel;
   next.city = "";
@@ -105,7 +108,7 @@ function applyRegistryCanonical(row) {
 }
 
 /**
- * Applied to every proven ally after optional canonical match:
+ * Applied to every trusted-resource row after optional canonical match:
  * - Humanized display name when not registry-backed
  * - Normalize website URL
  * - Backfill nonprofit_type for category mapping
@@ -130,12 +133,11 @@ function applyUniversalTrustedEnrichment(row) {
       org.organization_name,
       org.name,
       org.NAME,
-      profile.title,
       profile.org_name,
       profile.name
     );
     if (rawName) {
-      next.orgName = formatOrganizationDisplayName(rawName);
+      next.orgName = sanitizeOrganizationNameForDisplay(rawName, { trustCanonical: false });
     } else {
       next.orgName = "";
     }
@@ -272,7 +274,7 @@ function cloneTrustedRowShallow(row) {
   return next;
 }
 
-export function mergeProvenAllyPresentation(row = {}) {
+export function mergeTrustedResourcesPresentation(row = {}) {
   if (!row || typeof row !== "object") return row;
   const isolated = cloneTrustedRowShallow(row);
   let next = applyRegistryCanonical(isolated);
@@ -283,4 +285,9 @@ export function mergeProvenAllyPresentation(row = {}) {
     next = applyUniversalTrustedEnrichment(next);
   }
   return assignProvenCategoryFallback(next);
+}
+
+/** @deprecated Use mergeTrustedResourcesPresentation */
+export function mergeProvenAllyPresentation(row) {
+  return mergeTrustedResourcesPresentation(row);
 }

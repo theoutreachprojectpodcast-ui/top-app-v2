@@ -19,7 +19,7 @@ export const MEMBERSHIP_TIER_DEFINITIONS = [
     label: "No membership",
     shortLabel: "Browse",
     benefits: [
-      "Explore the nonprofit directory and Proven Allies listings",
+      "Explore the nonprofit directory and Trusted Resources listings",
       "Read community stories and partner content",
       "Contact the team via the site",
     ],
