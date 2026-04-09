@@ -545,6 +545,13 @@
   background: rgba(10, 15, 24, 0.7);
 }
 
+.podcastLockCardActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
 .podcastAdminSection {
   border: 1px solid rgba(157, 179, 214, 0.22);
   background: rgba(8, 14, 24, 0.72);

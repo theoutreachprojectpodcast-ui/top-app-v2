@@ -10,7 +10,7 @@ import {
   FALLBACK_EPISODES,
   FALLBACK_GUESTS,
   FALLBACK_MEMBER,
-  canAccessMemberContent,
+  resolvePodcastMemberContentAccess,
   listPodcastEpisodeGuests,
   listPodcastEpisodes,
   listPodcastGuestApplications,
@@ -41,7 +41,14 @@ export default function PodcastsLandingPage({ initialEpisodes = [] }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setCanAccessMembers(canAccessMemberContent());
+    let cancelled = false;
+    (async () => {
+      const access = await resolvePodcastMemberContentAccess();
+      if (!cancelled) setCanAccessMembers(access);
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
   const [applyOpen, setApplyOpen] = useState(false);
   const [sponsorFlowOpen, setSponsorFlowOpen] = useState(false);

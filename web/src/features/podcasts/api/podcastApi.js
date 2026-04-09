@@ -1,5 +1,3 @@
-import { AUTH_KEY, PROFILE_KEY } from "@/lib/constants";
-
 const EPISODES_TABLE = "podcast_episodes";
 const GUESTS_TABLE = "podcast_guests";
 const MEMBER_TABLE = "podcast_member_content";
@@ -83,31 +81,10 @@ export const FALLBACK_MEMBER = [
   },
 ];
 
-function loadAuthState() {
-  if (typeof window === "undefined") return { isAuthenticated: false };
-  try {
-    return JSON.parse(localStorage.getItem(AUTH_KEY) || "{}");
-  } catch {
-    return { isAuthenticated: false };
-  }
-}
-
-function loadProfileState() {
-  if (typeof window === "undefined") return {};
-  try {
-    return JSON.parse(localStorage.getItem(PROFILE_KEY) || "{}");
-  } catch {
-    return {};
-  }
-}
-
-export function canAccessMemberContent() {
-  const auth = loadAuthState();
-  if (!auth?.isAuthenticated) return false;
-  const profile = loadProfileState();
-  const tier = String(profile?.membershipStatus || profile?.tier || "support").toLowerCase();
-  return tier === "member";
-}
+export {
+  resolvePodcastMemberContentAccess,
+  tierAllowsPodcastMemberContent,
+} from "@/lib/podcast/memberAccess";
 
 export async function listPodcastEpisodes(supabase) {
   try {

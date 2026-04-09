@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import AppShell from "@/components/layout/AppShell";
 import { getSupabaseClient } from "@/lib/supabase/client";
-import { canAccessMemberContent, listPodcastMemberContent } from "@/features/podcasts/api/podcastApi";
+import { resolvePodcastMemberContentAccess, listPodcastMemberContent } from "@/features/podcasts/api/podcastApi";
 import "@/features/podcasts/styles/podcasts.css";
 
 export default function PodcastMembersPage() {
@@ -13,7 +13,7 @@ export default function PodcastMembersPage() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const access = canAccessMemberContent();
+      const access = await resolvePodcastMemberContentAccess();
       if (!cancelled) setAllowed(access);
       const rows = await listPodcastMemberContent(supabase, { canViewMemberContent: access });
       if (!cancelled) setItems(rows);
@@ -43,7 +43,21 @@ export default function PodcastMembersPage() {
       <div className="podcastScope">
         <section className="podcastSection">
           <h2 className="podcastSectionTitle">Members-Only Content</h2>
-          <p className="podcastSectionSubtitle">{allowed ? "Unlocked content for active members." : "Member access required to unlock full content."}</p>
+          <p className="podcastSectionSubtitle">
+            {allowed
+              ? "Unlocked for your account — same Pro tier as community story submissions."
+              : "Sign in with your Outreach Project account. Pro membership unlocks this library."}
+          </p>
+          {!allowed ? (
+            <p className="podcastSectionSubtitle" style={{ marginTop: 8 }}>
+              <a className="podcastSponsorPill" href="/api/auth/workos/signin?returnTo=/podcasts/members">
+                Sign in
+              </a>{" "}
+              <a className="podcastSponsorPill" href="/profile">
+                Check membership
+              </a>
+            </p>
+          ) : null}
           <div className="podcastEpisodeGrid">
             {items.map((item) => (
               <article key={item.id || item.slug} className="podcastEpisodeCard">

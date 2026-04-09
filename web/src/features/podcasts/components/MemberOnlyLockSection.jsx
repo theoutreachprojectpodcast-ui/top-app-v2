@@ -4,9 +4,19 @@ export default function MemberOnlyLockSection({ canAccess, items = [] }) {
       <h3>Members-Only Content</h3>
       {!canAccess ? (
         <div className="podcastLockCard">
-          <strong>Locked for members</strong>
-          <p>Sign in as a member to unlock bonus episodes, extended interviews, and downloadable resources.</p>
-          <a className="btnSoft" href="/profile">Sign in or upgrade membership</a>
+          <strong>Locked for Pro members</strong>
+          <p>
+            Use the same Outreach Project account as the main app. Pro membership unlocks bonus episodes, extended
+            interviews, and downloadable resources.
+          </p>
+          <div className="podcastLockCardActions">
+            <a className="btnSoft" href="/api/auth/workos/signin?returnTo=/podcasts">
+              Sign in
+            </a>
+            <a className="btnSoft" href="/profile">
+              Profile &amp; membership
+            </a>
+          </div>
         </div>
       ) : (
         <div className="podcastMemberGrid">
