@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { listSponsorsCatalog, mapSponsorsToCardModels } from "@/features/sponsors/api/sponsorCatalogApi";
+import { getSupabaseClient } from "@/lib/supabase/client";
 import MissionPartnerPackagesModal from "@/features/sponsors/components/MissionPartnerPackagesModal";
 import MissionSponsorApplyModal from "@/features/sponsors/components/MissionSponsorApplyModal";
 import SponsorAdminEditorSection from "@/features/sponsors/components/SponsorAdminEditorSection";
@@ -10,7 +11,9 @@ import SponsorAdminReviewSection from "@/features/sponsors/components/SponsorAdm
 import SponsorsLandingPage from "@/features/sponsors/components/SponsorsLandingPage";
 import { SPONSOR_TIERS } from "@/features/sponsors/data/sponsorTiers";
 
-export default function SponsorHub({ supabase }) {
+export default function SponsorHub({ supabase: supabaseProp }) {
+  const supabaseClient = useMemo(() => getSupabaseClient(), []);
+  const supabase = supabaseProp ?? supabaseClient;
   const router = useRouter();
   const searchParams = useSearchParams();
   const [sponsors, setSponsors] = useState([]);

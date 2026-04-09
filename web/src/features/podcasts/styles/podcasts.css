@@ -201,6 +201,13 @@
   padding: 16px;
 }
 
+.podcastScope .podcastApplySection.podcastApplySection--modalBody {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  box-shadow: none;
+}
+
 .podcastEyebrow {
   margin: 0;
   color: var(--pod-accent);
@@ -455,7 +462,8 @@
   height: 120px;
 }
 .podcastModalOverlay {
-  background: rgba(3, 6, 11, 0.84);
+  background: rgba(2, 4, 9, 0.92);
+  backdrop-filter: blur(10px);
 }
 .podcastSponsorFlowOverlay {
   z-index: 110;
@@ -464,7 +472,7 @@
 /* Backdrop stays dark even when :root is light (theme-light-components.css raises .modalOverlay specificity) */
 :root[data-color-scheme="light"] .modalOverlay.podcastModalOverlay,
 :root[data-color-scheme="light"] .modalOverlay.podcastSponsorFlowOverlay {
-  background: rgba(3, 6, 11, 0.84);
+  background: rgba(2, 4, 9, 0.92);
   color-scheme: dark;
 }
 .podcastModalCard {
@@ -621,6 +629,11 @@
     0 32px 64px rgba(0, 0, 0, 0.55),
     inset 0 1px 0 rgba(255, 255, 255, 0.06),
     inset 0 -1px 0 rgba(111, 194, 255, 0.06);
+}
+
+.podcastApplyGuestModal.podcastSponsorFlowModal.modalCard {
+  width: min(680px, 98vw);
+  max-height: min(90vh, 860px);
 }
 
 .podcastSponsorFlowModal__chrome {

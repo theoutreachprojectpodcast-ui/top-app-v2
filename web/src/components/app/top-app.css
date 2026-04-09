@@ -87,6 +87,11 @@
   justify-content: flex-end;
   gap: 10px;
 }
+.subpageAuthActionsPlaceholder {
+  min-width: 88px;
+  min-height: 42px;
+  flex-shrink: 0;
+}
 .headerAccountWrap {
   position: relative;
   flex-shrink: 0;

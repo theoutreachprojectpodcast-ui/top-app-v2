@@ -187,11 +187,33 @@ export default function PodcastsLandingPage({ initialEpisodes = [] }) {
         </section>
       </div>
       {applyOpen ? (
-        <div className="modalOverlay podcastModalOverlay" onClick={() => setApplyOpen(false)}>
-          <div className="modalCard podcastModalCard" onClick={(e) => e.stopPropagation()}>
-            <PodcastApplyGuestForm supabase={supabase} onSubmitted={() => setTimeout(() => setApplyOpen(false), 900)} />
-            <div className="row wrap">
-              <button className="btnSoft" type="button" onClick={() => setApplyOpen(false)}>Close</button>
+        <div
+          className="modalOverlay podcastModalOverlay podcastApplyGuestOverlay podcastSponsorFlowOverlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="podcast-apply-guest-title"
+          onClick={() => setApplyOpen(false)}
+        >
+          <div className="modalCard podcastModalCard podcastApplyGuestModal podcastSponsorFlowModal" onClick={(e) => e.stopPropagation()}>
+            <div className="podcastSponsorFlowModal__chrome">
+              <div className="podcastSponsorFlowModal__topBar">
+                <PodcastSectionHeader
+                  titleId="podcast-apply-guest-title"
+                  eyebrow="Podcast guests"
+                  title="Apply to be on the show"
+                  subtitle="Tell us who you are, your topic, and why now — the team reviews every application."
+                />
+                <button type="button" className="podcastSponsorFlowModal__close" onClick={() => setApplyOpen(false)}>
+                  Close
+                </button>
+              </div>
+              <div className="podcastScope podcastSponsorFlowModal__scroll">
+                <PodcastApplyGuestForm
+                  supabase={supabase}
+                  showHeading={false}
+                  onSubmitted={() => setTimeout(() => setApplyOpen(false), 900)}
+                />
+              </div>
             </div>
           </div>
         </div>

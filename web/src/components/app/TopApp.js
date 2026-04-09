@@ -13,7 +13,6 @@ import NonprofitCard from "@/features/nonprofits/components/NonprofitCard";
 import { mapNonprofitCardRow } from "@/features/nonprofits/mappers/nonprofitCardMapper";
 import ProvenAllyApplicationForm from "@/features/proven-allies/components/ProvenAllyApplicationForm";
 import CommunityPage from "@/features/community/components/CommunityPage";
-import SponsorHub from "@/features/sponsors/components/SponsorHub";
 import ProfileHeader from "@/features/profile/components/ProfileHeader";
 import ProfileIdentitySection from "@/features/profile/components/ProfileIdentitySection";
 import ProfileQuickStats from "@/features/profile/components/ProfileQuickStats";
@@ -68,7 +67,7 @@ function TopAppInner({ initialNav = "home" }) {
 
   useEffect(() => {
     if (searchParams.get("signin") === "1") {
-      setAuthMode("signin");
+      setAuthMode(searchParams.get("signup") === "1" ? "signup" : "signin");
       setOverlay("signin");
     }
   }, [searchParams]);
@@ -84,6 +83,7 @@ function TopAppInner({ initialNav = "home" }) {
   }, [overlay, authMode]);
 
   const {
+    userId,
     sessionKind,
     authBackend,
     isAuthenticated,
@@ -188,8 +188,29 @@ function TopAppInner({ initialNav = "home" }) {
     }
   }
 
-  function openSponsors() {
-    setNav("sponsors");
+  function openMissionPartnerPackages() {
+    router.push("/sponsors?packages=1");
+  }
+
+  function openMembershipJourney() {
+    if (!isAuthenticated) {
+      if (authBackend.workos) {
+        window.location.assign("/api/auth/workos/signup?returnTo=/onboarding");
+        return;
+      }
+      setAuthMode("signup");
+      setOverlay("signin");
+      return;
+    }
+    if (sessionKind === "workos" && !profile?.onboardingCompleted) {
+      router.push("/onboarding");
+      return;
+    }
+    setOverlay("upgrade");
+  }
+
+  function scrollToDirectory() {
+    document.getElementById("home-directory")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   function openCommunity() {
@@ -264,7 +285,7 @@ function TopAppInner({ initialNav = "home" }) {
           <div className="topbarZone topbarRight">
             <div className="topbarActionsCluster">
               <ColorSchemeToggle />
-              <button className="btnSoft sponsorBtn" onClick={() => setNav("sponsors")} type="button">
+              <button className="btnSoft sponsorBtn" onClick={openMissionPartnerPackages} type="button">
                 <AppIcon name="sponsors" />
                 Become a Sponsor
               </button>
@@ -284,11 +305,28 @@ function TopAppInner({ initialNav = "home" }) {
                   onSavedItems={() => setNav("profile")}
                   onSignOut={signOut}
                 />
+              ) : authBackend.workos ? (
+                <>
+                  <a className="btnSoft sponsorBtn" href="/api/auth/workos/signup?returnTo=/onboarding">
+                    <AppIcon name="profile" />
+                    Create account
+                  </a>
+                  <a className="btnSoft sponsorBtn" href="/api/auth/workos/signin?returnTo=/">
+                    <AppIcon name="profile" />
+                    Sign in
+                  </a>
+                </>
               ) : (
-                <button className="btnSoft sponsorBtn" onClick={() => { setAuthMode("signin"); setOverlay("signin"); }} type="button">
-                  <AppIcon name="profile" />
-                  Sign In
-                </button>
+                <>
+                  <button className="btnSoft sponsorBtn" onClick={() => { setAuthMode("signup"); setOverlay("signin"); }} type="button">
+                    <AppIcon name="profile" />
+                    Create account
+                  </button>
+                  <button className="btnSoft sponsorBtn" onClick={() => { setAuthMode("signin"); setOverlay("signin"); }} type="button">
+                    <AppIcon name="profile" />
+                    Sign in
+                  </button>
+                </>
               )}
             </div>
           </div>
@@ -296,7 +334,7 @@ function TopAppInner({ initialNav = "home" }) {
       </header>
       <div className="topbarOcclusion" aria-hidden="true" />
 
-      {(nav === "home" || nav === "sponsors" || nav === "community") && (
+      {(nav === "home" || nav === "community") && (
         <section className="shell">
           {nav === "home" && (
             <>
@@ -308,28 +346,14 @@ function TopAppInner({ initialNav = "home" }) {
                     setNav("trusted");
                     loadTrusted(true);
                   }}
-                  onCreateAccount={() => {
-                    setAuthMode("signup");
-                    setOverlay("signin");
-                  }}
-                  onBecomeSupporter={() => {
-                    setAuthMode("signup");
-                    setOverlay("signin");
-                  }}
-                  onBecomeMember={() => {
-                    if (isAuthenticated) {
-                      setOverlay("upgrade");
-                      return;
-                    }
-                    setAuthMode("signup");
-                    setOverlay("signin");
-                  }}
+                  onOpenMembershipJourney={openMembershipJourney}
+                  onBrowseFree={scrollToDirectory}
                   onOpenProfile={() => setNav("profile")}
                 />
               </div>
 
               <div className="welcomeActionLayout">
-                <button className="card action welcomeSponsorsFeatured" onClick={openSponsors} type="button">
+                <button className="card action welcomeSponsorsFeatured" onClick={openMissionPartnerPackages} type="button">
                   <AppIcon name="sponsors" />
                   <span className="welcomeActionLabel">Sponsors</span>
                   <span className="welcomeActionHint">Mission partners &amp; support tiers</span>
@@ -350,7 +374,7 @@ function TopAppInner({ initialNav = "home" }) {
                 </div>
               </div>
 
-              <div className="card">
+              <div className="card" id="home-directory">
                 <h3><AppIcon name="search" />Nonprofit Directory</h3>
                 <DirectoryCategoryQuickPick value={filters.service} onChange={(letter) => setFilters((f) => ({ ...f, service: letter }))} />
                 <div className="form">
@@ -409,24 +433,35 @@ function TopAppInner({ initialNav = "home" }) {
             </>
           )}
 
-          {nav === "sponsors" && (
-            <SponsorHub supabase={sb} />
-          )}
-
           {nav === "community" && (
             <CommunityPage
               supabase={sb}
               userId={userId}
+              isAuthenticated={isAuthenticated}
+              authLoading={loadingProfile}
+              authBackend={authBackend}
               isMember={isMember}
               fullName={fullName}
               profile={profile}
               onRequestUpgrade={() => {
                 if (!isAuthenticated) {
+                  if (authBackend.workos) {
+                    window.location.assign("/api/auth/workos/signup?returnTo=/community");
+                    return;
+                  }
                   setAuthMode("signup");
                   setOverlay("signin");
                   return;
                 }
                 setOverlay("upgrade");
+              }}
+              onRequestSignIn={() => {
+                if (authBackend.workos) {
+                  window.location.assign("/api/auth/workos/signin?returnTo=/community");
+                  return;
+                }
+                setAuthMode("signin");
+                setOverlay("signin");
               }}
             />
           )}
@@ -616,11 +651,31 @@ function TopAppInner({ initialNav = "home" }) {
       {overlay === "upgrade" && (
         <div className="modalOverlay" onClick={() => setOverlay(null)}>
           <div className="modalCard" onClick={(e) => e.stopPropagation()}>
-            <h3>Join The Outreach Project</h3>
-            <p>Become a Member to unlock sponsor promos, community access, and saved organizations.</p>
-            <div className="row">
-              <button className="btnSoft" onClick={() => setOverlay(null)} type="button">Continue as Supporter</button>
-              <button className="btnPrimary" onClick={async () => { await setMembershipStatus("member"); setOverlay(null); }} type="button">Become a Member</button>
+            <h3>Membership &amp; billing</h3>
+            <p>
+              Support ($5/mo) and Member ($10/mo) tiers unlock saved organizations, profile sync, and community participation.
+              For the full Stripe checkout experience, continue in onboarding.
+            </p>
+            <div className="row wrap">
+              <button className="btnSoft" onClick={() => setOverlay(null)} type="button">
+                Not now
+              </button>
+              {authBackend.workos ? (
+                <a className="btnPrimary" href="/onboarding">
+                  Open membership onboarding
+                </a>
+              ) : (
+                <button
+                  className="btnPrimary"
+                  onClick={async () => {
+                    await setMembershipStatus("member");
+                    setOverlay(null);
+                  }}
+                  type="button"
+                >
+                  Become a Member (demo)
+                </button>
+              )}
             </div>
           </div>
         </div>

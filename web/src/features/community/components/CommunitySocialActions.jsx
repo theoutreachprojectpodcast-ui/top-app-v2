@@ -14,7 +14,11 @@ export default function CommunitySocialActions({
       <button
         type="button"
         className={`communityActionBtn communityActionBtn--like ${liked ? "isActive" : ""}`}
-        onClick={() => onToggleLike(postId, baseLikeCount)}
+        onClick={() => {
+          if (typeof onToggleLike === "function") onToggleLike(postId, baseLikeCount);
+        }}
+        disabled={typeof onToggleLike !== "function"}
+        title={typeof onToggleLike !== "function" ? "Sign in to like posts" : undefined}
         aria-pressed={liked}
       >
         <span className="communityActionIcon" aria-hidden="true">

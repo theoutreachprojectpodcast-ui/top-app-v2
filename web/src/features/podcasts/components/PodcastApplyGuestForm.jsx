@@ -13,7 +13,7 @@ const INITIAL = {
   social_links: "",
 };
 
-export default function PodcastApplyGuestForm({ supabase, onSubmitted }) {
+export default function PodcastApplyGuestForm({ supabase, onSubmitted, showHeading = true }) {
   const [form, setForm] = useState(INITIAL);
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
@@ -39,8 +39,8 @@ export default function PodcastApplyGuestForm({ supabase, onSubmitted }) {
   }
 
   return (
-    <section className="podcastApplySection" id="apply-guest">
-      <h3>Apply to Be on the Podcast</h3>
+    <section className={`podcastApplySection${showHeading ? "" : " podcastApplySection--modalBody"}`} id={showHeading ? "apply-guest" : undefined}>
+      {showHeading ? <h3>Apply to Be on the Podcast</h3> : null}
       <form className="podcastApplyForm" onSubmit={onSubmit}>
         <input placeholder="Full name" value={form.full_name} onChange={(e) => setForm((d) => ({ ...d, full_name: e.target.value }))} />
         <input placeholder="Email" value={form.email} onChange={(e) => setForm((d) => ({ ...d, email: e.target.value }))} />

@@ -18,9 +18,8 @@ export default function HomeWelcomeSection({
   isAuthenticated,
   isMember,
   onOpenTrusted,
-  onCreateAccount,
-  onBecomeSupporter,
-  onBecomeMember,
+  onOpenMembershipJourney,
+  onBrowseFree,
   onOpenProfile,
 }) {
   return (
@@ -31,7 +30,7 @@ export default function HomeWelcomeSection({
         <p className="homeWelcomeLead">
           {isAuthenticated
             ? "Explore the directory, trusted resources, sponsors, and community. Your account details and saved organizations stay in the Profile tab."
-            : "Explore nonprofits, trusted resources, sponsors, and community. Create an account to save organizations and unlock member-ready features."}
+            : "Explore nonprofits, trusted resources, sponsors, and community. Create an account to save organizations and choose Support ($5/mo) or Member ($10/mo) billing when you are ready."}
         </p>
       </div>
       <div className="row wrap homeWelcomeActions">
@@ -41,15 +40,12 @@ export default function HomeWelcomeSection({
         </button>
         {!isAuthenticated ? (
           <>
-            <button className="btnSoft" type="button" onClick={onCreateAccount}>
+            <button className="btnPrimary" type="button" onClick={onOpenMembershipJourney}>
               <AppIcon name="profile" />
-              Create an Account
+              Join — account &amp; membership
             </button>
-            <button className="btnPrimary" type="button" onClick={onBecomeSupporter}>
-              Become a Supporter
-            </button>
-            <button className="btnSoft" type="button" onClick={onBecomeMember}>
-              Become a Member
+            <button className="btnSoft" type="button" onClick={onBrowseFree}>
+              Browse nonprofits free
             </button>
           </>
         ) : (
@@ -59,10 +55,14 @@ export default function HomeWelcomeSection({
               Open Profile
             </button>
             {!isMember ? (
-              <button className="btnPrimary" type="button" onClick={onBecomeMember}>
-                Become a Member
+              <button className="btnPrimary" type="button" onClick={onOpenMembershipJourney}>
+                Choose membership &amp; billing
               </button>
-            ) : null}
+            ) : (
+              <button className="btnSoft" type="button" onClick={onOpenProfile}>
+                Manage membership
+              </button>
+            )}
           </>
         )}
       </div>
