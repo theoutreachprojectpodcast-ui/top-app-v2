@@ -82,6 +82,7 @@ export async function POST(request) {
     long_description: clean(row.long_description) || clean(signals.description),
     tagline: clean(row.tagline) || clean(signals.description),
     logo_url: clean(row.logo_url) || clean(signals.logo),
+    background_image_url: clean(row.background_image_url) || clean(signals.logo),
     instagram_url: clean(row.instagram_url) || clean(signals.instagram_url),
     facebook_url: clean(row.facebook_url) || clean(signals.facebook_url),
     linkedin_url: clean(row.linkedin_url) || clean(signals.linkedin_url),

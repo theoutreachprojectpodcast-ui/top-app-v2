@@ -13,8 +13,10 @@ WorkOS cookies remain the source of truth; this layer only coordinates **client 
 ## Trusted Resource / sponsor website enrichment
 
 - **Trusted / directory rows**: enrichment is persisted by **`POST /api/nonprofit/enrich`** into `nonprofit_directory_enrichment` (and related profile fallbacks). Rows are merged in **`mergeDirectoryRowWithEnrichment`** so cards read DB-backed `tagline`, `headline`, `short_description`, socials, etc.—not live scraping on render.
-- **Sponsors**: **`POST /api/sponsors/enrich`** fetches the organization website once, then updates `sponsors_catalog` (see route implementation). Run from admin tooling when needed.
+- **Images (Trusted)**: verified website extraction now persists **`hero_image_url`** (prefers `twitter:image` / `twitter:image:src`, else `og:image`), **`thumbnail_url`**, and **`logo_url`** (OG first, else Twitter) into the enrichment row so listing cards can show real site imagery after enrichment runs.
+- **Sponsors**: **`POST /api/sponsors/enrich`** sets **`background_image_url`** from the homepage **`og:image`** when the column is empty, and fills **`logo_url`** the same way when empty. Featured sponsor **fallback seed data** (`featuredSponsors.js`) no longer uses generic Unsplash URLs—backgrounds come from Supabase + enrich, or the card’s warm-tone fallback.
 - **Batch helper**: `scripts/enrich-trusted-registry-eins.mjs` — loops EINs discovered in `provenAllyRegistry.js` and POSTs to `/api/nonprofit/enrich` with throttling. Requires a running dev server and server-side Supabase credentials.
+- **Legacy DB cleanup** (optional): see `supabase/sponsors_clear_unsplash_backgrounds.sql` (commented) to strip old Unsplash URLs from `sponsors_catalog`.
 
 ## Card subheaders (unified presentation)
 

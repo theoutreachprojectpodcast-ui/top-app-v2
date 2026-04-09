@@ -90,6 +90,7 @@ export function extractFromHtml(html, finalUrl) {
     meta["og:description"] || meta["description"] || meta["twitter:description"] || "";
   const ogImageMatch = slice.match(OG_IMAGE);
   const ogImage = ogImageMatch ? decodeEntities(ogImageMatch[1]) : "";
+  const twitterImage = decodeEntities(meta["twitter:image"] || meta["twitter:image:src"] || "");
 
   const h1Match = slice.match(/<h1[^>]*>([^<]{1,400})<\/h1>/i);
   const h1 = decodeEntities(h1Match?.[1] || "");
@@ -118,6 +119,7 @@ export function extractFromHtml(html, finalUrl) {
     h1,
     aboutText: aboutClean,
     ogImage,
+    twitterImage,
     socialCandidates,
     jsonLdOrganizationRaw: ld.join("\n"),
   };
@@ -149,6 +151,7 @@ export function mergePageExtractions(pages) {
     h1: first.h1 || rest.find((r) => r.h1)?.h1 || "",
     aboutText,
     ogImage: first.ogImage || rest.find((r) => r.ogImage)?.ogImage || "",
+    twitterImage: first.twitterImage || rest.find((r) => r.twitterImage)?.twitterImage || "",
     socialCandidates: [...socialMap.entries()].map(([platform, url]) => ({ platform, url })),
     jsonLdOrganizationRaw: list.map((p) => p.jsonLdOrganizationRaw).filter(Boolean).join("\n"),
   };

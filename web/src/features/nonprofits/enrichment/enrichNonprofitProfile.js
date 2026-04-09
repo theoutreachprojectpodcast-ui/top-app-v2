@@ -137,6 +137,8 @@ export async function enrichNonprofitProfile(record) {
     long_description: v.long_description,
     mission_statement: v.mission_statement,
     logo_url: v.logo_url,
+    hero_image_url: v.hero_image_url || null,
+    thumbnail_url: v.thumbnail_url || v.hero_image_url || null,
     facebook_url: socials.facebook?.verified ? socials.facebook.url : null,
     facebook_verified: !!socials.facebook?.verified,
     instagram_url: socials.instagram?.verified ? socials.instagram.url : null,

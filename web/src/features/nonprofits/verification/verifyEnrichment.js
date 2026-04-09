@@ -150,6 +150,18 @@ export function verifyEnrichmentAgainstRecord(params, extracted) {
 
   const missionGuess = allowContent ? pickMissionSentence(extracted.aboutText || extracted.metaDescription) : "";
 
+  const ogImg =
+    allowContent && extracted.ogImage && /^https?:\/\//i.test(String(extracted.ogImage).trim())
+      ? String(extracted.ogImage).trim()
+      : "";
+  const twImg =
+    allowContent && extracted.twitterImage && /^https?:\/\//i.test(String(extracted.twitterImage).trim())
+      ? String(extracted.twitterImage).trim()
+      : "";
+  /** Prefer Twitter card image for wide hero; OG often works for both logo + hero when Twitter is absent. */
+  const heroImageUrl = twImg || ogImg || null;
+  const logoImageUrl = ogImg || twImg || null;
+
   return {
     ok: allowContent,
     confidence: Math.min(1, (nameScore + (domainOk ? 0.25 : 0) + (textOk ? 0.15 : 0)) / 1.2),
@@ -160,7 +172,9 @@ export function verifyEnrichmentAgainstRecord(params, extracted) {
       short_description: shortDescription || null,
       long_description: longDescription || null,
       mission_statement: missionGuess || null,
-      logo_url: allowContent && extracted.ogImage && /^https?:\/\//i.test(extracted.ogImage) ? extracted.ogImage : null,
+      logo_url: logoImageUrl || null,
+      hero_image_url: heroImageUrl || null,
+      thumbnail_url: ogImg || twImg || null,
       website_url: fetchFinalUrl,
       socials,
     },
