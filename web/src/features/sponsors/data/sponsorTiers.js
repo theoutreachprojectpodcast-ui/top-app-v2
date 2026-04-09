@@ -1,107 +1,76 @@
-export const SPONSOR_FAMILY = {
-  SUPPORT: "support_sponsor",
-  INTEGRATED: "integrated_sponsorship",
-};
+/**
+ * Main app Mission Partner tiers (Outreach Project Sponsors tab only).
+ * Placement and benefit bullets should be reconciled with reference image IMG_6033.jpg when that asset is available in-repo.
+ */
+export const SPONSOR_PROGRAM_TYPE_MAIN = "main_app";
 
-export const SPONSOR_TIERS = [
+/** Stored on sponsor_applications.sponsor_family */
+export const SPONSOR_FAMILY_MISSION = "mission_partner";
+
+export const MISSION_PARTNER_TIERS = [
   {
-    id: "support-1000",
-    family: SPONSOR_FAMILY.SUPPORT,
-    familyLabel: "Support Sponsor Tiers",
-    name: "Support Sponsor",
-    subLabel: "Community Support Sponsor",
-    amount: 1000,
-    placements: [
-      "Website sponsor listing",
-      "One digital sponsor acknowledgement",
-      "Community announcement inclusion",
-      "Minimal social support",
+    id: "mission-supporting-7500",
+    programType: SPONSOR_PROGRAM_TYPE_MAIN,
+    family: SPONSOR_FAMILY_MISSION,
+    familyLabel: "Mission partners",
+    name: "Supporting Partner",
+    amount: 7500,
+    spotlight: "Trusted presence across the main digital experience with clear onboarding and stewardship.",
+    fullPlacements: [
+      "Mission partner listing on The Outreach Project website with standard logo treatment",
+      "Inclusion in partner-focused digital announcements when those programs are active",
+      "Qualified visibility in community-appropriate surfaces aligned to sponsor category and fit",
+      "Entry-level integrated presence across website and discovery pathways (depth subject to editorial review)",
     ],
-    spotlight: "Ideal for mission-aligned brands entering sponsorship.",
+    fullBenefits: [
+      "Association with vetted resource navigation for veterans, first responders, and families",
+      "Sponsor profile eligible for the public catalog after review and asset readiness",
+      "Structured onboarding with brand-fit review and placement coordination",
+    ],
   },
   {
-    id: "support-2500",
-    family: SPONSOR_FAMILY.SUPPORT,
-    familyLabel: "Support Sponsor Tiers",
-    name: "Support Sponsor",
-    subLabel: "Featured Support Sponsor",
-    amount: 2500,
-    placements: [
-      "Enhanced website placement",
-      "Featured Partner Banner rotation",
-      "Limited podcast or YouTube mention",
-      "Expanded social inclusion",
-    ],
-    spotlight: "Balanced visibility across website and content touchpoints.",
-  },
-  {
-    id: "support-5000",
-    family: SPONSOR_FAMILY.SUPPORT,
-    familyLabel: "Support Sponsor Tiers",
-    name: "Support Sponsor",
-    subLabel: "Premier Support Sponsor",
-    amount: 5000,
-    placements: [
-      "Homepage sponsor callout panel",
-      "Recurring sponsor highlight opportunities",
-      "Website + content ecosystem visibility",
-      "Strong social and digital support",
-    ],
-    spotlight: "For sponsors seeking stronger recurring exposure.",
-  },
-  {
-    id: "integrated-15000-basic",
-    family: SPONSOR_FAMILY.INTEGRATED,
-    familyLabel: "Integrated Sponsorship Tiers",
-    name: "Basic Sponsor",
+    id: "mission-growth-15000",
+    programType: SPONSOR_PROGRAM_TYPE_MAIN,
+    family: SPONSOR_FAMILY_MISSION,
+    familyLabel: "Mission partners",
+    name: "Growth Partner",
     amount: 15000,
-    placements: [
-      "Integrated website placement",
-      "Recurring sponsor mention opportunities",
-      "YouTube Episode Partner Mention",
-      "Podcast Sponsor Spotlight",
-      "Multiple social posts",
+    spotlight: "Stronger recurring visibility across website, media, and social touchpoints.",
+    fullPlacements: [
+      "Featured mission partner modules in higher-traffic website sections (rotation and inventory permitting)",
+      "Expanded cadence of digital acknowledgements across approved channels",
+      "Coordinated mentions across podcast and YouTube where format and inventory allow (separate from dedicated podcast sponsor packages)",
+      "Elevated social support with milestone or launch-aligned opportunities when scheduled",
     ],
-    spotlight: "A full integrated entry package across core channels.",
+    fullBenefits: [
+      "Cross-channel continuity for sustained awareness beyond a single placement",
+      "Priority consideration for homepage or hero-adjacent modules when inventory allows",
+      "Stewardship-style recap of delivered placements when reporting is available",
+    ],
   },
   {
-    id: "integrated-20000-support",
-    family: SPONSOR_FAMILY.INTEGRATED,
-    familyLabel: "Integrated Sponsorship Tiers",
-    name: "Support Sponsor",
-    amount: 20000,
-    placements: [
-      "Prominent website and digital placement",
-      "Recurring podcast support mention",
-      "Elevated YouTube and description placement",
-      "Community announcement feature",
-      "Expanded cross-channel support package",
-    ],
-    spotlight: "Elevated visibility with stronger mission-facing integration.",
-  },
-  {
-    id: "integrated-25000-mission",
-    family: SPONSOR_FAMILY.INTEGRATED,
-    familyLabel: "Integrated Sponsorship Tiers",
-    name: "Mission Sponsor",
+    id: "mission-strategic-25000",
+    programType: SPONSOR_PROGRAM_TYPE_MAIN,
+    family: SPONSOR_FAMILY_MISSION,
+    familyLabel: "Mission partners",
+    name: "Strategic Partner",
     amount: 25000,
-    placements: [
-      "Top sponsor visibility across ecosystem",
-      "Homepage Mission Partner Placement",
-      "High-frequency podcast + YouTube acknowledgements",
-      "Sponsor spotlight segment opportunities",
-      "Priority featured callouts and social/media inclusion",
+    spotlight: "Premier mission-facing integration for brands ready to lead with the ecosystem.",
+    fullPlacements: [
+      "Premier mission partner positioning across the main Outreach Project website experience",
+      "Highest-priority recurring acknowledgements across approved website, social, and long-form media (coordinated with inventory and editorial standards)",
+      "Opportunity for co-developed impact storytelling where brand fit, compliance, and timing align",
+      "Dedicated check-in rhythm for strategic alignment and placement optimization during the term",
     ],
-    spotlight: "Highest-tier mission-aligned sponsor partnership.",
+    fullBenefits: [
+      "Recognized strategic supporter status suitable for enterprise and mission-major partnerships",
+      "Custom placement sequencing reviewed with your team during onboarding",
+      "Highest standard stewardship tier before engaging a fully custom agreement",
+    ],
   },
 ];
 
-export const SPONSOR_FAMILY_COPY = {
-  [SPONSOR_FAMILY.SUPPORT]:
-    "Lighter-weight sponsorship options for brands supporting the mission with focused visibility.",
-  [SPONSOR_FAMILY.INTEGRATED]:
-    "Premium integrated sponsorships designed for stronger recurring presence across The Outreach Project ecosystem.",
-};
+export const SPONSOR_TIERS = MISSION_PARTNER_TIERS;
 
 export function formatUsd(amount) {
   return new Intl.NumberFormat("en-US", {
@@ -111,6 +80,7 @@ export function formatUsd(amount) {
   }).format(Number(amount || 0));
 }
 
-export function getTierById(tierId) {
-  return SPONSOR_TIERS.find((tier) => tier.id === tierId) || SPONSOR_TIERS[0];
+export function getTierById(tierId, tiers = SPONSOR_TIERS) {
+  const list = Array.isArray(tiers) && tiers.length ? tiers : SPONSOR_TIERS;
+  return list.find((tier) => tier.id === tierId) || list[0];
 }

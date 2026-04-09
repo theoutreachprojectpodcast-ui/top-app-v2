@@ -1,4 +1,13 @@
 /**
+ * Default empty profile picture (gray silhouette). Use when the user has not uploaded a photo.
+ */
+export const EMPTY_PROFILE_AVATAR_URL = "/avatar-placeholder.svg";
+
+export function emptyProfileAvatarUrl() {
+  return EMPTY_PROFILE_AVATAR_URL;
+}
+
+/**
  * Deterministic placeholder avatars when the user has no photo.
  * Uses cropped portrait photography (Unsplash) — same licensing approach as communitySeed.
  * Renders via <img>; no Next/Image remote config required.

@@ -457,6 +457,9 @@
 .podcastModalOverlay {
   background: rgba(3, 6, 11, 0.84);
 }
+.podcastSponsorFlowOverlay {
+  z-index: 110;
+}
 .podcastModalCard {
   width: min(760px, 100%);
   background:
@@ -465,6 +468,130 @@
     linear-gradient(180deg, var(--pod-surface) 0%, var(--pod-surface-2) 100%);
   border: 1px solid rgba(148, 171, 210, 0.24);
   color: var(--pod-text);
+}
+
+.podcastSponsorStripHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.podcastSponsorStripHead h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+.podcastSponsorStripCta {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--pod-accent);
+  text-decoration: none;
+  border: 1px solid rgba(255, 122, 67, 0.45);
+  border-radius: 999px;
+  padding: 6px 12px;
+  background: rgba(255, 122, 67, 0.12);
+}
+.podcastSponsorStripCta:hover,
+.podcastSponsorStripCta:focus-visible {
+  border-color: rgba(255, 186, 160, 0.72);
+}
+.podcastSponsorStripLead {
+  margin: 0 0 10px;
+}
+.podcastSponsorFlowHeading {
+  margin: 0 0 8px;
+  font-size: 1.12rem;
+  color: var(--pod-text);
+}
+.podcastSponsorFlowList {
+  margin: 0 0 12px;
+  padding-left: 1.25rem;
+  color: var(--pod-muted);
+  line-height: 1.55;
+  display: grid;
+  gap: 6px;
+}
+.podcastSponsorTierGrid {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  align-items: stretch;
+}
+.podcastSponsorTierGrid > * {
+  min-width: 0;
+  display: flex;
+}
+.podcastSponsorTierCard {
+  border: 1px solid rgba(157, 179, 214, 0.28);
+  border-radius: 14px;
+  background: rgba(8, 14, 24, 0.72);
+  padding: 14px;
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+.podcastSponsorTierCard.isSelected {
+  border-color: rgba(255, 122, 67, 0.72);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+}
+.podcastSponsorTierCard .sponsorTierFamily {
+  color: color-mix(in srgb, var(--pod-muted) 90%, var(--pod-accent) 10%);
+}
+.podcastSponsorTierCard .sponsorTierPrice {
+  color: var(--pod-accent);
+}
+.podcastSponsorTierCard .sponsorTierTeaser {
+  color: var(--pod-muted);
+}
+.podcastSponsorTierCard .sponsorTierDetails summary {
+  color: color-mix(in srgb, var(--pod-accent-2) 70%, var(--pod-text) 30%);
+}
+.podcastSponsorPackageActions {
+  margin-top: 8px;
+}
+
+.podcastSponsorFlowModal.modalCard {
+  width: min(920px, 98vw);
+  max-height: min(94vh, 980px);
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  background:
+    radial-gradient(120% 100% at 12% -20%, rgba(255, 95, 69, 0.16), transparent 45%),
+    radial-gradient(100% 80% at 88% 0%, rgba(111, 194, 255, 0.14), transparent 44%),
+    linear-gradient(180deg, var(--pod-surface) 0%, var(--pod-surface-2) 100%);
+  border-color: rgba(148, 171, 210, 0.28);
+}
+.podcastSponsorFlowModal .podcastScope {
+  padding: 16px 18px 20px;
+  overflow-y: auto;
+  max-height: min(94vh, 980px);
+  display: grid;
+  gap: 16px;
+}
+.podcastSponsorFlowModal__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  padding-bottom: 12px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid rgba(157, 179, 214, 0.28);
+}
+.podcastSponsorFlowModal__head .podcastSectionTitle {
+  margin: 6px 0 0;
+}
+.podcastSponsorFlowModal__foot {
+  margin-top: 4px;
+}
+.podcastSponsorCtaBand .row.wrap {
+  margin-top: 4px;
 }
 
 @media (max-width: 860px) {
@@ -480,6 +607,9 @@
     grid-template-columns: 1fr;
   }
   .podcastGuestProfile {
+    grid-template-columns: 1fr;
+  }
+  .podcastSponsorTierGrid {
     grid-template-columns: 1fr;
   }
 }

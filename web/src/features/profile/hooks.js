@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AUTH_KEY, FAV_KEY, PROFILE_KEY } from "@/lib/constants";
+import { AUTH_KEY, DEMO_ACCOUNT_KEY, FAV_KEY, PROFILE_KEY } from "@/lib/constants";
+import { AUTH_PROVIDER } from "@/lib/auth/providers";
+import {
+  clearDemoAccount,
+  demoCredentialsMatch,
+  readDemoAccount,
+  writeDemoAccount,
+} from "@/lib/auth/demoAccountStore";
 import { loadJson, saveJson } from "@/lib/storage";
 import { defaultProfile } from "@/lib/utils";
 import {
@@ -28,6 +35,7 @@ export function useProfileData(supabase) {
   const [userId, setUserId] = useState("demo-user");
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authProvider, setAuthProvider] = useState(null);
   const [profileError, setProfileError] = useState("");
   const [profileSource, setProfileSource] = useState("local");
   const [profile, setProfile] = useState(() => createInitialProfile());
@@ -44,8 +52,10 @@ export function useProfileData(supabase) {
     const storedFavs = loadJson(FAV_KEY, []);
     const authState = loadJson(AUTH_KEY, { isAuthenticated: false });
     const authenticated = !!authState?.isAuthenticated;
+    const storedProvider = authState?.provider || null;
     queueMicrotask(() => {
       setIsAuthenticated(authenticated);
+      setAuthProvider(authenticated ? storedProvider || AUTH_PROVIDER.DEMO_EMAIL : null);
       if (!authenticated) {
         setProfile(createInitialProfile());
         setFavoriteEins([]);
@@ -98,8 +108,16 @@ export function useProfileData(supabase) {
   }, [favoriteEins]);
 
   useEffect(() => {
-    saveJson(AUTH_KEY, { isAuthenticated });
-  }, [isAuthenticated]);
+    if (isAuthenticated) {
+      saveJson(AUTH_KEY, {
+        isAuthenticated: true,
+        provider: authProvider || AUTH_PROVIDER.DEMO_EMAIL,
+        email: profile.email || "",
+      });
+    } else {
+      saveJson(AUTH_KEY, { isAuthenticated: false });
+    }
+  }, [isAuthenticated, authProvider, profile.email]);
 
   useEffect(() => {
     async function loadSavedOrgCards() {
@@ -148,11 +166,13 @@ export function useProfileData(supabase) {
   }
 
   async function resetDemo() {
+    const cloudUserId = userId;
     const localKeysToClear = [
       PROFILE_KEY,
       FAV_KEY,
       AUTH_KEY,
       DEMO_USER_KEY,
+      DEMO_ACCOUNT_KEY,
       "top_sponsor_applications_demo",
       "top_proven_ally_applications_demo",
       "top_community_pending_submissions",
@@ -186,21 +206,27 @@ export function useProfileData(supabase) {
     setSavedOrganizations([]);
     setProfileError("");
     setIsAuthenticated(false);
-    setUserId("demo-user");
-    try {
-      await replaceSavedOrgEinList(supabase, userId, []);
-    } catch {
-      /* local reset still applies */
+    setAuthProvider(null);
+    clearDemoAccount();
+    const nextUserId = typeof window !== "undefined" ? getOrCreateDemoUserId() : "demo-user";
+    setUserId(nextUserId);
+    if (supabase && cloudUserId) {
+      try {
+        await replaceSavedOrgEinList(supabase, cloudUserId, []);
+      } catch {
+        /* local reset still applies */
+      }
     }
   }
 
-  async function createAccount({ firstName = "", lastName = "", email = "", password = "" } = {}) {
+  async function createAccount({ firstName = "", lastName = "", email = "", password = "", avatarUrl = "" } = {}) {
     const safeFirst = String(firstName || "").trim();
     const safeLast = String(lastName || "").trim();
     const safeEmail = String(email || "").trim();
     if (!safeFirst || !safeLast || !safeEmail || String(password || "").trim().length < 6) {
       return { ok: false, message: "Please complete all fields. Password must be at least 6 characters." };
     }
+    const safeAvatar = String(avatarUrl || "").trim();
     const next = {
       ...createInitialProfile(),
       firstName: safeFirst,
@@ -208,9 +234,12 @@ export function useProfileData(supabase) {
       email: safeEmail,
       membershipStatus: "support",
       banner: "Hi, I’m Andy",
+      avatarUrl: safeAvatar,
     };
     setIsAuthenticated(true);
+    setAuthProvider(AUTH_PROVIDER.DEMO_EMAIL);
     setProfile(next);
+    writeDemoAccount(safeEmail, String(password || "").trim());
     try {
       if (supabase) await upsertProfileByUserId(supabase, userId, next);
     } catch {
@@ -219,21 +248,56 @@ export function useProfileData(supabase) {
     return { ok: true };
   }
 
-  async function signInWithEmail(email = "") {
+  /**
+   * Demo email/password sign-in. Swap this body for `supabase.auth.signInWithPassword`
+   * (and OAuth) when wiring real auth; keep the same return shape for callers.
+   */
+  async function signInWithCredentials({ email = "", password = "" } = {}) {
     const safeEmail = String(email || "").trim();
+    const safePassword = String(password || "").trim();
     if (!safeEmail) return { ok: false, message: "Enter your email to continue." };
-    const next = {
-      ...profile,
-      email: safeEmail,
-      banner: profile.banner || "Hi, I’m Andy",
-    };
-    setIsAuthenticated(true);
-    setProfile(next);
-    return { ok: true };
+    if (safePassword.length < 6) return { ok: false, message: "Password must be at least 6 characters." };
+
+    const acct = readDemoAccount();
+
+    function applySessionFromStorage() {
+      const legacy = loadJson(PROFILE_KEY, defaultProfile());
+      setProfile(profileFromLegacy(legacy || {}));
+      const storedFavs = loadJson(FAV_KEY, []);
+      const rawFavs = Array.isArray(storedFavs) ? storedFavs : [];
+      setFavoriteEins([...new Set(rawFavs.map((e) => normalizeEinDigits(e)).filter((e) => e.length === 9))]);
+      setIsAuthenticated(true);
+      setAuthProvider(AUTH_PROVIDER.DEMO_EMAIL);
+    }
+
+    if (acct) {
+      if (demoCredentialsMatch(safeEmail, safePassword)) {
+        applySessionFromStorage();
+        return { ok: true };
+      }
+      return { ok: false, message: "Incorrect email or password." };
+    }
+
+    const legacy = loadJson(PROFILE_KEY, defaultProfile());
+    const legacyShape = profileFromLegacy(legacy || {});
+    const legacyEmail = String(legacyShape?.email || "").trim().toLowerCase();
+    if (legacyEmail && legacyEmail === safeEmail.toLowerCase()) {
+      writeDemoAccount(safeEmail, safePassword);
+      setProfile(legacyShape);
+      const storedFavs = loadJson(FAV_KEY, []);
+      const rawFavs = Array.isArray(storedFavs) ? storedFavs : [];
+      setFavoriteEins([...new Set(rawFavs.map((e) => normalizeEinDigits(e)).filter((e) => e.length === 9))]);
+      setIsAuthenticated(true);
+      setAuthProvider(AUTH_PROVIDER.DEMO_EMAIL);
+      return { ok: true };
+    }
+
+    return { ok: false, message: "No account found for this email. Create an account first." };
   }
 
   function signOut() {
     setIsAuthenticated(false);
+    setAuthProvider(null);
     setProfile(createInitialProfile());
     setFavoriteEins([]);
     setSavedOrganizations([]);
@@ -271,7 +335,7 @@ export function useProfileData(supabase) {
     setMembershipStatus,
     resetDemo,
     createAccount,
-    signInWithEmail,
+    signInWithCredentials,
     signOut,
   };
 }

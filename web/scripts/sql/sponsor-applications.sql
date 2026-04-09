@@ -14,6 +14,7 @@ create table if not exists public.sponsor_applications (
   company_description text not null,
   contact_role text not null,
   sponsor_family text not null,
+  sponsor_program_type text not null default 'main_app',
   sponsor_tier_id text,
   sponsor_tier_name text not null,
   sponsor_tier_amount numeric not null,

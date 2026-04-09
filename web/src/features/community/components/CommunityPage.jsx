@@ -11,7 +11,7 @@ import CommunityPostCard from "@/features/community/components/CommunityPostCard
 import CommunitySubmissionForm from "@/features/community/components/CommunitySubmissionForm";
 import { isModeratorUser } from "@/features/community/api/communityApi";
 import { useCommunityFeed } from "@/features/community/hooks/useCommunityFeed";
-import { avatarFallbackUrl } from "@/lib/avatarFallback";
+import { emptyProfileAvatarUrl } from "@/lib/avatarFallback";
 
 function CommunityIcon() {
   const path = "M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6m8 0a3 3 0 1 1 0-6 3 3 0 0 1 0 6M3 19c0-2.8 2.8-4 5-4s5 1.2 5 4m3 0c0-2.4 2.3-3.5 5-3.5 2.1 0 5 1 5 3.5";
@@ -113,7 +113,7 @@ export default function CommunityPage({
               supabase={supabase}
               userId={userId}
               authorName={authorName}
-              authorAvatarUrl={profile.avatarUrl || avatarFallbackUrl(userId)}
+              authorAvatarUrl={profile.avatarUrl || emptyProfileAvatarUrl()}
               onClose={() => setSubmitOpen(false)}
               onSubmitted={() => {
                 refresh();

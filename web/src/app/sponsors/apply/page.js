@@ -1,5 +1,5 @@
-import BecomeASponsorPage from "@/features/sponsors/components/BecomeASponsorPage";
+import { redirect } from "next/navigation";
 
-export default function SponsorsApplyRoute() {
-  return <BecomeASponsorPage />;
+export default function SponsorsApplyRedirectRoute() {
+  redirect("/sponsors?apply=1");
 }

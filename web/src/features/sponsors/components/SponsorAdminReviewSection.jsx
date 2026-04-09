@@ -82,7 +82,9 @@ export default function SponsorAdminReviewSection({ supabase }) {
               >
                 <strong>{row?.company_name || "Company"}</strong>
                 <span>{row?.email || "No contact email"}</span>
-                <span>{row?.sponsor_tier_name || "Tier not specified"}</span>
+                <span>
+                  {row?.sponsor_program_type === "podcast" ? "Podcast sponsor" : "Mission partner"} · {row?.sponsor_tier_name || "Tier not specified"}
+                </span>
                 <span className={`sponsorAdminStatus sponsorAdminStatus--${statusKey}`}>{STATUS_LABEL[statusKey]}</span>
               </button>
             );
@@ -96,6 +98,10 @@ export default function SponsorAdminReviewSection({ supabase }) {
               <h4>{selectedRecord.company_name || "Sponsor submission"}</h4>
               <p className="sponsorAdminMeta">
                 {selectedRecord.first_name} {selectedRecord.last_name} · {selectedRecord.email}
+              </p>
+              <p className="sponsorAdminMeta">
+                Program:{" "}
+                <strong>{selectedRecord.sponsor_program_type === "podcast" ? "Podcast sponsor" : "Mission partner (main app)"}</strong>
               </p>
               <p className="sponsorAdminMeta">
                 Tier: <strong>{selectedRecord.sponsor_tier_name || "N/A"}</strong>

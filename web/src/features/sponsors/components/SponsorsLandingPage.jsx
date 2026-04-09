@@ -12,57 +12,63 @@ function ChannelChip({ icon, label }) {
   );
 }
 
-export default function SponsorsLandingPage({ sponsors = [] }) {
+export default function SponsorsLandingPage({ sponsors = [], onOpenMissionPackages, onOpenMissionApply }) {
+  const openPackages = typeof onOpenMissionPackages === "function" ? onOpenMissionPackages : () => {};
+  const openApply = typeof onOpenMissionApply === "function" ? onOpenMissionApply : () => {};
+
   return (
     <div className="sponsorPage sponsorLanding">
       <section className="card cardHero sponsorHero sponsorHero--compact">
-        <p className="introTagline">Partners</p>
-        <h2>Partner with a trusted community platform</h2>
+        <p className="introTagline">Mission partners</p>
+        <h2>Partner with The Outreach Project</h2>
         <p className="sponsorHeroBlurb">
-          Join mission-aligned brands, businesses, and organizations supporting trusted resources, storytelling, and community impact.
+          Meet current partners below, then explore Supporting, Growth, and Strategic mission packages in a guided popup. Podcast-only sponsor tiers open from the Podcast hub.
         </p>
         <div className="row wrap">
-          <Link className="btnPrimary" href="/sponsors/options">
-            Explore sponsorship options
-          </Link>
-          <Link className="btnSoft" href="/sponsors/apply">
-            Become a sponsor
-          </Link>
+          <button className="btnPrimary" type="button" onClick={() => openPackages()}>
+            Explore mission partner packages
+          </button>
+          <button className="btnSoft" type="button" onClick={() => openApply()}>
+            Become a mission partner
+          </button>
         </div>
-      </section>
-
-      <section className="card sponsorSection">
-        <h3>Why sponsor</h3>
-        <p className="sponsorSectionLead">Visible, values-driven placement—not a wall of ads.</p>
-        <div className="sponsorChannelRow">
-          <ChannelChip icon={<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path d="M2 12h20M12 2a15 15 0 010 20" /></svg>} label="Website" />
-          <ChannelChip icon={<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><path d="M12 19v3" /></svg>} label="Podcast" />
-          <ChannelChip icon={<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="7" width="20" height="10" rx="2" /><path d="M7 7V5a2 2 0 012-2h6a2 2 0 012 2v2" /></svg>} label="YouTube" />
-          <ChannelChip icon={<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8a3 3 0 100-6 3 3 0 000 6zM6 15a3 3 0 100-6 3 3 0 000 6zM13 21a3 3 0 100-6 3 3 0 000 6z" /></svg>} label="Social & digital" />
-        </div>
-        <details className="sponsorReveal">
-          <summary>More about placements</summary>
-          <ul className="sponsorBulletList">
-            <li>Sponsor cards and mission partner callouts on the digital experience</li>
-            <li>Episode acknowledgements and description placements</li>
-            <li>Announcements aligned to your brand and audience goals</li>
-          </ul>
-        </details>
       </section>
 
       <FeaturedSponsorsSection sponsors={sponsors} />
 
+      <section className="card sponsorSection">
+        <h3>Why sponsor</h3>
+        <p className="sponsorSectionLead">Mission partner placements emphasize trust and clarity—not a wall of ads.</p>
+        <div className="sponsorChannelRow">
+          <ChannelChip icon={<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path d="M2 12h20M12 2a15 15 0 010 20" /></svg>} label="Website" />
+          <ChannelChip icon={<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="7" width="20" height="10" rx="2" /><path d="M7 7V5a2 2 0 012-2h6a2 2 0 012 2v2" /></svg>} label="YouTube ecosystem" />
+          <ChannelChip icon={<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8a3 3 0 100-6 3 3 0 000 6zM6 15a3 3 0 100-6 3 3 0 000 6zM13 21a3 3 0 100-6 3 3 0 000 6z" /></svg>} label="Social and digital" />
+        </div>
+        <details className="sponsorReveal">
+          <summary>Podcast sponsors (separate program)</summary>
+          <ul className="sponsorBulletList">
+            <li>Community, Impact, and Foundational podcast packages are offered from the Podcast page.</li>
+            <li>
+              <Link href="/podcasts?sponsor=1">Open podcast sponsor flow →</Link>
+            </li>
+          </ul>
+        </details>
+      </section>
+
       <section className="card sponsorCtaBand">
         <div>
-          <h3>Ready to explore tiers?</h3>
-          <p className="sponsorSectionLead">Compare packages, then apply when you are ready.</p>
+          <h3>Mission partner next steps</h3>
+          <p className="sponsorSectionLead">Review packages in detail, then apply when your team is ready.</p>
         </div>
         <div className="row wrap">
-          <Link className="btnSoft" href="/sponsors/options">Explore Sponsorship Options</Link>
-          <Link className="btnPrimary" href="/sponsors/apply">Become a Sponsor</Link>
+          <button className="btnSoft" type="button" onClick={() => openPackages()}>
+            View mission partner options
+          </button>
+          <button className="btnPrimary" type="button" onClick={() => openApply()}>
+            Apply to become a mission partner
+          </button>
         </div>
       </section>
     </div>
   );
 }
-

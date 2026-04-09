@@ -87,6 +87,67 @@
   justify-content: flex-end;
   gap: 10px;
 }
+.headerAccountWrap {
+  position: relative;
+  flex-shrink: 0;
+}
+.headerAccountTrigger {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  margin: 0;
+  border: 2px solid color-mix(in srgb, var(--color-accent) 45%, transparent);
+  border-radius: 999px;
+  background: var(--color-bg-card);
+  cursor: pointer;
+  box-shadow: var(--shadow-card);
+}
+.headerAccountTrigger:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--color-focus-ring);
+}
+.headerAccountAvatar.profileAvatarShell {
+  width: 42px;
+  height: 42px;
+}
+.headerAccountDropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  min-width: 232px;
+  padding: 8px;
+  border-radius: 14px;
+  border: 1px solid var(--color-border-subtle);
+  background: linear-gradient(180deg, var(--color-surface-card) 0%, var(--color-surface-card-deep) 100%);
+  box-shadow: var(--shadow-card);
+  z-index: 120;
+}
+.headerAccountMenuItem {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.headerAccountMenuItem:hover,
+.headerAccountMenuItem:focus-visible {
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  outline: none;
+}
+.headerAccountMenuItem--danger {
+  color: color-mix(in srgb, #f87171 88%, var(--color-text-primary) 12%);
+}
+.headerAccountMenuRule {
+  height: 1px;
+  margin: 6px 4px;
+  background: var(--color-border-subtle);
+}
 /* Fixed header logo column */
 .headerBrandStack {
   position: fixed;
@@ -232,6 +293,115 @@ img.brandMarkImg--header {
   margin: 0;
   color: var(--color-text-secondary);
   max-width: 62ch;
+}
+.homeWelcomeSection {
+  display: grid;
+  gap: 16px;
+}
+.homeWelcomeCopy {
+  display: grid;
+  gap: 8px;
+}
+.homeWelcomeCopy h2 {
+  margin: 0;
+  font-size: clamp(24px, 2.7vw, 32px);
+  line-height: 1.2;
+}
+.homeWelcomeLead {
+  margin: 0;
+  color: var(--color-text-secondary);
+  max-width: 62ch;
+  line-height: 1.55;
+  font-size: 15px;
+}
+.homeWelcomeActions {
+  margin-top: 2px;
+}
+.profileSignedOutCard h3 {
+  margin-top: 0;
+}
+.demoAuthModal__lede {
+  margin: 0 0 10px;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+.demoAuthModal__providers {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border-subtle);
+}
+.demoAuthModal__providersLabel {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-secondary);
+}
+.demoAuthModal__providerRow {
+  gap: 8px;
+}
+.demoAuthModal__providerRow .btnSoft:disabled {
+  opacity: 0.52;
+  cursor: not-allowed;
+}
+.demoAuthModal__avatarBlock {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--color-border-subtle);
+  background: color-mix(in srgb, var(--color-bg-subtle) 88%, transparent);
+  margin-bottom: 4px;
+}
+.demoAuthModal__avatarPreview.profileAvatarShell {
+  width: 88px;
+  height: 88px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+}
+.demoAuthModal__avatarCopy {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  flex: 1 1 160px;
+}
+.demoAuthModal__avatarLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.demoAuthModal__avatarHint {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--color-text-secondary);
+}
+.demoAuthModal__avatarUpload {
+  position: relative;
+  display: inline-flex;
+  width: fit-content;
+  cursor: pointer;
+}
+.demoAuthModal__avatarUpload .profileFileInput {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+}
+.demoAuthModal__avatarUploadBtn {
+  pointer-events: none;
+}
+.demoAuthModal__avatarRemove {
+  justify-self: start;
+  font-size: 13px;
+  padding: 6px 12px;
 }
 .profileHeaderGrid {
   display: grid;
@@ -1248,6 +1418,12 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   padding: var(--ds-space-4, 16px);
   z-index: 100;
 }
+.missionSponsorModalOverlay {
+  z-index: 110;
+}
+.missionPartnerPackagesOverlay {
+  z-index: 105;
+}
 .modalCard {
   width: min(560px, 100%);
   background: linear-gradient(180deg, var(--color-surface-elevated) 0%, var(--color-surface-card-deep) 100%);
@@ -1257,6 +1433,108 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   display: grid;
   gap: var(--ds-space-3, 12px);
   box-shadow: var(--shadow-card-hover);
+}
+.missionSponsorApplyModal.modalCard {
+  width: min(760px, 96vw);
+  max-height: min(92vh, 920px);
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+.missionSponsorApplyModal__head {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+.missionSponsorApplyModal__head h3 {
+  margin: 0;
+  font-size: clamp(1.1rem, 2vw, 1.35rem);
+}
+.missionSponsorApplyModal__sub {
+  margin: 8px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+  max-width: 52ch;
+}
+.missionSponsorApplyModal__close {
+  flex-shrink: 0;
+}
+.missionSponsorApplyModal__body {
+  overflow-y: auto;
+  padding: 16px 20px 22px;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  gap: 14px;
+}
+.sponsorSection--modalForm h3 {
+  margin-top: 0;
+}
+.sponsorForm--modal {
+  gap: 8px;
+}
+.missionPartnerPackagesModal.modalCard {
+  width: min(920px, 98vw);
+  max-height: min(92vh, 960px);
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+.missionPartnerPackagesModal__head {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+.missionPartnerPackagesModal__head h3 {
+  margin: 0;
+  font-size: clamp(1.1rem, 2vw, 1.35rem);
+}
+.missionPartnerPackagesModal__sub {
+  margin: 8px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+  max-width: 56ch;
+}
+.missionPartnerPackagesModal__close {
+  flex-shrink: 0;
+}
+.missionPartnerPackagesModal__body {
+  overflow-y: auto;
+  padding: 14px 18px 20px;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  gap: 14px;
+}
+.missionPartnerPackagesModal__sectionTitle {
+  margin: 0 0 6px;
+  font-size: 1.05rem;
+}
+.missionPartnerPackagesModal__foot {
+  padding-top: 4px;
+  border-top: 1px solid var(--color-border-subtle);
+  margin-top: 2px;
+  justify-content: flex-end;
+}
+.sponsorSection--modalInset h3,
+.sponsorSection--modalInset h4 {
+  margin-top: 0;
 }
 .sponsorApplyModal {
   width: min(760px, 100%);
@@ -1378,6 +1656,38 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   font-size: 14px;
   max-width: 68ch;
   line-height: 1.55;
+}
+.profileDemoResetNote {
+  margin-top: 12px;
+  margin-bottom: 0;
+}
+.sponsorRouteHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+.sponsorRouteHeader h1 {
+  margin: 0;
+  font-size: clamp(1.15rem, 2.2vw, 1.35rem);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+.sponsorRouteBack {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-accent);
+  text-decoration: none;
+  border-radius: 8px;
+  padding: 6px 10px;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 35%, transparent);
+  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+}
+.sponsorRouteBack:hover,
+.sponsorRouteBack:focus-visible {
+  border-color: color-mix(in srgb, var(--color-accent) 55%, transparent);
 }
 .sponsorSelectionHint {
   margin: 0;
@@ -1904,8 +2214,17 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   margin-bottom: 10px;
   color: var(--color-accent);
 }
+.sponsorTierSelectLabel {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: var(--color-text-primary);
+}
 .sponsorTierSelect {
   margin-top: 4px;
+  width: 100%;
+  max-width: min(100%, 420px);
 }
 .sponsorPaymentSummary {
   margin: 0 0 8px;

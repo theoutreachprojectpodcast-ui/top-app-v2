@@ -17,7 +17,8 @@ import ProfileHeader from "@/features/profile/components/ProfileHeader";
 import ProfileIdentitySection from "@/features/profile/components/ProfileIdentitySection";
 import ProfileQuickStats from "@/features/profile/components/ProfileQuickStats";
 import SavedOrganizationsList from "@/features/profile/components/SavedOrganizationsList";
-import ProfileSummaryPanel from "@/features/profile/components/ProfileSummaryPanel";
+import HomeWelcomeSection from "@/components/app/HomeWelcomeSection";
+import HeaderAccountMenu from "@/components/layout/HeaderAccountMenu";
 import { useDirectorySearch } from "@/hooks/useDirectorySearch";
 import { useProfileData } from "@/features/profile/hooks";
 import { useTrustedResources } from "@/hooks/useTrustedResources";
@@ -26,7 +27,7 @@ import MembershipAtAGlance from "@/features/membership/components/MembershipAtAG
 import ColorSchemeToggle from "@/components/app/ColorSchemeToggle";
 import { SERVICE_OPTIONS, STATES } from "@/lib/constants";
 import { getSupabaseClient } from "@/lib/supabase/client";
-import { avatarFallbackUrl } from "@/lib/avatarFallback";
+import { emptyProfileAvatarUrl } from "@/lib/avatarFallback";
 import { rowEin } from "@/lib/utils";
 import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
 
@@ -53,6 +54,7 @@ export default function TopApp({ initialNav = "home" }) {
   const [authDraft, setAuthDraft] = useState({ firstName: "", lastName: "", email: "", password: "" });
   const [authError, setAuthError] = useState("");
   const [authStatus, setAuthStatus] = useState("");
+  const [signupAvatarDataUrl, setSignupAvatarDataUrl] = useState("");
   const [contactDraft, setContactDraft] = useState({ firstName: "", lastName: "", email: "", phone: "", message: "" });
   const [contactStatus, setContactStatus] = useState("");
   const [contactError, setContactError] = useState("");
@@ -60,6 +62,16 @@ export default function TopApp({ initialNav = "home" }) {
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [nav]);
+
+  useEffect(() => {
+    if (overlay !== "signin") {
+      setSignupAvatarDataUrl("");
+      return;
+    }
+    if (authMode === "signin") {
+      setSignupAvatarDataUrl("");
+    }
+  }, [overlay, authMode]);
 
   const {
     userId,
@@ -70,7 +82,6 @@ export default function TopApp({ initialNav = "home" }) {
     profile,
     persistProfile,
     fullName,
-    greetingName,
     membership,
     isMember,
     favoriteEins,
@@ -79,7 +90,7 @@ export default function TopApp({ initialNav = "home" }) {
     setMembershipStatus,
     resetDemo,
     createAccount,
-    signInWithEmail,
+    signInWithCredentials,
     signOut,
   } = useProfileData(sb);
   const { filters, setFilters, results, status, meta, page, canGoNext, runSearch, clearSearch } = useDirectorySearch(sb);
@@ -133,6 +144,18 @@ export default function TopApp({ initialNav = "home" }) {
     }
   }
 
+  async function onSignupAvatarSelected(file) {
+    if (!file) return;
+    if (!String(file.type || "").startsWith("image/")) return;
+    try {
+      const dataUrl = await fileToCompressedDataUrl(file);
+      if (!dataUrl) return;
+      setSignupAvatarDataUrl(dataUrl);
+    } catch {
+      // ignore invalid image
+    }
+  }
+
   function openSponsors() {
     setNav("sponsors");
   }
@@ -159,15 +182,23 @@ export default function TopApp({ initialNav = "home" }) {
   async function onAuthSubmit() {
     setAuthError("");
     setAuthStatus("");
-    const result = authMode === "signup"
-      ? await createAccount(authDraft)
-      : await signInWithEmail(authDraft.email);
+    const result =
+      authMode === "signup"
+        ? await createAccount({ ...authDraft, avatarUrl: signupAvatarDataUrl || "" })
+        : await signInWithCredentials({ email: authDraft.email, password: authDraft.password });
     if (!result?.ok) {
       setAuthError(result?.message || "Unable to continue right now.");
       return;
     }
     setAuthStatus(authMode === "signup" ? "Account created. Welcome in." : "Signed in successfully.");
+    setAuthDraft((d) => ({ ...d, password: "" }));
+    setSignupAvatarDataUrl("");
     setOverlay(null);
+  }
+
+  function openSignInForMembership() {
+    setAuthMode("signin");
+    setOverlay("signin");
   }
 
   function onContactSubmit(e) {
@@ -205,7 +236,23 @@ export default function TopApp({ initialNav = "home" }) {
                 <AppIcon name="sponsors" />
                 Become a Sponsor
               </button>
-              {!isLoggedIn && (
+              {isLoggedIn ? (
+                <HeaderAccountMenu
+                  avatarSrc={profile.avatarUrl || emptyProfileAvatarUrl()}
+                  ariaLabel={`Account menu for ${fullName || profile.email || "signed-in user"}`}
+                  onProfile={() => setNav("profile")}
+                  onProfileSettings={() => {
+                    setEditDraft(profile);
+                    setOverlay("edit");
+                  }}
+                  onMembership={() => {
+                    if (!isMember) setOverlay("upgrade");
+                    else setNav("profile");
+                  }}
+                  onSavedItems={() => setNav("profile")}
+                  onSignOut={signOut}
+                />
+              ) : (
                 <button className="btnSoft sponsorBtn" onClick={() => { setAuthMode("signin"); setOverlay("signin"); }} type="button">
                   <AppIcon name="profile" />
                   Sign In
@@ -222,52 +269,31 @@ export default function TopApp({ initialNav = "home" }) {
           {nav === "home" && (
             <>
               <div className="card cardHero">
-                <div className="row space">
-                  {isAuthenticated ? (
-                    <ProfileSummaryPanel
-                      avatarSrc={profile.avatarUrl || avatarFallbackUrl(userId)}
-                      greetingName={greetingName}
-                      isMember={isMember}
-                      membershipLabel={membership.label}
-                      membershipHint={membership.hint}
-                      savedCount={favoriteEins.length}
-                      icon={<AppIcon name="profile" />}
-                    />
-                  ) : (
-                    <div className="guestWelcomePanel">
-                      <p className="introTagline">Welcome</p>
-                      <h2>Find trusted support, faster.</h2>
-                      <p>Explore nonprofits, trusted resources, sponsors, and community stories. Create an account to save resources and personalize your journey.</p>
-                    </div>
-                  )}
-                </div>
-                <div className="row wrap">
-                  <button className="btnSoft" type="button" onClick={() => { setNav("trusted"); loadTrusted(true); }}>
-                    <AppIcon name="trusted" />
-                    Open Trusted Resources
-                  </button>
-                  {isAuthenticated ? (
-                    <button className="btnSoft" type="button" onClick={openEdit}>
-                      <AppIcon name="profile" />
-                      Edit Profile
-                    </button>
-                  ) : (
-                    <button className="btnSoft" type="button" onClick={() => { setAuthMode("signup"); setOverlay("signin"); }}>
-                      <AppIcon name="profile" />
-                      Create Account
-                    </button>
-                  )}
-                  {!isMember && isAuthenticated && (
-                    <button className="btnPrimary" type="button" onClick={() => setOverlay("upgrade")}>
-                      Become a Member
-                    </button>
-                  )}
-                  {!isAuthenticated && (
-                    <button className="btnPrimary" type="button" onClick={() => { setAuthMode("signup"); setOverlay("signin"); }}>
-                      Become a Supporter
-                    </button>
-                  )}
-                </div>
+                <HomeWelcomeSection
+                  isAuthenticated={isAuthenticated}
+                  isMember={isMember}
+                  onOpenTrusted={() => {
+                    setNav("trusted");
+                    loadTrusted(true);
+                  }}
+                  onCreateAccount={() => {
+                    setAuthMode("signup");
+                    setOverlay("signin");
+                  }}
+                  onBecomeSupporter={() => {
+                    setAuthMode("signup");
+                    setOverlay("signin");
+                  }}
+                  onBecomeMember={() => {
+                    if (isAuthenticated) {
+                      setOverlay("upgrade");
+                      return;
+                    }
+                    setAuthMode("signup");
+                    setOverlay("signin");
+                  }}
+                  onOpenProfile={() => setNav("profile")}
+                />
               </div>
 
               <div className="welcomeActionLayout">
@@ -430,24 +456,28 @@ export default function TopApp({ initialNav = "home" }) {
             isAuthenticated={isAuthenticated}
             currentTierKey={profile.membershipStatus}
             onSelectTier={(id) => setMembershipStatus(id)}
-            onRequestSignIn={() => {
-              setAuthMode("signup");
-              setOverlay("signin");
-            }}
+            onRequestSignIn={openSignInForMembership}
           />
           {!isAuthenticated ? (
-            <div className="card">
-              <h3><AppIcon name="profile" />Create your account</h3>
-              <p>Set up your profile to save organizations, personalize support pathways, and unlock member-ready features.</p>
+            <div className="card profileSignedOutCard">
+              <h3><AppIcon name="profile" />Your profile</h3>
+              <p className="sponsorSectionLead">
+                Sign in or create an account to manage your identity, membership, saved nonprofits, and preferences. Everything stays on this tab once you are signed in.
+              </p>
               <div className="row wrap">
-                <button className="btnPrimary" type="button" onClick={() => { setAuthMode("signup"); setOverlay("signin"); }}>Start onboarding</button>
+                <button className="btnPrimary" type="button" onClick={() => { setAuthMode("signin"); setOverlay("signin"); }}>Sign in</button>
+                <button className="btnSoft" type="button" onClick={() => { setAuthMode("signup"); setOverlay("signin"); }}>Create an account</button>
                 <button className="btnSoft" type="button" onClick={() => setNav("home")}>Back to home</button>
+                <button className="btnSoft" type="button" onClick={resetDemo}>Reset Demo</button>
               </div>
+              <p className="sponsorSectionLead profileDemoResetNote">
+                Reset Demo clears local profile, saved organizations, and demo-only application data on this device. You do not need to be signed in.
+              </p>
             </div>
           ) : (
             <>
           <ProfileHeader
-            avatarSrc={profile.avatarUrl || avatarFallbackUrl(userId)}
+            avatarSrc={profile.avatarUrl || emptyProfileAvatarUrl()}
             fullName={fullName || "Supporter"}
             email={profile.email}
             bio={profile.banner}
@@ -569,7 +599,7 @@ export default function TopApp({ initialNav = "home" }) {
             <p className="ds-page-intro__lead" style={{ margin: 0 }}>
               Core account fields sync when cloud is available; identity details below are always saved locally.
             </p>
-            <Avatar src={editDraft.avatarUrl || avatarFallbackUrl(userId)} alt="Profile preview" />
+            <Avatar src={editDraft.avatarUrl || emptyProfileAvatarUrl()} alt="Profile preview" />
             <label className="profilePhotoUploadLabel">
               <span className="profilePhotoUploadTitle">Profile photo</span>
               <span className="profilePhotoUploadHint">Upload or replace the image shown on your profile and membership card.</span>
@@ -611,22 +641,62 @@ export default function TopApp({ initialNav = "home" }) {
 
       {overlay === "signin" && (
         <div className="modalOverlay" onClick={() => setOverlay(null)}>
-          <div className="modalCard" onClick={(e) => e.stopPropagation()}>
+          <div className="modalCard demoAuthModal" onClick={(e) => e.stopPropagation()}>
             <h3>{authMode === "signup" ? "Create account" : "Sign in"}</h3>
-            <p>{authMode === "signup" ? "Start with a simple supporter account. You can upgrade to Member anytime." : "Use your email to continue in this demo experience."}</p>
+            <p className="demoAuthModal__lede">
+              {authMode === "signup"
+                ? "Start with a simple supporter account. You can upgrade to Member anytime."
+                : "Demo sign-in uses email and password stored on this device only. Replace this modal with Supabase Auth when you are ready for production."}
+            </p>
             {authMode === "signup" && (
               <>
-                <input value={authDraft.firstName} onChange={(e) => setAuthDraft((d) => ({ ...d, firstName: e.target.value }))} placeholder="First Name" />
-                <input value={authDraft.lastName} onChange={(e) => setAuthDraft((d) => ({ ...d, lastName: e.target.value }))} placeholder="Last Name" />
+                <div className="demoAuthModal__avatarBlock">
+                  <Avatar src={signupAvatarDataUrl || emptyProfileAvatarUrl()} alt="Profile photo preview" className="demoAuthModal__avatarPreview" sizes="96px" />
+                  <div className="demoAuthModal__avatarCopy">
+                    <span className="demoAuthModal__avatarLabel">Profile photo</span>
+                    <span className="demoAuthModal__avatarHint">Optional. If you skip this, a default placeholder is used until you add one in Profile settings.</span>
+                    <label className="demoAuthModal__avatarUpload">
+                      <span className="btnSoft demoAuthModal__avatarUploadBtn">Upload image</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="profileFileInput"
+                        onChange={(e) => onSignupAvatarSelected(e.target.files?.[0])}
+                      />
+                    </label>
+                    {signupAvatarDataUrl ? (
+                      <button type="button" className="btnSoft demoAuthModal__avatarRemove" onClick={() => setSignupAvatarDataUrl("")}>
+                        Remove photo
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
+                <input value={authDraft.firstName} onChange={(e) => setAuthDraft((d) => ({ ...d, firstName: e.target.value }))} placeholder="First Name" autoComplete="given-name" />
+                <input value={authDraft.lastName} onChange={(e) => setAuthDraft((d) => ({ ...d, lastName: e.target.value }))} placeholder="Last Name" autoComplete="family-name" />
               </>
             )}
-            <input value={authDraft.email} onChange={(e) => setAuthDraft((d) => ({ ...d, email: e.target.value }))} placeholder="Email" type="email" />
-            {authMode === "signup" && (
-              <input value={authDraft.password} onChange={(e) => setAuthDraft((d) => ({ ...d, password: e.target.value }))} placeholder="Password" type="password" />
-            )}
+            <input value={authDraft.email} onChange={(e) => setAuthDraft((d) => ({ ...d, email: e.target.value }))} placeholder="Email" type="email" autoComplete="email" />
+            <input
+              value={authDraft.password}
+              onChange={(e) => setAuthDraft((d) => ({ ...d, password: e.target.value }))}
+              placeholder="Password (min. 6 characters)"
+              type="password"
+              autoComplete={authMode === "signup" ? "new-password" : "current-password"}
+            />
+            <div className="demoAuthModal__providers" aria-label="More sign-in options (coming soon)">
+              <p className="demoAuthModal__providersLabel">More options (coming soon)</p>
+              <div className="row wrap demoAuthModal__providerRow">
+                <button type="button" className="btnSoft" disabled title="Connect Google OAuth via Supabase Auth">
+                  Continue with Google
+                </button>
+                <button type="button" className="btnSoft" disabled title="Add additional OAuth providers the same way">
+                  Other social login
+                </button>
+              </div>
+            </div>
             {authError ? <p className="applyError">{authError}</p> : null}
             {authStatus ? <p className="applyStatus">{authStatus}</p> : null}
-            <div className="row">
+            <div className="row wrap">
               <button className="btnPrimary" onClick={onAuthSubmit} type="button">{authMode === "signup" ? "Create Account" : "Sign In"}</button>
               <button className="btnSoft" onClick={() => setAuthMode((m) => (m === "signup" ? "signin" : "signup"))} type="button">
                 {authMode === "signup" ? "I already have an account" : "Create an account"}

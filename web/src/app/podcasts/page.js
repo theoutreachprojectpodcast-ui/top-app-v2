@@ -1,5 +1,14 @@
+import { Suspense } from "react";
 import PodcastsLandingPage from "@/features/podcasts/components/PodcastsLandingPage";
 import { discoverChannelId, parseYoutubeFeed, youtubeFeedUrls } from "@/features/podcasts/domain/youtubeFeed";
+
+function PodcastsFallback() {
+  return (
+    <div className="appShell appShell--podcast" style={{ minHeight: "60vh", padding: 24 }}>
+      <p style={{ color: "#a8b8d3" }}>Loading podcast…</p>
+    </div>
+  );
+}
 
 export default async function PodcastsPageRoute() {
   let initialEpisodes = [];
@@ -15,5 +24,9 @@ export default async function PodcastsPageRoute() {
   } catch {
     initialEpisodes = [];
   }
-  return <PodcastsLandingPage initialEpisodes={initialEpisodes} />;
+  return (
+    <Suspense fallback={<PodcastsFallback />}>
+      <PodcastsLandingPage initialEpisodes={initialEpisodes} />
+    </Suspense>
+  );
 }

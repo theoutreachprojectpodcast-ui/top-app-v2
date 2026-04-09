@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import SponsorPaymentDemo from "@/features/sponsors/components/SponsorPaymentDemo";
 import { submitSponsorApplication } from "@/features/sponsors/api/sponsorApi";
-import { SPONSOR_FAMILY, SPONSOR_TIERS, formatUsd, getTierById } from "@/features/sponsors/data/sponsorTiers";
+import { SPONSOR_PROGRAM_TYPE_MAIN, SPONSOR_TIERS, formatUsd, getTierById } from "@/features/sponsors/data/sponsorTiers";
 
 const INITIAL_FORM = {
   first_name: "",
@@ -17,8 +17,6 @@ const INITIAL_FORM = {
   state: "",
   company_description: "",
   contact_role: "",
-  sponsor_family: SPONSOR_FAMILY.SUPPORT,
-  sponsor_tier_id: SPONSOR_TIERS[0].id,
   sponsor_interest_notes: "",
   audience_goals: "",
   highlights_requested: "",
@@ -40,7 +38,17 @@ const PLACEMENT_OPTIONS = [
   "All of the above",
 ];
 
-export default function SponsorApplicationForm({ supabase, selectedTierId, onSelectTier, variant = "page" }) {
+export default function SponsorApplicationForm({
+  supabase,
+  selectedTierId,
+  onSelectTier,
+  variant = "page",
+  programType = SPONSOR_PROGRAM_TYPE_MAIN,
+  tiers = SPONSOR_TIERS,
+  placementOptions = PLACEMENT_OPTIONS,
+  onSuccessfulSubmit,
+}) {
+  const tierList = Array.isArray(tiers) && tiers.length ? tiers : SPONSOR_TIERS;
   const [form, setForm] = useState(INITIAL_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [status, setStatus] = useState("");
@@ -48,7 +56,10 @@ export default function SponsorApplicationForm({ supabase, selectedTierId, onSel
   const [paymentStatus, setPaymentStatus] = useState("unpaid");
   const [paymentBusy, setPaymentBusy] = useState(false);
 
-  const tier = useMemo(() => getTierById(selectedTierId || form.sponsor_tier_id), [selectedTierId, form.sponsor_tier_id]);
+  const tier = useMemo(
+    () => getTierById(selectedTierId || tierList[0]?.id, tierList),
+    [selectedTierId, tierList],
+  );
   const tierFamily = tier.family;
   const tierAmount = Number(tier.amount || 0);
 
@@ -73,9 +84,8 @@ export default function SponsorApplicationForm({ supabase, selectedTierId, onSel
   }, [form, paymentStatus]);
 
   function setTier(tierId) {
-    const next = getTierById(tierId);
+    const next = getTierById(tierId, tierList);
     onSelectTier(next.id);
-    setForm((f) => ({ ...f, sponsor_family: next.family, sponsor_tier_id: next.id }));
     setPaymentStatus("unpaid");
   }
 
@@ -111,7 +121,9 @@ export default function SponsorApplicationForm({ supabase, selectedTierId, onSel
     try {
       const payload = {
         ...form,
+        sponsor_program_type: programType,
         sponsor_family: tierFamily,
+        sponsor_tier_id: tier.id,
         sponsor_tier_name: tier.name,
         sponsor_tier_amount: tierAmount,
         payment_status: paymentStatus === "demo_paid" ? "paid" : paymentStatus,
@@ -122,8 +134,9 @@ export default function SponsorApplicationForm({ supabase, selectedTierId, onSel
       if (result.warning) setStatus(result.warning);
       else setStatus("Sponsor application submitted. Our team will follow up with next-step onboarding.");
       if (result.ok) {
-        setForm({ ...INITIAL_FORM, sponsor_family: tierFamily, sponsor_tier_id: tier.id });
+        setForm({ ...INITIAL_FORM });
         setPaymentStatus("unpaid");
+        onSuccessfulSubmit?.();
       }
     } catch {
       setError("Sponsor application failed to submit. Please retry.");
@@ -132,14 +145,19 @@ export default function SponsorApplicationForm({ supabase, selectedTierId, onSel
     }
   }
 
-  return (
-    <section className={variant === "modal" ? "sponsorSection" : "card sponsorSection"}>
-      <h3>Sponsor Questionnaire & Application</h3>
-      <p>Complete this form to reserve your sponsorship tier and start onboarding.</p>
+  const flowLabel =
+    programType === SPONSOR_PROGRAM_TYPE_MAIN
+      ? "Mission partner application (main Outreach Project sponsors)"
+      : "Podcast sponsor application";
 
-      <form className="sponsorForm" onSubmit={onSubmit}>
+  return (
+    <section className={variant === "modal" ? "sponsorSection sponsorSection--modalForm" : "card sponsorSection"}>
+      <h3>Sponsor questionnaire and application</h3>
+      <p className="sponsorSectionLead">{flowLabel}</p>
+
+      <form className={`sponsorForm ${variant === "modal" ? "sponsorForm--modal" : ""}`.trim()} onSubmit={onSubmit}>
         <section className="applySection">
-          <h4>Section 1 - Contact Info</h4>
+          <h4>Step 1 — Contact</h4>
           <div className="form">
             <input placeholder="First name" value={form.first_name} onChange={(e) => setForm((f) => ({ ...f, first_name: e.target.value }))} />
             <input placeholder="Last name" value={form.last_name} onChange={(e) => setForm((f) => ({ ...f, last_name: e.target.value }))} />
@@ -149,7 +167,7 @@ export default function SponsorApplicationForm({ supabase, selectedTierId, onSel
         </section>
 
         <section className="applySection">
-          <h4>Section 2 - Company Info</h4>
+          <h4>Step 2 — Organization</h4>
           <div className="form">
             <input placeholder="Company name" value={form.company_name} onChange={(e) => setForm((f) => ({ ...f, company_name: e.target.value }))} />
             <input placeholder="Company website" value={form.company_website} onChange={(e) => setForm((f) => ({ ...f, company_website: e.target.value }))} />
@@ -162,45 +180,27 @@ export default function SponsorApplicationForm({ supabase, selectedTierId, onSel
         </section>
 
         <section className="applySection">
-          <h4>Section 3 - Sponsorship Interest</h4>
-          <div className="dsChoiceGroup">
-            <label className="dsChoice dsChoice--radio">
-              <input
-                type="radio"
-                name="family"
-                checked={tierFamily === SPONSOR_FAMILY.SUPPORT}
-                onChange={() => setTier("support-1000")}
-              />
-              <span className="dsChoice__control" />
-              <span className="dsChoice__text">Support Sponsor tiers ($1,000 / $2,500 / $5,000)</span>
-            </label>
-            <label className="dsChoice dsChoice--radio">
-              <input
-                type="radio"
-                name="family"
-                checked={tierFamily === SPONSOR_FAMILY.INTEGRATED}
-                onChange={() => setTier("integrated-15000-basic")}
-              />
-              <span className="dsChoice__control" />
-              <span className="dsChoice__text">Integrated Sponsorship tiers ($15,000 / $20,000 / $25,000)</span>
-            </label>
-          </div>
-          <select value={tier.id} onChange={(e) => setTier(e.target.value)}>
-            {SPONSOR_TIERS.map((item) => (
+          <h4>Step 3 — Tier</h4>
+          <p className="sponsorSectionLead">Choose the package that matches your goals. Details are available on the options page.</p>
+          <label className="sponsorTierSelectLabel" htmlFor="sponsor-tier-select">
+            Sponsorship tier
+          </label>
+          <select id="sponsor-tier-select" className="sponsorTierSelect" value={tier.id} onChange={(e) => setTier(e.target.value)}>
+            {tierList.map((item) => (
               <option key={item.id} value={item.id}>
-                {item.name}{item.subLabel ? ` - ${item.subLabel}` : ""} ({formatUsd(item.amount)})
+                {item.name} ({formatUsd(item.amount)})
               </option>
             ))}
           </select>
         </section>
 
         <section className="applySection">
-          <h4>Section 4 - Brand + Marketing Goals</h4>
-          <textarea rows={3} placeholder="Why do you want to sponsor The Outreach Project?" value={form.sponsor_interest_notes} onChange={(e) => setForm((f) => ({ ...f, sponsor_interest_notes: e.target.value }))} />
+          <h4>Step 4 — Goals and placements</h4>
+          <textarea rows={3} placeholder="Why do you want to sponsor?" value={form.sponsor_interest_notes} onChange={(e) => setForm((f) => ({ ...f, sponsor_interest_notes: e.target.value }))} />
           <textarea rows={2} placeholder="What audience are you hoping to reach?" value={form.audience_goals} onChange={(e) => setForm((f) => ({ ...f, audience_goals: e.target.value }))} />
-          <textarea rows={2} placeholder="What products, services, or mission should be highlighted?" value={form.highlights_requested} onChange={(e) => setForm((f) => ({ ...f, highlights_requested: e.target.value }))} />
+          <textarea rows={2} placeholder="What should be highlighted about your brand or mission?" value={form.highlights_requested} onChange={(e) => setForm((f) => ({ ...f, highlights_requested: e.target.value }))} />
           <div className="dsChoiceGroup">
-            {PLACEMENT_OPTIONS.map((option) => (
+            {placementOptions.map((option) => (
               <label className="dsChoice dsChoice--checkbox" key={option}>
                 <input
                   type="checkbox"
@@ -212,11 +212,11 @@ export default function SponsorApplicationForm({ supabase, selectedTierId, onSel
               </label>
             ))}
           </div>
-          <textarea rows={2} placeholder="Any specific activation ideas or requests?" value={form.activation_requests} onChange={(e) => setForm((f) => ({ ...f, activation_requests: e.target.value }))} />
+          <textarea rows={2} placeholder="Activation ideas or special requests" value={form.activation_requests} onChange={(e) => setForm((f) => ({ ...f, activation_requests: e.target.value }))} />
         </section>
 
         <section className="applySection">
-          <h4>Section 5 - Creative / Assets</h4>
+          <h4>Step 5 — Creative / assets</h4>
           <select value={form.assets_ready} onChange={(e) => setForm((f) => ({ ...f, assets_ready: e.target.value }))}>
             <option value="unknown">Assets readiness (select one)</option>
             <option value="ready_now">Yes, assets are ready now</option>
@@ -228,7 +228,7 @@ export default function SponsorApplicationForm({ supabase, selectedTierId, onSel
         </section>
 
         <section className="applySection">
-          <h4>Section 6 - Agreement / Confirmation</h4>
+          <h4>Step 6 — Agreement</h4>
           <div className="dsChoiceGroup">
             <label className="dsChoice dsChoice--checkbox">
               <input type="checkbox" checked={form.agreed_to_terms} onChange={(e) => setForm((f) => ({ ...f, agreed_to_terms: e.target.checked }))} />
@@ -244,9 +244,9 @@ export default function SponsorApplicationForm({ supabase, selectedTierId, onSel
         </section>
 
         <section className="applySection">
-          <h4>Section 7 - Payment + Submit</h4>
+          <h4>Step 7 — Demo payment and submit</h4>
           <p>
-            Selected tier: <strong>{tier.name}</strong>{tier.subLabel ? ` (${tier.subLabel})` : ""} - {formatUsd(tierAmount)}
+            Selected tier: <strong>{tier.name}</strong> — {formatUsd(tierAmount)}
           </p>
           <SponsorPaymentDemo
             amount={tierAmount}
@@ -260,9 +260,9 @@ export default function SponsorApplicationForm({ supabase, selectedTierId, onSel
         {error ? <p className="applyError">{error}</p> : null}
         {status ? <p className="applyStatus">{status}</p> : null}
 
-        <div className="row wrap">
+        <div className="row wrap sponsorFormActions">
           <button className="btnPrimary" type="submit" disabled={!canSubmit || submitting}>
-            {submitting ? "Submitting..." : "Submit Sponsor Application"}
+            {submitting ? "Submitting..." : "Submit application"}
           </button>
         </div>
       </form>

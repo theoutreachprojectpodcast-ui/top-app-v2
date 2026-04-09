@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import AppShell from "@/components/layout/AppShell";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { listSponsorsCatalog } from "@/features/sponsors/api/sponsorCatalogApi";
@@ -16,9 +18,10 @@ import {
   listPodcastMemberContent,
 } from "@/features/podcasts/api/podcastApi";
 import PodcastHero from "@/features/podcasts/components/PodcastHero";
-import PodcastSectionHeader from "@/features/podcasts/components/PodcastSectionHeader";
 import EpisodeCard from "@/features/podcasts/components/EpisodeCard";
 import GuestCard from "@/features/podcasts/components/GuestCard";
+import PodcastSponsorFlowModal from "@/features/podcasts/components/PodcastSponsorFlowModal";
+import PodcastSectionHeader from "@/features/podcasts/components/PodcastSectionHeader";
 import SponsorStrip from "@/features/podcasts/components/SponsorStrip";
 import MemberOnlyLockSection from "@/features/podcasts/components/MemberOnlyLockSection";
 import PodcastCTASection from "@/features/podcasts/components/PodcastCTASection";
@@ -41,6 +44,14 @@ export default function PodcastsLandingPage({ initialEpisodes = [] }) {
     setCanAccessMembers(canAccessMemberContent());
   }, []);
   const [applyOpen, setApplyOpen] = useState(false);
+  const [sponsorFlowOpen, setSponsorFlowOpen] = useState(false);
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get("sponsor") === "1") {
+      setSponsorFlowOpen(true);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     let cancelled = false;
@@ -147,6 +158,21 @@ export default function PodcastsLandingPage({ initialEpisodes = [] }) {
             <button className="btnPrimary" type="button" onClick={() => setApplyOpen(true)}>Apply to Be on the Podcast</button>
           </div>
         </section>
+        <section className="podcastSection podcastSponsorCtaBand">
+          <PodcastSectionHeader
+            eyebrow="Podcast sponsors"
+            title="Sponsor the show"
+            subtitle="Community, Impact, and Foundational packages. Open the flow to compare tiers, review full placements and benefits, and apply—without leaving the podcast experience."
+          />
+          <div className="row wrap">
+            <button className="btnPrimary" type="button" onClick={() => setSponsorFlowOpen(true)}>
+              Sponsor the show
+            </button>
+            <Link className="btnSoft" href="/sponsors?packages=1">
+              Mission partners (main app)
+            </Link>
+          </div>
+        </section>
         <SponsorStrip sponsors={sponsors} />
         <MemberOnlyLockSection canAccess={canAccessMembers} items={memberItems} />
         <PodcastCTASection onApply={() => setApplyOpen(true)} />
@@ -170,6 +196,12 @@ export default function PodcastsLandingPage({ initialEpisodes = [] }) {
           </div>
         </div>
       ) : null}
+      <PodcastSponsorFlowModal
+        open={sponsorFlowOpen}
+        onClose={() => setSponsorFlowOpen(false)}
+        supabase={supabase}
+        initialTierId={searchParams.get("tier") || undefined}
+      />
     </AppShell>
   );
 }
