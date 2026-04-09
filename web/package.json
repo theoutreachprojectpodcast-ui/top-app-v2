@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=20.20.0"
+  },
   "scripts": {
     "prebuild": "node scripts/verify-proven-ally-registry.mjs && node scripts/verify-entity-display-names.mjs && node scripts/verify-trusted-resources-titles.mjs && node scripts/sync-public-assets.mjs",
     "verify:proven-allies": "node scripts/verify-proven-ally-registry.mjs",
@@ -22,7 +25,9 @@
     "enrich:logos": "node scripts/enrich-nonprofit-logos.js",
     "enrich:websites": "node scripts/discover-nonprofit-websites.js",
     "enrich:cities": "node scripts/build-city-image-library.js",
-    "enrich:media": "node scripts/enrich-nonprofit-media.js"
+    "enrich:media": "node scripts/enrich-nonprofit-media.js",
+    "workos": "pnpm dlx workos@latest",
+    "workos:doctor": "pnpm dlx workos@latest doctor"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.0",

@@ -107,3 +107,7 @@ Supabase-backed community posts, moderation statuses, RLS, and API routes are do
 ## Billing — Stripe + persistent profiles (tORP v0.3)
 
 WorkOS identity, Supabase `torp_profiles`, Checkout, webhooks, and Customer Portal are documented in [`docs/BILLING_STRIPE_v0.3.md`](docs/BILLING_STRIPE_v0.3.md).
+
+## WorkOS CLI
+
+From `web/`: `pnpm workos` runs `pnpm dlx workos@latest` (Node **≥ 20.20** required; avoids some Windows `npx`/Node mismatches). See [`docs/WORKOS_CLI.md`](docs/WORKOS_CLI.md).
