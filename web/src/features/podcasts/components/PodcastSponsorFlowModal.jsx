@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import PodcastSectionHeader from "@/features/podcasts/components/PodcastSectionHeader";
 import SponsorApplicationForm from "@/features/sponsors/components/SponsorApplicationForm";
 import SponsorTierComparison from "@/features/sponsors/components/SponsorTierComparison";
 import {
@@ -26,46 +27,60 @@ export default function PodcastSponsorFlowModal({ open, onClose, supabase: supab
   if (!open) return null;
 
   return (
-    <div className="modalOverlay podcastModalOverlay podcastSponsorFlowOverlay" role="dialog" aria-modal="true" aria-labelledby="podcast-sponsor-flow-title" onClick={onClose}>
+    <div
+      className="modalOverlay podcastModalOverlay podcastSponsorFlowOverlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="podcast-sponsor-flow-title"
+      onClick={onClose}
+    >
       <div className="modalCard podcastModalCard podcastSponsorFlowModal" onClick={(e) => e.stopPropagation()}>
-        <div className="podcastScope">
-          <div className="podcastSponsorFlowModal__head">
-            <div>
-              <p className="podcastEyebrow">Podcast sponsors</p>
-              <h2 id="podcast-sponsor-flow-title" className="podcastSectionTitle">Sponsor the show</h2>
-              <p className="podcastSectionSubtitle">Pick a tier, review full placements and benefits, then apply. Mission partner packages open in a popup from the main Sponsors page.</p>
-            </div>
-            <button type="button" className="btnSoft" onClick={onClose}>
+        <div className="podcastSponsorFlowModal__chrome">
+          <div className="podcastSponsorFlowModal__topBar">
+            <PodcastSectionHeader
+              titleId="podcast-sponsor-flow-title"
+              eyebrow="Podcast sponsors"
+              title="Sponsor the show"
+              subtitle="Compare Community, Impact, and Foundational tiers, expand placements and benefits, then complete the application — all in the podcast experience."
+            />
+            <button type="button" className="podcastSponsorFlowModal__close" onClick={onClose}>
               Close
             </button>
           </div>
 
-          <SponsorTierComparison
-            tiers={PODCAST_SPONSOR_TIERS}
-            variant="podcast"
-            selectedTierId={tierId}
-            onSelectTier={setTierId}
-            title="Podcast sponsor tiers"
-            lead="Community Sponsor, Impact Sponsor, and Foundational — podcast channels only."
-            familyTitle="Select your package"
-            compareHref="/podcasts"
-          />
+          <div className="podcastScope podcastSponsorFlowModal__scroll">
+            <SponsorTierComparison
+              tiers={PODCAST_SPONSOR_TIERS}
+              variant="podcast"
+              selectedTierId={tierId}
+              onSelectTier={setTierId}
+              title="Podcast sponsor tiers"
+              lead="Episode-first packages for the show — podcast channels only."
+              familyTitle="Select your package"
+              familyDescription="Tap a tier to select it, then scroll to apply with that package."
+              compareHref="/podcasts"
+            />
 
-          <SponsorApplicationForm
-            supabase={supabase}
-            selectedTierId={tierId}
-            onSelectTier={setTierId}
-            variant="modal"
-            programType={SPONSOR_PROGRAM_TYPE_PODCAST}
-            tiers={PODCAST_SPONSOR_TIERS}
-            placementOptions={PODCAST_PLACEMENT_OPTIONS}
-            onSuccessfulSubmit={onClose}
-          />
+            <SponsorApplicationForm
+              supabase={supabase}
+              selectedTierId={tierId}
+              onSelectTier={setTierId}
+              variant="modal"
+              designContext="podcast"
+              programType={SPONSOR_PROGRAM_TYPE_PODCAST}
+              tiers={PODCAST_SPONSOR_TIERS}
+              placementOptions={PODCAST_PLACEMENT_OPTIONS}
+              onSuccessfulSubmit={onClose}
+            />
 
-          <div className="row wrap podcastSponsorFlowModal__foot">
-            <Link className="btnSoft" href="/sponsors?packages=1" onClick={onClose}>
-              Mission partner packages
-            </Link>
+            <div className="podcastSponsorFlowModal__foot">
+              <p className="podcastSponsorFlowModal__footNote">
+                Mission partner packages (website &amp; ecosystem) live on the main Outreach Project sponsors hub.
+              </p>
+              <Link className="podcastSponsorFlowModal__missionLink" href="/sponsors?packages=1" onClick={onClose}>
+                Open mission partner packages
+              </Link>
+            </div>
           </div>
         </div>
       </div>

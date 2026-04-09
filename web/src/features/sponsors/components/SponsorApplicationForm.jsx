@@ -43,11 +43,13 @@ export default function SponsorApplicationForm({
   selectedTierId,
   onSelectTier,
   variant = "page",
+  designContext = "main",
   programType = SPONSOR_PROGRAM_TYPE_MAIN,
   tiers = SPONSOR_TIERS,
   placementOptions = PLACEMENT_OPTIONS,
   onSuccessfulSubmit,
 }) {
+  const isPodcastSkin = designContext === "podcast";
   const tierList = Array.isArray(tiers) && tiers.length ? tiers : SPONSOR_TIERS;
   const [form, setForm] = useState(INITIAL_FORM);
   const [submitting, setSubmitting] = useState(false);
@@ -150,12 +152,29 @@ export default function SponsorApplicationForm({
       ? "Mission partner application (main Outreach Project sponsors)"
       : "Podcast sponsor application";
 
-  return (
-    <section className={variant === "modal" ? "sponsorSection sponsorSection--modalForm" : "card sponsorSection"}>
-      <h3>Sponsor questionnaire and application</h3>
-      <p className="sponsorSectionLead">{flowLabel}</p>
+  const outerClass = (() => {
+    if (isPodcastSkin) {
+      return variant === "modal"
+        ? "podcastSponsorFlowModal__applyBlock sponsorSection--modalForm"
+        : "podcastSection podcastSponsorFlowModal__applyBlock";
+    }
+    return variant === "modal" ? "sponsorSection sponsorSection--modalForm" : "card sponsorSection";
+  })();
+  const leadClass = isPodcastSkin ? "podcastSponsorFlowModal__blockLead" : "sponsorSectionLead";
+  const formClass = [
+    "sponsorForm",
+    variant === "modal" ? "sponsorForm--modal" : "",
+    isPodcastSkin ? "podcastSponsorApplyForm" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
-      <form className={`sponsorForm ${variant === "modal" ? "sponsorForm--modal" : ""}`.trim()} onSubmit={onSubmit}>
+  return (
+    <section className={outerClass}>
+      <h3 className={isPodcastSkin ? "podcastSponsorFlowModal__blockTitle" : undefined}>Sponsor questionnaire and application</h3>
+      <p className={leadClass}>{flowLabel}</p>
+
+      <form className={formClass} onSubmit={onSubmit}>
         <section className="applySection">
           <h4>Step 1 — Contact</h4>
           <div className="form">
@@ -181,7 +200,7 @@ export default function SponsorApplicationForm({
 
         <section className="applySection">
           <h4>Step 3 — Tier</h4>
-          <p className="sponsorSectionLead">Choose the package that matches your goals. Details are available on the options page.</p>
+          <p className={leadClass}>Choose the package that matches your goals. Details are available on the options page.</p>
           <label className="sponsorTierSelectLabel" htmlFor="sponsor-tier-select">
             Sponsorship tier
           </label>

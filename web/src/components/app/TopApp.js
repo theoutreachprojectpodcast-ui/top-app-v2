@@ -74,14 +74,6 @@ function TopAppInner({ initialNav = "home" }) {
   }, [searchParams]);
 
   useEffect(() => {
-    if (sessionKind !== "workos" || !isAuthenticated) return;
-    if (profile?.onboardingCompleted) return;
-    const path = typeof window !== "undefined" ? window.location.pathname : "";
-    if (path.startsWith("/onboarding")) return;
-    router.replace("/onboarding");
-  }, [sessionKind, isAuthenticated, profile?.onboardingCompleted, router]);
-
-  useEffect(() => {
     if (overlay !== "signin") {
       setSignupAvatarDataUrl("");
       return;
@@ -116,6 +108,14 @@ function TopAppInner({ initialNav = "home" }) {
   } = useProfileData(sb);
   const { filters, setFilters, results, status, meta, page, canGoNext, runSearch, clearSearch } = useDirectorySearch(sb);
   const { trusted, trustedStatus, loadTrusted } = useTrustedResources(sb);
+
+  useEffect(() => {
+    if (sessionKind !== "workos" || !isAuthenticated) return;
+    if (profile?.onboardingCompleted) return;
+    const path = typeof window !== "undefined" ? window.location.pathname : "";
+    if (path.startsWith("/onboarding")) return;
+    router.replace("/onboarding");
+  }, [sessionKind, isAuthenticated, profile?.onboardingCompleted, router]);
 
   function openEdit() {
     setEditDraft(profile);
