@@ -23,10 +23,11 @@ const POST_TYPE_LABEL = {
   community_update: "Community update",
 };
 
-export default function CommunityPostCard({ post, onToggleLike, showModerationStatus = false }) {
+export default function CommunityPostCard({ post, onToggleLike, showModerationStatus = false, onOpenAuthor }) {
   const [shareBusy, setShareBusy] = useState(false);
   const displayName = post.showAuthorName ? post.authorName : "Community member";
   const avatarSrc = post.authorAvatarUrl || avatarFallbackUrl(post.authorId || post.id);
+  const authorLookupKey = String(post.authorProfileId || post.authorId || "").trim();
   const cat = CATEGORY_LABEL[post.category] || "Story";
 
   async function onShare() {
@@ -44,7 +45,17 @@ export default function CommunityPostCard({ post, onToggleLike, showModerationSt
         <Avatar src={avatarSrc} alt={displayName} className="communityPostAvatar" />
         <div className="communityPostMeta">
           <div className="communityPostAuthorRow">
-            <strong className="communityPostAuthorName">{displayName}</strong>
+            {onOpenAuthor && authorLookupKey ? (
+              <button
+                type="button"
+                className="communityPostAuthorTrigger"
+                onClick={() => onOpenAuthor(authorLookupKey)}
+              >
+                {displayName}
+              </button>
+            ) : (
+              <strong className="communityPostAuthorName">{displayName}</strong>
+            )}
             {showModerationStatus && post.status && post.status !== "approved" ? (
               <span className="communityPostStatusBadge">{post.statusLabel || post.status}</span>
             ) : null}

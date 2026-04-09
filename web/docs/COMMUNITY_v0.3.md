@@ -6,7 +6,7 @@ This note describes the first production-oriented community pass: Supabase-backe
 
 Apply SQL in order after base community + profiles exist:
 
-- `supabase/community.sql` — base `community_posts` (and legacy `community_post_likes` if present).
+- `supabase/community.sql` — base `community_posts` (legacy `community_post_likes` table may still exist from older scripts; **likes in v0.3 use `community_post_reactions` via API**, not the legacy likes table).
 - `supabase/community_v03_data_model.sql` — extends posts with `author_profile_id`, `visibility`, `moderation_notes`, `is_edited`, `deleted_at`, `published_at`, `post_type`, `photo_url`; normalizes statuses; adds `community_post_reactions` (like scaffold).
 
 ### `community_posts` (relevant fields)
@@ -71,6 +71,7 @@ Optional **client** mirrors exist for UI gating only (`NEXT_PUBLIC_COMMUNITY_MOD
 - **My posts** (signed-in WorkOS): all of the current user’s posts with moderation badges where appropriate.
 - **Composer**: WorkOS path submits via POST; confirmation copy reflects review workflow.
 - **Moderation panel** (moderators): cloud queue loaded via `fetchPendingFeedFromApi` (`scope=pending`); Approve/Reject call PATCH (with optional Supabase client fallback in `reviewSubmission` for local dev).
+- **Member profile modal**: click an author name on a post to open a profile sheet. **Seed/demo members** resolve from `COMMUNITY_MEMBERS_SEED` by id; **real authors** use `torp_profiles.id` (`author_profile_id` on the post). Approved posts for that author load via the Supabase client using RLS-safe public read (`fetchApprovedPostsByMember` chooses `author_profile_id` vs `author_id` using `isAuthorProfileLookupKey`).
 
 ## Not in this pass (future)
 
@@ -87,3 +88,4 @@ Optional **client** mirrors exist for UI gating only (`NEXT_PUBLIC_COMMUNITY_MOD
 4. **Logged out**: see value prop + sign-in CTA; public feed shows approved posts only.
 5. **Member user**: complete onboarding; ensure profile has `membership_tier` = `member`; submit a story (≥ 20 characters); expect “submitted for review” and row in DB with `pending_review`.
 6. **Moderator**: set env emails/IDs; open moderation section; pending posts appear; Approve → post appears on Latest; Reject → visible in My posts with rejected state, not in public feed.
+7. **Author profile**: on an approved post, click the underlined author name; for cloud posts you should see that member’s approved stories (and seed-demo members still show seeded favorites when applicable).

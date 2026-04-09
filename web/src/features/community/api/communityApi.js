@@ -8,7 +8,12 @@ import {
 } from "@/features/community/domain/shareActions";
 
 const POSTS_TABLE = "community_posts";
-const LIKES_TABLE = "community_post_likes";
+
+/** True when `id` is a torp_profiles row id (UUID) — use author_profile_id in queries. */
+export function isAuthorProfileLookupKey(id) {
+  const s = String(id || "").trim();
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(s);
+}
 
 const LS_PENDING = "top_community_pending_submissions";
 const LS_LOCAL_APPROVED = "top_community_local_approved_posts";
@@ -185,13 +190,18 @@ export async function fetchApprovedPostsByMember(supabase, memberId) {
     return [];
   }
 
-  const { data, error } = await supabase
+  let q = supabase
     .from(POSTS_TABLE)
     .select("*")
     .eq("status", "approved")
-    .eq("author_id", id)
+    .is("deleted_at", null)
+    .in("visibility", ["community", "public"])
     .order("created_at", { ascending: false })
     .limit(30);
+
+  q = isAuthorProfileLookupKey(id) ? q.eq("author_profile_id", id) : q.eq("author_id", id);
+
+  const { data, error } = await q;
 
   if (error) {
     return [];

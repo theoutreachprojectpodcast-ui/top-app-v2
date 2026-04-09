@@ -19,7 +19,7 @@ export function mapCommunityPostRow(row) {
     authorName: String(row.author_name || row.authorName || "Community member"),
     authorAvatarUrl: String(row.author_avatar_url || row.authorAvatarUrl || ""),
     title: String(row.title || "").trim(),
-    body: String(row.body || "").trim(),
+    body: String(row.body || row.content || "").trim(),
     nonprofitEin: row.nonprofit_ein != null ? String(row.nonprofit_ein) : null,
     nonprofitName: String(row.nonprofit_name || row.nonprofitName || "").trim(),
     category: String(row.category || "success_story"),

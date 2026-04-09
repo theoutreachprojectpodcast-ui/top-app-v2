@@ -191,6 +191,7 @@ export default function CommunityPage({
               key={p.id}
               post={p}
               showModerationStatus={feedTab === "mine"}
+              onOpenAuthor={(key) => setSelectedMemberId(String(key || "").trim())}
               onToggleLike={
                 isAuthenticated && (sessionKind === "workos" || typeof onToggleLike === "function")
                   ? onToggleLike
@@ -245,6 +246,8 @@ export default function CommunityPage({
         <CommunityMemberProfileModal
           supabase={supabase}
           memberId={selectedMemberId}
+          sessionKind={sessionKind}
+          onToggleLike={isAuthenticated && sessionKind === "workos" ? onToggleLike : undefined}
           onClose={() => setSelectedMemberId("")}
         />
       ) : null}
