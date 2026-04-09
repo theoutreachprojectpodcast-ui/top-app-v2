@@ -18,6 +18,13 @@ function firstNonEmpty(...values) {
   return "";
 }
 
+function truncateCardLine(value, max = 120) {
+  const text = String(value ?? "").trim();
+  if (!text) return "";
+  if (text.length <= max) return text;
+  return `${text.slice(0, max - 1)}…`;
+}
+
 /** safeText uses "—" for empty; skip that so we can fall through to profile/org fields */
 function firstNonEmptyDisplay(...values) {
   for (const value of values) {
@@ -245,6 +252,15 @@ export function mapNonprofitCardRow(row = {}, source = "directory") {
       [resolvedCity, resolvedState].filter(Boolean).join(", "),
       trustedLocation.raw
     ) || (applyTrustedPresentation ? "National" : "Unknown Location");
+  const displayOnSite = String(patchedRow.displayNameOnSite ?? patchedRow.display_name_on_site ?? "").trim();
+  const cardSubheader = truncateCardLine(
+    firstNonEmpty(
+      patchedRow.tagline,
+      patchedRow.headline,
+      displayOnSite && displayOnSite.toLowerCase() !== String(displayName || "").trim().toLowerCase() ? displayOnSite : "",
+    ),
+    120,
+  );
   const cardShell = {
     id: baseRow.id || resolvedEin || displayName,
     ein: resolvedEin,
@@ -258,6 +274,7 @@ export function mapNonprofitCardRow(row = {}, source = "directory") {
     tier,
     status,
     description: computedDescription,
+    cardSubheader,
     headline: String(patchedRow.headline ?? "").trim(),
     tagline: String(patchedRow.tagline ?? "").trim(),
     shortDescription: enrichmentShort,

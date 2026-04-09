@@ -189,6 +189,7 @@ export default function FeaturedSponsorCard({ sponsor }) {
           </div>
           <div className="sponsorPremiumCopy">
             <h4>{displayName}</h4>
+            {sponsor.cardSubheader ? <p className="sponsorPremiumSubheader">{sponsor.cardSubheader}</p> : null}
             {sponsor.industry ? <p className="sponsorPremiumIndustry">{sponsor.industry}</p> : null}
             <p className="sponsorPremiumTagline">{sponsor.tagline || "Partner supporting service communities."}</p>
             <div className="sponsorPremiumFooter">

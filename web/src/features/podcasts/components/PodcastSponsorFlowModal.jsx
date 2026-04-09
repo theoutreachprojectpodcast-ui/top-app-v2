@@ -12,7 +12,7 @@ import {
 } from "@/features/sponsors/data/podcastSponsorTiers";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
-export default function PodcastSponsorFlowModal({ open, onClose, supabase: supabaseProp, initialTierId }) {
+export default function PodcastSponsorFlowModal({ open, onClose, supabase: supabaseProp, initialTierId, stripeReturn }) {
   const supabaseClient = useMemo(() => getSupabaseClient(), []);
   const supabase = supabaseProp ?? supabaseClient;
   const [tierId, setTierId] = useState(initialTierId || PODCAST_SPONSOR_TIERS[0]?.id);
@@ -71,6 +71,7 @@ export default function PodcastSponsorFlowModal({ open, onClose, supabase: supab
               tiers={PODCAST_SPONSOR_TIERS}
               placementOptions={PODCAST_PLACEMENT_OPTIONS}
               onSuccessfulSubmit={onClose}
+              stripeReturn={stripeReturn}
             />
 
             <div className="podcastSponsorFlowModal__foot">

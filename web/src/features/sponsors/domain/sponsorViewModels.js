@@ -4,6 +4,13 @@ function clean(value) {
   return String(value ?? "").trim();
 }
 
+function truncateSponsorLine(value, max = 140) {
+  const text = clean(value);
+  if (!text) return "";
+  if (text.length <= max) return text;
+  return `${text.slice(0, max - 1)}…`;
+}
+
 function parseAdditionalLinks(value) {
   if (Array.isArray(value)) return value.filter((item) => item && item.url);
   const raw = clean(value);
@@ -70,10 +77,13 @@ export function normalizeSponsorRecord(row = {}) {
 
 export function getSponsorCardViewModel(row = {}) {
   const s = normalizeSponsorRecord(row);
+  /** Prefer DB long description so we do not duplicate the tagline line under the title. */
+  const cardSubheader = truncateSponsorLine(s.long_description, 140);
   return {
     id: s.id,
     slug: s.slug,
     name: s.name,
+    cardSubheader,
     tag: s.short_description || "Mission-aligned",
     industry: s.sponsor_type,
     tierLabel: s.featured ? "Featured sponsor" : "Partner sponsor",

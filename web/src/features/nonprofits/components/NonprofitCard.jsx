@@ -104,6 +104,7 @@ export default function NonprofitCard({
         ) : null}
       </div>
       {metaRow}
+      {!!card.cardSubheader ? <p className="nonprofitCardSubheader">{card.cardSubheader}</p> : null}
       {!!card.nonprofitType && card.nonprofitType !== card.category?.label ? (
         <p className="nonprofitTypeLine">{card.nonprofitType}</p>
       ) : null}

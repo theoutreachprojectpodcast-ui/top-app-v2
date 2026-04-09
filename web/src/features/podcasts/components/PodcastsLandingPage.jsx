@@ -58,6 +58,9 @@ export default function PodcastsLandingPage({ initialEpisodes = [] }) {
     if (searchParams.get("sponsor") === "1") {
       setSponsorFlowOpen(true);
     }
+    if (searchParams.get("sponsor_checkout") === "success" || searchParams.get("sponsor_checkout") === "cancel") {
+      setSponsorFlowOpen(true);
+    }
   }, [searchParams]);
 
   useEffect(() => {
@@ -230,6 +233,10 @@ export default function PodcastsLandingPage({ initialEpisodes = [] }) {
         onClose={() => setSponsorFlowOpen(false)}
         supabase={supabase}
         initialTierId={searchParams.get("tier") || undefined}
+        stripeReturn={{
+          checkout: searchParams.get("sponsor_checkout") || "",
+          sessionId: searchParams.get("session_id") || "",
+        }}
       />
     </AppShell>
   );

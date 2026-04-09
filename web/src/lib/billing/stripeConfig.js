@@ -34,6 +34,31 @@ export function priceIdForTier(tier) {
   return "";
 }
 
+/** One-time Checkout prices for podcast sponsor tiers (Sponsor the Show). */
+const PODCAST_TIER_ENV_KEYS = {
+  "podcast-community-500": "STRIPE_PRICE_PODCAST_SPONSOR_COMMUNITY",
+  "podcast-impact-1000": "STRIPE_PRICE_PODCAST_SPONSOR_IMPACT",
+  "podcast-foundational-2500": "STRIPE_PRICE_PODCAST_SPONSOR_FOUNDATIONAL",
+};
+
+export function podcastSponsorPriceIdForTier(tierId) {
+  const key = PODCAST_TIER_ENV_KEYS[String(tierId || "").trim()];
+  if (!key) return "";
+  return process.env[key]?.trim() || "";
+}
+
+export function podcastSponsorCheckoutConfigured() {
+  if (!stripeSecretConfigured()) return false;
+  return Object.keys(PODCAST_TIER_ENV_KEYS).every((id) => !!podcastSponsorPriceIdForTier(id));
+}
+
+/** For docs / admin UI when env is incomplete. */
+export function podcastSponsorMissingPriceEnvKeys() {
+  return Object.entries(PODCAST_TIER_ENV_KEYS)
+    .filter(([id]) => !podcastSponsorPriceIdForTier(id))
+    .map(([, envKey]) => envKey);
+}
+
 /**
  * Canonical app origin for redirects. Prefer APP_BASE_URL, then NEXT_PUBLIC_APP_URL.
  */

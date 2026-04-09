@@ -1,5 +1,7 @@
 # tORP v0.3 — Membership, sponsors, community seed (implementation pass)
 
+See also: **`docs/TORP_V0_3_SESSION_ENRICHMENT_BILLING.md`** (persistent nav auth snapshot, enrichment batch script, podcast Stripe env + APIs).
+
 ## Membership naming & visuals
 
 - Canonical UI labels live in `src/features/membership/membershipTiers.js`: **Free Membership**, **Support Membership**, **Pro Membership**, **Sponsor Membership**. Storage keys (`none`, `support`, `member`, `sponsor`) are unchanged.

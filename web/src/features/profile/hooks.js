@@ -20,6 +20,7 @@ import {
   toLocalStorageProfile,
 } from "@/features/profile/mappers";
 import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
+import { clearNavAuthCache } from "@/lib/auth/navAuthCache";
 import {
   fetchProfileByUserId,
   fetchSavedOrgEinList,
@@ -335,6 +336,7 @@ export function useProfileData(supabase) {
 
   async function resetDemo() {
     if (workosRef.current && typeof window !== "undefined") {
+      clearNavAuthCache();
       window.location.assign("/sign-out?returnTo=/");
       return;
     }
@@ -471,9 +473,11 @@ export function useProfileData(supabase) {
 
   function signOut() {
     if (workosRef.current && typeof window !== "undefined") {
+      clearNavAuthCache();
       window.location.assign("/sign-out?returnTo=/");
       return;
     }
+    clearNavAuthCache();
     setIsAuthenticated(false);
     setAuthProvider(null);
     setProfile(createInitialProfile());

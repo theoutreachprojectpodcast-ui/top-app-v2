@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import SponsorPaymentDemo from "@/features/sponsors/components/SponsorPaymentDemo";
 import { submitSponsorApplication } from "@/features/sponsors/api/sponsorApi";
+import { SPONSOR_PROGRAM_TYPE_PODCAST } from "@/features/sponsors/data/podcastSponsorTiers";
 import { SPONSOR_PROGRAM_TYPE_MAIN, SPONSOR_TIERS, formatUsd, getTierById } from "@/features/sponsors/data/sponsorTiers";
 
 const INITIAL_FORM = {
@@ -27,6 +28,7 @@ const INITIAL_FORM = {
   additional_notes: "",
   agreed_to_terms: false,
   agreed_demo_payment: false,
+  agreed_deferred_billing: false,
 };
 
 const PLACEMENT_OPTIONS = [
@@ -48,8 +50,11 @@ export default function SponsorApplicationForm({
   tiers = SPONSOR_TIERS,
   placementOptions = PLACEMENT_OPTIONS,
   onSuccessfulSubmit,
+  /** When returning from Stripe Checkout (podcast flow): { checkout: "success"|"cancel", sessionId } */
+  stripeReturn = null,
 }) {
   const isPodcastSkin = designContext === "podcast";
+  const isPodcast = programType === SPONSOR_PROGRAM_TYPE_PODCAST;
   const tierList = Array.isArray(tiers) && tiers.length ? tiers : SPONSOR_TIERS;
   const [form, setForm] = useState(INITIAL_FORM);
   const [submitting, setSubmitting] = useState(false);
@@ -57,6 +62,8 @@ export default function SponsorApplicationForm({
   const [error, setError] = useState("");
   const [paymentStatus, setPaymentStatus] = useState("unpaid");
   const [paymentBusy, setPaymentBusy] = useState(false);
+  const [podcastBillingLive, setPodcastBillingLive] = useState(false);
+  const [podcastMissingEnv, setPodcastMissingEnv] = useState([]);
 
   const tier = useMemo(
     () => getTierById(selectedTierId || tierList[0]?.id, tierList),
@@ -65,25 +72,85 @@ export default function SponsorApplicationForm({
   const tierFamily = tier.family;
   const tierAmount = Number(tier.amount || 0);
 
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/billing/capabilities", { cache: "no-store" });
+        const data = await res.json().catch(() => ({}));
+        if (cancelled) return;
+        setPodcastBillingLive(!!data.podcastSponsorCheckout);
+        setPodcastMissingEnv(Array.isArray(data.podcastSponsorMissingEnv) ? data.podcastSponsorMissingEnv : []);
+      } catch {
+        if (!cancelled) {
+          setPodcastBillingLive(false);
+          setPodcastMissingEnv([]);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isPodcast || !podcastBillingLive) return;
+    const checkout = String(stripeReturn?.checkout || "").trim();
+    const sessionId = String(stripeReturn?.sessionId || "").trim();
+    if (checkout !== "success" || !sessionId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(
+          `/api/billing/verify-podcast-session?session_id=${encodeURIComponent(sessionId)}`,
+          { credentials: "include" },
+        );
+        const data = await res.json().catch(() => ({}));
+        if (cancelled) return;
+        if (data.paid) {
+          setPaymentStatus("stripe_paid");
+          setStatus("Payment confirmed. You can submit your podcast sponsor application.");
+        } else {
+          setStatus("We could not confirm payment for this session. You can try Pay with Stripe again.");
+        }
+      } catch {
+        if (!cancelled) setError("Could not verify payment. Try again or contact support.");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isPodcast, podcastBillingLive, stripeReturn?.checkout, stripeReturn?.sessionId]);
+
   const canSubmit = useMemo(() => {
-    return Boolean(
+    const baseFields = Boolean(
       form.first_name &&
-      form.last_name &&
-      form.email &&
-      form.company_name &&
-      form.company_type &&
-      form.city &&
-      form.state &&
-      form.company_description &&
-      form.contact_role &&
-      form.sponsor_interest_notes &&
-      form.audience_goals &&
-      form.highlights_requested &&
-      form.agreed_to_terms &&
-      form.agreed_demo_payment &&
-      paymentStatus === "demo_paid",
+        form.last_name &&
+        form.email &&
+        form.company_name &&
+        form.company_type &&
+        form.city &&
+        form.state &&
+        form.company_description &&
+        form.contact_role &&
+        form.sponsor_interest_notes &&
+        form.audience_goals &&
+        form.highlights_requested,
     );
-  }, [form, paymentStatus]);
+    if (!baseFields) return false;
+
+    if (isPodcast) {
+      const termsOk = form.agreed_to_terms;
+      const deferredOk = !podcastBillingLive && form.agreed_deferred_billing;
+      const agreementOk = termsOk && (podcastBillingLive ? true : deferredOk);
+      const paymentOk = podcastBillingLive ? paymentStatus === "stripe_paid" : true;
+      return agreementOk && paymentOk;
+    }
+
+    return Boolean(
+      form.agreed_to_terms && form.agreed_demo_payment && paymentStatus === "demo_paid",
+    );
+  }, [form, isPodcast, podcastBillingLive, paymentStatus]);
 
   function setTier(tierId) {
     const next = getTierById(tierId, tierList);
@@ -114,6 +181,38 @@ export default function SponsorApplicationForm({
     setStatus("Demo payment marked as successful.");
   }
 
+  async function beginStripePodcastCheckout() {
+    setError("");
+    setStatus("");
+    setPaymentBusy(true);
+    try {
+      const res = await fetch("/api/billing/podcast-sponsor-checkout", {
+        method: "POST",
+        credentials: "include",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ podcastTierId: tier.id, returnPath: "/podcasts" }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (data.url) {
+        window.location.assign(data.url);
+        return;
+      }
+      if (res.status === 401) {
+        setError("Sign in with your Outreach Project account to complete Stripe checkout.");
+        return;
+      }
+      if (data.error === "podcast_billing_not_configured") {
+        setError("Podcast billing is not configured on the server yet. See deployment docs for Stripe price env vars.");
+        return;
+      }
+      setError(data.message || data.error || "Could not start checkout.");
+    } catch {
+      setError("Network error starting checkout.");
+    } finally {
+      setPaymentBusy(false);
+    }
+  }
+
   async function onSubmit(e) {
     e.preventDefault();
     if (!canSubmit) return;
@@ -121,6 +220,14 @@ export default function SponsorApplicationForm({
     setError("");
     setStatus("");
     try {
+      const paymentLabel = (() => {
+        if (!isPodcast) {
+          return paymentStatus === "demo_paid" ? "paid" : paymentStatus;
+        }
+        if (podcastBillingLive && paymentStatus === "stripe_paid") return "paid_stripe";
+        return "pending_review_no_live_checkout";
+      })();
+
       const payload = {
         ...form,
         sponsor_program_type: programType,
@@ -128,8 +235,8 @@ export default function SponsorApplicationForm({
         sponsor_tier_id: tier.id,
         sponsor_tier_name: tier.name,
         sponsor_tier_amount: tierAmount,
-        payment_status: paymentStatus === "demo_paid" ? "paid" : paymentStatus,
-        payment_demo_status: paymentStatus,
+        payment_status: paymentLabel,
+        payment_demo_status: isPodcast ? paymentStatus : paymentStatus,
         application_status: "submitted",
       };
       const result = await submitSponsorApplication(supabase, payload);
@@ -255,26 +362,80 @@ export default function SponsorApplicationForm({
               <span className="dsChoice__control" />
               <span className="dsChoice__text">We align with The Outreach Project values and understand sponsorship is subject to review and onboarding.</span>
             </label>
-            <label className="dsChoice dsChoice--checkbox">
-              <input type="checkbox" checked={form.agreed_demo_payment} onChange={(e) => setForm((f) => ({ ...f, agreed_demo_payment: e.target.checked }))} />
-              <span className="dsChoice__control" />
-              <span className="dsChoice__text">We acknowledge this is a demo payment flow placeholder until live billing is enabled.</span>
-            </label>
+            {isPodcast && podcastBillingLive ? (
+              <p className="sponsorSectionLead" style={{ marginTop: 8 }}>
+                Pay with Stripe in the next step (signed-in account required). No demo payment placeholder is used for podcast sponsors when billing is live.
+              </p>
+            ) : null}
+            {isPodcast && !podcastBillingLive ? (
+              <label className="dsChoice dsChoice--checkbox">
+                <input
+                  type="checkbox"
+                  checked={form.agreed_deferred_billing}
+                  onChange={(e) => setForm((f) => ({ ...f, agreed_deferred_billing: e.target.checked }))}
+                />
+                <span className="dsChoice__control" />
+                <span className="dsChoice__text">
+                  We understand live Stripe checkout for this tier is not configured yet; we are submitting for review and expect follow-up for payment and activation.
+                </span>
+              </label>
+            ) : null}
+            {!isPodcast ? (
+              <label className="dsChoice dsChoice--checkbox">
+                <input type="checkbox" checked={form.agreed_demo_payment} onChange={(e) => setForm((f) => ({ ...f, agreed_demo_payment: e.target.checked }))} />
+                <span className="dsChoice__control" />
+                <span className="dsChoice__text">We acknowledge this is a demo payment flow placeholder until live billing is enabled.</span>
+              </label>
+            ) : null}
           </div>
         </section>
 
         <section className="applySection">
-          <h4>Step 7 — Demo payment and submit</h4>
+          <h4>{isPodcast ? "Step 7 — Payment and submit" : "Step 7 — Demo payment and submit"}</h4>
           <p>
             Selected tier: <strong>{tier.name}</strong> — {formatUsd(tierAmount)}
           </p>
-          <SponsorPaymentDemo
-            amount={tierAmount}
-            paymentStatus={paymentStatus}
-            onBegin={beginDemoPayment}
-            onComplete={completeDemoPayment}
-            busy={paymentBusy}
-          />
+          {isPodcast && podcastBillingLive ? (
+            <div className="sponsorPaymentCard">
+              <h4>Stripe checkout</h4>
+              <p>Uses the same Stripe account as membership billing. You will return to the podcast page after payment.</p>
+              <p>
+                <strong>Status:</strong>{" "}
+                {paymentStatus === "stripe_paid" ? "Paid — ready to submit" : "Not paid yet"}
+              </p>
+              <button
+                type="button"
+                className="btnPrimary"
+                disabled={paymentBusy || paymentStatus === "stripe_paid"}
+                onClick={beginStripePodcastCheckout}
+              >
+                {paymentBusy ? "Redirecting…" : "Pay with Stripe"}
+              </button>
+            </div>
+          ) : null}
+          {isPodcast && !podcastBillingLive ? (
+            <div className="sponsorPaymentCard sponsorPaymentCard--notice">
+              <h4>Stripe env required for live podcast payments</h4>
+              <p>Set these in your deployment environment (Stripe Dashboard → Products → one-time Prices):</p>
+              <ul>
+                {(podcastMissingEnv.length ? podcastMissingEnv : ["STRIPE_PRICE_PODCAST_SPONSOR_COMMUNITY", "STRIPE_PRICE_PODCAST_SPONSOR_IMPACT", "STRIPE_PRICE_PODCAST_SPONSOR_FOUNDATIONAL"]).map((k) => (
+                  <li key={k}>
+                    <code>{k}</code>
+                  </li>
+                ))}
+              </ul>
+              <p>Also required: <code>STRIPE_SECRET_KEY</code>. Until all are set, you can still submit this application for review using the checkbox in Step 6.</p>
+            </div>
+          ) : null}
+          {!isPodcast ? (
+            <SponsorPaymentDemo
+              amount={tierAmount}
+              paymentStatus={paymentStatus}
+              onBegin={beginDemoPayment}
+              onComplete={completeDemoPayment}
+              busy={paymentBusy}
+            />
+          ) : null}
         </section>
 
         {error ? <p className="applyError">{error}</p> : null}
