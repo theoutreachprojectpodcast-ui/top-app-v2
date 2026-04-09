@@ -74,7 +74,7 @@ export function normalizeMembershipTierKey(value) {
   const v = String(value || "").toLowerCase().trim();
   if (v === "member" || v === "member_active" || v === "active") return MEMBERSHIP_TIER_KEYS.MEMBER;
   if (v === "sponsor") return MEMBERSHIP_TIER_KEYS.SPONSOR;
-  if (v === "none" || v === "guest" || v === "") return MEMBERSHIP_TIER_KEYS.NONE;
+  if (v === "none" || v === "guest" || v === "" || v === "free") return MEMBERSHIP_TIER_KEYS.NONE;
   if (v === "supporter" || v === "support") return MEMBERSHIP_TIER_KEYS.SUPPORT;
   if (v === "demo") return MEMBERSHIP_TIER_KEYS.MEMBER;
   return MEMBERSHIP_TIER_KEYS.SUPPORT;

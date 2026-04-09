@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AUTH_KEY, DEMO_ACCOUNT_KEY, FAV_KEY, PROFILE_KEY } from "@/lib/constants";
 import { AUTH_PROVIDER } from "@/lib/auth/providers";
 import {
@@ -14,6 +14,7 @@ import { defaultProfile } from "@/lib/utils";
 import {
   createInitialProfile,
   getMembershipMeta,
+  profileFromApiDto,
   profileFromLegacy,
   toLocalShape,
   toLocalStorageProfile,
@@ -29,10 +30,48 @@ import {
   upsertProfileByUserId,
 } from "@/features/profile/api";
 
+function mapLegacyMembershipToTier(status) {
+  const v = String(status || "").toLowerCase();
+  if (v === "member" || v === "demo") return "member";
+  if (v === "sponsor") return "sponsor";
+  if (v === "none" || v === "guest" || v === "") return "free";
+  if (v === "supporter" || v === "support") return "support";
+  return "support";
+}
+
+function profileToApiPatch(p) {
+  return {
+    firstName: p.firstName,
+    lastName: p.lastName,
+    displayName: p.displayName || `${p.firstName || ""} ${p.lastName || ""}`.trim(),
+    email: p.email,
+    bio: p.bio,
+    banner: p.banner,
+    theme: p.theme,
+    avatarUrl: p.avatarUrl,
+    membershipTier: p.membershipTier || mapLegacyMembershipToTier(p.membershipStatus),
+    membershipBillingStatus: p.membershipBillingStatus || "none",
+    identityRole: p.identityRole,
+    missionStatement: p.missionStatement,
+    organizationAffiliation: p.organizationAffiliation,
+    serviceBackground: p.serviceBackground,
+    city: p.city,
+    state: p.state,
+    causes: p.causes,
+    skills: p.skills,
+    volunteerInterests: p.volunteerInterests,
+    supportInterests: p.supportInterests,
+    contributionSummary: p.contributionSummary,
+  };
+}
+
 export function useProfileData(supabase) {
   const hydratedRef = useRef(false);
   const syncingRef = useRef(false);
-  const [userId, setUserId] = useState("demo-user");
+  const workosRef = useRef(false);
+  const [userId, setUserId] = useState(() =>
+    typeof window !== "undefined" ? getOrCreateDemoUserId() : "demo-user",
+  );
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authProvider, setAuthProvider] = useState(null);
@@ -41,73 +80,153 @@ export function useProfileData(supabase) {
   const [profile, setProfile] = useState(() => createInitialProfile());
   const [favoriteEins, setFavoriteEins] = useState([]);
   const [savedOrganizations, setSavedOrganizations] = useState([]);
+  const [sessionKind, setSessionKind] = useState("none");
+  const [authBackend, setAuthBackend] = useState({ workos: false, stripe: false, supabaseServiceRole: false });
 
-  useEffect(() => {
-    const id = getOrCreateDemoUserId();
-    setUserId(id);
-  }, []);
-
-  useEffect(() => {
-    const legacy = loadJson(PROFILE_KEY, defaultProfile());
-    const storedFavs = loadJson(FAV_KEY, []);
-    const authState = loadJson(AUTH_KEY, { isAuthenticated: false });
-    const authenticated = !!authState?.isAuthenticated;
-    const storedProvider = authState?.provider || null;
-    queueMicrotask(() => {
-      setIsAuthenticated(authenticated);
-      setAuthProvider(authenticated ? storedProvider || AUTH_PROVIDER.DEMO_EMAIL : null);
-      if (!authenticated) {
-        setProfile(createInitialProfile());
-        setFavoriteEins([]);
-        setLoadingProfile(false);
-        hydratedRef.current = true;
-        return;
+  const refreshWorkOSProfile = useCallback(async () => {
+    if (!workosRef.current) return;
+    try {
+      const res = await fetch("/api/me", { credentials: "include" });
+      const data = await res.json();
+      if (data.authenticated && data.profile) {
+        setProfile(profileFromApiDto(data.profile));
+        setProfileSource("cloud");
       }
-      setProfile(profileFromLegacy(legacy || {}));
-      const rawFavs = Array.isArray(storedFavs) ? storedFavs : [];
-      setFavoriteEins([...new Set(rawFavs.map((e) => normalizeEinDigits(e)).filter((e) => e.length === 9))]);
-    });
+    } catch {
+      setProfileError("Could not refresh your profile.");
+    }
   }, []);
 
   useEffect(() => {
-    async function bootstrap() {
+    let cancelled = false;
+    async function init() {
       setLoadingProfile(true);
       setProfileError("");
       try {
-        if (supabase) {
-          const dbProfile = await fetchProfileByUserId(supabase, userId);
-          if (dbProfile) {
-            setProfile((prev) => ({ ...prev, ...toLocalShape(dbProfile) }));
-            setProfileSource("supabase");
+        const [statusRes, meRes] = await Promise.all([
+          fetch("/api/auth/status"),
+          fetch("/api/me", { credentials: "include" }),
+        ]);
+        const status = await statusRes.json();
+        const me = await meRes.json();
+        if (cancelled) return;
+        setAuthBackend({
+          workos: !!status.workos,
+          stripe: !!status.stripe,
+          supabaseServiceRole: !!status.supabaseServiceRole,
+        });
+
+        if (me.authenticated) {
+          workosRef.current = true;
+          setSessionKind("workos");
+          setIsAuthenticated(true);
+          setAuthProvider(AUTH_PROVIDER.WORKOS);
+          const dto =
+            me.profile ||
+            {
+              firstName: me.user?.firstName || "",
+              lastName: me.user?.lastName || "",
+              email: me.user?.email || "",
+              membershipTier: "free",
+              membershipBillingStatus: "none",
+              onboardingCompleted: false,
+            };
+          setProfile(profileFromApiDto(dto));
+          setProfileSource("cloud");
+          const favRes = await fetch("/api/me/saved-orgs", { credentials: "include" });
+          const favJson = await favRes.json().catch(() => ({}));
+          if (Array.isArray(favJson.eins)) {
+            setFavoriteEins(favJson.eins);
           }
-          const dbEins = await fetchSavedOrgEinList(supabase, userId);
-          if (dbEins.length) setFavoriteEins(dbEins);
+          hydratedRef.current = true;
+          setLoadingProfile(false);
+          return;
         }
+
+        workosRef.current = false;
+        setSessionKind("demo");
+        const legacy = loadJson(PROFILE_KEY, defaultProfile());
+        const storedFavs = loadJson(FAV_KEY, []);
+        const authState = loadJson(AUTH_KEY, { isAuthenticated: false });
+        const authenticated = !!authState?.isAuthenticated;
+        const storedProvider = authState?.provider || null;
+        setIsAuthenticated(authenticated);
+        setAuthProvider(authenticated ? storedProvider || AUTH_PROVIDER.DEMO_EMAIL : null);
+        if (!authenticated) {
+          setProfile(createInitialProfile());
+          setFavoriteEins([]);
+          hydratedRef.current = true;
+          setLoadingProfile(false);
+          return;
+        }
+        setProfile(profileFromLegacy(legacy || {}));
+        const rawFavs = Array.isArray(storedFavs) ? storedFavs : [];
+        setFavoriteEins([...new Set(rawFavs.map((e) => normalizeEinDigits(e)).filter((e) => e.length === 9))]);
+
+        if (supabase) {
+          try {
+            const dbProfile = await fetchProfileByUserId(supabase, userId);
+            if (dbProfile) {
+              setProfile((prev) => ({ ...prev, ...toLocalShape(dbProfile) }));
+              setProfileSource("supabase");
+            }
+            const dbEins = await fetchSavedOrgEinList(supabase, userId);
+            if (dbEins.length) setFavoriteEins(dbEins);
+          } catch {
+            setProfileError("Profile could not be fully loaded from Supabase.");
+          }
+        }
+        hydratedRef.current = true;
+        setLoadingProfile(false);
+      } catch {
+        if (!cancelled) {
+          setProfileError("Could not initialize session.");
+          hydratedRef.current = true;
+          setLoadingProfile(false);
+        }
+      }
+    }
+    init();
+    return () => {
+      cancelled = true;
+    };
+  }, [supabase, userId]);
+
+  useEffect(() => {
+    async function bootstrapDemoCloud() {
+      if (!hydratedRef.current || workosRef.current) return;
+      if (sessionKind !== "demo" || !isAuthenticated || !supabase || !userId) return;
+      setLoadingProfile(true);
+      setProfileError("");
+      try {
+        const dbProfile = await fetchProfileByUserId(supabase, userId);
+        if (dbProfile) {
+          setProfile((prev) => ({ ...prev, ...toLocalShape(dbProfile) }));
+          setProfileSource("supabase");
+        }
+        const dbEins = await fetchSavedOrgEinList(supabase, userId);
+        if (dbEins.length) setFavoriteEins(dbEins);
       } catch {
         setProfileError("Profile could not be fully loaded from Supabase.");
       } finally {
-        hydratedRef.current = true;
         setLoadingProfile(false);
       }
     }
-    if (userId && isAuthenticated) bootstrap();
-    if (!isAuthenticated) {
-      hydratedRef.current = true;
-      setLoadingProfile(false);
-    }
-  }, [supabase, userId, isAuthenticated]);
+    bootstrapDemoCloud();
+  }, [sessionKind, isAuthenticated, supabase, userId]);
 
   useEffect(() => {
-    if (!hydratedRef.current) return;
+    if (!hydratedRef.current || workosRef.current) return;
     saveJson(PROFILE_KEY, toLocalStorageProfile(profile));
   }, [profile]);
 
   useEffect(() => {
-    if (!hydratedRef.current) return;
+    if (!hydratedRef.current || workosRef.current) return;
     saveJson(FAV_KEY, favoriteEins.slice(0, 500));
   }, [favoriteEins]);
 
   useEffect(() => {
+    if (workosRef.current) return;
     if (isAuthenticated) {
       saveJson(AUTH_KEY, {
         isAuthenticated: true,
@@ -121,8 +240,11 @@ export function useProfileData(supabase) {
 
   useEffect(() => {
     async function loadSavedOrgCards() {
-      if (!supabase) return;
       if (!isAuthenticated) {
+        setSavedOrganizations([]);
+        return;
+      }
+      if (!supabase || !favoriteEins.length) {
         setSavedOrganizations([]);
         return;
       }
@@ -138,7 +260,27 @@ export function useProfileData(supabase) {
 
   async function persistProfile(next) {
     setProfile(next);
-    if (!supabase || !isAuthenticated) return;
+    if (!isAuthenticated) return;
+    if (workosRef.current) {
+      try {
+        const res = await fetch("/api/me/profile", {
+          method: "PATCH",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(profileToApiPatch(next)),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          setProfileError(data.message || "Profile could not be saved to the server.");
+          return;
+        }
+        if (data.profile) setProfile(profileFromApiDto(data.profile));
+      } catch {
+        setProfileError("Profile could not be saved to the server.");
+      }
+      return;
+    }
+    if (!supabase) return;
     try {
       await upsertProfileByUserId(supabase, userId, next);
     } catch {
@@ -148,13 +290,39 @@ export function useProfileData(supabase) {
 
   async function setMembershipStatus(status) {
     const normalized = String(status || "supporter").toLowerCase();
-    await persistProfile({ ...profile, membershipStatus: normalized });
+    const tier = mapLegacyMembershipToTier(normalized);
+    const billing = tier === "free" ? "none" : "none";
+    await persistProfile({
+      ...profile,
+      membershipStatus: normalized,
+      membershipTier: tier,
+      membershipBillingStatus: billing,
+    });
   }
 
   async function setFavoriteEinList(nextEins) {
     const normalized = [...new Set((nextEins || []).map((e) => normalizeEinDigits(e)).filter((e) => e.length === 9))];
     setFavoriteEins(normalized);
-    if (!supabase || syncingRef.current || !isAuthenticated) return;
+    if (!isAuthenticated) return;
+    if (workosRef.current) {
+      if (syncingRef.current) return;
+      syncingRef.current = true;
+      try {
+        const res = await fetch("/api/me/saved-orgs", {
+          method: "PUT",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ eins: normalized }),
+        });
+        if (!res.ok) setProfileError("Saved organizations could not sync to the server.");
+      } catch {
+        setProfileError("Saved organizations could not sync to the server.");
+      } finally {
+        syncingRef.current = false;
+      }
+      return;
+    }
+    if (!supabase || syncingRef.current) return;
     syncingRef.current = true;
     try {
       await replaceSavedOrgEinList(supabase, userId, normalized);
@@ -166,6 +334,10 @@ export function useProfileData(supabase) {
   }
 
   async function resetDemo() {
+    if (workosRef.current && typeof window !== "undefined") {
+      window.location.assign("/sign-out?returnTo=/");
+      return;
+    }
     const cloudUserId = userId;
     const localKeysToClear = [
       PROFILE_KEY,
@@ -207,9 +379,11 @@ export function useProfileData(supabase) {
     setProfileError("");
     setIsAuthenticated(false);
     setAuthProvider(null);
+    setSessionKind("demo");
     clearDemoAccount();
     const nextUserId = typeof window !== "undefined" ? getOrCreateDemoUserId() : "demo-user";
     setUserId(nextUserId);
+    workosRef.current = false;
     if (supabase && cloudUserId) {
       try {
         await replaceSavedOrgEinList(supabase, cloudUserId, []);
@@ -233,6 +407,8 @@ export function useProfileData(supabase) {
       lastName: safeLast,
       email: safeEmail,
       membershipStatus: "support",
+      membershipTier: "support",
+      membershipBillingStatus: "none",
       banner: "Hi, I’m Andy",
       avatarUrl: safeAvatar,
     };
@@ -248,10 +424,6 @@ export function useProfileData(supabase) {
     return { ok: true };
   }
 
-  /**
-   * Demo email/password sign-in. Swap this body for `supabase.auth.signInWithPassword`
-   * (and OAuth) when wiring real auth; keep the same return shape for callers.
-   */
   async function signInWithCredentials({ email = "", password = "" } = {}) {
     const safeEmail = String(email || "").trim();
     const safePassword = String(password || "").trim();
@@ -268,6 +440,7 @@ export function useProfileData(supabase) {
       setFavoriteEins([...new Set(rawFavs.map((e) => normalizeEinDigits(e)).filter((e) => e.length === 9))]);
       setIsAuthenticated(true);
       setAuthProvider(AUTH_PROVIDER.DEMO_EMAIL);
+      setSessionKind("demo");
     }
 
     if (acct) {
@@ -289,6 +462,7 @@ export function useProfileData(supabase) {
       setFavoriteEins([...new Set(rawFavs.map((e) => normalizeEinDigits(e)).filter((e) => e.length === 9))]);
       setIsAuthenticated(true);
       setAuthProvider(AUTH_PROVIDER.DEMO_EMAIL);
+      setSessionKind("demo");
       return { ok: true };
     }
 
@@ -296,11 +470,31 @@ export function useProfileData(supabase) {
   }
 
   function signOut() {
+    if (workosRef.current && typeof window !== "undefined") {
+      window.location.assign("/sign-out?returnTo=/");
+      return;
+    }
     setIsAuthenticated(false);
     setAuthProvider(null);
     setProfile(createInitialProfile());
     setFavoriteEins([]);
     setSavedOrganizations([]);
+    setSessionKind("none");
+  }
+
+  async function uploadAvatarFile(file) {
+    if (!file || !workosRef.current) return { ok: false, message: "Avatar upload requires a signed-in cloud account." };
+    const fd = new FormData();
+    fd.append("file", file);
+    try {
+      const res = await fetch("/api/me/avatar", { method: "POST", credentials: "include", body: fd });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) return { ok: false, message: data.message || data.error || "Upload failed." };
+      if (data.profile) setProfile(profileFromApiDto(data.profile));
+      return { ok: true };
+    } catch {
+      return { ok: false, message: "Upload failed." };
+    }
   }
 
   function toggleFavoriteEin(ein) {
@@ -311,12 +505,14 @@ export function useProfileData(supabase) {
   }
 
   const fullName = useMemo(() => `${profile.firstName} ${profile.lastName}`.trim(), [profile.firstName, profile.lastName]);
-  const greetingName = fullName || "Supporter";
+  const greetingName = fullName || profile.displayName || "Supporter";
   const membership = useMemo(() => getMembershipMeta(profile.membershipStatus), [profile.membershipStatus]);
   const isMember = membership.isMember;
 
   return {
     userId,
+    sessionKind,
+    authBackend,
     isAuthenticated,
     loadingProfile,
     profileError,
@@ -337,5 +533,7 @@ export function useProfileData(supabase) {
     createAccount,
     signInWithCredentials,
     signOut,
+    refreshWorkOSProfile,
+    uploadAvatarFile,
   };
 }

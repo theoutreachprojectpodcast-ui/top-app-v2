@@ -56,7 +56,14 @@ export function profileFromLegacy(localProfile = {}) {
 }
 
 export function createInitialProfile() {
-  return profileFromLegacy(defaultProfile());
+  return {
+    ...profileFromLegacy(defaultProfile()),
+    displayName: "",
+    bio: "",
+    membershipTier: "free",
+    membershipBillingStatus: "none",
+    onboardingCompleted: true,
+  };
 }
 
 export function toLocalStorageProfile(profile) {
@@ -86,6 +93,41 @@ export function toLocalShape(profile) {
     avatarUrl: profile.avatarUrl || "",
     theme: profile.theme || "clean",
     savedOrgEins: Array.isArray(profile.savedOrgEins) ? profile.savedOrgEins : [],
+  };
+}
+
+/**
+ * Merge server profile DTO (from /api/me) into full client profile shape.
+ * @param {Record<string, unknown>} dto
+ */
+export function profileFromApiDto(dto = {}) {
+  const tier = String(dto.membershipTier || "free").toLowerCase();
+  const legacyStatus = normalizeMembershipStatus(tier === "free" ? "none" : tier);
+  return {
+    ...createInitialProfile(),
+    firstName: String(dto.firstName || "").trim(),
+    lastName: String(dto.lastName || "").trim(),
+    email: String(dto.email || "").trim(),
+    displayName: String(dto.displayName || "").trim(),
+    bio: String(dto.bio || "").trim(),
+    avatarUrl: String(dto.avatarUrl || "").trim(),
+    membershipTier: tier,
+    membershipBillingStatus: String(dto.membershipBillingStatus || "none").toLowerCase(),
+    membershipStatus: legacyStatus,
+    onboardingCompleted: !!dto.onboardingCompleted,
+    banner: String(dto.banner || "Hi, I’m Andy").trim(),
+    theme: String(dto.theme || "clean").trim() || "clean",
+    identityRole: String(dto.identityRole || "").trim(),
+    missionStatement: String(dto.missionStatement || "").trim(),
+    organizationAffiliation: String(dto.organizationAffiliation || "").trim(),
+    serviceBackground: String(dto.serviceBackground || "").trim(),
+    city: String(dto.city || "").trim(),
+    state: String(dto.state || "").trim(),
+    causes: String(dto.causes || "").trim(),
+    skills: String(dto.skills || "").trim(),
+    volunteerInterests: String(dto.volunteerInterests || "").trim(),
+    supportInterests: String(dto.supportInterests || "").trim(),
+    contributionSummary: String(dto.contributionSummary || "").trim(),
   };
 }
 

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import HeaderInner from "@/components/layout/HeaderInner";
 import FooterInner from "@/components/layout/FooterInner";
 import Avatar from "@/components/shared/Avatar";
@@ -45,7 +46,9 @@ function AppIcon({ name }) {
   return <IconWrap path={icons[name] || icons.search} />;
 }
 
-export default function TopApp({ initialNav = "home" }) {
+function TopAppInner({ initialNav = "home" }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const sb = useMemo(() => getSupabaseClient(), []);
   const [nav, setNav] = useState(initialNav);
   const [overlay, setOverlay] = useState(null);
@@ -64,6 +67,21 @@ export default function TopApp({ initialNav = "home" }) {
   }, [nav]);
 
   useEffect(() => {
+    if (searchParams.get("signin") === "1") {
+      setAuthMode("signin");
+      setOverlay("signin");
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (sessionKind !== "workos" || !isAuthenticated) return;
+    if (profile?.onboardingCompleted) return;
+    const path = typeof window !== "undefined" ? window.location.pathname : "";
+    if (path.startsWith("/onboarding")) return;
+    router.replace("/onboarding");
+  }, [sessionKind, isAuthenticated, profile?.onboardingCompleted, router]);
+
+  useEffect(() => {
     if (overlay !== "signin") {
       setSignupAvatarDataUrl("");
       return;
@@ -74,7 +92,8 @@ export default function TopApp({ initialNav = "home" }) {
   }, [overlay, authMode]);
 
   const {
-    userId,
+    sessionKind,
+    authBackend,
     isAuthenticated,
     loadingProfile,
     profileError,
@@ -92,6 +111,8 @@ export default function TopApp({ initialNav = "home" }) {
     createAccount,
     signInWithCredentials,
     signOut,
+    uploadAvatarFile,
+    refreshWorkOSProfile,
   } = useProfileData(sb);
   const { filters, setFilters, results, status, meta, page, canGoNext, runSearch, clearSearch } = useDirectorySearch(sb);
   const { trusted, trustedStatus, loadTrusted } = useTrustedResources(sb);
@@ -135,6 +156,17 @@ export default function TopApp({ initialNav = "home" }) {
   async function onProfileImageSelected(file) {
     if (!file) return;
     if (!String(file.type || "").startsWith("image/")) return;
+    if (sessionKind === "workos" && uploadAvatarFile) {
+      const result = await uploadAvatarFile(file);
+      if (!result?.ok) {
+        setAuthError(result?.message || "Could not upload photo.");
+        return;
+      }
+      await refreshWorkOSProfile?.();
+      setEditDraft((d) => ({ ...d, avatarUrl: profile.avatarUrl }));
+      setOverlay(null);
+      return;
+    }
     try {
       const dataUrl = await fileToCompressedDataUrl(file);
       if (!dataUrl) return;
@@ -507,7 +539,9 @@ export default function TopApp({ initialNav = "home" }) {
             firstName={profile.firstName}
             lastName={profile.lastName}
             email={profile.email}
-            userId={userId}
+            displayName={profile.displayName}
+            membershipTier={profile.membershipTier || profile.membershipStatus}
+            membershipBillingStatus={profile.membershipBillingStatus}
             profileSource={profileSource}
           />
           <MembershipUpgradeCard
@@ -644,10 +678,37 @@ export default function TopApp({ initialNav = "home" }) {
           <div className="modalCard demoAuthModal" onClick={(e) => e.stopPropagation()}>
             <h3>{authMode === "signup" ? "Create account" : "Sign in"}</h3>
             <p className="demoAuthModal__lede">
-              {authMode === "signup"
-                ? "Start with a simple supporter account. You can upgrade to Member anytime."
-                : "Demo sign-in uses email and password stored on this device only. Replace this modal with Supabase Auth when you are ready for production."}
+              {authBackend.workos
+                ? authMode === "signup"
+                  ? "Create your account with WorkOS (email or Google, depending on what your administrator enabled)."
+                  : "Sign in securely with WorkOS. Password reset and additional providers are managed in the hosted auth experience."
+                : authMode === "signup"
+                  ? "Start with a simple local demo account. Production sign-in is not connected yet."
+                  : "Demo sign-in uses email and password stored on this device only."}
             </p>
+            {authBackend.workos ? (
+              <div className="demoAuthModal__providers">
+                <p className="demoAuthModal__providersLabel">WorkOS (production path)</p>
+                <div className="row wrap demoAuthModal__providerRow">
+                  <a className="btnPrimary" href="/api/auth/workos/signin?returnTo=/">
+                    Sign in
+                  </a>
+                  <a className="btnSoft" href="/api/auth/workos/signup?returnTo=/">
+                    Create account
+                  </a>
+                  <a className="btnSoft" href="/api/auth/workos/signin?returnTo=/">
+                    Continue with Google
+                  </a>
+                </div>
+                <p className="profilePhotoUploadHint" style={{ marginTop: 8 }}>
+                  Forgot your password? Use the reset link on the WorkOS sign-in screen.
+                </p>
+              </div>
+            ) : (
+              <p className="applyStatus" style={{ marginTop: 0 }}>
+                Authentication is not fully connected — using development-safe local demo mode. Add WorkOS environment variables to enable hosted sign-in.
+              </p>
+            )}
             {authMode === "signup" && (
               <>
                 <div className="demoAuthModal__avatarBlock">
@@ -683,17 +744,16 @@ export default function TopApp({ initialNav = "home" }) {
               type="password"
               autoComplete={authMode === "signup" ? "new-password" : "current-password"}
             />
-            <div className="demoAuthModal__providers" aria-label="More sign-in options (coming soon)">
-              <p className="demoAuthModal__providersLabel">More options (coming soon)</p>
-              <div className="row wrap demoAuthModal__providerRow">
-                <button type="button" className="btnSoft" disabled title="Connect Google OAuth via Supabase Auth">
-                  Continue with Google
-                </button>
-                <button type="button" className="btnSoft" disabled title="Add additional OAuth providers the same way">
-                  Other social login
-                </button>
+            {!authBackend.workos ? (
+              <div className="demoAuthModal__providers" aria-label="Local demo sign-in">
+                <p className="demoAuthModal__providersLabel">Local demo only</p>
+                <div className="row wrap demoAuthModal__providerRow">
+                  <span className="profilePhotoUploadHint">Google and other social login activate when WorkOS is configured.</span>
+                </div>
               </div>
-            </div>
+            ) : (
+              <hr className="sponsorAdminDivider" style={{ margin: "12px 0" }} aria-hidden="true" />
+            )}
             {authError ? <p className="applyError">{authError}</p> : null}
             {authStatus ? <p className="applyStatus">{authStatus}</p> : null}
             <div className="row wrap">
@@ -714,5 +774,21 @@ export default function TopApp({ initialNav = "home" }) {
         />
       )}
     </main>
+  );
+}
+
+function TopAppFallback() {
+  return (
+    <main className="topApp theme-clean">
+      <p style={{ padding: 24 }}>Loading…</p>
+    </main>
+  );
+}
+
+export default function TopApp(props) {
+  return (
+    <Suspense fallback={<TopAppFallback />}>
+      <TopAppInner {...props} />
+    </Suspense>
   );
 }

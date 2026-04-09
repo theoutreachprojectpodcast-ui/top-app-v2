@@ -1,0 +1,74 @@
+import { withAuth } from "@workos-inc/authkit-nextjs";
+import Stripe from "stripe";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
+import { appBaseUrl, priceIdForTier, stripeSecretConfigured } from "@/lib/billing/stripeConfig";
+
+const PAID = new Set(["support", "member", "sponsor"]);
+
+export async function POST(request) {
+  if (!stripeSecretConfigured()) {
+    return Response.json({ error: "billing_not_configured" }, { status: 503 });
+  }
+
+  const auth = await withAuth();
+  if (!auth.user) {
+    return Response.json({ error: "unauthorized" }, { status: 401 });
+  }
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json({ error: "invalid_json" }, { status: 400 });
+  }
+
+  const tier = String(body.tier || "").toLowerCase();
+  if (!PAID.has(tier)) {
+    return Response.json({ error: "invalid_tier" }, { status: 400 });
+  }
+
+  const priceId = priceIdForTier(tier);
+  if (!priceId) {
+    return Response.json({ error: "price_not_configured", tier }, { status: 503 });
+  }
+
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+  const base = appBaseUrl();
+  const admin = createSupabaseAdminClient();
+  let customerId = null;
+  if (admin) {
+    const row = await getProfileRowByWorkOSId(admin, auth.user.id);
+    customerId = row?.stripe_customer_id || null;
+  }
+
+  try {
+    const session = await stripe.checkout.sessions.create({
+      mode: "subscription",
+      customer: customerId || undefined,
+      customer_email: customerId ? undefined : auth.user.email || undefined,
+      client_reference_id: auth.user.id,
+      line_items: [{ price: priceId, quantity: 1 }],
+      success_url: `${base}/onboarding?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${base}/onboarding?checkout=cancel`,
+      metadata: {
+        workos_user_id: auth.user.id,
+        membership_tier: tier,
+      },
+      subscription_data: {
+        metadata: {
+          workos_user_id: auth.user.id,
+          membership_tier: tier,
+        },
+      },
+    });
+
+    if (session.url) {
+      return Response.json({ url: session.url });
+    }
+    return Response.json({ error: "no_checkout_url" }, { status: 500 });
+  } catch (e) {
+    console.error("[torp] Stripe checkout", e);
+    return Response.json({ error: "stripe_error", message: e.message }, { status: 500 });
+  }
+}

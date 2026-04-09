@@ -1,5 +1,19 @@
-export default function AccountInfoCard({ firstName, lastName, email, userId, profileSource = "local" }) {
-  const name = [firstName, lastName].filter(Boolean).join(" ").trim();
+function sourceLabel(source) {
+  if (source === "cloud") return "Cloud (WorkOS + Supabase)";
+  if (source === "supabase") return "Supabase (demo sync)";
+  return "This device only";
+}
+
+export default function AccountInfoCard({
+  firstName,
+  lastName,
+  email,
+  profileSource = "local",
+  membershipTier = "",
+  membershipBillingStatus = "",
+  displayName = "",
+}) {
+  const name = [firstName, lastName].filter(Boolean).join(" ").trim() || displayName;
   return (
     <div className="card">
       <h3>Account</h3>
@@ -13,15 +27,20 @@ export default function AccountInfoCard({ firstName, lastName, email, userId, pr
         <br />
         {email || "—"}
       </p>
-      <p style={{ marginBottom: 0 }}>
-        <strong>User ID</strong>
+      <p>
+        <strong>Membership tier</strong>
         <br />
-        <span style={{ wordBreak: "break-all", fontSize: "0.9em" }}>{userId || "—"}</span>
+        {membershipTier ? String(membershipTier) : "—"}
+      </p>
+      <p>
+        <strong>Billing status</strong>
+        <br />
+        {membershipBillingStatus ? String(membershipBillingStatus) : "—"}
       </p>
       <p style={{ marginBottom: 0 }}>
         <strong>Profile data source</strong>
         <br />
-        {profileSource === "supabase" ? "Supabase" : "Local fallback"}
+        {sourceLabel(profileSource)}
       </p>
     </div>
   );

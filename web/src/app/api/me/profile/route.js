@@ -1,0 +1,102 @@
+import { withAuth } from "@workos-inc/authkit-nextjs";
+import { createSupabaseAdminClient, profileTableName } from "@/lib/supabase/admin";
+import { getProfileRowByWorkOSId, profileRowToClientDto } from "@/lib/profile/serverProfile";
+
+const TIER_KEYS = new Set(["free", "support", "member", "sponsor"]);
+const STATUS_KEYS = new Set(["none", "pending", "active", "past_due", "canceled", "incomplete"]);
+
+const META_KEYS = new Set([
+  "identityRole",
+  "missionStatement",
+  "organizationAffiliation",
+  "serviceBackground",
+  "city",
+  "state",
+  "causes",
+  "skills",
+  "volunteerInterests",
+  "supportInterests",
+  "contributionSummary",
+]);
+
+export async function PATCH(request) {
+  const auth = await withAuth();
+  if (!auth.user) {
+    return Response.json({ error: "unauthorized" }, { status: 401 });
+  }
+  const admin = createSupabaseAdminClient();
+  if (!admin) {
+    return Response.json({ error: "server_storage_unavailable" }, { status: 503 });
+  }
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json({ error: "invalid_json" }, { status: 400 });
+  }
+
+  const existing = await getProfileRowByWorkOSId(admin, auth.user.id);
+  const prevMeta =
+    existing?.metadata && typeof existing.metadata === "object" && !Array.isArray(existing.metadata)
+      ? { ...existing.metadata }
+      : {};
+
+  for (const k of META_KEYS) {
+    if (Object.prototype.hasOwnProperty.call(body, k)) {
+      prevMeta[k] = String(body[k] ?? "").trim();
+    }
+  }
+
+  const row = {
+    updated_at: new Date().toISOString(),
+    metadata: prevMeta,
+  };
+
+  if (typeof body.firstName === "string") row.first_name = body.firstName.trim();
+  if (typeof body.lastName === "string") row.last_name = body.lastName.trim();
+  if (typeof body.displayName === "string") row.display_name = body.displayName.trim();
+  if (typeof body.email === "string") row.email = body.email.trim();
+  if (typeof body.bio === "string") row.bio = body.bio.trim();
+  if (typeof body.banner === "string") row.banner = body.banner.trim();
+  if (typeof body.theme === "string") row.theme = body.theme.trim();
+  if (typeof body.avatarUrl === "string") row.profile_photo_url = body.avatarUrl.trim();
+  if (typeof body.membershipTier === "string") {
+    const t = body.membershipTier.toLowerCase();
+    if (TIER_KEYS.has(t)) row.membership_tier = t;
+  }
+  if (typeof body.membershipBillingStatus === "string") {
+    const s = body.membershipBillingStatus.toLowerCase();
+    if (STATUS_KEYS.has(s)) row.membership_status = s;
+  }
+
+  if (!existing) {
+    const insertRow = {
+      workos_user_id: auth.user.id,
+      email: auth.user.email || row.email || null,
+      first_name: row.first_name ?? auth.user.firstName ?? "",
+      last_name: row.last_name ?? auth.user.lastName ?? "",
+      display_name:
+        row.display_name ??
+        ([auth.user.firstName, auth.user.lastName].filter(Boolean).join(" ").trim() ||
+          auth.user.email ||
+          "Member"),
+      membership_tier: row.membership_tier ?? "free",
+      membership_status: row.membership_status ?? "none",
+      onboarding_completed: false,
+      ...row,
+    };
+    const { error: insErr } = await admin.from(profileTableName()).insert(insertRow);
+    if (insErr) {
+      return Response.json({ error: "insert_failed", message: insErr.message }, { status: 500 });
+    }
+  } else {
+    const { error } = await admin.from(profileTableName()).update(row).eq("workos_user_id", auth.user.id);
+    if (error) {
+      return Response.json({ error: "update_failed", message: error.message }, { status: 500 });
+    }
+  }
+
+  const next = await getProfileRowByWorkOSId(admin, auth.user.id);
+  return Response.json({ profile: profileRowToClientDto(next) });
+}
