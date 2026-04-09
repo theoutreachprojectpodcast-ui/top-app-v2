@@ -1,10 +1,8 @@
-import AppShell from "@/components/layout/AppShell";
-
 const SHIELD = "M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6z";
 
 export default function TrustedPage() {
   return (
-    <AppShell activeNav="trusted">
+    <div className="sponsorPage sponsorLanding">
       <section className="panel">
         <div className="ds-page-intro" style={{ borderBottom: "none", marginBottom: 0, paddingBottom: 0 }}>
           <h2 style={{ margin: 0, display: "flex", alignItems: "center", gap: "12px" }}>
@@ -24,6 +22,6 @@ export default function TrustedPage() {
           This route is kept for navigation parity while we align multi-page flows with the main experience.
         </p>
       </section>
-    </AppShell>
+    </div>
   );
 }

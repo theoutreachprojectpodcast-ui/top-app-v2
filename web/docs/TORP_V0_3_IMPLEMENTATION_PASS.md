@@ -32,11 +32,20 @@
 - **Account tiers** (Support / Pro / Sponsor Membership): Stripe checkout via `/api/billing/checkout` from onboarding (`OnboardingFlow`).
 - **Mission partner packages** (Supporting / Growth / Strategic): application + review in sponsor modals; clarified in `MissionPartnerPackagesModal` copy.
 
-## Partners (`/sponsors`) layout
+## Site chrome (home-matched header + footer)
 
-- `app/sponsors/layout.js` uses `AppShell` with `usePrimaryTopbarChrome`, `useFooterDockChrome`, `showSiteFooter`, and `useTopAppStructure` so content clears the fixed logo and footer matches the glass dock pattern.
-- Styles: `src/features/sponsors/styles/sponsors-shell.css`.
-- App-wide footer nav includes **Partners** → `/sponsors` (`AppShell.js`).
+- **Canonical shell** for non–podcast hub routes: `AppShell` with `usePrimaryTopbarChrome`, `useFooterDockChrome`, `showSiteFooter`, `useTopAppStructure`, and `shellClassName="appShell--siteChrome"`.
+- **Layouts**: `app/sponsors/layout.js`, `app/trusted/layout.js`, `app/contact/layout.js` import `src/styles/site-route-shell.css` (spacing, footer glass dock, z-index for sponsor sections).
+- **Pages** under those routes must **not** nest a second `AppShell` — the layout owns the shell; pages render content only (e.g. `trusted/page.js`, `contact/page.js`).
+- App-wide footer nav includes **Partners** → `/sponsors` (`AppShell.js`). **Podcast** routes keep their own layouts/branding.
+
+## Shared listing cards (Trusted Resources + Sponsors)
+
+- **Styles**: `src/styles/torp-listing-cards.css` (imported after `top-app.css` in `app/globals.css`).
+- **Trusted / directory cards**: `NonprofitCard.jsx` uses `resultCard--listingHero` with a top **hero strip** — photo from `heroImageUrl` or `thumbnailUrl` when set; otherwise a **category gradient** from `data-torp-listing-category` + `--np-*` tokens (same keys as `categoryMapper`).
+- **Featured sponsor cards**: `FeaturedSponsorCard.jsx` adds `torpListingCard` + `torpListingCardHero` on the existing premium shell; **DB** `background_image_url` when present; otherwise a **deterministic warm-tone placeholder** (`torpListingCardHero--sponsorTone-{gold|copper|…}`), not a random stock pick.
+- **Logo framing**: sponsor logo shell aligned to **64px** to match nonprofit listing plates (`torp-listing-cards.css` overrides `sponsorPremiumLogoShell`).
+- **Manual review**: enrich `hero_image_url` / `background_image_url` in Supabase when moderators approve imagery; keep logo discovery behind `/api/admin/sponsors/logo-candidates` as documented below.
 
 ## Sponsor applications & invites
 

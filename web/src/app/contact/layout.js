@@ -1,10 +1,10 @@
 import AppShell from "@/components/layout/AppShell";
 import "@/styles/site-route-shell.css";
 
-export default function SponsorsLayout({ children }) {
+export default function ContactLayout({ children }) {
   return (
     <AppShell
-      activeNav="sponsors"
+      activeNav="contact"
       shellClassName="appShell--siteChrome"
       usePrimaryTopbarChrome
       useFooterDockChrome

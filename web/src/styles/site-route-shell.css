@@ -1,9 +1,11 @@
-/* Partner / sponsors hub: match home top chrome + shell spacing + footer glass dock */
+/* Non–podcast routes that should match home TopApp chrome + shell spacing + footer glass dock */
 
+.appShell--siteChrome.appShell--subpage,
 .appShell--sponsors.appShell--subpage {
   padding-bottom: 0;
 }
 
+.appShell--siteChrome.appShell--subpage .shell,
 .appShell--sponsors.appShell--subpage .shell {
   width: min(var(--content-max-width), calc(100% - var(--content-gutter)));
   margin: 0 auto;
@@ -13,10 +15,12 @@
   gap: var(--ds-section-gap, 24px);
 }
 
+.appShell--siteChrome .subpageTopbar,
 .appShell--sponsors .subpageTopbar {
   display: none;
 }
 
+.appShell--siteChrome .siteFooter,
 .appShell--sponsors .siteFooter {
   position: relative;
   z-index: 2;
@@ -31,14 +35,19 @@
   backdrop-filter: blur(14px);
 }
 
+.appShell--siteChrome .footerDockBackdrop,
 .appShell--sponsors .footerDockBackdrop {
   z-index: 90;
 }
 
+.appShell--siteChrome .footerDock,
 .appShell--sponsors .footerDock {
   z-index: 91;
 }
 
+.appShell--siteChrome .sponsorFeaturedCard,
+.appShell--siteChrome .sponsorSection,
+.appShell--siteChrome .sponsorHero,
 .appShell--sponsors .sponsorFeaturedCard,
 .appShell--sponsors .sponsorSection,
 .appShell--sponsors .sponsorHero {

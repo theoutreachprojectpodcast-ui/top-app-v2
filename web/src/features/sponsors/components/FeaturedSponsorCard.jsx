@@ -102,7 +102,7 @@ export default function FeaturedSponsorCard({ sponsor }) {
   const [logoIndex, setLogoIndex] = useState(0);
   const [logoTone, setLogoTone] = useState("normal");
   const warm = sponsor.warmVariant || "gold";
-  const bg = sponsor.backgroundImageUrl ? `url("${sponsor.backgroundImageUrl}")` : "none";
+  const hasListingBg = !!String(sponsor.backgroundImageUrl || "").trim();
   const social = sponsor.socialLinks || {};
   const displayName = resolveSponsorDisplayName(sponsor.name || "") || String(sponsor.name || "").trim() || "Partner";
   const websiteHost = useMemo(() => {
@@ -133,7 +133,7 @@ export default function FeaturedSponsorCard({ sponsor }) {
 
   return (
     <article
-      className={`sponsorPremiumCard sponsorPremiumCard--${warm}`}
+      className={`torpListingCard sponsorPremiumCard sponsorPremiumCard--${warm}`}
       role="button"
       tabIndex={0}
       onClick={() => router.push(profileHref)}
@@ -145,7 +145,11 @@ export default function FeaturedSponsorCard({ sponsor }) {
       }}
       aria-label={`Open ${displayName} sponsor profile`}
     >
-      <div className="sponsorPremiumCardBg" style={{ backgroundImage: bg }} aria-hidden />
+      <div
+        className={`sponsorPremiumCardBg torpListingCardHero ${hasListingBg ? "torpListingCardHero--photo" : `torpListingCardHero--sponsorTone torpListingCardHero--sponsorTone-${warm}`}`}
+        style={hasListingBg ? { backgroundImage: `url(${JSON.stringify(String(sponsor.backgroundImageUrl).trim())})` } : undefined}
+        aria-hidden
+      />
       <div className="sponsorPremiumCardScrim" aria-hidden />
       <div className="sponsorPremiumCardInner">
         <div className="sponsorPremiumCardTop">

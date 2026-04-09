@@ -17,6 +17,8 @@ export default function NonprofitCard({
 }) {
   const favoriteKey = String(card.ein || card.id || "").trim();
   const isProvenCard = actionMode === "proven";
+  const listingPhoto = String(card.heroImageUrl || card.thumbnailUrl || "").trim();
+  const categoryKey = card.category?.key || "unknownGeneral";
   const einDigits =
     card.einNormalized?.length === 9 ? card.einNormalized : normalizeEinDigits(card.ein);
   const profilePath = einDigits.length === 9 ? `/nonprofit/${einDigits}` : "";
@@ -156,36 +158,46 @@ export default function NonprofitCard({
 
   return (
     <article
-      className={`resultCard tier-${card.tier} category-${card.category?.key || "unknownGeneral"} ${activationTarget ? "resultCard--clickable" : ""} ${isProvenCard ? "resultCard--proven" : ""} ${useProfileLink ? "resultCard--profileLink" : ""}`}
+      className={`resultCard torpListingCard tier-${card.tier} category-${categoryKey} resultCard--listingHero ${activationTarget ? "resultCard--clickable" : ""} ${isProvenCard ? "resultCard--proven" : ""} ${useProfileLink ? "resultCard--profileLink" : ""}`}
       onClick={useProfileLink ? undefined : onCardClick}
       onKeyDown={useProfileLink ? undefined : onCardKeyDown}
       role={activationTarget && !useProfileLink ? "link" : undefined}
       tabIndex={activationTarget && !useProfileLink ? 0 : undefined}
       aria-label={activationTarget && !useProfileLink ? `View profile: ${card.name}` : undefined}
     >
-      <div
-        className={`nonprofitCardMain${isProvenCard ? " nonprofitCardMain--proven" : " nonprofitCardMain--directoryBalance"}${useProfileLink ? " nonprofitCardMain--hitStack" : ""}`}
-      >
-        {useProfileLink ? (
-          <Link
-            href={profilePath}
-            className="nonprofitCardHitLayer"
-            aria-label={`View profile: ${card.name}`}
-          />
-        ) : null}
-        <div className="nonprofitCardMediaSlot">
-          <NonprofitCardMedia
-            category={card.category}
-            tier={card.tier}
-            logoUrl={card.logoUrl}
-            layout={isProvenCard ? "proven" : "default"}
-          />
-        </div>
-        <div className={`nonprofitContentCol${isProvenCard ? " nonprofitContentCol--proven" : " nonprofitContentCol--directory"}`}>
-          {bodyBlock}
-        </div>
+      <div className="torpListingCardHeroWrap" aria-hidden>
+        <div
+          className={`torpListingCardHero ${listingPhoto ? "torpListingCardHero--photo" : "torpListingCardHero--category"}`}
+          data-torp-listing-category={categoryKey}
+          style={listingPhoto ? { backgroundImage: `url(${JSON.stringify(listingPhoto)})` } : undefined}
+        />
+        <div className="torpListingCardHeroScrim torpListingCardHeroScrim--resource" />
       </div>
-      {actionRow}
+      <div className="torpListingCardBody">
+        <div
+          className={`nonprofitCardMain${isProvenCard ? " nonprofitCardMain--proven" : " nonprofitCardMain--directoryBalance"}${useProfileLink ? " nonprofitCardMain--hitStack" : ""}`}
+        >
+          {useProfileLink ? (
+            <Link
+              href={profilePath}
+              className="nonprofitCardHitLayer"
+              aria-label={`View profile: ${card.name}`}
+            />
+          ) : null}
+          <div className="nonprofitCardMediaSlot">
+            <NonprofitCardMedia
+              category={card.category}
+              tier={card.tier}
+              logoUrl={card.logoUrl}
+              layout={isProvenCard ? "proven" : "default"}
+            />
+          </div>
+          <div className={`nonprofitContentCol${isProvenCard ? " nonprofitContentCol--proven" : " nonprofitContentCol--directory"}`}>
+            {bodyBlock}
+          </div>
+        </div>
+        {actionRow}
+      </div>
     </article>
   );
 }
