@@ -44,6 +44,30 @@
   background-blend-mode: screen, screen, normal, soft-light;
 }
 
+/* Full-bleed demo photo (replace /podcasts-demo-band.jpg for production art). Radial mask: soft glow behind header + mid-page band. */
+.appShell--podcast::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: url("/podcasts-demo-band.jpg") center 44% / cover no-repeat;
+  opacity: 0.36;
+  filter: saturate(0.88) contrast(1.05);
+  -webkit-mask-image: radial-gradient(
+    ellipse 125% 72% at 50% 38%,
+    #000 0%,
+    #000 38%,
+    transparent 70%
+  );
+  mask-image: radial-gradient(
+    ellipse 125% 72% at 50% 38%,
+    #000 0%,
+    #000 38%,
+    transparent 70%
+  );
+}
+
 .appShell--podcast .content--subpage {
   background: transparent;
 }
