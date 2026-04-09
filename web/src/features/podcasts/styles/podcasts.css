@@ -2,6 +2,7 @@
   position: relative;
   isolation: isolate;
   min-height: 100vh;
+  min-height: 100dvh;
   background-color: #070b12;
   color: #e8f0ff;
   color-scheme: dark;
@@ -47,7 +48,24 @@
   background: transparent;
 }
 
-.appShell--podcast .siteFooter {
+/* Podcast routes use main.topApp: pin site footer above fixed bottom nav on short pages */
+.topApp.appShell--podcast {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding-bottom: 0;
+}
+.topApp.appShell--podcast .shell {
+  flex: 1 1 auto;
+  min-height: 0;
+  background: transparent;
+}
+.topApp.appShell--podcast .siteFooter {
+  flex-shrink: 0;
+  margin-top: auto;
+  margin-bottom: 0;
+  /* Clear fixed .footerDock + safe area (nav ~56–72px + padding) */
+  padding: 28px 0 calc(32px + 96px + env(safe-area-inset-bottom, 0px));
   background: linear-gradient(180deg, rgba(8, 13, 21, 0.94), rgba(6, 10, 17, 0.98));
   border-top: 1px solid rgba(111, 194, 255, 0.28);
 }
@@ -87,8 +105,8 @@
   border-color: rgba(149, 174, 214, 0.2);
 }
 .appShell--podcast .footerDockBackdrop {
-  background: transparent;
-  border-top: 0;
+  background: linear-gradient(180deg, transparent, rgba(6, 10, 17, 0.88));
+  border-top: 1px solid rgba(111, 194, 255, 0.18);
 }
 .appShell--podcast .footerDock {
   background: linear-gradient(180deg, rgba(8, 13, 21, 0.86), rgba(6, 10, 17, 0.96));
