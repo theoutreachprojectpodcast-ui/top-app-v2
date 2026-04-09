@@ -133,13 +133,14 @@ export default function SponsorApplicationForm({
         application_status: "submitted",
       };
       const result = await submitSponsorApplication(supabase, payload);
-      if (result.warning) setStatus(result.warning);
-      else setStatus("Sponsor application submitted. Our team will follow up with next-step onboarding.");
-      if (result.ok) {
-        setForm({ ...INITIAL_FORM });
-        setPaymentStatus("unpaid");
-        onSuccessfulSubmit?.();
+      if (!result.ok) {
+        setError(result.error || "Could not submit application.");
+        return;
       }
+      setStatus("Sponsor application submitted. Our team will follow up with next-step onboarding.");
+      setForm({ ...INITIAL_FORM });
+      setPaymentStatus("unpaid");
+      onSuccessfulSubmit?.();
     } catch {
       setError("Sponsor application failed to submit. Please retry.");
     } finally {

@@ -29,7 +29,7 @@ export default function AccountInfoCard({
         {email || "—"}
       </p>
       <p>
-        <strong>Membership tier</strong>
+        <strong>Membership</strong>
         <br />
         {membershipTier ? String(membershipTier) : "—"}
       </p>

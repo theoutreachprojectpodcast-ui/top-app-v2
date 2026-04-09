@@ -4,7 +4,7 @@ export default function MembershipUpgradeCard({ isMember, membershipLabel, membe
       <div className="card">
         <h3>Membership</h3>
         <p>
-          <strong>{membershipLabel || "Member Active"}</strong>
+          <strong>{membershipLabel || "Pro Membership"}</strong>
         </p>
         <p>{membershipHint || "You have full member access to sponsors, community, and saved organizations."}</p>
       </div>

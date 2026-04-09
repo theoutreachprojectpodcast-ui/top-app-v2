@@ -8,31 +8,31 @@ import { emptyProfileAvatarUrl } from "@/lib/avatarFallback";
 const PLANS = [
   {
     id: "free",
-    title: "Free / Browse",
+    title: "Free Membership",
     price: "$0",
     cadence: "",
     blurb: "Explore the directory, trusted resources, and public community content. No card required.",
   },
   {
     id: "support",
-    title: "Support",
+    title: "Support Membership",
     price: "$5",
     cadence: "/month",
     blurb: "Back the mission with a light monthly subscription. Saves and profile stay in sync.",
   },
   {
     id: "member",
-    title: "Member",
+    title: "Pro Membership",
     price: "$10",
     cadence: "/month",
     blurb: "Full member flows as they roll out, including community submissions where enabled.",
   },
   {
     id: "sponsor",
-    title: "Sponsor",
+    title: "Sponsor Membership",
     price: "$100",
     cadence: "/month",
-    blurb: "For organizations aligning at a sponsor level — billed monthly until you change plans.",
+    blurb: "Platform sponsor tier for aligned organizations (Stripe-backed when configured). Large mission partner packages are applied for separately on the Partners page.",
   },
 ];
 

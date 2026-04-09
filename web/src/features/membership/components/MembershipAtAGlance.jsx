@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import MembershipTierArt from "@/features/membership/components/MembershipTierArt";
 import {
   MEMBERSHIP_TIER_DEFINITIONS,
   getMembershipTierDefinition,
@@ -15,11 +16,16 @@ export default function MembershipAtAGlance({
 }) {
   const [open, setOpen] = useState(true);
   const current = getMembershipTierDefinition(currentTierKey);
+  const tierKey = normalizeMembershipTierKey(currentTierKey);
 
   return (
     <section className="card membershipAtAGlance">
       <button type="button" className="membershipAtAGlanceHead" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
-        <div>
+        <div className="membershipAtAGlanceHeadMain">
+          <span className="membershipAtAGlanceArt" aria-hidden="true">
+            <MembershipTierArt tierId={tierKey} />
+          </span>
+          <div>
           <h3>Membership</h3>
           <p className="membershipAtAGlanceSub">
             {isAuthenticated ? (
@@ -30,6 +36,7 @@ export default function MembershipAtAGlance({
               <>Choose how you want to participate — sign in to activate saves and profile.</>
             )}
           </p>
+          </div>
         </div>
         <span className="membershipAtAGlanceChevron" aria-hidden="true">
           {open ? "▾" : "▸"}

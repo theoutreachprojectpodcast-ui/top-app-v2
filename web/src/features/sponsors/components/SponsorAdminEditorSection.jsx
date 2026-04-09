@@ -24,7 +24,7 @@ const NEW_SPONSOR_DRAFT = {
   display_order: 0,
 };
 
-export default function SponsorAdminEditorSection({ supabase, sponsors = [], onSaved }) {
+export default function SponsorAdminEditorSection({ showAdmin = false, supabase, sponsors = [], onSaved }) {
   const [step, setStep] = useState("select");
   const [selectedSlug, setSelectedSlug] = useState("");
   const [draft, setDraft] = useState(null);
@@ -91,6 +91,7 @@ export default function SponsorAdminEditorSection({ supabase, sponsors = [], onS
     setBusy(false);
   }
 
+  if (!showAdmin) return null;
   if (!draft) return null;
 
   return (

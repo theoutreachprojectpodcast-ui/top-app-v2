@@ -89,7 +89,7 @@ export default function MissionPartnerPackagesModal({ open, onClose, onRequestAp
           <div>
             <h3 id="mission-partner-packages-title">Mission partner packages</h3>
             <p className="missionPartnerPackagesModal__sub">
-              Compare Supporting Partner, Growth Partner, and Strategic Partner. Apply opens in a guided modal so you stay in the main app.
+              Compare Supporting Partner, Growth Partner, and Strategic Partner. Apply opens in a guided modal so you stay in the main app. These are mission partner packages (application + review). Account-level Support / Pro / Sponsor Membership is billed separately through onboarding when Stripe is enabled.
             </p>
           </div>
           <button type="button" className="btnSoft missionPartnerPackagesModal__close" onClick={onClose}>

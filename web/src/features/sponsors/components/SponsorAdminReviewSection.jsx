@@ -7,7 +7,7 @@ import { SPONSOR_REVIEW_STATUSES, SPONSOR_REVIEW_STATUS_LABEL } from "@/features
 const STATUS_ORDER = SPONSOR_REVIEW_STATUSES;
 const STATUS_LABEL = SPONSOR_REVIEW_STATUS_LABEL;
 
-export default function SponsorAdminReviewSection({ supabase }) {
+export default function SponsorAdminReviewSection({ showAdmin = false, supabase }) {
   const [records, setRecords] = useState([]);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("");
@@ -19,7 +19,7 @@ export default function SponsorAdminReviewSection({ supabase }) {
     setBusy(true);
     setError("");
     const result = await listSponsorApplications(supabase);
-    if (result.warning) setStatus(result.warning);
+    if (result.error) setError(result.error);
     const nextRecords = Array.isArray(result.records) ? result.records : [];
     setRecords(nextRecords);
     if (!selectedId && nextRecords.length) {
@@ -31,9 +31,10 @@ export default function SponsorAdminReviewSection({ supabase }) {
   }
 
   useEffect(() => {
+    if (!showAdmin) return;
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [showAdmin]);
 
   const selectedRecord = useMemo(
     () => records.find((row) => String(row?.id || "") === String(selectedId || "")) || null,
@@ -51,6 +52,8 @@ export default function SponsorAdminReviewSection({ supabase }) {
     await load();
     setBusy(false);
   }
+
+  if (!showAdmin) return null;
 
   return (
     <section className="card sponsorAdminSection" aria-labelledby="sponsor-admin-title">

@@ -1,0 +1,47 @@
+/* Partner / sponsors hub: match home top chrome + shell spacing + footer glass dock */
+
+.appShell--sponsors.appShell--subpage {
+  padding-bottom: 0;
+}
+
+.appShell--sponsors.appShell--subpage .shell {
+  width: min(var(--content-max-width), calc(100% - var(--content-gutter)));
+  margin: 0 auto;
+  padding: calc(var(--header-floating-offset) + var(--header-floating-height) + var(--header-fade-height) + 8px) 0
+    calc(24px + env(safe-area-inset-bottom, 0px));
+  display: grid;
+  gap: var(--ds-section-gap, 24px);
+}
+
+.appShell--sponsors .subpageTopbar {
+  display: none;
+}
+
+.appShell--sponsors .siteFooter {
+  position: relative;
+  z-index: 2;
+  margin-top: 0;
+  border-top: 1px solid var(--color-border-subtle);
+  background: linear-gradient(
+    180deg,
+    transparent,
+    color-mix(in srgb, var(--color-bg-secondary) 72%, transparent)
+  );
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+.appShell--sponsors .footerDockBackdrop {
+  z-index: 90;
+}
+
+.appShell--sponsors .footerDock {
+  z-index: 91;
+}
+
+.appShell--sponsors .sponsorFeaturedCard,
+.appShell--sponsors .sponsorSection,
+.appShell--sponsors .sponsorHero {
+  position: relative;
+  z-index: 1;
+}

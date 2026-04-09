@@ -16,8 +16,8 @@ export const MEMBERSHIP_TIER_KEYS = {
 export const MEMBERSHIP_TIER_DEFINITIONS = [
   {
     id: MEMBERSHIP_TIER_KEYS.NONE,
-    label: "No membership",
-    shortLabel: "Browse",
+    label: "Free Membership",
+    shortLabel: "Free",
     benefits: [
       "Explore the nonprofit directory and Trusted Resources listings",
       "Read community stories and partner content",
@@ -28,7 +28,7 @@ export const MEMBERSHIP_TIER_DEFINITIONS = [
   },
   {
     id: MEMBERSHIP_TIER_KEYS.SUPPORT,
-    label: "Support",
+    label: "Support Membership",
     shortLabel: "Support",
     benefits: [
       "Save favorite organizations across sessions",
@@ -36,11 +36,11 @@ export const MEMBERSHIP_TIER_DEFINITIONS = [
       "Newsletter-ready account identity for future updates",
     ],
     isMember: false,
-    hint: "Supporter accounts keep your saves and profile in sync.",
+    hint: "Support members keep saves and profile in sync across devices.",
   },
   {
     id: MEMBERSHIP_TIER_KEYS.SPONSOR,
-    label: "Sponsor",
+    label: "Sponsor Membership",
     shortLabel: "Sponsor",
     benefits: [
       "Recognition pathways aligned to sponsor packages (when activated)",
@@ -48,19 +48,19 @@ export const MEMBERSHIP_TIER_DEFINITIONS = [
       "Co-marketing touchpoints per executed agreement",
     ],
     isMember: false,
-    hint: "Sponsor tier is assigned after sponsorship onboarding — not self-serve checkout yet.",
+    hint: "Sponsor membership is assigned after sponsorship onboarding. Mission partner packages are separate from this account tier.",
   },
   {
     id: MEMBERSHIP_TIER_KEYS.MEMBER,
-    label: "Member Active",
-    shortLabel: "Member",
+    label: "Pro Membership",
+    shortLabel: "Pro",
     benefits: [
       "Submit community stories for moderation review",
       "Full access to member-only flows as they roll out",
       "Saved organizations and enhanced profile fields",
     ],
     isMember: true,
-    hint: "Active members can participate in community submissions and member features.",
+    hint: "Pro members can participate in community submissions and member features.",
   },
 ];
 

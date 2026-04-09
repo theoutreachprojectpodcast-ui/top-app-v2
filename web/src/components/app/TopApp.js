@@ -9,7 +9,6 @@ import BrandMark from "@/components/BrandMark";
 import IconWrap from "@/components/shared/IconWrap";
 import AccountInfoCard from "@/features/profile/components/AccountInfoCard";
 import ManageBillingButton from "@/features/profile/components/ManageBillingButton";
-import MembershipUpgradeCard from "@/features/profile/components/MembershipUpgradeCard";
 import NonprofitCard from "@/features/nonprofits/components/NonprofitCard";
 import { mapNonprofitCardRow } from "@/features/nonprofits/mappers/nonprofitCardMapper";
 import ProvenAllyApplicationForm from "@/features/proven-allies/components/ProvenAllyApplicationForm";
@@ -189,8 +188,8 @@ function TopAppInner({ initialNav = "home" }) {
     }
   }
 
-  function openMissionPartnerPackages() {
-    router.push("/sponsors?packages=1");
+  function goToSponsorsHub() {
+    router.push("/sponsors");
   }
 
   function openMembershipJourney() {
@@ -286,7 +285,7 @@ function TopAppInner({ initialNav = "home" }) {
           <div className="topbarZone topbarRight">
             <div className="topbarActionsCluster">
               <ColorSchemeToggle />
-              <button className="btnSoft sponsorBtn" onClick={openMissionPartnerPackages} type="button">
+              <button className="btnSoft sponsorBtn" onClick={goToSponsorsHub} type="button">
                 <AppIcon name="sponsors" />
                 Become a Sponsor
               </button>
@@ -339,25 +338,29 @@ function TopAppInner({ initialNav = "home" }) {
         <section className="shell">
           {nav === "home" && (
             <>
-              <div className="card cardHero">
-                <HomeWelcomeSection
-                  isAuthenticated={isAuthenticated}
-                  isMember={isMember}
-                  onOpenTrusted={() => {
-                    setNav("trusted");
-                    loadTrusted(true);
-                  }}
-                  onOpenMembershipJourney={openMembershipJourney}
-                  onBrowseFree={scrollToDirectory}
-                  onOpenProfile={() => setNav("profile")}
-                />
+              <div className="homeHeroBackdrop">
+                <div className="homeHeroBackdrop__image" aria-hidden="true" />
+                <div className="homeHeroBackdrop__scrim" aria-hidden="true" />
+                <div className="card cardHero homeHeroBackdrop__card">
+                  <HomeWelcomeSection
+                    isAuthenticated={isAuthenticated}
+                    isMember={isMember}
+                    onOpenTrusted={() => {
+                      setNav("trusted");
+                      loadTrusted(true);
+                    }}
+                    onOpenMembershipJourney={openMembershipJourney}
+                    onBrowseFree={scrollToDirectory}
+                    onOpenProfile={() => setNav("profile")}
+                  />
+                </div>
               </div>
 
               <div className="welcomeActionLayout">
-                <button className="card action welcomeSponsorsFeatured" onClick={openMissionPartnerPackages} type="button">
+                <button className="card action welcomeSponsorsFeatured" onClick={goToSponsorsHub} type="button">
                   <AppIcon name="sponsors" />
                   <span className="welcomeActionLabel">Sponsors</span>
-                  <span className="welcomeActionHint">Mission partners &amp; support tiers</span>
+                  <span className="welcomeActionHint">Partner page — open packages from there</span>
                 </button>
                 <div className="welcomeActionTriplet">
                   <button className="card action welcomeTripletBtn" onClick={() => { setNav("trusted"); loadTrusted(true); }} type="button">
@@ -571,13 +574,13 @@ function TopAppInner({ initialNav = "home" }) {
             </div>
           )}
 
-          <ProfileQuickStats savedCount={favoriteEins.length} membershipLabel={membership.label} />
+          <ProfileQuickStats savedCount={favoriteEins.length} />
           <AccountInfoCard
             firstName={profile.firstName}
             lastName={profile.lastName}
             email={profile.email}
             displayName={profile.displayName}
-            membershipTier={profile.membershipTier || profile.membershipStatus}
+            membershipTier={membership.label}
             membershipBillingStatus={profile.membershipBillingStatus}
             profileSource={profileSource}
             manageBillingSlot={
@@ -589,12 +592,22 @@ function TopAppInner({ initialNav = "home" }) {
               ) : null
             }
           />
-          <MembershipUpgradeCard
-            isMember={isMember}
-            membershipLabel={membership.label}
-            membershipHint={membership.hint}
-            onUpgrade={() => setOverlay("upgrade")}
-          />
+          {!isMember ? (
+            <div className="card">
+              <h3>Upgrade to Pro</h3>
+              <p className="sponsorSectionLead">{membership.hint}</p>
+              <div className="row wrap">
+                <button type="button" className="btnPrimary" onClick={() => setOverlay("upgrade")}>
+                  View membership options
+                </button>
+                {authBackend.workos ? (
+                  <a className="btnSoft" href="/onboarding">
+                    Open membership onboarding
+                  </a>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
           <SavedOrganizationsList organizations={savedOrgsToRender} onToggleFavorite={toggleFavoriteEin} isMember={isMember} />
           <div className="card">
             <div className="row wrap">
@@ -663,7 +676,7 @@ function TopAppInner({ initialNav = "home" }) {
           <div className="modalCard" onClick={(e) => e.stopPropagation()}>
             <h3>Membership &amp; billing</h3>
             <p>
-              Support ($5/mo) and Member ($10/mo) tiers unlock saved organizations, profile sync, and community participation.
+              Support Membership ($5/mo) and Pro Membership ($10/mo) unlock saved organizations, profile sync, and community participation.
               For the full Stripe checkout experience, continue in onboarding.
             </p>
             <div className="row wrap">
