@@ -37,10 +37,16 @@ export default function AppShell({
       </div>
       <header className={usePrimaryTopbarChrome ? "topbar" : "subpageTopbar"}>
         <HeaderInner className="topbarInner">
-          <div className="topbarZone topbarLeft" aria-hidden="true" />
+          <div className="topbarZone topbarLeft">
+            <div className="topbarActionsCluster topbarActionsCluster--start">
+              <SubpageTopbarActions section="lead" showThemeToggle={showThemeToggle} />
+            </div>
+          </div>
           <div className="topbarZone topbarCenter" aria-hidden="true" />
           <div className="topbarZone topbarRight">
-            <SubpageTopbarActions showThemeToggle={showThemeToggle} />
+            <div className="topbarActionsCluster">
+              <SubpageTopbarActions section="auth" />
+            </div>
           </div>
         </HeaderInner>
       </header>

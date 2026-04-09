@@ -87,6 +87,9 @@
   justify-content: flex-end;
   gap: 10px;
 }
+.topbarActionsCluster--start {
+  justify-content: flex-start;
+}
 .subpageAuthActionsPlaceholder {
   min-width: 88px;
   min-height: 42px;
@@ -3727,15 +3730,27 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   }
   .siteContainer, .shell { width: min(var(--content-max-width), calc(100% - var(--content-gutter))); }
   .topbarInner {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr) auto;
     grid-template-areas:
-      "center"
-      "right";
+      "left right"
+      "center center";
     gap: 6px;
+    align-items: center;
   }
-  .topbarLeft { display: none; }
+  .topbarLeft {
+    display: flex;
+    justify-content: flex-start;
+    min-width: 0;
+  }
   .topbarCenter { justify-self: center; }
-  .topbarRight { justify-content: center; justify-self: center; }
+  .topbarRight {
+    justify-content: flex-end;
+    justify-self: end;
+  }
+  .topbarLeft .topbarActionsCluster--start {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
   img.brandMarkImg--header {
     max-height: clamp(131px, 51.56vw, 188px) !important;
     max-width: min(516px, 92vw) !important;

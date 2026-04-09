@@ -280,15 +280,18 @@ function TopAppInner({ initialNav = "home" }) {
       </div>
       <header className="topbar">
         <HeaderInner className="topbarInner">
-          <div className="topbarZone topbarLeft" aria-hidden="true" />
-          <div className="topbarZone topbarCenter" aria-hidden="true" />
-          <div className="topbarZone topbarRight">
-            <div className="topbarActionsCluster">
+          <div className="topbarZone topbarLeft">
+            <div className="topbarActionsCluster topbarActionsCluster--start">
               <ColorSchemeToggle />
               <button className="btnSoft sponsorBtn" onClick={goToSponsorsHub} type="button">
                 <AppIcon name="sponsors" />
                 Become a Sponsor
               </button>
+            </div>
+          </div>
+          <div className="topbarZone topbarCenter" aria-hidden="true" />
+          <div className="topbarZone topbarRight">
+            <div className="topbarActionsCluster">
               {isLoggedIn ? (
                 <HeaderAccountMenu
                   avatarSrc={profile.avatarUrl || emptyProfileAvatarUrl()}
