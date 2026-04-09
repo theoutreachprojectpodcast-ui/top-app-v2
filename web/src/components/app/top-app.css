@@ -2463,6 +2463,58 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   color: var(--color-text-secondary);
   background: var(--color-surface-muted);
 }
+.communityPostBadge {
+  display: inline-flex;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 35%, var(--color-border) 65%);
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+}
+.communityPostStatusBadge {
+  display: inline-flex;
+  border-radius: 999px;
+  border: 1px solid var(--color-border-subtle);
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  background: var(--color-bg-subtle);
+}
+.communityFeedTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 14px;
+}
+.communityFeedTab {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-bg-card);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease;
+}
+.communityFeedTab:hover,
+.communityFeedTab:focus-visible {
+  outline: none;
+  border-color: color-mix(in srgb, var(--color-accent) 40%, var(--color-border-subtle) 60%);
+  color: var(--color-text-primary);
+}
+.communityFeedTab.isActive {
+  border-color: color-mix(in srgb, var(--color-accent) 55%, transparent);
+  background: color-mix(in srgb, var(--color-accent) 12%, var(--color-bg-card) 88%);
+  color: var(--color-text-primary);
+}
 .communityPage {
   display: grid;
   gap: var(--ds-space-6, 24px);

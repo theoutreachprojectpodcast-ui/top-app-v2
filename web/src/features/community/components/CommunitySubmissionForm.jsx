@@ -23,6 +23,7 @@ export default function CommunitySubmissionForm({
   authorAvatarUrl,
   onClose,
   onSubmitted,
+  useWorkOSApi = false,
 }) {
   const [form, setForm] = useState(INITIAL);
   const [busy, setBusy] = useState(false);
@@ -42,28 +43,42 @@ export default function CommunitySubmissionForm({
 
   async function onSubmit(e) {
     e.preventDefault();
-    if (!String(form.body || "").trim()) {
+    const story = String(form.body || "").trim();
+    if (!story) {
       setError("Please share your story in the text area.");
+      return;
+    }
+    if (useWorkOSApi && story.length < 20) {
+      setError("Please add a bit more detail — at least 20 characters.");
       return;
     }
     setBusy(true);
     setError("");
     setStatus("");
     try {
-      const result = await submitCommunityStory(supabase, {
-        author_id: userId,
-        author_name: authorName || "Community member",
-        author_avatar_url: authorAvatarUrl || "",
-        title: form.title.trim(),
-        body: form.body.trim(),
-        nonprofit_name: form.nonprofit_name.trim(),
-        post_type: form.post_type,
-        category: form.category,
-        show_author_name: form.show_author_name,
-        link_url: form.link_url.trim(),
-        photo_url: form.photo_url || "",
-      });
+      const result = await submitCommunityStory(
+        supabase,
+        {
+          author_id: userId,
+          author_name: authorName || "Community member",
+          author_avatar_url: authorAvatarUrl || "",
+          title: form.title.trim(),
+          body: form.body.trim(),
+          nonprofit_name: form.nonprofit_name.trim(),
+          post_type: form.post_type,
+          category: form.category,
+          show_author_name: form.show_author_name,
+          link_url: form.link_url.trim(),
+          photo_url: form.photo_url || "",
+        },
+        { useWorkOSApi },
+      );
+      if (!result.ok) {
+        setError(result.message || "Could not submit.");
+        return;
+      }
       if (result.warning) setStatus(result.warning);
+      else if (result.message) setStatus(result.message);
       else setStatus("Thank you. Your story is submitted for review before it can appear in the community feed.");
       setForm(INITIAL);
       onSubmitted?.();

@@ -23,7 +23,7 @@ const POST_TYPE_LABEL = {
   community_update: "Community update",
 };
 
-export default function CommunityPostCard({ post, onToggleLike }) {
+export default function CommunityPostCard({ post, onToggleLike, showModerationStatus = false }) {
   const [shareBusy, setShareBusy] = useState(false);
   const displayName = post.showAuthorName ? post.authorName : "Community member";
   const avatarSrc = post.authorAvatarUrl || avatarFallbackUrl(post.authorId || post.id);
@@ -45,6 +45,9 @@ export default function CommunityPostCard({ post, onToggleLike }) {
         <div className="communityPostMeta">
           <div className="communityPostAuthorRow">
             <strong className="communityPostAuthorName">{displayName}</strong>
+            {showModerationStatus && post.status && post.status !== "approved" ? (
+              <span className="communityPostStatusBadge">{post.statusLabel || post.status}</span>
+            ) : null}
             <span className="communityPostBadge">{cat}</span>
             {post.postType ? (
               <span className="communityPostTypeBadge">{POST_TYPE_LABEL[post.postType] || "Update"}</span>

@@ -18,6 +18,7 @@ export function profileRowToClientDto(row) {
   if (!row) return null;
   const meta = row.metadata && typeof row.metadata === "object" ? row.metadata : {};
   return {
+    profileRecordId: row.id ?? null,
     email: row.email ?? "",
     displayName: row.display_name ?? "",
     firstName: row.first_name ?? "",

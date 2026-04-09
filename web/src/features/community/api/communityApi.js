@@ -1,9 +1,5 @@
 import { mapCommunityPostRow } from "@/features/community/mappers/mapCommunityPost";
-import {
-  APPROVED_POSTS_SEED,
-  COMMUNITY_MEMBER_FAVORITE_ROWS_SEED,
-  COMMUNITY_MEMBERS_SEED,
-} from "@/features/community/data/communitySeed";
+import { COMMUNITY_MEMBER_FAVORITE_ROWS_SEED, COMMUNITY_MEMBERS_SEED } from "@/features/community/data/communitySeed";
 import { queryTrustedOrgsByEin } from "@/lib/supabase/queries";
 import {
   buildCommunityShareUrl,
@@ -65,28 +61,61 @@ export function getRelativeTime(iso) {
   return new Date(iso).toLocaleDateString();
 }
 
+async function fetchPostsApi(scope) {
+  try {
+    const res = await fetch(`/api/community/posts?scope=${encodeURIComponent(scope)}`, {
+      credentials: "include",
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) return [];
+    const rows = Array.isArray(json.posts) ? json.posts : [];
+    return rows.map(mapCommunityPostRow).filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+/** Public approved feed — Supabase-backed via trusted API (RLS-safe). */
+export async function fetchApprovedFeedFromApi() {
+  return fetchPostsApi("public");
+}
+
+/** @deprecated Prefer fetchApprovedFeedFromApi; anon client cannot satisfy new RLS write path. */
 export async function fetchApprovedFeedFromSupabase(supabase) {
-  if (!supabase) return [];
+  if (!supabase) return fetchApprovedFeedFromApi();
   const { data, error } = await supabase
     .from(POSTS_TABLE)
     .select("*")
     .eq("status", "approved")
+    .is("deleted_at", null)
+    .in("visibility", ["community", "public"])
     .order("created_at", { ascending: false })
     .limit(50);
-  if (error) return [];
+  if (error) return fetchApprovedFeedFromApi();
   return (data || []).map(mapCommunityPostRow).filter(Boolean);
 }
 
+export async function fetchPendingFeedFromApi() {
+  return fetchPostsApi("pending");
+}
+
+/** @deprecated Use fetchPendingFeedFromApi for moderators */
 export async function fetchPendingFeedFromSupabase(supabase) {
+  const apiRows = await fetchPendingFeedFromApi();
+  if (apiRows.length) return apiRows;
   if (!supabase) return [];
   const { data, error } = await supabase
     .from(POSTS_TABLE)
     .select("*")
-    .in("status", ["submitted", "under_review"])
+    .in("status", ["pending_review", "submitted", "under_review"])
     .order("created_at", { ascending: true })
     .limit(100);
   if (error) return [];
   return (data || []).map(mapCommunityPostRow).filter(Boolean);
+}
+
+export async function fetchMyPostsFromApi() {
+  return fetchPostsApi("mine");
 }
 
 export function getCommunityMemberById(memberId) {
@@ -135,21 +164,17 @@ export function rejectPendingLocal(pendingId, reason = "") {
 }
 
 /**
- * Public feed: approved only. Merges seed + Supabase + locally approved demo posts.
+ * Public feed: approved posts from API (and RLS direct read when available), plus local demo approvals only when offline.
  */
 export async function fetchPublicCommunityFeed(supabase) {
-  const seed = APPROVED_POSTS_SEED.map(mapCommunityPostRow);
-  const remote = await fetchApprovedFeedFromSupabase(supabase);
-  const localApproved = loadLocalApprovedPosts();
-  const byId = new Map();
-  [...seed, ...remote, ...localApproved].forEach((p) => {
-    if (p && p.id && p.status === "approved") byId.set(p.id, p);
-  });
-  return Array.from(byId.values()).sort((a, b) => {
-    const ta = new Date(a.createdAt).getTime();
-    const tb = new Date(b.createdAt).getTime();
-    return tb - ta;
-  });
+  const remote = await fetchApprovedFeedFromApi();
+  if (remote.length) {
+    return remote.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+  const viaClient = await fetchApprovedFeedFromSupabase(supabase);
+  if (viaClient.length) return viaClient;
+  const localApproved = loadLocalApprovedPosts().filter((p) => p && p.status === "approved");
+  return localApproved.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
 export async function fetchApprovedPostsByMember(supabase, memberId) {
@@ -157,10 +182,7 @@ export async function fetchApprovedPostsByMember(supabase, memberId) {
   if (!id) return [];
 
   if (!supabase) {
-    return APPROVED_POSTS_SEED
-      .filter((p) => String(p.author_id) === id && String(p.status) === "approved")
-      .map(mapCommunityPostRow)
-      .filter(Boolean);
+    return [];
   }
 
   const { data, error } = await supabase
@@ -172,10 +194,7 @@ export async function fetchApprovedPostsByMember(supabase, memberId) {
     .limit(30);
 
   if (error) {
-    return APPROVED_POSTS_SEED
-      .filter((p) => String(p.author_id) === id && String(p.status) === "approved")
-      .map(mapCommunityPostRow)
-      .filter(Boolean);
+    return [];
   }
 
   return (data || []).map(mapCommunityPostRow).filter(Boolean);
@@ -237,7 +256,40 @@ function copyShare(text, url) {
   return Promise.resolve({ ok: false, method: "none" });
 }
 
-export async function submitCommunityStory(supabase, payload) {
+export async function submitCommunityStory(supabase, payload, { useWorkOSApi = false } = {}) {
+  if (useWorkOSApi) {
+    try {
+      const res = await fetch("/api/community/posts", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: payload.title,
+          body: payload.body,
+          nonprofit_name: payload.nonprofit_name,
+          nonprofit_ein: payload.nonprofit_ein,
+          category: payload.category,
+          post_type: payload.post_type,
+          show_author_name: payload.show_author_name,
+          link_url: payload.link_url,
+          photo_url: payload.photo_url,
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        return { ok: false, message: json.message || "Could not submit your story." };
+      }
+      return {
+        ok: true,
+        localOnly: false,
+        id: json.post?.id,
+        message: json.message,
+      };
+    } catch {
+      return { ok: false, message: "Network error while submitting." };
+    }
+  }
+
   const record = {
     author_id: payload.author_id,
     author_name: payload.author_name,
@@ -251,7 +303,8 @@ export async function submitCommunityStory(supabase, payload) {
     show_author_name: payload.show_author_name !== false,
     link_url: payload.link_url || "",
     photo_url: payload.photo_url || "",
-    status: "submitted",
+    status: "pending_review",
+    visibility: "community",
     like_count: 0,
     share_count: 0,
   };
@@ -331,16 +384,50 @@ export function isModeratorUser({ userId = "", profile = {} } = {}) {
 }
 
 export async function reviewSubmission(supabase, { postId, action, reviewerId, rejectionReason = "" }) {
-  if (!supabase || !postId) return { ok: false, message: "Missing moderation context." };
-  const normalizedAction = action === "reject" ? "rejected" : "approved";
-  const patch = {
-    status: normalizedAction,
-    reviewed_by: reviewerId || "moderator",
-    reviewed_at: new Date().toISOString(),
-    rejection_reason: normalizedAction === "rejected" ? String(rejectionReason || "").trim() : null,
-  };
-  const { error } = await supabase.from(POSTS_TABLE).update(patch).eq("id", postId);
-  if (error) return { ok: false, message: error.message || "Unable to update moderation status." };
-  return { ok: true };
+  if (!postId) return { ok: false, message: "Missing post." };
+  const apiAction = action === "reject" ? "reject" : "approve";
+  try {
+    const res = await fetch(`/api/community/posts/${encodeURIComponent(postId)}`, {
+      method: "PATCH",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: apiAction,
+        rejectionReason: action === "reject" ? rejectionReason : undefined,
+      }),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      if (supabase) {
+        const normalizedAction = action === "reject" ? "rejected" : "approved";
+        const patch = {
+          status: normalizedAction,
+          reviewed_by: reviewerId || "moderator",
+          reviewed_at: new Date().toISOString(),
+          rejection_reason: normalizedAction === "rejected" ? String(rejectionReason || "").trim() : null,
+        };
+        const { error } = await supabase.from(POSTS_TABLE).update(patch).eq("id", postId);
+        if (!error) return { ok: true };
+      }
+      return { ok: false, message: json.message || "Moderation update failed." };
+    }
+    return { ok: true };
+  } catch {
+    return { ok: false, message: "Network error." };
+  }
+}
+
+export async function togglePostLikeApi(postId) {
+  try {
+    const res = await fetch(`/api/community/posts/${encodeURIComponent(postId)}/like`, {
+      method: "POST",
+      credentials: "include",
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) return { ok: false, message: json.message };
+    return { ok: true, liked: !!json.liked, likeCount: Number(json.likeCount) || 0 };
+  } catch {
+    return { ok: false, message: "Network error." };
+  }
 }
 

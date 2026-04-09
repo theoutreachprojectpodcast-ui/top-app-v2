@@ -58,6 +58,7 @@ export function profileFromLegacy(localProfile = {}) {
 export function createInitialProfile() {
   return {
     ...profileFromLegacy(defaultProfile()),
+    profileRecordId: "",
     displayName: "",
     bio: "",
     membershipTier: "free",
@@ -105,6 +106,7 @@ export function profileFromApiDto(dto = {}) {
   const legacyStatus = normalizeMembershipStatus(tier === "free" ? "none" : tier);
   return {
     ...createInitialProfile(),
+    profileRecordId: dto.profileRecordId ? String(dto.profileRecordId) : "",
     firstName: String(dto.firstName || "").trim(),
     lastName: String(dto.lastName || "").trim(),
     email: String(dto.email || "").trim(),

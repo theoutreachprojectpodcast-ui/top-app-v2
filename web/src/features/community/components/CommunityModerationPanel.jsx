@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   approvePendingLocal,
-  fetchPendingFeedFromSupabase,
+  fetchPendingFeedFromApi,
   loadPendingSubmissionsLocal,
   rejectPendingLocal,
   reviewSubmission,
@@ -21,11 +21,11 @@ export default function CommunityModerationPanel({ supabase, userId, canModerate
 
   const reload = useCallback(async () => {
     setPending(loadPendingSubmissionsLocal());
-    if (!supabase || !canModerate) return;
+    if (!canModerate) return;
     setLoadingCloud(true);
     setCloudError("");
     try {
-      const rows = await fetchPendingFeedFromSupabase(supabase);
+      const rows = await fetchPendingFeedFromApi();
       setCloudPending(rows);
     } catch {
       setCloudError("Could not load cloud moderation queue.");
@@ -33,18 +33,15 @@ export default function CommunityModerationPanel({ supabase, userId, canModerate
     } finally {
       setLoadingCloud(false);
     }
-  }, [supabase, canModerate]);
+  }, [canModerate]);
 
   useEffect(() => {
     reload();
   }, [reload]);
 
-  const showCloudQueue = queueFilter === "all" || queueFilter === "submitted" || queueFilter === "under_review";
-  const showLocalQueue = queueFilter === "all" || queueFilter === "local";
-  const filteredCloudPending =
-    queueFilter === "submitted" || queueFilter === "under_review"
-      ? cloudPending.filter((p) => p.status === queueFilter)
-      : cloudPending;
+  const showCloudQueue = queueFilter === "cloud" || queueFilter === "all";
+  const showLocalQueue = queueFilter === "local" || queueFilter === "all";
+  const filteredCloudPending = cloudPending;
   const totalFiltered = (showCloudQueue ? filteredCloudPending.length : 0) + (showLocalQueue ? pending.length : 0);
 
   return (
@@ -91,9 +88,8 @@ export default function CommunityModerationPanel({ supabase, userId, canModerate
           </p>
           <div className="communityModToolbar">
             <select value={queueFilter} onChange={(e) => setQueueFilter(e.target.value)} aria-label="Filter review queue">
-              <option value="all">All queues</option>
-              <option value="submitted">Submitted only</option>
-              <option value="under_review">Under review only</option>
+              <option value="all">Cloud + local demo</option>
+              <option value="cloud">Cloud queue only</option>
               <option value="local">Local demo queue only</option>
             </select>
             <button type="button" className="btnSoft" onClick={reload} disabled={loadingCloud}>

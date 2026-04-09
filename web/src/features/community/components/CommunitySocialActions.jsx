@@ -14,8 +14,9 @@ export default function CommunitySocialActions({
       <button
         type="button"
         className={`communityActionBtn communityActionBtn--like ${liked ? "isActive" : ""}`}
-        onClick={() => {
-          if (typeof onToggleLike === "function") onToggleLike(postId, baseLikeCount);
+        onClick={async () => {
+          if (typeof onToggleLike !== "function") return;
+          await Promise.resolve(onToggleLike(postId, baseLikeCount));
         }}
         disabled={typeof onToggleLike !== "function"}
         title={typeof onToggleLike !== "function" ? "Sign in to like posts" : undefined}

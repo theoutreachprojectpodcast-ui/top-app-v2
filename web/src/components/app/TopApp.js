@@ -437,6 +437,7 @@ function TopAppInner({ initialNav = "home" }) {
             <CommunityPage
               supabase={sb}
               userId={userId}
+              sessionKind={sessionKind}
               isAuthenticated={isAuthenticated}
               authLoading={loadingProfile}
               authBackend={authBackend}

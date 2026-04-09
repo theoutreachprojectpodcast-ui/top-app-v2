@@ -99,3 +99,7 @@ Opens **http://localhost:3000**. If port 3000 is in use, free it or run `pnpm --
 - Bottom nav routes load.
 - Layout renders consistently across routes.
 - Supabase client helper returns `null` gracefully when env vars are missing.
+
+## Community (tORP v0.3)
+
+Supabase-backed community posts, moderation statuses, RLS, and API routes are documented in [`docs/COMMUNITY_v0.3.md`](docs/COMMUNITY_v0.3.md).
