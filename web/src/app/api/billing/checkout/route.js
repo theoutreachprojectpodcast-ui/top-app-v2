@@ -2,15 +2,22 @@ import { withAuth } from "@workos-inc/authkit-nextjs";
 import Stripe from "stripe";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
-import { appBaseUrl, priceIdForTier, stripeCheckoutConfigured } from "@/lib/billing/stripeConfig";
+import {
+  appBaseUrl,
+  priceIdForTier,
+  stripeMemberRecurringConfigured,
+  stripeSponsorSubscriptionConfigured,
+} from "@/lib/billing/stripeConfig";
 
 const PAID = new Set(["support", "member", "sponsor"]);
 
-export async function POST(request) {
-  if (!stripeCheckoutConfigured()) {
-    return Response.json({ error: "billing_not_configured" }, { status: 503 });
-  }
+function safeReturnPath(raw) {
+  const p = String(raw || "").trim();
+  if (!p.startsWith("/") || p.startsWith("//")) return "/profile";
+  return p;
+}
 
+export async function POST(request) {
   const auth = await withAuth();
   if (!auth.user) {
     return Response.json({ error: "unauthorized" }, { status: 401 });
@@ -44,6 +51,23 @@ export async function POST(request) {
     return Response.json({ error: "invalid_tier" }, { status: 400 });
   }
 
+  if (tier === "sponsor") {
+    if (!stripeSponsorSubscriptionConfigured()) {
+      return Response.json(
+        { error: "sponsor_billing_not_configured", message: "Set STRIPE_PRICE_SPONSOR_MONTHLY for sponsor subscription checkout." },
+        { status: 503 },
+      );
+    }
+  } else if (!stripeMemberRecurringConfigured()) {
+    return Response.json(
+      {
+        error: "billing_not_configured",
+        message: "Set STRIPE_SECRET_KEY, STRIPE_PRICE_SUPPORT_MONTHLY, and STRIPE_PRICE_PRO_MONTHLY (or STRIPE_PRICE_MEMBER_MONTHLY).",
+      },
+      { status: 503 },
+    );
+  }
+
   const priceId = priceIdForTier(tier);
   if (!priceId) {
     return Response.json({ error: "price_not_configured", tier }, { status: 503 });
@@ -51,12 +75,14 @@ export async function POST(request) {
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
   const base = appBaseUrl();
+  const returnPath = safeReturnPath(body.returnPath);
   const customerId = profileRow.stripe_customer_id ? String(profileRow.stripe_customer_id).trim() : null;
   const profileId = profileRow.id ? String(profileRow.id) : "";
 
   const metadata = {
     workos_user_id: auth.user.id,
     membership_tier: tier,
+    checkout_kind: "membership_subscription",
     ...(profileId ? { torp_profile_id: profileId } : {}),
   };
 
@@ -67,8 +93,8 @@ export async function POST(request) {
       customer_email: customerId ? undefined : auth.user.email || undefined,
       client_reference_id: auth.user.id,
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${base}/onboarding?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${base}/onboarding?checkout=cancel`,
+      success_url: `${base}${returnPath}?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${base}${returnPath}?checkout=cancel`,
       metadata,
       subscription_data: {
         metadata,

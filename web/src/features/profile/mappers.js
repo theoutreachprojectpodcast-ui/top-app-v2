@@ -63,9 +63,13 @@ export function createInitialProfile() {
     bio: "",
     membershipTier: "free",
     membershipBillingStatus: "none",
+    membershipSource: "manual",
     onboardingCompleted: true,
     stripeCustomerIdSet: false,
     stripeSubscriptionIdSet: false,
+    podcastSponsorLastTierId: "",
+    podcastSponsorLastCheckoutAt: "",
+    podcastSponsorLastSessionId: "",
   };
 }
 
@@ -134,6 +138,10 @@ export function profileFromApiDto(dto = {}) {
     contributionSummary: String(dto.contributionSummary || "").trim(),
     stripeCustomerIdSet: !!dto.stripeCustomerIdSet,
     stripeSubscriptionIdSet: !!dto.stripeSubscriptionIdSet,
+    membershipSource: String(dto.membershipSource || "manual").trim() || "manual",
+    podcastSponsorLastTierId: String(dto.podcastSponsorLastTierId || "").trim(),
+    podcastSponsorLastCheckoutAt: String(dto.podcastSponsorLastCheckoutAt || "").trim(),
+    podcastSponsorLastSessionId: String(dto.podcastSponsorLastSessionId || "").trim(),
   };
 }
 

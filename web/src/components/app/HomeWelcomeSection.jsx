@@ -30,7 +30,7 @@ export default function HomeWelcomeSection({
         <p className="homeWelcomeLead">
           {isAuthenticated
             ? "Explore the directory, trusted resources, sponsors, and community. Your account details and saved organizations stay in the Profile tab."
-            : "Explore nonprofits, trusted resources, sponsors, and community. Create an account to save organizations and choose Support Membership ($5/mo) or Pro Membership ($10/mo) when you are ready."}
+            : "Explore nonprofits, trusted resources, sponsors, and community. Create an account to save organizations and choose Support Membership ($1.99/mo) or Pro Membership ($5.99/mo) when you are ready."}
         </p>
       </div>
       <div className="row wrap homeWelcomeActions">

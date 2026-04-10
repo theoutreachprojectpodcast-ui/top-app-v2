@@ -4,6 +4,13 @@ function sourceLabel(source) {
   return "This device only";
 }
 
+function formatMembershipSource(src) {
+  const s = String(src || "manual").toLowerCase();
+  if (s === "stripe") return "Stripe (subscription)";
+  if (s === "onboarding") return "Onboarding";
+  return "Manual / free";
+}
+
 export default function AccountInfoCard({
   firstName,
   lastName,
@@ -11,10 +18,20 @@ export default function AccountInfoCard({
   profileSource = "local",
   membershipTier = "",
   membershipBillingStatus = "",
+  membershipSource = "",
+  podcastSponsorLastTierId = "",
+  podcastSponsorLastCheckoutAt = "",
   displayName = "",
   manageBillingSlot = null,
 }) {
   const name = [firstName, lastName].filter(Boolean).join(" ").trim() || displayName;
+  const sponsorLine =
+    podcastSponsorLastTierId || podcastSponsorLastCheckoutAt
+      ? `Last podcast sponsor checkout${podcastSponsorLastTierId ? ` (${podcastSponsorLastTierId})` : ""}${
+          podcastSponsorLastCheckoutAt ? ` — ${new Date(podcastSponsorLastCheckoutAt).toLocaleString()}` : ""
+        }`
+      : "";
+
   return (
     <div className="card">
       <h3>Account</h3>
@@ -38,6 +55,18 @@ export default function AccountInfoCard({
         <br />
         {membershipBillingStatus ? String(membershipBillingStatus) : "—"}
       </p>
+      <p>
+        <strong>Membership source</strong>
+        <br />
+        {formatMembershipSource(membershipSource)}
+      </p>
+      {sponsorLine ? (
+        <p>
+          <strong>Sponsor activity</strong>
+          <br />
+          {sponsorLine}
+        </p>
+      ) : null}
       <p>
         <strong>Profile data source</strong>
         <br />

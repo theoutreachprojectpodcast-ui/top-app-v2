@@ -304,10 +304,36 @@ export default function SponsorApplicationForm({
         <section className="applySection">
           <h4>Step 1 — Contact</h4>
           <div className="form">
-            <input placeholder="First name" value={form.first_name} onChange={(e) => setForm((f) => ({ ...f, first_name: e.target.value }))} />
-            <input placeholder="Last name" value={form.last_name} onChange={(e) => setForm((f) => ({ ...f, last_name: e.target.value }))} />
-            <input placeholder="Email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
-            <input placeholder="Phone" value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} />
+            <input
+              name="first_name"
+              autoComplete="given-name"
+              placeholder="First name"
+              value={form.first_name}
+              onChange={(e) => setForm((f) => ({ ...f, first_name: e.target.value }))}
+            />
+            <input
+              name="last_name"
+              autoComplete="family-name"
+              placeholder="Last name"
+              value={form.last_name}
+              onChange={(e) => setForm((f) => ({ ...f, last_name: e.target.value }))}
+            />
+            <input
+              name="email"
+              type="email"
+              autoComplete="email"
+              placeholder="Email"
+              value={form.email}
+              onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+            />
+            <input
+              name="phone"
+              type="tel"
+              autoComplete="tel"
+              placeholder="Phone"
+              value={form.phone}
+              onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+            />
           </div>
         </section>
 

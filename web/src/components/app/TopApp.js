@@ -106,6 +106,22 @@ function TopAppInner({ initialNav = "home" }) {
     uploadAvatarFile,
     refreshWorkOSProfile,
   } = useProfileData(sb);
+
+  useEffect(() => {
+    const c = searchParams.get("checkout");
+    if ((c !== "success" && c !== "cancel") || sessionKind !== "workos") return;
+    let cancelled = false;
+    (async () => {
+      await refreshWorkOSProfile();
+      if (cancelled || typeof window === "undefined") return;
+      const path = window.location.pathname || "/";
+      router.replace(path, { scroll: false });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [searchParams, sessionKind, refreshWorkOSProfile, router]);
+
   const { filters, setFilters, results, status, meta, page, canGoNext, runSearch, clearSearch } = useDirectorySearch(sb);
   const { trusted, trustedStatus, loadTrusted } = useTrustedResources(sb);
 
@@ -532,6 +548,11 @@ function TopAppInner({ initialNav = "home" }) {
             currentTierKey={profile.membershipStatus}
             onSelectTier={(id) => setMembershipStatus(id)}
             onRequestSignIn={openSignInForMembership}
+            sessionKind={sessionKind}
+            stripeMemberReady={!!authBackend?.stripe}
+            stripeSponsorSubscriptionReady={!!authBackend?.stripeSponsorSubscription}
+            stripeMemberMissingEnv={authBackend?.stripeMemberRecurringMissingEnv || []}
+            checkoutReturnPath="/profile"
           />
           {!isAuthenticated ? (
             <div className="card profileSignedOutCard">
@@ -585,6 +606,9 @@ function TopAppInner({ initialNav = "home" }) {
             displayName={profile.displayName}
             membershipTier={membership.label}
             membershipBillingStatus={profile.membershipBillingStatus}
+            membershipSource={profile.membershipSource}
+            podcastSponsorLastTierId={profile.podcastSponsorLastTierId}
+            podcastSponsorLastCheckoutAt={profile.podcastSponsorLastCheckoutAt}
             profileSource={profileSource}
             manageBillingSlot={
               sessionKind === "workos" ? (
@@ -634,12 +658,37 @@ function TopAppInner({ initialNav = "home" }) {
           <div className="card">
             <h3>Send us a message</h3>
             <form className="contactForm" onSubmit={onContactSubmit}>
-              <div className="form">
-                <input placeholder="First Name *" value={contactDraft.firstName} onChange={(e) => setContactDraft((d) => ({ ...d, firstName: e.target.value }))} />
-                <input placeholder="Last Name *" value={contactDraft.lastName} onChange={(e) => setContactDraft((d) => ({ ...d, lastName: e.target.value }))} />
-                <input placeholder="Email *" type="email" value={contactDraft.email} onChange={(e) => setContactDraft((d) => ({ ...d, email: e.target.value }))} />
-                <input placeholder="Phone Number" value={contactDraft.phone} onChange={(e) => setContactDraft((d) => ({ ...d, phone: e.target.value }))} />
-              </div>
+            <div className="form">
+              <input
+                name="given-name"
+                autoComplete="given-name"
+                placeholder="First Name *"
+                value={contactDraft.firstName}
+                onChange={(e) => setContactDraft((d) => ({ ...d, firstName: e.target.value }))}
+              />
+              <input
+                name="family-name"
+                autoComplete="family-name"
+                placeholder="Last Name *"
+                value={contactDraft.lastName}
+                onChange={(e) => setContactDraft((d) => ({ ...d, lastName: e.target.value }))}
+              />
+              <input
+                name="email"
+                autoComplete="email"
+                placeholder="Email *"
+                type="email"
+                value={contactDraft.email}
+                onChange={(e) => setContactDraft((d) => ({ ...d, email: e.target.value }))}
+              />
+              <input
+                name="tel"
+                autoComplete="tel"
+                placeholder="Phone Number"
+                value={contactDraft.phone}
+                onChange={(e) => setContactDraft((d) => ({ ...d, phone: e.target.value }))}
+              />
+            </div>
               <textarea rows={6} placeholder="Message *" value={contactDraft.message} onChange={(e) => setContactDraft((d) => ({ ...d, message: e.target.value }))} />
               {contactError ? <p className="applyError">{contactError}</p> : null}
               {contactStatus ? <p className="applyStatus">{contactStatus}</p> : null}
@@ -679,8 +728,8 @@ function TopAppInner({ initialNav = "home" }) {
           <div className="modalCard" onClick={(e) => e.stopPropagation()}>
             <h3>Membership &amp; billing</h3>
             <p>
-              Support Membership ($5/mo) and Pro Membership ($10/mo) unlock saved organizations, profile sync, and community participation.
-              For the full Stripe checkout experience, continue in onboarding.
+              Support Membership ($1.99/mo) and Pro Membership ($5.99/mo) unlock saved organizations, profile sync, and community
+              participation. Use the Membership card above for Stripe checkout, or open onboarding for the full setup flow.
             </p>
             <div className="row wrap">
               <button className="btnSoft" onClick={() => setOverlay(null)} type="button">
@@ -725,10 +774,35 @@ function TopAppInner({ initialNav = "home" }) {
                 onChange={(e) => onProfileImageSelected(e.target.files?.[0])}
               />
             </label>
-            <input value={editDraft.firstName || ""} onChange={(e) => setEditDraft((d) => ({ ...d, firstName: e.target.value }))} placeholder="First name" />
-            <input value={editDraft.lastName || ""} onChange={(e) => setEditDraft((d) => ({ ...d, lastName: e.target.value }))} placeholder="Last name" />
-            <input value={editDraft.email} onChange={(e) => setEditDraft((d) => ({ ...d, email: e.target.value }))} placeholder="Email" type="email" />
-            <input value={editDraft.banner || ""} onChange={(e) => setEditDraft((d) => ({ ...d, banner: e.target.value }))} placeholder="Short tagline (shown under your name)" />
+            <input
+              name="given-name"
+              autoComplete="given-name"
+              value={editDraft.firstName || ""}
+              onChange={(e) => setEditDraft((d) => ({ ...d, firstName: e.target.value }))}
+              placeholder="First name"
+            />
+            <input
+              name="family-name"
+              autoComplete="family-name"
+              value={editDraft.lastName || ""}
+              onChange={(e) => setEditDraft((d) => ({ ...d, lastName: e.target.value }))}
+              placeholder="Last name"
+            />
+            <input
+              name="email"
+              autoComplete="email"
+              value={editDraft.email}
+              onChange={(e) => setEditDraft((d) => ({ ...d, email: e.target.value }))}
+              placeholder="Email"
+              type="email"
+            />
+            <input
+              name="organization-title"
+              autoComplete="organization-title"
+              value={editDraft.banner || ""}
+              onChange={(e) => setEditDraft((d) => ({ ...d, banner: e.target.value }))}
+              placeholder="Short tagline (shown under your name)"
+            />
             <fieldset className="profileEditFieldset">
               <legend>Identity &amp; contribution</legend>
               <p className="profileEditFieldsetHint">These fields power the Identity &amp; contribution card on your profile.</p>
@@ -817,7 +891,15 @@ function TopAppInner({ initialNav = "home" }) {
                 <input value={authDraft.lastName} onChange={(e) => setAuthDraft((d) => ({ ...d, lastName: e.target.value }))} placeholder="Last Name" autoComplete="family-name" />
               </>
             )}
-            <input value={authDraft.email} onChange={(e) => setAuthDraft((d) => ({ ...d, email: e.target.value }))} placeholder="Email" type="email" autoComplete="email" />
+            <input
+              name="email"
+              id="torp-demo-auth-email"
+              value={authDraft.email}
+              onChange={(e) => setAuthDraft((d) => ({ ...d, email: e.target.value }))}
+              placeholder="Email"
+              type="email"
+              autoComplete="email"
+            />
             <input
               value={authDraft.password}
               onChange={(e) => setAuthDraft((d) => ({ ...d, password: e.target.value }))}

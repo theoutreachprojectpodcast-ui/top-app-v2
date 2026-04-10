@@ -1,6 +1,9 @@
 import Stripe from "stripe";
 import { createSupabaseAdminClient, profileTableName } from "@/lib/supabase/admin";
-import { getProfileRowByStripeCustomerId } from "@/lib/profile/serverProfile";
+import {
+  getProfileRowByStripeCustomerId,
+  mergeProfileMetadataByWorkOSId,
+} from "@/lib/profile/serverProfile";
 import { headers } from "next/headers";
 
 export const runtime = "nodejs";
@@ -65,6 +68,7 @@ async function syncSubscription(admin, sub, customerId, { forceEnded = false } =
       membership_tier: "free",
       membership_status: "canceled",
       stripe_subscription_id: null,
+      membership_source: "manual",
       updated_at: new Date().toISOString(),
     };
     if (cust) patch.stripe_customer_id = cust;
@@ -81,6 +85,7 @@ async function syncSubscription(admin, sub, customerId, { forceEnded = false } =
     stripe_subscription_id: sub.id,
     membership_tier: safeTier,
     membership_status: billingStatus,
+    membership_source: "stripe",
     updated_at: new Date().toISOString(),
   };
 
@@ -158,6 +163,12 @@ export async function POST(request) {
               { onConflict: "stripe_checkout_session_id" },
             );
             if (pe) console.warn("[torp] podcast checkout audit upsert", pe.message);
+            const merge = await mergeProfileMetadataByWorkOSId(admin, String(w), {
+              podcastSponsorLastTierId: String(session.metadata?.podcast_tier_id || ""),
+              podcastSponsorLastCheckoutAt: new Date().toISOString(),
+              podcastSponsorLastSessionId: session.id,
+            });
+            if (!merge.ok) console.warn("[torp] podcast profile metadata merge", merge.reason);
           }
         }
         break;

@@ -3106,6 +3106,26 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   font-weight: 800;
   font-size: 15px;
 }
+.membershipTierCardPrice {
+  display: block;
+  margin-top: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-accent);
+  letter-spacing: 0.02em;
+}
+.membershipStripePanel {
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--color-border-soft);
+  background: color-mix(in srgb, var(--color-accent-soft) 35%, var(--color-surface-soft));
+}
+.profileMembershipCheckoutTitle {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 800;
+}
 .membershipTierCardHint {
   display: block;
   margin-top: 6px;

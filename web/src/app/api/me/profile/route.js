@@ -2,9 +2,6 @@ import { withAuth } from "@workos-inc/authkit-nextjs";
 import { createSupabaseAdminClient, profileTableName } from "@/lib/supabase/admin";
 import { getProfileRowByWorkOSId, profileRowToClientDto } from "@/lib/profile/serverProfile";
 
-const TIER_KEYS = new Set(["free", "support", "member", "sponsor"]);
-const STATUS_KEYS = new Set(["none", "pending", "active", "past_due", "canceled", "incomplete"]);
-
 const META_KEYS = new Set([
   "identityRole",
   "missionStatement",
@@ -61,14 +58,7 @@ export async function PATCH(request) {
   if (typeof body.banner === "string") row.banner = body.banner.trim();
   if (typeof body.theme === "string") row.theme = body.theme.trim();
   if (typeof body.avatarUrl === "string") row.profile_photo_url = body.avatarUrl.trim();
-  if (typeof body.membershipTier === "string") {
-    const t = body.membershipTier.toLowerCase();
-    if (TIER_KEYS.has(t)) row.membership_tier = t;
-  }
-  if (typeof body.membershipBillingStatus === "string") {
-    const s = body.membershipBillingStatus.toLowerCase();
-    if (STATUS_KEYS.has(s)) row.membership_status = s;
-  }
+  /* membership_tier / membership_status: Stripe webhooks + /api/me/onboarding/complete only — not profile PATCH. */
 
   if (!existing) {
     const insertRow = {

@@ -4,6 +4,10 @@ import { useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Avatar from "@/components/shared/Avatar";
 import { emptyProfileAvatarUrl } from "@/lib/avatarFallback";
+import {
+  PRO_MEMBERSHIP_PRICE_LABEL,
+  SUPPORT_MEMBERSHIP_PRICE_LABEL,
+} from "@/features/membership/membershipTiers";
 
 const PLANS = [
   {
@@ -16,23 +20,23 @@ const PLANS = [
   {
     id: "support",
     title: "Support Membership",
-    price: "$5",
+    price: SUPPORT_MEMBERSHIP_PRICE_LABEL.replace("/mo", ""),
     cadence: "/month",
     blurb: "Back the mission with a light monthly subscription. Saves and profile stay in sync.",
   },
   {
     id: "member",
     title: "Pro Membership",
-    price: "$10",
+    price: PRO_MEMBERSHIP_PRICE_LABEL.replace("/mo", ""),
     cadence: "/month",
     blurb: "Full member flows as they roll out, including community submissions where enabled.",
   },
   {
     id: "sponsor",
     title: "Sponsor Membership",
-    price: "$100",
-    cadence: "/month",
-    blurb: "Platform sponsor tier for aligned organizations (Stripe-backed when configured). Large mission partner packages are applied for separately on the Partners page.",
+    price: "Monthly",
+    cadence: " — set in Stripe",
+    blurb: "Platform sponsor tier for aligned organizations (requires STRIPE_PRICE_SPONSOR_MONTHLY). Large mission partner packages are applied for separately on the Partners page.",
   },
 ];
 
@@ -80,6 +84,16 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
 
   async function startPaidCheckout() {
     if (selectedTier === "free") return;
+    if (selectedTier === "sponsor" && !authBackend?.stripeSponsorSubscription) {
+      setError("Sponsor subscription checkout requires STRIPE_PRICE_SPONSOR_MONTHLY in the server environment.");
+      return;
+    }
+    if (["support", "member"].includes(selectedTier) && !authBackend?.stripeMemberRecurring) {
+      setError(
+        "Support and Pro checkout require STRIPE_PRICE_SUPPORT_MONTHLY and STRIPE_PRICE_PRO_MONTHLY (or STRIPE_PRICE_MEMBER_MONTHLY).",
+      );
+      return;
+    }
     setSaving(true);
     setError("");
     try {
@@ -87,7 +101,7 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tier: selectedTier }),
+        body: JSON.stringify({ tier: selectedTier, returnPath: "/onboarding" }),
       });
       const data = await res.json().catch(() => ({}));
       if (res.status === 503) {
@@ -150,17 +164,23 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
               Profile photo can be updated from Profile → Edit after onboarding.
             </p>
             <input
+              name="displayName"
+              autoComplete="nickname"
               value={draft.displayName}
               onChange={(e) => setDraft((d) => ({ ...d, displayName: e.target.value }))}
               placeholder="Display name"
             />
             <div className="form">
               <input
+                name="given-name"
+                autoComplete="given-name"
                 value={draft.firstName}
                 onChange={(e) => setDraft((d) => ({ ...d, firstName: e.target.value }))}
                 placeholder="First name"
               />
               <input
+                name="family-name"
+                autoComplete="family-name"
                 value={draft.lastName}
                 onChange={(e) => setDraft((d) => ({ ...d, lastName: e.target.value }))}
                 placeholder="Last name"
@@ -197,10 +217,17 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
                 </button>
               ))}
             </div>
-            {!authBackend?.stripe && selectedTier !== "free" ? (
+            {selectedTier === "sponsor" && !authBackend?.stripeSponsorSubscription ? (
               <p className="sponsorSectionLead">
-                Stripe price IDs are not configured in this environment. Choose <strong>Free</strong> to continue, or add{" "}
-                <code>STRIPE_SECRET_KEY</code> and monthly price IDs to enable checkout.
+                Sponsor subscription checkout needs <code>STRIPE_PRICE_SPONSOR_MONTHLY</code> (and <code>STRIPE_SECRET_KEY</code>).
+                Choose another plan or finish with <strong>Free</strong>.
+              </p>
+            ) : null}
+            {["support", "member"].includes(selectedTier) && !authBackend?.stripeMemberRecurring ? (
+              <p className="sponsorSectionLead">
+                Support and Pro checkout need <code>STRIPE_PRICE_SUPPORT_MONTHLY</code> and{" "}
+                <code>STRIPE_PRICE_PRO_MONTHLY</code> (or legacy <code>STRIPE_PRICE_MEMBER_MONTHLY</code>), plus{" "}
+                <code>STRIPE_SECRET_KEY</code>. Choose <strong>Free</strong> to continue without billing.
               </p>
             ) : null}
             <div className="row wrap">

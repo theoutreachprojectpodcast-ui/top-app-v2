@@ -40,6 +40,7 @@ export function profileRowToClientDto(row) {
     theme: row.theme ?? "clean",
     stripeCustomerIdSet: Boolean(row.stripe_customer_id),
     stripeSubscriptionIdSet: Boolean(row.stripe_subscription_id),
+    membershipSource: String(row.membership_source || "manual").trim() || "manual",
     ...spreadMetadata(meta),
   };
 }
@@ -57,6 +58,9 @@ function spreadMetadata(meta) {
     "volunteerInterests",
     "supportInterests",
     "contributionSummary",
+    "podcastSponsorLastTierId",
+    "podcastSponsorLastCheckoutAt",
+    "podcastSponsorLastSessionId",
   ];
   const out = {};
   for (const k of keys) {
@@ -104,4 +108,17 @@ export async function patchProfileByWorkOSId(admin, workosUserId, patch) {
   const { error } = await admin.from(TABLE()).update(row).eq("workos_user_id", workosUserId);
   if (error) return { ok: false, reason: error.message };
   return { ok: true };
+}
+
+/**
+ * Shallow-merge keys into torp_profiles.metadata for one user (service role).
+ * @param {import('@supabase/supabase-js').SupabaseClient} admin
+ */
+export async function mergeProfileMetadataByWorkOSId(admin, workosUserId, partialMeta) {
+  if (!admin || !workosUserId || !partialMeta || typeof partialMeta !== "object") return { ok: false, reason: "invalid" };
+  const row = await getProfileRowByWorkOSId(admin, workosUserId);
+  if (!row) return { ok: false, reason: "no_profile" };
+  const prev = row.metadata && typeof row.metadata === "object" && !Array.isArray(row.metadata) ? { ...row.metadata } : {};
+  const next = { ...prev, ...partialMeta };
+  return patchProfileByWorkOSId(admin, workosUserId, { metadata: next });
 }

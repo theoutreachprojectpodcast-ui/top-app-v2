@@ -47,6 +47,7 @@ export async function POST(request) {
     onboarding_completed: true,
     membership_tier,
     membership_status,
+    membership_source: safeTier === "free" ? "manual" : "onboarding",
     updated_at: new Date().toISOString(),
   };
 

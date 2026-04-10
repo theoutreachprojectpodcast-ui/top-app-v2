@@ -114,6 +114,11 @@ export function useProfileData(supabase) {
         setAuthBackend({
           workos: !!status.workos,
           stripe: !!status.stripe,
+          stripeMemberRecurringMissingEnv: Array.isArray(status.stripeMemberRecurringMissingEnv)
+            ? status.stripeMemberRecurringMissingEnv
+            : [],
+          stripeSponsorSubscription: !!status.stripeSponsorSubscription,
+          stripeFullOnboarding: !!status.stripeFullOnboarding,
           supabaseServiceRole: !!status.supabaseServiceRole,
         });
 
@@ -290,6 +295,10 @@ export function useProfileData(supabase) {
   }
 
   async function setMembershipStatus(status) {
+    if (workosRef.current) {
+      /* WorkOS accounts: tier is driven by Stripe webhooks, not client-side PATCH (avoids spoofing). */
+      return;
+    }
     const normalized = String(status || "supporter").toLowerCase();
     const tier = mapLegacyMembershipToTier(normalized);
     const billing = tier === "free" ? "none" : "none";

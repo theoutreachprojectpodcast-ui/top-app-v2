@@ -59,7 +59,7 @@ const BENEFIT_AREAS = [
     details: [
       "Brand and mission fit review for all tiers.",
       "Asset collection with practical specs.",
-      "Demo billing today; live payments when enabled.",
+      "Packages are application + review; invoicing and activation are coordinated after approval (no fake checkout in this flow).",
     ],
   },
 ];

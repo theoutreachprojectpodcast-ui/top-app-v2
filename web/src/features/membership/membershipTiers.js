@@ -3,6 +3,10 @@
  * Storage: profile.membershipStatus uses normalized keys from normalizeMembershipTierKey().
  */
 
+/** Display pricing (recurring Stripe products must match in the Stripe Dashboard). */
+export const SUPPORT_MEMBERSHIP_PRICE_LABEL = "$1.99/mo";
+export const PRO_MEMBERSHIP_PRICE_LABEL = "$5.99/mo";
+
 export const MEMBERSHIP_TIER_KEYS = {
   NONE: "none",
   SUPPORT: "support",
@@ -30,6 +34,7 @@ export const MEMBERSHIP_TIER_DEFINITIONS = [
     id: MEMBERSHIP_TIER_KEYS.SUPPORT,
     label: "Support Membership",
     shortLabel: "Support",
+    priceLabel: SUPPORT_MEMBERSHIP_PRICE_LABEL,
     benefits: [
       "Save favorite organizations across sessions",
       "Personal profile and tagline",
@@ -54,6 +59,7 @@ export const MEMBERSHIP_TIER_DEFINITIONS = [
     id: MEMBERSHIP_TIER_KEYS.MEMBER,
     label: "Pro Membership",
     shortLabel: "Pro",
+    priceLabel: PRO_MEMBERSHIP_PRICE_LABEL,
     benefits: [
       "Submit community stories for moderation review",
       "Full access to member-only flows as they roll out",

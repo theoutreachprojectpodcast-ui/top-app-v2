@@ -5,7 +5,11 @@ import Link from "next/link";
 import OnboardingFlow from "@/features/onboarding/components/OnboardingFlow";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getProfileRowByWorkOSId, profileRowToClientDto } from "@/lib/profile/serverProfile";
-import { stripeCheckoutConfigured } from "@/lib/billing/stripeConfig";
+import {
+  stripeCheckoutConfigured,
+  stripeMemberRecurringConfigured,
+  stripeSponsorSubscriptionConfigured,
+} from "@/lib/billing/stripeConfig";
 
 async function OnboardingServer({ searchParams }) {
   const sp = await searchParams;
@@ -36,7 +40,10 @@ async function OnboardingServer({ searchParams }) {
   }
 
   const authBackend = {
-    stripe: stripeCheckoutConfigured(),
+    stripe: stripeMemberRecurringConfigured(),
+    stripeMemberRecurring: stripeMemberRecurringConfigured(),
+    stripeSponsorSubscription: stripeSponsorSubscriptionConfigured(),
+    stripeFullOnboarding: stripeCheckoutConfigured(),
   };
 
   return <OnboardingFlow initialProfile={dto} authBackend={authBackend} />;

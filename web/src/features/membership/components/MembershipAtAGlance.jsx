@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import MembershipTierArt from "@/features/membership/components/MembershipTierArt";
+import ProfileMembershipCheckout from "@/features/membership/components/ProfileMembershipCheckout";
 import {
   MEMBERSHIP_TIER_DEFINITIONS,
   getMembershipTierDefinition,
@@ -13,10 +14,17 @@ export default function MembershipAtAGlance({
   currentTierKey,
   onSelectTier,
   onRequestSignIn,
+  sessionKind = "demo",
+  stripeMemberReady = false,
+  stripeSponsorSubscriptionReady = false,
+  stripeMemberMissingEnv = [],
+  checkoutReturnPath = "/profile",
+  onCheckoutNavigate,
 }) {
   const [open, setOpen] = useState(true);
   const current = getMembershipTierDefinition(currentTierKey);
   const tierKey = normalizeMembershipTierKey(currentTierKey);
+  const isWorkos = sessionKind === "workos";
 
   return (
     <section className="card membershipAtAGlance">
@@ -26,16 +34,16 @@ export default function MembershipAtAGlance({
             <MembershipTierArt tierId={tierKey} />
           </span>
           <div>
-          <h3>Membership</h3>
-          <p className="membershipAtAGlanceSub">
-            {isAuthenticated ? (
-              <>
-                Current: <strong>{current.label}</strong>
-              </>
-            ) : (
-              <>Choose how you want to participate — sign in to activate saves and profile.</>
-            )}
-          </p>
+            <h3>Membership</h3>
+            <p className="membershipAtAGlanceSub">
+              {isAuthenticated ? (
+                <>
+                  Current: <strong>{current.label}</strong>
+                </>
+              ) : (
+                <>Choose how you want to participate — sign in to activate saves and profile.</>
+              )}
+            </p>
           </div>
         </div>
         <span className="membershipAtAGlanceChevron" aria-hidden="true">
@@ -48,16 +56,26 @@ export default function MembershipAtAGlance({
           {!isAuthenticated ? (
             <div className="membershipTierChoiceGrid">
               {MEMBERSHIP_TIER_DEFINITIONS.map((tier) => (
-                <button
-                  key={tier.id}
-                  type="button"
-                  className="membershipTierCard"
-                  onClick={() => onRequestSignIn?.()}
-                >
+                <button key={tier.id} type="button" className="membershipTierCard" onClick={() => onRequestSignIn?.()}>
                   <span className="membershipTierCardTitle">{tier.label}</span>
+                  {tier.priceLabel ? (
+                    <span className="membershipTierCardPrice">{tier.priceLabel}</span>
+                  ) : null}
                   <span className="membershipTierCardHint">{tier.hint}</span>
                 </button>
               ))}
+            </div>
+          ) : null}
+
+          {isAuthenticated && isWorkos ? (
+            <div className="membershipStripePanel">
+              <ProfileMembershipCheckout
+                stripeReady={stripeMemberReady}
+                stripeSponsorSubscriptionReady={stripeSponsorSubscriptionReady}
+                missingEnvKeys={stripeMemberMissingEnv}
+                returnPath={checkoutReturnPath}
+                onAfterRedirect={onCheckoutNavigate}
+              />
             </div>
           ) : null}
 
@@ -73,7 +91,7 @@ export default function MembershipAtAGlance({
             </details>
           ) : null}
 
-          {isAuthenticated ? (
+          {isAuthenticated && !isWorkos ? (
             <div className="membershipTierAdminRow">
               <span className="membershipDemoLabel">Demo: switch tier</span>
               <div className="row wrap membershipTierPills">
