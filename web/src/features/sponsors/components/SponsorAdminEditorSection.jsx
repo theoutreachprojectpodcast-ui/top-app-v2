@@ -82,8 +82,13 @@ export default function SponsorAdminEditorSection({ showAdmin = false, supabase,
     setStatus("");
     setError("");
     const result = await runSponsorEnrichment(draft.slug);
-    if (!result.ok) setError(result.error || "Enrichment failed.");
-    else {
+    if (!result.ok) {
+      setError(
+        result.error === "forbidden"
+          ? "Enrichment requires moderator access (COMMUNITY_MODERATOR_* env or signed-in moderator)."
+          : result.error || "Enrichment failed.",
+      );
+    } else {
       setStatus("Enrichment complete. Review and save changes.");
       if (result.row) setDraft(getSponsorAdminViewModel(result.row));
       onSaved?.();

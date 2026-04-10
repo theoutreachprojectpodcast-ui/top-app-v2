@@ -1,4 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
+import { withAuth } from "@workos-inc/authkit-nextjs";
+import { isCommunityModeratorServer } from "@/lib/community/moderatorServer";
 
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -68,6 +70,15 @@ async function loadWebsiteSignals(websiteUrl) {
 
 export async function POST(request) {
   if (!URL || !KEY) return Response.json({ error: "Missing Supabase credentials." }, { status: 500 });
+
+  const auth = await withAuth();
+  if (!auth.user) {
+    return Response.json({ error: "unauthorized", message: "Sign in to run sponsor enrichment." }, { status: 401 });
+  }
+  if (!isCommunityModeratorServer({ email: auth.user.email, workosUserId: auth.user.id })) {
+    return Response.json({ error: "forbidden", message: "Moderator access required." }, { status: 403 });
+  }
+
   const body = await request.json().catch(() => ({}));
   const slug = clean(body.slug);
   if (!slug) return Response.json({ error: "Missing sponsor slug." }, { status: 400 });
@@ -76,11 +87,32 @@ export async function POST(request) {
   if (error || !row) return Response.json({ error: "Sponsor not found." }, { status: 404 });
 
   const signals = await loadWebsiteSignals(row.website_url);
+  const nowIso = new Date().toISOString();
+  const hasSignals = !!(clean(signals.title) || clean(signals.description) || clean(signals.logo));
+
+  const enrichmentRow = {
+    sponsor_id: row.id,
+    canonical_display_name: clean(row.name) || clean(signals.title) || clean(row.slug),
+    extracted_site_title: clean(signals.title) || null,
+    extracted_meta_description: clean(signals.description) || null,
+    enrichment_confidence: hasSignals ? 0.72 : 0.15,
+    enrichment_status: hasSignals ? "enriched" : "pending",
+    source_summary: hasSignals ? "website_html_meta" : "no_signals",
+    review_required: !hasSignals,
+    last_enriched_at: nowIso,
+    updated_at: nowIso,
+  };
+
+  const { error: enrichErr } = await supabase.from("sponsor_enrichment").upsert(enrichmentRow, { onConflict: "sponsor_id" });
+  if (enrichErr) {
+    console.warn("[torp] sponsor_enrichment upsert", enrichErr.message);
+  }
+
   const patch = {
     name: clean(row.name) || clean(signals.title) || clean(row.slug),
     short_description: clean(row.short_description) || clean(signals.description),
     long_description: clean(row.long_description) || clean(signals.description),
-    tagline: clean(row.tagline) || clean(signals.description),
+    tagline: clean(row.tagline) || clean(signals.title) || clean(signals.description),
     logo_url: clean(row.logo_url) || clean(signals.logo),
     background_image_url: clean(row.background_image_url) || clean(signals.logo),
     instagram_url: clean(row.instagram_url) || clean(signals.instagram_url),
@@ -88,9 +120,9 @@ export async function POST(request) {
     linkedin_url: clean(row.linkedin_url) || clean(signals.linkedin_url),
     twitter_url: clean(row.twitter_url) || clean(signals.twitter_url),
     youtube_url: clean(row.youtube_url) || clean(signals.youtube_url),
-    enrichment_status: "enriched",
-    verified: true,
-    last_enriched_at: new Date().toISOString(),
+    enrichment_status: hasSignals ? "enriched" : clean(row.enrichment_status) || "manual",
+    verified: hasSignals ? true : !!row.verified,
+    last_enriched_at: nowIso,
   };
   const { data: updated, error: upErr } = await supabase.from(TABLE).update(patch).eq("slug", slug).select("*").maybeSingle();
   if (upErr) return Response.json({ error: upErr.message }, { status: 500 });

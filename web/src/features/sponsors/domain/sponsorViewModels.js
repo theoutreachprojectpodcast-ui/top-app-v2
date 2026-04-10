@@ -77,8 +77,8 @@ export function normalizeSponsorRecord(row = {}) {
 
 export function getSponsorCardViewModel(row = {}) {
   const s = normalizeSponsorRecord(row);
-  /** Prefer DB long description so we do not duplicate the tagline line under the title. */
-  const cardSubheader = truncateSponsorLine(s.long_description, 140);
+  /** Prefer concise site-derived tagline, then long description (enrichment merges into these). */
+  const cardSubheader = truncateSponsorLine(s.tagline || s.long_description || s.short_description, 140);
   return {
     id: s.id,
     slug: s.slug,

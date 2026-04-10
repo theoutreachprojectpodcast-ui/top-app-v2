@@ -61,6 +61,7 @@ export default function SponsorApplicationForm({
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
   const [paymentStatus, setPaymentStatus] = useState("unpaid");
+  const [confirmedStripeSessionId, setConfirmedStripeSessionId] = useState("");
   const [paymentBusy, setPaymentBusy] = useState(false);
   const [podcastBillingLive, setPodcastBillingLive] = useState(false);
   const [podcastMissingEnv, setPodcastMissingEnv] = useState([]);
@@ -94,10 +95,16 @@ export default function SponsorApplicationForm({
   }, []);
 
   useEffect(() => {
-    if (!isPodcast || !podcastBillingLive) return;
+    if (!isPodcast || !podcastBillingLive) {
+      setConfirmedStripeSessionId("");
+      return;
+    }
     const checkout = String(stripeReturn?.checkout || "").trim();
     const sessionId = String(stripeReturn?.sessionId || "").trim();
-    if (checkout !== "success" || !sessionId) return;
+    if (checkout !== "success" || !sessionId) {
+      setConfirmedStripeSessionId("");
+      return;
+    }
     let cancelled = false;
     (async () => {
       try {
@@ -109,12 +116,17 @@ export default function SponsorApplicationForm({
         if (cancelled) return;
         if (data.paid) {
           setPaymentStatus("stripe_paid");
+          setConfirmedStripeSessionId(sessionId);
           setStatus("Payment confirmed. You can submit your podcast sponsor application.");
         } else {
+          setConfirmedStripeSessionId("");
           setStatus("We could not confirm payment for this session. You can try Pay with Stripe again.");
         }
       } catch {
-        if (!cancelled) setError("Could not verify payment. Try again or contact support.");
+        if (!cancelled) {
+          setConfirmedStripeSessionId("");
+          setError("Could not verify payment. Try again or contact support.");
+        }
       }
     })();
     return () => {
@@ -156,6 +168,7 @@ export default function SponsorApplicationForm({
     const next = getTierById(tierId, tierList);
     onSelectTier(next.id);
     setPaymentStatus("unpaid");
+    setConfirmedStripeSessionId("");
   }
 
   function updatePlacement(option, checked) {
@@ -238,6 +251,10 @@ export default function SponsorApplicationForm({
         payment_status: paymentLabel,
         payment_demo_status: isPodcast ? paymentStatus : paymentStatus,
         application_status: "submitted",
+        stripe_checkout_session_id:
+          isPodcast && podcastBillingLive && paymentStatus === "stripe_paid" && confirmedStripeSessionId
+            ? confirmedStripeSessionId
+            : "",
       };
       const result = await submitSponsorApplication(supabase, payload);
       if (!result.ok) {
@@ -247,6 +264,7 @@ export default function SponsorApplicationForm({
       setStatus("Sponsor application submitted. Our team will follow up with next-step onboarding.");
       setForm({ ...INITIAL_FORM });
       setPaymentStatus("unpaid");
+      setConfirmedStripeSessionId("");
       onSuccessfulSubmit?.();
     } catch {
       setError("Sponsor application failed to submit. Please retry.");

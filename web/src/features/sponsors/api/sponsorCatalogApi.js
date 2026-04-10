@@ -53,9 +53,14 @@ export async function listSponsorsCatalog(supabase) {
   return rows.map((row) => {
     const enrich = byId.get(String(row.id));
     if (!enrich) return row;
+    const extTitle = String(enrich.extracted_site_title || "").trim();
+    const extDesc = String(enrich.extracted_meta_description || "").trim();
     return normalizeSponsorRecord({
       ...row,
       name: enrich.canonical_display_name || row.name,
+      short_description: String(row.short_description || "").trim() || extDesc || row.short_description,
+      long_description: String(row.long_description || "").trim() || extDesc || row.long_description,
+      tagline: String(row.tagline || "").trim() || extTitle || row.tagline,
       enrichment_status: enrich.enrichment_status || row.enrichment_status,
       last_enriched_at: enrich.last_enriched_at || row.last_enriched_at,
     });
@@ -82,11 +87,12 @@ export async function saveSponsorAdminRecord(supabase, payload) {
 export async function runSponsorEnrichment(slug) {
   const res = await fetch("/api/sponsors/enrich", {
     method: "POST",
+    credentials: "include",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ slug }),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) return { ok: false, error: data?.error || "Enrichment failed." };
+  if (!res.ok) return { ok: false, error: data?.error || data?.message || "Enrichment failed." };
   return { ok: true, row: data?.row || null };
 }
 

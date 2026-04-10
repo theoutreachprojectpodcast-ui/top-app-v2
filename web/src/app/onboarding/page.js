@@ -54,8 +54,8 @@ function OnboardingFallback() {
 
 export default function OnboardingPage(props) {
   return (
-    <main className="topApp theme-clean">
-      <div className="headerBrandStack" style={{ padding: "16px 20px" }}>
+    <div className="onboardingRouteWrap theme-clean">
+      <div className="onboardingRouteToolbar">
         <Link href="/" className="btnSoft">
           ← Back to app
         </Link>
@@ -63,6 +63,6 @@ export default function OnboardingPage(props) {
       <Suspense fallback={<OnboardingFallback />}>
         <OnboardingServer {...props} />
       </Suspense>
-    </main>
+    </div>
   );
 }

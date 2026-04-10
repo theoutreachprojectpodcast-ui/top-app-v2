@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { clearNavAuthCache, readNavAuthCache, writeNavAuthCache } from "@/lib/auth/navAuthCache";
 
@@ -18,8 +18,10 @@ export function useAuthSession() {
 export default function AuthSessionProvider({ children }) {
   const pathname = usePathname();
   const [state, setState] = useState({ loading: true, authenticated: false, workos: false });
+  const skipFirstPathnameEffect = useRef(true);
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (opts = {}) => {
+    const soft = !!opts.soft;
     try {
       const [statusRes, meRes] = await Promise.all([
         fetch("/api/auth/status", { credentials: "include" }),
@@ -32,8 +34,12 @@ export default function AuthSessionProvider({ children }) {
       writeNavAuthCache(authenticated, workos);
       setState({ loading: false, authenticated, workos });
     } catch {
-      setState({ loading: false, authenticated: false, workos: false });
-      clearNavAuthCache();
+      setState((prev) => ({
+        loading: false,
+        authenticated: soft ? prev.authenticated : false,
+        workos: soft ? prev.workos : false,
+      }));
+      if (!soft) clearNavAuthCache();
     }
   }, []);
 
@@ -42,7 +48,15 @@ export default function AuthSessionProvider({ children }) {
     if (c) {
       setState({ loading: false, authenticated: !!c.authenticated, workos: !!c.workos });
     }
-    refresh();
+    void refresh({ soft: false });
+  }, [refresh]);
+
+  useEffect(() => {
+    if (skipFirstPathnameEffect.current) {
+      skipFirstPathnameEffect.current = false;
+      return;
+    }
+    void refresh({ soft: true });
   }, [pathname, refresh]);
 
   useEffect(() => {

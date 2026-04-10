@@ -141,6 +141,25 @@ export async function POST(request) {
           const sub = await stripe.subscriptions.retrieve(subId);
           await syncSubscription(admin, sub, cust);
         }
+
+        if (session.mode === "payment" && session.metadata?.checkout_kind === "podcast_sponsor") {
+          const w = session.metadata?.workos_user_id;
+          if (w && session.payment_status === "paid") {
+            const { error: pe } = await admin.from("podcast_sponsor_checkout_events").upsert(
+              {
+                stripe_checkout_session_id: session.id,
+                workos_user_id: String(w),
+                podcast_tier_id: String(session.metadata?.podcast_tier_id || ""),
+                payment_status: String(session.payment_status || "paid"),
+                amount_total: session.amount_total ?? null,
+                currency: session.currency ? String(session.currency) : null,
+                updated_at: new Date().toISOString(),
+              },
+              { onConflict: "stripe_checkout_session_id" },
+            );
+            if (pe) console.warn("[torp] podcast checkout audit upsert", pe.message);
+          }
+        }
         break;
       }
       case "customer.subscription.created":

@@ -54,3 +54,14 @@
   position: relative;
   z-index: 1;
 }
+
+.onboardingRouteToolbar,
+.nonprofitProfileToolbar {
+  width: min(var(--content-max-width), calc(100% - var(--content-gutter)));
+  margin: 0 auto;
+  padding: 8px 0 0;
+}
+
+.onboardingRouteWrap {
+  width: 100%;
+}

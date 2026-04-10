@@ -1,11 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import BrandMark from "@/components/BrandMark";
-import ColorSchemeToggle from "@/components/app/ColorSchemeToggle";
-import HeaderInner from "@/components/layout/HeaderInner";
 import NonprofitIcon from "@/features/nonprofits/components/NonprofitIcon";
 import NonprofitSocialLinks from "@/features/nonprofits/components/NonprofitSocialLinks";
 import { fetchNonprofitProfileDetail } from "@/features/directory/api";
@@ -49,11 +46,6 @@ export default function NonprofitProfilePage({ ein: einParam }) {
   const [error, setError] = useState("");
   const [enrichStatus, setEnrichStatus] = useState("");
   const [enrichBusy, setEnrichBusy] = useState(false);
-  const autoEnrichAttemptedRef = useRef(false);
-
-  useEffect(() => {
-    autoEnrichAttemptedRef.current = false;
-  }, [einParam]);
 
   useEffect(() => {
     setTheme(readProfileTheme());
@@ -124,63 +116,6 @@ export default function NonprofitProfilePage({ ein: einParam }) {
   const einDigits = normalizeEinDigits(einParam);
   const isFavorite = einDigits.length === 9 && favoriteEins.includes(einDigits);
 
-  useEffect(() => {
-    if (loading || error || !mergeBase || einDigits.length !== 9) return;
-    if (autoEnrichAttemptedRef.current) return;
-    const web = String(mergeBase.website ?? mergeBase.Website ?? "").trim();
-    if (!web) return;
-    const meta = String(mergeBase.metadata_source ?? "").toLowerCase();
-    if (meta.includes("website_enrichment") || mergeBase.profile_enriched_at) return;
-
-    autoEnrichAttemptedRef.current = true;
-    let cancelled = false;
-
-    (async () => {
-      setEnrichBusy(true);
-      setEnrichStatus("Checking the official website for verified details…");
-      try {
-        const res = await fetch("/api/nonprofit/enrich", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ein: einDigits }),
-        });
-        const data = await res.json().catch(() => ({}));
-        if (cancelled) return;
-        if (!res.ok) {
-          setEnrichStatus("");
-          return;
-        }
-        if (data.persisted) {
-          await reloadDetail(einDigits);
-        } else if (data.enrichmentRow) {
-          setMergeBase((prev) => {
-            if (!prev || !data.enrichmentRow) return prev;
-            const next = mergeDirectoryRowWithEnrichment(prev, data.enrichmentRow);
-            setCard(mapNonprofitCardRow(mapDirectoryRow(next), "directory"));
-            return next;
-          });
-        }
-        if (data.verified) {
-          setEnrichStatus(
-            data.persisted
-              ? "Profile updated from the official website."
-              : "Showing verified details gathered from the official website."
-          );
-        } else {
-          setEnrichStatus("");
-        }
-      } catch {
-        if (!cancelled) setEnrichStatus("");
-      } finally {
-        if (!cancelled) setEnrichBusy(false);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [loading, error, mergeBase, einDigits, reloadDetail]);
-
   function goBack() {
     if (typeof window !== "undefined" && window.history.length > 1) {
       router.back();
@@ -238,28 +173,12 @@ export default function NonprofitProfilePage({ ein: einParam }) {
       : "";
 
   return (
-    <main className={`topApp theme-${theme} nonprofitProfileShell`}>
-      <div className="headerBrandStack">
-        <BrandMark size="header" />
+    <div className={`theme-${theme} nonprofitProfileShell nonprofitProfileShell--inSiteChrome`}>
+      <div className="nonprofitProfileToolbar">
+        <button className="btnSoft nonprofitProfileBack" type="button" onClick={goBack}>
+          ← Back
+        </button>
       </div>
-      <header className="topbar">
-        <HeaderInner className="topbarInner nonprofitProfileTopbarInner">
-          <div className="topbarZone topbarLeft">
-            <button className="btnSoft nonprofitProfileBack" type="button" onClick={goBack}>
-              ← Back
-            </button>
-          </div>
-          <div className="topbarZone topbarRight">
-            <div className="topbarActionsCluster">
-              <ColorSchemeToggle />
-              <Link className="btnSoft" href="/">
-                Home
-              </Link>
-            </div>
-          </div>
-        </HeaderInner>
-      </header>
-      <div className="topbarOcclusion" aria-hidden="true" />
 
       <section className="shell nonprofitProfileOuter">
         <div className="nonprofitProfileBody">
@@ -415,6 +334,6 @@ export default function NonprofitProfilePage({ ein: einParam }) {
           ) : null}
         </div>
       </section>
-    </main>
+    </div>
   );
 }

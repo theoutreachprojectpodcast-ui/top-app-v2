@@ -1,5 +1,8 @@
 import { randomUUID } from "crypto";
+import { withAuth } from "@workos-inc/authkit-nextjs";
+import Stripe from "stripe";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { podcastSponsorCheckoutConfigured } from "@/lib/billing/stripeConfig";
 
 const TABLE = "sponsor_applications";
 
@@ -32,8 +35,41 @@ export async function POST(request) {
   const sponsor_program_type = pickString(body, "sponsor_program_type") || "main_app";
   const sponsor_tier_name = pickString(body, "sponsor_tier_name");
   const sponsor_tier_amount = Number(body.sponsor_tier_amount);
+  const payment_status_in = pickString(body, "payment_status") || "unpaid";
+  const stripe_checkout_session_id_in = pickString(body, "stripe_checkout_session_id");
+
   if (!first_name || !last_name || !email || !company_name || !sponsor_tier_name || Number.isNaN(sponsor_tier_amount)) {
     return Response.json({ error: "missing_required_fields" }, { status: 400 });
+  }
+
+  const auth = await withAuth();
+
+  if (sponsor_program_type === "podcast" && payment_status_in === "paid_stripe") {
+    if (!stripe_checkout_session_id_in) {
+      return Response.json({ error: "missing_stripe_checkout_session_id" }, { status: 400 });
+    }
+    if (!auth.user) {
+      return Response.json({ error: "unauthorized", message: "Sign in to submit a paid podcast sponsor application." }, { status: 401 });
+    }
+    if (!podcastSponsorCheckoutConfigured()) {
+      return Response.json({ error: "podcast_billing_not_configured" }, { status: 503 });
+    }
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+    try {
+      const session = await stripe.checkout.sessions.retrieve(stripe_checkout_session_id_in);
+      if (session.metadata?.checkout_kind !== "podcast_sponsor") {
+        return Response.json({ error: "invalid_checkout_session" }, { status: 400 });
+      }
+      if (String(session.metadata?.workos_user_id || "") !== auth.user.id) {
+        return Response.json({ error: "session_user_mismatch" }, { status: 403 });
+      }
+      if (session.payment_status !== "paid") {
+        return Response.json({ error: "payment_not_completed" }, { status: 400 });
+      }
+    } catch (e) {
+      console.error("[torp] sponsor application stripe verify", e);
+      return Response.json({ error: "stripe_verify_failed", message: e.message }, { status: 400 });
+    }
   }
 
   const row = {
@@ -66,6 +102,11 @@ export async function POST(request) {
     payment_status: pickString(body, "payment_status") || "unpaid",
     payment_demo_status: pickString(body, "payment_demo_status") || "unpaid",
     application_status: pickString(body, "application_status") || "submitted",
+    stripe_checkout_session_id:
+      sponsor_program_type === "podcast" && payment_status_in === "paid_stripe" && stripe_checkout_session_id_in
+        ? stripe_checkout_session_id_in
+        : null,
+    applicant_workos_user_id: auth.user?.id ? String(auth.user.id) : null,
   };
 
   const { data, error } = await admin.from(TABLE).insert(row).select("id").maybeSingle();
