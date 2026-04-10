@@ -172,7 +172,7 @@ export default function NonprofitCard({
           data-torp-listing-category={categoryKey}
           style={listingPhoto ? { backgroundImage: `url(${JSON.stringify(listingPhoto)})` } : undefined}
         />
-        <div className="torpListingCardHeroScrim torpListingCardHeroScrim--resource" />
+        <div className="torpListingCardHeroScrim torpListingCardHeroScrim--resource torpListingCardHeroScrim--orgListing" />
       </div>
       <div className="torpListingCardBody">
         <div

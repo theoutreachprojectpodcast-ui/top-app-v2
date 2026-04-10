@@ -48,6 +48,26 @@
   background: linear-gradient(180deg, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0.5) 100%);
 }
 
+/* Directory + trusted org cards: slightly richer scrim than base resource strip (sponsors keep their own shell). */
+.torpListingCardHero--photo + .torpListingCardHeroScrim--orgListing {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-bg-primary) 10%, transparent) 0%,
+    color-mix(in srgb, var(--color-bg-primary) 38%, transparent) 55%,
+    color-mix(in srgb, var(--color-bg-primary) 62%, transparent) 100%
+  );
+}
+
+:root[data-color-scheme="dark"] .torpListingCardHero--photo + .torpListingCardHeroScrim--orgListing,
+.dark .torpListingCardHero--photo + .torpListingCardHeroScrim--orgListing {
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.1) 0%,
+    rgba(4, 10, 18, 0.42) 55%,
+    rgba(4, 10, 18, 0.58) 100%
+  );
+}
+
 /* Category-based hero when no photo URL (deterministic, uses brand np-* tokens) */
 .torpListingCardHero--category {
   background-image: linear-gradient(

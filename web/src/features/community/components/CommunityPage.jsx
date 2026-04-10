@@ -5,6 +5,7 @@ import Link from "next/link";
 import IconWrap from "@/components/shared/IconWrap";
 import CommunityTrustDisclosure from "@/features/community/components/CommunityTrustDisclosure";
 import CommunityModerationPanel from "@/features/community/components/CommunityModerationPanel";
+import OrgHeaderImageReviewPanel from "@/features/nonprofits/admin/OrgHeaderImageReviewPanel";
 import ModerationQueuePreview from "@/features/community/components/ModerationQueuePreview";
 import CommunityConnectionsPanel from "@/features/community/components/CommunityConnectionsPanel";
 import CommunityMemberProfileModal from "@/features/community/components/CommunityMemberProfileModal";
@@ -213,6 +214,7 @@ export default function CommunityPage({
               canModerate={canModerate}
               onFeedChanged={refresh}
             />
+            <OrgHeaderImageReviewPanel canModerate={canModerate} />
             <ModerationQueuePreview />
           </section>
         </>

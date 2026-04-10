@@ -27,6 +27,13 @@ create table if not exists public.proven_allies (
     check (listing_status in ('pending', 'active', 'archived')),
   sort_order int not null default 0,
   application_submission_ref text null,
+  header_image_url text null,
+  header_image_source_url text null,
+  header_image_source_type text null,
+  header_image_status text null,
+  header_image_last_enriched_at timestamptz null,
+  header_image_review_status text null,
+  header_image_notes text null,
   unique (ein)
 );
 

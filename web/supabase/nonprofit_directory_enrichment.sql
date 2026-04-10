@@ -21,6 +21,14 @@ create table if not exists public.nonprofit_directory_enrichment (
   hero_image_url text,
   thumbnail_url text,
 
+  header_image_url text,
+  header_image_source_url text,
+  header_image_source_type text,
+  header_image_status text,
+  header_image_last_enriched_at timestamptz,
+  header_image_review_status text,
+  header_image_notes text,
+
   facebook_url text,
   instagram_url text,
   linkedin_url text,

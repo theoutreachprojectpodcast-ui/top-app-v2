@@ -9,6 +9,7 @@ import { nteeToService } from "@/lib/utils";
 import { mapNonprofitLinks } from "@/features/nonprofits/mappers/nonprofitLinksMapper";
 import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
 import { resolveFindInfoHref } from "@/features/nonprofits/domain/nonprofitCardActions";
+import { resolveOrgListingHeaderImageUrl } from "@/lib/nonprofits/resolveOrgListingHeaderImageUrl";
 
 function firstNonEmpty(...values) {
   for (const value of values) {
@@ -282,7 +283,7 @@ export function mapNonprofitCardRow(row = {}, source = "directory") {
     missionStatement: String(patchedRow.missionStatement ?? patchedRow.mission_statement ?? "").trim(),
     serviceArea: String(patchedRow.serviceArea ?? patchedRow.service_area ?? "").trim(),
     foundedYear: patchedRow.foundedYear ?? patchedRow.founded_year ?? null,
-    heroImageUrl: String(patchedRow.heroImageUrl ?? patchedRow.hero_image_url ?? "").trim(),
+    heroImageUrl: resolveOrgListingHeaderImageUrl(patchedRow),
     thumbnailUrl: String(patchedRow.thumbnailUrl ?? patchedRow.thumbnail_url ?? "").trim(),
     publicSlug: String(patchedRow.publicSlug ?? patchedRow.public_slug ?? "").trim(),
     metadataSource: String(patchedRow.metadataSource ?? patchedRow.metadata_source ?? "").trim(),

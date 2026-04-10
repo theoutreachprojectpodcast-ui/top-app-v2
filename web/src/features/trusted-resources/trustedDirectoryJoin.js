@@ -6,6 +6,8 @@
  * is the canonical bridge to `nonprofits_search_app_v1` + `nonprofit_directory_enrichment`.
  */
 
+import { resolveOrgListingHeaderImageUrl } from "@/lib/nonprofits/resolveOrgListingHeaderImageUrl";
+
 const DIRECTORY_TABLE = "nonprofits_search_app_v1";
 const ENRICHMENT_TABLE = "nonprofit_directory_enrichment";
 
@@ -123,7 +125,9 @@ export async function attachDirectoryAndEnrichmentToTrustedRows(supabase, rows =
   const enResult = await runQuery(() =>
     supabase
       .from(ENRICHMENT_TABLE)
-      .select("ein,display_name_on_site,canonical_display_name,website_verified_name,logo_url,short_description,headline")
+      .select(
+        "ein,display_name_on_site,canonical_display_name,website_verified_name,logo_url,short_description,headline,hero_image_url,thumbnail_url,header_image_url,header_image_source_url,header_image_source_type,header_image_status,header_image_review_status,header_image_notes,header_image_last_enriched_at"
+      )
       .in("ein", eins)
   );
   const enRows = enResult?.error ? [] : enResult.data || [];
@@ -202,6 +206,31 @@ export async function attachDirectoryAndEnrichmentToTrustedRows(supabase, rows =
     } else if (!next.raw?.profile?.logo_url) {
       if (next.raw?.profile) next.raw.profile = { ...next.raw.profile, logo_url: currentLogo };
     }
+
+    const catalogCurated = String(row.header_image_review_status || "").trim().toLowerCase() === "curated";
+    if (!catalogCurated && enrich?.ein) {
+      const eh = String(enrich.header_image_url || "").trim();
+      if (eh) next.header_image_url = eh;
+      const esrc = String(enrich.header_image_source_url || "").trim();
+      if (esrc) next.header_image_source_url = esrc;
+      const est = String(enrich.header_image_source_type || "").trim();
+      if (est) next.header_image_source_type = est;
+      const ests = String(enrich.header_image_status || "").trim();
+      if (ests) next.header_image_status = ests;
+      const ers = String(enrich.header_image_review_status || "").trim();
+      if (ers) next.header_image_review_status = ers;
+      const eno = String(enrich.header_image_notes || "").trim();
+      if (eno) next.header_image_notes = eno;
+      if (enrich.header_image_last_enriched_at) next.header_image_last_enriched_at = enrich.header_image_last_enriched_at;
+      const hv = String(enrich.hero_image_url || "").trim();
+      if (hv) next.hero_image_url = hv;
+      const tv = String(enrich.thumbnail_url || "").trim();
+      if (tv) next.thumbnail_url = tv;
+    }
+
+    const heroResolved = resolveOrgListingHeaderImageUrl(next);
+    next.heroImageUrl = heroResolved;
+    next.hero_image_url = heroResolved;
 
     const resolvedTitle = String(next.orgName || "").trim();
     if (resolvedTitle && next.raw?.profile) {
