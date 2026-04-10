@@ -2,8 +2,10 @@ import { createClient } from "@supabase/supabase-js";
 import { withAuth } from "@workos-inc/authkit-nextjs";
 import { isCommunityModeratorServer } from "@/lib/community/moderatorServer";
 
+export const runtime = "nodejs";
+
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const TABLE = "sponsors_catalog";
 
 function clean(value) {
@@ -69,20 +71,37 @@ async function loadWebsiteSignals(websiteUrl) {
 }
 
 export async function POST(request) {
-  if (!URL || !KEY) return Response.json({ error: "Missing Supabase credentials." }, { status: 500 });
+  if (!URL) return Response.json({ error: "Missing Supabase credentials." }, { status: 500 });
+  if (!SERVICE_KEY) {
+    return Response.json(
+      {
+        error: "missing_service_role",
+        message:
+          "Set SUPABASE_SERVICE_ROLE_KEY in .env.local so sponsor meta enrichment can write sponsors_catalog and sponsor_enrichment on localhost:3000.",
+      },
+      { status: 500 }
+    );
+  }
 
   const auth = await withAuth();
   if (!auth.user) {
     return Response.json({ error: "unauthorized", message: "Sign in to run sponsor enrichment." }, { status: 401 });
   }
   if (!isCommunityModeratorServer({ email: auth.user.email, workosUserId: auth.user.id })) {
-    return Response.json({ error: "forbidden", message: "Moderator access required." }, { status: 403 });
+    const hint =
+      process.env.NODE_ENV === "development"
+        ? "Add your WorkOS sign-in email to COMMUNITY_MODERATOR_EMAILS in .env.local."
+        : undefined;
+    return Response.json(
+      { error: "forbidden", message: "Moderator access required.", ...(hint ? { hint } : {}) },
+      { status: 403 }
+    );
   }
 
   const body = await request.json().catch(() => ({}));
   const slug = clean(body.slug);
   if (!slug) return Response.json({ error: "Missing sponsor slug." }, { status: 400 });
-  const supabase = createClient(URL, KEY);
+  const supabase = createClient(URL, SERVICE_KEY);
   const { data: row, error } = await supabase.from(TABLE).select("*").eq("slug", slug).maybeSingle();
   if (error || !row) return Response.json({ error: "Sponsor not found." }, { status: 404 });
 

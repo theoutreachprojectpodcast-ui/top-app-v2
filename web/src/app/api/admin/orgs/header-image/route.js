@@ -7,11 +7,38 @@ import {
   enrichOrgHeaderImageForEin,
 } from "@/server/orgHeaderImage/enrichOrgHeaderImage";
 
+/** Node runtime: Buffer, Storage uploads, and long-running fetches (required on `pnpm dev` / localhost:3000). */
+export const runtime = "nodejs";
+
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const READ_KEY = SERVICE_KEY || ANON_KEY;
 
 function clean(value) {
   return String(value ?? "").trim();
+}
+
+function moderatorForbiddenResponse() {
+  const hint =
+    process.env.NODE_ENV === "development"
+      ? "Add your WorkOS sign-in email to COMMUNITY_MODERATOR_EMAILS in .env.local (see .env.local.example)."
+      : undefined;
+  return Response.json(
+    { error: "forbidden", message: "Moderator access required.", ...(hint ? { hint } : {}) },
+    { status: 403 }
+  );
+}
+
+function missingServiceRoleResponse() {
+  return Response.json(
+    {
+      error: "missing_service_role",
+      message:
+        "Set SUPABASE_SERVICE_ROLE_KEY in .env.local. Org header enrichment updates the database and uploads to Storage; the anon key is not enough on localhost:3000 or in production.",
+    },
+    { status: 500 }
+  );
 }
 
 function requireModerator(auth) {
@@ -19,13 +46,13 @@ function requireModerator(auth) {
     return Response.json({ error: "unauthorized", message: "Sign in." }, { status: 401 });
   }
   if (!isCommunityModeratorServer({ email: auth.user.email, workosUserId: auth.user.id })) {
-    return Response.json({ error: "forbidden", message: "Moderator access required." }, { status: 403 });
+    return moderatorForbiddenResponse();
   }
   return null;
 }
 
 export async function GET(request) {
-  if (!URL || !KEY) return Response.json({ error: "Missing Supabase credentials." }, { status: 500 });
+  if (!URL || !READ_KEY) return Response.json({ error: "Missing Supabase credentials." }, { status: 500 });
   const auth = await withAuth();
   const denied = requireModerator(auth);
   if (denied) return denied;
@@ -36,7 +63,7 @@ export async function GET(request) {
     return Response.json({ error: "Provide ?ein= nine-digit EIN." }, { status: 400 });
   }
 
-  const supabase = createClient(URL, KEY);
+  const supabase = createClient(URL, READ_KEY);
   const { data: enrichment, error: e1 } = await supabase
     .from("nonprofit_directory_enrichment")
     .select("*")
@@ -55,14 +82,15 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
-  if (!URL || !KEY) return Response.json({ error: "Missing Supabase credentials." }, { status: 500 });
+  if (!URL) return Response.json({ error: "Missing Supabase credentials." }, { status: 500 });
+  if (!SERVICE_KEY) return missingServiceRoleResponse();
   const auth = await withAuth();
   const denied = requireModerator(auth);
   if (denied) return denied;
 
   const body = await request.json().catch(() => ({}));
   const mode = clean(body.mode || "single").toLowerCase();
-  const supabase = createClient(URL, KEY);
+  const supabase = createClient(URL, SERVICE_KEY);
 
   if (mode === "batch") {
     const limit = Number(body.limit) || 10;
@@ -90,7 +118,8 @@ export async function POST(request) {
 }
 
 export async function PATCH(request) {
-  if (!URL || !KEY) return Response.json({ error: "Missing Supabase credentials." }, { status: 500 });
+  if (!URL) return Response.json({ error: "Missing Supabase credentials." }, { status: 500 });
+  if (!SERVICE_KEY) return missingServiceRoleResponse();
   const auth = await withAuth();
   const denied = requireModerator(auth);
   if (denied) return denied;
@@ -106,7 +135,7 @@ export async function PATCH(request) {
     return Response.json({ error: "action must be approve | reject | curate" }, { status: 400 });
   }
 
-  const supabase = createClient(URL, KEY);
+  const supabase = createClient(URL, SERVICE_KEY);
   const nowIso = new Date().toISOString();
 
   const { data: existing, error: loadErr } = await supabase

@@ -31,6 +31,12 @@
 - If discovery fails and there is no existing `logo_url`, status may be set to **`fallback`** with `pending_review`.
 - Rejected logos clear `logo_url` for listing; cards show the **wordmark** (`sponsorPremiumWordmark`).
 
+## Localhost (`pnpm dev` → http://localhost:3000)
+
+1. `NEXT_PUBLIC_APP_URL` / `APP_BASE_URL` = `http://localhost:3000` and WorkOS **Redirect URI** = `http://localhost:3000/callback`.
+2. **`SUPABASE_SERVICE_ROLE_KEY`** in `.env.local` — required for POST/PATCH and Storage uploads (anon key alone will return `missing_service_role`).
+3. **`COMMUNITY_MODERATOR_EMAILS`** — include the exact email you use when signing in with WorkOS, or enrichment APIs return 403 with a dev `hint`.
+
 ## Relation to org header-image enrichment
 
 - Same architectural pattern: server pipeline, storage-first, moderator review, resolver for public display.
