@@ -14,8 +14,8 @@
   color-scheme: light;
   --topbar-occlusion-spot: rgba(17, 23, 20, 0.06);
 
-  --font-body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-heading: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+  --font-body: var(--font-roboto, system-ui), system-ui, -apple-system, sans-serif;
+  --font-heading: var(--font-roboto, system-ui), system-ui, -apple-system, sans-serif;
 
   /* Semantic surfaces — light */
   --color-bg-app: #f5f7f6;
@@ -259,7 +259,7 @@ body {
     radial-gradient(ellipse 72% 52% at 100% 0%, color-mix(in srgb, var(--color-bg-muted) 42%, transparent), transparent 52%),
     linear-gradient(180deg, var(--color-bg-subtle) 0%, var(--color-bg-app) 48%, var(--color-bg-app) 100%);
   color: var(--color-text-primary);
-  font-family: var(--font-body), "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: var(--font-body), Helvetica, Arial, sans-serif;
   position: relative;
   isolation: isolate;
 }
@@ -317,7 +317,7 @@ h1,
 h2,
 h3,
 h4 {
-  font-family: var(--font-heading), var(--font-body), "Segoe UI", sans-serif;
+  font-family: var(--font-heading), var(--font-body), sans-serif;
   font-weight: 650;
   letter-spacing: -0.01em;
 }

@@ -1,6 +1,14 @@
 import "./globals.css";
+import { Roboto } from "next/font/google";
 import ColorSchemeRoot from "@/components/app/ColorSchemeRoot";
 import AuthSessionProvider from "@/components/auth/AuthSessionProvider";
+
+const roboto = Roboto({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
+  variable: "--font-roboto",
+});
 
 export const metadata = {
   title: "The Outreach Project",
@@ -9,7 +17,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" suppressHydrationWarning data-color-scheme="light">
+    <html lang="en" className={roboto.variable} suppressHydrationWarning data-color-scheme="light">
       <body suppressHydrationWarning>
         <ColorSchemeRoot>
           <AuthSessionProvider>{children}</AuthSessionProvider>

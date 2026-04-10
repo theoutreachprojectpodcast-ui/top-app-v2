@@ -174,7 +174,7 @@
 }
 .headerBrandTitle {
   margin: 0;
-  font-family: var(--font-heading), var(--font-body), "Segoe UI", sans-serif;
+  font-family: var(--font-heading), var(--font-body), sans-serif;
   font-size: clamp(15px, 2.8vw, 19px);
   font-weight: 800;
   letter-spacing: 0.1em;
