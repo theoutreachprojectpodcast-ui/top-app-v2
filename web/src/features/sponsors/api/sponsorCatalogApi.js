@@ -96,6 +96,19 @@ export async function runSponsorEnrichment(slug) {
   return { ok: true, row: data?.row || null };
 }
 
+/** Moderator-only: official-site logo discovery → storage (see /api/admin/sponsors/logo-enrichment). */
+export async function runSponsorLogoEnrichment(slug, { force = false, batch = false, limit = 8 } = {}) {
+  const res = await fetch("/api/admin/sponsors/logo-enrichment", {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(batch ? { mode: "batch", limit, delayMs: 450, force } : { slug, force }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) return { ok: false, error: data?.error || data?.message || "Logo enrichment failed." };
+  return { ok: true, ...data };
+}
+
 export function mapSponsorsToCardModels(rows = []) {
   return rows.map((row) => getSponsorCardViewModel(row));
 }

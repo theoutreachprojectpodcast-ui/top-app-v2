@@ -8,6 +8,7 @@ import MissionPartnerPackagesModal from "@/features/sponsors/components/MissionP
 import MissionSponsorApplyModal from "@/features/sponsors/components/MissionSponsorApplyModal";
 import SponsorAdminEditorSection from "@/features/sponsors/components/SponsorAdminEditorSection";
 import SponsorAdminReviewSection from "@/features/sponsors/components/SponsorAdminReviewSection";
+import SponsorLogoReviewPanel from "@/features/sponsors/admin/SponsorLogoReviewPanel";
 import SponsorsLandingPage from "@/features/sponsors/components/SponsorsLandingPage";
 import { SPONSOR_TIERS } from "@/features/sponsors/data/sponsorTiers";
 
@@ -104,6 +105,7 @@ export default function SponsorHub({ supabase: supabaseProp }) {
       {showSponsorAdmin ? <hr className="sponsorAdminDivider" aria-hidden="true" /> : null}
       <SponsorAdminEditorSection showAdmin={showSponsorAdmin} supabase={supabase} sponsors={sponsors} onSaved={loadSponsors} />
       <SponsorAdminReviewSection showAdmin={showSponsorAdmin} supabase={supabase} />
+      <SponsorLogoReviewPanel showAdmin={showSponsorAdmin} onChanged={loadSponsors} />
       <MissionPartnerPackagesModal
         open={missionPackagesOpen}
         onClose={closeMissionPackages}

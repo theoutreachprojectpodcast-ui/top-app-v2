@@ -20,5 +20,8 @@ export async function POST(request) {
 
   const websiteUrl = String(body.websiteUrl || body.company_website || "").trim();
   const candidates = buildSponsorLogoCandidates(websiteUrl);
-  return Response.json({ candidates, note: "Confirm in UI before writing to sponsors_catalog.logo_url." });
+  return Response.json({
+    candidates,
+    note: "Static URL guesses only (no HTML fetch). For full discovery + validation use POST /api/admin/sponsors/logo-enrichment.",
+  });
 }

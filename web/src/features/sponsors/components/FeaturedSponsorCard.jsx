@@ -105,27 +105,10 @@ export default function FeaturedSponsorCard({ sponsor }) {
   const hasListingBg = !!String(sponsor.backgroundImageUrl || "").trim();
   const social = sponsor.socialLinks || {};
   const displayName = resolveSponsorDisplayName(sponsor.name || "") || String(sponsor.name || "").trim() || "Partner";
-  const websiteHost = useMemo(() => {
-    const src = String(sponsor.ctaUrl || social.website || "").trim();
-    if (!src) return "";
-    try {
-      return new URL(src).hostname.replace(/^www\./i, "");
-    } catch {
-      return "";
-    }
-  }, [sponsor.ctaUrl, social.website]);
   const logoCandidates = useMemo(() => {
-    const out = [];
-    const push = (value) => {
-      const next = String(value || "").trim();
-      if (!next) return;
-      if (!out.includes(next)) out.push(next);
-    };
-    push(sponsor.logoUrl);
-    if (websiteHost) push(`https://logo.clearbit.com/${websiteHost}`);
-    if (websiteHost) push(`https://www.google.com/s2/favicons?sz=128&domain=${websiteHost}`);
-    return out;
-  }, [sponsor.logoUrl, websiteHost]);
+    const u = String(sponsor.logoUrl || "").trim();
+    return u ? [u] : [];
+  }, [sponsor.logoUrl]);
   const logoSrc = logoCandidates[logoIndex] || "";
   const profileHref = `/sponsors/${encodeURIComponent(sponsor.slug || sponsor.id || "")}`;
   const logoToneClass = logoTone === "normal" ? "" : ` sponsorPremiumLogoImg--tone-${logoTone}`;

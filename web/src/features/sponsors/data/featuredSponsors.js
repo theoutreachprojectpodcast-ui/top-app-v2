@@ -1,12 +1,8 @@
 /**
- * Featured sponsors — logos via Clearbit where a public domain exists.
- * Background imagery should come from website Open Graph (see POST /api/sponsors/enrich) or
- * `sponsors_catalog.background_image_url` in Supabase — not generic stock URLs.
+ * Featured sponsors — offline fallback when `sponsors_catalog` is empty or unreachable.
+ * Logos are null here; use moderator logo enrichment + Supabase for real brand assets.
+ * Background imagery should come from Open Graph (`POST /api/sponsors/enrich`) or `background_image_url`.
  */
-
-function clearbitLogo(domain) {
-  return `https://logo.clearbit.com/${domain}`;
-}
 
 export const FEATURED_SPONSORS = [
   {
@@ -33,7 +29,7 @@ export const FEATURED_SPONSORS = [
     tagline: "Men’s health clinics focused on testosterone therapy, vitality, and proactive care.",
     ctaLabel: "Visit website",
     ctaUrl: "https://gamedaymenshealth.com/",
-    logoUrl: clearbitLogo("gamedaymenshealth.com"),
+    logoUrl: null,
     warmVariant: "copper",
     backgroundImageUrl: "",
     socialLinks: {
@@ -52,7 +48,7 @@ export const FEATURED_SPONSORS = [
     tagline: "Service-minded real estate guidance for military, veterans, and first-responder families.",
     ctaLabel: "Visit website",
     ctaUrl: "https://ruckingrealtygroup.com/",
-    logoUrl: clearbitLogo("ruckingrealtygroup.com"),
+    logoUrl: null,
     warmVariant: "amber",
     backgroundImageUrl: "",
     socialLinks: {
@@ -70,7 +66,7 @@ export const FEATURED_SPONSORS = [
     tagline: "Veteran-owned coffee fueling community and giving back to those who serve.",
     ctaLabel: "Visit website",
     ctaUrl: "https://ironsoldierscoffeeco.com/",
-    logoUrl: clearbitLogo("ironsoldierscoffeeco.com"),
+    logoUrl: null,
     warmVariant: "rust",
     backgroundImageUrl: "",
     socialLinks: {
@@ -88,7 +84,7 @@ export const FEATURED_SPONSORS = [
     tagline: "Brand and digital design for mission-driven organizations and founders.",
     ctaLabel: "Visit website",
     ctaUrl: "https://eduardopicodesigns.com/",
-    logoUrl: clearbitLogo("eduardopicodesigns.com"),
+    logoUrl: null,
     warmVariant: "teal",
     backgroundImageUrl: "",
     socialLinks: {
@@ -104,7 +100,7 @@ export const FEATURED_SPONSORS = [
     tagline: "Apparel and goods that amplify stories of service, recovery, and resilience.",
     ctaLabel: "Visit website",
     ctaUrl: "https://www.warsendmerch.com/",
-    logoUrl: clearbitLogo("warsendmerch.com"),
+    logoUrl: null,
     warmVariant: "rose",
     backgroundImageUrl: "",
     socialLinks: {},
@@ -118,7 +114,7 @@ export const FEATURED_SPONSORS = [
     tagline: "Advanced neurological care pathways supporting recovery and quality of life.",
     ctaLabel: "Visit website",
     ctaUrl: "https://braintreatmentcenter.com/",
-    logoUrl: clearbitLogo("braintreatmentcenter.com"),
+    logoUrl: null,
     warmVariant: "sage",
     backgroundImageUrl: "",
     socialLinks: {

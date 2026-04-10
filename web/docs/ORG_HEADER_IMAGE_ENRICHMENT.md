@@ -37,3 +37,7 @@
 ## Storage bucket
 
 Create **`org-header-images`** in Supabase (public read if using `getPublicUrl`). Service-role API routes perform uploads; anonymous users only receive already-public URLs stored in the database.
+
+## Related: sponsor logos
+
+Sponsor **logos** use a parallel pipeline: see `web/docs/SPONSOR_LOGO_ENRICHMENT.md` and `/api/admin/sponsors/logo-enrichment`. Sponsor **background** images stay on `background_image_url` / `POST /api/sponsors/enrich`.

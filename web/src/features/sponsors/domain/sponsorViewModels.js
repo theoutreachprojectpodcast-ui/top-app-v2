@@ -1,4 +1,5 @@
 import { resolveSponsorDisplayName } from "@/lib/entityDisplayName";
+import { resolveSponsorListingLogoUrl } from "@/lib/sponsors/resolveSponsorListingLogoUrl";
 
 function clean(value) {
   return String(value ?? "").trim();
@@ -56,6 +57,12 @@ export function normalizeSponsorRecord(row = {}) {
     sponsor_type: clean(row.sponsor_type || row.industry || "Mission partner"),
     website_url: website,
     logo_url: clean(row.logo_url || row.logoUrl),
+    logo_source_url: clean(row.logo_source_url),
+    logo_source_type: clean(row.logo_source_type),
+    logo_status: clean(row.logo_status),
+    logo_last_enriched_at: row.logo_last_enriched_at ?? null,
+    logo_review_status: clean(row.logo_review_status),
+    logo_notes: clean(row.logo_notes),
     background_image_url: clean(row.background_image_url || row.backgroundImageUrl),
     short_description: clean(row.short_description || row.tagline),
     long_description: clean(row.long_description || row.description),
@@ -79,6 +86,7 @@ export function getSponsorCardViewModel(row = {}) {
   const s = normalizeSponsorRecord(row);
   /** Prefer concise site-derived tagline, then long description (enrichment merges into these). */
   const cardSubheader = truncateSponsorLine(s.tagline || s.long_description || s.short_description, 140);
+  const logoDisplay = resolveSponsorListingLogoUrl(s) || null;
   return {
     id: s.id,
     slug: s.slug,
@@ -90,7 +98,7 @@ export function getSponsorCardViewModel(row = {}) {
     tagline: s.tagline || s.short_description || "Mission partner supporting community outcomes.",
     ctaUrl: s.website_url || null,
     websitePending: !s.website_url,
-    logoUrl: s.logo_url || null,
+    logoUrl: logoDisplay,
     warmVariant: s.warm_variant || "gold",
     backgroundImageUrl: s.background_image_url || "",
     socialLinks: {
@@ -112,8 +120,10 @@ export function getSponsorCardViewModel(row = {}) {
 
 export function getSponsorProfileViewModel(row = {}) {
   const s = normalizeSponsorRecord(row);
+  const logoDisplay = resolveSponsorListingLogoUrl(s) || "";
   return {
     ...s,
+    logo_url: logoDisplay,
     socialLinks: [
       { key: "website", label: "Website", url: validUrl(s.website_url) ? s.website_url : "" },
       { key: "instagram", label: "Instagram", url: platformVerified(s.instagram_url, "instagram.com") ? s.instagram_url : "" },
