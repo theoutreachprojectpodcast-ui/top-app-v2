@@ -83,7 +83,7 @@ export default function SponsorAdminReviewSection({ showAdmin = false, supabase 
                   setNote(String(row?.internal_notes || ""));
                 }}
               >
-                <strong>{row?.company_name || "Company"}</strong>
+                <strong className="torpEntityNameDisplay">{row?.company_name || "Company"}</strong>
                 <span>{row?.email || "No contact email"}</span>
                 <span>
                   {row?.sponsor_program_type === "podcast" ? "Podcast sponsor" : "Mission partner"} · {row?.sponsor_tier_name || "Tier not specified"}
@@ -98,7 +98,7 @@ export default function SponsorAdminReviewSection({ showAdmin = false, supabase 
         <div className="sponsorAdminDetail">
           {selectedRecord ? (
             <>
-              <h4>{selectedRecord.company_name || "Sponsor submission"}</h4>
+              <h4 className="torpEntityNameDisplay">{selectedRecord.company_name || "Sponsor submission"}</h4>
               <p className="sponsorAdminMeta">
                 {selectedRecord.first_name} {selectedRecord.last_name} · {selectedRecord.email}
               </p>

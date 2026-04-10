@@ -537,6 +537,11 @@
   font-size: 12px;
   font-weight: 700;
 }
+/* Sponsor org names on the podcast strip only (not generic .podcastSponsorPill CTAs elsewhere). */
+.podcastSponsorStrip .podcastSponsorRow .podcastSponsorPill {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
 
 .podcastLockCard {
   border: 1px dashed rgba(255, 95, 69, 0.45);

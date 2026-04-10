@@ -213,7 +213,8 @@ export default function NonprofitProfilePage({ ein: einParam }) {
                       {card.displayNameOnSite &&
                       sanitizePlainText(card.displayNameOnSite) !== sanitizePlainText(card.name) ? (
                         <p className="nonprofitProfileNameOnSite" title="As shown on the official website">
-                          On site: {sanitizePlainText(card.displayNameOnSite)}
+                          On site:{" "}
+                          <span className="torpEntityNameInline">{sanitizePlainText(card.displayNameOnSite)}</span>
                         </p>
                       ) : null}
                       {card.tagline ? <p className="nonprofitProfileTagline">{sanitizePlainText(card.tagline)}</p> : null}
