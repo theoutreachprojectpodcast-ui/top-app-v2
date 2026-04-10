@@ -1,8 +1,95 @@
 -- tORP v0.3 — Organization listing header images (directory + trusted resources).
--- Reviewable, DB-backed metadata; app renders from stored URLs only (no live image fetch on page load).
--- Run in Supabase SQL editor or your migration runner.
+-- Safe to run on empty projects: creates nonprofit_directory_enrichment when missing, then adds header columns.
+-- App reads stored URLs only (no live image fetch on page load).
 
--- 1) Directory enrichment (one row per EIN): canonical header pipeline fields.
+-- =============================================================================
+-- 0) Base table (required by later ALTERs). Idempotent: IF NOT EXISTS.
+-- =============================================================================
+-- Extended nonprofit directory metadata (one row per organization, keyed by normalized 9-digit EIN).
+
+create table if not exists public.nonprofit_directory_enrichment (
+  ein text primary key check (ein ~ '^[0-9]{9}$'),
+
+  public_slug text unique,
+
+  headline text,
+  tagline text,
+  short_description text,
+  long_description text,
+  mission_statement text,
+  service_area text,
+  founded_year integer,
+
+  website_url text,
+
+  logo_url text,
+  hero_image_url text,
+  thumbnail_url text,
+
+  header_image_url text,
+  header_image_source_url text,
+  header_image_source_type text,
+  header_image_status text,
+  header_image_last_enriched_at timestamptz,
+  header_image_review_status text,
+  header_image_notes text,
+
+  facebook_url text,
+  instagram_url text,
+  linkedin_url text,
+  x_url text,
+  youtube_url text,
+  tiktok_url text,
+
+  facebook_verified boolean not null default false,
+  instagram_verified boolean not null default false,
+  linkedin_verified boolean not null default false,
+  x_verified boolean not null default false,
+  youtube_verified boolean not null default false,
+  tiktok_verified boolean not null default false,
+
+  metadata_source text,
+  profile_enriched_at timestamptz,
+  last_verified_at timestamptz,
+
+  ein_identity_verified boolean not null default true,
+  identity_verified_at timestamptz,
+
+  display_name_on_site text,
+  canonical_display_name text,
+  website_verified_name text,
+  irs_name text,
+  legal_name text,
+  naming_confidence double precision,
+  naming_source_summary text,
+  naming_status text,
+  naming_last_checked_at timestamptz,
+  naming_verified_at timestamptz,
+  naming_review_required boolean not null default false,
+  research_status text,
+  research_confidence double precision,
+  source_summary text,
+  web_search_supplemented boolean not null default false,
+
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists nonprofit_directory_enrichment_slug_idx
+  on public.nonprofit_directory_enrichment (public_slug)
+  where public_slug is not null;
+
+alter table public.nonprofit_directory_enrichment enable row level security;
+
+drop policy if exists nonprofit_directory_enrichment_select_public on public.nonprofit_directory_enrichment;
+create policy nonprofit_directory_enrichment_select_public
+  on public.nonprofit_directory_enrichment
+  for select
+  using (true);
+
+-- =============================================================================
+-- 1) Header columns (for DBs that had enrichment before header fields existed)
+-- =============================================================================
 alter table public.nonprofit_directory_enrichment
   add column if not exists header_image_url text,
   add column if not exists header_image_source_url text,
@@ -25,17 +112,26 @@ comment on column public.nonprofit_directory_enrichment.header_image_review_stat
 comment on column public.nonprofit_directory_enrichment.header_image_notes is
   'Enrichment failures, low-confidence reasons, or moderator notes.';
 
--- 2) Trusted Resources catalog overrides (optional per listing when enrichment is absent or needs override).
-alter table public.proven_allies
-  add column if not exists header_image_url text,
-  add column if not exists header_image_source_url text,
-  add column if not exists header_image_source_type text,
-  add column if not exists header_image_status text,
-  add column if not exists header_image_last_enriched_at timestamptz,
-  add column if not exists header_image_review_status text,
-  add column if not exists header_image_notes text;
+-- =============================================================================
+-- 2) Trusted Resources catalog (only if table already exists — e.g. from proven_allies.sql)
+-- =============================================================================
+do $$
+begin
+  if to_regclass('public.proven_allies') is not null then
+    alter table public.proven_allies
+      add column if not exists header_image_url text,
+      add column if not exists header_image_source_url text,
+      add column if not exists header_image_source_type text,
+      add column if not exists header_image_status text,
+      add column if not exists header_image_last_enriched_at timestamptz,
+      add column if not exists header_image_review_status text,
+      add column if not exists header_image_notes text;
+  end if;
+end $$;
 
--- 3) Optional: backfill header from legacy hero when header is empty (one-time safe merge).
+-- =============================================================================
+-- 3) Optional: backfill header from legacy hero when header is empty
+-- =============================================================================
 update public.nonprofit_directory_enrichment e
 set
   header_image_url = coalesce(nullif(trim(e.header_image_url), ''), nullif(trim(e.hero_image_url), '')),
@@ -46,6 +142,7 @@ where
   coalesce(nullif(trim(e.header_image_url), ''), '') = ''
   and coalesce(nullif(trim(e.hero_image_url), ''), '') <> '';
 
--- 4) Storage: create a public bucket `org-header-images` in the Supabase dashboard (File storage)
---    with a public read policy for anonymous SELECT if cards load images from the public URL.
---    Service role uploads bypass RLS via API routes.
+-- =============================================================================
+-- 4) Storage: create bucket `org-header-images` in the Supabase dashboard (File storage)
+--     with public read if you use getPublicUrl. Service role uploads bypass RLS via API routes.
+-- =============================================================================
