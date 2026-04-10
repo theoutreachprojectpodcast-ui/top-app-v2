@@ -16,7 +16,7 @@
 
 - **Primary:** `nonprofit_directory_enrichment` columns `header_image_url`, `header_image_source_*`, `header_image_status`, `header_image_review_status`, `header_image_notes`, `header_image_last_enriched_at`.
 - **Trusted catalog overrides:** optional matching columns on `proven_allies` when a listing needs a catalog-only image; `header_image_review_status = curated` skips enrichment overlay from the join.
-- **SQL:** apply `web/supabase/org_header_image_enrichment.sql` on existing databases; base table definitions were updated in `nonprofit_directory_enrichment.sql` and `proven_allies.sql` for fresh installs.
+- **SQL:** apply `web/supabase/org_header_image_enrichment.sql` on existing databases (non-destructive: additive only, no policy drops or data updates). Optional one-time hero→header copy: `org_header_image_enrichment_backfill_optional.sql`. Base table definitions were updated in `nonprofit_directory_enrichment.sql` and `proven_allies.sql` for fresh installs.
 
 ## Overlay / filters
 

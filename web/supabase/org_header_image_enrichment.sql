@@ -1,11 +1,10 @@
 -- tORP v0.3 — Organization listing header images (directory + trusted resources).
--- Safe to run on empty projects: creates nonprofit_directory_enrichment when missing, then adds header columns.
--- App reads stored URLs only (no live image fetch on page load).
+-- Non-destructive: only creates objects that are missing; never drops policies, tables, or columns;
+-- does not modify existing row data. Run in Supabase SQL editor or your migration runner.
 
 -- =============================================================================
--- 0) Base table (required by later ALTERs). Idempotent: IF NOT EXISTS.
+-- 0) Base table. Idempotent: CREATE IF NOT EXISTS only (never replaces an existing table).
 -- =============================================================================
--- Extended nonprofit directory metadata (one row per organization, keyed by normalized 9-digit EIN).
 
 create table if not exists public.nonprofit_directory_enrichment (
   ein text primary key check (ein ~ '^[0-9]{9}$'),
@@ -81,14 +80,25 @@ create index if not exists nonprofit_directory_enrichment_slug_idx
 
 alter table public.nonprofit_directory_enrichment enable row level security;
 
-drop policy if exists nonprofit_directory_enrichment_select_public on public.nonprofit_directory_enrichment;
-create policy nonprofit_directory_enrichment_select_public
-  on public.nonprofit_directory_enrichment
-  for select
-  using (true);
+-- Add public SELECT policy only when absent (never DROP/replace an existing policy).
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_policies
+    where schemaname = 'public'
+      and tablename = 'nonprofit_directory_enrichment'
+      and policyname = 'nonprofit_directory_enrichment_select_public'
+  ) then
+    create policy nonprofit_directory_enrichment_select_public
+      on public.nonprofit_directory_enrichment
+      for select
+      using (true);
+  end if;
+end $$;
 
 -- =============================================================================
--- 1) Header columns (for DBs that had enrichment before header fields existed)
+-- 1) Header columns (additive only)
 -- =============================================================================
 alter table public.nonprofit_directory_enrichment
   add column if not exists header_image_url text,
@@ -113,7 +123,7 @@ comment on column public.nonprofit_directory_enrichment.header_image_notes is
   'Enrichment failures, low-confidence reasons, or moderator notes.';
 
 -- =============================================================================
--- 2) Trusted Resources catalog (only if table already exists — e.g. from proven_allies.sql)
+-- 2) Trusted Resources catalog (additive columns only when table exists)
 -- =============================================================================
 do $$
 begin
@@ -130,17 +140,9 @@ begin
 end $$;
 
 -- =============================================================================
--- 3) Optional: backfill header from legacy hero when header is empty
+-- 3) Data backfill (hero → header) is intentionally NOT run here.
+--     Optional one-time script: org_header_image_enrichment_backfill_optional.sql
 -- =============================================================================
-update public.nonprofit_directory_enrichment e
-set
-  header_image_url = coalesce(nullif(trim(e.header_image_url), ''), nullif(trim(e.hero_image_url), '')),
-  header_image_source_type = coalesce(e.header_image_source_type, 'legacy_hero_image_url'),
-  header_image_status = coalesce(nullif(trim(e.header_image_status), ''), 'found'),
-  header_image_review_status = coalesce(nullif(trim(e.header_image_review_status), ''), 'pending_review')
-where
-  coalesce(nullif(trim(e.header_image_url), ''), '') = ''
-  and coalesce(nullif(trim(e.hero_image_url), ''), '') <> '';
 
 -- =============================================================================
 -- 4) Storage: create bucket `org-header-images` in the Supabase dashboard (File storage)
