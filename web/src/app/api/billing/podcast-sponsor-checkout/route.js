@@ -1,6 +1,11 @@
 import { withAuth } from "@workos-inc/authkit-nextjs";
 import Stripe from "stripe";
-import { appBaseUrl, podcastSponsorCheckoutConfigured, podcastSponsorPriceIdForTier } from "@/lib/billing/stripeConfig";
+import {
+  appBaseUrl,
+  podcastSponsorCheckoutConfigured,
+  podcastSponsorPriceIdForTier,
+  safeAppReturnPath,
+} from "@/lib/billing/stripeConfig";
 
 export async function POST(request) {
   if (!podcastSponsorCheckoutConfigured()) {
@@ -26,8 +31,7 @@ export async function POST(request) {
   }
 
   const base = appBaseUrl();
-  const returnPath = String(body.returnPath || "/podcasts").trim() || "/podcasts";
-  const safeReturn = returnPath.startsWith("/") ? returnPath : "/podcasts";
+  const safeReturn = safeAppReturnPath(body.returnPath, "/podcasts");
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
   const metadata = {

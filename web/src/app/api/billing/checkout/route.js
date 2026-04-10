@@ -5,17 +5,12 @@ import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
 import {
   appBaseUrl,
   priceIdForTier,
+  safeAppReturnPath,
   stripeMemberRecurringConfigured,
   stripeSponsorSubscriptionConfigured,
 } from "@/lib/billing/stripeConfig";
 
 const PAID = new Set(["support", "member", "sponsor"]);
-
-function safeReturnPath(raw) {
-  const p = String(raw || "").trim();
-  if (!p.startsWith("/") || p.startsWith("//")) return "/profile";
-  return p;
-}
 
 export async function POST(request) {
   const auth = await withAuth();
@@ -75,7 +70,7 @@ export async function POST(request) {
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
   const base = appBaseUrl();
-  const returnPath = safeReturnPath(body.returnPath);
+  const returnPath = safeAppReturnPath(body.returnPath, "/profile");
   const customerId = profileRow.stripe_customer_id ? String(profileRow.stripe_customer_id).trim() : null;
   const profileId = profileRow.id ? String(profileRow.id) : "";
 

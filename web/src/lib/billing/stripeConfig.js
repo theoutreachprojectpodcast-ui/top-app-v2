@@ -92,6 +92,17 @@ export function podcastSponsorMissingPriceEnvKeys() {
 }
 
 /**
+ * Same-origin path only for Stripe success/cancel URLs (blocks open redirects like `//evil.com`).
+ * @param {string} raw
+ * @param {string} [fallback]
+ */
+export function safeAppReturnPath(raw, fallback = "/profile") {
+  const p = String(raw || "").trim();
+  if (!p.startsWith("/") || p.startsWith("//")) return fallback;
+  return p;
+}
+
+/**
  * Canonical app origin for redirects. Prefer APP_BASE_URL, then NEXT_PUBLIC_APP_URL.
  */
 export function appBaseUrl() {
