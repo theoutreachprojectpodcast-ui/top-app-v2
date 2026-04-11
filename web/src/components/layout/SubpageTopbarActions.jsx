@@ -4,6 +4,7 @@ import Link from "next/link";
 import ColorSchemeToggle from "@/components/app/ColorSchemeToggle";
 import { useAuthSession } from "@/components/auth/AuthSessionProvider";
 import IconWrap from "@/components/shared/IconWrap";
+import HeaderNotificationBell from "@/components/layout/HeaderNotificationBell";
 
 const SPONSOR_ICON = "M4 6h16v12H4z M4 10h16";
 
@@ -31,9 +32,12 @@ export default function SubpageTopbarActions({ showThemeToggle = true, section =
     authState.loading ? (
       <span className="subpageAuthActionsPlaceholder" aria-hidden="true" />
     ) : authState.authenticated ? (
-      <Link className="btnSoft sponsorBtn" href="/profile">
-        Profile
-      </Link>
+      <>
+        <HeaderNotificationBell variant="subpage" />
+        <Link className="btnSoft sponsorBtn" href="/profile">
+          Profile
+        </Link>
+      </>
     ) : authState.workos ? (
       <>
         <Link className="btnSoft sponsorBtn" href="/api/auth/workos/signup?returnTo=/onboarding">

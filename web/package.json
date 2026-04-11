@@ -14,6 +14,7 @@
     "verify:platform-names": "node scripts/verify-platform-organization-names.mjs",
     "verify:nonprofit-canonical-names": "node scripts/verify-nonprofit-canonical-names.mjs",
     "seed:sponsors": "node scripts/seed-sponsors-catalog.mjs",
+    "seed:local-dev": "node scripts/seed-local-dev-data.mjs",
     "enrich:sponsors": "node scripts/enrich-sponsors.mjs",
     "sync:podcast-youtube": "node scripts/sync-podcast-youtube.mjs",
     "repair:trusted-display-names": "node scripts/repair-trusted-resource-display-names.mjs",

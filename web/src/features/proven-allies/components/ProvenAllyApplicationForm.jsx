@@ -138,6 +138,13 @@ export default function ProvenAllyApplicationForm({ supabase, onClose }) {
       const result = await submitProvenAllyApplication(supabase, payload);
       if (result.warning) setStatus(result.warning);
       else setStatus("Application submitted successfully.");
+      if (result.ok && result.applicationId && !result.localOnly) {
+        void fetch("/api/notifications/triggers/proven-ally-application", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ applicationId: result.applicationId }),
+        }).catch(() => {});
+      }
       if (result.ok) setForm(INITIAL_FORM);
       if (result.ok) setFeePaid(false);
     } catch {

@@ -6,6 +6,7 @@ import {
   batchEnrichOrgHeaderImages,
   enrichOrgHeaderImageForEin,
 } from "@/server/orgHeaderImage/enrichOrgHeaderImage";
+import { publishOrgPublicUpdateAndNotifyFans } from "@/server/notifications/notificationService";
 
 /** Node runtime: Buffer, Storage uploads, and long-running fetches (required on `pnpm dev` / localhost:3001). */
 export const runtime = "nodejs";
@@ -177,5 +178,26 @@ export async function PATCH(request) {
 
   const { error: upErr } = await supabase.from("nonprofit_directory_enrichment").update(patch).eq("ein", ein);
   if (upErr) return Response.json({ error: upErr.message }, { status: 500 });
+
+  if (action === "approve" || action === "curate") {
+    const { data: org } = await supabase
+      .from("nonprofits_search_app_v1")
+      .select("org_name,name")
+      .or(`ein.eq.${ein},ein.eq.${ein.slice(0, 2)}-${ein.slice(2)}`)
+      .maybeSingle();
+    const display = String(org?.org_name || org?.name || "").trim() || `EIN ${ein.slice(0, 2)}-${ein.slice(2)}`;
+    const dashed = `${ein.slice(0, 2)}-${ein.slice(2)}`;
+    await publishOrgPublicUpdateAndNotifyFans(supabase, {
+      ein,
+      headline: `${display} — listing update`,
+      summary:
+        action === "curate"
+          ? "Trusted listing imagery was curated and is now live for this organization."
+          : "Listing header imagery was approved for this organization.",
+      linkPath: `/nonprofit/${dashed}`,
+      sourceType: action === "curate" ? "header_image_curated" : "header_image_approved",
+    });
+  }
+
   return Response.json({ ok: true, ein, action });
 }

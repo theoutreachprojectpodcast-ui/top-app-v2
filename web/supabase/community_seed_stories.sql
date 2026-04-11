@@ -1,81 +1,12 @@
--- Seed approved community stories (idempotent). Run after community.sql + community_v03_data_model.sql.
--- Uses synthetic author_id; does not create torp_profiles rows.
-
-insert into public.community_posts (
-  id,
-  author_id,
-  author_name,
-  author_avatar_url,
-  title,
-  body,
-  nonprofit_ein,
-  nonprofit_name,
-  category,
-  post_type,
-  show_author_name,
-  link_url,
-  photo_url,
-  status,
-  visibility,
-  like_count,
-  share_count
-)
-values
-  (
-    'a1000000-0000-4000-8000-000000000001'::uuid,
-    'seed-community-torp',
-    'The Outreach Project',
-    '',
-    'A calm place to find credible help',
-    'We built this directory so veterans, first responders, and families could spend less time guessing and more time connecting with organizations that show up with clarity and respect.',
-    null,
-    '',
-    'thank_you',
-    'share_story',
-    true,
-    '',
-    '',
-    'approved',
-    'community',
-    0,
-    0
-  ),
-  (
-    'a1000000-0000-4000-8000-000000000002'::uuid,
-    'seed-community-torp',
-    'The Outreach Project',
-    '',
-    '',
-    'Every story in this feed is reviewed for tone and accuracy before it is published. If you are a Pro member, you can share your own experience once it clears moderation.',
-    null,
-    'Moderation',
-    'nonprofit_impact',
-    'community_update',
-    true,
-    '',
-    '',
-    'approved',
-    'community',
-    0,
-    0
-  ),
-  (
-    'a1000000-0000-4000-8000-000000000003'::uuid,
-    'seed-community-torp',
-    'The Outreach Project',
-    '',
-    'Thank you for serving your community',
-    'Whether you are navigating transition, supporting a loved one, or looking for trusted resources, you are not alone. Start with Trusted Resources or the directory, and save organizations when you sign in.',
-    null,
-    '',
-    'thank_you',
-    'success_story',
-    true,
-    '',
-    '',
-    'approved',
-    'community',
-    0,
-    0
-  )
-on conflict (id) do nothing;
+-- Legacy SQL seed (deprecated)
+--
+-- Previous versions inserted approved community_posts with a non–WorkOS author_id
+-- (`seed-community-torp`), which does not match production (WorkOS session user ids).
+--
+-- For localhost, use the Node seed instead (real WorkOS user ids from your dashboard):
+--   TORP_LOCAL_DATA_SEED=1 TORP_SEED_COMMUNITY_AUTHOR_WORKOS_USER_IDS=user_xxx,user_yyy,user_zzz pnpm seed:local-dev
+--
+-- See web/scripts/seed-local-dev-data.mjs and web/.env.local.example.
+--
+-- No-op migration body (safe to re-run):
+select 1 where false;

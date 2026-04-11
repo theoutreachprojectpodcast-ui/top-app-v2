@@ -4,11 +4,14 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import BrandMark from "@/components/BrandMark";
 import ColorSchemeToggle from "@/components/app/ColorSchemeToggle";
+import { useAuthSession } from "@/components/auth/AuthSessionProvider";
 import HeaderInner from "@/components/layout/HeaderInner";
+import HeaderNotificationBell from "@/components/layout/HeaderNotificationBell";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { getSponsorBySlug } from "@/features/sponsors/api/sponsorCatalogApi";
 
 export default function SponsorProfilePage({ slug }) {
+  const session = useAuthSession();
   const supabase = useMemo(() => getSupabaseClient(), []);
   const [profile, setProfile] = useState(null);
   const [status, setStatus] = useState("Loading sponsor...");
@@ -39,6 +42,14 @@ export default function SponsorProfilePage({ slug }) {
           <div className="topbarZone topbarRight">
             <div className="topbarActionsCluster">
               <ColorSchemeToggle />
+              {!session.loading && session.authenticated ? (
+                <>
+                  <HeaderNotificationBell variant="subpage" />
+                  <Link className="btnSoft sponsorBtn" href="/profile">
+                    Profile
+                  </Link>
+                </>
+              ) : null}
               <Link className="btnSoft" href="/sponsors">Sponsors</Link>
             </div>
           </div>

@@ -3,6 +3,11 @@ import { withAuth } from "@workos-inc/authkit-nextjs";
 import Stripe from "stripe";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { podcastSponsorCheckoutConfigured } from "@/lib/billing/stripeConfig";
+import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
+import {
+  createPlatformNotification,
+  notifyStaffProfiles,
+} from "@/server/notifications/notificationService";
 
 const TABLE = "sponsor_applications";
 
@@ -126,6 +131,39 @@ export async function POST(request) {
       })
       .eq("id", id);
     inviteQueued = !inviteErr;
+  }
+
+  if (id) {
+    const staffType =
+      sponsor_family === "mission_partner" ? "mission_partner_application_submitted" : "sponsor_application_submitted";
+    const label = sponsor_program_type === "podcast" ? "Podcast sponsor" : "Mission / sponsor";
+    await notifyStaffProfiles(admin, {
+      type: staffType,
+      title: `${label} application received`,
+      message: `${company_name} — ${email} (${sponsor_tier_name}).`,
+      linkPath: "/sponsors",
+      entityType: "sponsor_application",
+      entityId: String(id),
+      dedupeHours: 24,
+      metadata: { sponsor_family, sponsor_program_type, company_name },
+    });
+
+    if (auth.user?.id) {
+      const applicantProfile = await getProfileRowByWorkOSId(admin, auth.user.id);
+      if (applicantProfile?.id) {
+        await createPlatformNotification(admin, {
+          recipientProfileId: applicantProfile.id,
+          audienceScope: "user",
+          type: "application_received",
+          title: "We received your application",
+          message: `Thanks — the team will review your request for ${company_name}.`,
+          linkPath: "/sponsors",
+          entityType: "sponsor_application",
+          entityId: String(id),
+          metadata: { sponsor_family },
+        });
+      }
+    }
   }
 
   return Response.json({

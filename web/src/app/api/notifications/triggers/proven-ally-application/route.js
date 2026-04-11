@@ -1,0 +1,54 @@
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { notifyStaffProfiles } from "@/server/notifications/notificationService";
+
+export const runtime = "nodejs";
+
+/**
+ * Called from the browser after a successful `proven_ally_applications` insert.
+ * Verifies the row server-side, then fans out staff notifications (deduped).
+ */
+export async function POST(request) {
+  const admin = createSupabaseAdminClient();
+  if (!admin) {
+    return Response.json({ error: "server_unavailable" }, { status: 503 });
+  }
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json({ error: "invalid_json" }, { status: 400 });
+  }
+
+  const applicationId = String(body.applicationId || "").trim();
+  if (!applicationId) {
+    return Response.json({ error: "applicationId_required" }, { status: 400 });
+  }
+
+  const { data: row, error } = await admin
+    .from("proven_ally_applications")
+    .select("id, organization_name, applicant_email, applicant_first_name, applicant_last_name, created_at")
+    .eq("id", applicationId)
+    .maybeSingle();
+
+  if (error || !row?.id) {
+    return Response.json({ error: "not_found" }, { status: 404 });
+  }
+
+  const createdMs = row.created_at ? new Date(row.created_at).getTime() : 0;
+  if (createdMs && Date.now() - createdMs > 6 * 60 * 60 * 1000) {
+    return Response.json({ ok: true, skipped: "stale_submission" });
+  }
+
+  await notifyStaffProfiles(admin, {
+    type: "proven_ally_application_submitted",
+    title: "Trusted Resource application submitted",
+    message: `${row.organization_name} — ${row.applicant_first_name} ${row.applicant_last_name} (${row.applicant_email}).`,
+    linkPath: "/trusted",
+    entityType: "proven_ally_application",
+    entityId: String(row.id),
+    dedupeHours: 48,
+  });
+
+  return Response.json({ ok: true });
+}

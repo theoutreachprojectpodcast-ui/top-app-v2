@@ -19,6 +19,7 @@ import ProfileQuickStats from "@/features/profile/components/ProfileQuickStats";
 import SavedOrganizationsList from "@/features/profile/components/SavedOrganizationsList";
 import HomeWelcomeSection from "@/components/app/HomeWelcomeSection";
 import HeaderAccountMenu from "@/components/layout/HeaderAccountMenu";
+import HeaderNotificationBell from "@/components/layout/HeaderNotificationBell";
 import { useDirectorySearch } from "@/hooks/useDirectorySearch";
 import { useProfileData } from "@/features/profile/hooks";
 import { useTrustedResources } from "@/hooks/useTrustedResources";
@@ -309,21 +310,24 @@ function TopAppInner({ initialNav = "home" }) {
           <div className="topbarZone topbarRight">
             <div className="topbarActionsCluster">
               {isLoggedIn ? (
-                <HeaderAccountMenu
-                  avatarSrc={profile.avatarUrl || emptyProfileAvatarUrl()}
-                  ariaLabel={`Account menu for ${fullName || profile.email || "signed-in user"}`}
-                  onProfile={() => setNav("profile")}
-                  onProfileSettings={() => {
-                    setEditDraft(profile);
-                    setOverlay("edit");
-                  }}
-                  onMembership={() => {
-                    if (!isMember) setOverlay("upgrade");
-                    else setNav("profile");
-                  }}
-                  onSavedItems={() => setNav("profile")}
-                  onSignOut={signOut}
-                />
+                <>
+                  <HeaderNotificationBell skipSessionGate />
+                  <HeaderAccountMenu
+                    avatarSrc={profile.avatarUrl || emptyProfileAvatarUrl()}
+                    ariaLabel={`Account menu for ${fullName || profile.email || "signed-in user"}`}
+                    onProfile={() => setNav("profile")}
+                    onProfileSettings={() => {
+                      setEditDraft(profile);
+                      setOverlay("edit");
+                    }}
+                    onMembership={() => {
+                      if (!isMember) setOverlay("upgrade");
+                      else setNav("profile");
+                    }}
+                    onSavedItems={() => setNav("profile")}
+                    onSignOut={signOut}
+                  />
+                </>
               ) : authBackend.workos ? (
                 <>
                   <a className="btnSoft sponsorBtn" href="/api/auth/workos/signup?returnTo=/onboarding">

@@ -2,6 +2,10 @@ import { withAuth } from "@workos-inc/authkit-nextjs";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
 import { isCommunityModeratorServer } from "@/lib/community/moderatorServer";
+import {
+  createPlatformNotification,
+  notifyStaffProfiles,
+} from "@/server/notifications/notificationService";
 
 const REACTIONS = "community_post_reactions";
 
@@ -173,6 +177,31 @@ export async function POST(request) {
 
   if (error) {
     return Response.json({ ok: false, message: error.message || "Could not save your story." }, { status: 500 });
+  }
+
+  const postId = data?.id ? String(data.id) : "";
+  if (postId) {
+    await createPlatformNotification(admin, {
+      recipientProfileId: profileRow.id,
+      audienceScope: "user",
+      type: "community_post_submitted",
+      title: "Story submitted for review",
+      message: "Thanks for sharing — moderators will review your community post shortly.",
+      linkPath: "/community",
+      entityType: "community_post",
+      entityId: postId,
+      metadata: { post_id: postId },
+    });
+    await notifyStaffProfiles(admin, {
+      type: "community_post_submitted_for_review",
+      title: "New community post to review",
+      message: title ? `“${title.slice(0, 80)}${title.length > 80 ? "…" : ""}”` : "A member submitted a story for moderation.",
+      linkPath: "/community",
+      entityType: "community_post",
+      entityId: postId,
+      dedupeHours: 12,
+      metadata: { post_id: postId, author_profile_id: profileRow.id },
+    });
   }
 
   return Response.json({

@@ -4,6 +4,7 @@ import {
   getProfileRowByStripeCustomerId,
   mergeProfileMetadataByWorkOSId,
 } from "@/lib/profile/serverProfile";
+import { notifyMembershipFromStripeInvoice } from "@/server/notifications/notificationService";
 import { headers } from "next/headers";
 
 export const runtime = "nodejs";
@@ -187,13 +188,26 @@ export async function POST(request) {
         break;
       }
       case "invoice.paid":
-      case "invoice.payment_failed": {
+      case "invoice.payment_failed":
+      case "invoice.upcoming": {
         const inv = event.data.object;
         const subId = typeof inv.subscription === "string" ? inv.subscription : inv.subscription?.id;
         if (!subId) break;
-        const sub = await stripe.subscriptions.retrieve(subId);
         const customerId = typeof inv.customer === "string" ? inv.customer : inv.customer?.id;
-        await syncSubscription(admin, sub, customerId);
+        const profileForNotify = customerId ? await getProfileRowByStripeCustomerId(admin, customerId) : null;
+
+        if (event.type !== "invoice.upcoming") {
+          const sub = await stripe.subscriptions.retrieve(subId);
+          await syncSubscription(admin, sub, customerId);
+        }
+
+        if (profileForNotify?.id) {
+          try {
+            await notifyMembershipFromStripeInvoice(admin, profileForNotify, inv, event.type);
+          } catch (e) {
+            console.warn("[torp] membership notification", e?.message || e);
+          }
+        }
         break;
       }
       default:

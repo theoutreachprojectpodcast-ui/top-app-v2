@@ -1,6 +1,7 @@
 import { withAuth } from "@workos-inc/authkit-nextjs";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { isCommunityModeratorServer } from "@/lib/community/moderatorServer";
+import { createPlatformNotification } from "@/server/notifications/notificationService";
 
 const TABLE = "community_posts";
 
@@ -35,6 +36,15 @@ export async function PATCH(request, context) {
   const action = String(json.action || "").toLowerCase();
   const now = new Date().toISOString();
 
+  const { data: existingPost, error: loadPostErr } = await admin
+    .from(TABLE)
+    .select("id,author_profile_id,title,body")
+    .eq("id", postId)
+    .maybeSingle();
+  if (loadPostErr || !existingPost) {
+    return Response.json({ ok: false, message: "Post not found." }, { status: 404 });
+  }
+
   const patch = { updated_at: now, reviewed_by: auth.user.id, reviewed_at: now };
 
   if (action === "approve") {
@@ -56,6 +66,23 @@ export async function PATCH(request, context) {
 
   if (error) {
     return Response.json({ ok: false, message: error.message || "Update failed." }, { status: 500 });
+  }
+
+  if (action === "approve" && existingPost.author_profile_id) {
+    const snippet = String(existingPost.title || existingPost.body || "").trim().slice(0, 120);
+    await createPlatformNotification(admin, {
+      recipientProfileId: existingPost.author_profile_id,
+      audienceScope: "user",
+      type: "community_post_approved",
+      title: "Your community story is live",
+      message: snippet
+        ? `“${snippet}${snippet.length >= 120 ? "…" : ""}” is now visible in the community feed.`
+        : "Your post was approved and is visible in the community feed.",
+      linkPath: "/community",
+      entityType: "community_post",
+      entityId: postId,
+      metadata: { post_id: postId },
+    });
   }
 
   return Response.json({ ok: true });

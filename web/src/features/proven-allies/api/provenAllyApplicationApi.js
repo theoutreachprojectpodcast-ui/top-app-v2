@@ -83,6 +83,7 @@ export async function submitProvenAllyApplication(supabase, payload) {
     return {
       ok: true,
       localOnly: true,
+      applicationId: null,
       crmLead: buildProvenAllyCrmLeadPayload(payload, { submissionId: null, source: "torp_offline_queue" }),
     };
   }
@@ -104,6 +105,7 @@ export async function submitProvenAllyApplication(supabase, payload) {
     return {
       ok: true,
       localOnly: true,
+      applicationId: null,
       warning: "Application saved locally because the Supabase applications table is not yet deployed.",
       crmLead: buildProvenAllyCrmLeadPayload(payload, { submissionId: null, source: "torp_local_fallback" }),
     };
@@ -122,6 +124,7 @@ export async function submitProvenAllyApplication(supabase, payload) {
     return {
       ok: true,
       localOnly: false,
+      applicationId: inserted?.id ?? null,
       crmLead,
       warning:
         "Application submitted. Add a valid 9-digit EIN so this organization can be linked in the Trusted Resources catalog.",
@@ -137,6 +140,7 @@ export async function submitProvenAllyApplication(supabase, payload) {
       return {
         ok: true,
         localOnly: false,
+        applicationId: inserted?.id ?? null,
         crmLead,
         warning: "Application submitted. Deploy the Trusted Resources catalog table (`proven_allies`) in Supabase to store listing rows.",
       };
@@ -144,10 +148,11 @@ export async function submitProvenAllyApplication(supabase, payload) {
     return {
       ok: true,
       localOnly: false,
+      applicationId: inserted?.id ?? null,
       crmLead,
       warning: `Application submitted; catalog row could not be saved: ${catalogError.message}`,
     };
   }
 
-  return { ok: true, localOnly: false, crmLead };
+  return { ok: true, localOnly: false, applicationId: inserted?.id ?? null, crmLead };
 }

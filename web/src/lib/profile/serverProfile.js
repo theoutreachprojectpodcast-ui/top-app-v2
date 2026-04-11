@@ -91,10 +91,11 @@ export function workOSUserToUpsertPayload(user) {
  */
 export async function upsertProfileFromWorkOSUser(admin, user) {
   if (!admin) return { ok: false, reason: "no_admin" };
+  const existing = await getProfileRowByWorkOSId(admin, user.id);
   const payload = workOSUserToUpsertPayload(user);
   const { error } = await admin.from(TABLE()).upsert(payload, { onConflict: "workos_user_id" });
   if (error) return { ok: false, reason: error.message };
-  return { ok: true };
+  return { ok: true, isNew: !existing };
 }
 
 /**
