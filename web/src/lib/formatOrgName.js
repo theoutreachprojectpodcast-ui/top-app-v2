@@ -18,7 +18,6 @@ export function isPlaceholderOrgName(value = "") {
   if (!t) return true;
   if (/^unknown organization$/i.test(t)) return true;
   if (/^trusted\s+resource$/i.test(t)) return true;
-  if (/^proven\s+ally$/i.test(t)) return true;
   return false;
 }
 
@@ -107,7 +106,7 @@ function splitJoinedOrganizationToken(token = "") {
 
 /**
  * Normalize organization strings for UI: human title case, word breaks, no camelCase slugs.
- * Prefer provenAllyRegistry `displayName` verbatim for curated allies — do not run this on those.
+ * Prefer trustedResourcesRegistry `displayName` verbatim for curated listings — do not run this on those.
  */
 export function formatOrganizationDisplayName(value = "") {
   const raw = String(value || "").trim();
@@ -155,11 +154,8 @@ export function formatOrganizationDisplayName(value = "") {
 }
 
 /** Last-resort label from internal slug (registry `slug`); not a substitute for canonical displayName. */
-export function humanizeProvenAllySlug(slug = "") {
+export function humanizeTrustedResourceSlug(slug = "") {
   const raw = String(slug || "").trim();
   if (!raw) return "";
   return formatOrganizationDisplayName(raw.replace(/[-_]+/g, " "));
 }
-
-/** @deprecated Prefer humanizeProvenAllySlug — alias for Trusted Resources registry slugs */
-export const humanizeTrustedResourceSlug = humanizeProvenAllySlug;

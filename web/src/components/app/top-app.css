@@ -1109,7 +1109,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   z-index: 2;
   pointer-events: auto;
 }
-.nonprofitCardMain--proven {
+.nonprofitCardMain--trustedResource {
   grid-template-columns: 64px minmax(0, 1fr);
   column-gap: 14px;
   align-items: start;
@@ -1128,7 +1128,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   position: relative;
   z-index: 1;
 }
-.nonprofitCardMedia--proven {
+.nonprofitCardMedia--trustedResource {
   align-self: start;
 }
 .nonprofitIconBadge--logo {
@@ -1277,7 +1277,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 .nonprofitContentCol--directory .nonprofitDescription {
   margin-top: 4px;
 }
-.nonprofitContentCol--proven {
+.nonprofitContentCol--trustedResource {
   row-gap: 7px;
 }
 .nonprofitTitleRow {
@@ -1299,48 +1299,48 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 .resultCard--profileLink:hover .nonprofitOrgName {
   color: color-mix(in srgb, var(--color-accent-hover) 55%, var(--color-text-primary) 45%);
 }
-.resultCard--proven {
+.resultCard--trustedResource {
   padding: var(--ds-space-5, 20px) var(--ds-space-4, 16px);
 }
-.resultCard--proven .nonprofitOrgName {
+.resultCard--trustedResource .nonprofitOrgName {
   font-size: clamp(1.14rem, 2.1vw, 1.34rem);
   font-weight: 800;
   letter-spacing: 0.055em;
   line-height: 1.3;
   text-transform: uppercase;
 }
-.resultCard--proven .nonprofitLocation {
+.resultCard--trustedResource .nonprofitLocation {
   color: var(--color-text-secondary);
   font-size: calc(var(--text-body-sm, 0.875rem) + 0.02rem);
   font-weight: 600;
   letter-spacing: 0.02em;
 }
-.resultCard--proven .nonprofitCategoryLabel {
+.resultCard--trustedResource .nonprofitCategoryLabel {
   font-size: 12.5px;
   letter-spacing: 0.045em;
 }
-.resultCard--proven .nonprofitMetaRow {
+.resultCard--trustedResource .nonprofitMetaRow {
   margin-top: 0;
   flex-wrap: wrap;
 }
-.nonprofitMetaRow--proven .nonprofitCategoryWithIcon {
+.nonprofitMetaRow--trustedResource .nonprofitCategoryWithIcon {
   display: inline-flex;
   align-items: center;
   gap: 7px;
   min-width: 0;
 }
-.nonprofitMetaRow--proven .nonprofitCategoryWithIcon .nonprofitTypeIcon {
+.nonprofitMetaRow--trustedResource .nonprofitCategoryWithIcon .nonprofitTypeIcon {
   flex-shrink: 0;
 }
-.nonprofitMetaRow--proven .nonprofitCategoryWithIcon .nonprofitCategoryLabel {
+.nonprofitMetaRow--trustedResource .nonprofitCategoryWithIcon .nonprofitCategoryLabel {
   margin: 0;
 }
-.resultCard--proven .nonprofitDescription {
+.resultCard--trustedResource .nonprofitDescription {
   margin-top: 2px;
   line-height: 1.55;
   max-width: 62ch;
 }
-.resultCard--proven .nonprofitActionRow {
+.resultCard--trustedResource .nonprofitActionRow {
   margin-top: 12px;
 }
 .nonprofitMetaRow {
@@ -1402,7 +1402,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   align-items: center;
   gap: 10px;
 }
-.resultCard--proven .nonprofitActionRow--cardFooter {
+.resultCard--trustedResource .nonprofitActionRow--cardFooter {
   margin-left: calc(64px + 14px);
 }
 @media (max-width: 520px) {
@@ -1434,13 +1434,13 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   border-color: color-mix(in srgb, var(--color-accent) 40%, transparent);
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 8%, transparent), var(--glow-accent);
 }
-.provenApplyModal {
+.trustedResourceApplyModal {
   width: min(860px, 100%);
   max-height: min(88vh, 920px);
   overflow: auto;
 }
-.provenApplyChoiceGroup,
-.provenApplyCheckGroup {
+.trustedResourceApplyChoiceGroup,
+.trustedResourceApplyCheckGroup {
   display: grid;
   gap: 10px;
   margin-top: 8px;
@@ -1455,7 +1455,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   font-weight: 700;
   color: var(--color-accent);
 }
-.provenApplyForm {
+.trustedResourceApplyForm {
   display: grid;
   gap: 14px;
 }
@@ -1544,8 +1544,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   border-color: color-mix(in srgb, var(--color-accent) 56%, transparent);
   background: color-mix(in srgb, var(--color-accent) 15%, transparent);
 }
-.badgeTrustedResource,
-.badgeProvenAlly {
+.badgeTrustedResource {
   color: var(--color-accent);
   border-color: color-mix(in srgb, var(--color-accent) 42%, var(--color-border-subtle));
   background: var(--color-bg-card-hover);

@@ -17,8 +17,8 @@ Scope covered from current repository schema + app usage (non-destructive audit 
 - `nonprofit_profiles` (trusted fallback source)
 - `nonprofits` (trusted fallback source)
 - `nonprofit_directory_enrichment` (additive nonprofit enrichment + naming)
-- `proven_allies` (trusted resources catalog, legacy table name but actively used)
-- `proven_ally_applications`
+- `trusted_resources` (Trusted Resources catalog)
+- `trusted_resource_applications`
 - `sponsors_catalog` (new sponsor entity table, additive)
 - `sponsor_applications`
 - `top_app_user_profiles` (referenced by profile code/env; not defined in repo SQL)
@@ -30,7 +30,7 @@ Scope covered from current repository schema + app usage (non-destructive audit 
 ## Relationship status (current)
 
 - Trusted resources:
-  - app joins `proven_allies` -> directory/enrichment by EIN in code
+  - app joins `trusted_resources` -> directory/enrichment by EIN in code
   - no explicit DB FK to enrichment or nonprofit source in current SQL
 - Sponsors:
   - `sponsor_applications` has no FK to `sponsors_catalog`

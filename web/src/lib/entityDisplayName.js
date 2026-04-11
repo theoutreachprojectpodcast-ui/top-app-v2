@@ -3,7 +3,7 @@
  *
  * Rules (card + profile primary titles):
  * - No EIN in the title slot
- * - No status labels (“Trusted Resource”, “Proven Ally”) as the title
+ * - No status labels (“Trusted Resource”) as the title
  * - No raw slugs / snake_case as final output (humanized + title case)
  * - Registry / canonical display names are trusted verbatim (whitespace only)
  *
@@ -12,7 +12,7 @@
 
 import {
   formatOrganizationDisplayName,
-  humanizeProvenAllySlug,
+  humanizeTrustedResourceSlug,
   isPlaceholderOrgName,
   looksLikeMachineJoinedName,
   normalizeOrganizationWhitespace,
@@ -24,7 +24,7 @@ const RE_EIN = /\b\d{2}[-\s]?\d{7}\b/;
 const RE_PAREN_EIN = /\(\s*\d{2}[-\s]?\d{7}\s*\)/gi;
 const RE_BRACKET_EIN = /[\[(]\s*ein\s*[:#]?\s*\d{2}[-\s]?\d{7}\s*[\])]/gi;
 const RE_SUFFIX_EIN = /\s+ein\s*[:#]?\s*\d{2}[-\s]?\d{7}\s*$/i;
-const RE_STATUS_TAIL = /\s*[—\-–]\s*(trusted\s+resource|proven\s+ally)\s*$/i;
+const RE_STATUS_TAIL = /\s*[—\-–]\s*trusted\s+resource\s*$/i;
 const RE_GENERIC_PAREN = /\(\s*ein\s*[^)]*\)/gi;
 
 /**
@@ -52,7 +52,6 @@ export function isBannedGenericOrganizationTitle(value = "") {
   if (!t) return true;
   if (/^status\s*:/.test(t)) return true;
   if (/^trusted\s+resource\b/.test(t) || t === "trusted resource") return true;
-  if (/^proven\s+ally\b/.test(t) || t === "proven ally") return true;
   if (t === "trusted resources") return true;
   if (t === "directory organization") return true;
   if (t === "unknown organization") return true;
@@ -123,13 +122,12 @@ export function resolveOrganizationCardTitle(params = {}) {
     trustCanonical = false,
     canonicalDisplayName = "",
     candidateNames = [],
-    provenAllySlug = "",
     trustedResourceSlug = "",
     websiteUrl = "",
     emptyFallback = "Organization",
   } = params;
 
-  const slug = String(trustedResourceSlug || provenAllySlug || "").trim();
+  const slug = String(trustedResourceSlug || "").trim();
 
   if (trustCanonical && String(canonicalDisplayName).trim()) {
     const c = stripOrganizationTitleArtifacts(canonicalDisplayName);
@@ -145,7 +143,7 @@ export function resolveOrganizationCardTitle(params = {}) {
     return cleaned;
   }
 
-  const slugTitle = slug ? humanizeProvenAllySlug(slug) : "";
+  const slugTitle = slug ? humanizeTrustedResourceSlug(slug) : "";
   if (slugTitle && !isBannedGenericOrganizationTitle(slugTitle) && !titleContainsEinPattern(slugTitle)) {
     return slugTitle;
   }
@@ -190,9 +188,6 @@ export function auditEntityTitleSlot(title, options = {}) {
   const tl = t.toLowerCase();
   if (tl === "trusted resource" || /^trusted\s+resource\b/.test(tl)) {
     issues.push({ code: "status_as_title", message: "Trusted Resource used as title text" });
-  }
-  if (tl === "proven ally" || /^proven\s+ally\b/.test(tl)) {
-    issues.push({ code: "status_as_title", message: "Proven Ally used as title text" });
   }
   if (/^status\s*:/.test(tl)) {
     issues.push({ code: "status_prefix", message: "Status prefix in title" });

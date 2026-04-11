@@ -39,7 +39,7 @@ const SPONSOR_APP_IDS = {
   podcast: "c3000000-0000-4000-8000-000000000002",
 };
 
-const PROVEN_APP_ID = "c3000000-0000-4000-8000-000000000010";
+const TRUSTED_RESOURCE_APP_SEED_ID = "c3000000-0000-4000-8000-000000000010";
 
 const SAMPLE_EIN = "131234567";
 
@@ -509,9 +509,9 @@ async function seedSponsorApplications(admin) {
   console.log(`[torp-seed] sponsor_applications upserted: ${rows.length}`);
 }
 
-async function seedProvenAlly(admin) {
+async function seedTrustedResourceApplications(admin) {
   const row = {
-    id: PROVEN_APP_ID,
+    id: TRUSTED_RESOURCE_APP_SEED_ID,
     organization_path: "new",
     organization_id: null,
     organization_name: "Riverside Veteran Services Collective",
@@ -529,7 +529,7 @@ async function seedProvenAlly(admin) {
     veteran_support_experience: "Staff includes three veterans; board includes two retired senior NCOs.",
     first_responder_support_experience: "Partner EMT-B program for spouses; law enforcement family nights quarterly.",
     community_impact: "Served 1,200 households last fiscal year with 86% reporting improved stability at 90 days.",
-    why_join_proven_allies: "We want to be discoverable alongside other vetted orgs and reduce duplicate intakes.",
+    why_join_trusted_resources: "We want to be discoverable alongside other vetted orgs and reduce duplicate intakes.",
     references_or_links: "https://example.test/annual-report (sample)",
     agreed_to_values: true,
     agreed_info_accuracy: true,
@@ -537,12 +537,12 @@ async function seedProvenAlly(admin) {
     payment_demo_status: "demo_completed",
     review_status: "submitted",
   };
-  const { error } = await admin.from("proven_ally_applications").upsert([row], { onConflict: "id" });
+  const { error } = await admin.from("trusted_resource_applications").upsert([row], { onConflict: "id" });
   if (error) {
-    console.warn("[torp-seed] skip proven_ally_applications:", error.message);
+    console.warn("[torp-seed] skip trusted_resource_applications:", error.message);
     return;
   }
-  console.log("[torp-seed] proven_ally_applications upserted: 1");
+  console.log("[torp-seed] trusted_resource_applications upserted: 1");
 }
 
 async function seedOrgUpdate(admin) {
@@ -670,7 +670,7 @@ async function main() {
   await seedCommunity(admin, profileIds, authorIds);
 
   await seedSponsorApplications(admin);
-  await seedProvenAlly(admin);
+  await seedTrustedResourceApplications(admin);
   await seedOrgUpdate(admin);
 
   if (profileIds[targetWorkos]) {

@@ -1,5 +1,5 @@
--- Trusted Resource application intake table (demo + future-ready review pipeline)
-create table if not exists public.proven_ally_applications (
+-- Trusted Resource application intake (mirrors web/supabase/trusted_resource_applications.sql)
+create table if not exists public.trusted_resource_applications (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
   organization_path text not null check (organization_path in ('existing', 'new')),
@@ -19,7 +19,7 @@ create table if not exists public.proven_ally_applications (
   veteran_support_experience text null,
   first_responder_support_experience text null,
   community_impact text null,
-  why_join_proven_allies text not null,
+  why_join_trusted_resources text not null,
   references_or_links text null,
   agreed_to_values boolean not null default false,
   agreed_info_accuracy boolean not null default false,
@@ -29,6 +29,5 @@ create table if not exists public.proven_ally_applications (
   notes_internal text null
 );
 
-create index if not exists idx_proven_ally_applications_created_at on public.proven_ally_applications(created_at desc);
-create index if not exists idx_proven_ally_applications_review_status on public.proven_ally_applications(review_status);
-
+create index if not exists idx_trusted_resource_applications_created_at on public.trusted_resource_applications(created_at desc);
+create index if not exists idx_trusted_resource_applications_review_status on public.trusted_resource_applications(review_status);

@@ -1,8 +1,8 @@
 /**
  * Joins public directory + optional enrichment onto Trusted Resources catalog rows
- * so card titles never depend on a single sparse `proven_allies.display_name` field.
+ * so card titles never depend on a single sparse `trusted_resources.display_name` field.
  *
- * Table name `proven_allies` is the Trusted Resources catalog in Supabase; this module
+ * Table `trusted_resources` is the Trusted Resources catalog in Supabase; this module
  * is the canonical bridge to `nonprofits_search_app_v1` + `nonprofit_directory_enrichment`.
  */
 
@@ -89,7 +89,7 @@ function isWeakLogoUrl(url = "") {
 
 /**
  * @param {import("@supabase/supabase-js").SupabaseClient} supabase
- * @param {object[]} rows — trusted catalog rows (mapProvenAlliesDbRowToTrustedRow shape)
+ * @param {object[]} rows — trusted catalog rows (mapTrustedResourcesDbRowToTrustedRow shape)
  */
 export async function attachDirectoryAndEnrichmentToTrustedRows(supabase, rows = []) {
   if (!supabase || !rows.length) return rows;

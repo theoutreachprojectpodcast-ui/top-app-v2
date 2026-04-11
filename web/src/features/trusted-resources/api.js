@@ -1,10 +1,10 @@
 import { TRUSTED_PAGE_SIZE } from "@/lib/constants";
 import { mapTrustedRow } from "@/lib/supabase/mappers";
 import {
-  PROVEN_ALLIES_TABLE,
-  isMissingProvenAlliesTable,
-  mapProvenAlliesDbRowToTrustedRow,
-} from "@/lib/supabase/provenAlliesCatalog";
+  TRUSTED_RESOURCES_TABLE,
+  isMissingTrustedResourcesTable,
+  mapTrustedResourcesDbRowToTrustedRow,
+} from "@/lib/supabase/trustedResourcesCatalog";
 import { queryTrustedOrgsByEin } from "@/lib/supabase/queries";
 import { attachDirectoryAndEnrichmentToTrustedRows } from "@/features/trusted-resources/trustedDirectoryJoin";
 
@@ -46,7 +46,7 @@ export async function fetchTrustedResourcesFromSupabase(supabase) {
 
   const catalog = await runQuery(() =>
     supabase
-      .from(PROVEN_ALLIES_TABLE)
+      .from(TRUSTED_RESOURCES_TABLE)
       .select("*")
       .eq("listing_status", "active")
       .order("sort_order", { ascending: true })
@@ -61,19 +61,19 @@ export async function fetchTrustedResourcesFromSupabase(supabase) {
     });
     return attachDirectoryAndEnrichmentToTrustedRows(supabase, mapped);
   }
-  if (catalog.error && !isMissingProvenAlliesTable(catalog.error)) {
+  if (catalog.error && !isMissingTrustedResourcesTable(catalog.error)) {
     throw catalog.error;
   }
 
-  // Legacy: nonprofit_profiles + directory joins when `proven_allies` is not deployed.
+  // Legacy: nonprofit_profiles + directory joins when `trusted_resources` is not deployed.
   const profileResult = await runQuery(() => supabase.from("nonprofit_profiles").select("*").limit(1000));
   if (profileResult.error) throw profileResult.error;
 
   const featuredTiers = new Set(["featured", "featured_partner", "trusted", "trusted_partner", "tier_3"]);
   const profiles = (profileResult.data || []).filter((p) => {
     const tier = String(p?.verification_tier || "").trim().toLowerCase();
-    const approved = String(p?.proven_ally_status || "").trim().toLowerCase() === "approved";
-    return !!p?.ein && (p?.is_trusted === true || p?.is_proven_ally === true || approved || featuredTiers.has(tier));
+    const approved = String(p?.trusted_resource_status || "").trim().toLowerCase() === "approved";
+    return !!p?.ein && (p?.is_trusted === true || p?.is_trusted_resource === true || approved || featuredTiers.has(tier));
   });
   if (!profiles.length) return [];
   const einKeys = new Set();

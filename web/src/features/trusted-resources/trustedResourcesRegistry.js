@@ -1,5 +1,5 @@
 /**
- * Canonical Trusted Resources registry — single source of truth for display metadata (internal module: provenAllyRegistry).
+ * Canonical Trusted Resources registry — single source of truth for display metadata (module: trustedResourcesRegistry).
  * Match order: EIN (row + profile + org) → official website hostname → strict name keys (+ host stems).
  *
  * Social URLs: include only org-verified presences. Partial overrides (e.g. Instagram only) use socialOverrides.
@@ -7,8 +7,8 @@
  * ── Adding / importing a new Trusted Resource ─────────────────────────────────
  * 1. Add a record below with: eins (from IRS/profile), nameKeys (legal + common DB variants),
  *    slug, displayName (exact public-facing title — this string is shown verbatim in the UI),
- *    provenCategoryKey, shortDescription, locationLabel, website, ntee_code, nonprofit_type.
- * 2. Run: pnpm verify:proven-allies  (must pass before merge; wired into prebuild).
+ *    trustedResourceCategoryKey, shortDescription, locationLabel, website, ntee_code, nonprofit_type.
+ * 2. Run: pnpm verify:trusted-resources  (must pass before merge; wired into prebuild).
  * 3. Spot-check the Trusted Resources tab: name, category, location, description, links.
  */
 
@@ -65,7 +65,7 @@ function hostStemCompactKeys(url) {
 
 function matchRecordByHosts(rowHosts) {
   for (const h of rowHosts) {
-    const hit = PROVEN_ALLY_BY_HOST.get(h);
+    const hit = TRUSTED_RESOURCE_BY_HOST.get(h);
     if (hit) return hit;
   }
   for (const h of rowHosts) {
@@ -73,7 +73,7 @@ function matchRecordByHosts(rowHosts) {
     if (parts.length < 2) continue;
     for (let start = 0; start < parts.length - 1; start += 1) {
       const parent = parts.slice(start).join(".");
-      const sub = PROVEN_ALLY_BY_HOST.get(parent);
+      const sub = TRUSTED_RESOURCE_BY_HOST.get(parent);
       if (sub) return sub;
     }
   }
@@ -81,7 +81,7 @@ function matchRecordByHosts(rowHosts) {
 }
 
 /**
- * @typedef {object} ProvenAllySocialOverrides
+ * @typedef {object} TrustedResourceSocialOverrides
  * @property {string} [instagramUrl]
  * @property {string} [facebookUrl]
  * @property {string} [youtubeUrl]
@@ -92,24 +92,24 @@ function matchRecordByHosts(rowHosts) {
 /**
  * Canonical record shape (documented for editors; registry is the contract).
  *
- * @typedef {object} ProvenAllyCanonicalRecord
+ * @typedef {object} TrustedResourceCanonicalRecord
  * @property {string[]} [eins] Normalized EINs (digits only ok)
  * @property {string[]} [nameKeys] Lowercase phrases / compact tokens for matching
  * @property {string} slug Internal routing key (not shown in UI)
  * @property {string} displayName Authoritative user-facing title
- * @property {string} provenCategoryKey Key into NONPROFIT_CATEGORY_MAP (categoryMapper)
+ * @property {string} trustedResourceCategoryKey Key into NONPROFIT_CATEGORY_MAP (categoryMapper)
  * @property {string} shortDescription Card body copy
  * @property {string} locationLabel e.g. National or City, ST
  * @property {string} website Official site
  * @property {string[]} [aliasHosts] Extra hostnames that should map to this record (no scheme)
  * @property {string} [ntee_code] IRS NTEE major letter when known
  * @property {string} [nonprofit_type] Human category line for text-based inference
- * @property {ProvenAllySocialOverrides} [socialOverrides] Verified URLs only; merges onto row
+ * @property {TrustedResourceSocialOverrides} [socialOverrides] Verified URLs only; merges onto row
  * @property {boolean} [clearUnlistedSocials] When true, omit socials not listed in socialOverrides (website kept)
  */
 
-/** @type {ProvenAllyCanonicalRecord[]} */
-export const PROVEN_ALLY_CANONICAL_RECORDS = [
+/** @type {TrustedResourceCanonicalRecord[]} */
+export const TRUSTED_RESOURCE_CANONICAL_RECORDS = [
   {
     eins: ["541411430", "0541411430"],
     nameKeys: [
@@ -121,7 +121,7 @@ export const PROVEN_ALLY_CANONICAL_RECORDS = [
     ],
     slug: "freedom-alliance",
     displayName: "Freedom Alliance",
-    provenCategoryKey: "veteransMilitary",
+    trustedResourceCategoryKey: "veteransMilitary",
     shortDescription:
       "Supports wounded service members and military families with care packages, scholarships, and morale programs.",
     locationLabel: "National",
@@ -146,7 +146,7 @@ export const PROVEN_ALLY_CANONICAL_RECORDS = [
     ],
     slug: "wounded-warrior-project",
     displayName: "Wounded Warrior Project",
-    provenCategoryKey: "veteransMilitary",
+    trustedResourceCategoryKey: "veteransMilitary",
     shortDescription: "Life-changing programs for injured veterans and their families.",
     locationLabel: "National",
     website: "https://www.woundedwarriorproject.org/",
@@ -165,7 +165,7 @@ export const PROVEN_ALLY_CANONICAL_RECORDS = [
     ],
     slug: "fisher-house-foundation",
     displayName: "Fisher House Foundation",
-    provenCategoryKey: "humanServices",
+    trustedResourceCategoryKey: "humanServices",
     shortDescription:
       "Comfort homes where military and veterans families stay at no cost while a loved one is in hospital.",
     locationLabel: "National",
@@ -185,7 +185,7 @@ export const PROVEN_ALLY_CANONICAL_RECORDS = [
     ],
     slug: "uso",
     displayName: "USO",
-    provenCategoryKey: "veteransMilitary",
+    trustedResourceCategoryKey: "veteransMilitary",
     shortDescription: "Strengthens service members by keeping them connected to family, home and country.",
     locationLabel: "National",
     website: "https://www.uso.org/",
@@ -203,7 +203,7 @@ export const PROVEN_ALLY_CANONICAL_RECORDS = [
     ],
     slug: "team-rubicon",
     displayName: "Team Rubicon",
-    provenCategoryKey: "firstRespondersSafety",
+    trustedResourceCategoryKey: "firstRespondersSafety",
     shortDescription: "Unites military veterans with first responders to deploy emergency response teams.",
     locationLabel: "National",
     website: "https://teamrubiconusa.org/",
@@ -223,7 +223,7 @@ export const PROVEN_ALLY_CANONICAL_RECORDS = [
     ],
     slug: "the-mission-continues",
     displayName: "The Mission Continues",
-    provenCategoryKey: "veteransMilitary",
+    trustedResourceCategoryKey: "veteransMilitary",
     shortDescription: "Empowers veterans to continue their service through community impact projects.",
     locationLabel: "National",
     website: "https://missioncontinues.org/",
@@ -241,7 +241,7 @@ export const PROVEN_ALLY_CANONICAL_RECORDS = [
     ],
     slug: "bob-woodruff-foundation",
     displayName: "Bob Woodruff Foundation",
-    provenCategoryKey: "veteransMilitary",
+    trustedResourceCategoryKey: "veteransMilitary",
     shortDescription:
       "Invests in programs that help impacted veterans, service members, and their families thrive.",
     locationLabel: "National",
@@ -261,7 +261,7 @@ export const PROVEN_ALLY_CANONICAL_RECORDS = [
     ],
     slug: "hire-heroes-usa",
     displayName: "Hire Heroes USA",
-    provenCategoryKey: "education",
+    trustedResourceCategoryKey: "education",
     shortDescription: "Free job search support and career coaching for transitioning military members and veterans.",
     locationLabel: "National",
     website: "https://www.hireheroesusa.org/",
@@ -283,7 +283,7 @@ export const PROVEN_ALLY_CANONICAL_RECORDS = [
     ],
     slug: "tunnel-to-towers",
     displayName: "Tunnel to Towers Foundation",
-    provenCategoryKey: "humanServices",
+    trustedResourceCategoryKey: "humanServices",
     shortDescription:
       "Builds mortgage-free smart homes for veterans and first responders with life-changing injuries.",
     locationLabel: "National",
@@ -302,7 +302,7 @@ export const PROVEN_ALLY_CANONICAL_RECORDS = [
     ],
     slug: "green-beret-foundation",
     displayName: "Green Beret Foundation",
-    provenCategoryKey: "veteransMilitary",
+    trustedResourceCategoryKey: "veteransMilitary",
     shortDescription: "Provides support for U.S. Army Special Forces soldiers and their families.",
     locationLabel: "National",
     website: "https://greenberetfoundation.org/",
@@ -319,7 +319,7 @@ export const PROVEN_ALLY_CANONICAL_RECORDS = [
     ],
     slug: "travis-manion-foundation",
     displayName: "Travis Manion Foundation",
-    provenCategoryKey: "veteransMilitary",
+    trustedResourceCategoryKey: "veteransMilitary",
     shortDescription: "Develops character in future generations and empowers veterans and families.",
     locationLabel: "National",
     website: "https://www.travismanion.org/",
@@ -337,7 +337,7 @@ export const PROVEN_ALLY_CANONICAL_RECORDS = [
     ],
     slug: "hope-for-the-warriors",
     displayName: "Hope For The Warriors",
-    provenCategoryKey: "veteransMilitary",
+    trustedResourceCategoryKey: "veteransMilitary",
     shortDescription: "Comprehensive programs for post-9/11 service members, veterans, and military families.",
     locationLabel: "National",
     website: "https://hopeforthewarriors.org/",
@@ -355,7 +355,7 @@ export const PROVEN_ALLY_CANONICAL_RECORDS = [
     ],
     slug: "southern-outdoor-dreams",
     displayName: "Southern Outdoor Dreams",
-    provenCategoryKey: "veteransMilitary",
+    trustedResourceCategoryKey: "veteransMilitary",
     shortDescription:
       "Faith-based Texas nonprofit providing outdoor adventures and community for veterans, youth, and others facing physical health challenges.",
     locationLabel: "Angleton, TX",
@@ -365,13 +365,13 @@ export const PROVEN_ALLY_CANONICAL_RECORDS = [
   },
 ];
 
-const PROVEN_ALLY_BY_HOST = new Map();
-for (const rec of PROVEN_ALLY_CANONICAL_RECORDS) {
+const TRUSTED_RESOURCE_BY_HOST = new Map();
+for (const rec of TRUSTED_RESOURCE_CANONICAL_RECORDS) {
   const primary = canonicalHostname(rec.website);
-  if (primary) PROVEN_ALLY_BY_HOST.set(primary, rec);
+  if (primary) TRUSTED_RESOURCE_BY_HOST.set(primary, rec);
   for (const a of rec.aliasHosts || []) {
     const h = canonicalHostname(a.includes("://") ? a : `https://${a}/`);
-    if (h) PROVEN_ALLY_BY_HOST.set(h, rec);
+    if (h) TRUSTED_RESOURCE_BY_HOST.set(h, rec);
   }
 }
 
@@ -394,7 +394,7 @@ function compactNameMatchesKey(nk, ck) {
  * @param {string[]} compactCandidates orgName, profile names, directory org names (compactKey)
  * @param {string[]} nameKeys
  */
-export function provenAllyNameKeysMatch(compactCandidates, nameKeys) {
+export function trustedResourceNameKeysMatch(compactCandidates, nameKeys) {
   const list = compactCandidates.filter(Boolean);
   for (const raw of nameKeys) {
     const ck = compactKey(raw);
@@ -408,14 +408,14 @@ export function provenAllyNameKeysMatch(compactCandidates, nameKeys) {
 
 /**
  * @param {object} row Trusted / profile row shape (ein, orgName, raw.profile)
- * @returns {ProvenAllyCanonicalRecord | null}
+ * @returns {TrustedResourceCanonicalRecord | null}
  */
-export function matchCanonicalProvenAlly(row = {}) {
+export function matchCanonicalTrustedResource(row = {}) {
   const profile = row.raw?.profile || {};
   const org = row.raw?.org || {};
   const einK = normEin(row.ein || profile.ein || org.ein || "");
 
-  for (const record of PROVEN_ALLY_CANONICAL_RECORDS) {
+  for (const record of TRUSTED_RESOURCE_CANONICAL_RECORDS) {
     if (einK && Array.isArray(record.eins) && record.eins.length) {
       const hitEin = record.eins.some((e) => normEin(e) === einK);
       if (hitEin) return record;
@@ -440,22 +440,22 @@ export function matchCanonicalProvenAlly(row = {}) {
   ];
   const compactCandidates = [...new Set([nameK, profileNameK, orgTableNameK, ...stems].filter(Boolean))];
 
-  for (const record of PROVEN_ALLY_CANONICAL_RECORDS) {
-    if (record.nameKeys?.length && provenAllyNameKeysMatch(compactCandidates, record.nameKeys)) {
+  for (const record of TRUSTED_RESOURCE_CANONICAL_RECORDS) {
+    if (record.nameKeys?.length && trustedResourceNameKeysMatch(compactCandidates, record.nameKeys)) {
       return record;
     }
   }
 
-  const displayCompacts = PROVEN_ALLY_CANONICAL_RECORDS.map((r) => compactKey(r.displayName || "")).filter(Boolean);
-  for (let i = 0; i < PROVEN_ALLY_CANONICAL_RECORDS.length; i += 1) {
+  const displayCompacts = TRUSTED_RESOURCE_CANONICAL_RECORDS.map((r) => compactKey(r.displayName || "")).filter(Boolean);
+  for (let i = 0; i < TRUSTED_RESOURCE_CANONICAL_RECORDS.length; i += 1) {
     const dc = displayCompacts[i];
     if (!dc) continue;
     if (compactCandidates.includes(dc)) {
-      return PROVEN_ALLY_CANONICAL_RECORDS[i];
+      return TRUSTED_RESOURCE_CANONICAL_RECORDS[i];
     }
   }
 
   return null;
 }
 
-export { normEin as normalizeProvenAllyEin, compactKey as compactProvenAllyKey };
+export { normEin as normalizeTrustedResourceEin, compactKey as compactTrustedResourceKey };

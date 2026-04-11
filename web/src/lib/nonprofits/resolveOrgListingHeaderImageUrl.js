@@ -1,3 +1,5 @@
+import { sanitizeDisplayableImageUrl } from "@/lib/media/safeImageUrl";
+
 /**
  * Resolve which header/hero image URL to show on nonprofit + trusted resource listing cards.
  * Uses only fields already on the row — no network access.
@@ -6,7 +8,7 @@
  * @returns {string}
  */
 export function resolveOrgListingHeaderImageUrl(row = {}) {
-  const headerUrl = String(row.header_image_url ?? row.headerImageUrl ?? "").trim();
+  const headerUrl = sanitizeDisplayableImageUrl(String(row.header_image_url ?? row.headerImageUrl ?? "").trim());
   const status = String(row.header_image_status ?? row.headerImageStatus ?? "").trim().toLowerCase();
   const review = String(row.header_image_review_status ?? row.headerImageReviewStatus ?? "")
     .trim()
@@ -26,8 +28,8 @@ export function resolveOrgListingHeaderImageUrl(row = {}) {
     if (allowedStatus && allowedReview) return headerUrl;
   }
 
-  const legacyHero = String(row.hero_image_url ?? row.heroImageUrl ?? "").trim();
+  const legacyHero = sanitizeDisplayableImageUrl(String(row.hero_image_url ?? row.heroImageUrl ?? "").trim());
   if (legacyHero && !rejected) return legacyHero;
 
-  return String(row.thumbnail_url ?? row.thumbnailUrl ?? "").trim();
+  return sanitizeDisplayableImageUrl(String(row.thumbnail_url ?? row.thumbnailUrl ?? "").trim());
 }

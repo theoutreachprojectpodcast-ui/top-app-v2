@@ -1,7 +1,7 @@
 import { mapNonprofitCategory } from "@/features/nonprofits/mappers/categoryMapper";
 import { getNonprofitVerificationTier } from "@/lib/nonprofits/verification";
 import { mapNonprofitStatus } from "@/features/nonprofits/mappers/nonprofitStatusMapper";
-import { mergeTrustedResourcesPresentation } from "@/features/trusted-resources/provenAllyPresentation";
+import { mergeTrustedResourcesPresentation } from "@/features/trusted-resources/trustedResourcesPresentation";
 import { isPlaceholderOrgName } from "@/lib/formatOrgName";
 import { resolveCanonicalOrganizationName } from "@/lib/entityDisplayName";
 import { rowCity, rowEin, rowNtee, rowState } from "@/lib/utils";
@@ -10,6 +10,7 @@ import { mapNonprofitLinks } from "@/features/nonprofits/mappers/nonprofitLinksM
 import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
 import { resolveFindInfoHref } from "@/features/nonprofits/domain/nonprofitCardActions";
 import { resolveOrgListingHeaderImageUrl } from "@/lib/nonprofits/resolveOrgListingHeaderImageUrl";
+import { sanitizeDisplayableImageUrl } from "@/lib/media/safeImageUrl";
 
 function firstNonEmpty(...values) {
   for (const value of values) {
@@ -90,11 +91,11 @@ function needsTrustedResourcesPresentation(row = {}, source) {
   if (source === "trusted") return true;
   if (row?.isTrusted || row?.is_trusted) return true;
   const prof = row?.raw?.profile;
-  if (prof?.is_trusted === true || prof?.is_proven_ally === true) return true;
-  if (String(prof?.proven_ally_status || "").toLowerCase() === "approved") return true;
+  if (prof?.is_trusted === true || prof?.is_trusted_resource === true) return true;
+  if (String(prof?.trusted_resource_status || "").toLowerCase() === "approved") return true;
   const rawRow = row?.raw;
   if (rawRow && typeof rawRow === "object" && !prof) {
-    if (rawRow.is_trusted === true || rawRow.is_proven_ally === true) return true;
+    if (rawRow.is_trusted === true || rawRow.is_trusted_resource === true) return true;
   }
   return false;
 }
@@ -174,7 +175,6 @@ export function mapNonprofitCardRow(row = {}, source = "directory") {
     canonicalDisplayName: baseRow.canonicalDisplayName,
     candidateNames: titleCandidates,
     trustedResourceSlug: baseRow.trustedResourceSlug,
-    provenAllySlug: baseRow.provenAllySlug,
     websiteUrl: websiteForTitle,
     emptyFallback: source === "saved" ? "Saved organization" : "Organization",
   });
@@ -182,7 +182,7 @@ export function mapNonprofitCardRow(row = {}, source = "directory") {
   const patchedRow = {
     ...baseRow,
     orgName: displayName,
-    provenCategoryKey: baseRow.provenCategoryKey,
+    trustedResourceCategoryKey: baseRow.trustedResourceCategoryKey,
     city: resolvedCity,
     state: resolvedState,
     nonprofit_type: firstNonEmpty(
@@ -249,7 +249,7 @@ export function mapNonprofitCardRow(row = {}, source = "directory") {
   }
   const locationLine =
     firstNonEmpty(
-      baseRow.provenDisplayLocation,
+      baseRow.trustedResourceDisplayLocation,
       [resolvedCity, resolvedState].filter(Boolean).join(", "),
       trustedLocation.raw
     ) || (applyTrustedPresentation ? "National" : "Unknown Location");
@@ -284,7 +284,7 @@ export function mapNonprofitCardRow(row = {}, source = "directory") {
     serviceArea: String(patchedRow.serviceArea ?? patchedRow.service_area ?? "").trim(),
     foundedYear: patchedRow.foundedYear ?? patchedRow.founded_year ?? null,
     heroImageUrl: resolveOrgListingHeaderImageUrl(patchedRow),
-    thumbnailUrl: String(patchedRow.thumbnailUrl ?? patchedRow.thumbnail_url ?? "").trim(),
+    thumbnailUrl: sanitizeDisplayableImageUrl(String(patchedRow.thumbnailUrl ?? patchedRow.thumbnail_url ?? "").trim()),
     publicSlug: String(patchedRow.publicSlug ?? patchedRow.public_slug ?? "").trim(),
     metadataSource: String(patchedRow.metadataSource ?? patchedRow.metadata_source ?? "").trim(),
     profileEnrichedAt: patchedRow.profileEnrichedAt ?? patchedRow.profile_enriched_at ?? null,
@@ -295,8 +295,10 @@ export function mapNonprofitCardRow(row = {}, source = "directory") {
     researchStatus: String(patchedRow.researchStatus ?? patchedRow.research_status ?? "").trim(),
     sourceSummary: String(patchedRow.sourceSummary ?? patchedRow.source_summary ?? "").trim(),
     webSearchSupplemented: !!(patchedRow.webSearchSupplemented ?? patchedRow.web_search_supplemented),
-    logoUrl: String(baseRow.logoUrl ?? baseRow.logo_url ?? "").trim(),
-    cityImageUrl: String(baseRow.cityImageUrl ?? baseRow.fallback_city_image_url ?? baseRow.city_image_url ?? "").trim(),
+    logoUrl: sanitizeDisplayableImageUrl(String(baseRow.logoUrl ?? baseRow.logo_url ?? "").trim()),
+    cityImageUrl: sanitizeDisplayableImageUrl(
+      String(baseRow.cityImageUrl ?? baseRow.fallback_city_image_url ?? baseRow.city_image_url ?? "").trim(),
+    ),
     fallbackLocation: [city, state].filter(Boolean).join(", ") || state || city || "Unknown Location",
     links,
     primaryLink: links.find((l) => l.type === "website")?.url || links[0]?.url || "",

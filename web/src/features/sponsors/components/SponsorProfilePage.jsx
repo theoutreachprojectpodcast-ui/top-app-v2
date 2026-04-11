@@ -7,6 +7,8 @@ import ColorSchemeToggle from "@/components/app/ColorSchemeToggle";
 import { useAuthSession } from "@/components/auth/AuthSessionProvider";
 import HeaderInner from "@/components/layout/HeaderInner";
 import HeaderNotificationBell from "@/components/layout/HeaderNotificationBell";
+import { sanitizeDisplayableImageUrl } from "@/lib/media/safeImageUrl";
+import { readNavAuthCache } from "@/lib/auth/navAuthCache";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { getSponsorBySlug } from "@/features/sponsors/api/sponsorCatalogApi";
 
@@ -29,6 +31,15 @@ export default function SponsorProfilePage({ slug }) {
     };
   }, [supabase, slug]);
 
+  const sponsorHeroBg = profile
+    ? sanitizeDisplayableImageUrl(String(profile.background_image_url || "").trim())
+    : "";
+  const sponsorLogoSrc = profile ? sanitizeDisplayableImageUrl(String(profile.logo_url || "").trim()) : "";
+
+  const navCache = typeof window !== "undefined" ? readNavAuthCache() : null;
+  const sponsorHeaderAuthed =
+    session.authenticated || (session.loading && !!navCache?.authenticated);
+
   return (
     <main className="topApp sponsorProfileShell">
       <div className="headerBrandStack">
@@ -42,7 +53,7 @@ export default function SponsorProfilePage({ slug }) {
           <div className="topbarZone topbarRight">
             <div className="topbarActionsCluster">
               <ColorSchemeToggle />
-              {!session.loading && session.authenticated ? (
+              {sponsorHeaderAuthed ? (
                 <>
                   <HeaderNotificationBell variant="subpage" />
                   <Link className="btnSoft sponsorBtn" href="/profile">
@@ -63,11 +74,23 @@ export default function SponsorProfilePage({ slug }) {
           <>
             <section
               className="card sponsorProfileHero"
-              style={profile.background_image_url ? { backgroundImage: `linear-gradient(130deg, rgba(6,10,14,0.84), rgba(6,10,14,0.68)), url(${JSON.stringify(profile.background_image_url)})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
+              style={
+                sponsorHeroBg
+                  ? {
+                      backgroundImage: `linear-gradient(130deg, rgba(6,10,14,0.84), rgba(6,10,14,0.68)), url(${JSON.stringify(sponsorHeroBg)})`,
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                    }
+                  : undefined
+              }
             >
               <div className="sponsorProfileIdentity">
                 <div className="sponsorPremiumLogoShell">
-                  {profile.logo_url ? <img className="sponsorPremiumLogoImg" src={profile.logo_url} alt="" loading="lazy" /> : <span className="sponsorPremiumWordmark">{profile.name}</span>}
+                  {sponsorLogoSrc ? (
+                    <img className="sponsorPremiumLogoImg" src={sponsorLogoSrc} alt="" loading="lazy" />
+                  ) : (
+                    <span className="sponsorPremiumWordmark">{profile.name}</span>
+                  )}
                 </div>
                 <div>
                   <h1 className="sponsorProfileTitle">{profile.name}</h1>

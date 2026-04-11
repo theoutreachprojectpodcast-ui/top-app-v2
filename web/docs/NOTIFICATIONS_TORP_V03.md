@@ -41,7 +41,7 @@ Email/push: **`scheduleOutboundEmailNotification`** is a no-op stub; set `delive
 | `community_post_submitted_for_review` | New community submission |
 | `sponsor_application_submitted` | Sponsor application POST |
 | `mission_partner_application_submitted` | Mission partner family |
-| `proven_ally_application_submitted` | Trusted Resource application (after verified server trigger) |
+| `trusted_resource_application_submitted` | Trusted Resource application (after verified server trigger) |
 
 ## Favorites → org updates
 

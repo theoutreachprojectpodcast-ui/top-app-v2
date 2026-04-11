@@ -42,6 +42,9 @@ const defaultFilters = { state: "", q: "", service: "", audience: "all" };
 
 export function useDirectorySearch(supabase) {
   const restoredRef = useRef(false);
+  const runSearchRef = useRef(null);
+  const searchGenRef = useRef(0);
+
   const [filters, setFilters] = useState({ ...defaultFilters });
   const [results, setResults] = useState([]);
   const [status, setStatus] = useState("");
@@ -52,6 +55,8 @@ export function useDirectorySearch(supabase) {
   const runSearch = useCallback(
     async (nextPage = 1, overrideFilters = null) => {
       const f = overrideFilters && typeof overrideFilters === "object" ? overrideFilters : filters;
+      const gen = ++searchGenRef.current;
+
       if (!f.state) {
         setStatus("Please select a state.");
         setMeta("");
@@ -65,6 +70,8 @@ export function useDirectorySearch(supabase) {
 
       try {
         const { rows, count, from } = await fetchDirectorySearch(supabase, f, nextPage);
+        if (gen !== searchGenRef.current) return;
+
         setResults(rows);
         setTotal(count);
 
@@ -88,6 +95,7 @@ export function useDirectorySearch(supabase) {
         setMeta(`Displaying ${start.toLocaleString()}-${end.toLocaleString()} • Page ${nextPage}`);
         writeDirSession(f, nextPage);
       } catch {
+        if (gen !== searchGenRef.current) return;
         setStatus("Search temporarily unavailable. Please try again.");
         setMeta("");
         setResults([]);
@@ -96,7 +104,10 @@ export function useDirectorySearch(supabase) {
     [supabase, filters]
   );
 
+  runSearchRef.current = runSearch;
+
   const clearSearch = useCallback(() => {
+    searchGenRef.current += 1;
     setFilters({ ...defaultFilters });
     setResults([]);
     setStatus("");
@@ -104,18 +115,25 @@ export function useDirectorySearch(supabase) {
     setPage(1);
     setTotal(null);
     clearDirSession();
-    restoredRef.current = false;
   }, []);
 
+  /**
+   * Restore from sessionStorage once when Supabase client is ready — not on every filter/runSearch change.
+   * (Depending on runSearch previously re-applied storage and overwrote in-progress filter edits.)
+   */
   useEffect(() => {
+    if (!supabase) return;
     if (restoredRef.current) return;
+    restoredRef.current = true;
+
     const s = readDirSession();
     if (!s?.filters?.state) return;
-    restoredRef.current = true;
+
     setFilters(s.filters);
-    setPage(typeof s.page === "number" && s.page >= 1 ? s.page : 1);
-    void runSearch(s.page || 1, s.filters);
-  }, [supabase, runSearch]);
+    const nextPage = typeof s.page === "number" && s.page >= 1 ? s.page : 1;
+    setPage(nextPage);
+    void runSearchRef.current?.(nextPage, s.filters);
+  }, [supabase]);
 
   const canGoNext = total === null ? results.length === PAGE_SIZE : page * PAGE_SIZE < total;
 

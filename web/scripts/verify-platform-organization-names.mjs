@@ -3,7 +3,7 @@
  *
  * Scans:
  * - nonprofits_search_app_v1
- * - proven_allies (Trusted Resources catalog)
+ * - trusted_resources (Trusted Resources catalog)
  *
  * Output per flagged row:
  * - source, id/ein
@@ -15,7 +15,7 @@
  *
  * Optional:
  * - VERIFY_WEB=1   -> fetch official website title for confidence support
- * - APPLY_TRUSTED=1 -> updates proven_allies.display_name when safe
+ * - APPLY_TRUSTED=1 -> updates trusted_resources.display_name when safe
  *
  * Usage:
  *   node scripts/verify-platform-organization-names.mjs
@@ -156,13 +156,13 @@ async function scanDirectory() {
 async function scanTrusted() {
   const out = [];
   const { data, error } = await sb
-    .from("proven_allies")
+    .from("trusted_resources")
     .select("id,ein,display_name,website_url,listing_status")
     .limit(5000);
   if (error && String(error.code || "") !== "PGRST205") throw error;
 
   let trustedRows = (data || []).slice(0, MAX_SCAN);
-  let sourceTable = "proven_allies";
+  let sourceTable = "trusted_resources";
   if (error && String(error.code || "") === "PGRST205") {
     const fallback = await sb
       .from("nonprofit_profiles")
@@ -172,8 +172,8 @@ async function scanTrusted() {
     sourceTable = "nonprofit_profiles";
     trustedRows = (fallback.data || [])
       .filter((r) => {
-        const approved = String(r.proven_ally_status || "").toLowerCase() === "approved";
-        return r.is_trusted === true || r.is_proven_ally === true || approved;
+        const approved = String(r.trusted_resource_status || "").toLowerCase() === "approved";
+        return r.is_trusted === true || r.is_trusted_resource === true || approved;
       })
       .map((r) => ({
         id: r.id || r.ein || r.organization_name || r.display_name_override || crypto.randomUUID(),
@@ -203,7 +203,7 @@ async function scanTrusted() {
         recommended !== "Organization" &&
         !issueCodes.includes("all_caps");
       out.push({
-        source: sourceTable === "proven_allies" ? "trusted_resources_catalog" : "trusted_resources_profiles_fallback",
+        source: sourceTable === "trusted_resources" ? "trusted_resources_catalog" : "trusted_resources_profiles_fallback",
         id: String(r.id),
         ein: normalizeEin(r.ein),
         currentTitle: current,
@@ -223,13 +223,13 @@ async function scanTrusted() {
       console.warn("APPLY_TRUSTED skipped: SUPABASE_SERVICE_ROLE_KEY is not set.");
       return out;
     }
-    if (sourceTable !== "proven_allies") {
-      console.warn("APPLY_TRUSTED skipped: proven_allies table is not available in this project.");
+    if (sourceTable !== "trusted_resources") {
+      console.warn("APPLY_TRUSTED skipped: trusted_resources table is not available in this project.");
       return out;
     }
     const safe = out.filter((x) => x.autoFixSafe && x.recommendedTitle && x.recommendedTitle !== x.currentTitle);
     for (const row of safe) {
-      const { error: upErr } = await sb.from("proven_allies").update({ display_name: row.recommendedTitle }).eq("id", row.id);
+      const { error: upErr } = await sb.from("trusted_resources").update({ display_name: row.recommendedTitle }).eq("id", row.id);
       if (upErr) {
         row.manualReview = true;
         row.applyError = upErr.message;

@@ -1,5 +1,5 @@
 /**
- * Entity title / naming QA gate — runs in prebuild with proven-allies verification.
+ * Entity title / naming QA gate — runs in prebuild with trusted-resources registry verification.
  *
  * Checks:
  * - Trusted Resources registry displayName strings (no EIN, no machine joins, etc.)
@@ -18,7 +18,7 @@ import fs from "node:fs";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const entityUrl = pathToFileURL(path.join(__dirname, "../src/lib/entityDisplayName.js")).href;
 const registryUrl = pathToFileURL(
-  path.join(__dirname, "../src/features/trusted-resources/provenAllyRegistry.js")
+  path.join(__dirname, "../src/features/trusted-resources/trustedResourcesRegistry.js")
 ).href;
 const sponsorsUrl = pathToFileURL(
   path.join(__dirname, "../src/features/sponsors/data/featuredSponsors.js")
@@ -31,7 +31,7 @@ const {
   stripOrganizationTitleArtifacts,
 } = await import(entityUrl);
 
-const { PROVEN_ALLY_CANONICAL_RECORDS } = await import(registryUrl);
+const { TRUSTED_RESOURCE_CANONICAL_RECORDS } = await import(registryUrl);
 const { FEATURED_SPONSORS } = await import(sponsorsUrl);
 
 const errors = [];
@@ -41,8 +41,8 @@ function fail(msg) {
 }
 
 // --- Registry ---
-for (let i = 0; i < PROVEN_ALLY_CANONICAL_RECORDS.length; i += 1) {
-  const r = PROVEN_ALLY_CANONICAL_RECORDS[i];
+for (let i = 0; i < TRUSTED_RESOURCE_CANONICAL_RECORDS.length; i += 1) {
+  const r = TRUSTED_RESOURCE_CANONICAL_RECORDS[i];
   const label = r.slug || `record[${i}]`;
   const issues = auditRegistryDisplayName(r);
   for (const iss of issues) {
@@ -74,7 +74,7 @@ for (const [input, expect] of stripCases) {
 const resolved = resolveOrganizationCardTitle({
   trustCanonical: false,
   candidateNames: ["trusted resource (EIN 12-3456789)", "Real Hope Foundation"],
-  provenAllySlug: "",
+  trustedResourceSlug: "",
   emptyFallback: "Organization",
 });
 if (resolved !== "Real Hope Foundation") {
@@ -84,7 +84,7 @@ if (resolved !== "Real Hope Foundation") {
 const resolved2 = resolveOrganizationCardTitle({
   trustCanonical: false,
   candidateNames: [],
-  provenAllySlug: "",
+  trustedResourceSlug: "",
   emptyFallback: "Saved organization",
 });
 if (resolved2 !== "Saved organization") {
@@ -93,7 +93,7 @@ if (resolved2 !== "Saved organization") {
 
 const badTitles = [
   "Trusted resource",
-  "Proven Ally",
+  "Directory Organization",
   "ACME_CORP_NAME",
   "status: approved",
 ];
@@ -136,5 +136,5 @@ if (errors.length) {
 }
 
 console.log(
-  `Entity display names OK — registry ${PROVEN_ALLY_CANONICAL_RECORDS.length} record(s), ${FEATURED_SPONSORS.length} sponsor(s), fixtures + source scan.`
+  `Entity display names OK — registry ${TRUSTED_RESOURCE_CANONICAL_RECORDS.length} record(s), ${FEATURED_SPONSORS.length} sponsor(s), fixtures + source scan.`
 );

@@ -357,7 +357,7 @@ export function useProfileData(supabase) {
       DEMO_USER_KEY,
       DEMO_ACCOUNT_KEY,
       "top_sponsor_applications_demo",
-      "top_proven_ally_applications_demo",
+      "top_trusted_resource_applications_demo",
       "top_community_pending_submissions",
       "top_community_local_approved_posts",
       "top_community_liked_posts",

@@ -62,7 +62,7 @@ where sa.sponsor_catalog_id is null
 
 create table if not exists public.trusted_resource_nonprofit_links (
   id uuid primary key default gen_random_uuid(),
-  trusted_resource_id uuid not null references public.proven_allies (id) on delete cascade,
+  trusted_resource_id uuid not null references public.trusted_resources (id) on delete cascade,
   nonprofit_ein text not null,
   link_confidence double precision,
   link_source text,
@@ -76,10 +76,10 @@ create table if not exists public.trusted_resource_nonprofit_links (
 create index if not exists trusted_resource_nonprofit_links_ein_idx
   on public.trusted_resource_nonprofit_links (nonprofit_ein);
 
--- Backfill from proven_allies.ein when link table empty for that pair.
+-- Backfill from trusted_resources.ein when link table empty for that pair.
 insert into public.trusted_resource_nonprofit_links (trusted_resource_id, nonprofit_ein, link_confidence, link_source, is_primary, verified)
-select pa.id, regexp_replace(pa.ein, '\D', '', 'g') as nonprofit_ein, 1.0, 'proven_allies_ein', true, true
-from public.proven_allies pa
+select pa.id, regexp_replace(pa.ein, '\D', '', 'g') as nonprofit_ein, 1.0, 'trusted_resources_ein', true, true
+from public.trusted_resources pa
 where coalesce(pa.ein, '') <> ''
   and regexp_replace(pa.ein, '\D', '', 'g') ~ '^[0-9]{9}$'
 on conflict (trusted_resource_id, nonprofit_ein) do nothing;

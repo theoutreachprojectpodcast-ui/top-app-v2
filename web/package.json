@@ -7,8 +7,8 @@
     "node": ">=20.20.0"
   },
   "scripts": {
-    "prebuild": "node scripts/verify-proven-ally-registry.mjs && node scripts/verify-entity-display-names.mjs && node scripts/verify-trusted-resources-titles.mjs && node scripts/sync-public-assets.mjs",
-    "verify:proven-allies": "node scripts/verify-proven-ally-registry.mjs",
+    "prebuild": "node scripts/verify-trusted-resources-registry.mjs && node scripts/verify-entity-display-names.mjs && node scripts/verify-trusted-resources-titles.mjs && node scripts/sync-public-assets.mjs",
+    "verify:trusted-resources": "node scripts/verify-trusted-resources-registry.mjs",
     "verify:entity-names": "node scripts/verify-entity-display-names.mjs",
     "verify:trusted-titles": "node scripts/verify-trusted-resources-titles.mjs",
     "verify:platform-names": "node scripts/verify-platform-organization-names.mjs",

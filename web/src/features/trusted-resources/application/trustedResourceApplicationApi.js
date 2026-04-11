@@ -1,13 +1,13 @@
 import {
-  PROVEN_ALLIES_TABLE,
-  buildPendingProvenAllyRowFromApplication,
-  isMissingProvenAlliesTable,
-} from "@/lib/supabase/provenAlliesCatalog";
-import { buildProvenAllyCrmLeadPayload } from "@/features/proven-allies/domain/crmLeadPayload";
+  TRUSTED_RESOURCES_TABLE,
+  buildPendingTrustedResourceRowFromApplication,
+  isMissingTrustedResourcesTable,
+} from "@/lib/supabase/trustedResourcesCatalog";
+import { buildTrustedResourceCrmLeadPayload } from "@/features/trusted-resources/application/crmLeadPayload";
 
 const DIRECTORY_SOURCE = "nonprofits_search_app_v1";
-const APPLICATION_TABLE = "proven_ally_applications";
-const LOCAL_FALLBACK_KEY = "top_proven_ally_applications_demo";
+const APPLICATION_TABLE = "trusted_resource_applications";
+const LOCAL_FALLBACK_KEY = "top_trusted_resource_applications_demo";
 
 export async function searchDirectoryOrganizations(supabase, term = "", limit = 20) {
   const q = String(term || "").trim();
@@ -47,7 +47,7 @@ function applicationInsertRow(payload) {
     veteran_support_experience: String(payload.veteran_support_experience || "").trim() || null,
     first_responder_support_experience: String(payload.first_responder_support_experience || "").trim() || null,
     community_impact: String(payload.community_impact || "").trim() || null,
-    why_join_proven_allies: String(payload.why_join_proven_allies || "").trim(),
+    why_join_trusted_resources: String(payload.why_join_trusted_resources || "").trim(),
     references_or_links: String(payload.references_or_links || "").trim() || null,
     agreed_to_values: !!payload.agreed_to_values,
     agreed_info_accuracy: !!payload.agreed_info_accuracy,
@@ -70,7 +70,7 @@ function pushLocalFallback(record) {
   }
 }
 
-export async function submitProvenAllyApplication(supabase, payload) {
+export async function submitTrustedResourceApplication(supabase, payload) {
   const application = applicationInsertRow(payload);
 
   if (!supabase) {
@@ -84,7 +84,7 @@ export async function submitProvenAllyApplication(supabase, payload) {
       ok: true,
       localOnly: true,
       applicationId: null,
-      crmLead: buildProvenAllyCrmLeadPayload(payload, { submissionId: null, source: "torp_offline_queue" }),
+      crmLead: buildTrustedResourceCrmLeadPayload(payload, { submissionId: null, source: "torp_offline_queue" }),
     };
   }
 
@@ -107,19 +107,19 @@ export async function submitProvenAllyApplication(supabase, payload) {
       localOnly: true,
       applicationId: null,
       warning: "Application saved locally because the Supabase applications table is not yet deployed.",
-      crmLead: buildProvenAllyCrmLeadPayload(payload, { submissionId: null, source: "torp_local_fallback" }),
+      crmLead: buildTrustedResourceCrmLeadPayload(payload, { submissionId: null, source: "torp_local_fallback" }),
     };
   }
 
-  const crmLead = buildProvenAllyCrmLeadPayload(
+  const crmLead = buildTrustedResourceCrmLeadPayload(
     { ...payload, review_status: application.review_status },
-    { submissionId: inserted?.id ?? null, source: "torp_web_proven_ally_form" }
+    { submissionId: inserted?.id ?? null, source: "torp_web_trusted_resource_form" }
   );
   if (typeof process !== "undefined" && process.env.NODE_ENV === "development") {
-    console.info("[torp:crm:proven-ally-lead]", crmLead);
+    console.info("[torp:crm:trusted-resource-lead]", crmLead);
   }
 
-  const pendingRow = buildPendingProvenAllyRowFromApplication(payload, inserted?.id);
+  const pendingRow = buildPendingTrustedResourceRowFromApplication(payload, inserted?.id);
   if (!pendingRow) {
     return {
       ok: true,
@@ -132,17 +132,17 @@ export async function submitProvenAllyApplication(supabase, payload) {
   }
 
   const { error: catalogError } = await supabase
-    .from(PROVEN_ALLIES_TABLE)
+    .from(TRUSTED_RESOURCES_TABLE)
     .upsert(pendingRow, { onConflict: "ein" });
 
   if (catalogError) {
-    if (isMissingProvenAlliesTable(catalogError)) {
+    if (isMissingTrustedResourcesTable(catalogError)) {
       return {
         ok: true,
         localOnly: false,
         applicationId: inserted?.id ?? null,
         crmLead,
-        warning: "Application submitted. Deploy the Trusted Resources catalog table (`proven_allies`) in Supabase to store listing rows.",
+        warning: "Application submitted. Deploy the Trusted Resources catalog table (`trusted_resources`) in Supabase to store listing rows.",
       };
     }
     return {

@@ -1,7 +1,6 @@
 -- Trusted Resources catalog (public listing + application pipeline).
--- Table name `proven_allies` is legacy; the app treats this as the single Trusted Resources repository (see TRUSTED_RESOURCES_TABLE in code).
 -- Favorites are per-user in the app; they are not stored here.
-create table if not exists public.proven_allies (
+create table if not exists public.trusted_resources (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
@@ -37,26 +36,23 @@ create table if not exists public.proven_allies (
   unique (ein)
 );
 
-create index if not exists idx_proven_allies_listing on public.proven_allies (listing_status, sort_order, display_name);
+create index if not exists idx_trusted_resources_listing on public.trusted_resources (listing_status, sort_order, display_name);
 
-alter table public.proven_allies enable row level security;
+alter table public.trusted_resources enable row level security;
 
-drop policy if exists proven_allies_select_active on public.proven_allies;
-drop policy if exists proven_allies_insert_pending on public.proven_allies;
-drop policy if exists proven_allies_update_pending on public.proven_allies;
+drop policy if exists trusted_resources_select_active on public.trusted_resources;
+drop policy if exists trusted_resources_insert_pending on public.trusted_resources;
+drop policy if exists trusted_resources_update_pending on public.trusted_resources;
 
--- Public app: only vetted allies are visible.
-create policy proven_allies_select_active on public.proven_allies
+create policy trusted_resources_select_active on public.trusted_resources
   for select to anon, authenticated
   using (listing_status = 'active');
 
--- Application flow: allow inserting pending rows (anon demo + authenticated applicants).
-create policy proven_allies_insert_pending on public.proven_allies
+create policy trusted_resources_insert_pending on public.trusted_resources
   for insert to anon, authenticated
   with check (listing_status = 'pending');
 
--- Re-application / upsert: keep pending rows editable until staff activates them.
-create policy proven_allies_update_pending on public.proven_allies
+create policy trusted_resources_update_pending on public.trusted_resources
   for update to anon, authenticated
   using (listing_status = 'pending')
   with check (listing_status = 'pending');

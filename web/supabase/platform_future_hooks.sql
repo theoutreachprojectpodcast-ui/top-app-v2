@@ -18,7 +18,7 @@
 --   add column if not exists share_count bigint default 0;
 
 -- Proven ally applications: CRM + payment correlation
--- alter table public.proven_ally_applications
+-- alter table public.trusted_resource_applications
 --   add column if not exists crm_lead_id text,
 --   add column if not exists payment_intent_id text,
 --   add column if not exists payment_provider text;

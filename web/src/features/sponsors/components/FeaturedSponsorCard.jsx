@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { resolveSponsorDisplayName } from "@/lib/entityDisplayName";
+import { sanitizeDisplayableImageUrl } from "@/lib/media/safeImageUrl";
 
 const toneCache = new Map();
 
@@ -102,11 +103,12 @@ export default function FeaturedSponsorCard({ sponsor }) {
   const [logoIndex, setLogoIndex] = useState(0);
   const [logoTone, setLogoTone] = useState("normal");
   const warm = sponsor.warmVariant || "gold";
-  const hasListingBg = !!String(sponsor.backgroundImageUrl || "").trim();
+  const safeBg = sanitizeDisplayableImageUrl(String(sponsor.backgroundImageUrl || "").trim());
+  const hasListingBg = !!safeBg;
   const social = sponsor.socialLinks || {};
   const displayName = resolveSponsorDisplayName(sponsor.name || "") || String(sponsor.name || "").trim() || "Partner";
   const logoCandidates = useMemo(() => {
-    const u = String(sponsor.logoUrl || "").trim();
+    const u = sanitizeDisplayableImageUrl(String(sponsor.logoUrl || "").trim());
     return u ? [u] : [];
   }, [sponsor.logoUrl]);
   const logoSrc = logoCandidates[logoIndex] || "";
@@ -130,7 +132,7 @@ export default function FeaturedSponsorCard({ sponsor }) {
     >
       <div
         className={`sponsorPremiumCardBg torpListingCardHero ${hasListingBg ? "torpListingCardHero--photo" : `torpListingCardHero--sponsorTone torpListingCardHero--sponsorTone-${warm}`}`}
-        style={hasListingBg ? { backgroundImage: `url(${JSON.stringify(String(sponsor.backgroundImageUrl).trim())})` } : undefined}
+        style={hasListingBg ? { backgroundImage: `url(${JSON.stringify(safeBg)})` } : undefined}
         aria-hidden
       />
       <div className="sponsorPremiumCardScrim" aria-hidden />

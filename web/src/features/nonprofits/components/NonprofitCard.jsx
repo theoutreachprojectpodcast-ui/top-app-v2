@@ -16,13 +16,13 @@ export default function NonprofitCard({
   actionMode = "directory",
 }) {
   const favoriteKey = String(card.ein || card.id || "").trim();
-  const isProvenCard = actionMode === "proven";
+  const isTrustedResourcesCard = actionMode === "trustedResource";
   const listingPhoto = String(card.heroImageUrl || card.thumbnailUrl || "").trim();
   const categoryKey = card.category?.key || "unknownGeneral";
   const einDigits =
     card.einNormalized?.length === 9 ? card.einNormalized : normalizeEinDigits(card.ein);
   const profilePath = einDigits.length === 9 ? `/nonprofit/${einDigits}` : "";
-  const externalFallback = isProvenCard ? card.primaryLink : "";
+  const externalFallback = isTrustedResourcesCard ? card.primaryLink : "";
   const useProfileLink = einDigits.length === 9 && card.einIdentityVerified !== false;
   const activationTarget = profilePath || externalFallback;
 
@@ -66,9 +66,9 @@ export default function NonprofitCard({
   }
 
   const metaRow = (
-    <div className={`nonprofitMetaRow${isProvenCard ? " nonprofitMetaRow--proven" : ""}`}>
+    <div className={`nonprofitMetaRow${isTrustedResourcesCard ? " nonprofitMetaRow--trustedResource" : ""}`}>
       <NonprofitStatusBadge status={card.status} />
-      {!isProvenCard && <NonprofitVerificationBadge tier={card.tier} />}
+      {!isTrustedResourcesCard && <NonprofitVerificationBadge tier={card.tier} />}
       <span className="nonprofitCategoryText" title={card.category?.label}>
         {card.category?.label || "General Nonprofit"}
       </span>
@@ -109,7 +109,7 @@ export default function NonprofitCard({
         <p className="nonprofitTypeLine">{card.nonprofitType}</p>
       ) : null}
       <p className="nonprofitLocation">{card.location}</p>
-      {!isProvenCard && !!card.tagline && String(card.tagline).trim() !== String(card.description || "").trim() ? (
+      {!isTrustedResourcesCard && !!card.tagline && String(card.tagline).trim() !== String(card.description || "").trim() ? (
         <p className="nonprofitCardTagline">{card.tagline}</p>
       ) : null}
       {!!card.description && <p className="nonprofitDescription">{card.description}</p>}
@@ -159,7 +159,7 @@ export default function NonprofitCard({
 
   return (
     <article
-      className={`resultCard torpListingCard tier-${card.tier} category-${categoryKey} resultCard--listingHero ${activationTarget ? "resultCard--clickable" : ""} ${isProvenCard ? "resultCard--proven" : ""} ${useProfileLink ? "resultCard--profileLink" : ""}`}
+      className={`resultCard torpListingCard tier-${card.tier} category-${categoryKey} resultCard--listingHero ${activationTarget ? "resultCard--clickable" : ""} ${isTrustedResourcesCard ? "resultCard--trustedResource" : ""} ${useProfileLink ? "resultCard--profileLink" : ""}`}
       onClick={useProfileLink ? undefined : onCardClick}
       onKeyDown={useProfileLink ? undefined : onCardKeyDown}
       role={activationTarget && !useProfileLink ? "link" : undefined}
@@ -176,7 +176,7 @@ export default function NonprofitCard({
       </div>
       <div className="torpListingCardBody">
         <div
-          className={`nonprofitCardMain${isProvenCard ? " nonprofitCardMain--proven" : " nonprofitCardMain--directoryBalance"}${useProfileLink ? " nonprofitCardMain--hitStack" : ""}`}
+          className={`nonprofitCardMain${isTrustedResourcesCard ? " nonprofitCardMain--trustedResource" : " nonprofitCardMain--directoryBalance"}${useProfileLink ? " nonprofitCardMain--hitStack" : ""}`}
         >
           {useProfileLink ? (
             <Link
@@ -190,10 +190,10 @@ export default function NonprofitCard({
               category={card.category}
               tier={card.tier}
               logoUrl={card.logoUrl}
-              layout={isProvenCard ? "proven" : "default"}
+              layout={isTrustedResourcesCard ? "trustedResource" : "default"}
             />
           </div>
-          <div className={`nonprofitContentCol${isProvenCard ? " nonprofitContentCol--proven" : " nonprofitContentCol--directory"}`}>
+          <div className={`nonprofitContentCol${isTrustedResourcesCard ? " nonprofitContentCol--trustedResource" : " nonprofitContentCol--directory"}`}>
             {bodyBlock}
           </div>
         </div>

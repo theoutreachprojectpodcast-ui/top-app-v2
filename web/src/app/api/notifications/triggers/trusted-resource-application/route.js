@@ -4,7 +4,7 @@ import { notifyStaffProfiles } from "@/server/notifications/notificationService"
 export const runtime = "nodejs";
 
 /**
- * Called from the browser after a successful `proven_ally_applications` insert.
+ * Called from the browser after a successful `trusted_resource_applications` insert.
  * Verifies the row server-side, then fans out staff notifications (deduped).
  */
 export async function POST(request) {
@@ -26,7 +26,7 @@ export async function POST(request) {
   }
 
   const { data: row, error } = await admin
-    .from("proven_ally_applications")
+    .from("trusted_resource_applications")
     .select("id, organization_name, applicant_email, applicant_first_name, applicant_last_name, created_at")
     .eq("id", applicationId)
     .maybeSingle();
@@ -41,11 +41,11 @@ export async function POST(request) {
   }
 
   await notifyStaffProfiles(admin, {
-    type: "proven_ally_application_submitted",
+    type: "trusted_resource_application_submitted",
     title: "Trusted Resource application submitted",
     message: `${row.organization_name} — ${row.applicant_first_name} ${row.applicant_last_name} (${row.applicant_email}).`,
     linkPath: "/trusted",
-    entityType: "proven_ally_application",
+    entityType: "trusted_resource_application",
     entityId: String(row.id),
     dedupeHours: 48,
   });

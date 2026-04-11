@@ -13,7 +13,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const registryPath = join(__dirname, "../src/features/trusted-resources/provenAllyRegistry.js");
+const registryPath = join(__dirname, "../src/features/trusted-resources/trustedResourcesRegistry.js");
 
 function extractEinsFromRegistrySource(src) {
   const out = new Set();
@@ -36,7 +36,7 @@ const src = readFileSync(registryPath, "utf8");
 const eins = extractEinsFromRegistrySource(src);
 
 if (!eins.length) {
-  console.error("No EINs found in provenAllyRegistry.js — check script regex if registry format changed.");
+  console.error("No EINs found in trustedResourcesRegistry.js — check script regex if registry format changed.");
   process.exit(1);
 }
 

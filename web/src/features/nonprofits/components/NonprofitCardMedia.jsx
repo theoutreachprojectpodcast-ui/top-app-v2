@@ -52,7 +52,7 @@ function assessLogoToneFromElement(imgEl) {
 export default function NonprofitCardMedia({ category, tier, logoUrl, layout = "default" }) {
   const tint = category?.tint || "var(--color-accent-soft)";
   const url = String(logoUrl || "").trim();
-  const showLogo = layout === "proven" && !!url;
+  const showLogo = layout === "trustedResource" && !!url;
   const isFeatured = tier === "featured";
   const [logoTone, setLogoTone] = useState(() => toneCache.get(url) || "unknown");
   const toneClass = useMemo(
@@ -72,7 +72,7 @@ export default function NonprofitCardMedia({ category, tier, logoUrl, layout = "
   }
 
   return (
-    <div className={`nonprofitCardMedia${layout === "proven" ? " nonprofitCardMedia--proven" : ""}`}>
+    <div className={`nonprofitCardMedia${layout === "trustedResource" ? " nonprofitCardMedia--trustedResource" : ""}`}>
       <div
         className={`nonprofitIconBadge${showLogo ? " nonprofitIconBadge--logo" : ""}`}
         title={category?.label || "General Nonprofit"}
@@ -90,7 +90,7 @@ export default function NonprofitCardMedia({ category, tier, logoUrl, layout = "
             />
           </span>
         ) : (
-          <NonprofitIcon category={category} size={layout === "proven" ? 30 : 28} variant={isFeatured ? "featured" : "default"} />
+          <NonprofitIcon category={category} size={layout === "trustedResource" ? 30 : 28} variant={isFeatured ? "featured" : "default"} />
         )}
       </div>
     </div>

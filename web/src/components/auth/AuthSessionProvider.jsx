@@ -1,6 +1,15 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { usePathname } from "next/navigation";
 import { clearNavAuthCache, readNavAuthCache, writeNavAuthCache } from "@/lib/auth/navAuthCache";
 
@@ -19,6 +28,14 @@ export default function AuthSessionProvider({ children }) {
   const pathname = usePathname();
   const [state, setState] = useState({ loading: true, authenticated: false, workos: false });
   const skipFirstPathnameEffect = useRef(true);
+
+  /** Apply cached auth before paint to avoid a signed-out flash on client navigations (WorkOS cookie is still canonical). */
+  useLayoutEffect(() => {
+    const c = readNavAuthCache();
+    if (c) {
+      setState({ loading: false, authenticated: !!c.authenticated, workos: !!c.workos });
+    }
+  }, []);
 
   const refresh = useCallback(async (opts = {}) => {
     const soft = !!opts.soft;
@@ -44,10 +61,6 @@ export default function AuthSessionProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    const c = readNavAuthCache();
-    if (c) {
-      setState({ loading: false, authenticated: !!c.authenticated, workos: !!c.workos });
-    }
     void refresh({ soft: false });
   }, [refresh]);
 

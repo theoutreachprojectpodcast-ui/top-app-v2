@@ -1,7 +1,7 @@
 /**
  * Trusted Resources presentation layer.
- * Canonical curated metadata lives in `provenAllyRegistry.js` (legacy filename; product domain is Trusted Resources only).
- * DB catalog table: `proven_allies` — see `trustedDirectoryJoin.js` for directory + enrichment joins.
+ * Canonical curated metadata lives in `trustedResourcesRegistry.js`.
+ * DB catalog table: `trusted_resources` — see `trustedDirectoryJoin.js` for directory + enrichment joins.
  */
 
 import {
@@ -11,7 +11,7 @@ import {
 import { sanitizeOrganizationNameForDisplay } from "@/lib/entityDisplayName";
 import { safeUrl } from "@/lib/utils";
 import { mapNonprofitCategory, NONPROFIT_CATEGORY_MAP } from "@/features/nonprofits/mappers/categoryMapper";
-import { matchCanonicalProvenAlly } from "@/features/trusted-resources/provenAllyRegistry";
+import { matchCanonicalTrustedResource } from "@/features/trusted-resources/trustedResourcesRegistry";
 
 function firstNonEmpty(...values) {
   for (const value of values) {
@@ -35,8 +35,7 @@ function applyCanonicalRecord(row, record) {
   next.canonicalDisplayName = record.displayName;
   next.orgName = record.displayName;
   next.trustedResourceSlug = record.slug;
-  next.provenAllySlug = record.slug;
-  next.provenDisplayLocation = record.locationLabel;
+  next.trustedResourceDisplayLocation = record.locationLabel;
   next.city = "";
   next.state = "";
   if (record.website) next.website = record.website;
@@ -46,8 +45,8 @@ function applyCanonicalRecord(row, record) {
   }
   if (record.nonprofit_type) next.nonprofit_type = record.nonprofit_type;
   if (record.shortDescription) next.description = record.shortDescription;
-  if (record.provenCategoryKey && NONPROFIT_CATEGORY_MAP[record.provenCategoryKey]) {
-    next.provenCategoryKey = record.provenCategoryKey;
+  if (record.trustedResourceCategoryKey && NONPROFIT_CATEGORY_MAP[record.trustedResourceCategoryKey]) {
+    next.trustedResourceCategoryKey = record.trustedResourceCategoryKey;
   }
 
   if (record.socialOverrides) {
@@ -102,7 +101,7 @@ function applyCanonicalRecord(row, record) {
 }
 
 function applyRegistryCanonical(row) {
-  const record = matchCanonicalProvenAlly(row);
+  const record = matchCanonicalTrustedResource(row);
   if (!record) return { ...row };
   return applyCanonicalRecord(row, record);
 }
@@ -176,7 +175,7 @@ function applyUniversalTrustedEnrichment(row) {
     }
   }
 
-  if (!next.provenDisplayLocation) {
+  if (!next.trustedResourceDisplayLocation) {
     const city = firstNonEmpty(
       next.city,
       org.city,
@@ -203,13 +202,13 @@ function applyUniversalTrustedEnrichment(row) {
     );
 
     if (city || state) {
-      next.provenDisplayLocation = [city, state].filter(Boolean).join(", ");
+      next.trustedResourceDisplayLocation = [city, state].filter(Boolean).join(", ");
       return next;
     }
 
     if (locBlob) {
       if (/\b(nationwide|national\s+(headquarters|organization|reach)|across\s+the\s+(u\.?s\.?|united\s+states)|all\s+50)\b/i.test(locBlob)) {
-        next.provenDisplayLocation = "National";
+        next.trustedResourceDisplayLocation = "National";
       }
       return next;
     }
@@ -220,42 +219,42 @@ function applyUniversalTrustedEnrichment(row) {
         missionText
       )
     ) {
-      next.provenDisplayLocation = "National";
+      next.trustedResourceDisplayLocation = "National";
     } else {
-      next.provenDisplayLocation = "United States";
+      next.trustedResourceDisplayLocation = "United States";
     }
   }
 
   return next;
 }
 
-function assignProvenCategoryFallback(row) {
+function assignTrustedResourceCategoryFallback(row) {
   const next = { ...row };
-  if (next.provenCategoryKey && NONPROFIT_CATEGORY_MAP[next.provenCategoryKey]) {
+  if (next.trustedResourceCategoryKey && NONPROFIT_CATEGORY_MAP[next.trustedResourceCategoryKey]) {
     return next;
   }
 
   const mapped = mapNonprofitCategory(next);
   if (mapped.key !== "unknownGeneral") {
-    next.provenCategoryKey = mapped.key;
+    next.trustedResourceCategoryKey = mapped.key;
     return next;
   }
 
   const blob = `${next.nonprofit_type || ""} ${next.description || ""} ${next.orgName || ""}`.toLowerCase();
   if (/veteran|military|troop|service\s*member|warrior|armed\s*forces|gold\s*star|combat/.test(blob)) {
-    next.provenCategoryKey = "veteransMilitary";
+    next.trustedResourceCategoryKey = "veteransMilitary";
   } else if (/first\s*responder|firefighter|police|ems|disaster|emergency\s*response/.test(blob)) {
-    next.provenCategoryKey = "firstRespondersSafety";
+    next.trustedResourceCategoryKey = "firstRespondersSafety";
   } else if (/mental\s*health|wellness|counseling|therapy|ptsd/.test(blob)) {
-    next.provenCategoryKey = "healthWellness";
+    next.trustedResourceCategoryKey = "healthWellness";
   } else if (/housing|home|shelter|mortgage/.test(blob)) {
-    next.provenCategoryKey = "humanServices";
+    next.trustedResourceCategoryKey = "humanServices";
   } else if (/scholarship|education|school|college/.test(blob)) {
-    next.provenCategoryKey = "education";
+    next.trustedResourceCategoryKey = "education";
   } else if (/career|employment|job|workforce/.test(blob)) {
-    next.provenCategoryKey = "education";
+    next.trustedResourceCategoryKey = "education";
   } else {
-    next.provenCategoryKey = "veteransMilitary";
+    next.trustedResourceCategoryKey = "veteransMilitary";
   }
   return next;
 }
@@ -284,10 +283,5 @@ export function mergeTrustedResourcesPresentation(row = {}) {
     next = applyRegistryCanonical(next);
     next = applyUniversalTrustedEnrichment(next);
   }
-  return assignProvenCategoryFallback(next);
-}
-
-/** @deprecated Use mergeTrustedResourcesPresentation */
-export function mergeProvenAllyPresentation(row) {
-  return mergeTrustedResourcesPresentation(row);
+  return assignTrustedResourceCategoryFallback(next);
 }

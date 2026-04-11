@@ -11,7 +11,7 @@ import AccountInfoCard from "@/features/profile/components/AccountInfoCard";
 import ManageBillingButton from "@/features/profile/components/ManageBillingButton";
 import NonprofitCard from "@/features/nonprofits/components/NonprofitCard";
 import { mapNonprofitCardRow } from "@/features/nonprofits/mappers/nonprofitCardMapper";
-import ProvenAllyApplicationForm from "@/features/proven-allies/components/ProvenAllyApplicationForm";
+import TrustedResourceApplicationForm from "@/features/trusted-resources/application/TrustedResourceApplicationForm";
 import CommunityPage from "@/features/community/components/CommunityPage";
 import ProfileHeader from "@/features/profile/components/ProfileHeader";
 import ProfileIdentitySection from "@/features/profile/components/ProfileIdentitySection";
@@ -511,7 +511,7 @@ function TopAppInner({ initialNav = "home" }) {
             <div className="row">
               <button className="btnPrimary" onClick={() => loadTrusted(true)} type="button">Refresh</button>
               <button className="btnSoft" onClick={() => loadTrusted(false)} type="button">Load More</button>
-              <button className="btnSoft" onClick={() => setOverlay("applyProvenAlly")} type="button">Apply to Become a Trusted Resource</button>
+              <button className="btnSoft" onClick={() => setOverlay("applyTrustedResource")} type="button">Apply to Become a Trusted Resource</button>
             </div>
             <p>{trustedStatus}</p>
             <div className="results">
@@ -532,7 +532,7 @@ function TopAppInner({ initialNav = "home" }) {
                   <NonprofitCard
                     key={`trusted-${ein}-${card.name}`}
                     card={card}
-                    actionMode="proven"
+                    actionMode="trustedResource"
                     favoritesEnabled={isAuthenticated}
                     isFavorite={einKey.length === 9 && favoriteEinSet.has(einKey)}
                     onToggleFavorite={toggleFavoriteEin}
@@ -934,8 +934,8 @@ function TopAppInner({ initialNav = "home" }) {
         </div>
       )}
 
-      {overlay === "applyProvenAlly" && (
-        <ProvenAllyApplicationForm
+      {overlay === "applyTrustedResource" && (
+        <TrustedResourceApplicationForm
           supabase={sb}
           onClose={() => setOverlay(null)}
         />

@@ -1,10 +1,8 @@
 import { resolveTrustedResourceDisplayName, sanitizeOrganizationNameForDisplay } from "@/lib/entityDisplayName";
 
-/** Supabase Trusted Resources catalog (legacy table name `proven_allies`). */
+/** Supabase Trusted Resources catalog table name (override for forks). */
 export const TRUSTED_RESOURCES_TABLE =
-  (typeof process !== "undefined" && process.env.NEXT_PUBLIC_PROVEN_ALLIES_TABLE) || "proven_allies";
-
-export const PROVEN_ALLIES_TABLE = TRUSTED_RESOURCES_TABLE;
+  (typeof process !== "undefined" && process.env.NEXT_PUBLIC_TRUSTED_RESOURCES_TABLE) || "trusted_resources";
 
 /** Match trusted-resources/api.js EIN keying for joins. */
 export function normalizeEin(value) {
@@ -22,19 +20,19 @@ export function parseEinStrict(value) {
   return d.length === 9 ? d : "";
 }
 
-export function isMissingProvenAlliesTable(error) {
+export function isMissingTrustedResourcesTable(error) {
   const c = String(error?.code || "");
   const m = String(error?.message || "").toLowerCase();
   return c === "PGRST205" || m.includes("could not find the table") || m.includes("does not exist");
 }
 
 /**
- * Maps a Trusted Resources catalog (`proven_allies`) DB row into the feed shape.
+ * Maps a Trusted Resources catalog (`trusted_resources`) DB row into the feed shape.
  * Rows are joined to the public directory + enrichment in `trustedDirectoryJoin.js`, then
- * `mergeTrustedResourcesPresentation` + `provenAllyRegistry` enrich by EIN / website / name.
+ * `mergeTrustedResourcesPresentation` + `trustedResourcesRegistry` enrich by EIN / website / name.
  * Do not set `canonicalDisplayName` here — the registry owns canonical titles when matched.
  */
-export function mapProvenAlliesDbRowToTrustedRow(db = {}) {
+export function mapTrustedResourcesDbRowToTrustedRow(db = {}) {
   const ein = normalizeEin(db.ein);
   const displayNameRaw = String(db.display_name || "").trim();
   const orgNameFromDb = resolveTrustedResourceDisplayName({
@@ -47,7 +45,7 @@ export function mapProvenAlliesDbRowToTrustedRow(db = {}) {
     String(db.location_label || "").trim() ||
     [String(db.city || "").trim(), String(db.state || "").trim()].filter(Boolean).join(", ");
   const status = String(db.listing_status || "").toLowerCase();
-  const provenStatus = status === "active" ? "approved" : "pending";
+  const listingApprovalStatus = status === "active" ? "approved" : "pending";
 
   return {
     ein,
@@ -69,8 +67,8 @@ export function mapProvenAlliesDbRowToTrustedRow(db = {}) {
     nteeCode: String(db.ntee_code || "").trim(),
     nonprofit_type: String(db.nonprofit_type || "").trim(),
     description: String(db.short_description || "").trim(),
-    provenDisplayLocation: loc || "National",
-    provenCategoryKey: String(db.category_key || "").trim() || undefined,
+    trustedResourceDisplayLocation: loc || "National",
+    trustedResourceCategoryKey: String(db.category_key || "").trim() || undefined,
     instagramUrl: db.instagram_url || "",
     facebookUrl: db.facebook_url || "",
     youtubeUrl: db.youtube_url || "",
@@ -80,8 +78,8 @@ export function mapProvenAlliesDbRowToTrustedRow(db = {}) {
     serves_first_responders: !!db.serves_first_responders,
     isTrusted: true,
     is_trusted: true,
-    is_proven_ally: status === "active",
-    proven_ally_status: provenStatus,
+    is_trusted_resource: status === "active",
+    trusted_resource_status: listingApprovalStatus,
     listing_status: status,
     raw: {
       profile: {
@@ -96,8 +94,8 @@ export function mapProvenAlliesDbRowToTrustedRow(db = {}) {
         state: db.state,
         ntee_code: db.ntee_code,
         is_trusted: true,
-        is_proven_ally: status === "active",
-        proven_ally_status: provenStatus,
+        is_trusted_resource: status === "active",
+        trusted_resource_status: listingApprovalStatus,
         instagram_url: db.instagram_url,
         facebook_url: db.facebook_url,
         youtube_url: db.youtube_url,
@@ -115,7 +113,7 @@ function trimDescription(text, max = 2000) {
   return s.length <= max ? s : `${s.slice(0, max - 1)}…`;
 }
 
-export function buildPendingProvenAllyRowFromApplication(payload = {}, applicationId = null) {
+export function buildPendingTrustedResourceRowFromApplication(payload = {}, applicationId = null) {
   const fromDirectory = String(payload.organization_id || "").trim();
   const fromManual = String(payload.organization_ein || "").trim();
   const ein = parseEinStrict(fromDirectory || fromManual);

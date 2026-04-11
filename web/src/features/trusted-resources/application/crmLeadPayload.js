@@ -8,11 +8,11 @@
  * @param {{ submissionId?: string|null, source?: string }} meta
  * @returns {object}
  */
-export function buildProvenAllyCrmLeadPayload(applicationPayload = {}, meta = {}) {
+export function buildTrustedResourceCrmLeadPayload(applicationPayload = {}, meta = {}) {
   const p = applicationPayload;
   return {
-    objectType: "proven_ally_application",
-    source: meta.source || "torp_web_proven_ally_form",
+    objectType: "trusted_resource_application",
+    source: meta.source || "torp_web_trusted_resource_form",
     submissionId: meta.submissionId ?? null,
     capturedAt: new Date().toISOString(),
     organization: {
@@ -34,7 +34,7 @@ export function buildProvenAllyCrmLeadPayload(applicationPayload = {}, meta = {}
       whyGoodFit: String(p.why_good_fit || "").trim(),
       whoYouServe: String(p.who_you_serve || "").trim(),
       servicesOffered: String(p.services_offered || "").trim(),
-      whyJoin: String(p.why_join_proven_allies || "").trim(),
+      whyJoin: String(p.why_join_trusted_resources || "").trim(),
       referencesOrLinks: String(p.references_or_links || "").trim() || null,
     },
     compliance: {

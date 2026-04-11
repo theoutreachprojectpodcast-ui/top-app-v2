@@ -50,8 +50,9 @@ function categoryFromText(row = {}) {
 }
 
 export function mapNonprofitCategory(row = {}) {
-  if (row.provenCategoryKey && CATEGORY[row.provenCategoryKey]) {
-    return CATEGORY[row.provenCategoryKey];
+  const trKey = row.trustedResourceCategoryKey;
+  if (trKey && CATEGORY[trKey]) {
+    return CATEGORY[trKey];
   }
   if (row.servesVeterans || row.serves_veterans) return CATEGORY.veteransMilitary;
   if (row.servesFirstResponders || row.serves_first_responders) return CATEGORY.firstRespondersSafety;

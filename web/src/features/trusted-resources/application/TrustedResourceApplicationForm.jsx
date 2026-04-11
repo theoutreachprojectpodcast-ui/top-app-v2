@@ -4,14 +4,14 @@ import { useMemo, useState } from "react";
 import { FormCheckbox, FormRadio } from "@/components/forms/FormChoice";
 import {
   searchDirectoryOrganizations,
-  submitProvenAllyApplication,
-} from "@/features/proven-allies/api/provenAllyApplicationApi";
+  submitTrustedResourceApplication,
+} from "@/features/trusted-resources/application/trustedResourceApplicationApi";
 import {
-  completeProvenAllyApplicationFeeDemo,
-  startProvenAllyApplicationPayment,
-} from "@/features/proven-allies/domain/applicationPaymentAdapter";
+  completeTrustedResourceApplicationFeeDemo,
+  startTrustedResourceApplicationPayment,
+} from "@/features/trusted-resources/application/applicationPaymentAdapter";
 import { SERVICE_OPTIONS, STATES } from "@/lib/constants";
-import { parseEinStrict } from "@/lib/supabase/provenAlliesCatalog";
+import { parseEinStrict } from "@/lib/supabase/trustedResourcesCatalog";
 
 const FEE_AMOUNT = 49;
 
@@ -34,7 +34,7 @@ const INITIAL_FORM = {
   first_responder_support_experience: "",
   community_impact: "",
   why_good_fit: "",
-  why_join_proven_allies: "",
+  why_join_trusted_resources: "",
   references_or_links: "",
   agreed_to_values: false,
   agreed_info_accuracy: false,
@@ -43,7 +43,7 @@ const INITIAL_FORM = {
   payment_demo_status: "unpaid",
 };
 
-export default function ProvenAllyApplicationForm({ supabase, onClose }) {
+export default function TrustedResourceApplicationForm({ supabase, onClose }) {
   const [form, setForm] = useState(INITIAL_FORM);
   const [searchTerm, setSearchTerm] = useState("");
   const [searching, setSearching] = useState(false);
@@ -65,7 +65,7 @@ export default function ProvenAllyApplicationForm({ supabase, onClose }) {
       form.why_good_fit &&
       form.who_you_serve &&
       form.services_offered &&
-      form.why_join_proven_allies &&
+      form.why_join_trusted_resources &&
       form.agreed_to_values &&
       form.agreed_info_accuracy &&
       form.acknowledged_review_process;
@@ -103,13 +103,13 @@ export default function ProvenAllyApplicationForm({ supabase, onClose }) {
   }
 
   /**
-   * FUTURE_PAYMENT_PROVIDER: startProvenAllyApplicationPayment will call your backend to create a charge/session.
+   * FUTURE_PAYMENT_PROVIDER: startTrustedResourceApplicationPayment will call your backend to create a charge/session.
    * Today we complete the demo ledger only after the adapter reports readiness.
    */
   async function payApplicationFee() {
     setStatus("");
-    await startProvenAllyApplicationPayment({ amountUsd: FEE_AMOUNT, applicationDraft: form });
-    const result = await completeProvenAllyApplicationFeeDemo({ amountUsd: FEE_AMOUNT });
+    await startTrustedResourceApplicationPayment({ amountUsd: FEE_AMOUNT, applicationDraft: form });
+    const result = await completeTrustedResourceApplicationFeeDemo({ amountUsd: FEE_AMOUNT });
     if (!result.ok) {
       setError("Could not record fee status.");
       return;
@@ -135,11 +135,11 @@ export default function ProvenAllyApplicationForm({ supabase, onClose }) {
         organization_id: form.organization_id || null,
         review_status: "submitted",
       };
-      const result = await submitProvenAllyApplication(supabase, payload);
+      const result = await submitTrustedResourceApplication(supabase, payload);
       if (result.warning) setStatus(result.warning);
       else setStatus("Application submitted successfully.");
       if (result.ok && result.applicationId && !result.localOnly) {
-        void fetch("/api/notifications/triggers/proven-ally-application", {
+        void fetch("/api/notifications/triggers/trusted-resource-application", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ applicationId: result.applicationId }),
@@ -156,11 +156,11 @@ export default function ProvenAllyApplicationForm({ supabase, onClose }) {
 
   return (
     <div className="modalOverlay" onClick={onClose}>
-      <div className="modalCard provenApplyModal" onClick={(e) => e.stopPropagation()}>
+      <div className="modalCard trustedResourceApplyModal" onClick={(e) => e.stopPropagation()}>
         <h3>Apply to Become a Trusted Resource</h3>
         <p>Structured review for organizations committed to trusted, mission-first support.</p>
 
-        <form className="provenApplyForm" onSubmit={onSubmit}>
+        <form className="trustedResourceApplyForm" onSubmit={onSubmit}>
           <section className="applySection">
             <h4>Applicant Info</h4>
             <div className="form">
@@ -173,7 +173,7 @@ export default function ProvenAllyApplicationForm({ supabase, onClose }) {
 
           <section className="applySection">
             <h4>Organization Path</h4>
-            <div className="dsChoiceGroup provenApplyChoiceGroup">
+            <div className="dsChoiceGroup trustedResourceApplyChoiceGroup">
               <FormRadio
                 name="organization_path"
                 checked={form.organization_path === "existing"}
@@ -256,13 +256,13 @@ export default function ProvenAllyApplicationForm({ supabase, onClose }) {
             <textarea rows={3} placeholder="Veteran support experience" value={form.veteran_support_experience} onChange={(e) => setForm((f) => ({ ...f, veteran_support_experience: e.target.value }))} />
             <textarea rows={3} placeholder="First responder support experience" value={form.first_responder_support_experience} onChange={(e) => setForm((f) => ({ ...f, first_responder_support_experience: e.target.value }))} />
             <textarea rows={3} placeholder="Community impact" value={form.community_impact} onChange={(e) => setForm((f) => ({ ...f, community_impact: e.target.value }))} />
-            <textarea rows={3} placeholder="Why do you want to join Trusted Resources?" value={form.why_join_proven_allies} onChange={(e) => setForm((f) => ({ ...f, why_join_proven_allies: e.target.value }))} />
+            <textarea rows={3} placeholder="Why do you want to join Trusted Resources?" value={form.why_join_trusted_resources} onChange={(e) => setForm((f) => ({ ...f, why_join_trusted_resources: e.target.value }))} />
             <textarea rows={2} placeholder="References or links" value={form.references_or_links} onChange={(e) => setForm((f) => ({ ...f, references_or_links: e.target.value }))} />
           </section>
 
           <section className="applySection">
             <h4>Alignment & Standards</h4>
-            <div className="dsChoiceGroup provenApplyCheckGroup">
+            <div className="dsChoiceGroup trustedResourceApplyCheckGroup">
               <FormCheckbox checked={form.agreed_to_values} onChange={(e) => setForm((f) => ({ ...f, agreed_to_values: e.target.checked }))}>
                 We align with The Outreach Project values and mission standards.
               </FormCheckbox>

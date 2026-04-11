@@ -1,5 +1,5 @@
 /**
- * Trusted Resources registry gate — run after any change to provenAllyRegistry.js (also runs on prebuild).
+ * Trusted Resources registry gate — run after any change to trustedResourcesRegistry.js (also runs on prebuild).
  *
  * Manual review checklist for NEW records:
  * - Confirm displayName matches the org’s official public name (card shows this string verbatim).
@@ -15,10 +15,10 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const registryUrl = pathToFileURL(
-  path.join(__dirname, "../src/features/trusted-resources/provenAllyRegistry.js")
+  path.join(__dirname, "../src/features/trusted-resources/trustedResourcesRegistry.js")
 ).href;
 
-const { PROVEN_ALLY_CANONICAL_RECORDS, canonicalHostname } = await import(registryUrl);
+const { TRUSTED_RESOURCE_CANONICAL_RECORDS, canonicalHostname } = await import(registryUrl);
 
 function normEin(ein) {
   let d = String(ein || "").replace(/\D/g, "");
@@ -59,8 +59,8 @@ const errors = [];
 const einOwner = new Map();
 const shortNameKeysOk = new Set(["uso", "wwp", "t2t", "snd"]);
 
-for (let i = 0; i < PROVEN_ALLY_CANONICAL_RECORDS.length; i += 1) {
-  const r = PROVEN_ALLY_CANONICAL_RECORDS[i];
+for (let i = 0; i < TRUSTED_RESOURCE_CANONICAL_RECORDS.length; i += 1) {
+  const r = TRUSTED_RESOURCE_CANONICAL_RECORDS[i];
   const label = r.slug || `record[${i}]`;
 
   if (!r.slug || !/^[a-z0-9]+(-[a-z0-9]+)*$/.test(r.slug)) {
@@ -76,8 +76,8 @@ for (let i = 0; i < PROVEN_ALLY_CANONICAL_RECORDS.length; i += 1) {
   if (looksLikeCamelJoin(dn)) {
     errors.push(`[${label}] displayName looks like camelCase — use human words (e.g. "Wounded Warrior Project")`);
   }
-  if (!r.provenCategoryKey || !VALID_CATEGORY_KEYS.has(r.provenCategoryKey)) {
-    errors.push(`[${label}] provenCategoryKey must be a valid categoryMapper key`);
+  if (!r.trustedResourceCategoryKey || !VALID_CATEGORY_KEYS.has(r.trustedResourceCategoryKey)) {
+    errors.push(`[${label}] trustedResourceCategoryKey must be a valid categoryMapper key`);
   }
   if (!r.shortDescription || String(r.shortDescription).trim().length < 20) {
     errors.push(`[${label}] shortDescription should be at least ~20 chars for card quality`);
@@ -127,7 +127,7 @@ function claimHost(h, slug) {
     hostOwner.set(h, slug);
   }
 }
-for (const r of PROVEN_ALLY_CANONICAL_RECORDS) {
+for (const r of TRUSTED_RESOURCE_CANONICAL_RECORDS) {
   const label = r.slug || "record";
   const primary = canonicalHostname(r.website);
   if (!primary) errors.push(`[${label}] website must have a parseable hostname`);
@@ -145,11 +145,11 @@ if (errors.length) {
   console.error("Trusted Resources registry verification failed:\n");
   for (const e of errors) console.error(`  • ${e}`);
   console.error(
-    "\nFix provenAllyRegistry.js, then run: pnpm verify:proven-allies\n"
+    "\nFix trustedResourcesRegistry.js, then run: pnpm verify:trusted-resources\n"
   );
   process.exit(1);
 }
 
 console.log(
-  `Trusted Resources registry OK — ${PROVEN_ALLY_CANONICAL_RECORDS.length} canonical record(s). New entries still need a UI spot-check on the Trusted Resources tab.`
+  `Trusted Resources registry OK — ${TRUSTED_RESOURCE_CANONICAL_RECORDS.length} canonical record(s). New entries still need a UI spot-check on the Trusted Resources tab.`
 );

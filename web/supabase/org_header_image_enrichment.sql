@@ -127,7 +127,16 @@ comment on column public.nonprofit_directory_enrichment.header_image_notes is
 -- =============================================================================
 do $$
 begin
-  if to_regclass('public.proven_allies') is not null then
+  if to_regclass('public.trusted_resources') is not null then
+    alter table public.trusted_resources
+      add column if not exists header_image_url text,
+      add column if not exists header_image_source_url text,
+      add column if not exists header_image_source_type text,
+      add column if not exists header_image_status text,
+      add column if not exists header_image_last_enriched_at timestamptz,
+      add column if not exists header_image_review_status text,
+      add column if not exists header_image_notes text;
+  elsif to_regclass('public.proven_allies') is not null then
     alter table public.proven_allies
       add column if not exists header_image_url text,
       add column if not exists header_image_source_url text,

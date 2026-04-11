@@ -3,6 +3,7 @@
 import Link from "next/link";
 import ColorSchemeToggle from "@/components/app/ColorSchemeToggle";
 import { useAuthSession } from "@/components/auth/AuthSessionProvider";
+import { readNavAuthCache } from "@/lib/auth/navAuthCache";
 import IconWrap from "@/components/shared/IconWrap";
 import HeaderNotificationBell from "@/components/layout/HeaderNotificationBell";
 
@@ -16,10 +17,16 @@ const SPONSOR_ICON = "M4 6h16v12H4z M4 10h16";
  */
 export default function SubpageTopbarActions({ showThemeToggle = true, section = "all" }) {
   const session = useAuthSession();
+  const cache = typeof window !== "undefined" ? readNavAuthCache() : null;
+  const optimisticAuthed = session.loading && cache?.authenticated;
   const authState =
     section === "lead"
       ? { loading: false, workos: false, authenticated: false }
-      : { loading: session.loading, workos: session.workos, authenticated: session.authenticated };
+      : {
+          loading: session.loading && !optimisticAuthed,
+          workos: session.workos || (!!cache?.workos && optimisticAuthed),
+          authenticated: session.authenticated || optimisticAuthed,
+        };
 
   const sponsorLink = (
     <Link className="btnSoft sponsorBtn" href="/sponsors">
