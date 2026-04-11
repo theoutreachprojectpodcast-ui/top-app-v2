@@ -1,9 +1,9 @@
 import { withAuth } from "@workos-inc/authkit-nextjs";
 import Stripe from "stripe";
 import {
-  appBaseUrl,
   podcastSponsorCheckoutConfigured,
   podcastSponsorPriceIdForTier,
+  requestOriginForStripeRedirects,
   safeAppReturnPath,
 } from "@/lib/billing/stripeConfig";
 
@@ -30,7 +30,7 @@ export async function POST(request) {
     return Response.json({ error: "invalid_podcast_tier", tier: podcastTierId }, { status: 400 });
   }
 
-  const base = appBaseUrl();
+  const base = requestOriginForStripeRedirects(request);
   const safeReturn = safeAppReturnPath(body.returnPath, "/podcasts");
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);

@@ -35,6 +35,7 @@ async function OnboardingServer({ searchParams }) {
       platformRole: "user",
       accountIntent: "",
       onboardingStatus: "not_started",
+      onboardingCurrentStep: "",
       banner: "",
       theme: "clean",
     };

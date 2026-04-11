@@ -21,7 +21,10 @@ const META_KEYS = new Set([
   "sponsorApplicationNotes",
   "sponsorOnboardingPath",
   "sponsorApplicationStatus",
+  "onboardingCurrentStep",
 ]);
+
+const ONBOARDING_STEP_VALUES = new Set(["0", "1", "2"]);
 
 const CLIENT_ONBOARDING_STATUS = new Set(["in_progress"]);
 
@@ -49,9 +52,13 @@ export async function PATCH(request) {
       : {};
 
   for (const k of META_KEYS) {
-    if (Object.prototype.hasOwnProperty.call(body, k)) {
-      prevMeta[k] = String(body[k] ?? "").trim();
+    if (!Object.prototype.hasOwnProperty.call(body, k)) continue;
+    if (k === "onboardingCurrentStep") {
+      const s = String(body[k] ?? "").trim();
+      if (ONBOARDING_STEP_VALUES.has(s)) prevMeta[k] = s;
+      continue;
     }
+    prevMeta[k] = String(body[k] ?? "").trim();
   }
 
   const row = {

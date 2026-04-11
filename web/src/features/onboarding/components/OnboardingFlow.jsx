@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Avatar from "@/components/shared/Avatar";
 import { emptyProfileAvatarUrl } from "@/lib/avatarFallback";
@@ -65,6 +65,12 @@ const PLANS = [
 ];
 
 function deriveInitialStep(profile) {
+  const stored = String(profile?.onboardingCurrentStep || "").trim();
+  if (stored === "0" || stored === "1" || stored === "2") {
+    const intent = normalizePublicAccountIntent(profile?.accountIntent);
+    if ((stored === "1" || stored === "2") && !intent) return 0;
+    return Number(stored);
+  }
   const intent = normalizePublicAccountIntent(profile?.accountIntent);
   if (!intent) return 0;
   const hasName =
@@ -104,8 +110,67 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
   const [selectedTier, setSelectedTier] = useState(() =>
     normalizedInitialIntent ? defaultMembershipTierForIntent(normalizedInitialIntent) : "free",
   );
+  const [autoFinalizing, setAutoFinalizing] = useState(false);
+  const autoFinalizeRanRef = useRef(false);
 
   const checkoutFlash = useMemo(() => searchParams.get("checkout"), [searchParams]);
+  const busy = saving || autoFinalizing;
+
+  function persistOnboardingStep(n) {
+    void fetch("/api/me/profile", {
+      method: "PATCH",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        onboardingCurrentStep: String(n),
+        onboardingStatus: "in_progress",
+      }),
+    });
+  }
+
+  /** After Stripe redirects back, webhooks often activate the subscription before the user clicks “Finish”. */
+  useEffect(() => {
+    if (checkoutFlash !== "success" || autoFinalizeRanRef.current) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const r = await fetch("/api/me", { credentials: "include", cache: "no-store" });
+        const data = await r.json().catch(() => ({}));
+        if (cancelled || !data.authenticated || !data.profile) return;
+        const st = String(data.profile.membershipBillingStatus || "").toLowerCase();
+        const tier = String(data.profile.membershipTier || "").toLowerCase();
+        if (st !== "active" || !["support", "member", "sponsor"].includes(tier)) return;
+        autoFinalizeRanRef.current = true;
+        setAutoFinalizing(true);
+        const res = await fetch("/api/me/onboarding/complete", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            membershipTier: tier,
+            membershipStatus: "active",
+            accountIntent: data.profile.accountIntent || undefined,
+            sponsorOnboardingPath: tier === "sponsor" ? "subscription" : undefined,
+          }),
+        });
+        const out = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          autoFinalizeRanRef.current = false;
+          setAutoFinalizing(false);
+          return;
+        }
+        const dest = typeof out.redirectPath === "string" && out.redirectPath.startsWith("/") ? out.redirectPath : "/";
+        router.replace(dest);
+        router.refresh();
+      } catch {
+        autoFinalizeRanRef.current = false;
+        setAutoFinalizing(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [checkoutFlash, router]);
 
   async function saveIntentStep() {
     const intent = normalizePublicAccountIntent(accountIntent);
@@ -123,6 +188,7 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
         body: JSON.stringify({
           accountIntent: intent,
           onboardingStatus: "in_progress",
+          onboardingCurrentStep: "1",
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -146,6 +212,7 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
         lastName: draft.lastName,
         bio: draft.bio,
         onboardingStatus: "in_progress",
+        onboardingCurrentStep: "2",
       };
       if (accountIntent === "support_user") body.supportInterests = draft.supportInterests;
       if (accountIntent === "member_user") body.contributionSummary = draft.contributionSummary;
@@ -272,8 +339,12 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
         <p className="introTagline">Welcome</p>
         <h2>Set up your Outreach Project account</h2>
         <p className="sponsorSectionLead">{lead}</p>
-        {checkoutFlash === "success" ? (
-          <p className="applyStatus">Checkout completed — confirm your plan below and finish onboarding.</p>
+        {autoFinalizing ? <p className="applyStatus">Payment confirmed — finalizing your account…</p> : null}
+        {checkoutFlash === "success" && !autoFinalizing ? (
+          <p className="applyStatus">
+            Checkout returned successfully. If your plan is already active, we finish setup automatically; otherwise confirm below and tap{" "}
+            <strong>Finish onboarding</strong>.
+          </p>
         ) : null}
         {checkoutFlash === "cancel" ? <p className="applyError">Checkout canceled. You can choose Free or try again.</p> : null}
         {message ? <p className="applyStatus">{message}</p> : null}
@@ -295,7 +366,7 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
               ))}
             </div>
             <div className="row wrap">
-              <button className="btnPrimary" type="button" disabled={saving} onClick={saveIntentStep}>
+              <button className="btnPrimary" type="button" disabled={busy} onClick={saveIntentStep}>
                 Continue
               </button>
             </div>
@@ -400,10 +471,18 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
               </>
             ) : null}
             <div className="row wrap">
-              <button className="btnSoft" type="button" disabled={saving} onClick={() => setStep(0)}>
+              <button
+                className="btnSoft"
+                type="button"
+                disabled={busy}
+                onClick={() => {
+                  persistOnboardingStep(0);
+                  setStep(0);
+                }}
+              >
                 Back
               </button>
-              <button className="btnPrimary" type="button" disabled={saving} onClick={saveProfileStep}>
+              <button className="btnPrimary" type="button" disabled={busy} onClick={saveProfileStep}>
                 Continue
               </button>
             </div>
@@ -442,10 +521,18 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
                   after finishing.
                 </p>
                 <div className="row wrap">
-                  <button className="btnSoft" type="button" disabled={saving} onClick={() => setStep(1)}>
+                  <button
+                    className="btnSoft"
+                    type="button"
+                    disabled={busy}
+                    onClick={() => {
+                      persistOnboardingStep(1);
+                      setStep(1);
+                    }}
+                  >
                     Back
                   </button>
-                  <button className="btnPrimary" type="button" disabled={saving} onClick={() => void finishOnboarding({ sponsorApplication: true })}>
+                  <button className="btnPrimary" type="button" disabled={busy} onClick={() => void finishOnboarding({ sponsorApplication: true })}>
                     Submit application &amp; finish
                   </button>
                 </div>
@@ -476,13 +563,21 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
                   </p>
                 ) : null}
                 <div className="row wrap">
-                  <button className="btnSoft" type="button" disabled={saving} onClick={() => setStep(1)}>
+                  <button
+                    className="btnSoft"
+                    type="button"
+                    disabled={busy}
+                    onClick={() => {
+                      persistOnboardingStep(1);
+                      setStep(1);
+                    }}
+                  >
                     Back
                   </button>
-                  <button className="btnSoft" type="button" disabled={saving} onClick={startPaidCheckout}>
+                  <button className="btnSoft" type="button" disabled={busy} onClick={startPaidCheckout}>
                     Continue to secure checkout
                   </button>
-                  <button className="btnPrimary" type="button" disabled={saving} onClick={() => void finishOnboarding()}>
+                  <button className="btnPrimary" type="button" disabled={busy} onClick={() => void finishOnboarding()}>
                     Finish onboarding
                   </button>
                 </div>
@@ -524,15 +619,23 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
               </p>
             ) : null}
             <div className="row wrap">
-              <button className="btnSoft" type="button" disabled={saving} onClick={() => setStep(1)}>
+              <button
+                className="btnSoft"
+                type="button"
+                disabled={busy}
+                onClick={() => {
+                  persistOnboardingStep(1);
+                  setStep(1);
+                }}
+              >
                 Back
               </button>
               {selectedTier !== "free" ? (
-                <button className="btnSoft" type="button" disabled={saving} onClick={startPaidCheckout}>
+                <button className="btnSoft" type="button" disabled={busy} onClick={startPaidCheckout}>
                   Continue to secure checkout
                 </button>
               ) : null}
-              <button className="btnPrimary" type="button" disabled={saving} onClick={() => void finishOnboarding()}>
+              <button className="btnPrimary" type="button" disabled={busy} onClick={() => void finishOnboarding()}>
                 {selectedTier === "free" ? "Finish with Free" : "Finish onboarding"}
               </button>
             </div>

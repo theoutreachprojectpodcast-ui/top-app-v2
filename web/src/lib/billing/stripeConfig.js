@@ -104,6 +104,8 @@ export function safeAppReturnPath(raw, fallback = "/profile") {
 
 /**
  * Canonical app origin for redirects. Prefer APP_BASE_URL, then NEXT_PUBLIC_APP_URL.
+ * For Stripe return URLs, prefer {@link requestOriginForStripeRedirects} so `pnpm dev:alt` (port 3000)
+ * matches checkout success/cancel without editing env.
  */
 export function appBaseUrl() {
   const raw = process.env.APP_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3001";
@@ -111,10 +113,29 @@ export function appBaseUrl() {
 }
 
 /**
- * Return URL after Stripe Customer Portal. Falls back to /profile under app base.
+ * Origin for Stripe success/cancel URLs from the incoming API request (Host / X-Forwarded-*).
+ * Falls back to {@link appBaseUrl} when headers are missing.
+ * @param {Request} [request]
  */
-export function stripePortalReturnUrl() {
+export function requestOriginForStripeRedirects(request) {
+  if (!request || typeof request.headers?.get !== "function") return appBaseUrl();
+  const forwardedHost = request.headers.get("x-forwarded-host");
+  const host = (forwardedHost ? forwardedHost.split(",")[0] : request.headers.get("host"))?.trim();
+  if (!host) return appBaseUrl();
+  const forwardedProto = request.headers.get("x-forwarded-proto");
+  const protoRaw = forwardedProto ? forwardedProto.split(",")[0].trim() : "";
+  const local = host.startsWith("localhost") || host.startsWith("127.");
+  const proto = protoRaw || (local ? "http" : "https");
+  return `${proto}://${host}`.replace(/\/$/, "");
+}
+
+/**
+ * Return URL after Stripe Customer Portal. Falls back to /profile under request origin or app base.
+ * @param {Request} [request]
+ */
+export function stripePortalReturnUrl(request) {
   const explicit = process.env.STRIPE_CUSTOMER_PORTAL_RETURN_URL?.trim();
   if (explicit) return explicit.replace(/\/$/, "");
-  return `${appBaseUrl()}/profile`;
+  const base = request ? requestOriginForStripeRedirects(request) : appBaseUrl();
+  return `${base}/profile`;
 }

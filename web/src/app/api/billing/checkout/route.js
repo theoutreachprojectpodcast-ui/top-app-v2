@@ -3,8 +3,8 @@ import Stripe from "stripe";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
 import {
-  appBaseUrl,
   priceIdForTier,
+  requestOriginForStripeRedirects,
   safeAppReturnPath,
   stripeMemberRecurringConfigured,
   stripeSponsorSubscriptionConfigured,
@@ -69,7 +69,7 @@ export async function POST(request) {
   }
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-  const base = appBaseUrl();
+  const base = requestOriginForStripeRedirects(request);
   const returnPath = safeAppReturnPath(body.returnPath, "/profile");
   const customerId = profileRow.stripe_customer_id ? String(profileRow.stripe_customer_id).trim() : null;
   const profileId = profileRow.id ? String(profileRow.id) : "";

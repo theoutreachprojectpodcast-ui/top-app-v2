@@ -2,9 +2,9 @@ import { withAuth } from "@workos-inc/authkit-nextjs";
 import Stripe from "stripe";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
-import { appBaseUrl, stripePortalReturnUrl, stripeSecretConfigured } from "@/lib/billing/stripeConfig";
+import { stripePortalReturnUrl, stripeSecretConfigured } from "@/lib/billing/stripeConfig";
 
-export async function POST() {
+export async function POST(request) {
   if (!stripeSecretConfigured()) {
     return Response.json({ error: "billing_not_configured" }, { status: 503 });
   }
@@ -29,7 +29,7 @@ export async function POST() {
   }
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-  const returnUrl = stripePortalReturnUrl() || `${appBaseUrl()}/profile`;
+  const returnUrl = stripePortalReturnUrl(request);
 
   try {
     const session = await stripe.billingPortal.sessions.create({
