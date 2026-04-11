@@ -1,6 +1,7 @@
 import { researchOfficialWebsite } from "@/features/nonprofits/enrichment/researchOfficialWebsite";
 import { verifyEnrichmentAgainstRecord } from "@/features/nonprofits/verification/verifyEnrichment";
 import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
+import { validateOrgListingHeaderImageBuffer } from "@/lib/image/validateListingHeaderImage";
 
 const DEFAULT_BUCKET = "org-header-images";
 
@@ -214,6 +215,27 @@ export async function enrichOrgHeaderImageForEin(params) {
 
   try {
     const { buf, contentType } = await downloadRemoteImage(remoteUrl);
+    const geom = validateOrgListingHeaderImageBuffer(buf);
+    if (!geom.ok) {
+      const notes = `Downloaded image failed listing-hero geometry check (${geom.reason}); likely a logo/icon or wrong aspect — needs review or different source.`;
+      await supabase
+        .from("nonprofit_directory_enrichment")
+        .update({
+          header_image_status: "rejected",
+          header_image_review_status: "pending_review",
+          header_image_notes: notes,
+          header_image_last_enriched_at: nowIso,
+          updated_at: nowIso,
+        })
+        .eq("ein", ein9);
+      return {
+        ok: true,
+        ein: ein9,
+        outcome: "image_geometry_rejected",
+        notes,
+        reason: geom.reason,
+      };
+    }
     const up = await uploadHeaderToOrgBucket(supabase, ein9, buf, contentType);
     publicUrl = up.publicUrl;
     storagePath = up.path;

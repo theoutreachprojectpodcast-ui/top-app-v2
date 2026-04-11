@@ -52,11 +52,6 @@ export function useDirectorySearch(supabase) {
   const runSearch = useCallback(
     async (nextPage = 1, overrideFilters = null) => {
       const f = overrideFilters && typeof overrideFilters === "object" ? overrideFilters : filters;
-      if (!supabase) {
-        setStatus("Supabase client not initialized.");
-        setMeta("Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.");
-        return;
-      }
       if (!f.state) {
         setStatus("Please select a state.");
         setMeta("");
@@ -74,7 +69,11 @@ export function useDirectorySearch(supabase) {
         setTotal(count);
 
         if (!rows.length) {
-          setStatus(`No organizations found in ${stateLabel(f.state)}.`);
+          setStatus(
+            !supabase
+              ? `No organizations found in ${stateLabel(f.state)}. If this persists, set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY, or add SUPABASE_SERVICE_ROLE_KEY for /api/directory/search.`
+              : `No organizations found in ${stateLabel(f.state)}.`
+          );
           setMeta("");
           return;
         }
@@ -109,7 +108,7 @@ export function useDirectorySearch(supabase) {
   }, []);
 
   useEffect(() => {
-    if (restoredRef.current || !supabase) return;
+    if (restoredRef.current) return;
     const s = readDirSession();
     if (!s?.filters?.state) return;
     restoredRef.current = true;

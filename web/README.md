@@ -73,7 +73,7 @@ cp web/.env.local.example web/.env.local
 pnpm dev
 ```
 
-Opens **http://localhost:3000**. If port 3000 is in use, free it or run `pnpm --filter web dev:alt` for port 3001.
+Opens **http://localhost:3001**. If port 3001 is in use, free it or run `pnpm --filter web dev:alt` for port 3000.
 
 **Windows:** Use a **space**: `pnpm dev` (not `pnpm` + `dev` merged into one token). Double-click **`web/dev.cmd`** to run `pnpm dev` from the repo root.
 

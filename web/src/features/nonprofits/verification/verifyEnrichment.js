@@ -158,9 +158,39 @@ export function verifyEnrichmentAgainstRecord(params, extracted) {
     allowContent && extracted.twitterImage && /^https?:\/\//i.test(String(extracted.twitterImage).trim())
       ? String(extracted.twitterImage).trim()
       : "";
-  /** Prefer Twitter card image for wide hero; OG often works for both logo + hero when Twitter is absent. */
-  const heroImageUrl = twImg || ogImg || null;
-  const logoImageUrl = ogImg || twImg || null;
+
+  function pathnameLikelyLogoOrIconAsset(url) {
+    try {
+      const p = new URL(String(url).trim()).pathname.toLowerCase();
+      return /(logo|brand|mark|favicon|apple-touch|site-icon|\/icons?\/|sprite|avatar)\b/i.test(p);
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Prefer Twitter card when it does not look like a logo URL; otherwise fall back to OG if that looks like a hero.
+   */
+  let heroImageUrl = null;
+  if (twImg && !pathnameLikelyLogoOrIconAsset(twImg)) {
+    heroImageUrl = twImg;
+  } else if (twImg && ogImg && !pathnameLikelyLogoOrIconAsset(ogImg)) {
+    heroImageUrl = ogImg;
+    notes.push("twitter_image_looks_like_logo_used_og_hero");
+  } else if (twImg) {
+    heroImageUrl = twImg;
+  } else if (ogImg && !pathnameLikelyLogoOrIconAsset(ogImg)) {
+    heroImageUrl = ogImg;
+  } else if (ogImg) {
+    notes.push("og_image_looks_like_logo_skipped_for_hero");
+  }
+
+  /** Only treat OG/Twitter URLs as verified logos when the path looks like a logo asset (not a default OG hero). */
+  let logoImageUrl = null;
+  if (ogImg && pathnameLikelyLogoOrIconAsset(ogImg)) logoImageUrl = ogImg;
+  else if (twImg && pathnameLikelyLogoOrIconAsset(twImg)) logoImageUrl = twImg;
+
+  const thumbnailUrl = heroImageUrl || logoImageUrl || null;
 
   return {
     ok: allowContent,
@@ -174,7 +204,7 @@ export function verifyEnrichmentAgainstRecord(params, extracted) {
       mission_statement: missionGuess || null,
       logo_url: logoImageUrl || null,
       hero_image_url: heroImageUrl || null,
-      thumbnail_url: ogImg || twImg || null,
+      thumbnail_url: thumbnailUrl,
       website_url: fetchFinalUrl,
       socials,
     },

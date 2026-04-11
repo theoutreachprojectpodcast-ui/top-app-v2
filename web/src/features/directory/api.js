@@ -37,7 +37,7 @@ async function fetchLegacyDirectoryCount(supabase, filters) {
   return query;
 }
 
-export async function fetchDirectorySearch(supabase, filters, page = 1) {
+export async function fetchDirectorySearchWithSupabase(supabase, filters, page = 1) {
   const from = (page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
 
@@ -81,6 +81,36 @@ export async function fetchDirectorySearch(supabase, filters, page = 1) {
     count: typeof count === "number" ? count : null,
     from,
   };
+}
+
+async function fetchDirectorySearchFromApi(filters, page) {
+  if (typeof window === "undefined") return null;
+  try {
+    const res = await fetch("/api/directory/search", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ filters, page }),
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data?.ok) return null;
+    return {
+      rows: Array.isArray(data.rows) ? data.rows : [],
+      count: typeof data.count === "number" ? data.count : null,
+      from: typeof data.from === "number" ? data.from : 0,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** Browser: tries server route first (service role) so enrichment-backed hero/logo fields load on localhost. */
+export async function fetchDirectorySearch(supabase, filters, page = 1) {
+  const fromApi = await fetchDirectorySearchFromApi(filters, page);
+  if (fromApi) return fromApi;
+  if (!supabase) return { rows: [], count: null, from: 0 };
+  return fetchDirectorySearchWithSupabase(supabase, filters, page);
 }
 
 /**

@@ -2,7 +2,7 @@
  * Batch website enrichment for Trusted Resources / directory EINs (non-destructive POST to API).
  *
  * Usage (dev server must be running):
- *   cd web && BASE_URL=http://localhost:3000 pnpm exec node scripts/enrich-trusted-registry-eins.mjs
+ *   cd web && BASE_URL=http://localhost:3001 pnpm exec node scripts/enrich-trusted-registry-eins.mjs
  *
  * Requires server env: NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY (or anon for read-only failures).
  * Throttles requests to avoid hammering external sites.
@@ -29,7 +29,7 @@ function extractEinsFromRegistrySource(src) {
   return [...out];
 }
 
-const base = (process.env.BASE_URL || "http://localhost:3000").replace(/\/$/, "");
+const base = (process.env.BASE_URL || "http://localhost:3001").replace(/\/$/, "");
 const delayMs = Number(process.env.ENRICH_DELAY_MS || 800);
 
 const src = readFileSync(registryPath, "utf8");

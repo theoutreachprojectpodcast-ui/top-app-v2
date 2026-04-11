@@ -106,7 +106,7 @@ export function safeAppReturnPath(raw, fallback = "/profile") {
  * Canonical app origin for redirects. Prefer APP_BASE_URL, then NEXT_PUBLIC_APP_URL.
  */
 export function appBaseUrl() {
-  const raw = process.env.APP_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const raw = process.env.APP_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3001";
   return String(raw).replace(/\/$/, "");
 }
 

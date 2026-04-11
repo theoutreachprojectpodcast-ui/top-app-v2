@@ -34,5 +34,5 @@ Docs: [AI Installer & CLI](https://workos.com/docs/authkit/cli-installer).
 
 ## Align with this app
 
-- **Redirect URI** in the WorkOS dashboard must match **`NEXT_PUBLIC_WORKOS_REDIRECT_URI`** (default `http://localhost:3000/callback`).
+- **Redirect URI** in the WorkOS dashboard must match **`NEXT_PUBLIC_WORKOS_REDIRECT_URI`** (default `http://localhost:3001/callback`).
 - After the CLI or dashboard changes env vars, restart **`pnpm dev`** from the repo root.

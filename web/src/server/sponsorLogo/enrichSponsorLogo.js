@@ -1,3 +1,4 @@
+import { readImageDimensions } from "@/lib/image/readImageDimensions";
 import { buildOrderedSponsorLogoCandidates } from "@/lib/sponsors/logoDiscoveryServer";
 
 const TABLE = "sponsors_catalog";
@@ -13,37 +14,6 @@ function storageKeySlug(slug) {
     .replace(/[^a-z0-9-]+/g, "_")
     .replace(/^_|_$/g, "")
     .slice(0, 80) || "sponsor";
-}
-
-/**
- * @param {Buffer} buf
- * @returns {{ w: number, h: number } | null}
- */
-export function readImageDimensions(buf) {
-  if (!buf || buf.length < 24) return null;
-  if (buf[0] === 0xff && buf[1] === 0xd8) {
-    let i = 2;
-    while (i < buf.length - 8) {
-      if (buf[i] !== 0xff) {
-        i += 1;
-        continue;
-      }
-      const marker = buf[i + 1];
-      if (marker === 0xc0 || marker === 0xc2) {
-        return { h: buf.readUInt16BE(i + 5), w: buf.readUInt16BE(i + 7) };
-      }
-      const len = buf.readUInt16BE(i + 2);
-      i += 2 + len;
-    }
-    return null;
-  }
-  if (buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47) {
-    return { w: buf.readUInt32BE(16), h: buf.readUInt32BE(20) };
-  }
-  if (buf[0] === 0x47 && buf[1] === 0x49 && buf[2] === 0x46) {
-    return { w: buf.readUInt16LE(6), h: buf.readUInt16LE(8) };
-  }
-  return null;
 }
 
 function isProbablyIco(buf) {
@@ -72,7 +42,7 @@ export function validateSponsorLogoBuffer(buf, sourceType, sourceUrl) {
   if (r > 4.2 || r < 0.22) return false;
   if (Math.min(dim.w, dim.h) < 36) return false;
   if (Math.max(dim.w, dim.h) > 3600) return false;
-  if (sourceType === "og_image" && r > 2.85) return false;
+  if (sourceType === "og_image_logo_hint" && r > 2.65) return false;
   return true;
 }
 

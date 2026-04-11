@@ -78,7 +78,8 @@ function pathSuggestsLogo(u) {
       return "";
     }
   })();
-  return /\/(logo|brand|mark|symbol|icon|favicon|apple-touch)/i.test(p) || /\.(png|jpg|jpeg|webp)(\?|$)/i.test(p);
+  // Do not treat generic image extensions as logo hints — most OG images are heroes.
+  return /\/(logo|logos|brand|branding|mark|marks|symbol|favicon|apple-touch)/i.test(p) || /[-_/]logo[-_/./]/i.test(p);
 }
 
 function isSvgUrl(u) {
@@ -116,12 +117,9 @@ export function buildOrderedSponsorLogoCandidates(html, pageUrl) {
   const og = String(extracted?.ogImage || "").trim();
   if (og && /^https?:\/\//i.test(og) && !isSvgUrl(og)) {
     const url = absUrl(og, base);
-    const hint = pathSuggestsLogo(url);
-    raw.push({
-      url,
-      sourceType: hint ? "og_image_logo_hint" : "og_image",
-      score: hint ? 62 : 44,
-    });
+    if (pathSuggestsLogo(url)) {
+      raw.push({ url, sourceType: "og_image_logo_hint", score: 62 });
+    }
   }
 
   const origin = safeOrigin(base);

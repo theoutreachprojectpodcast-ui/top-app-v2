@@ -7,7 +7,7 @@ import {
   enrichOrgHeaderImageForEin,
 } from "@/server/orgHeaderImage/enrichOrgHeaderImage";
 
-/** Node runtime: Buffer, Storage uploads, and long-running fetches (required on `pnpm dev` / localhost:3000). */
+/** Node runtime: Buffer, Storage uploads, and long-running fetches (required on `pnpm dev` / localhost:3001). */
 export const runtime = "nodejs";
 
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -35,7 +35,7 @@ function missingServiceRoleResponse() {
     {
       error: "missing_service_role",
       message:
-        "Set SUPABASE_SERVICE_ROLE_KEY in .env.local. Org header enrichment updates the database and uploads to Storage; the anon key is not enough on localhost:3000 or in production.",
+        "Set SUPABASE_SERVICE_ROLE_KEY in .env.local. Org header enrichment updates the database and uploads to Storage; the anon key is not enough on localhost:3001 or in production.",
     },
     { status: 500 }
   );

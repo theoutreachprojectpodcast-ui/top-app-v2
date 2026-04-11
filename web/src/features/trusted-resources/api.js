@@ -40,28 +40,29 @@ function normalizeDomain(url = "") {
   }
 }
 
-export async function fetchTrustedResources(supabase) {
-  if (supabase) {
-    const catalog = await runQuery(() =>
-      supabase
-        .from(PROVEN_ALLIES_TABLE)
-        .select("*")
-        .eq("listing_status", "active")
-        .order("sort_order", { ascending: true })
-        .order("display_name", { ascending: true })
-    );
-    if (!catalog.error && Array.isArray(catalog.data)) {
-      const mapped = (catalog.data || []).map(mapProvenAlliesDbRowToTrustedRow).filter((row) => {
-        const ein = String(row?.ein ?? "").trim();
-        const name = String(row?.orgName ?? "").trim();
-        const web = String(row?.website ?? "").trim();
-        return !!(ein || name || web);
-      });
-      return attachDirectoryAndEnrichmentToTrustedRows(supabase, mapped);
-    }
-    if (catalog.error && !isMissingProvenAlliesTable(catalog.error)) {
-      throw catalog.error;
-    }
+/** Load trusted catalog + directory/enrichment joins (server or browser Supabase client). */
+export async function fetchTrustedResourcesFromSupabase(supabase) {
+  if (!supabase) return [];
+
+  const catalog = await runQuery(() =>
+    supabase
+      .from(PROVEN_ALLIES_TABLE)
+      .select("*")
+      .eq("listing_status", "active")
+      .order("sort_order", { ascending: true })
+      .order("display_name", { ascending: true })
+  );
+  if (!catalog.error && Array.isArray(catalog.data)) {
+    const mapped = (catalog.data || []).map(mapProvenAlliesDbRowToTrustedRow).filter((row) => {
+      const ein = String(row?.ein ?? "").trim();
+      const name = String(row?.orgName ?? "").trim();
+      const web = String(row?.website ?? "").trim();
+      return !!(ein || name || web);
+    });
+    return attachDirectoryAndEnrichmentToTrustedRows(supabase, mapped);
+  }
+  if (catalog.error && !isMissingProvenAlliesTable(catalog.error)) {
+    throw catalog.error;
   }
 
   // Legacy: nonprofit_profiles + directory joins when `proven_allies` is not deployed.
@@ -163,6 +164,29 @@ export async function fetchTrustedResources(supabase) {
     });
   }
   return rows;
+}
+
+async function fetchTrustedCatalogFromApi() {
+  if (typeof window === "undefined") return null;
+  try {
+    const res = await fetch("/api/trusted/catalog", { cache: "no-store" });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data?.ok || !Array.isArray(data.rows)) return null;
+    return data.rows;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Prefer GET /api/trusted/catalog in the browser so localhost can use the service role (same as enrichment)
+ * when anon RLS blocks `nonprofit_directory_enrichment` or related tables.
+ */
+export async function fetchTrustedResources(supabase) {
+  const fromApi = await fetchTrustedCatalogFromApi();
+  if (fromApi) return fromApi;
+  return fetchTrustedResourcesFromSupabase(supabase);
 }
 
 export function getTrustedSlice(rows, offset = 0) {

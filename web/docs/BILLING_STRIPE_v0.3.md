@@ -30,7 +30,7 @@ Copy `web/.env.local.example` to `web/.env.local` and set:
 | `STRIPE_PRICE_PODCAST_SPONSOR_COMMUNITY` | Podcast one-time tier | Required with the other two for live podcast pay |
 | `STRIPE_PRICE_PODCAST_SPONSOR_IMPACT` | Podcast one-time tier | Same |
 | `STRIPE_PRICE_PODCAST_SPONSOR_FOUNDATIONAL` | Podcast one-time tier | Same |
-| `APP_BASE_URL` | Redirect URLs | e.g. `http://localhost:3000` (falls back to `NEXT_PUBLIC_APP_URL`) |
+| `APP_BASE_URL` | Redirect URLs | e.g. `http://localhost:3001` (falls back to `NEXT_PUBLIC_APP_URL`) |
 | `NEXT_PUBLIC_APP_URL` | Public base URL | Same purpose if `APP_BASE_URL` unset |
 | `STRIPE_CUSTOMER_PORTAL_RETURN_URL` | After Customer Portal | Full URL; default `${APP_BASE_URL}/profile` |
 
@@ -93,7 +93,7 @@ Podcast paid checkouts update the **same** `torp_profiles` row (WorkOS identity)
 
 ## Local testing
 
-1. Install [Stripe CLI](https://stripe.com/docs/stripe-cli), run `stripe listen --forward-to localhost:3000/api/billing/webhook`, copy the signing secret into `STRIPE_WEBHOOK_SECRET`.
+1. Install [Stripe CLI](https://stripe.com/docs/stripe-cli), run `stripe listen --forward-to localhost:3001/api/billing/webhook`, copy the signing secret into `STRIPE_WEBHOOK_SECRET`.
 2. Set keys and price IDs in `web/.env.local` (including `membership_source` migration in Supabase).
 3. Sign in with WorkOS, open **Profile** → Support or Pro checkout (or complete onboarding with Stripe).
 4. Confirm `torp_profiles` updated (`membership_tier`, `membership_status`, `membership_source`, Stripe IDs).

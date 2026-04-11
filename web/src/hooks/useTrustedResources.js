@@ -10,15 +10,6 @@ export function useTrustedResources(supabase) {
   const [trustedCache, setTrustedCache] = useState([]);
 
   async function loadTrusted(reset = false) {
-    if (!supabase) {
-      setTrustedStatus("Supabase client not initialized.");
-      if (reset) {
-        setTrusted([]);
-        setTrustedCache([]);
-        setTrustedOffset(0);
-      }
-      return;
-    }
     setTrustedStatus("Loading trusted resources…");
 
     let cache = trustedCache;

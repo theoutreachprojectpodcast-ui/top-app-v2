@@ -77,7 +77,7 @@ export async function POST(request) {
       {
         error: "missing_service_role",
         message:
-          "Set SUPABASE_SERVICE_ROLE_KEY in .env.local so sponsor meta enrichment can write sponsors_catalog and sponsor_enrichment on localhost:3000.",
+          "Set SUPABASE_SERVICE_ROLE_KEY in .env.local so sponsor meta enrichment can write sponsors_catalog and sponsor_enrichment on localhost:3001.",
       },
       { status: 500 }
     );
@@ -132,7 +132,7 @@ export async function POST(request) {
     short_description: clean(row.short_description) || clean(signals.description),
     long_description: clean(row.long_description) || clean(signals.description),
     tagline: clean(row.tagline) || clean(signals.title) || clean(signals.description),
-    logo_url: clean(row.logo_url) || clean(signals.logo),
+    logo_url: clean(row.logo_url),
     background_image_url: clean(row.background_image_url) || clean(signals.logo),
     instagram_url: clean(row.instagram_url) || clean(signals.instagram_url),
     facebook_url: clean(row.facebook_url) || clean(signals.facebook_url),

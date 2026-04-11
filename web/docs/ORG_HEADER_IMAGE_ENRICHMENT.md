@@ -38,7 +38,7 @@
 
 Create **`org-header-images`** in Supabase (public read if using `getPublicUrl`). Service-role API routes perform uploads; anonymous users only receive already-public URLs stored in the database.
 
-## Localhost (`pnpm dev` → http://localhost:3000)
+## Localhost (`pnpm dev` → http://localhost:3001)
 
 API routes use the **Node.js** runtime and require **`SUPABASE_SERVICE_ROLE_KEY`** for enrich/review writes and Storage. Add your WorkOS user email to **`COMMUNITY_MODERATOR_EMAILS`** in `.env.local`. See `.env.local.example`.
 

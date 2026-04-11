@@ -32,7 +32,7 @@ See `web/.env.local.example` for the full list. Minimum for **local demo-only** 
 
 **WorkOS live:**
 
-- `WORKOS_API_KEY`, `WORKOS_CLIENT_ID`, `WORKOS_COOKIE_PASSWORD` (≥32 chars), `NEXT_PUBLIC_WORKOS_REDIRECT_URI` (e.g. `http://localhost:3000/callback`)
+- `WORKOS_API_KEY`, `WORKOS_CLIENT_ID`, `WORKOS_COOKIE_PASSWORD` (≥32 chars), `NEXT_PUBLIC_WORKOS_REDIRECT_URI` (e.g. `http://localhost:3001/callback`)
 
 **Profiles / API:**
 
@@ -45,7 +45,7 @@ See `web/.env.local.example` for the full list. Minimum for **local demo-only** 
 
 **App URL:**
 
-- `NEXT_PUBLIC_APP_URL` (e.g. `http://localhost:3000`) for Stripe return URLs and similar
+- `NEXT_PUBLIC_APP_URL` (e.g. `http://localhost:3001`) for Stripe return URLs and similar
 
 ## Functional vs placeholder
 
@@ -57,11 +57,11 @@ See `web/.env.local.example` for the full list. Minimum for **local demo-only** 
 | Stripe checkout | 503 or inline message on onboarding | Redirect to Checkout |
 | Webhook | 503 without secret | Updates tier/status + Stripe IDs |
 
-## How to test (localhost:3000)
+## How to test (localhost:3001)
 
-1. `pnpm dev` in `web` (already binds to `localhost:3000`).
+1. `pnpm dev` in `web` (already binds to `localhost:3001`).
 2. **Demo:** Sign in with local demo credentials; profile still syncs to `top_app_user_profiles` if that table exists and anon RLS allows (legacy behavior).
-3. **WorkOS:** Configure dashboard redirect `http://localhost:3000/callback`, set env vars, restart dev server, use **Sign in** / **Create account** / **Continue with Google** in the auth modal (all use AuthKit; Google appears if enabled in WorkOS).
+3. **WorkOS:** Configure dashboard redirect `http://localhost:3001/callback`, set env vars, restart dev server, use **Sign in** / **Create account** / **Continue with Google** in the auth modal (all use AuthKit; Google appears if enabled in WorkOS).
 4. **Onboarding:** After first WorkOS login, app redirects to `/onboarding` until `onboarding_completed` is true.
 5. **Profile edit:** With WorkOS + service role, edits call `PATCH /api/me/profile`; image upload uses `POST /api/me/avatar`.
 6. **Stripe:** Point Stripe CLI webhook to `/api/billing/webhook` with your signing secret; complete a test checkout and confirm `torp_profiles` updates.

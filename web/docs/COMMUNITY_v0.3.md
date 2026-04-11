@@ -84,7 +84,7 @@ Optional **client** mirrors exist for UI gating only (`NEXT_PUBLIC_COMMUNITY_MOD
 
 1. Run migrations on your Supabase project (`community.sql` then `community_v03_data_model.sql`).
 2. Ensure `web/.env.local` has Supabase URL/anon + **service role** key for admin client (see existing app patterns for `SUPABASE_SERVICE_ROLE_KEY` or project equivalent).
-3. `pnpm dev` from repo root; open `http://localhost:3000/community`.
+3. `pnpm dev` from repo root; open `http://localhost:3001/community`.
 4. **Logged out**: see value prop + sign-in CTA; public feed shows approved posts only.
 5. **Member user**: complete onboarding; ensure profile has `membership_tier` = `member`; submit a story (≥ 20 characters); expect “submitted for review” and row in DB with `pending_review`.
 6. **Moderator**: set env emails/IDs; open moderation section; pending posts appear; Approve → post appears on Latest; Reject → visible in My posts with rejected state, not in public feed.

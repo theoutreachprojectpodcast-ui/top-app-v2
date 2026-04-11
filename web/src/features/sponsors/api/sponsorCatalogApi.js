@@ -30,27 +30,25 @@ function fallbackRows() {
   );
 }
 
-export async function listSponsorsCatalog(supabase) {
-  if (!supabase) return fallbackRows();
-  const { data, error } = await supabase
-    .from(SPONSOR_TABLE)
-    .select("*")
-    .order("display_order", { ascending: true, nullsFirst: false })
-    .order("name", { ascending: true });
-  if (error || !Array.isArray(data) || !data.length) return fallbackRows();
-
-  const rows = data.map((row) => normalizeSponsorRecord(row));
-  const sponsorIds = rows.map((row) => row.id).filter(Boolean);
-  if (!sponsorIds.length) return rows;
+/**
+ * Merge `sponsor_enrichment` titles/descriptions onto normalized catalog rows (server or browser).
+ * @param {import("@supabase/supabase-js").SupabaseClient} supabase
+ * @param {ReturnType<normalizeSponsorRecord>[]} normalizedRows
+ */
+export async function mergeSponsorEnrichmentForRows(supabase, normalizedRows) {
+  const sponsorIds = normalizedRows.map((row) => row.id).filter(Boolean);
+  if (!sponsorIds.length) return normalizedRows;
 
   const { data: enrichRows, error: enrichErr } = await supabase
     .from("sponsor_enrichment")
-    .select("sponsor_id,canonical_display_name,source_summary,enrichment_status,last_enriched_at,review_required")
+    .select(
+      "sponsor_id,canonical_display_name,extracted_site_title,extracted_meta_description,source_summary,enrichment_status,last_enriched_at,review_required"
+    )
     .in("sponsor_id", sponsorIds);
-  if (enrichErr || !Array.isArray(enrichRows) || !enrichRows.length) return rows;
+  if (enrichErr || !Array.isArray(enrichRows) || !enrichRows.length) return normalizedRows;
 
   const byId = new Map(enrichRows.map((row) => [String(row.sponsor_id), row]));
-  return rows.map((row) => {
+  return normalizedRows.map((row) => {
     const enrich = byId.get(String(row.id));
     if (!enrich) return row;
     const extTitle = String(enrich.extracted_site_title || "").trim();
@@ -67,12 +65,59 @@ export async function listSponsorsCatalog(supabase) {
   });
 }
 
+/** Load sponsors from Supabase (no HTTP proxy). Used by API routes with the service role. */
+export async function listSponsorsCatalogWithClient(supabase) {
+  if (!supabase) return fallbackRows();
+  const { data, error } = await supabase
+    .from(SPONSOR_TABLE)
+    .select("*")
+    .order("display_order", { ascending: true, nullsFirst: false })
+    .order("name", { ascending: true });
+  if (error || !Array.isArray(data) || !data.length) return fallbackRows();
+
+  const rows = data.map((row) => normalizeSponsorRecord(row));
+  return mergeSponsorEnrichmentForRows(supabase, rows);
+}
+
+async function fetchSponsorsCatalogFromApi() {
+  if (typeof window === "undefined") return null;
+  try {
+    const res = await fetch("/api/sponsors/catalog", { cache: "no-store" });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data?.ok || !Array.isArray(data.rows)) return null;
+    return data.rows.map((r) => normalizeSponsorRecord(r));
+  } catch {
+    return null;
+  }
+}
+
+export async function listSponsorsCatalog(supabase) {
+  const fromApi = await fetchSponsorsCatalogFromApi();
+  if (fromApi) return fromApi;
+  return listSponsorsCatalogWithClient(supabase);
+}
+
 export async function getSponsorBySlug(supabase, slug) {
   const key = String(slug || "").trim();
   if (!key) return null;
-  if (!supabase) return fallbackRows().find((r) => r.slug === key) || null;
+  if (typeof window !== "undefined") {
+    try {
+      const res = await fetch(`/api/sponsors/catalog?slug=${encodeURIComponent(key)}`, { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.ok && data.row) return getSponsorProfileViewModel(data.row);
+      }
+    } catch {
+      /* fall through */
+    }
+  }
+  if (!supabase) return getSponsorProfileViewModel(fallbackRows().find((r) => r.slug === key) || null);
   const { data, error } = await supabase.from(SPONSOR_TABLE).select("*").eq("slug", key).maybeSingle();
-  if (data && !error) return getSponsorProfileViewModel(data);
+  if (data && !error) {
+    const [merged] = await mergeSponsorEnrichmentForRows(supabase, [normalizeSponsorRecord(data)]);
+    return getSponsorProfileViewModel(merged);
+  }
   return getSponsorProfileViewModel(fallbackRows().find((r) => r.slug === key) || null);
 }
 
