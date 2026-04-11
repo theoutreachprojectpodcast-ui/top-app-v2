@@ -26,6 +26,7 @@ export async function GET(request) {
   const isStaffViewer = isCommunityModeratorServer({
     email: profile.email,
     workosUserId: auth.user.id,
+    profileRow: profile,
   });
 
   const url = new URL(request.url);
@@ -112,6 +113,7 @@ export async function PATCH(request) {
   const isStaffViewer = isCommunityModeratorServer({
     email: profile.email,
     workosUserId: auth.user.id,
+    profileRow: profile,
   });
 
   if (body.markAllRead) {

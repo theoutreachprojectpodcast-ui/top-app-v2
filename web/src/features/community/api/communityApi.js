@@ -376,6 +376,9 @@ export function sendConnectionRequest(userId, targetId) {
 }
 
 export function isModeratorUser({ userId = "", profile = {} } = {}) {
+  const pr = String(profile?.platformRole || "").toLowerCase();
+  if (pr === "moderator" || pr === "admin") return true;
+
   const envUserIds = String(process.env.NEXT_PUBLIC_COMMUNITY_MODERATOR_USER_IDS || "")
     .split(",")
     .map((v) => v.trim())

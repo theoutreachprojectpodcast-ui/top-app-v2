@@ -1,5 +1,6 @@
 import { withAuth } from "@workos-inc/authkit-nextjs";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
 import { isCommunityModeratorServer } from "@/lib/community/moderatorServer";
 import { createPlatformNotification } from "@/server/notifications/notificationService";
 
@@ -11,13 +12,14 @@ export async function PATCH(request, context) {
     return Response.json({ ok: false, message: "Unauthorized" }, { status: 401 });
   }
 
-  if (!isCommunityModeratorServer({ email: auth.user.email, workosUserId: auth.user.id })) {
-    return Response.json({ ok: false, message: "Moderator access required." }, { status: 403 });
-  }
-
   const admin = createSupabaseAdminClient();
   if (!admin) {
     return Response.json({ ok: false, message: "Server storage unavailable." }, { status: 503 });
+  }
+
+  const profileRow = await getProfileRowByWorkOSId(admin, auth.user.id);
+  if (!isCommunityModeratorServer({ email: auth.user.email, workosUserId: auth.user.id, profileRow })) {
+    return Response.json({ ok: false, message: "Moderator access required." }, { status: 403 });
   }
 
   const params = await context.params;

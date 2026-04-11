@@ -1,6 +1,7 @@
 import { withAuth } from "@workos-inc/authkit-nextjs";
 import { createSupabaseAdminClient, profileTableName } from "@/lib/supabase/admin";
 import { getProfileRowByWorkOSId, profileRowToClientDto } from "@/lib/profile/serverProfile";
+import { normalizePublicAccountIntent } from "@/lib/account/accountModel";
 
 const META_KEYS = new Set([
   "identityRole",
@@ -14,7 +15,15 @@ const META_KEYS = new Set([
   "volunteerInterests",
   "supportInterests",
   "contributionSummary",
+  "sponsorOrgName",
+  "sponsorWebsite",
+  "sponsorIntentSummary",
+  "sponsorApplicationNotes",
+  "sponsorOnboardingPath",
+  "sponsorApplicationStatus",
 ]);
+
+const CLIENT_ONBOARDING_STATUS = new Set(["in_progress"]);
 
 export async function PATCH(request) {
   const auth = await withAuth();
@@ -59,6 +68,15 @@ export async function PATCH(request) {
   if (typeof body.theme === "string") row.theme = body.theme.trim();
   if (typeof body.avatarUrl === "string") row.profile_photo_url = body.avatarUrl.trim();
   /* membership_tier / membership_status: Stripe webhooks + /api/me/onboarding/complete only — not profile PATCH. */
+
+  if (typeof body.accountIntent === "string") {
+    const intent = normalizePublicAccountIntent(body.accountIntent);
+    if (intent) row.account_intent = intent;
+  }
+  if (typeof body.onboardingStatus === "string") {
+    const os = body.onboardingStatus.trim().toLowerCase();
+    if (CLIENT_ONBOARDING_STATUS.has(os)) row.onboarding_status = os;
+  }
 
   if (!existing) {
     const insertRow = {

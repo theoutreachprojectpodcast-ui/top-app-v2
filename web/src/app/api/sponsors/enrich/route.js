@@ -1,5 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { withAuth } from "@workos-inc/authkit-nextjs";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
 import { isCommunityModeratorServer } from "@/lib/community/moderatorServer";
 
 export const runtime = "nodejs";
@@ -87,7 +89,9 @@ export async function POST(request) {
   if (!auth.user) {
     return Response.json({ error: "unauthorized", message: "Sign in to run sponsor enrichment." }, { status: 401 });
   }
-  if (!isCommunityModeratorServer({ email: auth.user.email, workosUserId: auth.user.id })) {
+  const adminProfiles = createSupabaseAdminClient();
+  const profileRow = adminProfiles ? await getProfileRowByWorkOSId(adminProfiles, auth.user.id) : null;
+  if (!isCommunityModeratorServer({ email: auth.user.email, workosUserId: auth.user.id, profileRow })) {
     const hint =
       process.env.NODE_ENV === "development"
         ? "Add your WorkOS sign-in email to COMMUNITY_MODERATOR_EMAILS in .env.local."

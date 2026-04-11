@@ -1,21 +1,24 @@
 import { withAuth } from "@workos-inc/authkit-nextjs";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
 import { isCommunityModeratorServer } from "@/lib/community/moderatorServer";
 import { SPONSOR_REVIEW_STATUSES } from "@/features/sponsors/admin/reviewStatuses";
 
 const TABLE = "sponsor_applications";
 const STATUS_SET = new Set(SPONSOR_REVIEW_STATUSES);
 
-function assertModerator(auth) {
+async function assertModerator(auth) {
   if (!auth.user) return Response.json({ error: "unauthorized" }, { status: 401 });
-  const ok = isCommunityModeratorServer({ email: auth.user.email, workosUserId: auth.user.id });
+  const admin = createSupabaseAdminClient();
+  const profileRow = admin ? await getProfileRowByWorkOSId(admin, auth.user.id) : null;
+  const ok = isCommunityModeratorServer({ email: auth.user.email, workosUserId: auth.user.id, profileRow });
   if (!ok) return Response.json({ error: "forbidden" }, { status: 403 });
   return null;
 }
 
 export async function GET() {
   const auth = await withAuth();
-  const denied = assertModerator(auth);
+  const denied = await assertModerator(auth);
   if (denied) return denied;
 
   const admin = createSupabaseAdminClient();
@@ -32,7 +35,7 @@ export async function GET() {
 
 export async function PATCH(request) {
   const auth = await withAuth();
-  const denied = assertModerator(auth);
+  const denied = await assertModerator(auth);
   if (denied) return denied;
 
   const admin = createSupabaseAdminClient();

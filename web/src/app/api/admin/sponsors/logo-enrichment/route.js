@@ -1,5 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { withAuth } from "@workos-inc/authkit-nextjs";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
 import { isCommunityModeratorServer } from "@/lib/community/moderatorServer";
 import {
   batchEnrichSponsorLogos,
@@ -41,11 +43,13 @@ function missingServiceRoleResponse() {
   );
 }
 
-function requireModerator(auth) {
+async function requireModerator(auth) {
   if (!auth.user) {
     return Response.json({ error: "unauthorized", message: "Sign in." }, { status: 401 });
   }
-  if (!isCommunityModeratorServer({ email: auth.user.email, workosUserId: auth.user.id })) {
+  const adminProfiles = createSupabaseAdminClient();
+  const profileRow = adminProfiles ? await getProfileRowByWorkOSId(adminProfiles, auth.user.id) : null;
+  if (!isCommunityModeratorServer({ email: auth.user.email, workosUserId: auth.user.id, profileRow })) {
     return moderatorForbiddenResponse();
   }
   return null;
@@ -54,7 +58,7 @@ function requireModerator(auth) {
 export async function GET(request) {
   if (!URL || !READ_KEY) return Response.json({ error: "Missing Supabase credentials." }, { status: 500 });
   const auth = await withAuth();
-  const denied = requireModerator(auth);
+  const denied = await requireModerator(auth);
   if (denied) return denied;
 
   const { searchParams } = new URL(request.url);
@@ -72,7 +76,7 @@ export async function POST(request) {
   if (!URL) return Response.json({ error: "Missing Supabase credentials." }, { status: 500 });
   if (!SERVICE_KEY) return missingServiceRoleResponse();
   const auth = await withAuth();
-  const denied = requireModerator(auth);
+  const denied = await requireModerator(auth);
   if (denied) return denied;
 
   const body = await request.json().catch(() => ({}));
@@ -106,7 +110,7 @@ export async function PATCH(request) {
   if (!URL) return Response.json({ error: "Missing Supabase credentials." }, { status: 500 });
   if (!SERVICE_KEY) return missingServiceRoleResponse();
   const auth = await withAuth();
-  const denied = requireModerator(auth);
+  const denied = await requireModerator(auth);
   if (denied) return denied;
 
   const body = await request.json().catch(() => ({}));

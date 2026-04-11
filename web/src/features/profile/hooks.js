@@ -83,12 +83,24 @@ export function useProfileData(supabase) {
   const [savedOrganizations, setSavedOrganizations] = useState([]);
   const [sessionKind, setSessionKind] = useState("none");
   const [authBackend, setAuthBackend] = useState({ workos: false, stripe: false, supabaseServiceRole: false });
+  const [entitlements, setEntitlements] = useState({
+    podcastMemberContent: false,
+    communityStorySubmit: false,
+    isPrivilegedStaff: false,
+  });
 
   const refreshWorkOSProfile = useCallback(async () => {
     if (!workosRef.current) return;
     try {
       const res = await fetch("/api/me", { credentials: "include" });
       const data = await res.json();
+      if (data.entitlements && typeof data.entitlements === "object") {
+        setEntitlements({
+          podcastMemberContent: !!data.entitlements.podcastMemberContent,
+          communityStorySubmit: !!data.entitlements.communityStorySubmit,
+          isPrivilegedStaff: !!data.entitlements.isPrivilegedStaff,
+        });
+      }
       if (data.authenticated && data.profile) {
         setProfile(profileFromApiDto(data.profile));
         setProfileSource("cloud");
@@ -127,6 +139,13 @@ export function useProfileData(supabase) {
           setSessionKind("workos");
           setIsAuthenticated(true);
           setAuthProvider(AUTH_PROVIDER.WORKOS);
+          if (me.entitlements && typeof me.entitlements === "object") {
+            setEntitlements({
+              podcastMemberContent: !!me.entitlements.podcastMemberContent,
+              communityStorySubmit: !!me.entitlements.communityStorySubmit,
+              isPrivilegedStaff: !!me.entitlements.isPrivilegedStaff,
+            });
+          }
           const dto =
             me.profile ||
             {
@@ -493,6 +512,11 @@ export function useProfileData(supabase) {
     setFavoriteEins([]);
     setSavedOrganizations([]);
     setSessionKind("none");
+    setEntitlements({
+      podcastMemberContent: false,
+      communityStorySubmit: false,
+      isPrivilegedStaff: false,
+    });
   }
 
   async function uploadAvatarFile(file) {
@@ -520,7 +544,10 @@ export function useProfileData(supabase) {
   const fullName = useMemo(() => `${profile.firstName} ${profile.lastName}`.trim(), [profile.firstName, profile.lastName]);
   const greetingName = fullName || profile.displayName || "Supporter";
   const membership = useMemo(() => getMembershipMeta(profile.membershipStatus), [profile.membershipStatus]);
-  const isMember = membership.isMember;
+  const isMember = useMemo(() => {
+    if (sessionKind === "workos") return !!entitlements.communityStorySubmit;
+    return membership.isMember;
+  }, [sessionKind, entitlements.communityStorySubmit, membership.isMember]);
 
   return {
     userId,

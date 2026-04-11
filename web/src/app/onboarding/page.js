@@ -10,6 +10,7 @@ import {
   stripeMemberRecurringConfigured,
   stripeSponsorSubscriptionConfigured,
 } from "@/lib/billing/stripeConfig";
+import { postOnboardingDestination } from "@/lib/account/postOnboardingDestination";
 
 async function OnboardingServer({ searchParams }) {
   const sp = await searchParams;
@@ -31,12 +32,22 @@ async function OnboardingServer({ searchParams }) {
       membershipTier: "free",
       membershipBillingStatus: "none",
       onboardingCompleted: false,
+      platformRole: "user",
+      accountIntent: "",
+      onboardingStatus: "not_started",
       banner: "",
       theme: "clean",
     };
   }
   if (dto.onboardingCompleted && sp?.checkout !== "success" && sp?.checkout !== "cancel") {
-    redirect("/");
+    redirect(
+      postOnboardingDestination({
+        accountIntent: dto.accountIntent,
+        platformRole: dto.platformRole,
+        onboardingStatus: dto.onboardingStatus,
+        sponsorOnboardingPath: dto.sponsorOnboardingPath,
+      }),
+    );
   }
 
   const authBackend = {

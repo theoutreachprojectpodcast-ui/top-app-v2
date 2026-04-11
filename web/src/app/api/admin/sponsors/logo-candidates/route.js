@@ -1,4 +1,6 @@
 import { withAuth } from "@workos-inc/authkit-nextjs";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
 import { isCommunityModeratorServer } from "@/lib/community/moderatorServer";
 import { buildSponsorLogoCandidates } from "@/lib/sponsors/logoDiscoveryServer";
 
@@ -7,7 +9,9 @@ export async function POST(request) {
   if (!auth.user) {
     return Response.json({ error: "unauthorized" }, { status: 401 });
   }
-  if (!isCommunityModeratorServer({ email: auth.user.email, workosUserId: auth.user.id })) {
+  const admin = createSupabaseAdminClient();
+  const profileRow = admin ? await getProfileRowByWorkOSId(admin, auth.user.id) : null;
+  if (!isCommunityModeratorServer({ email: auth.user.email, workosUserId: auth.user.id, profileRow })) {
     return Response.json({ error: "forbidden" }, { status: 403 });
   }
 

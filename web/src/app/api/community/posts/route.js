@@ -2,6 +2,7 @@ import { withAuth } from "@workos-inc/authkit-nextjs";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
 import { isCommunityModeratorServer } from "@/lib/community/moderatorServer";
+import { profileMaySubmitCommunityStory } from "@/lib/account/entitlements";
 import {
   createPlatformNotification,
   notifyStaffProfiles,
@@ -83,7 +84,13 @@ export async function GET(request) {
   }
 
   if (scope === "pending") {
-    if (!isCommunityModeratorServer({ email: auth.user.email, workosUserId: auth.user.id })) {
+    if (
+      !isCommunityModeratorServer({
+        email: auth.user.email,
+        workosUserId: auth.user.id,
+        profileRow,
+      })
+    ) {
       return Response.json({ posts: [], error: "forbidden" }, { status: 403 });
     }
     const { data, error } = await admin
@@ -122,10 +129,13 @@ export async function POST(request) {
     );
   }
 
-  const tier = String(profileRow.membership_tier || "").toLowerCase();
-  if (tier !== "member") {
+  if (!profileMaySubmitCommunityStory(profileRow)) {
     return Response.json(
-      { ok: false, message: "Member billing tier is required to submit community stories." },
+      {
+        ok: false,
+        message:
+          "An active Pro membership is required to submit community stories. Upgrade from Profile or complete member checkout.",
+      },
       { status: 403 },
     );
   }

@@ -2,8 +2,10 @@ import Stripe from "stripe";
 import { createSupabaseAdminClient, profileTableName } from "@/lib/supabase/admin";
 import {
   getProfileRowByStripeCustomerId,
+  getProfileRowByWorkOSId,
   mergeProfileMetadataByWorkOSId,
 } from "@/lib/profile/serverProfile";
+import { resolvePlatformRoleAfterTierChange } from "@/lib/account/accountModel";
 import { notifyMembershipFromStripeInvoice } from "@/server/notifications/notificationService";
 import { headers } from "next/headers";
 
@@ -65,11 +67,13 @@ async function syncSubscription(admin, sub, customerId, { forceEnded = false } =
   const ended = forceEnded || sub.status === "canceled" || sub.status === "incomplete_expired";
 
   if (ended) {
+    const existing = await getProfileRowByWorkOSId(admin, workosUserId);
     const patch = {
       membership_tier: "free",
       membership_status: "canceled",
       stripe_subscription_id: null,
       membership_source: "manual",
+      platform_role: resolvePlatformRoleAfterTierChange(existing?.platform_role, "free"),
       updated_at: new Date().toISOString(),
     };
     if (cust) patch.stripe_customer_id = cust;
@@ -81,12 +85,14 @@ async function syncSubscription(admin, sub, customerId, { forceEnded = false } =
   const safeTier = ["support", "member", "sponsor"].includes(tier) ? tier : "member";
   const billingStatus = mapStripeSubStatus(sub.status);
 
+  const existing = await getProfileRowByWorkOSId(admin, workosUserId);
   const patch = {
     stripe_customer_id: cust || undefined,
     stripe_subscription_id: sub.id,
     membership_tier: safeTier,
     membership_status: billingStatus,
     membership_source: "stripe",
+    platform_role: resolvePlatformRoleAfterTierChange(existing?.platform_role, safeTier),
     updated_at: new Date().toISOString(),
   };
 

@@ -11,9 +11,12 @@ function splitList(value) {
 }
 
 /**
- * @param {{ email?: string, workosUserId?: string }} params
+ * @param {{ email?: string, workosUserId?: string, profileRow?: Record<string, unknown> | null }} params
  */
-export function isCommunityModeratorServer({ email = "", workosUserId = "" } = {}) {
+export function isCommunityModeratorServer({ email = "", workosUserId = "", profileRow = null } = {}) {
+  const pr = String(profileRow?.platform_role || "").toLowerCase();
+  if (pr === "moderator" || pr === "admin") return true;
+
   const emails = splitList(process.env.COMMUNITY_MODERATOR_EMAILS);
   const userIds = splitList(process.env.COMMUNITY_MODERATOR_WORKOS_USER_IDS);
   const pubEmails = splitList(process.env.NEXT_PUBLIC_COMMUNITY_MODERATOR_EMAILS).map((e) => e.toLowerCase());

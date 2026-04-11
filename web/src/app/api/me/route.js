@@ -1,10 +1,7 @@
 import { withAuth } from "@workos-inc/authkit-nextjs";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getProfileRowByWorkOSId, profileRowToClientDto } from "@/lib/profile/serverProfile";
-import {
-  MEMBERSHIP_TIER_KEYS,
-  normalizeMembershipTierKey,
-} from "@/features/membership/membershipTiers";
+import { computeEntitlementsFromProfileRow } from "@/lib/account/entitlements";
 
 export async function GET() {
   const auth = await withAuth();
@@ -12,18 +9,24 @@ export async function GET() {
     return Response.json({
       authenticated: false,
       profile: null,
-      entitlements: { podcastMemberContent: false },
+      entitlements: {
+        podcastMemberContent: false,
+        communityStorySubmit: false,
+        isPrivilegedStaff: false,
+      },
     });
   }
   const admin = createSupabaseAdminClient();
   let profileDto = null;
+  let row = null;
   if (admin) {
-    const row = await getProfileRowByWorkOSId(admin, auth.user.id);
+    row = await getProfileRowByWorkOSId(admin, auth.user.id);
     profileDto = profileRowToClientDto(row);
   }
-  const tierKey = profileDto ? normalizeMembershipTierKey(profileDto.membershipTier) : MEMBERSHIP_TIER_KEYS.NONE;
-  const entitlements = {
-    podcastMemberContent: tierKey === MEMBERSHIP_TIER_KEYS.MEMBER,
+  const entitlements = row ? computeEntitlementsFromProfileRow(row) : {
+    podcastMemberContent: false,
+    communityStorySubmit: false,
+    isPrivilegedStaff: false,
   };
   return Response.json({
     authenticated: true,
