@@ -88,6 +88,8 @@ export function useProfileData(supabase) {
     communityStorySubmit: false,
     isPrivilegedStaff: false,
   });
+  /** Mirrors GET /api/me `user` for merge rules in profile completion (WorkOS names/email when row is sparse). */
+  const [workosUserSnapshot, setWorkosUserSnapshot] = useState(null);
 
   const refreshWorkOSProfile = useCallback(async () => {
     if (!workosRef.current) return;
@@ -100,6 +102,15 @@ export function useProfileData(supabase) {
           communityStorySubmit: !!data.entitlements.communityStorySubmit,
           isPrivilegedStaff: !!data.entitlements.isPrivilegedStaff,
         });
+      }
+      if (data.authenticated && data.user && typeof data.user === "object") {
+        setWorkosUserSnapshot({
+          email: String(data.user.email ?? ""),
+          firstName: String(data.user.firstName ?? ""),
+          lastName: String(data.user.lastName ?? ""),
+        });
+      } else if (!data.authenticated) {
+        setWorkosUserSnapshot(null);
       }
       if (data.authenticated && data.profile) {
         setProfile(profileFromApiDto(data.profile));
@@ -139,6 +150,15 @@ export function useProfileData(supabase) {
           setSessionKind("workos");
           setIsAuthenticated(true);
           setAuthProvider(AUTH_PROVIDER.WORKOS);
+          if (me.user && typeof me.user === "object") {
+            setWorkosUserSnapshot({
+              email: String(me.user.email ?? ""),
+              firstName: String(me.user.firstName ?? ""),
+              lastName: String(me.user.lastName ?? ""),
+            });
+          } else {
+            setWorkosUserSnapshot(null);
+          }
           if (me.entitlements && typeof me.entitlements === "object") {
             setEntitlements({
               podcastMemberContent: !!me.entitlements.podcastMemberContent,
@@ -169,6 +189,7 @@ export function useProfileData(supabase) {
         }
 
         workosRef.current = false;
+        setWorkosUserSnapshot(null);
         setSessionKind("demo");
         const legacy = loadJson(PROFILE_KEY, defaultProfile());
         const storedFavs = loadJson(FAV_KEY, []);
@@ -414,6 +435,7 @@ export function useProfileData(supabase) {
     const nextUserId = typeof window !== "undefined" ? getOrCreateDemoUserId() : "demo-user";
     setUserId(nextUserId);
     workosRef.current = false;
+    setWorkosUserSnapshot(null);
     if (supabase && cloudUserId) {
       try {
         await replaceSavedOrgEinList(supabase, cloudUserId, []);
@@ -512,6 +534,7 @@ export function useProfileData(supabase) {
     setFavoriteEins([]);
     setSavedOrganizations([]);
     setSessionKind("none");
+    setWorkosUserSnapshot(null);
     setEntitlements({
       podcastMemberContent: false,
       communityStorySubmit: false,
@@ -575,5 +598,6 @@ export function useProfileData(supabase) {
     signOut,
     refreshWorkOSProfile,
     uploadAvatarFile,
+    workosUserSnapshot,
   };
 }

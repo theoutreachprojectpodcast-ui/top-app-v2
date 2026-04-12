@@ -18,6 +18,8 @@ import ProfileIdentitySection from "@/features/profile/components/ProfileIdentit
 import ProfileQuickStats from "@/features/profile/components/ProfileQuickStats";
 import SavedOrganizationsList from "@/features/profile/components/SavedOrganizationsList";
 import HomeWelcomeSection from "@/components/app/HomeWelcomeSection";
+import HomeProfileProgressNotice from "@/components/app/HomeProfileProgressNotice";
+import ProfileCompletionPanel from "@/features/profile/components/ProfileCompletionPanel";
 import HeaderAccountMenu from "@/components/layout/HeaderAccountMenu";
 import HeaderNotificationBell from "@/components/layout/HeaderNotificationBell";
 import { useDirectorySearch } from "@/hooks/useDirectorySearch";
@@ -32,6 +34,7 @@ import { emptyProfileAvatarUrl } from "@/lib/avatarFallback";
 import { rowEin } from "@/lib/utils";
 import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
 import { workosSignInLink } from "@/lib/auth/workosReturnTo";
+import { computeProfileCompletion } from "@/lib/profile/profileCompletion";
 
 function AppIcon({ name }) {
   const icons = {
@@ -108,7 +111,13 @@ function TopAppInner({ initialNav = "home" }) {
     signOut,
     uploadAvatarFile,
     refreshWorkOSProfile,
+    workosUserSnapshot,
   } = useProfileData(sb);
+
+  const profileCompletion = useMemo(() => {
+    if (!isAuthenticated) return null;
+    return computeProfileCompletion(profile, workosUserSnapshot);
+  }, [isAuthenticated, profile, workosUserSnapshot]);
 
   useEffect(() => {
     const c = searchParams.get("checkout");
@@ -368,6 +377,16 @@ function TopAppInner({ initialNav = "home" }) {
               <div className="homeHeroBackdrop">
                 <div className="homeHeroBackdrop__image" aria-hidden="true" />
                 <div className="homeHeroBackdrop__scrim" aria-hidden="true" />
+                {profileCompletion ? (
+                  <HomeProfileProgressNotice
+                    completion={profileCompletion}
+                    onOpenProfile={() => {
+                      setNav("profile");
+                      openEdit();
+                    }}
+                    onOpenOnboarding={() => router.push("/onboarding")}
+                  />
+                ) : null}
                 <div className="card cardHero homeHeroBackdrop__card">
                   <HomeWelcomeSection
                     isAuthenticated={isAuthenticated}
@@ -550,34 +569,36 @@ function TopAppInner({ initialNav = "home" }) {
       )}
 
       {nav === "profile" && (
-        <section className="shell">
-          <MembershipAtAGlance
-            isAuthenticated={isAuthenticated}
-            currentTierKey={profile.membershipStatus}
-            onSelectTier={(id) => setMembershipStatus(id)}
-            onRequestSignIn={openSignInForMembership}
-            sessionKind={sessionKind}
-            stripeMemberReady={!!authBackend?.stripe}
-            stripeSponsorSubscriptionReady={!!authBackend?.stripeSponsorSubscription}
-            stripeMemberMissingEnv={authBackend?.stripeMemberRecurringMissingEnv || []}
-            checkoutReturnPath="/profile"
-          />
+        <section className="shell profileTabShell">
           {!isAuthenticated ? (
-            <div className="card profileSignedOutCard">
-              <h3><AppIcon name="profile" />Your profile</h3>
-              <p className="sponsorSectionLead">
-                Sign in or create an account to manage your identity, membership, saved nonprofits, and preferences. Everything stays on this tab once you are signed in.
-              </p>
-              <div className="row wrap">
-                <button className="btnPrimary" type="button" onClick={() => { setAuthMode("signin"); setOverlay("signin"); }}>Sign in</button>
-                <button className="btnSoft" type="button" onClick={() => { setAuthMode("signup"); setOverlay("signin"); }}>Create an account</button>
-                <button className="btnSoft" type="button" onClick={() => setNav("home")}>Back to home</button>
-                <button className="btnSoft" type="button" onClick={resetDemo}>Reset Demo</button>
+            <>
+              <div className="card profileSignedOutCard">
+                <h3><AppIcon name="profile" />Your profile</h3>
+                <p className="sponsorSectionLead">
+                  Sign in or create an account to manage your identity, membership, saved nonprofits, and preferences. Everything stays on this tab once you are signed in.
+                </p>
+                <div className="row wrap">
+                  <button className="btnPrimary" type="button" onClick={() => { setAuthMode("signin"); setOverlay("signin"); }}>Sign in</button>
+                  <button className="btnSoft" type="button" onClick={() => { setAuthMode("signup"); setOverlay("signin"); }}>Create an account</button>
+                  <button className="btnSoft" type="button" onClick={() => setNav("home")}>Back to home</button>
+                  <button className="btnSoft" type="button" onClick={resetDemo}>Reset Demo</button>
+                </div>
+                <p className="sponsorSectionLead profileDemoResetNote">
+                  Reset Demo clears local profile, saved organizations, and demo-only application data on this device. You do not need to be signed in.
+                </p>
               </div>
-              <p className="sponsorSectionLead profileDemoResetNote">
-                Reset Demo clears local profile, saved organizations, and demo-only application data on this device. You do not need to be signed in.
-              </p>
-            </div>
+              <MembershipAtAGlance
+                isAuthenticated={isAuthenticated}
+                currentTierKey={profile.membershipStatus}
+                onSelectTier={(id) => setMembershipStatus(id)}
+                onRequestSignIn={openSignInForMembership}
+                sessionKind={sessionKind}
+                stripeMemberReady={!!authBackend?.stripe}
+                stripeSponsorSubscriptionReady={!!authBackend?.stripeSponsorSubscription}
+                stripeMemberMissingEnv={authBackend?.stripeMemberRecurringMissingEnv || []}
+                checkoutReturnPath="/profile"
+              />
+            </>
           ) : (
             <>
           <ProfileHeader
@@ -591,6 +612,22 @@ function TopAppInner({ initialNav = "home" }) {
             isMember={isMember}
             icon={<AppIcon name="profile" />}
             onEdit={openEdit}
+          />
+          <MembershipAtAGlance
+            isAuthenticated={isAuthenticated}
+            currentTierKey={profile.membershipStatus}
+            onSelectTier={(id) => setMembershipStatus(id)}
+            onRequestSignIn={openSignInForMembership}
+            sessionKind={sessionKind}
+            stripeMemberReady={!!authBackend?.stripe}
+            stripeSponsorSubscriptionReady={!!authBackend?.stripeSponsorSubscription}
+            stripeMemberMissingEnv={authBackend?.stripeMemberRecurringMissingEnv || []}
+            checkoutReturnPath="/profile"
+          />
+          <ProfileCompletionPanel
+            completion={profileCompletion}
+            onEditProfile={openEdit}
+            onOpenOnboarding={() => router.push("/onboarding")}
           />
 
           <ProfileIdentitySection profile={profile} onEdit={openEdit} savedCount={favoriteEins.length} />

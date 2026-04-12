@@ -18,7 +18,7 @@ export default function ProfileHeader({
   const showBio = cleanBio && !/^how can we assist you today\??$/i.test(cleanBio);
   const roleLine = String(identityRole || "").trim();
   return (
-    <div className="card cardHero">
+    <div className="card cardHero profileWelcomeCard">
       <div className="row space">
         <div className="welcomePanel">
           <Avatar src={avatarSrc} alt="Profile avatar" />

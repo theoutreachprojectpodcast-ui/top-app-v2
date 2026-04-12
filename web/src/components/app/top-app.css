@@ -521,6 +521,142 @@ img.brandMarkImg--header {
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
 }
+
+/* Profile completion — home hero (subtle green, above welcome card) */
+.homeProfileProgressNotice {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius-card);
+  border: 1px solid color-mix(in srgb, var(--color-success) 28%, var(--color-border-subtle));
+  background: color-mix(in srgb, var(--color-success) 9%, var(--color-surface-card));
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--color-success) 8%, transparent);
+}
+.homeProfileProgressNotice__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: min(100%, 240px);
+}
+.homeProfileProgressNotice__count {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.homeProfileProgressNotice__hint {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.35;
+}
+.homeProfileProgressNotice__cta {
+  flex-shrink: 0;
+  border-color: color-mix(in srgb, var(--color-success) 35%, var(--color-border-subtle));
+}
+
+/* Profile tab — completion bar + timeline */
+.profileCompletionPanel__head h3 {
+  margin: 0 0 6px;
+  font-size: 18px;
+}
+.profileCompletionPanel__summary {
+  margin: 0;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  line-height: 1.45;
+}
+.profileCompletionBar {
+  margin: 14px 0 18px;
+}
+.profileCompletionBar__track {
+  height: 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-border-subtle) 55%, var(--color-bg-muted));
+  overflow: hidden;
+}
+.profileCompletionBar__fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--color-success) 82%, var(--color-accent) 18%),
+    var(--color-success)
+  );
+  transition: width 0.35s ease;
+}
+.profileCompletionTimeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0;
+}
+.profileCompletionTimeline__item {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 8px 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-border-subtle);
+  align-items: start;
+}
+.profileCompletionTimeline__item:last-child {
+  border-bottom: none;
+}
+.profileCompletionTimeline__item.isDone .profileCompletionTimeline__mark {
+  color: var(--color-success);
+  font-weight: 700;
+  font-size: 14px;
+}
+.profileCompletionTimeline__item:not(.isDone) .profileCompletionTimeline__mark {
+  width: 12px;
+  height: 12px;
+  margin: 4px 0 0 2px;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--color-border-strong) 70%, var(--color-text-muted));
+}
+.profileCompletionTimeline__item.isNext:not(.isDone) {
+  background: color-mix(in srgb, var(--color-success) 5%, transparent);
+  margin: 0 -12px;
+  padding-left: 12px;
+  padding-right: 12px;
+  border-radius: var(--radius-pill);
+  border-bottom-color: transparent;
+}
+.profileCompletionTimeline__label {
+  font-size: 14px;
+  color: var(--color-text-primary);
+}
+.profileCompletionTimeline__item.isDone .profileCompletionTimeline__label {
+  color: var(--color-text-secondary);
+}
+.profileCompletionTimeline__nextCue {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--color-success);
+  font-weight: 500;
+}
+.profileCompletionPanel__actions {
+  margin-top: 12px;
+}
+.profileTabShell .profileCompletionPanel {
+  margin: 0;
+}
+.profileTabShell .profileIdentityCard .ds-section-label {
+  margin: 0 0 6px;
+}
+.profileTabShell .profileIdentityCard .profileIdentityHeading {
+  margin: 0 0 var(--ds-space-3, 12px);
+}
+.profileTabShell .card > h3:first-child {
+  margin-bottom: var(--ds-space-2, 8px);
+}
+
 .welcomePanel {
   display: flex;
   align-items: center;
@@ -567,8 +703,49 @@ img.brandMarkImg--header {
 .homeWelcomeActions {
   margin-top: 2px;
 }
+/* Profile tab: single vertical rhythm; avoid stacking margin + grid gap */
+.profileTabShell {
+  gap: var(--ds-space-5, 20px);
+}
+.profileSignedOutCard {
+  display: grid;
+  gap: var(--ds-space-4, 16px);
+}
 .profileSignedOutCard h3 {
-  margin-top: 0;
+  margin: 0;
+}
+.profileSignedOutCard .sponsorSectionLead {
+  margin: 0;
+}
+.profileSignedOutCard .row.wrap {
+  margin: 0;
+}
+
+/* Profile welcome hero — even vertical rhythm inside the card */
+.profileWelcomeCard .welcomePanel {
+  align-items: flex-start;
+  gap: clamp(16px, 3vw, 24px);
+}
+.profileWelcomeCard .welcomeCopy {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+.profileWelcomeCard .introTagline {
+  margin: 0;
+}
+.profileWelcomeCard .welcomeCopy h2 {
+  margin: 0;
+  line-height: 1.2;
+}
+.profileWelcomeCard .membershipBadge {
+  margin: 0;
+  justify-self: start;
+}
+.profileWelcomeCard .profileHeaderEmail,
+.profileWelcomeCard .profileHeaderMission,
+.profileWelcomeCard .profileHeaderTagline {
+  margin: 0;
 }
 .demoAuthModal__lede {
   margin: 0 0 10px;
@@ -676,6 +853,9 @@ img.brandMarkImg--header {
 }
 .welcomeCopy .profileHeaderActions {
   margin-top: var(--ds-space-3, 12px);
+}
+.profileWelcomeCard .welcomeCopy .profileHeaderActions {
+  margin-top: 2px;
 }
 .profileAvatarShell {
   width: 78px;
@@ -3216,9 +3396,9 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   line-height: 1.45;
 }
 
-/* Membership at a glance */
+/* Membership at a glance (profile tab only — parent .profileTabShell supplies gap) */
 .membershipAtAGlance {
-  margin-bottom: var(--ds-space-4, 16px);
+  margin: 0;
 }
 .membershipAtAGlanceHead {
   width: 100%;
