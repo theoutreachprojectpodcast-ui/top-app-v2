@@ -352,6 +352,13 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
 
         {step === 0 ? (
           <div className="onboardingPlans">
+            <h3 className="introTagline" style={{ marginBottom: 10 }}>
+              Step 1 — Choose your membership path
+            </h3>
+            <p className="sponsorSectionLead" style={{ marginTop: 0 }}>
+              Pick the experience that matches your goals. You will enter profile details next, then confirm your membership type
+              (including Free or paid plans).
+            </p>
             <div className="onboardingPlanGrid">
               {INTENT_CARDS.map((c) => (
                 <button
@@ -375,6 +382,9 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
 
         {step === 1 ? (
           <div className="form onboardingForm">
+            <h3 className="introTagline" style={{ marginBottom: 10 }}>
+              Step 2 — Profile &amp; contact details
+            </h3>
             <Avatar src={initialProfile?.avatarUrl || emptyProfileAvatarUrl()} alt="" sizes="96px" />
             <p className="profilePhotoUploadHint" style={{ marginTop: 0 }}>
               Profile photo can be updated from Profile → Edit after onboarding.
@@ -491,6 +501,12 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
 
         {step === 2 && accountIntent === "sponsor_user" ? (
           <div className="onboardingPlans">
+            <h3 className="introTagline" style={{ marginBottom: 10 }}>
+              Step 3 — Sponsor membership type
+            </h3>
+            <p className="sponsorSectionLead" style={{ marginTop: 0 }}>
+              Subscribe in Stripe or submit a partnership application. Either option keeps your account on the sponsor path.
+            </p>
             <div className="communityPillRow" style={{ marginBottom: 12 }}>
               <button
                 type="button"
@@ -588,6 +604,13 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
 
         {step === 2 && accountIntent !== "sponsor_user" ? (
           <div className="onboardingPlans">
+            <h3 className="introTagline" style={{ marginBottom: 10 }}>
+              Step 3 — Choose your membership type
+            </h3>
+            <p className="sponsorSectionLead" style={{ marginTop: 0 }}>
+              Select <strong>Free</strong>, <strong>Support</strong> ($1.99/mo), <strong>Pro</strong> ($5.99/mo), or another tier. Paid
+              plans open secure Stripe Checkout; Free completes without payment.
+            </p>
             <div className="onboardingPlanGrid">
               {PLANS.map((p) => (
                 <button

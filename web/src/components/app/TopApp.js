@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import HeaderInner from "@/components/layout/HeaderInner";
 import FooterInner from "@/components/layout/FooterInner";
 import Avatar from "@/components/shared/Avatar";
@@ -31,6 +31,7 @@ import { getSupabaseClient } from "@/lib/supabase/client";
 import { emptyProfileAvatarUrl } from "@/lib/avatarFallback";
 import { rowEin } from "@/lib/utils";
 import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
+import { workosSignInLink } from "@/lib/auth/workosReturnTo";
 
 function AppIcon({ name }) {
   const icons = {
@@ -48,6 +49,7 @@ function AppIcon({ name }) {
 
 function TopAppInner({ initialNav = "home" }) {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const sb = useMemo(() => getSupabaseClient(), []);
   const [nav, setNav] = useState(initialNav);
@@ -122,6 +124,8 @@ function TopAppInner({ initialNav = "home" }) {
       cancelled = true;
     };
   }, [searchParams, sessionKind, refreshWorkOSProfile, router]);
+
+  const workosSignInHereHref = useMemo(() => workosSignInLink(pathname, searchParams, "/"), [pathname, searchParams]);
 
   const { filters, setFilters, results, status, meta, page, canGoNext, runSearch, clearSearch } = useDirectorySearch(sb);
   const { trusted, trustedStatus, loadTrusted } = useTrustedResources(sb);
@@ -334,7 +338,7 @@ function TopAppInner({ initialNav = "home" }) {
                     <AppIcon name="profile" />
                     Create account
                   </a>
-                  <a className="btnSoft sponsorBtn" href="/api/auth/workos/signin?returnTo=/">
+                  <a className="btnSoft sponsorBtn" href={workosSignInHereHref}>
                     <AppIcon name="profile" />
                     Sign in
                   </a>
@@ -847,15 +851,19 @@ function TopAppInner({ initialNav = "home" }) {
             </p>
             {authBackend.workos ? (
               <div className="demoAuthModal__providers">
-                <p className="demoAuthModal__providersLabel">WorkOS (production path)</p>
+                <p className="demoAuthModal__providersLabel">WorkOS (production / demo users)</p>
+                <p className="profilePhotoUploadHint" style={{ marginTop: 0 }}>
+                  On localhost, use the same WorkOS Client ID as production and register this origin’s callback in the WorkOS
+                  dashboard (e.g. <code>http://localhost:3000/callback</code> for <code>pnpm dev:alt</code>).
+                </p>
                 <div className="row wrap demoAuthModal__providerRow">
-                  <a className="btnPrimary" href="/api/auth/workos/signin?returnTo=/">
+                  <a className="btnPrimary" href={workosSignInHereHref}>
                     Sign in
                   </a>
-                  <a className="btnSoft" href="/api/auth/workos/signup?returnTo=/">
+                  <a className="btnSoft" href="/api/auth/workos/signup?returnTo=/onboarding">
                     Create account
                   </a>
-                  <a className="btnSoft" href="/api/auth/workos/signin?returnTo=/">
+                  <a className="btnSoft" href={workosSignInHereHref}>
                     Continue with Google
                   </a>
                 </div>

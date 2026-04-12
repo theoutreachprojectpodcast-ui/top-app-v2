@@ -1,11 +1,14 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import ColorSchemeToggle from "@/components/app/ColorSchemeToggle";
 import { useAuthSession } from "@/components/auth/AuthSessionProvider";
 import { readNavAuthCache } from "@/lib/auth/navAuthCache";
 import IconWrap from "@/components/shared/IconWrap";
 import HeaderNotificationBell from "@/components/layout/HeaderNotificationBell";
+import { workosSignInLink } from "@/lib/auth/workosReturnTo";
 
 const SPONSOR_ICON = "M4 6h16v12H4z M4 10h16";
 
@@ -16,6 +19,10 @@ const SPONSOR_ICON = "M4 6h16v12H4z M4 10h16";
  * - all: single row (legacy)
  */
 export default function SubpageTopbarActions({ showThemeToggle = true, section = "all" }) {
+  const pathname = usePathname();
+  /** Avoid useSearchParams here (static routes like /contact must not CSR-bailout without Suspense). */
+  const workosSignInHereHref = useMemo(() => workosSignInLink(pathname, null, "/"), [pathname]);
+
   const session = useAuthSession();
   const cache = typeof window !== "undefined" ? readNavAuthCache() : null;
   const optimisticAuthed = session.loading && cache?.authenticated;
@@ -50,7 +57,7 @@ export default function SubpageTopbarActions({ showThemeToggle = true, section =
         <Link className="btnSoft sponsorBtn" href="/api/auth/workos/signup?returnTo=/onboarding">
           Create account
         </Link>
-        <Link className="btnSoft sponsorBtn" href="/api/auth/workos/signin?returnTo=/">
+        <Link className="btnSoft sponsorBtn" href={workosSignInHereHref}>
           Sign in
         </Link>
       </>
