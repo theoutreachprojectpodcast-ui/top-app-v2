@@ -508,6 +508,14 @@ img.brandMarkImg--header {
     color-mix(in srgb, #eef1f7 85%, transparent) 100%
   );
 }
+.homeHeroBackdrop__content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
 .homeHeroBackdrop__card.cardHero {
   position: relative;
   z-index: 1;
@@ -531,7 +539,7 @@ img.brandMarkImg--header {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 10px 16px;
-  margin: 0 0 12px;
+  margin: 0;
   padding: 10px 14px;
   border-radius: var(--radius-card);
   border: 1px solid color-mix(in srgb, var(--color-success) 28%, var(--color-border-subtle));
@@ -633,6 +641,7 @@ img.brandMarkImg--header {
 }
 .profileCompletionTimeline__item.isDone .profileCompletionTimeline__label {
   color: var(--color-text-secondary);
+  cursor: default;
 }
 .profileCompletionTimeline__nextCue {
   display: block;
@@ -642,6 +651,107 @@ img.brandMarkImg--header {
   font-weight: 500;
 }
 .profileCompletionPanel__actions {
+  margin-top: 12px;
+}
+.profileCompletionTimeline__item.isActionable .profileCompletionTimeline__body {
+  min-width: 0;
+}
+.profileCompletionTimeline__stepBtn {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  border-radius: 8px;
+}
+.profileCompletionTimeline__item.isActionable:not(.isDone) .profileCompletionTimeline__stepBtn:hover .profileCompletionTimeline__label {
+  color: var(--color-accent-hover);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.profileEditChunk {
+  display: grid;
+  gap: 10px;
+  padding: 10px 12px;
+  margin: 0 0 12px;
+  border-radius: var(--radius-input);
+  border: 1px solid transparent;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+.profileEditChunk--incomplete {
+  border-color: color-mix(in srgb, var(--color-success) 42%, var(--color-border-subtle));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-success) 18%, transparent);
+  background: color-mix(in srgb, var(--color-success) 5%, var(--color-surface-card));
+}
+
+.accountSettingsInlineLink {
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-weight: 600;
+  color: var(--color-accent);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.accountSettingsInlineLink:hover {
+  color: var(--color-accent-hover);
+}
+
+.accountSettingsPage__header h2 {
+  margin: 0 0 8px;
+  font-size: clamp(22px, 2.2vw, 28px);
+}
+.accountSettingsPage__header .sponsorSectionLead {
+  margin: 0 0 14px;
+  max-width: 62ch;
+}
+
+.membershipAtAGlance--profileCompact {
+  padding-bottom: var(--ds-space-5, 20px);
+}
+.membershipAtAGlanceProfileTitle {
+  margin: 0 0 8px;
+  font-size: var(--text-card-section);
+}
+.membershipCurrentProfileRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+.membershipAtAGlanceArt--profile {
+  flex-shrink: 0;
+}
+.membershipCurrentProfileCopy {
+  min-width: 0;
+}
+.membershipAtAGlanceSub--profile {
+  margin: 0 0 8px;
+}
+.membershipBillingStatusLine {
+  margin: 0 0 6px;
+  font-size: var(--text-body-sm);
+  color: var(--color-text-secondary);
+}
+.membershipTierFootnote--profile {
+  margin: 0;
+  font-size: 13px;
+}
+.membershipCurrentProfileBilling {
+  margin-top: 14px;
+}
+.membershipCurrentProfileSettingsLink {
+  margin-top: 12px;
+}
+.membershipSettingsBillingRow {
   margin-top: 12px;
 }
 .profileTabShell .profileCompletionPanel {

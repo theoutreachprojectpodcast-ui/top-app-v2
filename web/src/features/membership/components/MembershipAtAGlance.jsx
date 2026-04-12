@@ -1,15 +1,21 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import MembershipTierArt from "@/features/membership/components/MembershipTierArt";
 import ProfileMembershipCheckout from "@/features/membership/components/ProfileMembershipCheckout";
+import ManageBillingButton from "@/features/profile/components/ManageBillingButton";
 import {
   MEMBERSHIP_TIER_DEFINITIONS,
   getMembershipTierDefinition,
   normalizeMembershipTierKey,
 } from "@/features/membership/membershipTiers";
 
+/**
+ * @param {"profile" | "settings"} surface — profile shows current plan only; settings shows upgrades/options.
+ */
 export default function MembershipAtAGlance({
+  surface = "settings",
   isAuthenticated,
   currentTierKey,
   onSelectTier,
@@ -20,11 +26,58 @@ export default function MembershipAtAGlance({
   stripeMemberMissingEnv = [],
   checkoutReturnPath = "/profile",
   onCheckoutNavigate,
+  membershipBillingStatus = "none",
+  stripeCustomerReady = false,
 }) {
   const [open, setOpen] = useState(true);
   const current = getMembershipTierDefinition(currentTierKey);
   const tierKey = normalizeMembershipTierKey(currentTierKey);
   const isWorkos = sessionKind === "workos";
+  const billingLabel = String(membershipBillingStatus || "none").replace(/_/g, " ");
+
+  if (surface === "profile") {
+    if (!isAuthenticated) {
+      return (
+        <section className="card membershipAtAGlance membershipAtAGlance--profileCompact">
+          <h3 className="membershipAtAGlanceProfileTitle">Membership</h3>
+          <p className="membershipAtAGlanceSub membershipAtAGlanceSub--profile">
+            Sign in to see your active membership and billing status.
+          </p>
+          <button type="button" className="btnPrimary" onClick={() => onRequestSignIn?.()}>
+            Sign in
+          </button>
+        </section>
+      );
+    }
+
+    return (
+      <section className="card membershipAtAGlance membershipAtAGlance--profileCompact">
+        <div className="membershipCurrentProfileRow">
+          <span className="membershipAtAGlanceArt membershipAtAGlanceArt--profile" aria-hidden="true">
+            <MembershipTierArt tierId={tierKey} />
+          </span>
+          <div className="membershipCurrentProfileCopy">
+            <h3 className="membershipAtAGlanceProfileTitle">Membership</h3>
+            <p className="membershipAtAGlanceSub membershipAtAGlanceSub--profile">
+              Current plan: <strong>{current.label}</strong>
+            </p>
+            <p className="membershipBillingStatusLine">Billing status: {billingLabel}</p>
+            <p className="membershipTierFootnote membershipTierFootnote--profile">{current.hint}</p>
+          </div>
+        </div>
+        {isWorkos ? (
+          <div className="membershipCurrentProfileBilling">
+            <ManageBillingButton stripeReady={!!stripeMemberReady} hasStripeCustomer={!!stripeCustomerReady} />
+          </div>
+        ) : null}
+        <div className="membershipCurrentProfileSettingsLink">
+          <Link className="btnSoft" href="/settings#account-membership">
+            Membership &amp; billing in Settings
+          </Link>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="card membershipAtAGlance">
@@ -34,11 +87,11 @@ export default function MembershipAtAGlance({
             <MembershipTierArt tierId={tierKey} />
           </span>
           <div>
-            <h3>Membership</h3>
+            <h3>Membership &amp; billing</h3>
             <p className="membershipAtAGlanceSub">
               {isAuthenticated ? (
                 <>
-                  Current: <strong>{current.label}</strong>
+                  Current: <strong>{current.label}</strong> · Billing: {billingLabel}
                 </>
               ) : (
                 <>Choose how you want to participate — sign in to activate saves and profile.</>
@@ -76,6 +129,9 @@ export default function MembershipAtAGlance({
                 returnPath={checkoutReturnPath}
                 onAfterRedirect={onCheckoutNavigate}
               />
+              <div className="membershipSettingsBillingRow">
+                <ManageBillingButton stripeReady={!!stripeMemberReady} hasStripeCustomer={!!stripeCustomerReady} />
+              </div>
             </div>
           ) : null}
 
@@ -87,7 +143,6 @@ export default function MembershipAtAGlance({
                   <li key={b}>{b}</li>
                 ))}
               </ul>
-              <p className="membershipTierFootnote">{current.hint}</p>
             </details>
           ) : null}
 

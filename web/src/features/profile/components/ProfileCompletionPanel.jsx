@@ -3,10 +3,29 @@
 /**
  * Profile tab: completion bar + step list from real profile fields (same model as /api/me profileCompletion).
  */
-export default function ProfileCompletionPanel({ completion, onEditProfile, onOpenOnboarding }) {
+export default function ProfileCompletionPanel({
+  completion,
+  onEditProfile,
+  onEditProfileFocus,
+  onOpenOnboarding,
+}) {
   if (!completion || completion.total < 1) return null;
 
   const { completed, total, percentage, steps, nextStep, isComplete } = completion;
+
+  function activateStep(s) {
+    if (s.done) return;
+    if (s.actionKind === "onboarding") {
+      onOpenOnboarding?.();
+      return;
+    }
+    if (s.actionKind === "profile-edit") {
+      if (s.editFocus && onEditProfileFocus) onEditProfileFocus(s.editFocus);
+      else onEditProfile?.();
+      return;
+    }
+    onEditProfile?.();
+  }
 
   return (
     <div className="card profileCompletionPanel">
@@ -30,16 +49,23 @@ export default function ProfileCompletionPanel({ completion, onEditProfile, onOp
       <ol className="profileCompletionTimeline">
         {steps.map((s) => {
           const isNext = !isComplete && nextStep?.id === s.id;
+          const actionable = !s.done && (s.actionKind === "profile-edit" || s.actionKind === "onboarding");
           return (
             <li
               key={s.id}
-              className={`profileCompletionTimeline__item ${s.done ? "isDone" : ""} ${isNext ? "isNext" : ""}`}
+              className={`profileCompletionTimeline__item ${s.done ? "isDone" : ""} ${isNext ? "isNext" : ""} ${actionable ? "isActionable" : ""}`}
             >
               <span className="profileCompletionTimeline__mark" aria-hidden="true">
                 {s.done ? "✓" : ""}
               </span>
               <div className="profileCompletionTimeline__body">
-                <span className="profileCompletionTimeline__label">{s.label}</span>
+                {actionable ? (
+                  <button type="button" className="profileCompletionTimeline__stepBtn" onClick={() => activateStep(s)}>
+                    <span className="profileCompletionTimeline__label">{s.label}</span>
+                  </button>
+                ) : (
+                  <span className="profileCompletionTimeline__label">{s.label}</span>
+                )}
                 {!s.done && isNext ? (
                   <span className="profileCompletionTimeline__nextCue">Suggested next step</span>
                 ) : null}
@@ -51,12 +77,19 @@ export default function ProfileCompletionPanel({ completion, onEditProfile, onOp
       {!isComplete && nextStep ? (
         <div className="row wrap profileCompletionPanel__actions">
           {nextStep.actionKind === "onboarding" ? (
-            <button type="button" className="btnPrimary" onClick={onOpenOnboarding}>
+            <button type="button" className="btnPrimary" onClick={() => onOpenOnboarding?.()}>
               Continue account setup
             </button>
           ) : null}
           {nextStep.actionKind === "profile-edit" ? (
-            <button type="button" className="btnSoft" onClick={onEditProfile}>
+            <button
+              type="button"
+              className="btnSoft"
+              onClick={() => {
+                if (nextStep.editFocus && onEditProfileFocus) onEditProfileFocus(nextStep.editFocus);
+                else onEditProfile?.();
+              }}
+            >
               Edit profile
             </button>
           ) : null}

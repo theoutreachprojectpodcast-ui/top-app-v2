@@ -1,3 +1,5 @@
+import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
+
 const DIRECTORY_SOURCE = "nonprofits_search_app_v1";
 const TRUSTED_PROFILES_SOURCE = "nonprofit_profiles";
 const TRUSTED_ORGS_SOURCE = "nonprofits";
@@ -74,4 +76,19 @@ export async function queryDirectoryOrgByEin(supabase, einRaw) {
   const res = await supabase.from(DIRECTORY_SOURCE).select("*").eq("ein", digits).maybeSingle();
   if (res.data) return res;
   return supabase.from(DIRECTORY_SOURCE).select("*").eq("ein", dashed).maybeSingle();
+}
+
+/** Batch fetch directory rows by normalized 9-digit EIN (handles dashed or plain ein column values). */
+export async function queryDirectoryOrgsByEins(supabase, normalizedEins = []) {
+  const uniq = [...new Set(normalizedEins.map((e) => normalizeEinDigits(e)).filter((e) => e.length === 9))];
+  if (!uniq.length) return { data: [], byEin: new Map(), error: null };
+  const variants = [...new Set(uniq.flatMap((e) => [e, `${e.slice(0, 2)}-${e.slice(2)}`]))];
+  const res = await supabase.from(DIRECTORY_SOURCE).select("*").in("ein", variants);
+  if (res.error) return { data: [], byEin: new Map(), error: res.error };
+  const byEin = new Map();
+  for (const row of res.data || []) {
+    const k = normalizeEinDigits(row?.ein);
+    if (k.length === 9 && !byEin.has(k)) byEin.set(k, row);
+  }
+  return { data: uniq.map((k) => byEin.get(k)).filter(Boolean), byEin, error: null };
 }

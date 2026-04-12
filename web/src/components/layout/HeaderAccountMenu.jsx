@@ -7,7 +7,7 @@ export default function HeaderAccountMenu({
   avatarSrc,
   ariaLabel,
   onProfile,
-  onProfileSettings,
+  onSettings,
   onMembership,
   onSavedItems,
   onSignOut,
@@ -48,8 +48,8 @@ export default function HeaderAccountMenu({
           <button type="button" className="headerAccountMenuItem" role="menuitem" onClick={() => { onProfile?.(); setOpen(false); }}>
             Profile
           </button>
-          <button type="button" className="headerAccountMenuItem" role="menuitem" onClick={() => { onProfileSettings?.(); setOpen(false); }}>
-            Profile settings
+          <button type="button" className="headerAccountMenuItem" role="menuitem" onClick={() => { onSettings?.(); setOpen(false); }}>
+            Settings
           </button>
           <button type="button" className="headerAccountMenuItem" role="menuitem" onClick={() => { onMembership?.(); setOpen(false); }}>
             Membership / account

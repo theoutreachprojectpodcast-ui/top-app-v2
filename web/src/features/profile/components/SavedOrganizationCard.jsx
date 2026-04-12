@@ -1,8 +1,6 @@
 import NonprofitCard from "@/features/nonprofits/components/NonprofitCard";
-import { mapNonprofitCardRow } from "@/features/nonprofits/mappers/nonprofitCardMapper";
 
-export default function SavedOrganizationCard({ organization, onToggleFavorite }) {
-  const card = mapNonprofitCardRow(organization, "saved");
+export default function SavedOrganizationCard({ card, onToggleFavorite }) {
   if (!card?.name) return null;
 
   return (

@@ -129,6 +129,22 @@ export default function NonprofitCard({
           Find Info
         </a>
       )}
+      {actionMode === "saved"
+        ? card.links
+            .filter((l) => l.type === "website")
+            .map((l) => (
+              <a
+                key={l.url}
+                className="btnSoft"
+                data-torp-card-interactive
+                href={l.url}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Website
+              </a>
+            ))
+        : null}
       {actionMode === "saved" && !!favoriteKey && onToggleFavorite && (
         <button className="btnSoft" type="button" data-torp-card-interactive onClick={onFavoriteClick}>
           Unfavorite

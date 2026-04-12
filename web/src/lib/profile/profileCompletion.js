@@ -46,6 +46,7 @@ function baseStepDefs(p) {
       label: "Add your first and last name",
       shortLabel: "Your name",
       actionKind: "profile-edit",
+      editFocus: "name",
       check: (x) =>
         Boolean(String(x.firstName || "").trim()) && Boolean(String(x.lastName || "").trim()),
     },
@@ -54,13 +55,15 @@ function baseStepDefs(p) {
       label: "Add a display name",
       shortLabel: "Display name",
       actionKind: "profile-edit",
+      editFocus: "displayName",
       check: (x) => Boolean(String(x.displayName || "").trim()),
     },
     {
       id: "email",
       label: "Email on your account",
       shortLabel: "Email",
-      actionKind: "none",
+      actionKind: "profile-edit",
+      editFocus: "email",
       check: (x) => Boolean(String(x.email || "").trim()),
     },
     {
@@ -68,6 +71,7 @@ function baseStepDefs(p) {
       label: "Add a profile photo",
       shortLabel: "Profile photo",
       actionKind: "profile-edit",
+      editFocus: "avatar",
       check: (x) => hasCustomPhoto(x),
     },
     {
@@ -75,6 +79,7 @@ function baseStepDefs(p) {
       label: "Add a short bio or tagline",
       shortLabel: "Bio / tagline",
       actionKind: "profile-edit",
+      editFocus: "about",
       check: (x) => hasAboutText(x),
     },
     {
@@ -82,6 +87,7 @@ function baseStepDefs(p) {
       label: "Finish account onboarding",
       shortLabel: "Account setup",
       actionKind: "onboarding",
+      editFocus: null,
       check: (x) => Boolean(x.onboardingCompleted),
     },
   ];
@@ -93,6 +99,7 @@ function baseStepDefs(p) {
         label: "Add your organization name",
         shortLabel: "Organization",
         actionKind: "profile-edit",
+        editFocus: "sponsorOrg",
         check: (x) => Boolean(String(x.sponsorOrgName || "").trim()),
       },
       {
@@ -100,6 +107,7 @@ function baseStepDefs(p) {
         label: "Add your organization website",
         shortLabel: "Website",
         actionKind: "profile-edit",
+        editFocus: "sponsorSite",
         check: (x) => Boolean(String(x.sponsorWebsite || "").trim()),
       },
     );
@@ -123,6 +131,7 @@ export function computeProfileCompletion(profile, workOSUser = null) {
       shortLabel: d.shortLabel,
       done,
       actionKind: d.actionKind,
+      editFocus: d.editFocus ?? null,
     };
   });
   const completed = steps.filter((s) => s.done).length;
@@ -137,4 +146,12 @@ export function computeProfileCompletion(profile, workOSUser = null) {
     nextStep,
     isComplete: total > 0 && completed === total,
   };
+}
+
+/** Set of `editFocus` ids for incomplete profile-edit steps (for Edit Profile modal highlights). */
+export function getIncompleteEditFocusIds(profile, workOSUser = null) {
+  const { steps } = computeProfileCompletion(profile, workOSUser);
+  return new Set(
+    steps.filter((s) => !s.done && s.actionKind === "profile-edit" && s.editFocus).map((s) => s.editFocus),
+  );
 }

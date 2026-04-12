@@ -30,6 +30,7 @@ import {
   replaceSavedOrgEinList,
   upsertProfileByUserId,
 } from "@/features/profile/api";
+import { mapNonprofitCardRow } from "@/features/nonprofits/mappers/nonprofitCardMapper";
 
 function mapLegacyMembershipToTier(status) {
   const v = String(status || "").toLowerCase();
@@ -63,6 +64,8 @@ function profileToApiPatch(p) {
     volunteerInterests: p.volunteerInterests,
     supportInterests: p.supportInterests,
     contributionSummary: p.contributionSummary,
+    sponsorOrgName: p.sponsorOrgName,
+    sponsorWebsite: p.sponsorWebsite,
   };
 }
 
@@ -290,13 +293,24 @@ export function useProfileData(supabase) {
         setSavedOrganizations([]);
         return;
       }
-      if (!supabase || !favoriteEins.length) {
+      if (!favoriteEins.length) {
         setSavedOrganizations([]);
         return;
       }
       try {
-        const cards = await fetchSavedOrganizationsByEin(supabase, favoriteEins);
-        setSavedOrganizations(cards);
+        if (workosRef.current) {
+          const res = await fetch("/api/me/saved-orgs/cards", { credentials: "include" });
+          const j = await res.json().catch(() => ({}));
+          const rows = Array.isArray(j.rows) ? j.rows : [];
+          setSavedOrganizations(rows.map((r) => mapNonprofitCardRow(r, "saved")));
+          return;
+        }
+        if (!supabase) {
+          setSavedOrganizations([]);
+          return;
+        }
+        const rows = await fetchSavedOrganizationsByEin(supabase, favoriteEins);
+        setSavedOrganizations(rows.map((r) => mapNonprofitCardRow(r, "saved")));
       } catch {
         setSavedOrganizations([]);
       }

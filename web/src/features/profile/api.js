@@ -1,5 +1,5 @@
-import { queryTrustedOrgsByEin } from "@/lib/supabase/queries";
 import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
+import { resolveSavedOrganizationDirectoryRows } from "@/lib/savedOrganizations/resolveSavedOrganizations";
 
 export const DEMO_USER_KEY = "top_app_demo_user_id";
 const PROFILE_TABLE = process.env.NEXT_PUBLIC_PROFILE_TABLE || "top_app_user_profiles";
@@ -90,9 +90,20 @@ export async function replaceSavedOrgEinList(supabase, userId, eins) {
   if (error && !isOptionalCloudError(error)) throw error;
 }
 
+function orderUniqueEins(eins) {
+  const seen = new Set();
+  const out = [];
+  for (const raw of eins || []) {
+    const k = normalizeEinDigits(raw);
+    if (k.length !== 9 || seen.has(k)) continue;
+    seen.add(k);
+    out.push(k);
+  }
+  return out;
+}
+
+/** Returns directory-shaped rows (suitable for mapNonprofitCardRow(..., "saved")), in saved-list order. */
 export async function fetchSavedOrganizationsByEin(supabase, eins) {
   if (!supabase || !eins?.length) return [];
-  const { data, error } = await queryTrustedOrgsByEin(supabase, eins);
-  if (error || !Array.isArray(data)) return [];
-  return data;
+  return resolveSavedOrganizationDirectoryRows(supabase, orderUniqueEins(eins));
 }

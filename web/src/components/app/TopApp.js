@@ -34,7 +34,8 @@ import { emptyProfileAvatarUrl } from "@/lib/avatarFallback";
 import { rowEin } from "@/lib/utils";
 import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
 import { workosSignInLink } from "@/lib/auth/workosReturnTo";
-import { computeProfileCompletion } from "@/lib/profile/profileCompletion";
+import { computeProfileCompletion, getIncompleteEditFocusIds } from "@/lib/profile/profileCompletion";
+import AccountSettingsPage from "@/features/settings/components/AccountSettingsPage";
 
 function AppIcon({ name }) {
   const icons = {
@@ -58,6 +59,7 @@ function TopAppInner({ initialNav = "home" }) {
   const [nav, setNav] = useState(initialNav);
   const [overlay, setOverlay] = useState(null);
   const [editDraft, setEditDraft] = useState(null);
+  const [editFieldFocus, setEditFieldFocus] = useState(null);
   const [authMode, setAuthMode] = useState("signin");
   const [authDraft, setAuthDraft] = useState({ firstName: "", lastName: "", email: "", password: "" });
   const [authError, setAuthError] = useState("");
@@ -70,6 +72,11 @@ function TopAppInner({ initialNav = "home" }) {
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [nav]);
+
+  useEffect(() => {
+    if (pathname === "/settings") setNav("settings");
+    else if (pathname === "/profile") setNav("profile");
+  }, [pathname]);
 
   useEffect(() => {
     if (searchParams.get("signin") === "1") {
@@ -119,6 +126,9 @@ function TopAppInner({ initialNav = "home" }) {
     return computeProfileCompletion(profile, workosUserSnapshot);
   }, [isAuthenticated, profile, workosUserSnapshot]);
 
+  const editIncompleteKeys =
+    overlay === "edit" && editDraft ? getIncompleteEditFocusIds(editDraft, workosUserSnapshot) : new Set();
+
   useEffect(() => {
     const c = searchParams.get("checkout");
     if ((c !== "success" && c !== "cancel") || sessionKind !== "workos") return;
@@ -144,12 +154,40 @@ function TopAppInner({ initialNav = "home" }) {
     if (profile?.onboardingCompleted) return;
     const path = typeof window !== "undefined" ? window.location.pathname : "";
     if (path.startsWith("/onboarding")) return;
+    if (path.startsWith("/settings")) return;
     router.replace("/onboarding");
   }, [sessionKind, isAuthenticated, profile?.onboardingCompleted, router]);
 
-  function openEdit() {
+  function openEdit(focusKey) {
     setEditDraft(profile);
+    setEditFieldFocus(focusKey != null && focusKey !== "" ? focusKey : null);
     setOverlay("edit");
+  }
+
+  function closeEditOverlay() {
+    setEditFieldFocus(null);
+    setOverlay(null);
+  }
+
+  useEffect(() => {
+    if (overlay !== "edit" || !editFieldFocus) return;
+    const id = requestAnimationFrame(() => {
+      document.querySelector(`[data-profile-edit-focus="${editFieldFocus}"]`)?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [overlay, editFieldFocus]);
+
+  function dockNavHome() {
+    if (pathname && pathname !== "/") router.push("/");
+    else setNav("home");
+  }
+
+  function dockNavProfile() {
+    if (pathname !== "/profile") router.push("/profile");
+    else setNav("profile");
   }
 
   async function fileToCompressedDataUrl(file) {
@@ -194,7 +232,7 @@ function TopAppInner({ initialNav = "home" }) {
       }
       await refreshWorkOSProfile?.();
       setEditDraft((d) => ({ ...d, avatarUrl: profile.avatarUrl }));
-      setOverlay(null);
+      closeEditOverlay();
       return;
     }
     try {
@@ -250,7 +288,11 @@ function TopAppInner({ initialNav = "home" }) {
     const byEin = new Map([...results, ...trusted].map((r) => [String(rowEin(r)), r]));
     return favoriteEins.map((ein) => byEin.get(String(ein)) || { ein, orgName: "Saved organization", city: "", state: "" });
   }, [favoriteEins, results, trusted]);
-  const savedOrgsToRender = savedOrganizations.length ? savedOrganizations : fallbackSavedOrganizations;
+  const savedOrgsToRender = useMemo(() => {
+    if (savedOrganizations.length) return savedOrganizations;
+    if (isAuthenticated && favoriteEins.length) return [];
+    return fallbackSavedOrganizations.map((raw) => mapNonprofitCardRow(raw, "saved"));
+  }, [savedOrganizations, isAuthenticated, favoriteEins, fallbackSavedOrganizations]);
   const isLoggedIn = isAuthenticated;
   const favoriteEinSet = useMemo(
     () => new Set((favoriteEins || []).map((e) => normalizeEinDigits(e)).filter((e) => e.length === 9)),
@@ -328,11 +370,11 @@ function TopAppInner({ initialNav = "home" }) {
                   <HeaderAccountMenu
                     avatarSrc={profile.avatarUrl || emptyProfileAvatarUrl()}
                     ariaLabel={`Account menu for ${fullName || profile.email || "signed-in user"}`}
-                    onProfile={() => setNav("profile")}
-                    onProfileSettings={() => {
-                      setEditDraft(profile);
-                      setOverlay("edit");
+                    onProfile={() => {
+                      if (pathname !== "/profile") router.push("/profile");
+                      else setNav("profile");
                     }}
+                    onSettings={() => router.push("/settings")}
                     onMembership={() => {
                       if (!isMember) setOverlay("upgrade");
                       else setNav("profile");
@@ -377,17 +419,18 @@ function TopAppInner({ initialNav = "home" }) {
               <div className="homeHeroBackdrop">
                 <div className="homeHeroBackdrop__image" aria-hidden="true" />
                 <div className="homeHeroBackdrop__scrim" aria-hidden="true" />
-                {profileCompletion ? (
-                  <HomeProfileProgressNotice
-                    completion={profileCompletion}
-                    onOpenProfile={() => {
-                      setNav("profile");
-                      openEdit();
-                    }}
-                    onOpenOnboarding={() => router.push("/onboarding")}
-                  />
-                ) : null}
-                <div className="card cardHero homeHeroBackdrop__card">
+                <div className="homeHeroBackdrop__content">
+                  {profileCompletion ? (
+                    <HomeProfileProgressNotice
+                      completion={profileCompletion}
+                      onOpenProfile={() => {
+                        router.push("/profile");
+                        openEdit();
+                      }}
+                      onOpenOnboarding={() => router.push("/onboarding")}
+                    />
+                  ) : null}
+                  <div className="card cardHero homeHeroBackdrop__card">
                   <HomeWelcomeSection
                     isAuthenticated={isAuthenticated}
                     isMember={isMember}
@@ -397,8 +440,12 @@ function TopAppInner({ initialNav = "home" }) {
                     }}
                     onOpenMembershipJourney={openMembershipJourney}
                     onBrowseFree={scrollToDirectory}
-                    onOpenProfile={() => setNav("profile")}
+                    onOpenProfile={() => {
+                      if (pathname !== "/profile") router.push("/profile");
+                      else setNav("profile");
+                    }}
                   />
+                  </div>
                 </div>
               </div>
 
@@ -588,6 +635,7 @@ function TopAppInner({ initialNav = "home" }) {
                 </p>
               </div>
               <MembershipAtAGlance
+                surface="profile"
                 isAuthenticated={isAuthenticated}
                 currentTierKey={profile.membershipStatus}
                 onSelectTier={(id) => setMembershipStatus(id)}
@@ -597,6 +645,8 @@ function TopAppInner({ initialNav = "home" }) {
                 stripeSponsorSubscriptionReady={!!authBackend?.stripeSponsorSubscription}
                 stripeMemberMissingEnv={authBackend?.stripeMemberRecurringMissingEnv || []}
                 checkoutReturnPath="/profile"
+                membershipBillingStatus={profile.membershipBillingStatus}
+                stripeCustomerReady={!!profile.stripeCustomerIdSet}
               />
             </>
           ) : (
@@ -614,6 +664,7 @@ function TopAppInner({ initialNav = "home" }) {
             onEdit={openEdit}
           />
           <MembershipAtAGlance
+            surface="profile"
             isAuthenticated={isAuthenticated}
             currentTierKey={profile.membershipStatus}
             onSelectTier={(id) => setMembershipStatus(id)}
@@ -623,10 +674,13 @@ function TopAppInner({ initialNav = "home" }) {
             stripeSponsorSubscriptionReady={!!authBackend?.stripeSponsorSubscription}
             stripeMemberMissingEnv={authBackend?.stripeMemberRecurringMissingEnv || []}
             checkoutReturnPath="/profile"
+            membershipBillingStatus={profile.membershipBillingStatus}
+            stripeCustomerReady={!!profile.stripeCustomerIdSet}
           />
           <ProfileCompletionPanel
             completion={profileCompletion}
-            onEditProfile={openEdit}
+            onEditProfile={() => openEdit()}
+            onEditProfileFocus={(key) => openEdit(key)}
             onOpenOnboarding={() => router.push("/onboarding")}
           />
 
@@ -680,7 +734,12 @@ function TopAppInner({ initialNav = "home" }) {
               </div>
             </div>
           ) : null}
-          <SavedOrganizationsList organizations={savedOrgsToRender} onToggleFavorite={toggleFavoriteEin} isMember={isMember} />
+          <SavedOrganizationsList
+            organizations={savedOrgsToRender}
+            savedEinCount={favoriteEins.length}
+            onToggleFavorite={toggleFavoriteEin}
+            isMember={isMember}
+          />
           <div className="card">
             <div className="row wrap">
               <button className="btnSoft" onClick={resetDemo} type="button">Reset Demo</button>
@@ -691,6 +750,32 @@ function TopAppInner({ initialNav = "home" }) {
           )}
         </section>
       )}
+
+      {nav === "settings" && isAuthenticated ? (
+        <AccountSettingsPage
+          profile={profile}
+          membership={membership}
+          sessionKind={sessionKind}
+          authBackend={authBackend}
+          persistProfile={persistProfile}
+          onOpenEditProfile={() => openEdit()}
+          setMembershipStatus={setMembershipStatus}
+          openSignInForMembership={openSignInForMembership}
+          favoriteEins={favoriteEins}
+        />
+      ) : null}
+
+      {nav === "settings" && !isAuthenticated ? (
+        <section className="shell profileTabShell">
+          <div className="card">
+            <h3>Settings</h3>
+            <p className="sponsorSectionLead">Sign in to manage your account, membership, and billing.</p>
+            <button type="button" className="btnPrimary" onClick={() => { setAuthMode("signin"); setOverlay("signin"); }}>
+              Sign in
+            </button>
+          </div>
+        </section>
+      ) : null}
 
       {nav === "contact" && (
         <section className="shell">
@@ -759,10 +844,10 @@ function TopAppInner({ initialNav = "home" }) {
       <div className="footerDock">
         <FooterInner className="footerNavInner">
           <nav className="bottomNav" aria-label="Primary navigation">
-            <button className={`navItem ${nav === "home" ? "isActive" : ""}`} onClick={() => setNav("home")} type="button">Home</button>
+            <button className={`navItem ${nav === "home" ? "isActive" : ""}`} onClick={dockNavHome} type="button">Home</button>
             <button className={`navItem ${nav === "trusted" ? "isActive" : ""}`} onClick={() => { setNav("trusted"); if (!trusted.length) loadTrusted(true); }} type="button">Trusted Resources</button>
             <button className={`navItem ${nav === "community" ? "isActive" : ""}`} onClick={() => setNav("community")} type="button">Community</button>
-            <button className={`navItem ${nav === "profile" ? "isActive" : ""}`} onClick={() => setNav("profile")} type="button">Profile</button>
+            <button className={`navItem ${nav === "profile" ? "isActive" : ""}`} onClick={dockNavProfile} type="button">Profile</button>
             <button className={`navItem ${nav === "contact" ? "isActive" : ""}`} onClick={() => setNav("contact")} type="button">Contact</button>
           </nav>
         </FooterInner>
@@ -801,53 +886,123 @@ function TopAppInner({ initialNav = "home" }) {
         </div>
       )}
 
-      {overlay === "edit" && (
-        <div className="modalOverlay" onClick={() => setOverlay(null)}>
+      {overlay === "edit" && editDraft ? (
+        <div className="modalOverlay" onClick={closeEditOverlay}>
           <div className="modalCard modalCard--profileEdit" onClick={(e) => e.stopPropagation()}>
             <h3>Edit profile</h3>
             <p className="ds-page-intro__lead" style={{ margin: 0 }}>
-              Core account fields sync when cloud is available; identity details below are always saved locally.
+              Core account fields sync when cloud is available. Incomplete items from your profile checklist are highlighted
+              in green. Deeper account controls live in{" "}
+              <button type="button" className="accountSettingsInlineLink" onClick={() => router.push("/settings")}>
+                Settings
+              </button>
+              .
             </p>
-            <Avatar src={editDraft.avatarUrl || emptyProfileAvatarUrl()} alt="Profile preview" />
-            <label className="profilePhotoUploadLabel">
-              <span className="profilePhotoUploadTitle">Profile photo</span>
-              <span className="profilePhotoUploadHint">Upload or replace the image shown on your profile and membership card.</span>
+            <div
+              className={`profileEditChunk${editIncompleteKeys.has("avatar") ? " profileEditChunk--incomplete" : ""}`}
+              data-profile-edit-focus="avatar"
+            >
+              <Avatar src={editDraft.avatarUrl || emptyProfileAvatarUrl()} alt="Profile preview" />
+              <label className="profilePhotoUploadLabel">
+                <span className="profilePhotoUploadTitle">Profile photo</span>
+                <span className="profilePhotoUploadHint">Upload or replace the image shown on your profile and membership card.</span>
+                <input
+                  className="profileFileInput"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => onProfileImageSelected(e.target.files?.[0])}
+                />
+              </label>
+            </div>
+            <div
+              className={`profileEditChunk${editIncompleteKeys.has("name") ? " profileEditChunk--incomplete" : ""}`}
+              data-profile-edit-focus="name"
+            >
               <input
-                className="profileFileInput"
-                type="file"
-                accept="image/*"
-                onChange={(e) => onProfileImageSelected(e.target.files?.[0])}
+                name="given-name"
+                autoComplete="given-name"
+                value={editDraft.firstName || ""}
+                onChange={(e) => setEditDraft((d) => ({ ...d, firstName: e.target.value }))}
+                placeholder="First name"
               />
-            </label>
-            <input
-              name="given-name"
-              autoComplete="given-name"
-              value={editDraft.firstName || ""}
-              onChange={(e) => setEditDraft((d) => ({ ...d, firstName: e.target.value }))}
-              placeholder="First name"
-            />
-            <input
-              name="family-name"
-              autoComplete="family-name"
-              value={editDraft.lastName || ""}
-              onChange={(e) => setEditDraft((d) => ({ ...d, lastName: e.target.value }))}
-              placeholder="Last name"
-            />
-            <input
-              name="email"
-              autoComplete="email"
-              value={editDraft.email}
-              onChange={(e) => setEditDraft((d) => ({ ...d, email: e.target.value }))}
-              placeholder="Email"
-              type="email"
-            />
-            <input
-              name="organization-title"
-              autoComplete="organization-title"
-              value={editDraft.banner || ""}
-              onChange={(e) => setEditDraft((d) => ({ ...d, banner: e.target.value }))}
-              placeholder="Short tagline (shown under your name)"
-            />
+              <input
+                name="family-name"
+                autoComplete="family-name"
+                value={editDraft.lastName || ""}
+                onChange={(e) => setEditDraft((d) => ({ ...d, lastName: e.target.value }))}
+                placeholder="Last name"
+              />
+            </div>
+            <div
+              className={`profileEditChunk${editIncompleteKeys.has("displayName") ? " profileEditChunk--incomplete" : ""}`}
+              data-profile-edit-focus="displayName"
+            >
+              <input
+                name="nickname"
+                autoComplete="nickname"
+                value={editDraft.displayName || ""}
+                onChange={(e) => setEditDraft((d) => ({ ...d, displayName: e.target.value }))}
+                placeholder="Display name"
+              />
+            </div>
+            <div
+              className={`profileEditChunk${editIncompleteKeys.has("email") ? " profileEditChunk--incomplete" : ""}`}
+              data-profile-edit-focus="email"
+            >
+              <input
+                name="email"
+                autoComplete="email"
+                value={editDraft.email}
+                onChange={(e) => setEditDraft((d) => ({ ...d, email: e.target.value }))}
+                placeholder="Email"
+                type="email"
+                readOnly={sessionKind === "workos"}
+                title={sessionKind === "workos" ? "Email is managed by your WorkOS sign-in" : undefined}
+              />
+            </div>
+            <div
+              className={`profileEditChunk${editIncompleteKeys.has("about") ? " profileEditChunk--incomplete" : ""}`}
+              data-profile-edit-focus="about"
+            >
+              <input
+                name="organization-title"
+                autoComplete="organization-title"
+                value={editDraft.banner || ""}
+                onChange={(e) => setEditDraft((d) => ({ ...d, banner: e.target.value }))}
+                placeholder="Short tagline (shown under your name)"
+              />
+              <textarea
+                rows={3}
+                value={editDraft.bio || ""}
+                onChange={(e) => setEditDraft((d) => ({ ...d, bio: e.target.value }))}
+                placeholder="Bio (optional longer description, 12+ characters counts toward profile completion)"
+              />
+            </div>
+            {String(editDraft.accountIntent || profile.accountIntent || "").toLowerCase() === "sponsor_user" ? (
+              <>
+                <div
+                  className={`profileEditChunk${editIncompleteKeys.has("sponsorOrg") ? " profileEditChunk--incomplete" : ""}`}
+                  data-profile-edit-focus="sponsorOrg"
+                >
+                  <p className="profileEditFieldsetHint">Sponsor organization</p>
+                  <input
+                    value={editDraft.sponsorOrgName || ""}
+                    onChange={(e) => setEditDraft((d) => ({ ...d, sponsorOrgName: e.target.value }))}
+                    placeholder="Organization name"
+                  />
+                </div>
+                <div
+                  className={`profileEditChunk${editIncompleteKeys.has("sponsorSite") ? " profileEditChunk--incomplete" : ""}`}
+                  data-profile-edit-focus="sponsorSite"
+                >
+                  <input
+                    value={editDraft.sponsorWebsite || ""}
+                    onChange={(e) => setEditDraft((d) => ({ ...d, sponsorWebsite: e.target.value }))}
+                    placeholder="Organization website URL"
+                  />
+                </div>
+              </>
+            ) : null}
             <fieldset className="profileEditFieldset">
               <legend>Identity &amp; contribution</legend>
               <p className="profileEditFieldsetHint">These fields power the Identity &amp; contribution card on your profile.</p>
@@ -866,12 +1021,21 @@ function TopAppInner({ initialNav = "home" }) {
               <textarea rows={2} value={editDraft.contributionSummary || ""} onChange={(e) => setEditDraft((d) => ({ ...d, contributionSummary: e.target.value }))} placeholder="How you contribute on this platform" />
             </fieldset>
             <div className="row">
-              <button className="btnSoft" onClick={() => setOverlay(null)} type="button">Cancel</button>
-              <button className="btnPrimary" onClick={async () => { await persistProfile({ ...profile, ...editDraft }); setOverlay(null); }} type="button">Save</button>
+              <button className="btnSoft" onClick={closeEditOverlay} type="button">Cancel</button>
+              <button
+                className="btnPrimary"
+                onClick={async () => {
+                  await persistProfile({ ...profile, ...editDraft });
+                  closeEditOverlay();
+                }}
+                type="button"
+              >
+                Save
+              </button>
             </div>
           </div>
         </div>
-      )}
+      ) : null}
 
       {overlay === "signin" && (
         <div className="modalOverlay" onClick={() => setOverlay(null)}>
