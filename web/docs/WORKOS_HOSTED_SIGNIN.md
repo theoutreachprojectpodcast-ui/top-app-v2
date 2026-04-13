@@ -32,7 +32,7 @@ Optional tuning: `WORKOS_COOKIE_MAX_AGE`, `WORKOS_COOKIE_DOMAIN`, etc. — see `
 
 ## How it wires up in this repo
 
-- **Middleware** (`web/src/middleware.js`) runs **`authkitProxy()`** when configuration is complete (session refresh).
+- **Proxy** (`web/src/proxy.js`, Next.js 16+ convention) runs **`authkitProxy()`** when configuration is complete (session refresh and `x-workos-middleware` for `withAuth()` in RSC).
 - **Callback** (`web/src/app/callback/route.js`) runs **`handleAuth`** and syncs the user into Supabase.
 - **Sign-in / sign-up** (`web/src/app/api/auth/workos/signin|signup/route.js`) call **`getSignInUrl` / `getSignUpUrl`** (hosted UI).
 

@@ -8,6 +8,7 @@ export default function ProfileCompletionPanel({
   onEditProfile,
   onEditProfileFocus,
   onOpenOnboarding,
+  onOpenMembership,
 }) {
   if (!completion || completion.total < 1) return null;
 
@@ -17,6 +18,10 @@ export default function ProfileCompletionPanel({
     if (s.done) return;
     if (s.actionKind === "onboarding") {
       onOpenOnboarding?.();
+      return;
+    }
+    if (s.actionKind === "membership") {
+      onOpenMembership?.();
       return;
     }
     if (s.actionKind === "profile-edit") {
@@ -49,7 +54,9 @@ export default function ProfileCompletionPanel({
       <ol className="profileCompletionTimeline">
         {steps.map((s) => {
           const isNext = !isComplete && nextStep?.id === s.id;
-          const actionable = !s.done && (s.actionKind === "profile-edit" || s.actionKind === "onboarding");
+          const actionable =
+            !s.done &&
+            (s.actionKind === "profile-edit" || s.actionKind === "onboarding" || s.actionKind === "membership");
           return (
             <li
               key={s.id}
@@ -79,6 +86,11 @@ export default function ProfileCompletionPanel({
           {nextStep.actionKind === "onboarding" ? (
             <button type="button" className="btnPrimary" onClick={() => onOpenOnboarding?.()}>
               Continue account setup
+            </button>
+          ) : null}
+          {nextStep.actionKind === "membership" ? (
+            <button type="button" className="btnPrimary" onClick={() => onOpenMembership?.()}>
+              Membership &amp; billing
             </button>
           ) : null}
           {nextStep.actionKind === "profile-edit" ? (

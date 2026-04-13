@@ -26,7 +26,9 @@ export default function ProfileHeader({
             <p className="introTagline">{roleLine || "Welcome"}</p>
             <h2>{fullName || "Supporter"}</h2>
             <MembershipBadge isMember={isMember} icon={icon} label={membershipLabel} />
-            <p className="profileHeaderEmail">{email || "Add your email in Edit Profile to complete your account setup."}</p>
+            <p className="profileHeaderEmail">
+              {email || "Add your email in Settings or Edit profile to complete your account setup."}
+            </p>
             {cleanMission ? <p className="profileHeaderMission">{cleanMission}</p> : null}
             {showBio ? <p className="profileHeaderTagline">{cleanBio}</p> : null}
             <div className="profileHeaderActions">

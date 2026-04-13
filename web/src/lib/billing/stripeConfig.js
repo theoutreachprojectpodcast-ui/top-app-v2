@@ -104,11 +104,11 @@ export function safeAppReturnPath(raw, fallback = "/profile") {
 
 /**
  * Canonical app origin for redirects. Prefer APP_BASE_URL, then NEXT_PUBLIC_APP_URL.
- * For Stripe return URLs, prefer {@link requestOriginForStripeRedirects} so `pnpm dev:alt` (port 3000)
+ * For Stripe return URLs, prefer {@link requestOriginForStripeRedirects} so the active dev port
  * matches checkout success/cancel without editing env.
  */
 export function appBaseUrl() {
-  const raw = process.env.APP_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3001";
+  const raw = process.env.APP_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
   return String(raw).replace(/\/$/, "");
 }
 

@@ -3,8 +3,8 @@ import { redirect } from "next/navigation";
 
 /** Always read the latest `torp_profiles` row for this session (avoid stale RSC cache emptying onboarding fields). */
 export const dynamic = "force-dynamic";
-import { withAuth } from "@workos-inc/authkit-nextjs";
 import Link from "next/link";
+import { getWorkOSUserFromCookies } from "@/lib/auth/workosSessionFromCookies";
 import OnboardingFlow from "@/features/onboarding/components/OnboardingFlow";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import {
@@ -21,7 +21,8 @@ import { postOnboardingDestination } from "@/lib/account/postOnboardingDestinati
 
 async function OnboardingServer({ searchParams }) {
   const sp = await searchParams;
-  const auth = await withAuth();
+  /* Do not use withAuth() in this RSC — Next 16 RSC requests often lack x-workos-middleware. */
+  const auth = await getWorkOSUserFromCookies();
   if (!auth.user) {
     redirect("/?signin=1");
   }
@@ -30,12 +31,16 @@ async function OnboardingServer({ searchParams }) {
     await syncProfileEmailWithWorkOSUser(admin, auth.user);
   }
   const row = admin ? await getProfileRowByWorkOSId(admin, auth.user.id) : null;
+  const sessionEmail = String(auth.user.email || "").trim();
   let dto = profileRowToClientDto(row);
+  if (dto && sessionEmail && !String(dto.email || "").trim()) {
+    dto = { ...dto, email: sessionEmail };
+  }
   if (!dto) {
     dto = {
       firstName: auth.user.firstName || "",
       lastName: auth.user.lastName || "",
-      email: auth.user.email || "",
+      email: sessionEmail || "",
       displayName: "",
       bio: "",
       avatarUrl: "",

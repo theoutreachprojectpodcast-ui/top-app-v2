@@ -1,12 +1,12 @@
 /**
  * Fail fast if the chosen dev port is already in use.
- * Default port 3001 — see package.json `dev` / `dev:alt`.
+ * Port is passed from package.json (`dev` → 3000, `dev:alt` → 3001).
  */
 import net from "node:net";
 
 const PORT = (() => {
   const n = Number(process.argv[2]);
-  return Number.isFinite(n) && n > 0 && n < 65536 ? n : 3001;
+  return Number.isFinite(n) && n > 0 && n < 65536 ? n : 3000;
 })();
 
 await new Promise((resolve, reject) => {

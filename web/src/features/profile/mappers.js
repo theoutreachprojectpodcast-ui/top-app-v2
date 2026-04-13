@@ -114,6 +114,20 @@ export function toLocalShape(profile) {
 }
 
 /**
+ * When `torp_profiles.email` is empty, expose the WorkOS session email everywhere the profile DTO is used.
+ * @param {Record<string, unknown> | null | undefined} dto
+ * @param {{ email?: string } | null | undefined} sessionUser — `user` from `GET /api/me`
+ */
+export function mergeAccountEmailIntoProfileDto(dto, sessionUser) {
+  const d = dto && typeof dto === "object" ? { ...dto } : {};
+  const acct = String(sessionUser?.email ?? "").trim();
+  if (acct && !String(d.email ?? "").trim()) {
+    d.email = acct;
+  }
+  return d;
+}
+
+/**
  * Merge server profile DTO (from /api/me) into full client profile shape.
  * @param {Record<string, unknown>} dto
  */

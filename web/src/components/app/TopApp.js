@@ -23,7 +23,7 @@ import ProfileCompletionPanel from "@/features/profile/components/ProfileComplet
 import HeaderAccountMenu from "@/components/layout/HeaderAccountMenu";
 import HeaderNotificationBell from "@/components/layout/HeaderNotificationBell";
 import { useDirectorySearch } from "@/hooks/useDirectorySearch";
-import { useProfileData } from "@/features/profile/hooks";
+import { useProfileData } from "@/features/profile/ProfileDataProvider";
 import { useTrustedResources } from "@/hooks/useTrustedResources";
 import DirectoryCategoryQuickPick from "@/features/directory/components/DirectoryCategoryQuickPick";
 import MembershipAtAGlance from "@/features/membership/components/MembershipAtAGlance";
@@ -45,6 +45,7 @@ import {
 import { workosSignInLink, workosSignUpHref } from "@/lib/auth/workosReturnTo";
 import { computeProfileCompletion, getIncompleteEditFocusIds } from "@/lib/profile/profileCompletion";
 import { profileFromApiDto } from "@/features/profile/mappers";
+import { mergeEditDraftWithProfile } from "@/features/profile/lib/mergeEditDraftWithProfile";
 import AccountSettingsPage from "@/features/settings/components/AccountSettingsPage";
 import { FormCheckbox } from "@/components/forms/FormChoice";
 
@@ -153,6 +154,7 @@ function TopAppInner({ initialNav = "home" }) {
     userId,
     sessionKind,
     authBackend,
+    workOSAccountEmail,
     isAuthenticated,
     loadingProfile,
     profileError,
@@ -172,7 +174,7 @@ function TopAppInner({ initialNav = "home" }) {
     signOut,
     uploadAvatarFile,
     refreshWorkOSProfile,
-  } = useProfileData(sb);
+  } = useProfileData();
 
   const profileCompletion = useMemo(() => {
     if (!isAuthenticated) return null;
@@ -223,6 +225,17 @@ function TopAppInner({ initialNav = "home" }) {
   const { filters, setFilters, results, status, meta, page, canGoNext, runSearch, clearSearch } = useDirectorySearch(sb);
   const { trusted, trustedStatus, loadTrusted } = useTrustedResources(sb);
 
+  /** Prefill contact form from profile / account email when fields are still empty. */
+  useEffect(() => {
+    if (nav !== "contact" || !isAuthenticated) return;
+    setContactDraft((d) => ({
+      ...d,
+      firstName: String(d.firstName || "").trim() || String(profile.firstName || "").trim() || "",
+      lastName: String(d.lastName || "").trim() || String(profile.lastName || "").trim() || "",
+      email: String(d.email || "").trim() || String(profile.email || "").trim() || "",
+    }));
+  }, [nav, isAuthenticated, profile.email, profile.firstName, profile.lastName]);
+
   useEffect(() => {
     if (sessionKind !== "workos" || !isAuthenticated) return;
     if (profile?.onboardingCompleted) return;
@@ -266,6 +279,41 @@ function TopAppInner({ initialNav = "home" }) {
       setEditDraft(profileFromApiDto(profile));
     }
   }, [overlay, loadingProfile, profile]);
+
+  /** When `/api/me` hydrates after opening the modal, merge server fields without wiping typed values. */
+  const profileEditMergeKey = useMemo(
+    () =>
+      [
+        profile.profileRecordId,
+        profile.firstName,
+        profile.lastName,
+        profile.displayName,
+        profile.email,
+        profile.bio,
+        profile.banner,
+        profile.avatarUrl,
+        profile.sponsorOrgName,
+        profile.sponsorWebsite,
+        profile.missionStatement,
+        profile.identityRole,
+        profile.city,
+        profile.state,
+        profile.organizationAffiliation,
+        profile.serviceBackground,
+        profile.causes,
+        profile.skills,
+        profile.volunteerInterests,
+        profile.supportInterests,
+        profile.contributionSummary,
+        profile.accountIntent,
+      ].join("\u001f"),
+    [profile],
+  );
+
+  useEffect(() => {
+    if (overlay !== "edit" || !editDraft) return;
+    setEditDraft((d) => mergeEditDraftWithProfile(d, profile));
+  }, [overlay, profileEditMergeKey, profile]);
 
   function closeEditOverlay() {
     setEditFieldFocus(null);
@@ -541,6 +589,7 @@ function TopAppInner({ initialNav = "home" }) {
                           router.push(`/profile?${qs.toString()}`);
                         }}
                         onOpenOnboarding={() => router.push("/onboarding")}
+                        onOpenMembership={openMembershipJourney}
                       />
                       <div className="card cardHero homeHeroBackdrop__card">
                         <HomeWelcomeSection
@@ -823,6 +872,7 @@ function TopAppInner({ initialNav = "home" }) {
             onEditProfile={() => openEdit()}
             onEditProfileFocus={(key) => openEdit(key)}
             onOpenOnboarding={() => router.push("/onboarding")}
+            onOpenMembership={openMembershipJourney}
           />
 
           <ProfileIdentitySection profile={profile} onEdit={openEdit} savedCount={favoriteEins.length} />
@@ -895,6 +945,7 @@ function TopAppInner({ initialNav = "home" }) {
       {nav === "settings" && isAuthenticated ? (
         <AccountSettingsPage
           profile={profile}
+          workOSAccountEmail={workOSAccountEmail}
           membership={membership}
           sessionKind={sessionKind}
           authBackend={authBackend}
@@ -1097,8 +1148,11 @@ function TopAppInner({ initialNav = "home" }) {
                 onChange={(e) => setEditDraft((d) => ({ ...d, email: e.target.value }))}
                 placeholder="Email"
                 type="email"
-                readOnly={sessionKind === "workos"}
-                title={sessionKind === "workos" ? "Email is managed by your WorkOS sign-in" : undefined}
+                title={
+                  sessionKind === "workos"
+                    ? "Saved to your profile. Change anytime in Settings or here; sign-in email may still be your WorkOS address until updated with your provider."
+                    : undefined
+                }
               />
             </div>
             <div
@@ -1144,23 +1198,28 @@ function TopAppInner({ initialNav = "home" }) {
                 </div>
               </>
             ) : null}
-            <fieldset className="profileEditFieldset">
-              <legend>Identity &amp; contribution</legend>
-              <p className="profileEditFieldsetHint">These fields power the Identity &amp; contribution card on your profile.</p>
-              <textarea rows={3} value={editDraft.missionStatement || ""} onChange={(e) => setEditDraft((d) => ({ ...d, missionStatement: e.target.value }))} placeholder="Mission or personal statement" />
-              <input value={editDraft.identityRole || ""} onChange={(e) => setEditDraft((d) => ({ ...d, identityRole: e.target.value }))} placeholder="Role (e.g. Veteran, First Responder, Nonprofit leader)" />
-              <div className="form">
-                <input value={editDraft.city || ""} onChange={(e) => setEditDraft((d) => ({ ...d, city: e.target.value }))} placeholder="City" />
-                <input value={editDraft.state || ""} onChange={(e) => setEditDraft((d) => ({ ...d, state: e.target.value }))} placeholder="State (e.g. TX)" />
-              </div>
-              <input value={editDraft.organizationAffiliation || ""} onChange={(e) => setEditDraft((d) => ({ ...d, organizationAffiliation: e.target.value }))} placeholder="Organization affiliation" />
-              <input value={editDraft.serviceBackground || ""} onChange={(e) => setEditDraft((d) => ({ ...d, serviceBackground: e.target.value }))} placeholder="Service background (branch, years, role)" />
-              <input value={editDraft.causes || ""} onChange={(e) => setEditDraft((d) => ({ ...d, causes: e.target.value }))} placeholder="Causes you care about (comma-separated)" />
-              <input value={editDraft.skills || ""} onChange={(e) => setEditDraft((d) => ({ ...d, skills: e.target.value }))} placeholder="Skills / ways you help (comma-separated)" />
-              <input value={editDraft.volunteerInterests || ""} onChange={(e) => setEditDraft((d) => ({ ...d, volunteerInterests: e.target.value }))} placeholder="Volunteer interests (comma-separated)" />
-              <input value={editDraft.supportInterests || ""} onChange={(e) => setEditDraft((d) => ({ ...d, supportInterests: e.target.value }))} placeholder="Support and outreach interests" />
-              <textarea rows={2} value={editDraft.contributionSummary || ""} onChange={(e) => setEditDraft((d) => ({ ...d, contributionSummary: e.target.value }))} placeholder="How you contribute on this platform" />
-            </fieldset>
+            <div
+              className={`profileEditChunk${editIncompleteKeys.has("identity") ? " profileEditChunk--incomplete" : ""}`}
+              data-profile-edit-focus="identity"
+            >
+              <fieldset className="profileEditFieldset">
+                <legend>Identity &amp; contribution</legend>
+                <p className="profileEditFieldsetHint">These fields power the Identity &amp; contribution card on your profile.</p>
+                <textarea rows={3} value={editDraft.missionStatement || ""} onChange={(e) => setEditDraft((d) => ({ ...d, missionStatement: e.target.value }))} placeholder="Mission or personal statement" />
+                <input value={editDraft.identityRole || ""} onChange={(e) => setEditDraft((d) => ({ ...d, identityRole: e.target.value }))} placeholder="Role (e.g. Veteran, First Responder, Nonprofit leader)" />
+                <div className="form">
+                  <input value={editDraft.city || ""} onChange={(e) => setEditDraft((d) => ({ ...d, city: e.target.value }))} placeholder="City" />
+                  <input value={editDraft.state || ""} onChange={(e) => setEditDraft((d) => ({ ...d, state: e.target.value }))} placeholder="State (e.g. TX)" />
+                </div>
+                <input value={editDraft.organizationAffiliation || ""} onChange={(e) => setEditDraft((d) => ({ ...d, organizationAffiliation: e.target.value }))} placeholder="Organization affiliation" />
+                <input value={editDraft.serviceBackground || ""} onChange={(e) => setEditDraft((d) => ({ ...d, serviceBackground: e.target.value }))} placeholder="Service background (branch, years, role)" />
+                <input value={editDraft.causes || ""} onChange={(e) => setEditDraft((d) => ({ ...d, causes: e.target.value }))} placeholder="Causes you care about (comma-separated)" />
+                <input value={editDraft.skills || ""} onChange={(e) => setEditDraft((d) => ({ ...d, skills: e.target.value }))} placeholder="Skills / ways you help (comma-separated)" />
+                <input value={editDraft.volunteerInterests || ""} onChange={(e) => setEditDraft((d) => ({ ...d, volunteerInterests: e.target.value }))} placeholder="Volunteer interests (comma-separated)" />
+                <input value={editDraft.supportInterests || ""} onChange={(e) => setEditDraft((d) => ({ ...d, supportInterests: e.target.value }))} placeholder="Support and outreach interests" />
+                <textarea rows={2} value={editDraft.contributionSummary || ""} onChange={(e) => setEditDraft((d) => ({ ...d, contributionSummary: e.target.value }))} placeholder="How you contribute on this platform" />
+              </fieldset>
+            </div>
             <div className="row">
               <button className="btnSoft" onClick={closeEditOverlay} type="button">Cancel</button>
               <button

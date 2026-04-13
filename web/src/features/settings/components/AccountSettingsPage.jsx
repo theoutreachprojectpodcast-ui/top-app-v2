@@ -11,6 +11,7 @@ import AccountInfoCard from "@/features/profile/components/AccountInfoCard";
  */
 export default function AccountSettingsPage({
   profile,
+  workOSAccountEmail = "",
   membership,
   sessionKind,
   authBackend,
@@ -22,6 +23,7 @@ export default function AccountSettingsPage({
 }) {
   const isWorkos = sessionKind === "workos";
   const [draft, setDraft] = useState({
+    email: profile.email || "",
     displayName: profile.displayName || "",
     city: profile.city || "",
     state: profile.state || "",
@@ -29,11 +31,12 @@ export default function AccountSettingsPage({
 
   useEffect(() => {
     setDraft({
+      email: profile.email || "",
       displayName: profile.displayName || "",
       city: profile.city || "",
       state: profile.state || "",
     });
-  }, [profile.displayName, profile.city, profile.state]);
+  }, [profile.email, profile.displayName, profile.city, profile.state]);
 
   async function saveIdentityBasics() {
     await persistProfile({
@@ -41,6 +44,15 @@ export default function AccountSettingsPage({
       displayName: draft.displayName.trim(),
       city: draft.city.trim(),
       state: draft.state.trim(),
+    });
+  }
+
+  async function saveEmail() {
+    const next = draft.email.trim();
+    if (!next) return;
+    await persistProfile({
+      ...profile,
+      email: next,
     });
   }
 
@@ -63,13 +75,41 @@ export default function AccountSettingsPage({
       <div className="card" id="account-email">
         <h3>Email &amp; sign-in</h3>
         <p className="sponsorSectionLead">
-          {isWorkos
-            ? "Your email and password are managed by your WorkOS sign-in. Contact support if you need to change the email on file."
-            : "Demo accounts use locally stored credentials on this device."}
+          {isWorkos ? (
+            <>
+              Your <strong>profile email</strong> is what we show in the app and use for contact-style flows. It starts as
+              your WorkOS sign-in address when your account row has no email yet. Updating it here saves it to your profile;
+              your WorkOS login email may still be your old address until you change it with your identity provider or
+              support.
+            </>
+          ) : (
+            "Demo accounts use locally stored credentials on this device. You can change the email stored on your profile below."
+          )}
         </p>
-        <p>
-          <strong>Email on file:</strong> {profile.email || "—"}
-        </p>
+        {isWorkos && workOSAccountEmail ? (
+          <p className="sponsorSectionLead">
+            <strong>WorkOS sign-in email:</strong> {workOSAccountEmail}
+          </p>
+        ) : null}
+        <label className="sponsorSectionLead" style={{ display: "block" }} htmlFor="torp-settings-profile-email">
+          Profile email
+          <input
+            id="torp-settings-profile-email"
+            name="email"
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            value={draft.email}
+            onChange={(e) => setDraft((d) => ({ ...d, email: e.target.value }))}
+            placeholder={workOSAccountEmail || "you@example.com"}
+            style={{ marginTop: 8, width: "100%", maxWidth: 420 }}
+          />
+        </label>
+        <div className="row" style={{ marginTop: 12 }}>
+          <button type="button" className="btnPrimary" onClick={() => saveEmail()} disabled={!String(draft.email || "").trim()}>
+            Save email
+          </button>
+        </div>
       </div>
 
       <div className="card" id="account-username">

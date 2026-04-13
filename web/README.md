@@ -73,7 +73,7 @@ cp web/.env.local.example web/.env.local
 pnpm dev
 ```
 
-Opens **http://localhost:3001**. If port 3001 is in use, free it or run `pnpm --filter web dev:alt` for port 3000.
+Opens **http://localhost:3000**. If the page never loads, a stuck **Node** process may still be bound to 3000 — free it (PowerShell: `Get-NetTCPConnection -LocalPort 3000` then `Stop-Process -Id <OwningProcess> -Force`) and run `pnpm dev` again. If port 3000 is busy on purpose, use **`pnpm dev:alt`** for **http://localhost:3001**.
 
 **Windows:** Use a **space**: `pnpm dev` (not `pnpm` + `dev` merged into one token). Double-click **`web/dev.cmd`** to run `pnpm dev` from the repo root.
 

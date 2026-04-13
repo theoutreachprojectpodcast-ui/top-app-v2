@@ -34,6 +34,9 @@ importers:
       '@workos-inc/authkit-nextjs':
         specifier: ^3.0.0
         version: 3.0.0(next@16.2.1(@babel/core@7.29.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@6.0.2)
+      iron-session:
+        specifier: ^8.0.4
+        version: 8.0.4
       lucide-react:
         specifier: ^0.469.0
         version: 0.469.0(react@19.2.4)

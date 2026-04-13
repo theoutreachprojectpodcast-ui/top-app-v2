@@ -14,6 +14,7 @@ import { defaultProfile } from "@/lib/utils";
 import {
   createInitialProfile,
   getMembershipMeta,
+  mergeAccountEmailIntoProfileDto,
   profileFromApiDto,
   profileFromLegacy,
   toLocalShape,
@@ -42,7 +43,7 @@ function mapLegacyMembershipToTier(status) {
 }
 
 function profileToApiPatch(p) {
-  return {
+  const patch = {
     firstName: p.firstName,
     lastName: p.lastName,
     displayName: p.displayName || `${p.firstName || ""} ${p.lastName || ""}`.trim(),
@@ -51,8 +52,6 @@ function profileToApiPatch(p) {
     banner: p.banner,
     theme: p.theme,
     avatarUrl: p.avatarUrl,
-    membershipTier: p.membershipTier || mapLegacyMembershipToTier(p.membershipStatus),
-    membershipBillingStatus: p.membershipBillingStatus || "none",
     identityRole: p.identityRole,
     missionStatement: p.missionStatement,
     organizationAffiliation: p.organizationAffiliation,
@@ -67,9 +66,17 @@ function profileToApiPatch(p) {
     sponsorOrgName: p.sponsorOrgName,
     sponsorWebsite: p.sponsorWebsite,
   };
+  if (p.accountIntent != null && String(p.accountIntent).trim()) {
+    patch.accountIntent = String(p.accountIntent).trim();
+  }
+  return patch;
 }
 
-export function useProfileData(supabase) {
+/**
+ * Profile + favorites state for the signed-in session. Mount once via `ProfileDataProvider` in the root layout
+ * so navigating between `/`, `/profile`, etc. does not remount this hook and wipe cloud profile state.
+ */
+export function useProfileDataState(supabase) {
   const hydratedRef = useRef(false);
   const syncingRef = useRef(false);
   const workosRef = useRef(false);
@@ -96,6 +103,8 @@ export function useProfileData(supabase) {
     communityStorySubmit: false,
     isPrivilegedStaff: false,
   });
+  /** WorkOS session email from `GET /api/me` `user.email` (sign-in identity); may differ from `profile.email` after a settings change. */
+  const [workOSAccountEmail, setWorkOSAccountEmail] = useState("");
 
   /**
    * Before paint on each TopApp mount (every client route change remounts TopApp): restore session hints so we
@@ -131,8 +140,11 @@ export function useProfileData(supabase) {
           isPrivilegedStaff: !!data.entitlements.isPrivilegedStaff,
         });
       }
+      if (data.user?.email != null) {
+        setWorkOSAccountEmail(String(data.user.email || "").trim());
+      }
       if (data.authenticated && data.profile) {
-        setProfile(profileFromApiDto(data.profile));
+        setProfile(profileFromApiDto(mergeAccountEmailIntoProfileDto(data.profile, data.user)));
         setProfileSource("cloud");
       }
     } catch {
@@ -157,6 +169,15 @@ export function useProfileData(supabase) {
           await new Promise((r) => setTimeout(r, 180));
           const meRes2 = await fetch("/api/me", { credentials: "include", cache: "no-store" });
           me = await meRes2.json().catch(() => ({}));
+        }
+        /* Authenticated but profile null: transient storage/read — avoid replacing with IdP-only stub. */
+        if (me.authenticated && (me.profile == null || me.profile === undefined)) {
+          for (let attempt = 0; attempt < 2 && me.authenticated && me.profile == null; attempt++) {
+            if (cancelled) return;
+            await new Promise((r) => setTimeout(r, 160 * (attempt + 1)));
+            const meRetry = await fetch("/api/me", { credentials: "include", cache: "no-store" });
+            me = await meRetry.json().catch(() => ({}));
+          }
         }
         if (cancelled) return;
         setAuthBackend({
@@ -183,7 +204,7 @@ export function useProfileData(supabase) {
               isPrivilegedStaff: !!me.entitlements.isPrivilegedStaff,
             });
           }
-          const dto =
+          const raw =
             me.profile ||
             {
               firstName: me.user?.firstName || "",
@@ -193,7 +214,9 @@ export function useProfileData(supabase) {
               membershipBillingStatus: "none",
               onboardingCompleted: false,
             };
+          const dto = mergeAccountEmailIntoProfileDto(raw, me.user);
           setProfile(profileFromApiDto(dto));
+          setWorkOSAccountEmail(String(me.user?.email || "").trim());
           setProfileSource("cloud");
           const favRes = await fetch("/api/me/saved-orgs", { credentials: "include" });
           const favJson = await favRes.json().catch(() => ({}));
@@ -215,6 +238,7 @@ export function useProfileData(supabase) {
           setSessionKind("none");
           setIsAuthenticated(false);
           setAuthProvider(null);
+          setWorkOSAccountEmail("");
           setProfile(createInitialProfile());
           setFavoriteEins([]);
           setSavedOrganizations([]);
@@ -229,6 +253,7 @@ export function useProfileData(supabase) {
         }
 
         workosRef.current = false;
+        setWorkOSAccountEmail("");
         setSessionKind("demo");
         const legacy = loadJson(PROFILE_KEY, defaultProfile());
         const storedFavs = loadJson(FAV_KEY, []);
@@ -355,8 +380,10 @@ export function useProfileData(supabase) {
   }, [supabase, favoriteEins, isAuthenticated]);
 
   async function persistProfile(next) {
-    setProfile(next);
-    if (!isAuthenticated) return;
+    if (!isAuthenticated) {
+      setProfile(next);
+      return;
+    }
     if (workosRef.current) {
       try {
         const res = await fetch("/api/me/profile", {
@@ -367,15 +394,27 @@ export function useProfileData(supabase) {
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
-          setProfileError(data.message || "Profile could not be saved to the server.");
+          setProfileError(data.message || data.error || "Profile could not be saved to the server.");
+          await refreshWorkOSProfile();
           return;
         }
-        if (data.profile) setProfile(profileFromApiDto(data.profile));
+        if (data.profile) {
+          setProfile(
+            profileFromApiDto(
+              mergeAccountEmailIntoProfileDto(data.profile, {
+                email: workOSAccountEmail || undefined,
+              }),
+            ),
+          );
+          setProfileError("");
+        } else await refreshWorkOSProfile();
       } catch {
         setProfileError("Profile could not be saved to the server.");
+        await refreshWorkOSProfile();
       }
       return;
     }
+    setProfile(next);
     if (!supabase) return;
     try {
       await upsertProfileByUserId(supabase, userId, next);
@@ -573,10 +612,12 @@ export function useProfileData(supabase) {
   function signOut() {
     if (workosRef.current && typeof window !== "undefined") {
       clearNavAuthCache();
+      setWorkOSAccountEmail("");
       window.location.assign("/sign-out?returnTo=/");
       return;
     }
     clearNavAuthCache();
+    setWorkOSAccountEmail("");
     setIsAuthenticated(false);
     setAuthProvider(null);
     setProfile(createInitialProfile());
@@ -598,7 +639,13 @@ export function useProfileData(supabase) {
       const res = await fetch("/api/me/avatar", { method: "POST", credentials: "include", body: fd });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) return { ok: false, message: data.message || data.error || "Upload failed." };
-      if (data.profile) setProfile(profileFromApiDto(data.profile));
+      if (data.profile) {
+        setProfile(
+          profileFromApiDto(
+            mergeAccountEmailIntoProfileDto(data.profile, { email: workOSAccountEmail || undefined }),
+          ),
+        );
+      }
       return { ok: true };
     } catch {
       return { ok: false, message: "Upload failed." };
@@ -624,6 +671,7 @@ export function useProfileData(supabase) {
     userId,
     sessionKind,
     authBackend,
+    workOSAccountEmail,
     isAuthenticated,
     loadingProfile,
     profileError,

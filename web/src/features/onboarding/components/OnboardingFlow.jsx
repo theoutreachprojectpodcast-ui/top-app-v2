@@ -64,6 +64,15 @@ const PLANS = [
   },
 ];
 
+function hasSavedProfileBasics(profile) {
+  return Boolean(
+    String(profile?.firstName || "").trim() ||
+      String(profile?.lastName || "").trim() ||
+      String(profile?.displayName || "").trim() ||
+      String(profile?.bio || "").trim(),
+  );
+}
+
 function deriveInitialStep(profile) {
   const stored = String(profile?.onboardingCurrentStep || "").trim();
   if (stored === "0" || stored === "1" || stored === "2") {
@@ -72,7 +81,12 @@ function deriveInitialStep(profile) {
     return Number(stored);
   }
   const intent = normalizePublicAccountIntent(profile?.accountIntent);
-  if (!intent) return 0;
+  if (!intent) {
+    // User may have saved names/bio via Profile → Edit before choosing an onboarding path — show step 1
+    // so existing data is visible instead of an empty-looking step 0 (intent picker only).
+    if (hasSavedProfileBasics(profile)) return 1;
+    return 0;
+  }
   const hasName =
     String(profile?.firstName || "").trim() ||
     String(profile?.lastName || "").trim() ||
@@ -150,7 +164,9 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
         setDraft((prev) => mergeOnboardingDraftFromApi(p, prev));
         const ni = normalizePublicAccountIntent(p.accountIntent);
         if (ni) setAccountIntent(ni);
-        setStep(deriveInitialStep(p));
+        // Never move to an earlier step than the user already had from the server-rendered snapshot
+        // (stale RSC can be behind /api/me; avoid flashing step 0 when DB already advanced).
+        setStep((prev) => Math.max(prev, deriveInitialStep(p)));
         const sp = String(p.sponsorOnboardingPath || "").toLowerCase();
         if (sp === "application") setSponsorSubPath("application");
         else if (sp === "subscription") setSponsorSubPath("subscription");

@@ -7,7 +7,7 @@ import NonprofitIcon from "@/features/nonprofits/components/NonprofitIcon";
 import NonprofitSocialLinks from "@/features/nonprofits/components/NonprofitSocialLinks";
 import { fetchNonprofitProfileDetail } from "@/features/directory/api";
 import { resolveFindInfoHref } from "@/features/nonprofits/domain/nonprofitCardActions";
-import { useProfileData } from "@/features/profile/hooks";
+import { useProfileData } from "@/features/profile/ProfileDataProvider";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
 import { mergeDirectoryRowWithEnrichment } from "@/lib/supabase/enrichmentMerge";
@@ -37,7 +37,7 @@ function readProfileTheme() {
 export default function NonprofitProfilePage({ ein: einParam }) {
   const router = useRouter();
   const sb = useMemo(() => getSupabaseClient(), []);
-  const { isAuthenticated, favoriteEins, toggleFavoriteEin } = useProfileData(sb);
+  const { isAuthenticated, favoriteEins, toggleFavoriteEin } = useProfileData();
 
   const [theme, setTheme] = useState("clean");
   const [card, setCard] = useState(null);

@@ -25,10 +25,14 @@ export async function GET() {
   const admin = createSupabaseAdminClient();
   let profileDto = null;
   let row = null;
+  const sessionEmail = String(auth.user.email || "").trim();
   if (admin) {
     await syncProfileEmailWithWorkOSUser(admin, auth.user);
     row = await getProfileRowByWorkOSId(admin, auth.user.id);
     profileDto = profileRowToClientDto(row);
+  }
+  if (profileDto && sessionEmail && !String(profileDto.email || "").trim()) {
+    profileDto = { ...profileDto, email: sessionEmail };
   }
   const entitlements = row ? computeEntitlementsFromProfileRow(row) : {
     podcastMemberContent: false,

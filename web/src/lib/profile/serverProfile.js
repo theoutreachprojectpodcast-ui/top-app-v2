@@ -85,15 +85,17 @@ export function workOSUserToUpsertPayload(user) {
   const last = user.lastName || "";
   const display = [first, last].filter(Boolean).join(" ").trim() || user.email || "Member";
   const emailTrim = String(user.email || "").trim();
-  return {
+  const out = {
     workos_user_id: user.id,
     ...(emailTrim ? { email: emailTrim } : {}),
     first_name: first,
     last_name: last,
     display_name: display,
-    profile_photo_url: user.profilePictureUrl || null,
     updated_at: new Date().toISOString(),
   };
+  const pic = String(user.profilePictureUrl || "").trim();
+  if (pic) out.profile_photo_url = pic;
+  return out;
 }
 
 /**
@@ -127,11 +129,14 @@ export async function syncProfileEmailWithWorkOSUser(admin, user) {
   }
 
   const dbEmail = String(existing.email || "").trim();
+  /* Only copy sign-in email into the row when empty — do not overwrite a profile email the user set in Settings. */
+  if (!dbEmail) {
+    return patchProfileByWorkOSId(admin, user.id, { email: sessionEmail });
+  }
   if (dbEmail.toLowerCase() === sessionEmail.toLowerCase()) {
     return { ok: true, reason: "unchanged" };
   }
-
-  return patchProfileByWorkOSId(admin, user.id, { email: sessionEmail });
+  return { ok: true, reason: "profile_email_custom" };
 }
 
 /**

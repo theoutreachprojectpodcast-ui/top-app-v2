@@ -3,18 +3,24 @@
 /**
  * Compact home-hero reminder derived from real profile completion (Supabase-backed via /api/me → profile).
  */
-export default function HomeProfileProgressNotice({ completion, onOpenProfile, onOpenOnboarding }) {
+export default function HomeProfileProgressNotice({ completion, onOpenProfile, onOpenOnboarding, onOpenMembership }) {
   if (!completion || completion.isComplete || completion.total < 1) return null;
 
   const { completed, total, nextStep } = completion;
   const hint =
-    nextStep?.id === "onboarding"
+    nextStep?.actionKind === "onboarding"
       ? "Finish setup to unlock the full account experience."
-      : "A few details help the community recognize you.";
+      : nextStep?.actionKind === "membership"
+        ? "Complete billing for the membership path saved on your account."
+        : "A few details help the community recognize you — all checklist items are stored on your profile.";
 
   function onContinue() {
     if (nextStep?.actionKind === "onboarding" && onOpenOnboarding) {
       onOpenOnboarding();
+      return;
+    }
+    if (nextStep?.actionKind === "membership" && onOpenMembership) {
+      onOpenMembership();
       return;
     }
     onOpenProfile?.();
@@ -29,7 +35,11 @@ export default function HomeProfileProgressNotice({ completion, onOpenProfile, o
         <span className="homeProfileProgressNotice__hint">{hint}</span>
       </div>
       <button type="button" className="btnSoft homeProfileProgressNotice__cta" onClick={onContinue}>
-        {nextStep?.actionKind === "onboarding" ? "Continue setup" : "Finish profile"}
+        {nextStep?.actionKind === "onboarding"
+          ? "Continue setup"
+          : nextStep?.actionKind === "membership"
+            ? "Membership"
+            : "Finish profile"}
       </button>
     </div>
   );
