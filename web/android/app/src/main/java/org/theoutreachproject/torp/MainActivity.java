@@ -1,0 +1,5 @@
+package org.theoutreachproject.torp;
+
+import com.getcapacitor.BridgeActivity;
+
+public class MainActivity extends BridgeActivity {}
