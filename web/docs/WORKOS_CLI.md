@@ -27,7 +27,7 @@ Docs: [AI Installer & CLI](https://workos.com/docs/authkit/cli-installer).
 
 ## This repository already has AuthKit
 
-`tORP` already uses `@workos-inc/authkit-nextjs`, `/callback`, and env vars in `web/.env.local.example`.
+`tORP` already uses `@workos-inc/authkit-nextjs`, `/callback`, and env vars in `web/.env.local.example`. Step-by-step enablement: **`web/docs/WORKOS_HOSTED_SIGNIN.md`**.
 
 - **Do not** run `workos install` on a clean tree without reviewing diffs — it may rewrite routes and middleware. Prefer **dashboard + `.env.local`** for keys and redirect URIs unless you intend a full reinstall.
 - **Do** use the CLI for **`auth login`**, **`doctor`**, and dashboard sync flows that don’t overwrite your app.

@@ -1,3 +1,5 @@
+import { workosSignInLink } from "@/lib/auth/workosReturnTo";
+
 export default function MemberOnlyLockSection({ canAccess, items = [] }) {
   return (
     <section className="podcastMemberSection">
@@ -10,7 +12,7 @@ export default function MemberOnlyLockSection({ canAccess, items = [] }) {
             interviews, and downloadable resources.
           </p>
           <div className="podcastLockCardActions">
-            <a className="btnSoft" href="/api/auth/workos/signin?returnTo=/podcasts">
+            <a className="btnSoft" href={workosSignInLink("/podcasts", null, "/podcasts")}>
               Sign in
             </a>
             <a className="btnSoft" href="/profile">

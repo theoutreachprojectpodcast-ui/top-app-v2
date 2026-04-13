@@ -14,6 +14,8 @@ import CommunitySubmissionForm from "@/features/community/components/CommunitySu
 import { isModeratorUser } from "@/features/community/api/communityApi";
 import { useCommunityFeed } from "@/features/community/hooks/useCommunityFeed";
 import { emptyProfileAvatarUrl } from "@/lib/avatarFallback";
+import { readRememberDevicePref } from "@/lib/auth/lastUsedEmail";
+import { workosSignInLink, workosSignUpHref } from "@/lib/auth/workosReturnTo";
 
 function CommunityIcon() {
   const path = "M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6m8 0a3 3 0 1 1 0-6 3 3 0 0 1 0 6M3 19c0-2.8 2.8-4 5-4s5 1.2 5 4m3 0c0-2.4 2.3-3.5 5-3.5 2.1 0 5 1 5 3.5";
@@ -51,6 +53,10 @@ export default function CommunityPage({
   });
   const canModerate = isAuthenticated && isModeratorUser({ userId, profile });
   const useWorkOSApi = authBackend.workos && sessionKind === "workos";
+  const workosCommunitySignUpHref = workosSignUpHref("/community", { rememberDevice: readRememberDevicePref() });
+  const workosCommunitySignInHref = workosSignInLink("/community", null, "/community", {
+    rememberDevice: readRememberDevicePref(),
+  });
 
   useEffect(() => {
     if (!isAuthenticated) setFeedTab("latest");
@@ -84,10 +90,10 @@ export default function CommunityPage({
           <div className="row wrap">
             {authBackend.workos ? (
               <>
-                <a className="btnPrimary" href="/api/auth/workos/signup?returnTo=/community">
+                <a className="btnPrimary" href={workosCommunitySignUpHref}>
                   Create account
                 </a>
-                <a className="btnSoft" href="/api/auth/workos/signin?returnTo=/community">
+                <a className="btnSoft" href={workosCommunitySignInHref}>
                   Sign in
                 </a>
               </>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { AUTH_KEY, DEMO_ACCOUNT_KEY, FAV_KEY, PROFILE_KEY } from "@/lib/constants";
 import { AUTH_PROVIDER } from "@/lib/auth/providers";
 import {
@@ -20,7 +20,7 @@ import {
   toLocalStorageProfile,
 } from "@/features/profile/mappers";
 import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
-import { clearNavAuthCache } from "@/lib/auth/navAuthCache";
+import { clearNavAuthCache, readNavAuthCache } from "@/lib/auth/navAuthCache";
 import {
   fetchProfileByUserId,
   fetchSavedOrgEinList,
@@ -85,14 +85,39 @@ export function useProfileData(supabase) {
   const [favoriteEins, setFavoriteEins] = useState([]);
   const [savedOrganizations, setSavedOrganizations] = useState([]);
   const [sessionKind, setSessionKind] = useState("none");
-  const [authBackend, setAuthBackend] = useState({ workos: false, stripe: false, supabaseServiceRole: false });
+  const [authBackend, setAuthBackend] = useState({
+    workos: false,
+    workosMissingEnv: [],
+    stripe: false,
+    supabaseServiceRole: false,
+  });
   const [entitlements, setEntitlements] = useState({
     podcastMemberContent: false,
     communityStorySubmit: false,
     isPrivilegedStaff: false,
   });
-  /** Mirrors GET /api/me `user` for merge rules in profile completion (WorkOS names/email when row is sparse). */
-  const [workosUserSnapshot, setWorkosUserSnapshot] = useState(null);
+
+  /**
+   * Before paint on each TopApp mount (every client route change remounts TopApp): restore session hints so we
+   * do not flash signed-out UI while /api/me rehydrates. WorkOS: nav cache from AuthSessionProvider; demo: AUTH_KEY.
+   */
+  useLayoutEffect(() => {
+    if (typeof window === "undefined") return;
+    const c = readNavAuthCache();
+    if (c?.authenticated && c?.workos) {
+      workosRef.current = true;
+      setSessionKind("workos");
+      setIsAuthenticated(true);
+      return;
+    }
+    const authState = loadJson(AUTH_KEY, { isAuthenticated: false });
+    if (authState?.isAuthenticated) {
+      workosRef.current = false;
+      setSessionKind("demo");
+      setIsAuthenticated(true);
+      setAuthProvider(authState.provider || AUTH_PROVIDER.DEMO_EMAIL);
+    }
+  }, []);
 
   const refreshWorkOSProfile = useCallback(async () => {
     if (!workosRef.current) return;
@@ -105,15 +130,6 @@ export function useProfileData(supabase) {
           communityStorySubmit: !!data.entitlements.communityStorySubmit,
           isPrivilegedStaff: !!data.entitlements.isPrivilegedStaff,
         });
-      }
-      if (data.authenticated && data.user && typeof data.user === "object") {
-        setWorkosUserSnapshot({
-          email: String(data.user.email ?? ""),
-          firstName: String(data.user.firstName ?? ""),
-          lastName: String(data.user.lastName ?? ""),
-        });
-      } else if (!data.authenticated) {
-        setWorkosUserSnapshot(null);
       }
       if (data.authenticated && data.profile) {
         setProfile(profileFromApiDto(data.profile));
@@ -129,16 +145,23 @@ export function useProfileData(supabase) {
     async function init() {
       setLoadingProfile(true);
       setProfileError("");
+      const cacheNav = typeof window !== "undefined" ? readNavAuthCache() : null;
       try {
         const [statusRes, meRes] = await Promise.all([
-          fetch("/api/auth/status"),
-          fetch("/api/me", { credentials: "include" }),
+          fetch("/api/auth/status", { credentials: "include" }),
+          fetch("/api/me", { credentials: "include", cache: "no-store" }),
         ]);
         const status = await statusRes.json();
-        const me = await meRes.json();
+        let me = await meRes.json();
+        if (!me.authenticated && cacheNav?.authenticated) {
+          await new Promise((r) => setTimeout(r, 180));
+          const meRes2 = await fetch("/api/me", { credentials: "include", cache: "no-store" });
+          me = await meRes2.json().catch(() => ({}));
+        }
         if (cancelled) return;
         setAuthBackend({
           workos: !!status.workos,
+          workosMissingEnv: Array.isArray(status.workosMissingEnv) ? status.workosMissingEnv : [],
           stripe: !!status.stripe,
           stripeMemberRecurringMissingEnv: Array.isArray(status.stripeMemberRecurringMissingEnv)
             ? status.stripeMemberRecurringMissingEnv
@@ -153,15 +176,6 @@ export function useProfileData(supabase) {
           setSessionKind("workos");
           setIsAuthenticated(true);
           setAuthProvider(AUTH_PROVIDER.WORKOS);
-          if (me.user && typeof me.user === "object") {
-            setWorkosUserSnapshot({
-              email: String(me.user.email ?? ""),
-              firstName: String(me.user.firstName ?? ""),
-              lastName: String(me.user.lastName ?? ""),
-            });
-          } else {
-            setWorkosUserSnapshot(null);
-          }
           if (me.entitlements && typeof me.entitlements === "object") {
             setEntitlements({
               podcastMemberContent: !!me.entitlements.podcastMemberContent,
@@ -191,8 +205,30 @@ export function useProfileData(supabase) {
           return;
         }
 
+        /**
+         * Nav cache said we were signed in (last /api/me success), but API now says not — session ended or transient
+         * failure after retry. Never load unrelated demo localStorage profile in this branch (shared device bug).
+         */
+        if (cacheNav?.authenticated) {
+          clearNavAuthCache();
+          workosRef.current = false;
+          setSessionKind("none");
+          setIsAuthenticated(false);
+          setAuthProvider(null);
+          setProfile(createInitialProfile());
+          setFavoriteEins([]);
+          setSavedOrganizations([]);
+          setEntitlements({
+            podcastMemberContent: false,
+            communityStorySubmit: false,
+            isPrivilegedStaff: false,
+          });
+          hydratedRef.current = true;
+          setLoadingProfile(false);
+          return;
+        }
+
         workosRef.current = false;
-        setWorkosUserSnapshot(null);
         setSessionKind("demo");
         const legacy = loadJson(PROFILE_KEY, defaultProfile());
         const storedFavs = loadJson(FAV_KEY, []);
@@ -449,7 +485,6 @@ export function useProfileData(supabase) {
     const nextUserId = typeof window !== "undefined" ? getOrCreateDemoUserId() : "demo-user";
     setUserId(nextUserId);
     workosRef.current = false;
-    setWorkosUserSnapshot(null);
     if (supabase && cloudUserId) {
       try {
         await replaceSavedOrgEinList(supabase, cloudUserId, []);
@@ -548,7 +583,6 @@ export function useProfileData(supabase) {
     setFavoriteEins([]);
     setSavedOrganizations([]);
     setSessionKind("none");
-    setWorkosUserSnapshot(null);
     setEntitlements({
       podcastMemberContent: false,
       communityStorySubmit: false,
@@ -612,6 +646,5 @@ export function useProfileData(supabase) {
     signOut,
     refreshWorkOSProfile,
     uploadAvatarFile,
-    workosUserSnapshot,
   };
 }

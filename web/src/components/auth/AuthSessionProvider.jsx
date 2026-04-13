@@ -10,6 +10,12 @@ import {
   useRef,
   useState,
 } from "react";
+
+async function fetchMeAuthenticated() {
+  const meRes = await fetch("/api/me", { credentials: "include", cache: "no-store" });
+  const me = await meRes.json().catch(() => ({}));
+  return !!me.authenticated;
+}
 import { usePathname } from "next/navigation";
 import { clearNavAuthCache, readNavAuthCache, writeNavAuthCache } from "@/lib/auth/navAuthCache";
 
@@ -28,6 +34,11 @@ export default function AuthSessionProvider({ children }) {
   const pathname = usePathname();
   const [state, setState] = useState({ loading: true, authenticated: false, workos: false });
   const skipFirstPathnameEffect = useRef(true);
+  /** Latest snapshot for soft refresh: avoid spurious “signed out” on navigation/tab focus. */
+  const sessionRef = useRef(state);
+  useEffect(() => {
+    sessionRef.current = state;
+  }, [state]);
 
   /** Apply cached auth before paint to avoid a signed-out flash on client navigations (WorkOS cookie is still canonical). */
   useLayoutEffect(() => {
@@ -47,7 +58,11 @@ export default function AuthSessionProvider({ children }) {
       const status = await statusRes.json().catch(() => ({}));
       const me = await meRes.json().catch(() => ({}));
       const workos = !!status.workos;
-      const authenticated = !!me.authenticated;
+      let authenticated = !!me.authenticated;
+      if (soft && sessionRef.current.authenticated && !authenticated) {
+        await new Promise((r) => setTimeout(r, 150));
+        authenticated = await fetchMeAuthenticated();
+      }
       writeNavAuthCache(authenticated, workos);
       setState({ loading: false, authenticated, workos });
     } catch {
@@ -74,7 +89,7 @@ export default function AuthSessionProvider({ children }) {
 
   useEffect(() => {
     function onVis() {
-      if (document.visibilityState === "visible") refresh();
+      if (document.visibilityState === "visible") void refresh({ soft: true });
     }
     document.addEventListener("visibilitychange", onVis);
     return () => document.removeEventListener("visibilitychange", onVis);

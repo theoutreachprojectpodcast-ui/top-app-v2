@@ -1,0 +1,14 @@
+---
+description: Match existing design system for UI (tORP web app)
+alwaysApply: true
+---
+
+# Design system alignment (web)
+
+When adding or changing **UI** in `web/`:
+
+1. **Reuse tokens and primitives** — Prefer existing CSS variables (`--ds-space-*`, `--color-*`, `--radius-*`, `--text-body-sm`, `--color-focus-ring`) and shared classes over ad hoc colors, spacing, or one-off checkbox/radio markup.
+2. **Choices** — Use `FormCheckbox` / `FormRadio` from `@/components/forms/FormChoice` (`.dsChoice`, `.dsChoice--checkbox`, `.dsChoiceGroup`) instead of raw checkbox labels with custom styling.
+3. **Field labels** — Use `.fieldLabel` (and the same stacked label + control patterns as apply/sponsor/trusted-resource forms) for text above inputs unless a screen already defines a different pattern.
+4. **Buttons** — Use existing `.btnPrimary`, `.btnSoft`, etc.; keep density and typography consistent with nearby controls.
+5. **Exceptions** — Only diverge when the user explicitly asks for a different visual treatment or when extending an existing screen that already uses a bespoke pattern (then stay consistent *within* that screen).

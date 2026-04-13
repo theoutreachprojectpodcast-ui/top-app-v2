@@ -67,8 +67,8 @@ const PLANS = [
 function deriveInitialStep(profile) {
   const stored = String(profile?.onboardingCurrentStep || "").trim();
   if (stored === "0" || stored === "1" || stored === "2") {
-    const intent = normalizePublicAccountIntent(profile?.accountIntent);
-    if ((stored === "1" || stored === "2") && !intent) return 0;
+    // Respect persisted wizard position even if account_intent was not written yet (e.g. back navigation,
+    // partial saves). Forcing step 0 here made saved profile fields look "erased" until the user re-chose intent.
     return Number(stored);
   }
   const intent = normalizePublicAccountIntent(profile?.accountIntent);
@@ -79,6 +79,28 @@ function deriveInitialStep(profile) {
     String(profile?.displayName || "").trim();
   if (!hasName) return 1;
   return 2;
+}
+
+/** Prefer non-empty server values; keep local non-empty fields if the server is still empty (in-flight typing). */
+function mergeOnboardingDraftFromApi(serverProfile, prevDraft) {
+  if (!serverProfile || typeof serverProfile !== "object") return prevDraft;
+  const pick = (key) => {
+    const sv = String(serverProfile[key] ?? "").trim();
+    const pv = String(prevDraft[key] ?? "").trim();
+    return sv || pv;
+  };
+  return {
+    displayName: pick("displayName"),
+    firstName: pick("firstName"),
+    lastName: pick("lastName"),
+    bio: pick("bio"),
+    supportInterests: pick("supportInterests"),
+    contributionSummary: pick("contributionSummary"),
+    sponsorOrgName: pick("sponsorOrgName"),
+    sponsorWebsite: pick("sponsorWebsite"),
+    sponsorIntentSummary: pick("sponsorIntentSummary"),
+    sponsorApplicationNotes: pick("sponsorApplicationNotes"),
+  };
 }
 
 export default function OnboardingFlow({ initialProfile, authBackend }) {
@@ -115,6 +137,32 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
 
   const checkoutFlash = useMemo(() => searchParams.get("checkout"), [searchParams]);
   const busy = saving || autoFinalizing;
+
+  /** Live `/api/me` profile — corrects stale RSC props and restores DB-backed fields after navigation. */
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const r = await fetch("/api/me", { credentials: "include", cache: "no-store" });
+        const data = await r.json().catch(() => ({}));
+        if (cancelled || !data.authenticated || !data.profile) return;
+        const p = data.profile;
+        setDraft((prev) => mergeOnboardingDraftFromApi(p, prev));
+        const ni = normalizePublicAccountIntent(p.accountIntent);
+        if (ni) setAccountIntent(ni);
+        setStep(deriveInitialStep(p));
+        const sp = String(p.sponsorOnboardingPath || "").toLowerCase();
+        if (sp === "application") setSponsorSubPath("application");
+        else if (sp === "subscription") setSponsorSubPath("subscription");
+        if (ni) setSelectedTier(defaultMembershipTierForIntent(ni));
+      } catch {
+        /* ignore */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   function persistOnboardingStep(n) {
     void fetch("/api/me/profile", {
@@ -193,6 +241,9 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.message || "Could not save your choice.");
+      if (data.profile && typeof data.profile === "object") {
+        setDraft((prev) => mergeOnboardingDraftFromApi(data.profile, prev));
+      }
       setSelectedTier(defaultMembershipTierForIntent(intent));
       setStep(1);
     } catch (e) {
@@ -230,6 +281,9 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.message || "Could not save profile.");
+      if (data.profile && typeof data.profile === "object") {
+        setDraft((prev) => mergeOnboardingDraftFromApi(data.profile, prev));
+      }
       setStep(2);
     } catch (e) {
       setError(e.message || "Could not save profile.");
@@ -381,7 +435,13 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
         ) : null}
 
         {step === 1 ? (
-          <div className="form onboardingForm">
+          <form
+            className="form onboardingForm"
+            autoComplete="on"
+            onSubmit={(e) => {
+              e.preventDefault();
+            }}
+          >
             <h3 className="introTagline" style={{ marginBottom: 10 }}>
               Step 2 — Profile &amp; contact details
             </h3>
@@ -390,11 +450,13 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
               Profile photo can be updated from Profile → Edit after onboarding.
             </p>
             {initialProfile?.email ? (
-              <label className="sponsorSectionLead" style={{ display: "block" }}>
+              <label className="sponsorSectionLead" style={{ display: "block" }} htmlFor="torp-onboarding-email">
                 Email (from your sign-in provider)
                 <input
+                  id="torp-onboarding-email"
                   name="email"
                   type="email"
+                  inputMode="email"
                   autoComplete="email"
                   readOnly
                   value={initialProfile.email}
@@ -402,28 +464,43 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
                 />
               </label>
             ) : null}
-            <input
-              name="displayName"
-              autoComplete="nickname"
-              value={draft.displayName}
-              onChange={(e) => setDraft((d) => ({ ...d, displayName: e.target.value }))}
-              placeholder="Display name"
-            />
+            <label className="sponsorSectionLead" style={{ display: "block" }} htmlFor="torp-onboarding-username">
+              Display name
+              <input
+                id="torp-onboarding-username"
+                name="username"
+                autoComplete="username"
+                value={draft.displayName}
+                onChange={(e) => setDraft((d) => ({ ...d, displayName: e.target.value }))}
+                placeholder="Display name"
+                style={{ marginTop: 6 }}
+              />
+            </label>
             <div className="form">
-              <input
-                name="given-name"
-                autoComplete="given-name"
-                value={draft.firstName}
-                onChange={(e) => setDraft((d) => ({ ...d, firstName: e.target.value }))}
-                placeholder="First name"
-              />
-              <input
-                name="family-name"
-                autoComplete="family-name"
-                value={draft.lastName}
-                onChange={(e) => setDraft((d) => ({ ...d, lastName: e.target.value }))}
-                placeholder="Last name"
-              />
+              <label className="sponsorSectionLead" style={{ display: "block", marginBottom: 0 }} htmlFor="torp-onboarding-given">
+                First name
+                <input
+                  id="torp-onboarding-given"
+                  name="given-name"
+                  autoComplete="given-name"
+                  value={draft.firstName}
+                  onChange={(e) => setDraft((d) => ({ ...d, firstName: e.target.value }))}
+                  placeholder="First name"
+                  style={{ marginTop: 6 }}
+                />
+              </label>
+              <label className="sponsorSectionLead" style={{ display: "block", marginBottom: 0 }} htmlFor="torp-onboarding-family">
+                Last name
+                <input
+                  id="torp-onboarding-family"
+                  name="family-name"
+                  autoComplete="family-name"
+                  value={draft.lastName}
+                  onChange={(e) => setDraft((d) => ({ ...d, lastName: e.target.value }))}
+                  placeholder="Last name"
+                  style={{ marginTop: 6 }}
+                />
+              </label>
             </div>
             <textarea
               rows={3}
@@ -496,7 +573,7 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
                 Continue
               </button>
             </div>
-          </div>
+          </form>
         ) : null}
 
         {step === 2 && accountIntent === "sponsor_user" ? (

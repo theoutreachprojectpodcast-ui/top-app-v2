@@ -1,6 +1,10 @@
 import { withAuth } from "@workos-inc/authkit-nextjs";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { getProfileRowByWorkOSId, profileRowToClientDto } from "@/lib/profile/serverProfile";
+import {
+  getProfileRowByWorkOSId,
+  profileRowToClientDto,
+  syncProfileEmailWithWorkOSUser,
+} from "@/lib/profile/serverProfile";
 import { computeEntitlementsFromProfileRow } from "@/lib/account/entitlements";
 import { computeProfileCompletion } from "@/lib/profile/profileCompletion";
 
@@ -22,6 +26,7 @@ export async function GET() {
   let profileDto = null;
   let row = null;
   if (admin) {
+    await syncProfileEmailWithWorkOSUser(admin, auth.user);
     row = await getProfileRowByWorkOSId(admin, auth.user.id);
     profileDto = profileRowToClientDto(row);
   }
@@ -30,11 +35,7 @@ export async function GET() {
     communityStorySubmit: false,
     isPrivilegedStaff: false,
   };
-  const profileCompletion = computeProfileCompletion(profileDto, {
-    email: auth.user.email ?? "",
-    firstName: auth.user.firstName ?? "",
-    lastName: auth.user.lastName ?? "",
-  });
+  const profileCompletion = computeProfileCompletion(profileDto);
   return Response.json({
     authenticated: true,
     profile: profileDto,

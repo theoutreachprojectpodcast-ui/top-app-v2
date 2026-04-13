@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuthSession } from "@/components/auth/AuthSessionProvider";
+import { readRememberDevicePref } from "@/lib/auth/lastUsedEmail";
+import { workosSignInLink } from "@/lib/auth/workosReturnTo";
 
 async function fetchJson(url, options) {
   const res = await fetch(url, { credentials: "include", ...options });
@@ -96,12 +98,15 @@ export default function NotificationsPageClient() {
   }
 
   if (!session.authenticated) {
+    const workosNotificationsSignInHref = workosSignInLink("/notifications", null, "/notifications", {
+      rememberDevice: readRememberDevicePref(),
+    });
     return (
       <div className="card notificationsPage">
         <h1>Notifications</h1>
         <p className="sponsorSectionLead">Sign in to see your in-app notifications.</p>
         <div className="notificationsPage__actions">
-          <Link className="btnPrimary" href="/api/auth/workos/signin?returnTo=/notifications">
+          <Link className="btnPrimary" href={workosNotificationsSignInHref}>
             Sign in
           </Link>
           <Link className="btnSoft" href="/?signin=1">

@@ -16,11 +16,38 @@ export function workosReturnPathFromRouter(pathname, searchParams) {
 }
 
 /**
+ * @typedef {{ rememberDevice?: boolean, loginHint?: string }} WorkOSSignInLinkOptions
+ */
+
+/**
  * @param {string} [pathname]
  * @param {{ toString?: () => string } | null} [searchParams]
  * @param {string} [fallback]
+ * @param {WorkOSSignInLinkOptions} [options]
  */
-export function workosSignInLink(pathname, searchParams, fallback = "/") {
+export function workosSignInLink(pathname, searchParams, fallback = "/", options = {}) {
   const returnTo = workosReturnPathFromRouter(pathname, searchParams) || fallback;
-  return `/api/auth/workos/signin?returnTo=${encodeURIComponent(returnTo)}`;
+  const params = new URLSearchParams();
+  params.set("returnTo", returnTo);
+  const rememberDevice = options.rememberDevice !== false;
+  params.set("remember", rememberDevice ? "1" : "0");
+  const hint = String(options.loginHint || "").trim();
+  if (hint) params.set("loginHint", hint);
+  return `/api/auth/workos/signin?${params.toString()}`;
+}
+
+/**
+ * Sign-up URL with optional email hint for AuthKit (does not store credentials).
+ * @param {string} returnTo — safe path (e.g. /onboarding)
+ * @param {{ rememberDevice?: boolean, loginHint?: string }} [options]
+ */
+export function workosSignUpHref(returnTo, options = {}) {
+  const safe = safeAppReturnPath(returnTo, "/onboarding");
+  const params = new URLSearchParams();
+  params.set("returnTo", safe);
+  const rememberDevice = options.rememberDevice !== false;
+  params.set("remember", rememberDevice ? "1" : "0");
+  const hint = String(options.loginHint || "").trim();
+  if (hint) params.set("loginHint", hint);
+  return `/api/auth/workos/signup?${params.toString()}`;
 }

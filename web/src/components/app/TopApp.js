@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import HeaderInner from "@/components/layout/HeaderInner";
 import FooterInner from "@/components/layout/FooterInner";
@@ -33,9 +33,20 @@ import { getSupabaseClient } from "@/lib/supabase/client";
 import { emptyProfileAvatarUrl } from "@/lib/avatarFallback";
 import { rowEin } from "@/lib/utils";
 import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
-import { workosSignInLink } from "@/lib/auth/workosReturnTo";
+import {
+  clearLastUsedEmail,
+  readLastUsedEmail,
+  readRememberDevicePref,
+  readRememberEmailPref,
+  writeLastUsedEmail,
+  writeRememberDevicePref,
+  writeRememberEmailPref,
+} from "@/lib/auth/lastUsedEmail";
+import { workosSignInLink, workosSignUpHref } from "@/lib/auth/workosReturnTo";
 import { computeProfileCompletion, getIncompleteEditFocusIds } from "@/lib/profile/profileCompletion";
+import { profileFromApiDto } from "@/features/profile/mappers";
 import AccountSettingsPage from "@/features/settings/components/AccountSettingsPage";
+import { FormCheckbox } from "@/components/forms/FormChoice";
 
 function AppIcon({ name }) {
   const icons = {
@@ -51,6 +62,30 @@ function AppIcon({ name }) {
   return <IconWrap path={icons[name] || icons.search} />;
 }
 
+function DemoAuthPasswordVisibilityIcon({ revealed }) {
+  return (
+    <svg
+      className="demoAuthModal__passwordToggleSvg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      {revealed ? (
+        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24M1 1l22 22" />
+      ) : (
+        <>
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+          <circle cx="12" cy="12" r="3" />
+        </>
+      )}
+    </svg>
+  );
+}
+
 function TopAppInner({ initialNav = "home" }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -62,16 +97,27 @@ function TopAppInner({ initialNav = "home" }) {
   const [editFieldFocus, setEditFieldFocus] = useState(null);
   const [authMode, setAuthMode] = useState("signin");
   const [authDraft, setAuthDraft] = useState({ firstName: "", lastName: "", email: "", password: "" });
+  const [demoAuthPasswordVisible, setDemoAuthPasswordVisible] = useState(false);
   const [authError, setAuthError] = useState("");
   const [authStatus, setAuthStatus] = useState("");
   const [signupAvatarDataUrl, setSignupAvatarDataUrl] = useState("");
   const [contactDraft, setContactDraft] = useState({ firstName: "", lastName: "", email: "", phone: "", message: "" });
   const [contactStatus, setContactStatus] = useState("");
   const [contactError, setContactError] = useState("");
+  const [rememberDevice, setRememberDevice] = useState(() =>
+    typeof window !== "undefined" ? readRememberDevicePref() : true,
+  );
+  const [rememberEmail, setRememberEmail] = useState(() =>
+    typeof window !== "undefined" ? readRememberEmailPref() : true,
+  );
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [nav]);
+
+  useEffect(() => {
+    if (overlay !== "signin") setDemoAuthPasswordVisible(false);
+  }, [overlay]);
 
   useEffect(() => {
     if (pathname === "/settings") setNav("settings");
@@ -94,6 +140,14 @@ function TopAppInner({ initialNav = "home" }) {
       setSignupAvatarDataUrl("");
     }
   }, [overlay, authMode]);
+
+  useEffect(() => {
+    if (overlay !== "signin") return;
+    setRememberDevice(readRememberDevicePref());
+    setRememberEmail(readRememberEmailPref());
+    const last = readLastUsedEmail();
+    if (last) setAuthDraft((d) => ({ ...d, email: d.email ? d.email : last }));
+  }, [overlay]);
 
   const {
     userId,
@@ -118,16 +172,17 @@ function TopAppInner({ initialNav = "home" }) {
     signOut,
     uploadAvatarFile,
     refreshWorkOSProfile,
-    workosUserSnapshot,
   } = useProfileData(sb);
 
   const profileCompletion = useMemo(() => {
     if (!isAuthenticated) return null;
-    return computeProfileCompletion(profile, workosUserSnapshot);
-  }, [isAuthenticated, profile, workosUserSnapshot]);
+    return computeProfileCompletion(profile);
+  }, [isAuthenticated, profile]);
+
+  const prevLoadingProfileForEditRef = useRef(loadingProfile);
 
   const editIncompleteKeys =
-    overlay === "edit" && editDraft ? getIncompleteEditFocusIds(editDraft, workosUserSnapshot) : new Set();
+    overlay === "edit" && editDraft ? getIncompleteEditFocusIds(editDraft) : new Set();
 
   useEffect(() => {
     const c = searchParams.get("checkout");
@@ -144,7 +199,26 @@ function TopAppInner({ initialNav = "home" }) {
     };
   }, [searchParams, sessionKind, refreshWorkOSProfile, router]);
 
-  const workosSignInHereHref = useMemo(() => workosSignInLink(pathname, searchParams, "/"), [pathname, searchParams]);
+  const workosSignInHereHref = useMemo(
+    () =>
+      workosSignInLink(pathname, searchParams, "/", {
+        rememberDevice,
+        loginHint: authDraft.email,
+      }),
+    [pathname, searchParams, rememberDevice, authDraft.email],
+  );
+
+  const workosSignUpModalHref = useMemo(
+    () => workosSignUpHref("/onboarding", { rememberDevice, loginHint: authDraft.email }),
+    [rememberDevice, authDraft.email],
+  );
+
+  function persistAuthPrefsBeforeWorkOSRedirect() {
+    writeRememberDevicePref(rememberDevice);
+    writeRememberEmailPref(rememberEmail);
+    if (!rememberEmail) clearLastUsedEmail();
+    else if (String(authDraft.email || "").trim()) writeLastUsedEmail(authDraft.email.trim());
+  }
 
   const { filters, setFilters, results, status, meta, page, canGoNext, runSearch, clearSearch } = useDirectorySearch(sb);
   const { trusted, trustedStatus, loadTrusted } = useTrustedResources(sb);
@@ -159,10 +233,39 @@ function TopAppInner({ initialNav = "home" }) {
   }, [sessionKind, isAuthenticated, profile?.onboardingCompleted, router]);
 
   function openEdit(focusKey) {
-    setEditDraft(profile);
+    setEditDraft(profileFromApiDto(profile));
     setEditFieldFocus(focusKey != null && focusKey !== "" ? focusKey : null);
     setOverlay("edit");
   }
+
+  /** Home hero “Finish profile” navigates with ?edit=1 — open overlay only after /api/me profile is loaded on this mount. */
+  const openedProfileEditFromQueryRef = useRef(false);
+  useEffect(() => {
+    if (pathname !== "/profile" || searchParams.get("edit") !== "1") {
+      openedProfileEditFromQueryRef.current = false;
+      return;
+    }
+    if (openedProfileEditFromQueryRef.current) return;
+    if (loadingProfile || !isAuthenticated) return;
+    const rawFocus = searchParams.get("focus") || "";
+    const focusKey =
+      rawFocus && /^[a-zA-Z][a-zA-Z0-9_-]*$/.test(rawFocus) ? rawFocus : undefined;
+    openedProfileEditFromQueryRef.current = true;
+    setEditDraft(profileFromApiDto(profile));
+    setEditFieldFocus(focusKey != null && focusKey !== "" ? focusKey : null);
+    setOverlay("edit");
+    router.replace("/profile", { scroll: false });
+  }, [pathname, searchParams, loadingProfile, isAuthenticated, profile, router]);
+
+  /** If Edit Profile opens before cloud profile finishes loading, replace empty draft with real row. */
+  useEffect(() => {
+    const prev = prevLoadingProfileForEditRef.current;
+    prevLoadingProfileForEditRef.current = loadingProfile;
+    if (overlay !== "edit" || loadingProfile) return;
+    if (prev === true && loadingProfile === false) {
+      setEditDraft(profileFromApiDto(profile));
+    }
+  }, [overlay, loadingProfile, profile]);
 
   function closeEditOverlay() {
     setEditFieldFocus(null);
@@ -263,7 +366,8 @@ function TopAppInner({ initialNav = "home" }) {
   function openMembershipJourney() {
     if (!isAuthenticated) {
       if (authBackend.workos) {
-        window.location.assign("/api/auth/workos/signup?returnTo=/onboarding");
+        writeRememberDevicePref(rememberDevice);
+        window.location.assign(workosSignUpHref("/onboarding", { rememberDevice }));
         return;
       }
       setAuthMode("signup");
@@ -314,6 +418,11 @@ function TopAppInner({ initialNav = "home" }) {
     if (!result?.ok) {
       setAuthError(result?.message || "Unable to continue right now.");
       return;
+    }
+    if (!authBackend.workos) {
+      writeRememberEmailPref(rememberEmail);
+      if (rememberEmail && String(authDraft.email || "").trim()) writeLastUsedEmail(authDraft.email.trim());
+      else clearLastUsedEmail();
     }
     setAuthStatus(authMode === "signup" ? "Account created. Welcome in." : "Signed in successfully.");
     setAuthDraft((d) => ({ ...d, password: "" }));
@@ -421,31 +530,53 @@ function TopAppInner({ initialNav = "home" }) {
                 <div className="homeHeroBackdrop__scrim" aria-hidden="true" />
                 <div className="homeHeroBackdrop__content">
                   {profileCompletion ? (
-                    <HomeProfileProgressNotice
-                      completion={profileCompletion}
-                      onOpenProfile={() => {
-                        router.push("/profile");
-                        openEdit();
-                      }}
-                      onOpenOnboarding={() => router.push("/onboarding")}
-                    />
-                  ) : null}
-                  <div className="card cardHero homeHeroBackdrop__card">
-                  <HomeWelcomeSection
-                    isAuthenticated={isAuthenticated}
-                    isMember={isMember}
-                    onOpenTrusted={() => {
-                      setNav("trusted");
-                      loadTrusted(true);
-                    }}
-                    onOpenMembershipJourney={openMembershipJourney}
-                    onBrowseFree={scrollToDirectory}
-                    onOpenProfile={() => {
-                      if (pathname !== "/profile") router.push("/profile");
-                      else setNav("profile");
-                    }}
-                  />
-                  </div>
+                    <div className="homeHeroBackdrop__welcomeBundle">
+                      <HomeProfileProgressNotice
+                        completion={profileCompletion}
+                        onOpenProfile={() => {
+                          const focus = String(profileCompletion?.nextStep?.editFocus || "").trim();
+                          const qs = new URLSearchParams();
+                          qs.set("edit", "1");
+                          if (focus) qs.set("focus", focus);
+                          router.push(`/profile?${qs.toString()}`);
+                        }}
+                        onOpenOnboarding={() => router.push("/onboarding")}
+                      />
+                      <div className="card cardHero homeHeroBackdrop__card">
+                        <HomeWelcomeSection
+                          isAuthenticated={isAuthenticated}
+                          isMember={isMember}
+                          onOpenTrusted={() => {
+                            setNav("trusted");
+                            loadTrusted(true);
+                          }}
+                          onOpenMembershipJourney={openMembershipJourney}
+                          onBrowseFree={scrollToDirectory}
+                          onOpenProfile={() => {
+                            if (pathname !== "/profile") router.push("/profile");
+                            else setNav("profile");
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="card cardHero homeHeroBackdrop__card">
+                      <HomeWelcomeSection
+                        isAuthenticated={isAuthenticated}
+                        isMember={isMember}
+                        onOpenTrusted={() => {
+                          setNav("trusted");
+                          loadTrusted(true);
+                        }}
+                        onOpenMembershipJourney={openMembershipJourney}
+                        onBrowseFree={scrollToDirectory}
+                        onOpenProfile={() => {
+                          if (pathname !== "/profile") router.push("/profile");
+                          else setNav("profile");
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -544,7 +675,8 @@ function TopAppInner({ initialNav = "home" }) {
               onRequestUpgrade={() => {
                 if (!isAuthenticated) {
                   if (authBackend.workos) {
-                    window.location.assign("/api/auth/workos/signup?returnTo=/community");
+                    writeRememberDevicePref(rememberDevice);
+                    window.location.assign(workosSignUpHref("/community", { rememberDevice }));
                     return;
                   }
                   setAuthMode("signup");
@@ -555,7 +687,10 @@ function TopAppInner({ initialNav = "home" }) {
               }}
               onRequestSignIn={() => {
                 if (authBackend.workos) {
-                  window.location.assign("/api/auth/workos/signin?returnTo=/community");
+                  writeRememberDevicePref(rememberDevice);
+                  window.location.assign(
+                    workosSignInLink("/community", null, "/community", { rememberDevice }),
+                  );
                   return;
                 }
                 setAuthMode("signin");
@@ -617,7 +752,13 @@ function TopAppInner({ initialNav = "home" }) {
 
       {nav === "profile" && (
         <section className="shell profileTabShell">
-          {!isAuthenticated ? (
+          {loadingProfile && !isAuthenticated ? (
+            <div className="card profileSessionRestoring">
+              <p className="sponsorSectionLead" style={{ margin: 0 }}>
+                Loading your profile…
+              </p>
+            </div>
+          ) : !isAuthenticated ? (
             <>
               <div className="card profileSignedOutCard">
                 <h3><AppIcon name="profile" />Your profile</h3>
@@ -1054,17 +1195,40 @@ function TopAppInner({ initialNav = "home" }) {
               <div className="demoAuthModal__providers">
                 <p className="demoAuthModal__providersLabel">WorkOS (production / demo users)</p>
                 <p className="profilePhotoUploadHint" style={{ marginTop: 0 }}>
+                  Optional: add your email to prefill the hosted sign-in screen.
+                </p>
+                <p className="profilePhotoUploadHint" style={{ marginTop: 0 }}>
                   On localhost, use the same WorkOS Client ID as production and register this origin’s callback in the WorkOS
                   dashboard (e.g. <code>http://localhost:3000/callback</code> for <code>pnpm dev:alt</code>).
                 </p>
+                <div className="demoAuthModal__rememberGroup" role="group" aria-label="Sign-in preferences">
+                  <FormCheckbox checked={rememberDevice} onChange={(e) => setRememberDevice(e.target.checked)}>
+                    Stay signed in (session)
+                  </FormCheckbox>
+                  <FormCheckbox checked={rememberEmail} onChange={(e) => setRememberEmail(e.target.checked)}>
+                    Remember email on this device
+                  </FormCheckbox>
+                </div>
                 <div className="row wrap demoAuthModal__providerRow">
-                  <a className="btnPrimary" href={workosSignInHereHref}>
+                  <a
+                    className="btnPrimary"
+                    href={workosSignInHereHref}
+                    onClick={() => persistAuthPrefsBeforeWorkOSRedirect()}
+                  >
                     Sign in
                   </a>
-                  <a className="btnSoft" href="/api/auth/workos/signup?returnTo=/onboarding">
+                  <a
+                    className="btnSoft"
+                    href={workosSignUpModalHref}
+                    onClick={() => persistAuthPrefsBeforeWorkOSRedirect()}
+                  >
                     Create account
                   </a>
-                  <a className="btnSoft" href={workosSignInHereHref}>
+                  <a
+                    className="btnSoft"
+                    href={workosSignInHereHref}
+                    onClick={() => persistAuthPrefsBeforeWorkOSRedirect()}
+                  >
                     Continue with Google
                   </a>
                 </div>
@@ -1073,72 +1237,166 @@ function TopAppInner({ initialNav = "home" }) {
                 </p>
               </div>
             ) : (
-              <p className="applyStatus" style={{ marginTop: 0 }}>
-                Authentication is not fully connected — using development-safe local demo mode. Add WorkOS environment variables to enable hosted sign-in.
-              </p>
+              <div className="demoAuthModal__workosOff">
+                <p className="applyStatus" style={{ marginTop: 0 }}>
+                  Hosted WorkOS sign-in is not enabled on this deployment. The app is using local demo authentication until the
+                  AuthKit environment variables below are set. See{" "}
+                  <code className="mono">web/docs/WORKOS_HOSTED_SIGNIN.md</code> and{" "}
+                  <code className="mono">web/.env.local.example</code>.
+                </p>
+                {authBackend.workosMissingEnv?.length ? (
+                  <ul className="demoAuthModal__workosMissingList">
+                    {authBackend.workosMissingEnv.map((key) => (
+                      <li key={key}>
+                        <code className="mono">{key}</code>
+                      </li>
+                    ))}
+                  </ul>
+                ) : !loadingProfile ? (
+                  <p className="profilePhotoUploadHint" style={{ marginTop: 8 }}>
+                    If this box stays empty, open <code className="mono">GET /api/auth/status</code> — it lists{" "}
+                    <code className="mono">workosMissingEnv</code> when AuthKit is not ready.
+                  </p>
+                ) : null}
+              </div>
             )}
-            {authMode === "signup" && (
-              <>
-                <div className="demoAuthModal__avatarBlock">
-                  <Avatar src={signupAvatarDataUrl || emptyProfileAvatarUrl()} alt="Profile photo preview" className="demoAuthModal__avatarPreview" sizes="96px" />
-                  <div className="demoAuthModal__avatarCopy">
-                    <span className="demoAuthModal__avatarLabel">Profile photo</span>
-                    <span className="demoAuthModal__avatarHint">Optional. If you skip this, a default placeholder is used until you add one in Profile settings.</span>
-                    <label className="demoAuthModal__avatarUpload">
-                      <span className="btnSoft demoAuthModal__avatarUploadBtn">Upload image</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="profileFileInput"
-                        onChange={(e) => onSignupAvatarSelected(e.target.files?.[0])}
-                      />
-                    </label>
-                    {signupAvatarDataUrl ? (
-                      <button type="button" className="btnSoft demoAuthModal__avatarRemove" onClick={() => setSignupAvatarDataUrl("")}>
-                        Remove photo
-                      </button>
-                    ) : null}
+            <form
+              className="demoAuthModal__form"
+              autoComplete="on"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!authBackend.workos) void onAuthSubmit();
+              }}
+            >
+              {authMode === "signup" ? (
+                <>
+                  <div className="demoAuthModal__avatarBlock">
+                    <Avatar src={signupAvatarDataUrl || emptyProfileAvatarUrl()} alt="Profile photo preview" className="demoAuthModal__avatarPreview" sizes="96px" />
+                    <div className="demoAuthModal__avatarCopy">
+                      <span className="demoAuthModal__avatarLabel">Profile photo</span>
+                      <span className="demoAuthModal__avatarHint">Optional. If you skip this, a default placeholder is used until you add one in Profile settings.</span>
+                      <label className="demoAuthModal__avatarUpload">
+                        <span className="btnSoft demoAuthModal__avatarUploadBtn">Upload image</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="profileFileInput"
+                          onChange={(e) => onSignupAvatarSelected(e.target.files?.[0])}
+                        />
+                      </label>
+                      {signupAvatarDataUrl ? (
+                        <button type="button" className="btnSoft demoAuthModal__avatarRemove" onClick={() => setSignupAvatarDataUrl("")}>
+                          Remove photo
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                  <label className="demoAuthModal__field" htmlFor="torp-demo-auth-given">
+                    <span className="fieldLabel">First name</span>
+                    <input
+                      id="torp-demo-auth-given"
+                      name="given-name"
+                      value={authDraft.firstName}
+                      onChange={(e) => setAuthDraft((d) => ({ ...d, firstName: e.target.value }))}
+                      placeholder="First name"
+                      autoComplete="given-name"
+                    />
+                  </label>
+                  <label className="demoAuthModal__field" htmlFor="torp-demo-auth-family">
+                    <span className="fieldLabel">Last name</span>
+                    <input
+                      id="torp-demo-auth-family"
+                      name="family-name"
+                      value={authDraft.lastName}
+                      onChange={(e) => setAuthDraft((d) => ({ ...d, lastName: e.target.value }))}
+                      placeholder="Last name"
+                      autoComplete="family-name"
+                    />
+                  </label>
+                </>
+              ) : null}
+              <label className="demoAuthModal__field" htmlFor="torp-demo-auth-email">
+                <span className="fieldLabel">Email</span>
+                <input
+                  name="email"
+                  id="torp-demo-auth-email"
+                  value={authDraft.email}
+                  onChange={(e) => setAuthDraft((d) => ({ ...d, email: e.target.value }))}
+                  placeholder="Email"
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                />
+              </label>
+              {!authBackend.workos ? (
+                <label className="demoAuthModal__field" htmlFor="torp-demo-auth-password">
+                  <span className="fieldLabel">Password</span>
+                  <div className="demoAuthModal__passwordWrap">
+                    <input
+                      id="torp-demo-auth-password"
+                      name="password"
+                      value={authDraft.password}
+                      onChange={(e) => setAuthDraft((d) => ({ ...d, password: e.target.value }))}
+                      placeholder="Password (min. 6 characters)"
+                      type={demoAuthPasswordVisible ? "text" : "password"}
+                      autoComplete={authMode === "signup" ? "new-password" : "current-password"}
+                    />
+                    <button
+                      type="button"
+                      className="demoAuthModal__passwordToggle"
+                      onClick={() => setDemoAuthPasswordVisible((v) => !v)}
+                      aria-label={demoAuthPasswordVisible ? "Hide password" : "Show password"}
+                      aria-pressed={demoAuthPasswordVisible}
+                    >
+                      <DemoAuthPasswordVisibilityIcon revealed={demoAuthPasswordVisible} />
+                    </button>
+                  </div>
+                </label>
+              ) : null}
+              {!authBackend.workos ? (
+                <div className="demoAuthModal__rememberGroup" role="group" aria-label="Sign-in preferences">
+                  <FormCheckbox checked={rememberDevice} onChange={(e) => setRememberDevice(e.target.checked)}>
+                    Stay signed in (this browser)
+                  </FormCheckbox>
+                  <FormCheckbox checked={rememberEmail} onChange={(e) => setRememberEmail(e.target.checked)}>
+                    Remember email for next time
+                  </FormCheckbox>
+                </div>
+              ) : null}
+              {readLastUsedEmail() ? (
+                <button
+                  type="button"
+                  className="btnSoft demoAuthModal__clearEmail"
+                  onClick={() => {
+                    clearLastUsedEmail();
+                    setAuthDraft((d) => ({ ...d, email: "" }));
+                  }}
+                >
+                  Clear saved email
+                </button>
+              ) : null}
+              {!authBackend.workos ? (
+                <div className="demoAuthModal__providers" aria-label="Local demo sign-in">
+                  <p className="demoAuthModal__providersLabel">Local demo only</p>
+                  <div className="row wrap demoAuthModal__providerRow">
+                    <span className="profilePhotoUploadHint">Google and other social login activate when WorkOS is configured.</span>
                   </div>
                 </div>
-                <input value={authDraft.firstName} onChange={(e) => setAuthDraft((d) => ({ ...d, firstName: e.target.value }))} placeholder="First Name" autoComplete="given-name" />
-                <input value={authDraft.lastName} onChange={(e) => setAuthDraft((d) => ({ ...d, lastName: e.target.value }))} placeholder="Last Name" autoComplete="family-name" />
-              </>
-            )}
-            <input
-              name="email"
-              id="torp-demo-auth-email"
-              value={authDraft.email}
-              onChange={(e) => setAuthDraft((d) => ({ ...d, email: e.target.value }))}
-              placeholder="Email"
-              type="email"
-              autoComplete="email"
-            />
-            <input
-              value={authDraft.password}
-              onChange={(e) => setAuthDraft((d) => ({ ...d, password: e.target.value }))}
-              placeholder="Password (min. 6 characters)"
-              type="password"
-              autoComplete={authMode === "signup" ? "new-password" : "current-password"}
-            />
-            {!authBackend.workos ? (
-              <div className="demoAuthModal__providers" aria-label="Local demo sign-in">
-                <p className="demoAuthModal__providersLabel">Local demo only</p>
-                <div className="row wrap demoAuthModal__providerRow">
-                  <span className="profilePhotoUploadHint">Google and other social login activate when WorkOS is configured.</span>
-                </div>
+              ) : (
+                <hr className="sponsorAdminDivider" style={{ margin: "12px 0" }} aria-hidden="true" />
+              )}
+              {authError ? <p className="applyError">{authError}</p> : null}
+              {authStatus ? <p className="applyStatus">{authStatus}</p> : null}
+              <div className="row wrap">
+                {!authBackend.workos ? (
+                  <button className="btnPrimary" type="submit">{authMode === "signup" ? "Create Account" : "Sign In"}</button>
+                ) : null}
+                <button className="btnSoft" type="button" onClick={() => setAuthMode((m) => (m === "signup" ? "signin" : "signup"))}>
+                  {authMode === "signup" ? "I already have an account" : "Create an account"}
+                </button>
+                <button className="btnSoft" type="button" onClick={() => setOverlay(null)}>Close</button>
               </div>
-            ) : (
-              <hr className="sponsorAdminDivider" style={{ margin: "12px 0" }} aria-hidden="true" />
-            )}
-            {authError ? <p className="applyError">{authError}</p> : null}
-            {authStatus ? <p className="applyStatus">{authStatus}</p> : null}
-            <div className="row wrap">
-              <button className="btnPrimary" onClick={onAuthSubmit} type="button">{authMode === "signup" ? "Create Account" : "Sign In"}</button>
-              <button className="btnSoft" onClick={() => setAuthMode((m) => (m === "signup" ? "signin" : "signup"))} type="button">
-                {authMode === "signup" ? "I already have an account" : "Create an account"}
-              </button>
-              <button className="btnSoft" onClick={() => setOverlay(null)} type="button">Close</button>
-            </div>
+            </form>
           </div>
         </div>
       )}

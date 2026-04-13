@@ -1,4 +1,4 @@
-import { isWorkOSConfigured } from "@/lib/auth/workosConfigured";
+import { isWorkOSConfigured, workOSEnvironmentIssues } from "@/lib/auth/workosConfigured";
 import {
   stripeCheckoutConfigured,
   stripeMemberRecurringConfigured,
@@ -9,8 +9,11 @@ import {
 } from "@/lib/billing/stripeConfig";
 
 export async function GET() {
+  const workos = isWorkOSConfigured();
   return Response.json({
-    workos: isWorkOSConfigured(),
+    workos,
+    /** When false, lists what to set in `.env.local` to enable hosted AuthKit (no secret values). */
+    workosMissingEnv: workos ? [] : workOSEnvironmentIssues(),
     /** Support + Pro recurring checkout available (profile + most onboarding paid tiers). */
     stripe: stripeMemberRecurringConfigured(),
     stripeMemberRecurring: stripeMemberRecurringConfigured(),

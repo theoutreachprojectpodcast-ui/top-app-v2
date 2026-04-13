@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import ColorSchemeToggle from "@/components/app/ColorSchemeToggle";
@@ -8,7 +7,8 @@ import { useAuthSession } from "@/components/auth/AuthSessionProvider";
 import { readNavAuthCache } from "@/lib/auth/navAuthCache";
 import IconWrap from "@/components/shared/IconWrap";
 import HeaderNotificationBell from "@/components/layout/HeaderNotificationBell";
-import { workosSignInLink } from "@/lib/auth/workosReturnTo";
+import { readRememberDevicePref } from "@/lib/auth/lastUsedEmail";
+import { workosSignInLink, workosSignUpHref } from "@/lib/auth/workosReturnTo";
 
 const SPONSOR_ICON = "M4 6h16v12H4z M4 10h16";
 
@@ -21,7 +21,9 @@ const SPONSOR_ICON = "M4 6h16v12H4z M4 10h16";
 export default function SubpageTopbarActions({ showThemeToggle = true, section = "all" }) {
   const pathname = usePathname();
   /** Avoid useSearchParams here (static routes like /contact must not CSR-bailout without Suspense). */
-  const workosSignInHereHref = useMemo(() => workosSignInLink(pathname, null, "/"), [pathname]);
+  const rememberDevice = readRememberDevicePref();
+  const workosSignInHereHref = workosSignInLink(pathname, null, "/", { rememberDevice });
+  const workosOnboardingSignUpHref = workosSignUpHref("/onboarding", { rememberDevice });
 
   const session = useAuthSession();
   const cache = typeof window !== "undefined" ? readNavAuthCache() : null;
@@ -54,7 +56,7 @@ export default function SubpageTopbarActions({ showThemeToggle = true, section =
       </>
     ) : authState.workos ? (
       <>
-        <Link className="btnSoft sponsorBtn" href="/api/auth/workos/signup?returnTo=/onboarding">
+        <Link className="btnSoft sponsorBtn" href={workosOnboardingSignUpHref}>
           Create account
         </Link>
         <Link className="btnSoft sponsorBtn" href={workosSignInHereHref}>

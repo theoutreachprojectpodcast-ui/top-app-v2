@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import AppShell from "@/components/layout/AppShell";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { resolvePodcastMemberContentAccess, listPodcastMemberContent } from "@/features/podcasts/api/podcastApi";
+import { readRememberDevicePref } from "@/lib/auth/lastUsedEmail";
+import { workosSignInLink } from "@/lib/auth/workosReturnTo";
 import "@/features/podcasts/styles/podcasts.css";
 
 export default function PodcastMembersPage() {
@@ -26,6 +28,9 @@ export default function PodcastMembersPage() {
   const podcastLogoSrc =
     (typeof process !== "undefined" && process.env.NEXT_PUBLIC_PODCAST_BRAND_LOGO_PATH) ||
     "/podcast-logo-transparent.png";
+  const podcastMembersSignInHref = workosSignInLink("/podcasts/members", null, "/podcasts/members", {
+    rememberDevice: readRememberDevicePref(),
+  });
 
   return (
     <AppShell
@@ -50,7 +55,7 @@ export default function PodcastMembersPage() {
           </p>
           {!allowed ? (
             <p className="podcastSectionSubtitle" style={{ marginTop: 8 }}>
-              <a className="podcastSponsorPill" href="/api/auth/workos/signin?returnTo=/podcasts/members">
+              <a className="podcastSponsorPill" href={podcastMembersSignInHref}>
                 Sign in
               </a>{" "}
               <a className="podcastSponsorPill" href="/profile">

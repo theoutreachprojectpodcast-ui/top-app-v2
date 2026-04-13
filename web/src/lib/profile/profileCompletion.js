@@ -1,11 +1,13 @@
 import { EMPTY_PROFILE_AVATAR_URL } from "@/lib/avatarFallback";
 
 /**
- * Profile completion model (tORP v0.3) — derived only from persisted profile + optional WorkOS user snapshot.
- * Used by GET /api/me and client UI; no standalone client-only progress state.
+ * Profile completion (tORP v0.3) — **persisted Supabase `torp_profiles` only** (via `profileRowToClientDto` / client copy).
+ * Does not infer completion from the WorkOS IdP session: if `email` / `first_name` / etc. are empty in the DB row,
+ * the step stays incomplete until PATCH `/api/me/profile` (or onboarding) writes them.
  */
 
 /**
+ * Optional display merge for UI that shows IdP fallbacks (not used for completion %).
  * @param {Record<string, unknown> | null | undefined} profile
  * @param {{ email?: string, firstName?: string, lastName?: string } | null} [workOSUser]
  */
@@ -19,6 +21,11 @@ export function mergeProfileWithWorkOSUser(profile, workOSUser) {
   return p;
 }
 
+/** @param {Record<string, unknown> | null | undefined} profile */
+function persistedShape(profile) {
+  return profile && typeof profile === "object" ? { ...profile } : {};
+}
+
 function hasCustomPhoto(p) {
   const u = String(p.avatarUrl || "").trim();
   if (!u) return false;
@@ -27,15 +34,13 @@ function hasCustomPhoto(p) {
   return true;
 }
 
+/** Bio or banner column has any saved content (torp_profiles.bio / .banner). */
 function hasAboutText(p) {
-  const bio = String(p.bio || "").trim();
-  if (bio.length >= 12) return true;
-  const banner = String(p.banner || "").trim();
-  return banner.length >= 12;
+  return String(p.bio || "").trim().length > 0 || String(p.banner || "").trim().length > 0;
 }
 
 /**
- * @param {Record<string, unknown>} p merged profile shape (client profile or API DTO)
+ * @param {Record<string, unknown>} p client profile / API DTO (DB-backed fields only)
  */
 function baseStepDefs(p) {
   const sponsorIntent = String(p.accountIntent || "").toLowerCase() === "sponsor_user";
@@ -60,7 +65,7 @@ function baseStepDefs(p) {
     },
     {
       id: "email",
-      label: "Email on your account",
+      label: "Email on your profile",
       shortLabel: "Email",
       actionKind: "profile-edit",
       editFocus: "email",
@@ -117,11 +122,10 @@ function baseStepDefs(p) {
 }
 
 /**
- * @param {Record<string, unknown> | null | undefined} profile
- * @param {{ email?: string, firstName?: string, lastName?: string } | null} [workOSUser]
+ * @param {Record<string, unknown> | null | undefined} profile — from `profileRowToClientDto` or the same shape on the client
  */
-export function computeProfileCompletion(profile, workOSUser = null) {
-  const p = mergeProfileWithWorkOSUser(profile, workOSUser);
+export function computeProfileCompletion(profile) {
+  const p = persistedShape(profile);
   const defs = baseStepDefs(p);
   const steps = defs.map((d) => {
     const done = !!d.check(p);
@@ -148,9 +152,9 @@ export function computeProfileCompletion(profile, workOSUser = null) {
   };
 }
 
-/** Set of `editFocus` ids for incomplete profile-edit steps (for Edit Profile modal highlights). */
-export function getIncompleteEditFocusIds(profile, workOSUser = null) {
-  const { steps } = computeProfileCompletion(profile, workOSUser);
+/** Incomplete profile-edit focus ids for the Edit Profile modal (same rules as completion, evaluated on `draft`). */
+export function getIncompleteEditFocusIds(profile) {
+  const { steps } = computeProfileCompletion(profile);
   return new Set(
     steps.filter((s) => !s.done && s.actionKind === "profile-edit" && s.editFocus).map((s) => s.editFocus),
   );

@@ -514,7 +514,22 @@ img.brandMarkImg--header {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 0;
+}
+/* When profile progress + welcome card stack: one opaque shell so flex gap is not transparent over the dark hero scrim */
+.homeHeroBackdrop__welcomeBundle {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-space-3, 12px);
+  width: 100%;
+  padding: var(--ds-space-3, 12px);
+  border-radius: var(--radius-card);
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border-soft);
+  box-shadow: var(--shadow-card);
+}
+.homeHeroBackdrop__welcomeBundle .homeHeroBackdrop__card.cardHero {
+  margin: 0;
 }
 .homeHeroBackdrop__card.cardHero {
   position: relative;
@@ -715,8 +730,32 @@ img.brandMarkImg--header {
   max-width: 62ch;
 }
 
-.membershipAtAGlance--profileCompact {
-  padding-bottom: var(--ds-space-5, 20px);
+/* Guest / signed-out membership card: even vertical rhythm, title → copy → CTA */
+.membershipAtAGlance--profileCompact:not(:has(.membershipCurrentProfileRow)) {
+  display: grid;
+  gap: var(--ds-space-3, 12px);
+  align-content: start;
+}
+.membershipAtAGlance--profileCompact:not(:has(.membershipCurrentProfileRow)) .membershipAtAGlanceProfileTitle {
+  margin: 0;
+}
+.membershipAtAGlance--profileCompact:not(:has(.membershipCurrentProfileRow)) .membershipAtAGlanceSub--profile {
+  margin: 0;
+  max-width: 52ch;
+  line-height: 1.55;
+}
+.membershipAtAGlance--profileCompact:not(:has(.membershipCurrentProfileRow)) .btnPrimary {
+  justify-self: start;
+}
+/* Signed-in compact card: stack row, billing, settings link with design-system gap (no extra bottom padding) */
+.membershipAtAGlance--profileCompact:has(.membershipCurrentProfileRow) {
+  display: grid;
+  gap: var(--ds-space-3, 12px);
+  align-content: start;
+}
+.membershipAtAGlance--profileCompact:has(.membershipCurrentProfileRow) .membershipCurrentProfileBilling,
+.membershipAtAGlance--profileCompact:has(.membershipCurrentProfileRow) .membershipCurrentProfileSettingsLink {
+  margin-top: 0;
 }
 .membershipAtAGlanceProfileTitle {
   margin: 0 0 8px;
@@ -754,6 +793,9 @@ img.brandMarkImg--header {
 .membershipSettingsBillingRow {
   margin-top: 12px;
 }
+.profileSessionRestoring {
+  margin: 0;
+}
 .profileTabShell .profileCompletionPanel {
   margin: 0;
 }
@@ -765,6 +807,9 @@ img.brandMarkImg--header {
 }
 .profileTabShell .card > h3:first-child {
   margin-bottom: var(--ds-space-2, 8px);
+}
+.profileTabShell .membershipAtAGlance--profileCompact:not(:has(.membershipCurrentProfileRow)) > h3.membershipAtAGlanceProfileTitle {
+  margin-bottom: 0;
 }
 
 .welcomePanel {
@@ -939,6 +984,86 @@ img.brandMarkImg--header {
   justify-self: start;
   font-size: 13px;
   padding: 6px 12px;
+}
+.demoAuthModal__form {
+  display: grid;
+  gap: var(--ds-space-3, 12px);
+  margin-top: var(--ds-space-1, 4px);
+}
+.demoAuthModal__field {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+}
+.demoAuthModal__passwordWrap {
+  position: relative;
+  display: grid;
+  align-items: stretch;
+}
+.demoAuthModal__passwordWrap input {
+  padding-right: 44px;
+}
+.demoAuthModal__passwordToggle {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-input, 8px);
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+.demoAuthModal__passwordToggle:hover {
+  color: var(--color-text-primary);
+  background: color-mix(in srgb, var(--color-text-primary) 8%, transparent);
+}
+.demoAuthModal__passwordToggle:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+.demoAuthModal__passwordToggleSvg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+.demoAuthModal__rememberGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-space-3, 12px) var(--ds-space-5, 20px);
+  margin: var(--ds-space-2, 8px) 0 0;
+  align-items: flex-start;
+}
+.demoAuthModal__rememberGroup .dsChoice {
+  flex: 1 1 200px;
+  min-width: min(100%, 200px);
+}
+.demoAuthModal__clearEmail {
+  justify-self: start;
+  margin-top: calc(-1 * var(--ds-space-1, 4px));
+  padding: 8px 14px;
+  font-size: var(--text-body-sm);
+}
+.demoAuthModal__workosOff {
+  display: grid;
+  gap: var(--ds-space-2, 8px);
+}
+.demoAuthModal__workosMissingList {
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: var(--text-body-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+.demoAuthModal__workosMissingList li {
+  margin: 4px 0;
 }
 .profileHeaderGrid {
   display: grid;

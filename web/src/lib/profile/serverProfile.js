@@ -84,9 +84,10 @@ export function workOSUserToUpsertPayload(user) {
   const first = user.firstName || "";
   const last = user.lastName || "";
   const display = [first, last].filter(Boolean).join(" ").trim() || user.email || "Member";
+  const emailTrim = String(user.email || "").trim();
   return {
     workos_user_id: user.id,
-    email: user.email || null,
+    ...(emailTrim ? { email: emailTrim } : {}),
     first_name: first,
     last_name: last,
     display_name: display,
@@ -106,6 +107,31 @@ export async function upsertProfileFromWorkOSUser(admin, user) {
   const { error } = await admin.from(TABLE()).upsert(payload, { onConflict: "workos_user_id" });
   if (error) return { ok: false, reason: error.message };
   return { ok: true, isNew: !existing };
+}
+
+/**
+ * Persist WorkOS session (login) email to `torp_profiles.email` when missing or changed.
+ * Creates the profile row via the same upsert as `/callback` when none exists.
+ *
+ * @param {import('@supabase/supabase-js').SupabaseClient} admin
+ * @param {import('@workos-inc/node').User} user — `auth.user` from `withAuth()`
+ */
+export async function syncProfileEmailWithWorkOSUser(admin, user) {
+  if (!admin || !user?.id) return { ok: false, reason: "invalid" };
+  const sessionEmail = String(user.email || "").trim();
+  if (!sessionEmail) return { ok: true, reason: "no_session_email" };
+
+  const existing = await getProfileRowByWorkOSId(admin, user.id);
+  if (!existing) {
+    return upsertProfileFromWorkOSUser(admin, user);
+  }
+
+  const dbEmail = String(existing.email || "").trim();
+  if (dbEmail.toLowerCase() === sessionEmail.toLowerCase()) {
+    return { ok: true, reason: "unchanged" };
+  }
+
+  return patchProfileByWorkOSId(admin, user.id, { email: sessionEmail });
 }
 
 /**

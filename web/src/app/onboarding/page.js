@@ -1,10 +1,17 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
+
+/** Always read the latest `torp_profiles` row for this session (avoid stale RSC cache emptying onboarding fields). */
+export const dynamic = "force-dynamic";
 import { withAuth } from "@workos-inc/authkit-nextjs";
 import Link from "next/link";
 import OnboardingFlow from "@/features/onboarding/components/OnboardingFlow";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { getProfileRowByWorkOSId, profileRowToClientDto } from "@/lib/profile/serverProfile";
+import {
+  getProfileRowByWorkOSId,
+  profileRowToClientDto,
+  syncProfileEmailWithWorkOSUser,
+} from "@/lib/profile/serverProfile";
 import {
   stripeCheckoutConfigured,
   stripeMemberRecurringConfigured,
@@ -19,6 +26,9 @@ async function OnboardingServer({ searchParams }) {
     redirect("/?signin=1");
   }
   const admin = createSupabaseAdminClient();
+  if (admin) {
+    await syncProfileEmailWithWorkOSUser(admin, auth.user);
+  }
   const row = admin ? await getProfileRowByWorkOSId(admin, auth.user.id) : null;
   let dto = profileRowToClientDto(row);
   if (!dto) {
