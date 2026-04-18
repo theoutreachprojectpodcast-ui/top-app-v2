@@ -1,0 +1,27 @@
+name: PR Branch Flow Guard
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+jobs:
+  enforce-flow:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate allowed PR targets
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          echo "Checking PR flow: ${HEAD_REF} -> ${BASE_REF}"
+          if [ "${BASE_REF}" = "QA" ] && [ "${HEAD_REF}" = "qa" ]; then
+            exit 0
+          fi
+          if [ "${BASE_REF}" = "main" ] && [ "${HEAD_REF}" = "QA" ]; then
+            exit 0
+          fi
+          echo "Invalid PR flow."
+          echo "Allowed:"
+          echo "- qa -> QA"
+          echo "- QA -> main"
+          exit 1
