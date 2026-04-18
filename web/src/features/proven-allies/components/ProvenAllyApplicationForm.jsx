@@ -5,6 +5,7 @@ import {
   searchDirectoryOrganizations,
   submitProvenAllyApplication,
 } from "@/features/proven-allies/api/provenAllyApplicationApi";
+import { SERVICE_OPTIONS, STATES } from "@/lib/constants";
 
 const FEE_AMOUNT = 49;
 
@@ -30,6 +31,7 @@ const INITIAL_FORM = {
   references_or_links: "",
   agreed_to_values: false,
   agreed_info_accuracy: false,
+  acknowledged_review_process: false,
   application_fee_status: "unpaid",
   payment_demo_status: "unpaid",
 };
@@ -58,7 +60,8 @@ export default function ProvenAllyApplicationForm({ supabase, onClose }) {
       form.services_offered &&
       form.why_join_proven_allies &&
       form.agreed_to_values &&
-      form.agreed_info_accuracy;
+      form.agreed_info_accuracy &&
+      form.acknowledged_review_process;
     if (!baseValid) return false;
     if (form.organization_path === "existing" && !form.organization_id) return false;
     return feePaid;
@@ -143,9 +146,25 @@ export default function ProvenAllyApplicationForm({ supabase, onClose }) {
 
           <section className="applySection">
             <h4>Organization Path</h4>
-            <div className="row wrap">
-              <label><input type="radio" name="path" checked={form.organization_path === "existing"} onChange={() => setForm((f) => ({ ...f, organization_path: "existing", organization_id: "" }))} /> I am already listed in the directory</label>
-              <label><input type="radio" name="path" checked={form.organization_path === "new"} onChange={() => setForm((f) => ({ ...f, organization_path: "new", organization_id: "" }))} /> I am a new organization</label>
+            <div className="applyOptionGroup">
+              <label className="applyOption">
+                <input
+                  type="radio"
+                  name="path"
+                  checked={form.organization_path === "existing"}
+                  onChange={() => setForm((f) => ({ ...f, organization_path: "existing", organization_id: "" }))}
+                />
+                <span>I am already listed in the directory.</span>
+              </label>
+              <label className="applyOption">
+                <input
+                  type="radio"
+                  name="path"
+                  checked={form.organization_path === "new"}
+                  onChange={() => setForm((f) => ({ ...f, organization_path: "new", organization_id: "" }))}
+                />
+                <span>I am a new organization.</span>
+              </label>
             </div>
 
             {form.organization_path === "existing" && (
@@ -176,8 +195,12 @@ export default function ProvenAllyApplicationForm({ supabase, onClose }) {
               <input placeholder="Organization name" value={form.organization_name} onChange={(e) => setForm((f) => ({ ...f, organization_name: e.target.value }))} />
               <input placeholder="Website" value={form.website} onChange={(e) => setForm((f) => ({ ...f, website: e.target.value }))} />
               <input placeholder="City" value={form.city} onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))} />
-              <input placeholder="State" value={form.state} onChange={(e) => setForm((f) => ({ ...f, state: e.target.value }))} />
-              <input placeholder="Nonprofit type/category" value={form.nonprofit_type} onChange={(e) => setForm((f) => ({ ...f, nonprofit_type: e.target.value }))} />
+              <select value={form.state} onChange={(e) => setForm((f) => ({ ...f, state: e.target.value }))}>
+                {STATES.map(([v, label]) => <option key={v} value={v}>{label}</option>)}
+              </select>
+              <select value={form.nonprofit_type} onChange={(e) => setForm((f) => ({ ...f, nonprofit_type: e.target.value }))}>
+                {SERVICE_OPTIONS.map(([v, label]) => <option key={v || "all"} value={v}>{label}</option>)}
+              </select>
             </div>
           </section>
 
@@ -195,8 +218,32 @@ export default function ProvenAllyApplicationForm({ supabase, onClose }) {
 
           <section className="applySection">
             <h4>Alignment & Standards</h4>
-            <label><input type="checkbox" checked={form.agreed_to_values} onChange={(e) => setForm((f) => ({ ...f, agreed_to_values: e.target.checked }))} /> We align with The Outreach Project values and mission standards.</label>
-            <label><input type="checkbox" checked={form.agreed_info_accuracy} onChange={(e) => setForm((f) => ({ ...f, agreed_info_accuracy: e.target.checked }))} /> We confirm submitted information is accurate to the best of our knowledge.</label>
+            <div className="applyCheckList">
+              <label className="applyCheck">
+                <input
+                  type="checkbox"
+                  checked={form.agreed_to_values}
+                  onChange={(e) => setForm((f) => ({ ...f, agreed_to_values: e.target.checked }))}
+                />
+                <span>We align with The Outreach Project values and mission standards.</span>
+              </label>
+              <label className="applyCheck">
+                <input
+                  type="checkbox"
+                  checked={form.agreed_info_accuracy}
+                  onChange={(e) => setForm((f) => ({ ...f, agreed_info_accuracy: e.target.checked }))}
+                />
+                <span>We confirm submitted information is accurate to the best of our knowledge.</span>
+              </label>
+              <label className="applyCheck">
+                <input
+                  type="checkbox"
+                  checked={form.acknowledged_review_process}
+                  onChange={(e) => setForm((f) => ({ ...f, acknowledged_review_process: e.target.checked }))}
+                />
+                <span>We acknowledge this application enters structured review before approval.</span>
+              </label>
+            </div>
           </section>
 
           <section className="applySection applyFeeCard">
@@ -204,6 +251,11 @@ export default function ProvenAllyApplicationForm({ supabase, onClose }) {
             <p>Application Fee: ${FEE_AMOUNT}</p>
             <p>Status: {feePaid ? "Demo Paid" : "Unpaid"}</p>
             {!feePaid && <button className="btnPrimary" type="button" onClick={payDemoFee}>Pay Application Fee (Demo)</button>}
+          </section>
+
+          <section className="applySection">
+            <h4>Review & Submit</h4>
+            <p>Please review your details before submitting. Applications enter `submitted` status and are queued for internal review.</p>
           </section>
 
           {error ? <p className="applyError">{error}</p> : null}

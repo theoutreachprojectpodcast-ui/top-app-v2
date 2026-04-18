@@ -3,10 +3,14 @@
 import { useMemo, useState } from "react";
 import SponsorApplicationForm from "@/features/sponsors/components/SponsorApplicationForm";
 import SponsorTierComparison from "@/features/sponsors/components/SponsorTierComparison";
+import SponsorTimeline from "@/features/sponsors/components/SponsorTimeline";
 import { SPONSOR_TIERS, formatUsd, getTierById } from "@/features/sponsors/data/sponsorTiers";
 
-export default function BecomeASponsorPage({ supabase }) {
-  const [selectedTierId, setSelectedTierId] = useState(SPONSOR_TIERS[0].id);
+export default function BecomeASponsorPage({ supabase, selectedTierId: selectedTierIdProp, onSelectTier }) {
+  const [selectedTierIdLocal, setSelectedTierIdLocal] = useState(SPONSOR_TIERS[0].id);
+  const [applicationOpen, setApplicationOpen] = useState(false);
+  const selectedTierId = selectedTierIdProp || selectedTierIdLocal;
+  const setSelectedTierId = onSelectTier || setSelectedTierIdLocal;
   const selectedTier = useMemo(() => getTierById(selectedTierId), [selectedTierId]);
 
   return (
@@ -14,15 +18,9 @@ export default function BecomeASponsorPage({ supabase }) {
       <section className="card cardHero sponsorHero">
         <p className="introTagline">Become a Sponsor</p>
         <h2>Fuel Mission-First Support for Veterans and First Responders</h2>
-        <p>
-          Sponsor The Outreach Project to help expand trusted resources, strengthen digital access, and
-          accelerate community visibility across web, podcast, YouTube, and ecosystem announcements.
-        </p>
+        <p>Choose a tier, confirm fit, and activate sponsor visibility across website, podcast, YouTube, and digital announcements.</p>
         <div className="row wrap">
-          <button className="btnPrimary" type="button" onClick={() => {
-            const formEl = typeof document !== "undefined" ? document.getElementById("sponsor-application-form") : null;
-            if (formEl) formEl.scrollIntoView({ behavior: "smooth", block: "start" });
-          }}>
+          <button className="btnPrimary" type="button" onClick={() => setApplicationOpen(true)}>
             Apply as Sponsor
           </button>
           <p className="sponsorSelectionHint">
@@ -33,23 +31,19 @@ export default function BecomeASponsorPage({ supabase }) {
 
       <section className="card sponsorSection">
         <h3>Sponsorship Overview</h3>
-        <p>
-          Sponsorship supports a mission-driven ecosystem built to connect veterans, first responders, and supporters
-          with trusted organizations and real-world help. Sponsor placements are structured across digital and media
-          surfaces so partners can contribute meaningfully while receiving credible visibility.
-        </p>
+        <p className="sponsorSectionLead">Clear channel placement, mission alignment, and structured activation support.</p>
         <div className="sponsorPlacementGrid">
           <div className="resultCard">
             <strong>Website + Digital Experience</strong>
-            <p>Featured sponsor cards, partner callouts, rotating placements, and highlighted mission visibility.</p>
+            <p>Featured sponsor cards, partner callouts, and rotating mission placements.</p>
           </div>
           <div className="resultCard">
             <strong>Podcast + YouTube Channels</strong>
-            <p>Episode acknowledgements, sponsor spotlights, and partner mentions in content descriptions.</p>
+            <p>Episode acknowledgements, spotlight mentions, and description callouts.</p>
           </div>
           <div className="resultCard">
             <strong>Community + Social Promotion</strong>
-            <p>Digital announcements, social support, and ecosystem updates aligned to sponsor goals.</p>
+            <p>Digital announcements and social amplification aligned to sponsor goals.</p>
           </div>
         </div>
       </section>
@@ -58,11 +52,7 @@ export default function BecomeASponsorPage({ supabase }) {
 
       <section className="card sponsorSection">
         <h3>Benefits and Placement Logic</h3>
-        <p>
-          Higher tiers receive broader channel integration, more frequent mention opportunities, and stronger visual
-          placement priority. The integrated sponsorship ladder is built for sponsors who want recurring mission-facing
-          visibility across multiple channels.
-        </p>
+        <p className="sponsorSectionLead">Higher tiers increase placement frequency, channel depth, and sponsor prominence.</p>
         <div className="sponsorPlacementGrid">
           <div className="resultCard">
             <strong>Support Sponsor Family</strong>
@@ -79,27 +69,26 @@ export default function BecomeASponsorPage({ supabase }) {
         </div>
       </section>
 
-      <div id="sponsor-application-form">
-        <SponsorApplicationForm supabase={supabase} selectedTierId={selectedTierId} onSelectTier={setSelectedTierId} />
-      </div>
+      <SponsorTimeline />
 
-      <section className="card sponsorSection">
-        <h3>What Happens Next</h3>
-        <div className="sponsorFaqGrid">
-          <div className="resultCard">
-            <strong>Application Review</strong>
-            <p>Our team reviews fit, placement priorities, and onboarding readiness for your selected tier.</p>
-          </div>
-          <div className="resultCard">
-            <strong>Demo Payment Clarification</strong>
-            <p>This flow uses demo states now. Live billing can be connected later without changing sponsor UX.</p>
-          </div>
-          <div className="resultCard">
-            <strong>Onboarding + Activation</strong>
-            <p>Approved sponsors move into asset intake, timeline alignment, and launch planning across channels.</p>
+      {applicationOpen ? (
+        <div className="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="sponsor-app-title" onClick={() => setApplicationOpen(false)}>
+          <div className="modalCard sponsorApplyModal" onClick={(e) => e.stopPropagation()}>
+            <div className="sponsorApplyModalHead">
+              <h3 id="sponsor-app-title">Sponsor application</h3>
+              <button className="btnSoft sponsorModalClose" type="button" onClick={() => setApplicationOpen(false)}>
+                Close
+              </button>
+            </div>
+            <SponsorApplicationForm
+              supabase={supabase}
+              selectedTierId={selectedTierId}
+              onSelectTier={setSelectedTierId}
+              variant="modal"
+            />
           </div>
         </div>
-      </section>
+      ) : null}
     </div>
   );
 }

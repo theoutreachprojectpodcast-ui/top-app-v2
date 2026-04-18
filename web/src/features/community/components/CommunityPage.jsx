@@ -1,22 +1,18 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import IconWrap from "@/components/shared/IconWrap";
 import CommunityModerationPanel from "@/features/community/components/CommunityModerationPanel";
+import CommunityConnectionsPanel from "@/features/community/components/CommunityConnectionsPanel";
+import CommunityMemberProfileModal from "@/features/community/components/CommunityMemberProfileModal";
 import CommunityPostCard from "@/features/community/components/CommunityPostCard";
 import CommunitySubmissionForm from "@/features/community/components/CommunitySubmissionForm";
-import { COMMUNITY_FOLLOWS_SEED, COMMUNITY_MEMBERS_SEED } from "@/features/community/data/communitySeed";
+import { isModeratorUser } from "@/features/community/api/communityApi";
 import { useCommunityFeed } from "@/features/community/hooks/useCommunityFeed";
 
 function CommunityIcon() {
   const path = "M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6m8 0a3 3 0 1 1 0-6 3 3 0 0 1 0 6M3 19c0-2.8 2.8-4 5-4s5 1.2 5 4m3 0c0-2.4 2.3-3.5 5-3.5 2.1 0 5 1 5 3.5";
   return <IconWrap path={path} />;
-}
-
-function followingNames(followerId) {
-  return COMMUNITY_FOLLOWS_SEED.filter((f) => f.followerId === followerId)
-    .map((f) => COMMUNITY_MEMBERS_SEED.find((m) => m.id === f.followingId)?.name)
-    .filter(Boolean);
 }
 
 export default function CommunityPage({
@@ -28,16 +24,11 @@ export default function CommunityPage({
   onRequestUpgrade,
 }) {
   const [submitOpen, setSubmitOpen] = useState(false);
+  const [selectedMemberId, setSelectedMemberId] = useState("");
   const [modPanelKey, setModPanelKey] = useState(0);
   const authorName = fullName || [profile.firstName, profile.lastName].filter(Boolean).join(" ").trim() || "Community member";
   const { posts, loading, error, refresh, onToggleLike } = useCommunityFeed(supabase, userId);
-
-  const memberActivity = useMemo(() => {
-    return COMMUNITY_MEMBERS_SEED.map((m) => ({
-      ...m,
-      follows: followingNames(m.id),
-    }));
-  }, []);
+  const canModerate = isModeratorUser({ userId, profile });
 
   return (
     <div className="communityPage">
@@ -72,30 +63,15 @@ export default function CommunityPage({
         </ul>
       </section>
 
-      <section className="card communitySection">
-        <h3><CommunityIcon /> Member connections (demo)</h3>
-        <p className="communitySectionLead">Sample members and follow relationships—foundation for richer profiles later.</p>
-        <div className="communityMemberGrid">
-          {memberActivity.map((m) => (
-            <div key={m.id} className="communityMemberCard">
-              <div className="communityMemberAvatar" aria-hidden="true">{m.initials}</div>
-              <strong>{m.name}</strong>
-              <span className="communityMemberRole">{m.role}</span>
-              <p className="communityMemberTag">{m.tagline}</p>
-              {m.follows.length ? (
-                <p className="communityMemberFollows">Following: {m.follows.join(", ")}</p>
-              ) : (
-                <p className="communityMemberFollows muted">Following: —</p>
-              )}
-            </div>
-          ))}
-        </div>
-      </section>
+      <CommunityConnectionsPanel userId={userId} onOpenMember={setSelectedMemberId} />
 
       <section className="card communitySection">
         <div className="communitySectionHead">
           <h3>Community stories</h3>
-          <span className="communityApprovedPill">Approved posts only</span>
+          <div className="communityPillRow">
+            <span className="communityApprovedPill">Approved posts only</span>
+            {canModerate ? <span className="communityModeratorPill">Moderator access</span> : null}
+          </div>
         </div>
         {loading ? <p className="communityFeedStatus">Loading stories…</p> : null}
         {error ? <p className="applyError">{error}</p> : null}
@@ -115,7 +91,13 @@ export default function CommunityPage({
         </div>
       </section>
 
-      <CommunityModerationPanel key={modPanelKey} onFeedChanged={refresh} />
+      <CommunityModerationPanel
+        key={modPanelKey}
+        supabase={supabase}
+        userId={userId}
+        canModerate={canModerate}
+        onFeedChanged={refresh}
+      />
 
       {submitOpen ? (
         <div className="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="community-submit-title" onClick={() => setSubmitOpen(false)}>
@@ -137,6 +119,13 @@ export default function CommunityPage({
             />
           </div>
         </div>
+      ) : null}
+      {selectedMemberId ? (
+        <CommunityMemberProfileModal
+          supabase={supabase}
+          memberId={selectedMemberId}
+          onClose={() => setSelectedMemberId("")}
+        />
       ) : null}
     </div>
   );

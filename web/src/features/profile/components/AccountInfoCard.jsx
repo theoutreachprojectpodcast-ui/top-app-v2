@@ -1,4 +1,4 @@
-export default function AccountInfoCard({ firstName, lastName, email, userId }) {
+export default function AccountInfoCard({ firstName, lastName, email, userId, profileSource = "local" }) {
   const name = [firstName, lastName].filter(Boolean).join(" ").trim();
   return (
     <div className="card">
@@ -17,6 +17,11 @@ export default function AccountInfoCard({ firstName, lastName, email, userId }) 
         <strong>User ID</strong>
         <br />
         <span style={{ wordBreak: "break-all", fontSize: "0.9em" }}>{userId || "—"}</span>
+      </p>
+      <p style={{ marginBottom: 0 }}>
+        <strong>Profile data source</strong>
+        <br />
+        {profileSource === "supabase" ? "Supabase" : "Local fallback"}
       </p>
     </div>
   );

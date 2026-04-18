@@ -8,7 +8,7 @@ export default function SponsorTierComparison({ selectedTierId, onSelectTier }) 
   return (
     <section className="card sponsorSection">
       <h3>Sponsorship Tiers</h3>
-      <p>Choose a sponsorship package aligned with your visibility goals and mission impact.</p>
+      <p className="sponsorSectionLead">Compare quickly, then expand details only when needed.</p>
 
       <div className="sponsorFamilyBlock">
         <h4>Support Sponsor Tiers</h4>

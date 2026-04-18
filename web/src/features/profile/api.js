@@ -1,8 +1,15 @@
 import { queryTrustedOrgsByEin } from "@/lib/supabase/queries";
 
 const DEMO_USER_KEY = "top_app_demo_user_id";
-const PROFILE_TABLE = "top_app_user_profiles";
-const SAVED_EIN_TABLE = "top_app_saved_org_eins";
+const PROFILE_TABLE = process.env.NEXT_PUBLIC_PROFILE_TABLE || "top_app_user_profiles";
+const SAVED_EIN_TABLE = process.env.NEXT_PUBLIC_SAVED_ORG_TABLE || "top_app_saved_org_eins";
+
+function isOptionalCloudError(error) {
+  const code = String(error?.code || "");
+  if (code === "PGRST205" || code === "42501") return true;
+  const message = String(error?.message || "").toLowerCase();
+  return message.includes("row-level security") || message.includes("schema cache");
+}
 
 export function getOrCreateDemoUserId() {
   if (typeof window === "undefined") return "demo-user";
@@ -53,7 +60,7 @@ export async function upsertProfileByUserId(supabase, userId, profile) {
     updated_at: new Date().toISOString(),
   };
   const { error } = await supabase.from(PROFILE_TABLE).upsert(row, { onConflict: "user_id" });
-  if (error) throw error;
+  if (error && !isOptionalCloudError(error)) throw error;
 }
 
 export async function fetchSavedOrgEinList(supabase, userId) {
@@ -70,7 +77,7 @@ export async function fetchSavedOrgEinList(supabase, userId) {
 export async function replaceSavedOrgEinList(supabase, userId, eins) {
   if (!supabase || !userId) return;
   const { error: delErr } = await supabase.from(SAVED_EIN_TABLE).delete().eq("user_id", userId);
-  if (delErr) throw delErr;
+  if (delErr && !isOptionalCloudError(delErr)) throw delErr;
   const list = (eins || []).map((e) => String(e)).filter(Boolean);
   if (!list.length) return;
   const rows = list.map((ein, i) => ({
@@ -79,7 +86,7 @@ export async function replaceSavedOrgEinList(supabase, userId, eins) {
     sort_order: i,
   }));
   const { error } = await supabase.from(SAVED_EIN_TABLE).insert(rows);
-  if (error) throw error;
+  if (error && !isOptionalCloudError(error)) throw error;
 }
 
 export async function fetchSavedOrganizationsByEin(supabase, eins) {

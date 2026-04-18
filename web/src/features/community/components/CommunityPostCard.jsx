@@ -13,6 +13,15 @@ const CATEGORY_LABEL = {
   milestone: "Milestone",
 };
 
+const POST_TYPE_LABEL = {
+  share_story: "Story",
+  review_nonprofit: "Nonprofit review",
+  submit_feedback: "Feedback",
+  success_story: "Success",
+  recommend_resource: "Resource recommendation",
+  community_update: "Community update",
+};
+
 export default function CommunityPostCard({ post, onToggleLike }) {
   const [shareBusy, setShareBusy] = useState(false);
   const displayName = post.showAuthorName ? post.authorName : "Community member";
@@ -36,12 +45,19 @@ export default function CommunityPostCard({ post, onToggleLike }) {
           <div className="communityPostAuthorRow">
             <strong>{displayName}</strong>
             <span className="communityPostBadge">{cat}</span>
+            {post.postType ? <span className="communityPostTypeBadge">{POST_TYPE_LABEL[post.postType] || "Update"}</span> : null}
           </div>
           <time className="communityPostTime" dateTime={post.createdAt}>{post.relativeTime}</time>
         </div>
       </div>
       {post.title ? <h4 className="communityPostTitle">{post.title}</h4> : null}
       <p className="communityPostBody">{post.body}</p>
+      {post.photoUrl ? (
+        <div className="communityPostMedia">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={post.photoUrl} alt={post.title || "Community shared photo"} />
+        </div>
+      ) : null}
       {post.nonprofitName ? (
         <p className="communityPostNonprofit">
           <span className="communityPostNonprofitLabel">Organization</span>

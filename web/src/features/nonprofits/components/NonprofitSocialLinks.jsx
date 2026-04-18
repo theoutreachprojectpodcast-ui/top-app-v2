@@ -1,12 +1,12 @@
-import { Globe, Camera, Play, BriefcaseBusiness, MessageCircle } from "lucide-react";
+import { Globe, Instagram, Youtube, Linkedin, Facebook, Twitter } from "lucide-react";
 
 const ICONS = {
   website: Globe,
-  instagram: Camera,
-  facebook: MessageCircle,
-  youtube: Play,
-  linkedin: BriefcaseBusiness,
-  x: MessageCircle,
+  instagram: Instagram,
+  facebook: Facebook,
+  youtube: Youtube,
+  linkedin: Linkedin,
+  x: Twitter,
 };
 
 export default function NonprofitSocialLinks({ links = [] }) {

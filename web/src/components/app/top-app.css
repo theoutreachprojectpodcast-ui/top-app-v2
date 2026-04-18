@@ -1,10 +1,11 @@
 .topApp {
-  --content-max-width: 1100px;
-  --content-gutter: 40px;
+  --content-max-width: 1200px;
+  --content-gutter: 48px;
   --footer-nav-max-width: 760px;
   --header-floating-offset: 24px;
-  --header-floating-height: 320px;
+  --header-floating-height: 240px;
   --header-fade-height: 56px;
+  --header-subtitle-gap: 2px;
   min-height: 100vh;
   background: transparent;
   color: var(--color-text-primary);
@@ -48,43 +49,70 @@
 .subpageTopbar .siteContainer {
   pointer-events: auto;
 }
+
+/* Align fixed logo + subtitle with TopApp (--header-floating-offset on img + .headerBrandStack). */
+.appShell--subpage {
+  --header-floating-offset: 24px;
+  --header-subtitle-gap: 2px;
+}
 .topbarInner {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "left right"
+    "center center";
   align-items: center;
-  gap: 12px 16px;
+  gap: 8px 16px;
 }
 .topbarZone {
   align-items: center;
   display: flex;
   min-width: 0;
 }
-.topbarLeft { justify-content: flex-start; }
+.topbarLeft {
+  justify-content: flex-start;
+  grid-area: left;
+}
 .topbarCenter {
   justify-content: center;
   justify-self: center;
+  grid-area: center;
 }
 .topbarRight {
   justify-content: flex-end;
   justify-self: end;
+  grid-area: right;
 }
 .topbarActionsCluster {
   display: inline-flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: flex-end;
   gap: 10px;
 }
-.headerBrandCopy {
+/* Logo + subtitle: fixed column so the line sits directly under the image. */
+.headerBrandStack {
+  position: fixed;
+  top: calc(var(--header-floating-offset, 20px) + 4px + env(safe-area-inset-top, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 97;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  margin-top: clamp(118px, 24vw, 188px);
+  gap: var(--header-subtitle-gap, 2px);
+  width: max-content;
+  max-width: min(520px, 92vw);
   padding: 0 8px;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+.headerBrandStack .headerBrandSubtitle {
   max-width: min(100%, 480px);
   text-align: center;
-  pointer-events: auto;
+  /* Logo PNG includes transparent lower padding; pull copy up toward visible artwork */
+  margin-top: -14px;
+  line-height: 1.25;
 }
 .headerBrandTitle {
   margin: 0;
@@ -99,7 +127,7 @@
 }
 .headerBrandSubtitle {
   margin: 0;
-  font-size: clamp(11px, 2vw, 13px);
+  font-size: clamp(13.31px, 2.42vw, 15.73px);
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -107,58 +135,35 @@
   color: var(--color-text-secondary);
   text-wrap: balance;
 }
-.brandMark {
-  position: relative;
-  flex-shrink: 0;
-}
-.brandMarkFrame {
-  border-radius: 50%;
-  padding: 3px;
-  background: linear-gradient(145deg, rgba(228, 188, 92, 0.35), rgba(106, 74, 18, 0.55));
-  box-shadow:
-    0 0 0 1px rgba(8, 9, 11, 0.95),
-    0 4px 20px rgba(0, 0, 0, 0.45),
-    var(--glow-gold);
-}
-.brandMarkInner {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  overflow: hidden;
-  background: radial-gradient(circle at 35% 28%, rgba(40, 42, 48, 0.95), rgba(12, 13, 16, 0.98));
-  box-shadow: inset 0 2px 12px rgba(0, 0, 0, 0.55);
-}
 .brandMarkImg {
   object-fit: contain;
   object-position: center;
   padding: 8%;
   background: transparent !important;
 }
-/* Header: bare <img> only — fixed, no wrapper, no blend tricks (PNG alpha) */
+/* Header logo: inside .headerBrandStack (fixed); intrinsic box + max-* only (no letterbox slab). */
 img.brandMarkImg--header {
-  position: fixed;
-  top: calc(var(--header-floating-offset, 20px) + 4px + env(safe-area-inset-top, 0px));
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 97;
-  pointer-events: none;
+  box-sizing: content-box;
+  position: static;
   display: block;
   width: auto;
-  height: clamp(108px, 16.5vw, 156px);
-  min-width: 72px;
-  max-width: min(390px, 92vw);
-  object-fit: contain;
+  height: auto;
+  max-height: clamp(135px, 20.625vw, 195px);
+  max-width: min(488px, 92vw);
+  object-fit: scale-down;
   object-position: center center;
   padding: 0;
   margin: 0;
   border: 0;
   outline: none;
   vertical-align: top;
-  background: none !important;
+  background: transparent !important;
   background-color: transparent !important;
   box-shadow: none;
   mix-blend-mode: normal;
+  -webkit-tap-highlight-color: transparent;
+  forced-color-adjust: none;
+  color: rgba(236, 238, 241, 0);
 }
 .brandTag {
   font-size: 24px;
@@ -168,10 +173,10 @@ img.brandMarkImg--header {
   margin-top: 0;
 }
 .sponsorBtn {
-  min-width: 168px;
-  min-height: 52px;
-  font-size: 16px;
-  padding: 12px 22px;
+  min-width: 148px;
+  min-height: 46px;
+  font-size: 14px;
+  padding: 10px 14px;
 }
 .topbarRight .sponsorBtn {
   margin-bottom: 3px;
@@ -189,13 +194,13 @@ img.brandMarkImg--header {
   margin: 0 auto;
   padding: calc(var(--header-floating-offset) + var(--header-floating-height) + var(--header-fade-height) + 8px) 0 20px;
   display: grid;
-  gap: 16px;
+  gap: 18px;
 }
 .card {
   background: linear-gradient(180deg, rgba(22, 23, 26, 0.98), rgba(14, 15, 18, 0.98));
   border: 1px solid var(--color-border);
   border-radius: 16px;
-  padding: 18px;
+  padding: 20px;
   box-shadow: 0 14px 32px rgba(0, 0, 0, 0.42);
 }
 .cardHero {
@@ -207,6 +212,19 @@ img.brandMarkImg--header {
   display: flex;
   align-items: center;
   gap: 16px;
+}
+.guestWelcomePanel {
+  display: grid;
+  gap: 6px;
+}
+.guestWelcomePanel h2 {
+  margin: 0;
+  font-size: clamp(24px, 2.7vw, 32px);
+}
+.guestWelcomePanel p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  max-width: 62ch;
 }
 .profileHeaderGrid {
   display: grid;
@@ -375,6 +393,10 @@ input, select, textarea {
   border-color: rgba(228, 188, 92, 0.38);
   box-shadow: 0 0 0 1px rgba(228, 188, 92, 0.1);
 }
+.contactForm {
+  display: grid;
+  gap: 10px;
+}
 .row p { color: var(--color-text-secondary); }
 .row { display: flex; gap: 10px; align-items: center; margin-top: 10px; }
 .row.space { justify-content: space-between; }
@@ -402,11 +424,11 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 .btnSoft {
   background: rgba(18, 19, 22, 0.94);
   color: var(--color-text-primary);
-  border-color: rgba(228, 188, 92, 0.2);
+  border-color: rgba(255, 255, 255, 0.12);
 }
 .btnSoft:hover {
-  border-color: rgba(228, 188, 92, 0.42);
-  box-shadow: 0 0 0 1px rgba(228, 188, 92, 0.12), var(--glow-gold);
+  border-color: rgba(73, 164, 175, 0.48);
+  box-shadow: 0 0 0 1px rgba(73, 164, 175, 0.2), var(--glow-cyan);
 }
 .btnBlack {
   background: rgba(12, 13, 15, 0.96);
@@ -415,7 +437,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   text-decoration: none;
 }
 .btnBlack:hover {
-  border-color: rgba(58, 173, 184, 0.35);
+  border-color: rgba(73, 164, 175, 0.44);
   box-shadow: var(--glow-cyan);
 }
 .iconWrap {
@@ -441,12 +463,19 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 .resultCard {
   border: 1px solid rgba(47, 54, 64, 0.9);
   border-radius: 14px;
-  padding: 12px;
+  padding: 14px;
   background: rgba(14, 17, 22, 0.9);
 }
+.resultCard--clickable {
+  cursor: pointer;
+}
+.resultCard--clickable:hover {
+  border-color: rgba(228, 188, 92, 0.4);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.28), inset 0 0 0 1px rgba(228, 188, 92, 0.14);
+}
 .resultCard.tier-verified {
-  border-color: rgba(58, 173, 184, 0.28);
-  box-shadow: inset 0 0 0 1px rgba(58, 173, 184, 0.06);
+  border-color: rgba(73, 164, 175, 0.34);
+  box-shadow: inset 0 0 0 1px rgba(73, 164, 175, 0.12), 0 0 0 1px rgba(73, 164, 175, 0.04);
 }
 .resultCard.tier-featured {
   border-color: rgba(226, 174, 77, 0.5);
@@ -454,42 +483,88 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 }
 .nonprofitCardMain {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: 62px minmax(0, 1fr);
   align-items: start;
   column-gap: 12px;
 }
 .nonprofitCardMedia {
-  width: 64px;
-  flex: 0 0 64px;
+  width: 62px;
+  flex: 0 0 62px;
+  display: flex;
+  justify-content: center;
 }
-.nonprofitAvatarWrap {
-  width: 64px;
-  height: 64px;
+.nonprofitIconBadge {
+  width: 58px;
+  height: 58px;
   border-radius: 999px;
-  overflow: hidden;
-  background: rgba(14, 18, 22, 0.98);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background:
+    radial-gradient(circle at 30% 24%, var(--nonprofit-icon-tint, rgba(228, 188, 92, 0.14)), transparent 58%),
+    linear-gradient(180deg, rgba(16, 20, 24, 0.95), rgba(11, 14, 18, 0.96));
+  box-shadow: 0 0 0 1px rgba(228, 188, 92, 0.08);
   display: grid;
   place-items: center;
+}
+.nonprofitAvatarWrap {
+  width: 84px;
+  height: 84px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(12, 16, 20, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  display: grid;
+  place-items: center;
+  box-shadow: 0 0 0 1px rgba(228, 188, 92, 0.08);
 }
 .nonprofitAvatarIconShell {
   width: 100%;
   height: 100%;
   display: grid;
   place-items: center;
+  padding: 8px;
+}
+.nonprofitAvatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  background: rgba(9, 11, 14, 0.9);
+}
+.nonprofitAvatarImg--city {
+  object-fit: cover;
+}
+.nonprofitAvatarFallback {
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 8px;
+  background: radial-gradient(circle at 50% 20%, rgba(228, 188, 92, 0.12), rgba(11, 14, 18, 0.95));
+}
+.nonprofitAvatarFallback span {
+  color: var(--color-text-secondary);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: 0.02em;
 }
 .nonprofitTypeIcon {
   display: grid;
   place-items: center;
-  color: var(--color-gold-highlight);
+  color: var(--nonprofit-icon-color, var(--np-unknownGeneral));
 }
 .nonprofitTypeIcon.isFeatured {
-  color: var(--color-gold-highlight);
+  color: var(--nonprofit-icon-color, var(--np-unknownGeneral));
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--nonprofit-icon-color, #9ea6b1) 42%, transparent));
 }
 .nonprofitContentCol {
   min-width: 0;
   display: grid;
   justify-items: start;
+  align-content: start;
+  row-gap: 3px;
 }
 .nonprofitTitleRow {
   width: 100%;
@@ -499,8 +574,8 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   gap: 8px;
 }
 .nonprofitMetaRow {
-  margin-top: 4px;
-  margin-bottom: 4px;
+  margin-top: 2px;
+  margin-bottom: 2px;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -509,7 +584,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   margin: 0;
   font-size: 11px;
   letter-spacing: 0.04em;
-  color: var(--color-text-secondary);
+  color: color-mix(in srgb, var(--nonprofit-icon-color, var(--np-unknownGeneral)) 74%, #d5dae2 26%);
   font-weight: 600;
 }
 .nonprofitLocation {
@@ -519,7 +594,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   margin: 4px 0 0;
 }
 .nonprofitActionRow {
-  margin-top: 8px;
+  margin-top: 10px;
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
@@ -531,8 +606,8 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   gap: 8px;
 }
 .nonprofitSocialLink {
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   border-radius: 999px;
   border: 1px solid var(--color-border);
   background: rgba(12, 14, 18, 0.88);
@@ -597,6 +672,8 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   display: flex;
   align-items: flex-start;
   gap: 8px;
+  justify-content: flex-start;
+  text-align: left;
 }
 .applyCheck input {
   width: 16px;
@@ -630,14 +707,20 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   border: 1px solid var(--color-border);
 }
 .badgeVerified {
-  color: var(--color-accent-interactive);
-  border-color: rgba(58, 173, 184, 0.38);
-  background: rgba(58, 173, 184, 0.08);
+  color: var(--color-cyan-bright);
+  border-color: rgba(73, 164, 175, 0.5);
+  background: rgba(73, 164, 175, 0.14);
 }
 .badgeFeatured {
   color: var(--color-gold-highlight);
   border-color: rgba(226, 174, 77, 0.56);
   background: rgba(226, 174, 77, 0.15);
+}
+.badgeProvenAlly {
+  color: var(--color-gold-highlight);
+  border-color: rgba(228, 188, 92, 0.62);
+  background: linear-gradient(180deg, rgba(228, 188, 92, 0.18), rgba(228, 188, 92, 0.08));
+  box-shadow: inset 0 0 0 1px rgba(228, 188, 92, 0.12);
 }
 .resultCard p { margin: 6px 0 0; color: var(--color-text-secondary); }
 .emptyState {
@@ -657,6 +740,10 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   background: rgba(19, 22, 27, 0.94);
   border-color: var(--color-border);
   color: var(--color-gold-highlight);
+  font-size: 21px;
+  line-height: 1;
+  min-width: 44px;
+  min-height: 44px;
 }
 .footerDockBackdrop {
   position: fixed;
@@ -690,7 +777,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  width: fit-content;
+  width: min(760px, 100%);
   max-width: 100%;
   margin: 0 auto;
   background: transparent;
@@ -702,16 +789,16 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   color: var(--color-text-secondary);
   border: 1px solid rgba(255, 255, 255, 0.08);
   min-height: 42px;
-  min-width: 116px;
+  min-width: 108px;
   border-radius: 999px;
   padding: 9px 18px;
   white-space: nowrap;
   flex: 0 0 auto;
 }
 .navItem.isActive {
-  background: linear-gradient(180deg, rgba(42, 185, 202, 0.2), rgba(42, 185, 202, 0.07));
+  background: linear-gradient(180deg, rgba(73, 164, 175, 0.2), rgba(73, 164, 175, 0.07));
   color: var(--color-gold-highlight);
-  border-color: rgba(42, 185, 202, 0.52);
+  border-color: rgba(73, 164, 175, 0.52);
   font-weight: 800;
   letter-spacing: 0.02em;
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.45);
@@ -922,6 +1009,131 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 .sponsorFeaturedBody span {
   font-size: 12px;
   color: var(--color-text-secondary);
+}
+.sponsorFeaturedSection {
+  padding: 18px;
+}
+.sponsorSectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.sponsorFeaturedValuePill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(228, 188, 92, 0.38);
+  color: var(--color-gold-highlight);
+  background: rgba(228, 188, 92, 0.12);
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.sponsorFeaturedShowcase {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+.sponsorFeaturedSpotlight {
+  position: relative;
+  border: 1px solid color-mix(in srgb, var(--sponsor-brand-primary, #e4bc5c) 35%, var(--color-border) 65%);
+  border-radius: 16px;
+  overflow: hidden;
+  min-height: 210px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 132px;
+}
+.sponsorFeaturedBg {
+  position: absolute;
+  inset: 0;
+  background-image: var(--sponsor-brand-bg);
+  background-size: cover;
+  background-position: center;
+  filter: saturate(0.95) contrast(1.05);
+}
+.sponsorFeaturedOverlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(120deg, rgba(9, 12, 16, 0.9) 0%, rgba(9, 12, 16, 0.62) 56%, rgba(9, 12, 16, 0.78) 100%),
+    radial-gradient(circle at 10% 8%, color-mix(in srgb, var(--sponsor-brand-primary, #e4bc5c) 28%, transparent), transparent 44%);
+}
+.sponsorFeaturedContent,
+.sponsorFeaturedProfileWrap {
+  position: relative;
+  z-index: 1;
+}
+.sponsorFeaturedContent {
+  padding: 16px;
+  display: grid;
+  align-content: space-between;
+  gap: 14px;
+}
+.sponsorFeaturedTop {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.sponsorFeaturedTier,
+.sponsorFeaturedTag {
+  display: inline-flex;
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.sponsorFeaturedTier {
+  color: var(--color-gold-highlight);
+  border: 1px solid rgba(228, 188, 92, 0.4);
+  background: rgba(228, 188, 92, 0.12);
+}
+.sponsorFeaturedTag {
+  color: var(--color-text-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(12, 15, 20, 0.72);
+}
+.sponsorFeaturedBrandRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+}
+.sponsorFeaturedLogo {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  color: color-mix(in srgb, var(--sponsor-brand-primary, #e4bc5c) 72%, #f4f7ff 28%);
+  border: 1px solid color-mix(in srgb, var(--sponsor-brand-primary, #e4bc5c) 45%, #ffffff 10%);
+  background: linear-gradient(180deg, rgba(12, 15, 20, 0.88), rgba(11, 14, 18, 0.95));
+}
+.sponsorFeaturedTitleBlock h4 {
+  margin: 0;
+  font-size: clamp(18px, 2.2vw, 24px);
+}
+.sponsorFeaturedTitleBlock p {
+  margin: 4px 0 0;
+  color: var(--color-text-secondary);
+  line-height: 1.45;
+  max-width: 56ch;
+}
+.sponsorFeaturedActions {
+  display: flex;
+  justify-content: flex-start;
+}
+.sponsorFeaturedProfileWrap {
+  padding: 14px 14px 14px 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.sponsorFeaturedProfile {
+  width: 112px;
+  height: 112px;
 }
 .sponsorChannelRow {
   display: flex;
@@ -1286,6 +1498,215 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 .sponsorPaymentCard h4 {
   margin: 0 0 6px;
 }
+.communityPillRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.communityApprovedPill,
+.communityModeratorPill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  border: 1px solid var(--color-border);
+}
+.communityApprovedPill {
+  color: var(--color-text-secondary);
+  background: rgba(14, 18, 23, 0.9);
+}
+.communityModeratorPill {
+  color: var(--color-gold-highlight);
+  border-color: rgba(228, 188, 92, 0.46);
+  background: rgba(228, 188, 92, 0.12);
+}
+.communityModControls {
+  align-items: center;
+}
+.communityModControls select {
+  width: auto;
+  min-width: 220px;
+}
+.communitySectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.communityConnectionsPanel {
+  padding: 14px 16px;
+}
+.communityCollapseBtn {
+  padding: 7px 12px;
+}
+.communityConnectionsPreview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.communityConnectionsPreview p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+.communityConnectionsPreviewAvatars {
+  display: inline-flex;
+  align-items: center;
+}
+.communityConnectionsPreviewAvatars .communityMemberAvatarImg {
+  width: 34px;
+  height: 34px;
+  margin-right: -9px;
+  border: 2px solid rgba(10, 12, 16, 0.95);
+}
+.communityConnectionsBody {
+  margin-top: 12px;
+  display: grid;
+  gap: 10px;
+}
+.communitySearchBar input {
+  width: 100%;
+}
+.communitySearchResults {
+  display: grid;
+  gap: 8px;
+}
+.communitySearchResultRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 12px;
+  padding: 9px 10px;
+  background: rgba(12, 15, 19, 0.86);
+}
+.communityMemberMini {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.communityMemberMiniBtn {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+}
+.communityMemberMiniBtn:hover strong,
+.communityMemberMiniBtn:focus-visible strong {
+  color: var(--color-gold-highlight);
+}
+.communityMemberMiniBtn:focus-visible {
+  outline: 2px solid var(--color-accent-interactive);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+.communityMemberMini .communityMemberAvatarImg {
+  width: 38px;
+  height: 38px;
+}
+.communityMemberMini strong {
+  display: block;
+}
+.communityMemberMini p {
+  margin: 2px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}
+.communityRequestPill {
+  display: inline-flex;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  padding: 4px 10px;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  background: rgba(16, 18, 22, 0.9);
+}
+.communityRequestPill.isRequested {
+  color: var(--color-gold-highlight);
+  border-color: rgba(228, 188, 92, 0.42);
+}
+.communityRequestPill.isConnected {
+  color: var(--color-cyan-bright);
+  border-color: rgba(73, 164, 175, 0.45);
+}
+.communityPostTypeBadge {
+  display: inline-flex;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  padding: 2px 8px;
+  font-size: 10px;
+  color: var(--color-text-secondary);
+  background: rgba(14, 18, 23, 0.85);
+}
+.communityPostMedia {
+  margin-top: 10px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--color-border-soft);
+}
+.communityPostMedia img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.communityUploadPreview {
+  border: 1px solid var(--color-border-soft);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.communityUploadPreview img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.communityMemberProfileModal {
+  width: min(960px, 100%);
+  max-height: min(90vh, 980px);
+  overflow: auto;
+  gap: 14px;
+}
+.communityMemberProfileHeader {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+.communityMemberProfileAvatar {
+  width: 84px;
+  height: 84px;
+}
+.communityMemberProfileMeta h4 {
+  margin: 0;
+  font-size: 22px;
+}
+.communityMemberProfileMeta p {
+  margin: 5px 0 0;
+}
+.communityMemberProfileBio {
+  color: var(--color-text-secondary);
+}
+.communityMemberProfileSection {
+  border: 1px solid var(--color-border-soft);
+  border-radius: 12px;
+  padding: 12px;
+  background: rgba(12, 16, 20, 0.65);
+  display: grid;
+  gap: 10px;
+}
+.communityMemberProfileSection h4 {
+  margin: 0;
+}
 @media (max-width: 760px) {
   .grid4, .form { grid-template-columns: 1fr; }
   .statsGrid, .accountGrid { grid-template-columns: 1fr; }
@@ -1293,36 +1714,39 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   .topApp {
     --content-gutter: 24px;
     --header-floating-offset: 14px;
-    --header-floating-height: 288px;
+    --header-floating-height: 216px;
     --header-fade-height: 48px;
+  }
+  .appShell--subpage {
+    --header-floating-offset: 14px;
   }
   .siteContainer, .shell { width: min(var(--content-max-width), calc(100% - var(--content-gutter))); }
   .topbarInner {
     grid-template-columns: 1fr;
+    grid-template-areas:
+      "center"
+      "right";
     gap: 6px;
   }
   .topbarLeft { display: none; }
-  .topbarCenter { order: 1; }
-  .topbarRight { order: 2; justify-content: center; }
+  .topbarCenter { justify-self: center; }
+  .topbarRight { justify-content: center; justify-self: center; }
   img.brandMarkImg--header {
-    height: clamp(84px, 33vw, 120px) !important;
-    max-width: min(330px, 92vw) !important;
-  }
-  .headerBrandCopy {
-    margin-top: clamp(96px, 30vw, 138px);
+    max-height: clamp(105px, 41.25vw, 150px) !important;
+    max-width: min(413px, 92vw) !important;
   }
   .headerBrandTitle {
     letter-spacing: 0.08em;
   }
   .headerBrandSubtitle {
-    font-size: 10px;
+    font-size: 12.1px;
   }
   .brandTag { font-size: 16px; }
   .sponsorBtn {
-    min-width: 138px;
-    min-height: 46px;
-    font-size: 14px;
-    padding: 10px 16px;
+    min-width: 128px;
+    min-height: 42px;
+    font-size: 13px;
+    padding: 8px 12px;
   }
   .welcomePanel { align-items: flex-start; }
   .profileAvatarShell { width: 62px; height: 62px; }
@@ -1331,15 +1755,23 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   .welcomeActions .btnPrimary,
   .welcomeActions .btnSoft { width: 100%; }
   .nonprofitAvatarWrap {
-    width: 56px;
-    height: 56px;
+    width: 72px;
+    height: 72px;
+  }
+  .nonprofitIconBadge {
+    width: 52px;
+    height: 52px;
+  }
+  .nonprofitAvatarFallback span {
+    font-size: 9px;
   }
   .nonprofitCardMedia {
-    width: 56px;
-    flex-basis: 56px;
+    width: 54px;
+    flex-basis: 54px;
   }
   .nonprofitCardMain {
-    column-gap: 10px;
+    grid-template-columns: 54px minmax(0, 1fr);
+    column-gap: 8px;
   }
   .footerDockBackdrop { height: calc(60px + env(safe-area-inset-bottom)); }
   .footerNavInner { padding: 8px 0 calc(8px + env(safe-area-inset-bottom)); }
@@ -1357,6 +1789,14 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   .sponsorTierGrid,
   .sponsorFeaturedGrid {
     grid-template-columns: 1fr;
+  }
+  .sponsorFeaturedSpotlight {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+  .sponsorFeaturedProfileWrap {
+    justify-content: flex-start;
+    padding: 0 16px 16px;
   }
   .sponsorTimeline {
     grid-template-columns: 1fr;
@@ -1393,5 +1833,19 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   .sponsorStickyCta {
     width: 100%;
     min-width: 0;
+  }
+  .communityModControls select {
+    width: 100%;
+    min-width: 0;
+  }
+  .communitySearchResultRow {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .communitySearchResultRow .btnSoft {
+    width: 100%;
+  }
+  .communityMemberProfileHeader {
+    grid-template-columns: 1fr;
   }
 }

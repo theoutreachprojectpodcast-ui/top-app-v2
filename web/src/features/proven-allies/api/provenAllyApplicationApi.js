@@ -36,7 +36,9 @@ function pushLocalFallback(record) {
 export async function submitProvenAllyApplication(supabase, payload) {
   const application = {
     ...payload,
+    applicant_name: `${String(payload.applicant_first_name || "").trim()} ${String(payload.applicant_last_name || "").trim()}`.trim(),
     review_status: "submitted",
+    notes_internal: payload.notes_internal || null,
     application_fee_status: payload.application_fee_status || "unpaid",
     payment_demo_status: payload.payment_demo_status || "unpaid",
   };

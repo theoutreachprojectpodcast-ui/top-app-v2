@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { PAGE_SIZE } from "@/lib/constants";
-import { searchDirectory } from "@/lib/directory";
+import { fetchDirectorySearch } from "@/features/directory/api";
 import { stateLabel } from "@/lib/utils";
 
 export function useDirectorySearch(supabase) {
@@ -31,7 +31,7 @@ export function useDirectorySearch(supabase) {
     setPage(nextPage);
 
     try {
-      const { rows, count, from } = await searchDirectory(supabase, filters, nextPage);
+      const { rows, count, from } = await fetchDirectorySearch(supabase, filters, nextPage);
       setResults(rows);
       setTotal(count);
 
@@ -50,7 +50,7 @@ export function useDirectorySearch(supabase) {
       );
       setMeta(`Displaying ${start.toLocaleString()}-${end.toLocaleString()} • Page ${nextPage}`);
     } catch {
-      setStatus("Search failed. Please try again.");
+      setStatus("Search temporarily unavailable. Please try again.");
       setMeta("");
       setResults([]);
     }
