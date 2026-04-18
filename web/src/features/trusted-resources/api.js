@@ -1,6 +1,12 @@
 import { TRUSTED_PAGE_SIZE } from "@/lib/constants";
 import { mapTrustedRow } from "@/lib/supabase/mappers";
+import {
+  TRUSTED_RESOURCES_TABLE,
+  isMissingTrustedResourcesTable,
+  mapTrustedResourcesDbRowToTrustedRow,
+} from "@/lib/supabase/trustedResourcesCatalog";
 import { queryTrustedOrgsByEin } from "@/lib/supabase/queries";
+import { attachDirectoryAndEnrichmentToTrustedRows } from "@/features/trusted-resources/trustedDirectoryJoin";
 
 async function runQuery(factory) {
   try {
@@ -11,9 +17,10 @@ async function runQuery(factory) {
 }
 
 function normalizeEin(value) {
-  const digits = String(value ?? "").replace(/\D/g, "");
-  if (!digits) return "";
-  return digits.padStart(9, "0");
+  let d = String(value ?? "").replace(/\D/g, "");
+  if (!d) return "";
+  if (d.length > 9) d = d.slice(-9);
+  return d.padStart(9, "0");
 }
 
 function stripLeadingZeros(value) {
@@ -33,16 +40,40 @@ function normalizeDomain(url = "") {
   }
 }
 
-export async function fetchTrustedResources(supabase) {
-  // Use broad profile fetch to avoid schema-specific filter failures.
+/** Load trusted catalog + directory/enrichment joins (server or browser Supabase client). */
+export async function fetchTrustedResourcesFromSupabase(supabase) {
+  if (!supabase) return [];
+
+  const catalog = await runQuery(() =>
+    supabase
+      .from(TRUSTED_RESOURCES_TABLE)
+      .select("*")
+      .eq("listing_status", "active")
+      .order("sort_order", { ascending: true })
+      .order("display_name", { ascending: true })
+  );
+  if (!catalog.error && Array.isArray(catalog.data)) {
+    const mapped = (catalog.data || []).map(mapProvenAlliesDbRowToTrustedRow).filter((row) => {
+      const ein = String(row?.ein ?? "").trim();
+      const name = String(row?.orgName ?? "").trim();
+      const web = String(row?.website ?? "").trim();
+      return !!(ein || name || web);
+    });
+    return attachDirectoryAndEnrichmentToTrustedRows(supabase, mapped);
+  }
+  if (catalog.error && !isMissingTrustedResourcesTable(catalog.error)) {
+    throw catalog.error;
+  }
+
+  // Legacy: nonprofit_profiles + directory joins when `trusted_resources` is not deployed.
   const profileResult = await runQuery(() => supabase.from("nonprofit_profiles").select("*").limit(1000));
   if (profileResult.error) throw profileResult.error;
 
   const featuredTiers = new Set(["featured", "featured_partner", "trusted", "trusted_partner", "tier_3"]);
   const profiles = (profileResult.data || []).filter((p) => {
     const tier = String(p?.verification_tier || "").trim().toLowerCase();
-    const approved = String(p?.proven_ally_status || "").trim().toLowerCase() === "approved";
-    return !!p?.ein && (p?.is_trusted === true || p?.is_proven_ally === true || approved || featuredTiers.has(tier));
+    const approved = String(p?.trusted_resource_status || "").trim().toLowerCase() === "approved";
+    return !!p?.ein && (p?.is_trusted === true || p?.is_trusted_resource === true || approved || featuredTiers.has(tier));
   });
   if (!profiles.length) return [];
   const einKeys = new Set();
@@ -83,11 +114,25 @@ export async function fetchTrustedResources(supabase) {
       const org = orgMap.get(rawKey) || orgMap.get(normalizedKey) || orgMap.get(unpaddedKey) || {};
       return mapTrustedRow(p, org);
     })
-    .filter((row) => row.orgName)
-    .sort((a, b) => a.orgName.localeCompare(b.orgName, undefined, { sensitivity: "base" }));
+    .filter((row) => {
+      const ein = String(row?.ein ?? "").trim();
+      const name = String(row?.orgName ?? "").trim();
+      const web = String(row?.website ?? "").trim();
+      return !!(ein || name || web);
+    })
+    .sort((a, b) => {
+      const sortKey = (r) =>
+        String(r.orgName || "").trim() || String(r.ein || "").trim() || "\uFFFF";
+      return sortKey(a).localeCompare(sortKey(b), undefined, { sensitivity: "base" });
+    });
 
   // If many profile rows still don't resolve rich org fields, backfill from directory snapshot.
-  const unresolved = rows.filter((r) => !r.city || !r.state || !r.nteeCode || !r.orgName || r.orgName === "Unknown Organization");
+  const unresolved = rows.filter((r) => {
+    const noRealName =
+      !String(r.orgName || "").trim() ||
+      /^unknown organization$/i.test(String(r.orgName || "").trim());
+    return !r.city || !r.state || !r.nteeCode || noRealName;
+  });
   if (unresolved.length) {
     const directorySnapshot = await runQuery(() =>
       supabase
@@ -119,6 +164,29 @@ export async function fetchTrustedResources(supabase) {
     });
   }
   return rows;
+}
+
+async function fetchTrustedCatalogFromApi() {
+  if (typeof window === "undefined") return null;
+  try {
+    const res = await fetch("/api/trusted/catalog", { cache: "no-store" });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data?.ok || !Array.isArray(data.rows)) return null;
+    return data.rows;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Prefer GET /api/trusted/catalog in the browser so localhost can use the service role (same as enrichment)
+ * when anon RLS blocks `nonprofit_directory_enrichment` or related tables.
+ */
+export async function fetchTrustedResources(supabase) {
+  const fromApi = await fetchTrustedCatalogFromApi();
+  if (fromApi) return fromApi;
+  return fetchTrustedResourcesFromSupabase(supabase);
 }
 
 export function getTrustedSlice(rows, offset = 0) {

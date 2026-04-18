@@ -13,10 +13,10 @@ pnpm install
 pnpm dev
 ```
 
-Open **http://localhost:3000** (dev server uses `--hostname localhost --port 3000`).
+Open **http://localhost:3001** (dev server uses `--hostname localhost --port 3001`).
 
 - **Canonical command:** `pnpm dev` (run at the repo root). Do not use `npm run dev` or `npm dev` at the root; there is no root npm app.
-- **Alternate port** (if 3000 is busy): `pnpm --filter web dev:alt` → http://localhost:3001
+- **Alternate port** (if 3001 is busy): `pnpm --filter web dev:alt` → http://localhost:3000
 - **Env:** copy `web/.env.local.example` to `web/.env.local` and set Supabase keys.
 
 ### Layout for future work
@@ -27,6 +27,6 @@ Open **http://localhost:3000** (dev server uses `--hostname localhost --port 300
 
 ### Troubleshooting
 
-- **Port 3000 in use:** Next exits with “Another next dev server is already running.” Stop the old PID (message shows `taskkill /PID … /F` on Windows) or run `pnpm --filter web dev:alt`.
+- **Port 3001 in use:** The `dev` script checks the port first; free it or run `pnpm --filter web dev:alt` on port 3000. If Next reports another dev server in this repo, stop that PID (e.g. `taskkill /PID … /F` on Windows).
 - **Asset sync warnings:** If `[sync-public-assets] copy failed` appears, something is locking `web/public/assets` (often **OneDrive**). The dev server still starts; fix locks or pause sync for that folder. Production builds on CI still fail the copy if `CI=true` (set by most hosts).
 - **pnpm “Ignored build scripts” (e.g. sharp):** run `pnpm approve-builds` in the repo root if image optimization fails after install.

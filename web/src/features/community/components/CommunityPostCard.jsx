@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Avatar from "@/components/shared/Avatar";
+import { avatarFallbackUrl } from "@/lib/avatarFallback";
 import CommunitySocialActions from "@/features/community/components/CommunitySocialActions";
 import { sharePostDemo } from "@/features/community/api/communityApi";
 
@@ -22,10 +23,11 @@ const POST_TYPE_LABEL = {
   community_update: "Community update",
 };
 
-export default function CommunityPostCard({ post, onToggleLike }) {
+export default function CommunityPostCard({ post, onToggleLike, showModerationStatus = false, onOpenAuthor }) {
   const [shareBusy, setShareBusy] = useState(false);
   const displayName = post.showAuthorName ? post.authorName : "Community member";
-  const avatarSrc = post.authorAvatarUrl || "/assets/top_profile_circle_1024.png";
+  const avatarSrc = post.authorAvatarUrl || avatarFallbackUrl(post.authorId || post.id);
+  const authorLookupKey = String(post.authorProfileId || post.authorId || "").trim();
   const cat = CATEGORY_LABEL[post.category] || "Story";
 
   async function onShare() {
@@ -39,23 +41,40 @@ export default function CommunityPostCard({ post, onToggleLike }) {
 
   return (
     <article className="communityPostCard">
-      <div className="communityPostHead">
+      <div className="communityPostTop">
         <Avatar src={avatarSrc} alt={displayName} className="communityPostAvatar" />
         <div className="communityPostMeta">
           <div className="communityPostAuthorRow">
-            <strong>{displayName}</strong>
+            {onOpenAuthor && authorLookupKey ? (
+              <button
+                type="button"
+                className="communityPostAuthorTrigger"
+                onClick={() => onOpenAuthor(authorLookupKey)}
+              >
+                {displayName}
+              </button>
+            ) : (
+              <strong className="communityPostAuthorName">{displayName}</strong>
+            )}
+            {showModerationStatus && post.status && post.status !== "approved" ? (
+              <span className="communityPostStatusBadge">{post.statusLabel || post.status}</span>
+            ) : null}
             <span className="communityPostBadge">{cat}</span>
-            {post.postType ? <span className="communityPostTypeBadge">{POST_TYPE_LABEL[post.postType] || "Update"}</span> : null}
+            {post.postType ? (
+              <span className="communityPostTypeBadge">{POST_TYPE_LABEL[post.postType] || "Update"}</span>
+            ) : null}
           </div>
-          <time className="communityPostTime" dateTime={post.createdAt}>{post.relativeTime}</time>
+          <time className="communityPostTime" dateTime={post.createdAt}>
+            {post.relativeTime}
+          </time>
+          {post.title ? <h4 className="communityPostTitle">{post.title}</h4> : null}
         </div>
       </div>
-      {post.title ? <h4 className="communityPostTitle">{post.title}</h4> : null}
       <p className="communityPostBody">{post.body}</p>
       {post.photoUrl ? (
         <div className="communityPostMedia">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={post.photoUrl} alt={post.title || "Community shared photo"} />
+          <img src={post.photoUrl} alt="" />
         </div>
       ) : null}
       {post.nonprofitName ? (

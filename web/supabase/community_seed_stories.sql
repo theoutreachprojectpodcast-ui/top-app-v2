@@ -1,0 +1,12 @@
+-- Legacy SQL seed (deprecated)
+--
+-- Previous versions inserted approved community_posts with a non–WorkOS author_id
+-- (`seed-community-torp`), which does not match production (WorkOS session user ids).
+--
+-- For localhost, use the Node seed instead (real WorkOS user ids from your dashboard):
+--   TORP_LOCAL_DATA_SEED=1 TORP_SEED_COMMUNITY_AUTHOR_WORKOS_USER_IDS=user_xxx,user_yyy,user_zzz pnpm seed:local-dev
+--
+-- See web/scripts/seed-local-dev-data.mjs and web/.env.local.example.
+--
+-- No-op migration body (safe to re-run):
+select 1 where false;

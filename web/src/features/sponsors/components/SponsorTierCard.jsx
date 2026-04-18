@@ -1,10 +1,13 @@
+import Link from "next/link";
 import { formatUsd } from "@/features/sponsors/data/sponsorTiers";
 
-export default function SponsorTierCard({ tier, selected, onSelect }) {
-  const topPlacements = (tier.placements || []).slice(0, 3);
-  const extraPlacements = (tier.placements || []).slice(3);
+export default function SponsorTierCard({ tier, selected, onSelect, variant = "main", interactive = true, compareHref = "/sponsors?packages=1" }) {
+  const placements = tier.fullPlacements?.length ? tier.fullPlacements : tier.placements || [];
+  const benefits = tier.fullBenefits || [];
+  const combinedDetails = [...placements, ...benefits];
+  const rootClass = variant === "podcast" ? "podcastSponsorTierCard" : "sponsorTierCard";
   return (
-    <article className={`sponsorTierCard ${selected ? "isSelected" : ""}`}>
+    <article className={`${rootClass} ${selected ? "isSelected" : ""}`}>
       <div className="sponsorTierCardTop">
         <p className="sponsorTierFamily">{tier.familyLabel}</p>
         <h4>{tier.name}</h4>
@@ -14,17 +17,12 @@ export default function SponsorTierCard({ tier, selected, onSelect }) {
       </div>
 
       <div className="sponsorTierCardGrow">
-        <ul className="sponsorBenefitList">
-          {topPlacements.map((item) => (
-            <li key={`${tier.id}-${item}`}>{item}</li>
-          ))}
-        </ul>
-        {extraPlacements.length ? (
+        {combinedDetails.length ? (
           <details className="sponsorTierDetails">
-            <summary>View full placements</summary>
+            <summary>View full placements &amp; benefits</summary>
             <ul className="sponsorBenefitList">
-              {extraPlacements.map((item) => (
-                <li key={`${tier.id}-extra-${item}`}>{item}</li>
+              {combinedDetails.map((item, i) => (
+                <li key={`${tier.id}-d-${i}`}>{item}</li>
               ))}
             </ul>
           </details>
@@ -32,9 +30,15 @@ export default function SponsorTierCard({ tier, selected, onSelect }) {
       </div>
 
       <div className="sponsorTierCardFooter">
-        <button className={selected ? "btnPrimary" : "btnSoft"} type="button" onClick={() => onSelect(tier.id)}>
-          {selected ? "Selected Tier" : "Select Tier"}
-        </button>
+        {interactive === false ? (
+          <Link className="btnSoft" href={compareHref}>
+            Compare tiers
+          </Link>
+        ) : (
+          <button className={selected ? "btnPrimary" : "btnSoft"} type="button" onClick={() => onSelect(tier.id)}>
+            {selected ? "Selected Tier" : "Select Tier"}
+          </button>
+        )}
       </div>
     </article>
   );

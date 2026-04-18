@@ -1,9 +1,16 @@
 import { mapNonprofitCategory } from "@/features/nonprofits/mappers/categoryMapper";
 import { getNonprofitVerificationTier } from "@/lib/nonprofits/verification";
 import { mapNonprofitStatus } from "@/features/nonprofits/mappers/nonprofitStatusMapper";
-import { rowCity, rowEin, rowName, rowNtee, rowState } from "@/lib/utils";
+import { mergeTrustedResourcesPresentation } from "@/features/trusted-resources/trustedResourcesPresentation";
+import { isPlaceholderOrgName } from "@/lib/formatOrgName";
+import { resolveCanonicalOrganizationName } from "@/lib/entityDisplayName";
+import { rowCity, rowEin, rowNtee, rowState } from "@/lib/utils";
 import { nteeToService } from "@/lib/utils";
 import { mapNonprofitLinks } from "@/features/nonprofits/mappers/nonprofitLinksMapper";
+import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
+import { resolveFindInfoHref } from "@/features/nonprofits/domain/nonprofitCardActions";
+import { resolveOrgListingHeaderImageUrl } from "@/lib/nonprofits/resolveOrgListingHeaderImageUrl";
+import { sanitizeDisplayableImageUrl } from "@/lib/media/safeImageUrl";
 
 function firstNonEmpty(...values) {
   for (const value of values) {
@@ -11,6 +18,86 @@ function firstNonEmpty(...values) {
     if (text) return text;
   }
   return "";
+}
+
+function truncateCardLine(value, max = 120) {
+  const text = String(value ?? "").trim();
+  if (!text) return "";
+  if (text.length <= max) return text;
+  return `${text.slice(0, max - 1)}…`;
+}
+
+/** safeText uses "—" for empty; skip that so we can fall through to profile/org fields */
+function firstNonEmptyDisplay(...values) {
+  for (const value of values) {
+    const text = String(value ?? "").trim();
+    if (text && text !== "—") return text;
+  }
+  return "";
+}
+
+/** Priority-ordered raw strings for resolving a public title (no job titles / profile.title). */
+function gatherOrganizationTitleCandidates(baseRow, profile, orgRaw) {
+  const raw = [
+    baseRow.displayName,
+    baseRow.display_name,
+    baseRow.verified_name,
+    baseRow.verifiedName,
+    baseRow.approved_name,
+    baseRow.approvedName,
+    baseRow.orgName,
+    baseRow.catalog_display_name,
+    baseRow.display_name_on_site,
+    baseRow.displayNameOnSite,
+    baseRow.canonical_display_name,
+    baseRow.canonicalDisplayName,
+    baseRow.website_verified_name,
+    baseRow.websiteVerifiedName,
+    baseRow.verified_name,
+    baseRow.approved_name,
+    baseRow.org_name,
+    baseRow.name,
+    baseRow.NAME,
+    baseRow.display_name_override,
+    baseRow.organization_name,
+    baseRow.legal_name,
+    orgRaw.organization_name,
+    orgRaw.org_name,
+    orgRaw.name,
+    orgRaw.NAME,
+    profile.display_name_override,
+    profile.verified_name,
+    profile.approved_name,
+    profile.organization_name,
+    profile.legal_name,
+    profile.org_name,
+    profile.name,
+  ];
+  const seen = new Set();
+  const out = [];
+  for (const value of raw) {
+    const text = String(value ?? "").trim();
+    if (!text || text === "—" || isPlaceholderOrgName(text)) continue;
+    const key = text.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(text);
+  }
+  return out;
+}
+
+/** Curated + universal Trusted Resources formatting whenever the row is a catalog listing, not only on the trusted tab */
+function needsTrustedResourcesPresentation(row = {}, source) {
+  if (source === "trusted") return true;
+  if (row?.isTrusted || row?.is_trusted) return true;
+  const prof = row?.raw?.profile;
+  if (prof?.is_trusted === true || prof?.is_trusted_resource === true) return true;
+  if (String(prof?.trusted_resource_status || "").toLowerCase() === "approved") return true;
+  const rawRow = row?.raw;
+  if (rawRow && typeof rawRow === "object" && !prof) {
+    if (rawRow.is_trusted === true || rawRow.is_trusted_resource === true) return true;
+  }
+  return false;
 }
 
 function parseLocation(value = "") {
@@ -59,56 +146,63 @@ function resolveTrustedLocation(row = {}, profile = {}) {
   return { city: parsed.city, state: parsed.state, raw: rawLocation };
 }
 
-function formatDisplayName(value = "") {
-  const raw = String(value || "").trim();
-  if (!raw) return "";
-  const normalized = raw
-    .replace(/[_-]+/g, " ")
-    .replace(/([a-z])([A-Z])/g, "$1 $2")
-    .replace(/\s+/g, " ")
-    .trim();
-  return normalized
-    .split(" ")
-    .map((token) => {
-      if (!token) return token;
-      if (/^[A-Z0-9&]+$/.test(token) && token.length <= 4) return token;
-      return `${token.charAt(0).toUpperCase()}${token.slice(1).toLowerCase()}`;
-    })
-    .join(" ");
-}
-
 export function mapNonprofitCardRow(row = {}, source = "directory") {
-  const profile = row?.raw?.profile || {};
-  const trustedLocation = resolveTrustedLocation(row, profile);
-  const resolvedCity = firstNonEmpty(rowCity(row), row.city, row.address_city, profile.city, profile.address_city, trustedLocation.city);
-  const resolvedState = firstNonEmpty(rowState(row), row.state, row.address_state, profile.state, profile.address_state, trustedLocation.state);
-  const resolvedName = firstNonEmpty(
-    rowName(row),
-    row.orgName,
-    row.organization_name,
-    row.display_name_override,
-    profile.organization_name,
-    profile.legal_name,
-    profile.title,
-    profile.org_name,
-    profile.name,
-    "Unknown Organization"
+  const applyTrustedPresentation = needsTrustedResourcesPresentation(row, source);
+  const baseRow = applyTrustedPresentation ? mergeTrustedResourcesPresentation(row) : row;
+  const profile = baseRow?.raw?.profile || {};
+  const trustedLocation = resolveTrustedLocation(baseRow, profile);
+  const resolvedCity = firstNonEmpty(
+    baseRow.city,
+    rowCity(baseRow),
+    baseRow.address_city,
+    profile.city,
+    profile.address_city,
+    trustedLocation.city
   );
+  const resolvedState = firstNonEmpty(
+    baseRow.state,
+    rowState(baseRow),
+    baseRow.address_state,
+    profile.state,
+    profile.address_state,
+    trustedLocation.state
+  );
+  const orgRaw = baseRow.raw?.org || {};
+  const titleCandidates = gatherOrganizationTitleCandidates(baseRow, profile, orgRaw);
+  const websiteForTitle = firstNonEmpty(baseRow.website, profile.website, orgRaw.website, orgRaw.Website);
+  const displayName = resolveCanonicalOrganizationName({
+    trustCanonical: !!baseRow.canonicalDisplayName,
+    canonicalDisplayName: baseRow.canonicalDisplayName,
+    candidateNames: titleCandidates,
+    trustedResourceSlug: baseRow.trustedResourceSlug,
+    websiteUrl: websiteForTitle,
+    emptyFallback: source === "saved" ? "Saved organization" : "Organization",
+  });
 
   const patchedRow = {
-    ...row,
-    orgName: resolvedName,
+    ...baseRow,
+    orgName: displayName,
+    trustedResourceCategoryKey: baseRow.trustedResourceCategoryKey,
     city: resolvedCity,
     state: resolvedState,
-    nonprofit_type: firstNonEmpty(row.nonprofit_type, row.nonprofitType, profile.nonprofit_type, profile.category, profile.organization_type),
-    serves_veterans: row.serves_veterans ?? row.servesVeterans ?? String(firstNonEmpty(profile.who_you_serve, profile.veteran_support_experience)).toLowerCase().includes("veteran"),
+    nonprofit_type: firstNonEmpty(
+      baseRow.nonprofit_type,
+      baseRow.nonprofitType,
+      profile.nonprofit_type,
+      profile.category,
+      profile.organization_type
+    ),
+    serves_veterans:
+      baseRow.serves_veterans ??
+      baseRow.servesVeterans ??
+      String(firstNonEmpty(profile.who_you_serve, profile.veteran_support_experience)).toLowerCase().includes("veteran"),
     serves_first_responders:
-      row.serves_first_responders ??
-      row.servesFirstResponders ??
+      baseRow.serves_first_responders ??
+      baseRow.servesFirstResponders ??
       String(firstNonEmpty(profile.who_you_serve, profile.first_responder_support_experience)).toLowerCase().includes("first responder"),
     ntee_code: firstNonEmpty(
-      row.ntee_code,
-      row.nteeCode,
+      baseRow.ntee_code,
+      baseRow.nteeCode,
       profile.ntee_code,
       profile.ntee,
       profile.category_code,
@@ -123,9 +217,8 @@ export function mapNonprofitCardRow(row = {}, source = "directory") {
   const nteeCode = rowNtee(patchedRow);
   const status = mapNonprofitStatus(patchedRow, source, tier);
   const resolvedEin = rowEin(patchedRow);
-  const displayName = formatDisplayName(resolvedName || "Unknown Organization");
   const trustedDescription =
-    source === "trusted"
+    applyTrustedPresentation
       ? String(
         patchedRow?.description ??
         patchedRow?.summary ??
@@ -135,25 +228,88 @@ export function mapNonprofitCardRow(row = {}, source = "directory") {
         ""
       ).trim()
       : "";
-  const links = mapNonprofitLinks(patchedRow);
-  const computedDescription = trustedDescription || (source === "trusted" ? "" : nteeToService(nteeCode));
-  return {
-    id: row.id || resolvedEin || displayName,
+  const enrichmentShort = String(patchedRow.shortDescription ?? patchedRow.short_description ?? "").trim();
+  const headlineSnippet = String(patchedRow.headline ?? "").trim().slice(0, 280);
+  const taglineSnippet = String(patchedRow.tagline ?? "").trim().slice(0, 200);
+  const trustMode = source === "directory" ? "directory" : "curated";
+  const links = mapNonprofitLinks(patchedRow, { trustMode });
+  const einNorm = normalizeEinDigits(resolvedEin);
+  const einIdentityVerified =
+    patchedRow.einIdentityVerified === false
+      ? false
+      : einNorm.length === 9;
+  let computedDescription =
+    enrichmentShort ||
+    trustedDescription ||
+    (applyTrustedPresentation
+      ? ""
+      : headlineSnippet || taglineSnippet || nteeToService(nteeCode));
+  if (applyTrustedPresentation && computedDescription.length > 300) {
+    computedDescription = `${computedDescription.slice(0, 297)}…`;
+  }
+  const locationLine =
+    firstNonEmpty(
+      baseRow.trustedResourceDisplayLocation,
+      [resolvedCity, resolvedState].filter(Boolean).join(", "),
+      trustedLocation.raw
+    ) || (applyTrustedPresentation ? "National" : "Unknown Location");
+  const displayOnSite = String(patchedRow.displayNameOnSite ?? patchedRow.display_name_on_site ?? "").trim();
+  const cardSubheader = truncateCardLine(
+    firstNonEmpty(
+      patchedRow.tagline,
+      patchedRow.headline,
+      displayOnSite && displayOnSite.toLowerCase() !== String(displayName || "").trim().toLowerCase() ? displayOnSite : "",
+    ),
+    120,
+  );
+  const cardShell = {
+    id: baseRow.id || resolvedEin || displayName,
     ein: resolvedEin,
+    einNormalized: einNorm,
+    einIdentityVerified,
     name: displayName,
     city,
     state,
-    location: [city, state].filter(Boolean).join(", ") || trustedLocation.raw || "Unknown Location",
+    location: locationLine,
     category,
     tier,
     status,
     description: computedDescription,
-    logoUrl: String(row.logoUrl ?? row.logo_url ?? "").trim(),
-    cityImageUrl: String(row.cityImageUrl ?? row.fallback_city_image_url ?? row.city_image_url ?? "").trim(),
+    cardSubheader,
+    headline: String(patchedRow.headline ?? "").trim(),
+    tagline: String(patchedRow.tagline ?? "").trim(),
+    shortDescription: enrichmentShort,
+    longDescription: String(patchedRow.longDescription ?? patchedRow.long_description ?? "").trim(),
+    missionStatement: String(patchedRow.missionStatement ?? patchedRow.mission_statement ?? "").trim(),
+    serviceArea: String(patchedRow.serviceArea ?? patchedRow.service_area ?? "").trim(),
+    foundedYear: patchedRow.foundedYear ?? patchedRow.founded_year ?? null,
+    heroImageUrl: resolveOrgListingHeaderImageUrl(patchedRow),
+    thumbnailUrl: sanitizeDisplayableImageUrl(String(patchedRow.thumbnailUrl ?? patchedRow.thumbnail_url ?? "").trim()),
+    publicSlug: String(patchedRow.publicSlug ?? patchedRow.public_slug ?? "").trim(),
+    metadataSource: String(patchedRow.metadataSource ?? patchedRow.metadata_source ?? "").trim(),
+    profileEnrichedAt: patchedRow.profileEnrichedAt ?? patchedRow.profile_enriched_at ?? null,
+    lastVerifiedAt: patchedRow.lastVerifiedAt ?? patchedRow.last_verified_at ?? null,
+    displayNameOnSite: String(
+      patchedRow.displayNameOnSite ?? patchedRow.display_name_on_site ?? ""
+    ).trim(),
+    researchStatus: String(patchedRow.researchStatus ?? patchedRow.research_status ?? "").trim(),
+    sourceSummary: String(patchedRow.sourceSummary ?? patchedRow.source_summary ?? "").trim(),
+    webSearchSupplemented: !!(patchedRow.webSearchSupplemented ?? patchedRow.web_search_supplemented),
+    logoUrl: sanitizeDisplayableImageUrl(String(baseRow.logoUrl ?? baseRow.logo_url ?? "").trim()),
+    cityImageUrl: sanitizeDisplayableImageUrl(
+      String(baseRow.cityImageUrl ?? baseRow.fallback_city_image_url ?? baseRow.city_image_url ?? "").trim(),
+    ),
     fallbackLocation: [city, state].filter(Boolean).join(", ") || state || city || "Unknown Location",
     links,
     primaryLink: links.find((l) => l.type === "website")?.url || links[0]?.url || "",
-    raw: row,
+    nonprofitType: String(
+      patchedRow.nonprofit_type ?? patchedRow.nonprofitType ?? profile?.nonprofit_type ?? ""
+    ).trim(),
+    raw: baseRow,
+  };
+  return {
+    ...cardShell,
+    findInfoHref: resolveFindInfoHref(cardShell),
   };
 }
 

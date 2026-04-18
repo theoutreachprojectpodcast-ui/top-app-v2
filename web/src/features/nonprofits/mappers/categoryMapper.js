@@ -24,10 +24,12 @@ function categoryFromText(row = {}) {
   const text = String(
     row.nonprofit_type ??
     row.nonprofitType ??
+    row.orgName ??
     row.raw?.profile?.nonprofit_type ??
     row.raw?.profile?.description ??
     row.raw?.profile?.services_offered ??
     row.raw?.profile?.who_you_serve ??
+    row.raw?.profile?.organization_name ??
     ""
   ).toLowerCase();
   if (!text) return null;
@@ -48,6 +50,10 @@ function categoryFromText(row = {}) {
 }
 
 export function mapNonprofitCategory(row = {}) {
+  const trKey = row.trustedResourceCategoryKey;
+  if (trKey && CATEGORY[trKey]) {
+    return CATEGORY[trKey];
+  }
   if (row.servesVeterans || row.serves_veterans) return CATEGORY.veteransMilitary;
   if (row.servesFirstResponders || row.serves_first_responders) return CATEGORY.firstRespondersSafety;
   const textMatch = categoryFromText(row);
@@ -81,8 +87,13 @@ export function mapNonprofitCategory(row = {}) {
     case "C":
     case "D":
       return CATEGORY.environmentAnimals;
-    case "O":
+    case "O": {
+      const blob = `${row.nonprofit_type || ""} ${row.orgName || ""} ${row.description || ""}`.toLowerCase();
+      if (/veteran|military|warrior|armed\s*forces|service\s*member|troop|combat/.test(blob)) {
+        return CATEGORY.veteransMilitary;
+      }
       return CATEGORY.youthDevelopment;
+    }
     case "Q":
       return CATEGORY.crisisEmergency;
     case "R":

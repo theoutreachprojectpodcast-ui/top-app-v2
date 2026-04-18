@@ -1,3 +1,6 @@
+import { sanitizeOrganizationNameForDisplay } from "@/lib/entityDisplayName";
+import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
+
 function firstNonEmpty(...values) {
   for (const value of values) {
     const text = String(value ?? "").trim();
@@ -37,43 +40,24 @@ function parseLocation(location = "") {
   };
 }
 
-function nameFromWebsite(url = "") {
-  const value = String(url || "").trim();
-  if (!value) return "";
-  try {
-    const host = new URL(/^https?:\/\//i.test(value) ? value : `https://${value}`).hostname
-      .replace(/^www\./i, "")
-      .split(".")[0];
-    const safe = host.replace(/[-_]+/g, " ").trim();
-    if (!safe) return "";
-    return safe.replace(/\b\w/g, (ch) => ch.toUpperCase());
-  } catch {
-    return "";
-  }
-}
-
-function toDisplayOrganizationName(value = "") {
-  const raw = String(value || "").trim();
-  if (!raw) return "";
-  const withSpaces = raw
-    .replace(/[_-]+/g, " ")
-    .replace(/([a-z])([A-Z])/g, "$1 $2")
-    .replace(/\s+/g, " ")
-    .trim();
-  return withSpaces
-    .split(" ")
-    .map((token) => {
-      if (!token) return token;
-      if (/^[A-Z0-9&]+$/.test(token) && token.length <= 4) return token;
-      return `${token.charAt(0).toUpperCase()}${token.slice(1).toLowerCase()}`;
-    })
-    .join(" ");
-}
-
 export function mapDirectoryRow(row = {}) {
+  const einRaw = String(row.ein ?? row.EIN ?? "").trim();
+  const einNorm = normalizeEinDigits(einRaw);
+  const identityOk = einNorm.length === 9 && row.ein_identity_verified !== false;
   return {
-    ein: String(row.ein ?? row.EIN ?? "").trim(),
-    orgName: String(row.org_name ?? row.name ?? row.NAME ?? "Unknown Organization").trim(),
+    ein: einRaw,
+    einNormalized: einNorm,
+    einIdentityVerified: identityOk,
+    identityVerifiedAt: row.identity_verified_at ?? null,
+    orgName: String(
+      row.canonical_display_name ??
+      row.display_name ??
+      row.org_name ??
+      row.organization_name ??
+      row.name ??
+      row.NAME ??
+      "Unknown Organization"
+    ).trim(),
     city: String(row.city ?? row.CITY ?? "").trim(),
     state: String(row.state ?? row.STATE ?? "").trim(),
     nteeCode: String(row.ntee_code ?? row.ntee ?? row.NTEE_CODE ?? "").trim(),
@@ -90,13 +74,57 @@ export function mapDirectoryRow(row = {}) {
     youtubeUrl: row.youtube_url ?? row.youtube ?? "",
     xUrl: row.x_url ?? row.twitter ?? "",
     linkedinUrl: row.linkedin_url ?? row.linkedin ?? "",
+    tiktokUrl: row.tiktok_url ?? row.tiktok ?? "",
+    headline: String(row.headline ?? "").trim(),
+    tagline: String(row.tagline ?? "").trim(),
+    shortDescription: String(row.short_description ?? "").trim(),
+    longDescription: String(row.long_description ?? "").trim(),
+    missionStatement: String(row.mission_statement ?? "").trim(),
+    serviceArea: String(row.service_area ?? "").trim(),
+    foundedYear: row.founded_year ?? null,
+    heroImageUrl: String(row.hero_image_url ?? "").trim(),
+    thumbnailUrl: String(row.thumbnail_url ?? "").trim(),
+    headerImageUrl: String(row.header_image_url ?? "").trim(),
+    headerImageStatus: String(row.header_image_status ?? "").trim(),
+    headerImageReviewStatus: String(row.header_image_review_status ?? "").trim(),
+    headerImageSourceType: String(row.header_image_source_type ?? "").trim(),
+    headerImageNotes: String(row.header_image_notes ?? "").trim(),
+    header_image_url: String(row.header_image_url ?? "").trim(),
+    header_image_status: String(row.header_image_status ?? "").trim(),
+    header_image_review_status: String(row.header_image_review_status ?? "").trim(),
+    header_image_source_type: String(row.header_image_source_type ?? "").trim(),
+    header_image_notes: String(row.header_image_notes ?? "").trim(),
+    publicSlug: String(row.public_slug ?? "").trim(),
+    metadataSource: String(row.metadata_source ?? "").trim(),
+    profileEnrichedAt: row.profile_enriched_at ?? null,
+    lastVerifiedAt: row.last_verified_at ?? null,
+    facebookVerified: !!row.facebook_verified,
+    instagramVerified: !!row.instagram_verified,
+    linkedinVerified: !!row.linkedin_verified,
+    xVerified: !!row.x_verified,
+    youtubeVerified: !!row.youtube_verified,
+    tiktokVerified: !!row.tiktok_verified,
+    displayNameOnSite: String(row.display_name_on_site ?? "").trim(),
+    canonicalDisplayName: String(row.canonical_display_name ?? "").trim(),
+    websiteVerifiedName: String(row.website_verified_name ?? "").trim(),
+    irsName: String(row.irs_name ?? "").trim(),
+    legalName: String(row.legal_name ?? "").trim(),
+    namingConfidence: row.naming_confidence ?? null,
+    namingSourceSummary: String(row.naming_source_summary ?? "").trim(),
+    namingStatus: String(row.naming_status ?? "").trim(),
+    namingLastCheckedAt: row.naming_last_checked_at ?? null,
+    namingVerifiedAt: row.naming_verified_at ?? null,
+    namingReviewRequired: !!row.naming_review_required,
+    researchStatus: String(row.research_status ?? "").trim(),
+    researchConfidence: row.research_confidence ?? null,
+    sourceSummary: String(row.source_summary ?? "").trim(),
+    webSearchSupplemented: !!row.web_search_supplemented,
     raw: row,
   };
 }
 
 export function mapTrustedRow(profile = {}, org = {}) {
   const website = firstNonEmpty(profile.website, org.website);
-  const websiteName = nameFromWebsite(website);
   const parsedProfileLocation = parseLocation(profile.location || profile.city_state || profile.cityState || "");
   const city = firstNonEmpty(org.city, profile.city, profile.address_city, parsedProfileLocation.city);
   const state = firstNonEmpty(org.state, profile.state, profile.address_state, parsedProfileLocation.state);
@@ -111,19 +139,22 @@ export function mapTrustedRow(profile = {}, org = {}) {
   ).toLowerCase();
   return {
     ein: String(profile.ein ?? org.ein ?? "").trim(),
-    orgName: toDisplayOrganizationName(firstNonEmpty(
-      profile.display_name_override,
-      profile.organization_name,
-      profile.legal_name,
-      profile.title,
-      profile.org_name,
-      org.name,
-      org.organization_name,
-      org.org_name,
-      profile.name,
-      websiteName,
-      "Unknown Organization"
-    )),
+    // Do not use website hostname as a title. Leave empty when no real name so enrichment/registry
+    // can read profile/org fields instead of locking onto "Unknown Organization".
+    orgName: (() => {
+      const rawTitle = firstNonEmpty(
+        profile.display_name_override,
+        profile.organization_name,
+        profile.legal_name,
+        profile.org_name,
+        profile.name,
+        org.organization_name,
+        org.org_name,
+        org.name,
+        org.NAME
+      );
+      return rawTitle ? sanitizeOrganizationNameForDisplay(rawTitle, { trustCanonical: false }) : "";
+    })(),
     city: String(city).trim(),
     state: String(state).trim(),
     nteeCode: String(firstNonEmpty(org.ntee_code, profile.ntee_code)).trim(),

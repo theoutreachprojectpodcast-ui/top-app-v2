@@ -1,6 +1,7 @@
-import { queryTrustedOrgsByEin } from "@/lib/supabase/queries";
+import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
+import { resolveSavedOrganizationDirectoryRows } from "@/lib/savedOrganizations/resolveSavedOrganizations";
 
-const DEMO_USER_KEY = "top_app_demo_user_id";
+export const DEMO_USER_KEY = "top_app_demo_user_id";
 const PROFILE_TABLE = process.env.NEXT_PUBLIC_PROFILE_TABLE || "top_app_user_profiles";
 const SAVED_EIN_TABLE = process.env.NEXT_PUBLIC_SAVED_ORG_TABLE || "top_app_saved_org_eins";
 
@@ -71,14 +72,14 @@ export async function fetchSavedOrgEinList(supabase, userId) {
     .eq("user_id", userId)
     .order("sort_order", { ascending: true });
   if (error || !Array.isArray(data)) return [];
-  return data.map((r) => String(r.ein)).filter(Boolean);
+  return [...new Set(data.map((r) => normalizeEinDigits(r.ein)).filter((e) => e.length === 9))];
 }
 
 export async function replaceSavedOrgEinList(supabase, userId, eins) {
   if (!supabase || !userId) return;
   const { error: delErr } = await supabase.from(SAVED_EIN_TABLE).delete().eq("user_id", userId);
   if (delErr && !isOptionalCloudError(delErr)) throw delErr;
-  const list = (eins || []).map((e) => String(e)).filter(Boolean);
+  const list = [...new Set((eins || []).map((e) => normalizeEinDigits(e)).filter((e) => e.length === 9))];
   if (!list.length) return;
   const rows = list.map((ein, i) => ({
     user_id: userId,
@@ -89,9 +90,20 @@ export async function replaceSavedOrgEinList(supabase, userId, eins) {
   if (error && !isOptionalCloudError(error)) throw error;
 }
 
+function orderUniqueEins(eins) {
+  const seen = new Set();
+  const out = [];
+  for (const raw of eins || []) {
+    const k = normalizeEinDigits(raw);
+    if (k.length !== 9 || seen.has(k)) continue;
+    seen.add(k);
+    out.push(k);
+  }
+  return out;
+}
+
+/** Returns directory-shaped rows (suitable for mapNonprofitCardRow(..., "saved")), in saved-list order. */
 export async function fetchSavedOrganizationsByEin(supabase, eins) {
   if (!supabase || !eins?.length) return [];
-  const { data, error } = await queryTrustedOrgsByEin(supabase, eins);
-  if (error || !Array.isArray(data)) return [];
-  return data;
+  return resolveSavedOrganizationDirectoryRows(supabase, orderUniqueEins(eins));
 }

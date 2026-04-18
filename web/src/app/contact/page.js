@@ -1,8 +1,6 @@
-import AppShell from "@/components/layout/AppShell";
-
 export default function ContactPage() {
   return (
-    <AppShell activeNav="contact">
+    <div className="sponsorPage sponsorLanding">
       <section className="panel">
         <h1>Contact</h1>
         <p>
@@ -10,7 +8,6 @@ export default function ContactPage() {
           flow preserved in Phase 3.
         </p>
       </section>
-    </AppShell>
+    </div>
   );
 }
-

@@ -73,7 +73,7 @@ cp web/.env.local.example web/.env.local
 pnpm dev
 ```
 
-Opens **http://localhost:3000**. If port 3000 is in use, free it or run `pnpm --filter web dev:alt` for port 3001.
+Opens **http://localhost:3000**. If the page never loads, a stuck **Node** process may still be bound to 3000 — free it (PowerShell: `Get-NetTCPConnection -LocalPort 3000` then `Stop-Process -Id <OwningProcess> -Force`) and run `pnpm dev` again. If port 3000 is busy on purpose, use **`pnpm dev:alt`** for **http://localhost:3001**.
 
 **Windows:** Use a **space**: `pnpm dev` (not `pnpm` + `dev` merged into one token). Double-click **`web/dev.cmd`** to run `pnpm dev` from the repo root.
 
@@ -99,3 +99,15 @@ Opens **http://localhost:3000**. If port 3000 is in use, free it or run `pnpm --
 - Bottom nav routes load.
 - Layout renders consistently across routes.
 - Supabase client helper returns `null` gracefully when env vars are missing.
+
+## Community (tORP v0.3)
+
+Supabase-backed community posts, moderation statuses, RLS, and API routes are documented in [`docs/COMMUNITY_v0.3.md`](docs/COMMUNITY_v0.3.md).
+
+## Billing — Stripe + persistent profiles (tORP v0.3)
+
+WorkOS identity, Supabase `torp_profiles`, Checkout, webhooks, and Customer Portal are documented in [`docs/BILLING_STRIPE_v0.3.md`](docs/BILLING_STRIPE_v0.3.md).
+
+## WorkOS CLI
+
+From `web/`: `pnpm workos` runs `pnpm dlx workos@latest` (Node **≥ 20.20** required; avoids some Windows `npx`/Node mismatches). See [`docs/WORKOS_CLI.md`](docs/WORKOS_CLI.md).

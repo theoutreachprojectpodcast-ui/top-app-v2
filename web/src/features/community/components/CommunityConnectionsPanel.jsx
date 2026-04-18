@@ -7,6 +7,7 @@ import {
   sendConnectionRequest,
 } from "@/features/community/api/communityApi";
 import { COMMUNITY_FOLLOWS_SEED, COMMUNITY_MEMBERS_SEED } from "@/features/community/data/communitySeed";
+import { avatarFallbackUrl } from "@/lib/avatarFallback";
 
 function followingCount(memberId) {
   return COMMUNITY_FOLLOWS_SEED.filter((f) => f.followerId === memberId).length;
@@ -49,7 +50,7 @@ export default function CommunityConnectionsPanel({ userId, onOpenMember }) {
       <div className="communityConnectionsPreview">
         <div className="communityConnectionsPreviewAvatars">
           {preview.map((m) => (
-            <Avatar key={m.id} src={m.avatar_url || "/assets/top_profile_circle_1024.png"} alt={m.name} className="communityMemberAvatarImg" />
+            <Avatar key={m.id} src={m.avatar_url || avatarFallbackUrl(m.id)} alt={m.name} className="communityMemberAvatarImg" />
           ))}
         </div>
         <p>{members.length} demo members available</p>
@@ -71,7 +72,7 @@ export default function CommunityConnectionsPanel({ userId, onOpenMember }) {
               return (
                 <div key={m.id} className="communitySearchResultRow">
                   <button type="button" className="communityMemberMini communityMemberMiniBtn" onClick={() => onOpenMember?.(m.id)}>
-                    <Avatar src={m.avatar_url || "/assets/top_profile_circle_1024.png"} alt={m.name} className="communityMemberAvatarImg" />
+                    <Avatar src={m.avatar_url || avatarFallbackUrl(m.id)} alt={m.name} className="communityMemberAvatarImg" />
                     <div>
                       <strong>{m.name}</strong>
                       <p>{m.role} · Following {m.followingCount}</p>

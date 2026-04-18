@@ -1,5 +1,8 @@
-@import "../styles/brand-dark.css";
+@import "../styles/brand-theme.css";
+@import "../styles/theme-light-components.css";
+@import "../styles/design-system.css";
 @import "../components/app/top-app.css";
+@import "../styles/torp-listing-cards.css";
 
 * {
   box-sizing: border-box;
@@ -35,10 +38,10 @@ a {
   position: sticky;
   top: 0;
   z-index: 20;
-  background: linear-gradient(180deg, rgba(10, 11, 13, 0.97), rgba(8, 9, 11, 0.94));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--color-bg-secondary) 94%, transparent), color-mix(in srgb, var(--color-bg-primary) 88%, transparent));
   border-bottom: 1px solid var(--color-border);
   padding: 14px 0 18px;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px);
   pointer-events: none;
 }
 
@@ -62,19 +65,20 @@ a {
 .content {
   width: min(1100px, calc(100% - 40px));
   margin: 0 auto;
-  padding: 16px;
+  padding: var(--ds-space-5, 20px) var(--ds-space-4, 16px);
 }
 
 .content--subpage {
-  padding-top: 20px;
-  padding-bottom: 24px;
+  padding-top: var(--ds-space-6, 24px);
+  padding-bottom: var(--ds-space-6, 24px);
 }
 
 .panel {
-  background: var(--color-surface);
+  background: linear-gradient(180deg, var(--color-surface-card) 0%, var(--color-surface-card-deep) 100%);
   border: 1px solid var(--color-border);
-  border-radius: 16px;
-  padding: 18px;
+  border-radius: var(--radius-card);
+  padding: var(--ds-space-5, 20px);
+  box-shadow: var(--shadow-card);
 }
 
 .panel h1 {
@@ -95,11 +99,12 @@ a {
   bottom: 0;
   width: min(1200px, calc(100% - 48px));
   display: flex;
-  gap: 8px;
-  background: var(--color-bg-secondary);
+  gap: var(--ds-space-2, 8px);
+  background: color-mix(in srgb, var(--color-bg-secondary) 96%, transparent);
   border-top: 1px solid var(--color-border);
   padding: 10px 24px 14px;
   justify-content: center;
+  box-shadow: var(--shadow-bottom-nav);
 }
 
 .appShell--subpage .navItem {
@@ -114,9 +119,9 @@ a {
 }
 
 .appShell--subpage .navItem.isActive {
-  color: var(--color-gold-highlight);
-  background: var(--color-gold-muted);
-  border: 1px solid rgba(228, 188, 92, 0.22);
+  color: var(--color-accent-hover);
+  background: var(--color-accent-soft);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 28%, var(--color-border-subtle) 72%);
 }
 
 @media (max-width: 760px) {
