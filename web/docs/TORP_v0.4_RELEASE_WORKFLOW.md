@@ -13,7 +13,7 @@ Use this section as the source of truth before changing Vercel or GitHub setting
 | **Git remote** | `https://github.com/theoutreachprojectpodcast-ui/top-app-v2.git` |
 | **Production branch** | `main` (matches `origin/main`; confirm in Vercel **Git → Production Branch**) |
 | **QA branch** | `QA` exists on `origin` (same commit as `main` at last audit) |
-| **`prototype` branch** | **Present on `origin`** (tracks `main` at creation time). Use it for active development before opening PRs to `QA`. |
+| **`qa` branch (lowercase)** | Day-to-day development branch. Open PRs **`qa` → `QA`**. Create on `origin` if missing: `git checkout -b qa origin/main` then `git push -u origin qa`. The old **`prototype`** branch is no longer used. |
 | **Vercel Root Directory** | Still **`.`** (repo root) in project settings — Next app is in **`web/`**. **Change to `web`** in the dashboard. |
 | **Framework preset** | Still **Other** with generic output — **set to Next.js** after Root Directory is `web`. |
 | **Production env (Vercel)** | **None** — add all required variables for `Production` before relying on `main` deploys. |
@@ -30,13 +30,13 @@ Use this section as the source of truth before changing Vercel or GitHub setting
 
 ## Branch and Environment Model
 
-- `prototype` -> active development branch
+- `qa` (lowercase) -> active development / integration branch
 - `QA` -> staging/QA validation branch (Vercel Preview)
 - `main` -> production branch (Vercel Production)
 
 Required PR flow:
 
-1. `prototype` -> `QA`
+1. `qa` -> `QA`
 2. `QA` -> `main`
 
 `pr-branch-flow.yml` enforces the intended PR targets.
@@ -58,7 +58,7 @@ pnpm --filter web dev:alt
 
 ## CI Validation
 
-Automated in `.github/workflows/ci.yml` on PRs and pushes to `prototype`, `QA`, and `main`:
+Automated in `.github/workflows/ci.yml` on PRs and pushes to `qa`, `QA`, and `main`:
 
 - install with pinned pnpm
 - lint (`pnpm lint`)
@@ -180,7 +180,7 @@ pnpm exec vercel env add NEXT_PUBLIC_SUPABASE_URL preview QA
 
 ## Release Checklist
 
-1. Merge `prototype` -> `QA` and wait for Preview deploy.
+1. Merge `qa` -> `QA` and wait for Preview deploy.
 2. QA test key flows (auth, profile, community, sponsors, trusted resources, billing if enabled).
 3. Merge `QA` -> `main`.
 4. Verify production deploy and health checks.
@@ -193,7 +193,7 @@ pnpm exec vercel env add NEXT_PUBLIC_SUPABASE_URL preview QA
 - **Dev:** from repo root, `pnpm install` then `pnpm dev` (see `web/README.md`).
 - **Production build:** `pnpm build` (runs `pnpm --filter web build`).
 - **`web` prebuild:** `validate-production-env.mjs` runs strict on `CI`, `VERCEL`, or `TORP_VALIDATE_ENV=1`; locally it warns unless `.env.local` supplies vars.
-- **CI:** `.github/workflows/ci.yml` supplies dummy env for `pnpm build` on PRs and on push to `QA`, `main`, `prototype`.
+- **CI:** `.github/workflows/ci.yml` supplies dummy env for `pnpm build` on PRs and on push to `QA`, `main`, `qa`.
 
 ## Phase 3–4 — GitHub ↔ Vercel integration
 
@@ -203,8 +203,8 @@ pnpm exec vercel env add NEXT_PUBLIC_SUPABASE_URL preview QA
 
 ## Phase 5 — GitHub workflow alignment
 
-- **CI:** lint, route smoke (`smoke:routes`), build on PR and on push to `QA`, `main`, `prototype`.
-- **PR flow guard:** `prototype` → `QA`, `QA` → `main` (with lowercase `qa` variants allowed). Branch **`prototype`** is on `origin`; develop there (or merge feature branches into `prototype` first) before PRs to `QA`.
+- **CI:** lint, route smoke (`smoke:routes`), build on PR and on push to `QA`, `main`, `qa`.
+- **PR flow guard:** `qa` → `QA`, `QA` → `main`. Develop on branch **`qa`**, then open a PR into **`QA`** for staging review.
 
 ## Phase 6 — Environment variables
 
@@ -243,7 +243,7 @@ After dashboard and env updates:
 4. **QA deployment URL (stable):** `https://qa-the-outreach-project.vercel.app` (after Domains setup); fallback per-deploy: `https://the-outreach-project-app-git-qa-<slug>-the-outreach-project.vercel.app`.
 5. **Production deployment URL:** `https://the-outreach-project-app-the-outreach-project.vercel.app` (and any custom production domain configured on the project).
 6. **Vercel settings to configure:** Root Directory **`web`**, Framework **Next.js**, Production branch **`main`**, Preview env for **`QA`**, Production env vars filled, optional domain **`qa-the-outreach-project.vercel.app`** on Preview/branch `QA`.
-7. **GitHub integration:** Repository connected in Vercel; workflows `ci.yml` + `pr-branch-flow.yml`; branch **`prototype`** exists on `origin` (aligned with `main` at branch creation).
+7. **GitHub integration:** Repository connected in Vercel; workflows `ci.yml` + `pr-branch-flow.yml`; use branch **`qa`** for dev integration PRs into **`QA`**.
 8. **Required env vars:** see Phase 6 (mirror QA vs production values; no secrets in git).
-9. **Future deployments:** feature work on `prototype` (or agreed branch) → PR to `QA` → validate on QA URL → PR `QA` → `main` → verify production.
+9. **Future deployments:** work on **`qa`** → PR **`qa` → `QA`** → validate on QA URL → PR **`QA` → `main`** → verify production.
 10. **Manual steps only you can do:** Vercel dashboard (Root Directory, framework, domains, Production env vars), WorkOS/Stripe dashboards for redirect URLs and keys.
