@@ -66,6 +66,8 @@ function profileToApiPatch(p) {
     sponsorOrgName: p.sponsorOrgName,
     sponsorWebsite: p.sponsorWebsite,
   };
+  const cs = String(p.colorScheme || "").trim().toLowerCase();
+  if (cs === "light" || cs === "dark") patch.colorScheme = cs;
   if (p.accountIntent != null && String(p.accountIntent).trim()) {
     patch.accountIntent = String(p.accountIntent).trim();
   }

@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 const SHIELD = "M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6z";
 
 export default function TrustedPage() {
@@ -21,6 +23,14 @@ export default function TrustedPage() {
         <p style={{ marginTop: "16px", color: "var(--color-text-secondary)", lineHeight: 1.55 }}>
           This route is kept for navigation parity while we align multi-page flows with the main experience.
         </p>
+        <div style={{ marginTop: "18px", display: "flex", gap: "12px", flexWrap: "wrap" }}>
+          <Link href="/" className="btnPrimary">
+            Open Home Experience
+          </Link>
+          <Link href="/community" className="btnSoft">
+            Go to Community
+          </Link>
+        </div>
       </section>
     </div>
   );

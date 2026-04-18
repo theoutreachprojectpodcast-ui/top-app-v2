@@ -68,6 +68,7 @@ function spreadMetadata(meta) {
     "sponsorOnboardingPath",
     "sponsorApplicationStatus",
     "onboardingCurrentStep",
+    "colorScheme",
     "podcastSponsorLastTierId",
     "podcastSponsorLastCheckoutAt",
     "podcastSponsorLastSessionId",

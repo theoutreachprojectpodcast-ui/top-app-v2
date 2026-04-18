@@ -7,8 +7,9 @@
     "node": ">=20.20.0"
   },
   "scripts": {
-    "prebuild": "node scripts/verify-trusted-resources-registry.mjs && node scripts/verify-entity-display-names.mjs && node scripts/verify-trusted-resources-titles.mjs && node scripts/sync-public-assets.mjs",
+    "prebuild": "node scripts/validate-production-env.mjs && node scripts/verify-trusted-resources-registry.mjs && node scripts/verify-entity-display-names.mjs && node scripts/verify-trusted-resources-titles.mjs && node scripts/sync-public-assets.mjs",
     "verify:trusted-resources": "node scripts/verify-trusted-resources-registry.mjs",
+    "smoke:routes": "node scripts/smoke-routes.mjs",
     "verify:entity-names": "node scripts/verify-entity-display-names.mjs",
     "verify:trusted-titles": "node scripts/verify-trusted-resources-titles.mjs",
     "verify:platform-names": "node scripts/verify-platform-organization-names.mjs",
@@ -36,7 +37,8 @@
     "enrich:cities": "node scripts/build-city-image-library.js",
     "enrich:media": "node scripts/enrich-nonprofit-media.js",
     "workos": "pnpm dlx workos@latest",
-    "workos:doctor": "pnpm dlx workos@latest doctor"
+    "workos:doctor": "pnpm dlx workos@latest doctor",
+    "validate:env:prod": "node scripts/validate-production-env.mjs --strict"
   },
   "dependencies": {
     "@capacitor/android": "^8.3.0",

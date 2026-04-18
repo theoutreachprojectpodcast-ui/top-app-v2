@@ -22,6 +22,7 @@ const META_KEYS = new Set([
   "sponsorOnboardingPath",
   "sponsorApplicationStatus",
   "onboardingCurrentStep",
+  "colorScheme",
 ]);
 
 const ONBOARDING_STEP_VALUES = new Set(["0", "1", "2"]);

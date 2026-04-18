@@ -50,6 +50,7 @@ export function profileFromLegacy(localProfile = {}) {
     banner: String(localProfile.banner || "Hi, I’m Andy").trim(),
     avatarUrl: String(localProfile.photoDataUrl || localProfile.avatarUrl || "").trim(),
     theme: String(localProfile.theme || "clean").trim() || "clean",
+    colorScheme: String(localProfile.colorScheme || "").trim().toLowerCase(),
     savedOrgEins: Array.isArray(localProfile.savedOrgEins) ? localProfile.savedOrgEins : [],
     ...readExtensions(localProfile),
   };
@@ -80,6 +81,7 @@ export function createInitialProfile() {
     podcastSponsorLastTierId: "",
     podcastSponsorLastCheckoutAt: "",
     podcastSponsorLastSessionId: "",
+    colorScheme: "",
   };
 }
 
@@ -96,6 +98,7 @@ export function toLocalStorageProfile(profile) {
     banner: profile.banner,
     photoDataUrl: profile.avatarUrl || "",
     avatarUrl: profile.avatarUrl || "",
+    colorScheme: String(profile.colorScheme || "").trim().toLowerCase(),
     ...readExtensions(profile),
   };
 }
@@ -109,6 +112,7 @@ export function toLocalShape(profile) {
     banner: profile.banner || "Hi, I’m Andy",
     avatarUrl: profile.avatarUrl || "",
     theme: profile.theme || "clean",
+    colorScheme: String(profile.colorScheme || "").trim().toLowerCase(),
     savedOrgEins: Array.isArray(profile.savedOrgEins) ? profile.savedOrgEins : [],
   };
 }
@@ -149,6 +153,7 @@ export function profileFromApiDto(dto = {}) {
     onboardingCompleted: !!dto.onboardingCompleted,
     banner: String(dto.banner || "Hi, I’m Andy").trim(),
     theme: String(dto.theme || "clean").trim() || "clean",
+    colorScheme: String(dto.colorScheme || "").trim().toLowerCase(),
     identityRole: String(dto.identityRole || "").trim(),
     missionStatement: String(dto.missionStatement || "").trim(),
     organizationAffiliation: String(dto.organizationAffiliation || "").trim(),

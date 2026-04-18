@@ -1,12 +1,15 @@
 import { TRUSTED_PAGE_SIZE } from "@/lib/constants";
-import { mapTrustedRow } from "@/lib/supabase/mappers";
 import {
   TRUSTED_RESOURCES_TABLE,
   isMissingTrustedResourcesTable,
   mapTrustedResourcesDbRowToTrustedRow,
 } from "@/lib/supabase/trustedResourcesCatalog";
-import { queryTrustedOrgsByEin } from "@/lib/supabase/queries";
 import { attachDirectoryAndEnrichmentToTrustedRows } from "@/features/trusted-resources/trustedDirectoryJoin";
+import {
+  TRUSTED_RESOURCE_CANONICAL_RECORDS,
+  canonicalHostname,
+  normalizeTrustedResourceEin,
+} from "@/features/trusted-resources/trustedResourcesRegistry";
 
 async function runQuery(factory) {
   try {
@@ -16,28 +19,103 @@ async function runQuery(factory) {
   }
 }
 
-function normalizeEin(value) {
-  let d = String(value ?? "").replace(/\D/g, "");
-  if (!d) return "";
-  if (d.length > 9) d = d.slice(-9);
-  return d.padStart(9, "0");
+function rowIdentityKey(row = {}) {
+  const ein = normalizeTrustedResourceEin(row?.ein || "");
+  if (ein) return `ein:${ein}`;
+  const host = canonicalHostname(row?.website || "");
+  if (host) return `host:${host}`;
+  return `name:${String(row?.orgName || "").trim().toLowerCase()}`;
 }
 
-function stripLeadingZeros(value) {
-  const digits = String(value ?? "").replace(/\D/g, "");
-  if (!digits) return "";
-  return digits.replace(/^0+/, "") || "0";
+function registryRecordToTrustedRow(record = {}) {
+  const ein = normalizeTrustedResourceEin(record?.eins?.[0] || "");
+  const website = String(record.website || "").trim();
+  const social = record.socialOverrides || {};
+  return {
+    ein,
+    orgName: String(record.displayName || "").trim(),
+    display_name: String(record.displayName || "").trim(),
+    catalog_display_name: String(record.displayName || "").trim(),
+    trustedResourceSlug: String(record.slug || "").trim(),
+    website,
+    logoUrl: "",
+    city: "",
+    state: "",
+    ntee_code: String(record.ntee_code || "").trim(),
+    nteeCode: String(record.ntee_code || "").trim(),
+    nonprofit_type: String(record.nonprofit_type || "").trim(),
+    description: String(record.shortDescription || "").trim(),
+    trustedResourceDisplayLocation: String(record.locationLabel || "National").trim(),
+    trustedResourceCategoryKey: String(record.trustedResourceCategoryKey || "").trim() || undefined,
+    instagramUrl: String(social.instagramUrl || "").trim(),
+    facebookUrl: String(social.facebookUrl || "").trim(),
+    youtubeUrl: String(social.youtubeUrl || "").trim(),
+    xUrl: String(social.xUrl || "").trim(),
+    linkedinUrl: String(social.linkedinUrl || "").trim(),
+    serves_veterans: true,
+    serves_first_responders: false,
+    isTrusted: true,
+    is_trusted: true,
+    is_trusted_resource: true,
+    trusted_resource_status: "approved",
+    listing_status: "active",
+    raw: {
+      profile: {
+        ein,
+        organization_name: String(record.displayName || "").trim(),
+        display_name_override: String(record.displayName || "").trim(),
+        website,
+        nonprofit_type: String(record.nonprofit_type || "").trim(),
+        description: String(record.shortDescription || "").trim(),
+        ntee_code: String(record.ntee_code || "").trim(),
+        is_trusted: true,
+        is_trusted_resource: true,
+        trusted_resource_status: "approved",
+      },
+      org: {},
+    },
+  };
 }
 
-function normalizeDomain(url = "") {
-  const raw = String(url || "").trim();
-  if (!raw) return "";
-  try {
-    const full = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
-    return new URL(full).hostname.replace(/^www\./i, "").toLowerCase();
-  } catch {
-    return "";
+function ensureAllCanonicalTrustedRows(rows = []) {
+  const out = [...rows];
+  const seen = new Set(out.map((r) => rowIdentityKey(r)));
+  for (const rec of TRUSTED_RESOURCE_CANONICAL_RECORDS) {
+    const candidate = registryRecordToTrustedRow(rec);
+    const k = rowIdentityKey(candidate);
+    if (seen.has(k)) continue;
+    seen.add(k);
+    out.push(candidate);
   }
+  return out;
+}
+
+function buildCanonicalOrderedTrustedRows(rows = []) {
+  const byEin = new Map();
+  const byHost = new Map();
+  for (const row of rows) {
+    const ein = normalizeTrustedResourceEin(row?.ein || "");
+    if (ein) byEin.set(ein, row);
+    const host = canonicalHostname(row?.website || "");
+    if (host) byHost.set(host, row);
+  }
+
+  return TRUSTED_RESOURCE_CANONICAL_RECORDS.map((rec) => {
+    const hitEin = (rec.eins || [])
+      .map((e) => normalizeTrustedResourceEin(e))
+      .find((e) => e && byEin.has(e));
+    if (hitEin) return byEin.get(hitEin);
+
+    const primaryHost = canonicalHostname(rec.website || "");
+    if (primaryHost && byHost.has(primaryHost)) return byHost.get(primaryHost);
+
+    for (const alias of rec.aliasHosts || []) {
+      const h = canonicalHostname(alias.includes("://") ? alias : `https://${alias}/`);
+      if (h && byHost.has(h)) return byHost.get(h);
+    }
+
+    return registryRecordToTrustedRow(rec);
+  });
 }
 
 /** Load trusted catalog + directory/enrichment joins (server or browser Supabase client). */
@@ -53,117 +131,22 @@ export async function fetchTrustedResourcesFromSupabase(supabase) {
       .order("display_name", { ascending: true })
   );
   if (!catalog.error && Array.isArray(catalog.data)) {
-    const mapped = (catalog.data || []).map(mapProvenAlliesDbRowToTrustedRow).filter((row) => {
+    const mapped = (catalog.data || []).map(mapTrustedResourcesDbRowToTrustedRow).filter((row) => {
       const ein = String(row?.ein ?? "").trim();
       const name = String(row?.orgName ?? "").trim();
       const web = String(row?.website ?? "").trim();
       return !!(ein || name || web);
     });
-    return attachDirectoryAndEnrichmentToTrustedRows(supabase, mapped);
+    const canonicalOnly = buildCanonicalOrderedTrustedRows(ensureAllCanonicalTrustedRows(mapped));
+    return attachDirectoryAndEnrichmentToTrustedRows(supabase, canonicalOnly);
   }
   if (catalog.error && !isMissingTrustedResourcesTable(catalog.error)) {
     throw catalog.error;
   }
 
-  // Legacy: nonprofit_profiles + directory joins when `trusted_resources` is not deployed.
-  const profileResult = await runQuery(() => supabase.from("nonprofit_profiles").select("*").limit(1000));
-  if (profileResult.error) throw profileResult.error;
-
-  const featuredTiers = new Set(["featured", "featured_partner", "trusted", "trusted_partner", "tier_3"]);
-  const profiles = (profileResult.data || []).filter((p) => {
-    const tier = String(p?.verification_tier || "").trim().toLowerCase();
-    const approved = String(p?.trusted_resource_status || "").trim().toLowerCase() === "approved";
-    return !!p?.ein && (p?.is_trusted === true || p?.is_trusted_resource === true || approved || featuredTiers.has(tier));
-  });
-  if (!profiles.length) return [];
-  const einKeys = new Set();
-  for (const p of profiles) {
-    const raw = String(p?.ein ?? "").trim();
-    const normalized = normalizeEin(p?.ein);
-    const unpadded = stripLeadingZeros(p?.ein);
-    if (raw) einKeys.add(raw);
-    if (normalized) einKeys.add(normalized);
-    if (unpadded) einKeys.add(unpadded);
-  }
-  const eins = [...einKeys];
-
-  const orgResult = await runQuery(() => queryTrustedOrgsByEin(supabase, eins));
-  const orgRowsPrimary = orgResult?.error ? [] : (orgResult.data || []);
-  const directoryResult = await runQuery(() =>
-    supabase
-      .from("nonprofits_search_app_v1")
-      .select("ein,org_name,name,city,state,ntee_code,website,logo_url,verification_tier,verification_source,serves_veterans,serves_first_responders")
-      .in("ein", eins)
-  );
-  const orgRowsDirectory = directoryResult?.error ? [] : (directoryResult.data || []);
-  const orgRows = [...orgRowsPrimary, ...orgRowsDirectory];
-
-  const orgMap = new Map();
-  for (const org of orgRows) {
-    const rawKey = String(org?.ein ?? "").trim();
-    const normalizedKey = normalizeEin(org?.ein);
-    if (rawKey) orgMap.set(rawKey, org);
-    if (normalizedKey) orgMap.set(normalizedKey, org);
-  }
-
-  const rows = profiles
-    .map((p) => {
-      const rawKey = String(p?.ein ?? "").trim();
-      const normalizedKey = normalizeEin(p?.ein);
-      const unpaddedKey = stripLeadingZeros(p?.ein);
-      const org = orgMap.get(rawKey) || orgMap.get(normalizedKey) || orgMap.get(unpaddedKey) || {};
-      return mapTrustedRow(p, org);
-    })
-    .filter((row) => {
-      const ein = String(row?.ein ?? "").trim();
-      const name = String(row?.orgName ?? "").trim();
-      const web = String(row?.website ?? "").trim();
-      return !!(ein || name || web);
-    })
-    .sort((a, b) => {
-      const sortKey = (r) =>
-        String(r.orgName || "").trim() || String(r.ein || "").trim() || "\uFFFF";
-      return sortKey(a).localeCompare(sortKey(b), undefined, { sensitivity: "base" });
-    });
-
-  // If many profile rows still don't resolve rich org fields, backfill from directory snapshot.
-  const unresolved = rows.filter((r) => {
-    const noRealName =
-      !String(r.orgName || "").trim() ||
-      /^unknown organization$/i.test(String(r.orgName || "").trim());
-    return !r.city || !r.state || !r.nteeCode || noRealName;
-  });
-  if (unresolved.length) {
-    const directorySnapshot = await runQuery(() =>
-      supabase
-        .from("nonprofits_search_app_v1")
-        .select("ein,org_name,name,city,state,ntee_code,website,logo_url,verification_tier,verification_source,serves_veterans,serves_first_responders")
-        .limit(20000)
-    );
-    const snapshotRows = directorySnapshot?.error ? [] : (directorySnapshot.data || []);
-    const byEin = new Map();
-    const byDomain = new Map();
-    for (const org of snapshotRows) {
-      const rawKey = String(org?.ein ?? "").trim();
-      const normalizedKey = normalizeEin(org?.ein);
-      const unpaddedKey = stripLeadingZeros(org?.ein);
-      const domain = normalizeDomain(org?.website);
-      if (rawKey) byEin.set(rawKey, org);
-      if (normalizedKey) byEin.set(normalizedKey, org);
-      if (unpaddedKey) byEin.set(unpaddedKey, org);
-      if (domain) byDomain.set(domain, org);
-    }
-
-    return rows.map((row) => {
-      const rawKey = String(row?.ein ?? "").trim();
-      const normalizedKey = normalizeEin(row?.ein);
-      const unpaddedKey = stripLeadingZeros(row?.ein);
-      const domain = normalizeDomain(row?.website);
-      const org = byEin.get(rawKey) || byEin.get(normalizedKey) || byEin.get(unpaddedKey) || byDomain.get(domain) || {};
-      return mapTrustedRow(row?.raw?.profile || row, org);
-    });
-  }
-  return rows;
+  // Catalog missing/empty: still return curated Trusted list (not directory/nonprofit-profile-derived list).
+  const canonicalOnly = buildCanonicalOrderedTrustedRows(ensureAllCanonicalTrustedRows([]));
+  return attachDirectoryAndEnrichmentToTrustedRows(supabase, canonicalOnly);
 }
 
 async function fetchTrustedCatalogFromApi() {

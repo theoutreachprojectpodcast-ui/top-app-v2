@@ -303,7 +303,7 @@
 }
 
 .appShell--podcast .podcastBrandLogo {
-  max-height: clamp(124px, 26vw, 188px) !important;
+  max-height: clamp(149px, 31.2vw, 226px) !important;
   width: auto;
   filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.45));
 }

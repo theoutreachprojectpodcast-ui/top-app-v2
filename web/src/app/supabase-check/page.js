@@ -1,8 +1,13 @@
 import { createClient } from "@/utils/supabase/server";
+import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
 export default async function SupabaseCheckPage() {
+  if (process.env.NODE_ENV === "production") {
+    notFound();
+  }
+
   const supabase = await createClient();
 
   if (!supabase) {

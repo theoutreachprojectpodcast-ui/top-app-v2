@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { withAuth } from "@workos-inc/authkit-nextjs";
 import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
 import { enrichNonprofitProfile } from "@/features/nonprofits/enrichment/enrichNonprofitProfile";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
+import { isCommunityModeratorServer } from "@/lib/community/moderatorServer";
 
 const DIRECTORY_SOURCE = "nonprofits_search_app_v1";
 const ENRICHMENT_TABLE = "nonprofit_directory_enrichment";
@@ -93,6 +97,23 @@ async function loadDirectoryOrg(supabase, ein9) {
  * Loads canonical directory row, runs website enrichment + verification, optionally upserts nonprofit_directory_enrichment.
  */
 export async function POST(request) {
+  const auth = await withAuth();
+  if (!auth.user) {
+    return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
+  }
+  const adminProfiles = createSupabaseAdminClient();
+  const profileRow = adminProfiles ? await getProfileRowByWorkOSId(adminProfiles, auth.user.id) : null;
+  if (!isCommunityModeratorServer({ email: auth.user.email, workosUserId: auth.user.id, profileRow })) {
+    const hint =
+      process.env.NODE_ENV === "development"
+        ? "Add your WorkOS sign-in email to COMMUNITY_MODERATOR_EMAILS in .env.local."
+        : undefined;
+    return NextResponse.json(
+      { ok: false, error: "forbidden", message: "Moderator access required.", ...(hint ? { hint } : {}) },
+      { status: 403 }
+    );
+  }
+
   const body = await request.json().catch(() => ({}));
   const ein9 = normalizeEinDigits(body.ein);
   if (ein9.length !== 9) {

@@ -394,8 +394,8 @@ img.brandMarkImg--header {
   display: block;
   width: auto;
   height: auto;
-  max-height: clamp(169px, 25.78vw, 244px);
-  max-width: min(610px, 92vw);
+  max-height: clamp(220px, 33.51vw, 317px);
+  max-width: min(793px, 92vw);
   object-fit: scale-down;
   object-position: center center;
   padding: 0;
@@ -4412,8 +4412,8 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
     gap: 8px;
   }
   img.brandMarkImg--header {
-    max-height: clamp(131px, 51.56vw, 188px) !important;
-    max-width: min(516px, 92vw) !important;
+    max-height: clamp(170px, 67.03vw, 244px) !important;
+    max-width: min(671px, 92vw) !important;
   }
   .headerBrandTitle {
     letter-spacing: 0.08em;

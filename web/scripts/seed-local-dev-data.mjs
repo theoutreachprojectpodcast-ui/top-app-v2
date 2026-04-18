@@ -96,15 +96,7 @@ function parseCommunityAuthorWorkOSIds() {
     .split(/[,\n;]+/)
     .map((s) => s.trim())
     .filter(Boolean);
-  if (parts.length < 1) {
-    console.error(
-      "[torp-seed] Set TORP_SEED_COMMUNITY_AUTHOR_WORKOS_USER_IDS to 1–3 WorkOS user ids (comma-separated).",
-    );
-    console.error(
-      "[torp-seed] Create test users in the WorkOS dashboard or sign in once and copy the id from the user payload.",
-    );
-    process.exit(1);
-  }
+  if (parts.length < 1) return [];
   for (const p of parts) assertWorkOSUserId(p, "TORP_SEED_COMMUNITY_AUTHOR_WORKOS_USER_IDS entry");
   if (parts.length > 3) {
     console.warn("[torp-seed] More than 3 author ids provided; using the first 3.");
@@ -112,6 +104,38 @@ function parseCommunityAuthorWorkOSIds() {
   const three = parts.slice(0, 3);
   while (three.length < 3) three.push(three[three.length - 1]);
   return three;
+}
+
+/**
+ * Localhost fallback when env ids are not provided: pick recent WorkOS users from torp_profiles.
+ * @param {import("@supabase/supabase-js").SupabaseClient} admin
+ * @returns {Promise<string[]>} exactly three WorkOS user ids (pads by repeating last)
+ */
+async function pickAuthorIdsFromProfiles(admin) {
+  const { data, error } = await admin
+    .from("torp_profiles")
+    .select("workos_user_id,updated_at")
+    .not("workos_user_id", "is", null)
+    .order("updated_at", { ascending: false })
+    .limit(12);
+  if (error) throw new Error(`torp_profiles fallback author lookup: ${error.message}`);
+
+  const ids = [];
+  const seen = new Set();
+  for (const row of data || []) {
+    const id = String(row?.workos_user_id || "").trim();
+    if (!id || seen.has(id) || !/^user_[a-zA-Z0-9]+$/.test(id)) continue;
+    seen.add(id);
+    ids.push(id);
+    if (ids.length >= 3) break;
+  }
+  if (!ids.length) {
+    throw new Error(
+      "No WorkOS users found in torp_profiles. Sign in once with WorkOS or set TORP_SEED_COMMUNITY_AUTHOR_WORKOS_USER_IDS.",
+    );
+  }
+  while (ids.length < 3) ids.push(ids[ids.length - 1]);
+  return ids;
 }
 
 function nowIso(offsetMin = 0) {
@@ -646,11 +670,6 @@ async function seedNotifications(admin, targetProfileId) {
 async function main() {
   assertLocalOnly();
 
-  const authorIds = parseCommunityAuthorWorkOSIds();
-  const targetExplicit = String(process.env.TORP_SEED_TARGET_WORKOS_USER_ID || "").trim();
-  const targetWorkos = targetExplicit || authorIds[0];
-  if (targetExplicit) assertWorkOSUserId(targetExplicit, "TORP_SEED_TARGET_WORKOS_USER_ID");
-
   const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!SUPABASE_URL || !SERVICE_KEY) {
@@ -658,10 +677,20 @@ async function main() {
     process.exit(1);
   }
 
+  const admin = createClient(SUPABASE_URL, SERVICE_KEY);
+  let authorIds = parseCommunityAuthorWorkOSIds();
+  if (!authorIds.length) {
+    console.warn(
+      "[torp-seed] TORP_SEED_COMMUNITY_AUTHOR_WORKOS_USER_IDS not set; using recent WorkOS users from torp_profiles.",
+    );
+    authorIds = await pickAuthorIdsFromProfiles(admin);
+  }
+  const targetExplicit = String(process.env.TORP_SEED_TARGET_WORKOS_USER_ID || "").trim();
+  const targetWorkos = targetExplicit || authorIds[0];
+  if (targetExplicit) assertWorkOSUserId(targetExplicit, "TORP_SEED_TARGET_WORKOS_USER_ID");
+
   console.log("[torp-seed] Community authors (WorkOS user ids):", authorIds.join(", "));
   console.log("[torp-seed] Target for saved orgs + notifications:", targetWorkos);
-
-  const admin = createClient(SUPABASE_URL, SERVICE_KEY);
 
   console.log("[torp-seed] Upserting torp_profiles…");
   const profileIds = await upsertProfiles(admin, authorIds, targetWorkos);
