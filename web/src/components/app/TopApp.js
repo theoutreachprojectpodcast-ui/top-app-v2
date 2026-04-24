@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import HeaderInner from "@/components/layout/HeaderInner";
 import FooterInner from "@/components/layout/FooterInner";
@@ -174,6 +175,7 @@ function TopAppInner({ initialNav = "home" }) {
     signOut,
     uploadAvatarFile,
     refreshWorkOSProfile,
+    entitlements,
   } = useProfileData();
 
   const profileCompletion = useMemo(() => {

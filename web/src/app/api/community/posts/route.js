@@ -2,6 +2,7 @@ import { withAuth } from "@workos-inc/authkit-nextjs";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
 import { isCommunityModeratorServer } from "@/lib/community/moderatorServer";
+import { isPlatformAdminServer } from "@/lib/admin/platformAdminServer";
 import { profileMaySubmitCommunityStory } from "@/lib/account/entitlements";
 import {
   createPlatformNotification,
@@ -99,6 +100,30 @@ export async function GET(request) {
       .eq("status", "pending_review")
       .is("deleted_at", null)
       .order("created_at", { ascending: true })
+      .limit(100);
+
+    if (error) {
+      return Response.json({ posts: [], error: error.message }, { status: 500 });
+    }
+    return Response.json({ posts: data || [] });
+  }
+
+  if (scope === "bookmarked") {
+    if (
+      !isPlatformAdminServer({
+        email: auth.user.email,
+        workosUserId: auth.user.id,
+        profileRow,
+      })
+    ) {
+      return Response.json({ posts: [], error: "forbidden" }, { status: 403 });
+    }
+    const { data, error } = await admin
+      .from(TABLE)
+      .select("*")
+      .eq("admin_bookmark", true)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false })
       .limit(100);
 
     if (error) {

@@ -13,5 +13,9 @@ export function createSupabaseAdminClient() {
 }
 
 export function profileTableName() {
-  return process.env.NEXT_PUBLIC_PROFILE_TABLE || "torp_profiles";
+  const explicit =
+    process.env.PROFILE_TABLE || process.env.TOP_PROFILE_TABLE || process.env.NEXT_PUBLIC_PROFILE_TABLE;
+  if (String(explicit || "").trim()) return String(explicit).trim();
+  if (String(process.env.VERCEL_ENV || "").toLowerCase() === "preview") return "top_qa_profiles";
+  return "torp_profiles";
 }

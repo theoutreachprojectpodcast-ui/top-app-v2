@@ -5,6 +5,7 @@ import SponsorPaymentDemo from "@/features/sponsors/components/SponsorPaymentDem
 import { submitSponsorApplication } from "@/features/sponsors/api/sponsorApi";
 import { SPONSOR_PROGRAM_TYPE_PODCAST } from "@/features/sponsors/data/podcastSponsorTiers";
 import { SPONSOR_PROGRAM_TYPE_MAIN, SPONSOR_TIERS, formatUsd, getTierById } from "@/features/sponsors/data/sponsorTiers";
+import { isDemoModeEnabled } from "@/lib/runtime/launchMode";
 
 const INITIAL_FORM = {
   first_name: "",
@@ -53,6 +54,7 @@ export default function SponsorApplicationForm({
   /** When returning from Stripe Checkout (podcast flow): { checkout: "success"|"cancel", sessionId } */
   stripeReturn = null,
 }) {
+  const demoModeEnabled = isDemoModeEnabled();
   const isPodcastSkin = designContext === "podcast";
   const isPodcast = programType === SPONSOR_PROGRAM_TYPE_PODCAST;
   const tierList = Array.isArray(tiers) && tiers.length ? tiers : SPONSOR_TIERS;
@@ -159,10 +161,11 @@ export default function SponsorApplicationForm({
       return agreementOk && paymentOk;
     }
 
-    return Boolean(
-      form.agreed_to_terms && form.agreed_demo_payment && paymentStatus === "demo_paid",
-    );
-  }, [form, isPodcast, podcastBillingLive, paymentStatus]);
+    if (demoModeEnabled) {
+      return Boolean(form.agreed_to_terms && form.agreed_demo_payment && paymentStatus === "demo_paid");
+    }
+    return Boolean(form.agreed_to_terms && form.agreed_deferred_billing);
+  }, [demoModeEnabled, form, isPodcast, podcastBillingLive, paymentStatus]);
 
   function setTier(tierId) {
     const next = getTierById(tierId, tierList);
@@ -235,6 +238,7 @@ export default function SponsorApplicationForm({
     try {
       const paymentLabel = (() => {
         if (!isPodcast) {
+          if (!demoModeEnabled) return "pending_review_no_live_checkout";
           return paymentStatus === "demo_paid" ? "paid" : paymentStatus;
         }
         if (podcastBillingLive && paymentStatus === "stripe_paid") return "paid_stripe";
@@ -249,7 +253,7 @@ export default function SponsorApplicationForm({
         sponsor_tier_name: tier.name,
         sponsor_tier_amount: tierAmount,
         payment_status: paymentLabel,
-        payment_demo_status: isPodcast ? paymentStatus : paymentStatus,
+        payment_demo_status: isPodcast ? paymentStatus : demoModeEnabled ? paymentStatus : "provider_not_configured",
         application_status: "submitted",
         stripe_checkout_session_id:
           isPodcast && podcastBillingLive && paymentStatus === "stripe_paid" && confirmedStripeSessionId
@@ -424,18 +428,31 @@ export default function SponsorApplicationForm({
                 </span>
               </label>
             ) : null}
-            {!isPodcast ? (
+            {!isPodcast && demoModeEnabled ? (
               <label className="dsChoice dsChoice--checkbox">
                 <input type="checkbox" checked={form.agreed_demo_payment} onChange={(e) => setForm((f) => ({ ...f, agreed_demo_payment: e.target.checked }))} />
                 <span className="dsChoice__control" />
                 <span className="dsChoice__text">We acknowledge this is a demo payment flow placeholder until live billing is enabled.</span>
               </label>
             ) : null}
+            {!isPodcast && !demoModeEnabled ? (
+              <label className="dsChoice dsChoice--checkbox">
+                <input
+                  type="checkbox"
+                  checked={form.agreed_deferred_billing}
+                  onChange={(e) => setForm((f) => ({ ...f, agreed_deferred_billing: e.target.checked }))}
+                />
+                <span className="dsChoice__control" />
+                <span className="dsChoice__text">
+                  We understand this application enters review and billing follow-up; no demo payment placeholder is used in QA/production.
+                </span>
+              </label>
+            ) : null}
           </div>
         </section>
 
         <section className="applySection">
-          <h4>{isPodcast ? "Step 7 — Payment and submit" : "Step 7 — Demo payment and submit"}</h4>
+          <h4>{isPodcast ? "Step 7 — Payment and submit" : `Step 7 — ${demoModeEnabled ? "Demo payment and submit" : "Review and submit"}`}</h4>
           <p>
             Selected tier: <strong>{tier.name}</strong> — {formatUsd(tierAmount)}
           </p>
@@ -471,7 +488,7 @@ export default function SponsorApplicationForm({
               <p>Also required: <code>STRIPE_SECRET_KEY</code>. Until all are set, you can still submit this application for review using the checkbox in Step 6.</p>
             </div>
           ) : null}
-          {!isPodcast ? (
+          {!isPodcast && demoModeEnabled ? (
             <SponsorPaymentDemo
               amount={tierAmount}
               paymentStatus={paymentStatus}
@@ -479,6 +496,14 @@ export default function SponsorApplicationForm({
               onComplete={completeDemoPayment}
               busy={paymentBusy}
             />
+          ) : null}
+          {!isPodcast && !demoModeEnabled ? (
+            <div className="sponsorPaymentCard sponsorPaymentCard--notice">
+              <h4>Billing follow-up</h4>
+              <p>
+                Mission and sponsor applications are recorded for team review and billing follow-up. No simulated payment state is stored in this environment.
+              </p>
+            </div>
           ) : null}
         </section>
 

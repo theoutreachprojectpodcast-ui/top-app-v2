@@ -19,6 +19,7 @@ export async function GET() {
         podcastMemberContent: false,
         communityStorySubmit: false,
         isPrivilegedStaff: false,
+        isPlatformAdmin: false,
       },
     });
   }
@@ -38,6 +39,7 @@ export async function GET() {
     podcastMemberContent: false,
     communityStorySubmit: false,
     isPrivilegedStaff: false,
+    isPlatformAdmin: false,
   };
   const profileCompletion = computeProfileCompletion(profileDto);
   return Response.json({

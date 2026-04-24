@@ -2,7 +2,7 @@
  * Find same-origin URLs on homepage that likely carry mission/about content.
  */
 const PATH_HINT =
-  /\/(about|about-us|our-story|mission|who-we-are|what-we-do|overview|our-mission|programs)(\/|$|\?)/i;
+  /\/(about|about-us|our-story|mission|who-we-are|what-we-do|overview|our-mission|programs|team|board|leadership|our-work|impact|vision|values|contact|connect|community|media|press|news)(\/|$|\?)/i;
 
 export function discoverInternalContentUrls(html, finalUrl, maxN = 3) {
   let base;

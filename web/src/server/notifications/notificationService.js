@@ -1,6 +1,6 @@
 /**
  * Central notification creation + fan-out (service-role Supabase only).
- * Email/push: set `delivered_email_at` in a future worker; see docs/NOTIFICATIONS_TORP_V03.md.
+ * Email/push: set `delivered_email_at` in a future worker; see docs/NOTIFICATIONS_TOP_V03.md.
  */
 
 import { profileTableName } from "@/lib/supabase/admin";

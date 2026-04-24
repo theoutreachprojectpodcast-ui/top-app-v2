@@ -4,9 +4,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import IconWrap from "@/components/shared/IconWrap";
 import CommunityTrustDisclosure from "@/features/community/components/CommunityTrustDisclosure";
-import CommunityModerationPanel from "@/features/community/components/CommunityModerationPanel";
-import OrgHeaderImageReviewPanel from "@/features/nonprofits/admin/OrgHeaderImageReviewPanel";
-import ModerationQueuePreview from "@/features/community/components/ModerationQueuePreview";
 import CommunityConnectionsPanel from "@/features/community/components/CommunityConnectionsPanel";
 import CommunityMemberProfileModal from "@/features/community/components/CommunityMemberProfileModal";
 import CommunityPostCard from "@/features/community/components/CommunityPostCard";
@@ -40,7 +37,6 @@ export default function CommunityPage({
 }) {
   const [submitOpen, setSubmitOpen] = useState(false);
   const [selectedMemberId, setSelectedMemberId] = useState("");
-  const [modPanelKey, setModPanelKey] = useState(0);
   const [feedTab, setFeedTab] = useState("latest");
 
   const authorName = fullName || [profile.firstName, profile.lastName].filter(Boolean).join(" ").trim() || "Community member";
@@ -209,23 +205,6 @@ export default function CommunityPage({
         </div>
       </section>
 
-      {isAuthenticated ? (
-        <>
-          <hr className="communityAdminDivider" aria-hidden="true" />
-          <section className="communityAdminZone" aria-label="Community admin tools">
-            <CommunityModerationPanel
-              key={modPanelKey}
-              supabase={supabase}
-              userId={userId}
-              canModerate={canModerate}
-              onFeedChanged={refresh}
-            />
-            <OrgHeaderImageReviewPanel canModerate={canModerate} />
-            <ModerationQueuePreview />
-          </section>
-        </>
-      ) : null}
-
       {submitOpen && isAuthenticated ? (
         <div className="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="community-submit-title" onClick={() => setSubmitOpen(false)}>
           <div className="modalCard communitySubmitModalCard" onClick={(e) => e.stopPropagation()}>
@@ -244,7 +223,6 @@ export default function CommunityPage({
               onClose={() => setSubmitOpen(false)}
               onSubmitted={() => {
                 refresh();
-                setModPanelKey((k) => k + 1);
               }}
             />
           </div>

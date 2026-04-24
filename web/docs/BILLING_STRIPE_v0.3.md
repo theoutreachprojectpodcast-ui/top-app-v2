@@ -105,4 +105,4 @@ Podcast paid checkouts update the **same** `torp_profiles` row (WorkOS identity)
 - `web/supabase/torp_profiles_stripe_customer_idx.sql` — index `stripe_customer_id` for webhook lookups.
 - `web/supabase/torp_profiles_membership_source.sql` — `membership_source` column.
 
-See also: `web/docs/TORP_V0_3_MEMBER_SPONSOR_ACCOUNT.md` (implementation notes: profile billing return path, autofill, session mapping).
+See also: `web/docs/TOP_V0_3_MEMBER_SPONSOR_ACCOUNT.md` (implementation notes: profile billing return path, autofill, session mapping).

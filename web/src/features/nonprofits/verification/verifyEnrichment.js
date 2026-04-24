@@ -104,9 +104,13 @@ export function verifyEnrichmentAgainstRecord(params, extracted) {
   const nameOk = nameScore >= 0.35;
   if (!nameOk) notes.push("weak_name_alignment");
 
-  const textBlob = [extracted.metaDescription, extracted.aboutText].filter(Boolean).join(" ");
+  let textBlob = [extracted.metaDescription, extracted.aboutText, extracted.jsonLdDescription].filter(Boolean).join(" ");
   const textScore = nameAlignmentScore(canonicalName, textBlob.slice(0, 500));
-  const textOk = textScore >= 0.25 || textBlob.length < 40;
+  let textOk = textScore >= 0.25 || textBlob.length < 40;
+  if (!textOk && String(extracted.jsonLdDescription || "").trim().length >= 80) {
+    textOk = nameAlignmentScore(canonicalName, extracted.jsonLdDescription.slice(0, 400)) >= 0.2;
+    if (textOk) notes.push("json_ld_description_relaxed_body_gate");
+  }
   if (!textOk) notes.push("weak_body_alignment");
 
   const allowContent = domainOk && nameOk && textOk;
@@ -114,14 +118,20 @@ export function verifyEnrichmentAgainstRecord(params, extracted) {
   /** @type {Record<string, { url: string, verified: boolean }>} */
   const socials = {};
   const nameTokens = normalizeName(canonicalName).replace(/\s+/g, "");
+  const jsonLdTrust = new Set(
+    (extracted.jsonLdSameAs || []).map((u) => String(u).trim().split("#")[0].toLowerCase())
+  );
 
   for (const { platform, url } of extracted.socialCandidates || []) {
+    const normalized = String(url).trim().split("#")[0];
+    const inJsonLd = jsonLdTrust.has(normalized.toLowerCase());
     const slug = socialSlugFromUrl(platform, url).replace(/[^a-z0-9]/g, "");
     const slugScore = slug && nameTokens.includes(slug.slice(0, Math.min(6, slug.length))) ? 0.85 : 0;
     const loose = nameAlignmentScore(canonicalName, slug.replace(/-/g, " "));
-    const socialOk = domainOk && (slugScore >= 0.5 || loose >= 0.45);
+    const socialOk = domainOk && (inJsonLd || slugScore >= 0.5 || loose >= 0.45);
     socials[platform] = { url, verified: socialOk };
     if (!socialOk) notes.push(`social_rejected_${platform}`);
+    if (inJsonLd && socialOk) notes.push(`social_jsonld_sameas_${platform}`);
   }
 
   const headline =
@@ -141,14 +151,25 @@ export function verifyEnrichmentAgainstRecord(params, extracted) {
     if (shortDescription.length < 40 && extracted.aboutText) {
       shortDescription = extracted.aboutText.slice(0, 360);
     }
+    if (shortDescription.length < 60 && extracted.jsonLdDescription) {
+      const jd = String(extracted.jsonLdDescription).trim();
+      shortDescription = shortDescription.length ? `${shortDescription} ${jd}`.trim().slice(0, 480) : jd.slice(0, 480);
+    }
   }
 
+  const longBody = (() => {
+    const about = String(extracted.aboutText || "").trim();
+    const jd = String(extracted.jsonLdDescription || "").trim();
+    if (!about) return jd.slice(0, 8000);
+    if (!jd) return about.slice(0, 8000);
+    return about.length >= jd.length ? about.slice(0, 8000) : jd.slice(0, 8000);
+  })();
   const longDescription =
-    allowContent && extracted.aboutText && extracted.aboutText.length > shortDescription.length
-      ? extracted.aboutText.slice(0, 8000)
-      : "";
+    allowContent && longBody && longBody.length > shortDescription.length ? longBody.slice(0, 8000) : "";
 
-  const missionGuess = allowContent ? pickMissionSentence(extracted.aboutText || extracted.metaDescription) : "";
+  const missionGuess = allowContent
+    ? pickMissionSentence(extracted.aboutText || extracted.jsonLdDescription || extracted.metaDescription)
+    : "";
 
   const ogImg =
     allowContent && extracted.ogImage && /^https?:\/\//i.test(String(extracted.ogImage).trim())
@@ -187,8 +208,18 @@ export function verifyEnrichmentAgainstRecord(params, extracted) {
 
   /** Only treat OG/Twitter URLs as verified logos when the path looks like a logo asset (not a default OG hero). */
   let logoImageUrl = null;
-  if (ogImg && pathnameLikelyLogoOrIconAsset(ogImg)) logoImageUrl = ogImg;
-  else if (twImg && pathnameLikelyLogoOrIconAsset(twImg)) logoImageUrl = twImg;
+  const jsonLdLogo = String(extracted.jsonLdLogoUrl || "").trim();
+  if (jsonLdLogo && /^https?:\/\//i.test(jsonLdLogo) && allowContent) {
+    logoImageUrl = jsonLdLogo;
+    notes.push("logo_from_json_ld");
+  }
+  if (!logoImageUrl && ogImg && pathnameLikelyLogoOrIconAsset(ogImg)) logoImageUrl = ogImg;
+  else if (!logoImageUrl && twImg && pathnameLikelyLogoOrIconAsset(twImg)) logoImageUrl = twImg;
+  const appleIcon = String(extracted.appleTouchIconUrl || "").trim();
+  if (!logoImageUrl && appleIcon && /^https?:\/\//i.test(appleIcon) && allowContent) {
+    logoImageUrl = appleIcon;
+    notes.push("logo_from_apple_touch_icon");
+  }
 
   const thumbnailUrl = heroImageUrl || logoImageUrl || null;
 

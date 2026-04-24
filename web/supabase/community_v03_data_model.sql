@@ -1,5 +1,6 @@
 -- tORP v0.3 — Community posts: profile linkage, moderation states, visibility, reactions scaffold.
 -- Run after torp_profiles exists (torp_v03_profiles.sql). Safe to re-run.
+-- Idempotent: no DROP POLICY / DROP CONSTRAINT — policies and check constraints are created only when missing.
 
 -- ---------------------------------------------------------------------------
 -- Extend community_posts
@@ -36,7 +37,7 @@ alter table public.community_posts
 alter table public.community_posts
   add column if not exists photo_url text default '';
 
--- Normalize legacy status values to moderation model
+-- Normalize legacy status values to moderation model (in-place updates; no deletes)
 update public.community_posts
 set status = 'pending_review'
 where status in ('submitted', 'under_review');
@@ -45,22 +46,47 @@ update public.community_posts
 set status = 'pending_review'
 where status not in ('draft', 'pending_review', 'approved', 'rejected', 'hidden');
 
-alter table public.community_posts drop constraint if exists community_posts_status_chk;
-
-alter table public.community_posts
-  add constraint community_posts_status_chk check (
-    status in ('draft', 'pending_review', 'approved', 'rejected', 'hidden')
-  );
+-- Check constraints: add only if not already present (no drop/replace)
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_catalog.pg_constraint c
+    join pg_catalog.pg_class t on c.conrelid = t.oid
+    join pg_catalog.pg_namespace n on t.relnamespace = n.oid
+    where n.nspname = 'public'
+      and t.relname = 'community_posts'
+      and c.conname = 'community_posts_status_chk'
+  ) then
+    alter table public.community_posts
+      add constraint community_posts_status_chk check (
+        status in ('draft', 'pending_review', 'approved', 'rejected', 'hidden')
+      );
+  end if;
+end
+$$;
 
 alter table public.community_posts
   alter column status set default 'pending_review';
 
-alter table public.community_posts drop constraint if exists community_posts_visibility_chk;
-
-alter table public.community_posts
-  add constraint community_posts_visibility_chk check (
-    visibility in ('community', 'private', 'public')
-  );
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_catalog.pg_constraint c
+    join pg_catalog.pg_class t on c.conrelid = t.oid
+    join pg_catalog.pg_namespace n on t.relnamespace = n.oid
+    where n.nspname = 'public'
+      and t.relname = 'community_posts'
+      and c.conname = 'community_posts_visibility_chk'
+  ) then
+    alter table public.community_posts
+      add constraint community_posts_visibility_chk check (
+        visibility in ('community', 'private', 'public')
+      );
+  end if;
+end
+$$;
 
 create index if not exists community_posts_author_profile_created_idx
   on public.community_posts (author_profile_id, created_at desc);
@@ -97,20 +123,44 @@ alter table public.community_post_reactions enable row level security;
 -- ---------------------------------------------------------------------------
 alter table public.community_posts enable row level security;
 
-drop policy if exists community_posts_anon_public_read on public.community_posts;
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_catalog.pg_policy pol
+    join pg_catalog.pg_class cls on cls.oid = pol.polrelid
+    join pg_catalog.pg_namespace nsp on nsp.oid = cls.relnamespace
+    where nsp.nspname = 'public'
+      and cls.relname = 'community_posts'
+      and pol.polname = 'community_posts_anon_public_read'
+  ) then
+    create policy community_posts_anon_public_read on public.community_posts for select to anon using (
+      deleted_at is null
+      and status = 'approved'
+      and visibility in ('community', 'public')
+    );
+  end if;
+end
+$$;
 
-create policy community_posts_anon_public_read on public.community_posts for select to anon using (
-  deleted_at is null
-  and status = 'approved'
-  and visibility in ('community', 'public')
-);
-
-drop policy if exists community_posts_authenticated_public_read on public.community_posts;
-
-create policy community_posts_authenticated_public_read on public.community_posts for select to authenticated using (
-  deleted_at is null
-  and status = 'approved'
-  and visibility in ('community', 'public')
-);
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_catalog.pg_policy pol
+    join pg_catalog.pg_class cls on cls.oid = pol.polrelid
+    join pg_catalog.pg_namespace nsp on nsp.oid = cls.relnamespace
+    where nsp.nspname = 'public'
+      and cls.relname = 'community_posts'
+      and pol.polname = 'community_posts_authenticated_public_read'
+  ) then
+    create policy community_posts_authenticated_public_read on public.community_posts for select to authenticated using (
+      deleted_at is null
+      and status = 'approved'
+      and visibility in ('community', 'public')
+    );
+  end if;
+end
+$$;
 
 -- Inserts/updates/deletes: no policies for anon/authenticated → denied (service role bypasses RLS)

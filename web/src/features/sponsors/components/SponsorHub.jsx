@@ -6,9 +6,6 @@ import { listSponsorsCatalog, mapSponsorsToCardModels } from "@/features/sponsor
 import { getSupabaseClient } from "@/lib/supabase/client";
 import MissionPartnerPackagesModal from "@/features/sponsors/components/MissionPartnerPackagesModal";
 import MissionSponsorApplyModal from "@/features/sponsors/components/MissionSponsorApplyModal";
-import SponsorAdminEditorSection from "@/features/sponsors/components/SponsorAdminEditorSection";
-import SponsorAdminReviewSection from "@/features/sponsors/components/SponsorAdminReviewSection";
-import SponsorLogoReviewPanel from "@/features/sponsors/admin/SponsorLogoReviewPanel";
 import SponsorsLandingPage from "@/features/sponsors/components/SponsorsLandingPage";
 import { SPONSOR_TIERS } from "@/features/sponsors/data/sponsorTiers";
 
@@ -21,7 +18,6 @@ export default function SponsorHub({ supabase: supabaseProp }) {
   const [missionApplyOpen, setMissionApplyOpen] = useState(false);
   const [missionPackagesOpen, setMissionPackagesOpen] = useState(false);
   const [missionApplyTierId, setMissionApplyTierId] = useState(SPONSOR_TIERS[0]?.id);
-  const [showSponsorAdmin, setShowSponsorAdmin] = useState(false);
 
   async function loadSponsors() {
     const rows = await listSponsorsCatalog(supabase);
@@ -32,21 +28,6 @@ export default function SponsorHub({ supabase: supabaseProp }) {
     loadSponsors();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supabase]);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch("/api/admin/sponsor-applications", { credentials: "include" });
-        if (!cancelled) setShowSponsorAdmin(res.ok);
-      } catch {
-        if (!cancelled) setShowSponsorAdmin(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   useEffect(() => {
     const tier = searchParams.get("tier");
@@ -102,10 +83,6 @@ export default function SponsorHub({ supabase: supabaseProp }) {
         onOpenMissionPackages={openMissionPackages}
         onOpenMissionApply={openMissionApply}
       />
-      {showSponsorAdmin ? <hr className="sponsorAdminDivider" aria-hidden="true" /> : null}
-      <SponsorAdminEditorSection showAdmin={showSponsorAdmin} supabase={supabase} sponsors={sponsors} onSaved={loadSponsors} />
-      <SponsorAdminReviewSection showAdmin={showSponsorAdmin} supabase={supabase} />
-      <SponsorLogoReviewPanel showAdmin={showSponsorAdmin} onChanged={loadSponsors} />
       <MissionPartnerPackagesModal
         open={missionPackagesOpen}
         onClose={closeMissionPackages}

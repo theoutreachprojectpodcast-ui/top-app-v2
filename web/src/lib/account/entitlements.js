@@ -2,6 +2,8 @@
  * DB-backed entitlements (tORP v0.3). Do not grant member-only capabilities from UI alone.
  */
 
+import { isPlatformAdminServer } from "@/lib/admin/platformAdminServer";
+
 /**
  * Active paid subscription states we treat as entitled for member-only product surfaces.
  * @param {string} membershipStatus
@@ -20,6 +22,7 @@ export function computeEntitlementsFromProfileRow(row) {
       podcastMemberContent: false,
       communityStorySubmit: false,
       isPrivilegedStaff: false,
+      isPlatformAdmin: false,
     };
   }
   const tier = String(row.membership_tier || "free").toLowerCase();
@@ -28,10 +31,16 @@ export function computeEntitlementsFromProfileRow(row) {
   const isPrivilegedStaff = platformRole === "admin" || platformRole === "moderator";
   const activePro = tier === "member" && hasActiveMemberBilling(status);
   const privilegedContent = isPrivilegedStaff || activePro;
+  const isPlatformAdmin = isPlatformAdminServer({
+    email: String(row.email || ""),
+    workosUserId: String(row.workos_user_id || ""),
+    profileRow: row,
+  });
   return {
     podcastMemberContent: privilegedContent,
     communityStorySubmit: privilegedContent,
     isPrivilegedStaff,
+    isPlatformAdmin,
   };
 }
 

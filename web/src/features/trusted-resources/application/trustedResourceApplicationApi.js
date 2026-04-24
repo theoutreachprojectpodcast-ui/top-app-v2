@@ -4,6 +4,7 @@ import {
   isMissingTrustedResourcesTable,
 } from "@/lib/supabase/trustedResourcesCatalog";
 import { buildTrustedResourceCrmLeadPayload } from "@/features/trusted-resources/application/crmLeadPayload";
+import { isDemoModeEnabled } from "@/lib/runtime/launchMode";
 
 const DIRECTORY_SOURCE = "nonprofits_search_app_v1";
 const APPLICATION_TABLE = "trusted_resource_applications";
@@ -72,8 +73,17 @@ function pushLocalFallback(record) {
 
 export async function submitTrustedResourceApplication(supabase, payload) {
   const application = applicationInsertRow(payload);
+  const demoModeEnabled = isDemoModeEnabled();
 
   if (!supabase) {
+    if (!demoModeEnabled) {
+      return {
+        ok: false,
+        localOnly: false,
+        applicationId: null,
+        warning: "Trusted resource submission is unavailable right now. Please try again after backend connectivity is restored.",
+      };
+    }
     pushLocalFallback({
       ...application,
       organization_ein: payload.organization_ein || null,
@@ -95,6 +105,14 @@ export async function submitTrustedResourceApplication(supabase, payload) {
     .single();
 
   if (error) {
+    if (!demoModeEnabled) {
+      return {
+        ok: false,
+        localOnly: false,
+        applicationId: null,
+        warning: `Submission failed: ${error.message}`,
+      };
+    }
     pushLocalFallback({
       ...application,
       organization_ein: payload.organization_ein || null,

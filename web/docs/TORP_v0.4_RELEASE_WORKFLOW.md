@@ -1,4 +1,4 @@
-# TORP v0.4 — Vercel + GitHub Deployment Workflow
+# TOP v0.4 — Vercel + GitHub Deployment Workflow
 
 This workflow keeps local development stable while providing a clear QA gate before production.
 
@@ -107,6 +107,8 @@ Vercel is still treating the project like a **static “Other”** preset with d
 
 Use this as the single review URL instead of bookmarking per-deployment preview hostnames.
 
+**Evidence-based QA runs:** [TOP_v0.4_QA_VALIDATION_REPORT.md](./TOP_v0.4_QA_VALIDATION_REPORT.md) (HTTP probes, env names, blockers). After Deployment Protection is configured, use `pnpm --dir web run smoke:qa:http` with `QA_BASE_URL` and optional `VERCEL_AUTOMATION_BYPASS_SECRET`.
+
 ### One-time setup (Vercel dashboard — project owner)
 
 The domain must be attached to **`the-outreach-project-app`** on team **`the-outreach-project`**. CLI `vercel domains add` requires permission; if you see **403**, use the dashboard as a team **Owner** / **Admin**.
@@ -192,7 +194,7 @@ pnpm exec vercel env add NEXT_PUBLIC_SUPABASE_URL preview QA
 
 - **Dev:** from repo root, `pnpm install` then `pnpm dev` (see `web/README.md`).
 - **Production build:** `pnpm build` (runs `pnpm --filter web build`).
-- **`web` prebuild:** `validate-production-env.mjs` runs strict on `CI`, `VERCEL`, or `TORP_VALIDATE_ENV=1`; locally it warns unless `.env.local` supplies vars.
+- **`web` prebuild:** `validate-production-env.mjs` runs strict on `CI`, `VERCEL`, or `TOP_VALIDATE_ENV=1`; locally it warns unless `.env.local` supplies vars.
 - **CI:** `.github/workflows/ci.yml` supplies dummy env for `pnpm build` on PRs and on push to `QA`, `main`, `qa`.
 
 ## Phase 3–4 — GitHub ↔ Vercel integration

@@ -1,4 +1,5 @@
 import { isWorkOSConfigured, workOSEnvironmentIssues } from "@/lib/auth/workosConfigured";
+import { profileTableName } from "@/lib/supabase/admin";
 import {
   stripeCheckoutConfigured,
   stripeMemberRecurringConfigured,
@@ -10,6 +11,11 @@ import {
 
 export async function GET() {
   const workos = isWorkOSConfigured();
+  const profileTable = profileTableName();
+  const qaIsolatedProfiles =
+    String(process.env.VERCEL_ENV || "").toLowerCase() === "preview"
+      ? profileTable !== "torp_profiles"
+      : true;
   return Response.json({
     workos,
     /** When false, lists what to set in `.env.local` to enable hosted AuthKit (no secret values). */
@@ -24,5 +30,7 @@ export async function GET() {
     stripePublishable: stripePublishableConfigured(),
     stripeWebhook: stripeWebhookConfigured(),
     supabaseServiceRole: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+    profileTable,
+    qaIsolatedProfiles,
   });
 }

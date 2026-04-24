@@ -10,6 +10,7 @@
     "prebuild": "node scripts/validate-production-env.mjs && node scripts/verify-trusted-resources-registry.mjs && node scripts/verify-entity-display-names.mjs && node scripts/verify-trusted-resources-titles.mjs && node scripts/sync-public-assets.mjs",
     "verify:trusted-resources": "node scripts/verify-trusted-resources-registry.mjs",
     "smoke:routes": "node scripts/smoke-routes.mjs",
+    "smoke:qa:http": "node scripts/qa-http-smoke.mjs",
     "verify:entity-names": "node scripts/verify-entity-display-names.mjs",
     "verify:trusted-titles": "node scripts/verify-trusted-resources-titles.mjs",
     "verify:platform-names": "node scripts/verify-platform-organization-names.mjs",
@@ -38,7 +39,9 @@
     "enrich:media": "node scripts/enrich-nonprofit-media.js",
     "workos": "pnpm dlx workos@latest",
     "workos:doctor": "pnpm dlx workos@latest doctor",
-    "validate:env:prod": "node scripts/validate-production-env.mjs --strict"
+    "validate:env:prod": "node scripts/validate-production-env.mjs --strict",
+    "qa:recompute-quality": "node scripts/qa-recompute-quality.mjs",
+    "qa:recompute-quality:all": "node scripts/qa-recompute-quality.mjs --all"
   },
   "dependencies": {
     "@capacitor/android": "^8.3.0",

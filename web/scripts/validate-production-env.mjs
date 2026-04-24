@@ -1,5 +1,9 @@
 const strictArg = process.argv.includes("--strict");
-const enforce = strictArg || process.env.TORP_VALIDATE_ENV === "1" || process.env.CI === "true" || process.env.VERCEL === "1";
+const enforce =
+  strictArg ||
+  process.env.TOP_VALIDATE_ENV === "1" ||
+  process.env.CI === "true" ||
+  process.env.VERCEL === "1";
 
 const requiredKeys = [
   "NEXT_PUBLIC_SUPABASE_URL",

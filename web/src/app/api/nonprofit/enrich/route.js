@@ -3,6 +3,8 @@ import { createClient } from "@supabase/supabase-js";
 import { withAuth } from "@workos-inc/authkit-nextjs";
 import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
 import { enrichNonprofitProfile } from "@/features/nonprofits/enrichment/enrichNonprofitProfile";
+import { computeNonprofitEnrichmentQuality, isPromotionReady } from "@/features/enrichment/computeContentQuality";
+import { mergeNonprofitEnrichmentWithGuards } from "@/features/enrichment/enrichmentMergeGuards";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
 import { isCommunityModeratorServer } from "@/lib/community/moderatorServer";
@@ -39,6 +41,18 @@ function mergeDefined(base, patch) {
   return out;
 }
 
+function attachQualityFields(mergedRow) {
+  const q = computeNonprofitEnrichmentQuality(mergedRow);
+  const ready = isPromotionReady(q, { namingReviewRequired: !!mergedRow.naming_review_required });
+  return {
+    ...mergedRow,
+    content_quality_score: q.score,
+    enrichment_qa_flags: q.flags,
+    last_quality_audit_at: new Date().toISOString(),
+    enrichment_promotion_ready: ready,
+  };
+}
+
 async function upsertEnrichmentMerged(supabase, ein9, patch) {
   const { data: existing, error: readErr } = await supabase
     .from(ENRICHMENT_TABLE)
@@ -47,7 +61,8 @@ async function upsertEnrichmentMerged(supabase, ein9, patch) {
     .maybeSingle();
   if (readErr) return { error: readErr };
   const merged = mergeDefined(existing, { ...patch, ein: ein9, updated_at: new Date().toISOString() });
-  return supabase.from(ENRICHMENT_TABLE).upsert(merged, { onConflict: "ein" });
+  const withQuality = attachQualityFields(merged);
+  return supabase.from(ENRICHMENT_TABLE).upsert(withQuality, { onConflict: "ein" });
 }
 
 function isMissingTable(error) {
@@ -163,12 +178,17 @@ export async function POST(request) {
     );
   }
 
-  const row = pipeline.enrichmentRow ? { ...pipeline.enrichmentRow, ein: ein9 } : null;
+  let row = pipeline.enrichmentRow ? { ...pipeline.enrichmentRow, ein: ein9 } : null;
   let persistError = null;
   let persisted = false;
 
   if (serviceKey) {
     if (row && pipeline.verified) {
+      const { data: existingRow } = await supabase.from(ENRICHMENT_TABLE).select("*").eq("ein", ein9).maybeSingle();
+      row = mergeNonprofitEnrichmentWithGuards(existingRow, row, {
+        verificationConfidence: pipeline.verification?.confidence ?? 0,
+        verified: true,
+      });
       const { error: upErr } = await upsertEnrichmentMerged(supabase, ein9, row);
       if (upErr && isMissingTable(upErr)) {
         const { error: fallbackErr, skipped } = await upsertProfileFallback(supabase, ein9, row);

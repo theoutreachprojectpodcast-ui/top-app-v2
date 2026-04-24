@@ -18,7 +18,7 @@ export async function researchOfficialWebsite({ recordWebsite }) {
   }
 
   const homeEx = extractFromHtml(home.html, home.finalUrl);
-  const extraUrls = discoverInternalContentUrls(home.html, home.finalUrl, 3);
+  const extraUrls = discoverInternalContentUrls(home.html, home.finalUrl, 5);
   const secondary = [];
   for (const url of extraUrls) {
     const r = await fetchWebsiteHtml(url, { maxBytes: 950_000, timeoutMs: 14_000 });

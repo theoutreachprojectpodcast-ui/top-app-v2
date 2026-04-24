@@ -1,8 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { withAuth } from "@workos-inc/authkit-nextjs";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
-import { isCommunityModeratorServer } from "@/lib/community/moderatorServer";
+import { requirePlatformAdminRouteContext } from "@/lib/admin/adminRouteContext";
 import {
   batchEnrichSponsorLogos,
   enrichSponsorLogoForSlug,
@@ -21,17 +18,6 @@ function clean(value) {
   return String(value ?? "").trim();
 }
 
-function moderatorForbiddenResponse() {
-  const hint =
-    process.env.NODE_ENV === "development"
-      ? "Add your WorkOS sign-in email to COMMUNITY_MODERATOR_EMAILS in .env.local (see .env.local.example)."
-      : undefined;
-  return Response.json(
-    { error: "forbidden", message: "Moderator access required.", ...(hint ? { hint } : {}) },
-    { status: 403 }
-  );
-}
-
 function missingServiceRoleResponse() {
   return Response.json(
     {
@@ -43,23 +29,10 @@ function missingServiceRoleResponse() {
   );
 }
 
-async function requireModerator(auth) {
-  if (!auth.user) {
-    return Response.json({ error: "unauthorized", message: "Sign in." }, { status: 401 });
-  }
-  const adminProfiles = createSupabaseAdminClient();
-  const profileRow = adminProfiles ? await getProfileRowByWorkOSId(adminProfiles, auth.user.id) : null;
-  if (!isCommunityModeratorServer({ email: auth.user.email, workosUserId: auth.user.id, profileRow })) {
-    return moderatorForbiddenResponse();
-  }
-  return null;
-}
-
 export async function GET(request) {
   if (!URL || !READ_KEY) return Response.json({ error: "Missing Supabase credentials." }, { status: 500 });
-  const auth = await withAuth();
-  const denied = await requireModerator(auth);
-  if (denied) return denied;
+  const ctx = await requirePlatformAdminRouteContext();
+  if (!ctx.ok) return ctx.response;
 
   const { searchParams } = new URL(request.url);
   const slug = clean(searchParams.get("slug"));
@@ -75,9 +48,8 @@ export async function GET(request) {
 export async function POST(request) {
   if (!URL) return Response.json({ error: "Missing Supabase credentials." }, { status: 500 });
   if (!SERVICE_KEY) return missingServiceRoleResponse();
-  const auth = await withAuth();
-  const denied = await requireModerator(auth);
-  if (denied) return denied;
+  const ctx = await requirePlatformAdminRouteContext();
+  if (!ctx.ok) return ctx.response;
 
   const body = await request.json().catch(() => ({}));
   const mode = clean(body.mode || "single").toLowerCase();
@@ -109,9 +81,8 @@ export async function POST(request) {
 export async function PATCH(request) {
   if (!URL) return Response.json({ error: "Missing Supabase credentials." }, { status: 500 });
   if (!SERVICE_KEY) return missingServiceRoleResponse();
-  const auth = await withAuth();
-  const denied = await requireModerator(auth);
-  if (denied) return denied;
+  const ctx = await requirePlatformAdminRouteContext();
+  if (!ctx.ok) return ctx.response;
 
   const body = await request.json().catch(() => ({}));
   const slug = clean(body.slug);

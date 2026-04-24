@@ -22,6 +22,7 @@ import {
 } from "@/features/profile/mappers";
 import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
 import { clearNavAuthCache, readNavAuthCache } from "@/lib/auth/navAuthCache";
+import { isDemoModeEnabled } from "@/lib/runtime/launchMode";
 import {
   fetchProfileByUserId,
   fetchSavedOrgEinList,
@@ -79,6 +80,7 @@ function profileToApiPatch(p) {
  * so navigating between `/`, `/profile`, etc. does not remount this hook and wipe cloud profile state.
  */
 export function useProfileDataState(supabase) {
+  const demoModeEnabled = isDemoModeEnabled();
   const hydratedRef = useRef(false);
   const syncingRef = useRef(false);
   const workosRef = useRef(false);
@@ -104,6 +106,7 @@ export function useProfileDataState(supabase) {
     podcastMemberContent: false,
     communityStorySubmit: false,
     isPrivilegedStaff: false,
+    isPlatformAdmin: false,
   });
   /** WorkOS session email from `GET /api/me` `user.email` (sign-in identity); may differ from `profile.email` after a settings change. */
   const [workOSAccountEmail, setWorkOSAccountEmail] = useState("");
@@ -122,7 +125,7 @@ export function useProfileDataState(supabase) {
       return;
     }
     const authState = loadJson(AUTH_KEY, { isAuthenticated: false });
-    if (authState?.isAuthenticated) {
+    if (demoModeEnabled && authState?.isAuthenticated) {
       workosRef.current = false;
       setSessionKind("demo");
       setIsAuthenticated(true);
@@ -140,6 +143,7 @@ export function useProfileDataState(supabase) {
           podcastMemberContent: !!data.entitlements.podcastMemberContent,
           communityStorySubmit: !!data.entitlements.communityStorySubmit,
           isPrivilegedStaff: !!data.entitlements.isPrivilegedStaff,
+          isPlatformAdmin: !!data.entitlements.isPlatformAdmin,
         });
       }
       if (data.user?.email != null) {
@@ -204,6 +208,7 @@ export function useProfileDataState(supabase) {
               podcastMemberContent: !!me.entitlements.podcastMemberContent,
               communityStorySubmit: !!me.entitlements.communityStorySubmit,
               isPrivilegedStaff: !!me.entitlements.isPrivilegedStaff,
+              isPlatformAdmin: !!me.entitlements.isPlatformAdmin,
             });
           }
           const raw =
@@ -248,6 +253,7 @@ export function useProfileDataState(supabase) {
             podcastMemberContent: false,
             communityStorySubmit: false,
             isPrivilegedStaff: false,
+            isPlatformAdmin: false,
           });
           hydratedRef.current = true;
           setLoadingProfile(false);
@@ -256,11 +262,11 @@ export function useProfileDataState(supabase) {
 
         workosRef.current = false;
         setWorkOSAccountEmail("");
-        setSessionKind("demo");
+        setSessionKind(demoModeEnabled ? "demo" : "none");
         const legacy = loadJson(PROFILE_KEY, defaultProfile());
         const storedFavs = loadJson(FAV_KEY, []);
         const authState = loadJson(AUTH_KEY, { isAuthenticated: false });
-        const authenticated = !!authState?.isAuthenticated;
+        const authenticated = demoModeEnabled ? !!authState?.isAuthenticated : false;
         const storedProvider = authState?.provider || null;
         setIsAuthenticated(authenticated);
         setAuthProvider(authenticated ? storedProvider || AUTH_PROVIDER.DEMO_EMAIL : null);
@@ -306,7 +312,7 @@ export function useProfileDataState(supabase) {
 
   useEffect(() => {
     async function bootstrapDemoCloud() {
-      if (!hydratedRef.current || workosRef.current) return;
+      if (!hydratedRef.current || workosRef.current || !demoModeEnabled) return;
       if (sessionKind !== "demo" || !isAuthenticated || !supabase || !userId) return;
       setLoadingProfile(true);
       setProfileError("");
@@ -328,17 +334,17 @@ export function useProfileDataState(supabase) {
   }, [sessionKind, isAuthenticated, supabase, userId]);
 
   useEffect(() => {
-    if (!hydratedRef.current || workosRef.current) return;
+    if (!hydratedRef.current || workosRef.current || !demoModeEnabled) return;
     saveJson(PROFILE_KEY, toLocalStorageProfile(profile));
   }, [profile]);
 
   useEffect(() => {
-    if (!hydratedRef.current || workosRef.current) return;
+    if (!hydratedRef.current || workosRef.current || !demoModeEnabled) return;
     saveJson(FAV_KEY, favoriteEins.slice(0, 500));
   }, [favoriteEins]);
 
   useEffect(() => {
-    if (workosRef.current) return;
+    if (workosRef.current || !demoModeEnabled) return;
     if (isAuthenticated) {
       saveJson(AUTH_KEY, {
         isAuthenticated: true,
@@ -480,6 +486,7 @@ export function useProfileDataState(supabase) {
       window.location.assign("/sign-out?returnTo=/");
       return;
     }
+    if (!demoModeEnabled) return;
     const cloudUserId = userId;
     const localKeysToClear = [
       PROFILE_KEY,
@@ -536,6 +543,9 @@ export function useProfileDataState(supabase) {
   }
 
   async function createAccount({ firstName = "", lastName = "", email = "", password = "", avatarUrl = "" } = {}) {
+    if (!demoModeEnabled) {
+      return { ok: false, message: "Demo account creation is disabled in this environment. Use WorkOS sign-up." };
+    }
     const safeFirst = String(firstName || "").trim();
     const safeLast = String(lastName || "").trim();
     const safeEmail = String(email || "").trim();
@@ -567,6 +577,9 @@ export function useProfileDataState(supabase) {
   }
 
   async function signInWithCredentials({ email = "", password = "" } = {}) {
+    if (!demoModeEnabled) {
+      return { ok: false, message: "Demo sign-in is disabled in this environment. Use WorkOS sign-in." };
+    }
     const safeEmail = String(email || "").trim();
     const safePassword = String(password || "").trim();
     if (!safeEmail) return { ok: false, message: "Enter your email to continue." };
@@ -630,6 +643,7 @@ export function useProfileDataState(supabase) {
       podcastMemberContent: false,
       communityStorySubmit: false,
       isPrivilegedStaff: false,
+      isPlatformAdmin: false,
     });
   }
 
@@ -696,5 +710,6 @@ export function useProfileDataState(supabase) {
     signOut,
     refreshWorkOSProfile,
     uploadAvatarFile,
+    entitlements,
   };
 }

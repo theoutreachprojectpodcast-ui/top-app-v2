@@ -1,12 +1,12 @@
 /** Session snapshot for instant header auth UI between client navigations (WorkOS cookie remains source of truth). */
 
-export const TORP_NAV_AUTH_CACHE_KEY = "torp_nav_auth_v1";
+export const TOP_NAV_AUTH_CACHE_KEY = "top_nav_auth_v1";
 const MAX_STALE_MS = 1000 * 60 * 45;
 
 export function readNavAuthCache() {
   if (typeof sessionStorage === "undefined") return null;
   try {
-    const raw = sessionStorage.getItem(TORP_NAV_AUTH_CACHE_KEY);
+    const raw = sessionStorage.getItem(TOP_NAV_AUTH_CACHE_KEY);
     if (!raw) return null;
     const o = JSON.parse(raw);
     if (!o || typeof o.t !== "number") return null;
@@ -21,7 +21,7 @@ export function writeNavAuthCache(authenticated, workos) {
   if (typeof sessionStorage === "undefined") return;
   try {
     sessionStorage.setItem(
-      TORP_NAV_AUTH_CACHE_KEY,
+      TOP_NAV_AUTH_CACHE_KEY,
       JSON.stringify({ authenticated: !!authenticated, workos: !!workos, t: Date.now() }),
     );
   } catch {
@@ -32,7 +32,7 @@ export function writeNavAuthCache(authenticated, workos) {
 export function clearNavAuthCache() {
   if (typeof sessionStorage === "undefined") return;
   try {
-    sessionStorage.removeItem(TORP_NAV_AUTH_CACHE_KEY);
+    sessionStorage.removeItem(TOP_NAV_AUTH_CACHE_KEY);
   } catch {
     /* ignore */
   }

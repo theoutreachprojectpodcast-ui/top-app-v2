@@ -3,16 +3,16 @@
  *
  * Required:
  *   - NODE_ENV !== "production"
- *   - TORP_LOCAL_DATA_SEED=1
- *   - TORP_SEED_COMMUNITY_AUTHOR_WORKOS_USER_IDS — 1–3 comma-separated WorkOS user ids (e.g. user_01ABC…).
+ *   - TOP_LOCAL_DATA_SEED=1
+ *   - TOP_SEED_COMMUNITY_AUTHOR_WORKOS_USER_IDS — 1–3 comma-separated WorkOS user ids (e.g. user_01ABC…).
  *     Use the same id repeated if you only have one test user: user_01ABC,user_01ABC,user_01ABC
  *
  * Optional:
- *   - TORP_SEED_TARGET_WORKOS_USER_ID — saved orgs + sample notifications (defaults to first author id)
- *   - TORP_SEED_TARGET_EMAIL — set on target profile upsert when that id is seeded
- *   - TORP_SEED_SPONSOR_APPLICANT_WORKOS_USER_ID — sets applicant_workos_user_id on the mission_partner seed row
+ *   - TOP_SEED_TARGET_WORKOS_USER_ID — saved orgs + sample notifications (defaults to first author id)
+ *   - TOP_SEED_TARGET_EMAIL — set on target profile upsert when that id is seeded
+ *   - TOP_SEED_SPONSOR_APPLICANT_WORKOS_USER_ID — sets applicant_workos_user_id on the mission_partner seed row
  *
- * Run: TORP_LOCAL_DATA_SEED=1 TORP_SEED_COMMUNITY_AUTHOR_WORKOS_USER_IDS=user_a,user_b,user_c pnpm seed:local-dev
+ * Run: TOP_LOCAL_DATA_SEED=1 TOP_SEED_COMMUNITY_AUTHOR_WORKOS_USER_IDS=user_a,user_b,user_c pnpm seed:local-dev
  */
 
 import fs from "node:fs";
@@ -65,8 +65,8 @@ function assertLocalOnly() {
     console.error("[torp-seed] Refusing: NODE_ENV is production.");
     process.exit(1);
   }
-  if (process.env.TORP_LOCAL_DATA_SEED !== "1") {
-    console.error("[torp-seed] Refusing: set TORP_LOCAL_DATA_SEED=1 to run this seed.");
+  if (process.env.TOP_LOCAL_DATA_SEED !== "1") {
+    console.error("[torp-seed] Refusing: set TOP_LOCAL_DATA_SEED=1 to run this seed.");
     process.exit(1);
   }
 }
@@ -88,8 +88,8 @@ function assertWorkOSUserId(id, label) {
  */
 function parseCommunityAuthorWorkOSIds() {
   const raw = String(
-    process.env.TORP_SEED_COMMUNITY_AUTHOR_WORKOS_USER_IDS ||
-      process.env.TORP_SEED_WORKOS_USER_IDS ||
+    process.env.TOP_SEED_COMMUNITY_AUTHOR_WORKOS_USER_IDS ||
+      process.env.TOP_SEED_WORKOS_USER_IDS ||
       "",
   ).trim();
   const parts = raw
@@ -97,7 +97,7 @@ function parseCommunityAuthorWorkOSIds() {
     .map((s) => s.trim())
     .filter(Boolean);
   if (parts.length < 1) return [];
-  for (const p of parts) assertWorkOSUserId(p, "TORP_SEED_COMMUNITY_AUTHOR_WORKOS_USER_IDS entry");
+  for (const p of parts) assertWorkOSUserId(p, "TOP_SEED_COMMUNITY_AUTHOR_WORKOS_USER_IDS entry");
   if (parts.length > 3) {
     console.warn("[torp-seed] More than 3 author ids provided; using the first 3.");
   }
@@ -131,7 +131,7 @@ async function pickAuthorIdsFromProfiles(admin) {
   }
   if (!ids.length) {
     throw new Error(
-      "No WorkOS users found in torp_profiles. Sign in once with WorkOS or set TORP_SEED_COMMUNITY_AUTHOR_WORKOS_USER_IDS.",
+      "No WorkOS users found in torp_profiles. Sign in once with WorkOS or set TOP_SEED_COMMUNITY_AUTHOR_WORKOS_USER_IDS.",
     );
   }
   while (ids.length < 3) ids.push(ids[ids.length - 1]);
@@ -229,7 +229,7 @@ function targetProfileUpsert(workosUserId) {
     membership_source: "onboarding",
     onboarding_completed: true,
     banner: "Local development profile — seeded",
-    bio: "Upserted by scripts/seed-local-dev-data.mjs for TORP_SEED_TARGET_WORKOS_USER_ID (WorkOS-aligned).",
+    bio: "Upserted by scripts/seed-local-dev-data.mjs for TOP_SEED_TARGET_WORKOS_USER_ID (WorkOS-aligned).",
     theme: "clean",
     stripe_customer_id: "cus_localSeedTarget",
     metadata: {
@@ -244,7 +244,7 @@ function targetProfileUpsert(workosUserId) {
     },
     updated_at: nowIso(),
   };
-  const em = String(process.env.TORP_SEED_TARGET_EMAIL || "").trim();
+  const em = String(process.env.TOP_SEED_TARGET_EMAIL || "").trim();
   if (em) row.email = em;
   return row;
 }
@@ -261,10 +261,10 @@ function buildProfileUpsertRows(authorIds, targetWorkosId) {
   }
   const rows = [...unique.values()];
   if (targetWorkosId && !unique.has(targetWorkosId)) {
-    assertWorkOSUserId(targetWorkosId, "TORP_SEED_TARGET_WORKOS_USER_ID");
+    assertWorkOSUserId(targetWorkosId, "TOP_SEED_TARGET_WORKOS_USER_ID");
     rows.push(targetProfileUpsert(targetWorkosId));
   } else if (targetWorkosId && unique.has(targetWorkosId)) {
-    const em = String(process.env.TORP_SEED_TARGET_EMAIL || "").trim();
+    const em = String(process.env.TOP_SEED_TARGET_EMAIL || "").trim();
     const idx = rows.findIndex((r) => r.workos_user_id === targetWorkosId);
     if (idx >= 0 && em) rows[idx].email = em;
   }
@@ -465,8 +465,10 @@ async function seedSavedOrgs(admin, workosUserId) {
 }
 
 async function seedSponsorApplications(admin) {
-  const applicantWid = String(process.env.TORP_SEED_SPONSOR_APPLICANT_WORKOS_USER_ID || "").trim();
-  if (applicantWid) assertWorkOSUserId(applicantWid, "TORP_SEED_SPONSOR_APPLICANT_WORKOS_USER_ID");
+  const applicantWid = String(
+    process.env.TOP_SEED_SPONSOR_APPLICANT_WORKOS_USER_ID || "",
+  ).trim();
+  if (applicantWid) assertWorkOSUserId(applicantWid, "TOP_SEED_SPONSOR_APPLICANT_WORKOS_USER_ID");
 
   const rows = [
     {
@@ -681,13 +683,13 @@ async function main() {
   let authorIds = parseCommunityAuthorWorkOSIds();
   if (!authorIds.length) {
     console.warn(
-      "[torp-seed] TORP_SEED_COMMUNITY_AUTHOR_WORKOS_USER_IDS not set; using recent WorkOS users from torp_profiles.",
+      "[torp-seed] TOP_SEED_COMMUNITY_AUTHOR_WORKOS_USER_IDS not set; using recent WorkOS users from torp_profiles.",
     );
     authorIds = await pickAuthorIdsFromProfiles(admin);
   }
-  const targetExplicit = String(process.env.TORP_SEED_TARGET_WORKOS_USER_ID || "").trim();
+  const targetExplicit = String(process.env.TOP_SEED_TARGET_WORKOS_USER_ID || "").trim();
   const targetWorkos = targetExplicit || authorIds[0];
-  if (targetExplicit) assertWorkOSUserId(targetExplicit, "TORP_SEED_TARGET_WORKOS_USER_ID");
+  if (targetExplicit) assertWorkOSUserId(targetExplicit, "TOP_SEED_TARGET_WORKOS_USER_ID");
 
   console.log("[torp-seed] Community authors (WorkOS user ids):", authorIds.join(", "));
   console.log("[torp-seed] Target for saved orgs + notifications:", targetWorkos);

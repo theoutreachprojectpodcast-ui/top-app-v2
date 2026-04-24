@@ -25,7 +25,6 @@ import PodcastSectionHeader from "@/features/podcasts/components/PodcastSectionH
 import SponsorStrip from "@/features/podcasts/components/SponsorStrip";
 import MemberOnlyLockSection from "@/features/podcasts/components/MemberOnlyLockSection";
 import PodcastCTASection from "@/features/podcasts/components/PodcastCTASection";
-import PodcastGuestApplicationsAdmin from "@/features/podcasts/components/PodcastGuestApplicationsAdmin";
 import PodcastApplyGuestForm from "@/features/podcasts/components/PodcastApplyGuestForm";
 import "@/features/podcasts/styles/podcasts.css";
 
@@ -90,7 +89,6 @@ export default function PodcastsLandingPage({ initialEpisodes = [] }) {
 
   const featured = episodes.find((item) => item.is_featured) || episodes[0] || null;
   const publicEpisodes = episodes.filter((item) => !item.is_member_only).slice(0, 10);
-  const canReviewApplications = canAccessMembers;
   const approvedApplications = guestApplications.filter((row) => String(row.status || "").toLowerCase() === "approved");
   const upcomingFromApplications = approvedApplications.map((row) => ({
     id: `application-${row.id}`,
@@ -186,15 +184,6 @@ export default function PodcastsLandingPage({ initialEpisodes = [] }) {
         <SponsorStrip sponsors={sponsors} />
         <MemberOnlyLockSection canAccess={canAccessMembers} items={memberItems} />
         <PodcastCTASection onApply={() => setApplyOpen(true)} />
-        <hr className="podcastAdminDivider" />
-        <section className="podcastSection podcastAdminWrap">
-          <PodcastSectionHeader eyebrow="Admin" title="Podcast application review" subtitle="Review, request more info, and accept new guests." />
-          {canReviewApplications || guestApplications.length ? (
-            <PodcastGuestApplicationsAdmin supabase={supabase} />
-          ) : (
-            <p className="podcastMuted">Admin review tools appear when podcast applications are available for this account.</p>
-          )}
-        </section>
       </div>
       {applyOpen ? (
         <div

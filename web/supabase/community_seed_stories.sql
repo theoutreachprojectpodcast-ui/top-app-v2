@@ -4,7 +4,7 @@
 -- (`seed-community-torp`), which does not match production (WorkOS session user ids).
 --
 -- For localhost, use the Node seed instead (real WorkOS user ids from your dashboard):
---   TORP_LOCAL_DATA_SEED=1 TORP_SEED_COMMUNITY_AUTHOR_WORKOS_USER_IDS=user_xxx,user_yyy,user_zzz pnpm seed:local-dev
+--   TOP_LOCAL_DATA_SEED=1 TOP_SEED_COMMUNITY_AUTHOR_WORKOS_USER_IDS=user_xxx,user_yyy,user_zzz pnpm seed:local-dev
 --
 -- See web/scripts/seed-local-dev-data.mjs and web/.env.local.example.
 --

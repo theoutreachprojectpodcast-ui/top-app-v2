@@ -1,6 +1,6 @@
 # tORP v0.3 — Membership, sponsors, community seed (implementation pass)
 
-See also: **`docs/TORP_V0_3_SESSION_ENRICHMENT_BILLING.md`** (persistent nav auth snapshot, enrichment batch script, podcast Stripe env + APIs).
+See also: **`docs/TOP_V0_3_SESSION_ENRICHMENT_BILLING.md`** (persistent nav auth snapshot, enrichment batch script, podcast Stripe env + APIs).
 
 ## Membership naming & visuals
 
@@ -15,7 +15,7 @@ See also: **`docs/TORP_V0_3_SESSION_ENRICHMENT_BILLING.md`** (persistent nav aut
 
 ## Community stories seed
 
-- **WorkOS-aligned:** use `pnpm seed:local-dev` with `TORP_LOCAL_DATA_SEED=1` and `TORP_SEED_COMMUNITY_AUTHOR_WORKOS_USER_IDS` set to real WorkOS user ids (see `scripts/seed-local-dev-data.mjs`, `.env.local.example`). `community_posts.author_id` matches session `auth.user.id`.
+- **WorkOS-aligned:** use `pnpm seed:local-dev` with `TOP_LOCAL_DATA_SEED=1` and `TOP_SEED_COMMUNITY_AUTHOR_WORKOS_USER_IDS` set to real WorkOS user ids (see `scripts/seed-local-dev-data.mjs`, `.env.local.example`). `community_posts.author_id` matches session `auth.user.id`.
 - `supabase/community_seed_stories.sql` is deprecated (no-op); do not rely on non–WorkOS `author_id` values.
 - Feed loads via `/api/community/posts` (no frontend-only mocks for production).
 

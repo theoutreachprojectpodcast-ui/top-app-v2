@@ -3,6 +3,8 @@ import path from "node:path";
 
 const requiredRouteFiles = [
   "src/app/page.js",
+  "src/app/admin/layout.js",
+  "src/app/admin/page.js",
   "src/app/profile/page.js",
   "src/app/settings/page.js",
   "src/app/community/page.js",
