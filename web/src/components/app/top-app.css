@@ -4547,6 +4547,88 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   }
 }
 
+@media (max-width: 1024px) {
+  .topApp {
+    --content-gutter: 32px;
+  }
+  .topbarActionsCluster {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .shell,
+  .content {
+    width: min(var(--content-max-width), calc(100% - var(--content-gutter)));
+  }
+}
+
+@media (max-width: 520px) {
+  .topApp {
+    --content-gutter: 18px;
+    padding-bottom: 190px;
+  }
+  .card,
+  .panel {
+    padding: 14px;
+  }
+  .row {
+    flex-wrap: wrap;
+    align-items: stretch;
+  }
+  .row > .btnPrimary,
+  .row > .btnSoft,
+  .row > a.btnPrimary,
+  .row > a.btnSoft {
+    width: 100%;
+    min-height: 44px;
+  }
+  .modalOverlay {
+    place-items: start center;
+    padding: 10px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .modalCard {
+    width: min(100%, 100%);
+    max-height: calc(100dvh - 20px);
+    overflow-y: auto;
+  }
+  .footerDockBackdrop {
+    height: calc(70px + env(safe-area-inset-bottom));
+  }
+  .footerNavInner {
+    padding: 8px 0 calc(10px + env(safe-area-inset-bottom));
+  }
+  .bottomNav {
+    gap: 4px;
+  }
+  .navItem {
+    min-height: 44px;
+    font-size: 11px;
+    line-height: 1.15;
+    white-space: normal;
+    padding: 7px 4px;
+  }
+}
+
+@media (max-width: 390px) {
+  .topApp {
+    --content-gutter: 14px;
+  }
+  .topbarInner {
+    gap: 4px;
+  }
+  .sponsorBtn {
+    min-width: 0;
+    padding-inline: 10px;
+  }
+  .headerNotificationBellBtn,
+  .headerAccountAvatar.profileAvatarShell,
+  .headerAccountTrigger {
+    width: 40px;
+    height: 40px;
+  }
+}
+
 /* ── Nonprofit directory profile (standalone route) ── */
 .nonprofitTypeLine {
   margin: 4px 0 0;

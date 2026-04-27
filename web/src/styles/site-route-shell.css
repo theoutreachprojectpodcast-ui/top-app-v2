@@ -65,3 +65,24 @@
 .onboardingRouteWrap {
   width: 100%;
 }
+
+@media (max-width: 1024px) {
+  .appShell--siteChrome.appShell--subpage .shell,
+  .appShell--sponsors.appShell--subpage .shell {
+    padding-top: calc(var(--header-floating-offset) + var(--header-floating-height) + var(--header-fade-height));
+  }
+}
+
+@media (max-width: 760px) {
+  .appShell--siteChrome.appShell--subpage .shell,
+  .appShell--sponsors.appShell--subpage .shell {
+    gap: 16px;
+    padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .onboardingRouteToolbar,
+  .nonprofitProfileToolbar {
+    width: min(var(--content-max-width), calc(100% - var(--content-gutter)));
+    padding-top: 6px;
+  }
+}

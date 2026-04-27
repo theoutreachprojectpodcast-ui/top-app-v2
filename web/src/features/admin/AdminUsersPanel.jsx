@@ -75,7 +75,6 @@ export default function AdminUsersPanel() {
           value={qInput}
           onChange={(e) => setQInput(e.target.value)}
           placeholder="email or name"
-          style={{ minWidth: "220px" }}
           onKeyDown={(e) => {
             if (e.key === "Enter") void load();
           }}
@@ -107,14 +106,14 @@ export default function AdminUsersPanel() {
           <tbody>
             {rows.map((r) => (
               <tr key={r.id}>
-                <td>{r.email || "—"}</td>
-                <td>
+                <td data-label="Email">{r.email || "—"}</td>
+                <td data-label="Name">
                   {(r.first_name || "") + " " + (r.last_name || "")}
                   <div className="adminMuted" style={{ fontSize: "0.75rem" }}>
                     {r.workos_user_id}
                   </div>
                 </td>
-                <td>
+                <td data-label="Role">
                   <select
                     className="adminConsoleInput"
                     value={String(r.platform_role || "user")}
@@ -128,12 +127,12 @@ export default function AdminUsersPanel() {
                     ))}
                   </select>
                 </td>
-                <td>
+                <td data-label="Membership">
                   {r.membership_tier} / {r.membership_status}
                 </td>
-                <td>{r.onboarding_status}</td>
-                <td>{r.stripe_customer_id ? "yes" : "—"}</td>
-                <td>
+                <td data-label="Onboarding">{r.onboarding_status}</td>
+                <td data-label="Stripe">{r.stripe_customer_id ? "yes" : "—"}</td>
+                <td data-label="Actions" className="adminActionCell">
                   <select
                     className="adminConsoleInput"
                     value={String(r.membership_status || "none")}

@@ -75,6 +75,12 @@
   margin-bottom: 12px;
 }
 
+.adminConsole .adminSessionEmail {
+  width: min(var(--content-max-width), calc(100% - var(--content-gutter)));
+  margin: 0 auto;
+  padding: 4px 16px 0;
+}
+
 .adminConsole .adminConsoleInput,
 .adminConsole select.adminConsoleInput {
   border: 1px solid var(--color-border-subtle);
@@ -90,4 +96,120 @@
   min-height: 88px;
   width: 100%;
   resize: vertical;
+}
+
+.adminConsole .adminPanelBody {
+  display: grid;
+  gap: 10px;
+}
+
+.adminConsole .adminFieldStack {
+  display: grid;
+  gap: 10px;
+  max-width: 720px;
+}
+
+.adminConsole .adminActionCell {
+  display: grid;
+  gap: 8px;
+}
+
+@media (max-width: 1024px) {
+  .adminConsole .adminConsoleNav {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 8px;
+    scrollbar-width: thin;
+  }
+
+  .adminConsole .adminConsoleNav a {
+    flex: 0 0 auto;
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .adminConsole .adminToolbar {
+    align-items: stretch;
+  }
+}
+
+@media (max-width: 760px) {
+  .adminConsole .adminConsoleMain {
+    padding-top: 12px;
+  }
+
+  .adminConsole .adminPanel {
+    padding: 12px;
+  }
+
+  .adminConsole .topbarActionsCluster {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+
+  .adminConsole .topbarActionsCluster .btnSoft {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .adminConsole .adminToolbar {
+    display: grid;
+    gap: 8px;
+  }
+
+  .adminConsole .adminToolbar .btnPrimary,
+  .adminConsole .adminToolbar .btnSoft,
+  .adminConsole .adminToolbar .adminConsoleInput {
+    width: 100%;
+    min-height: 42px;
+  }
+
+  .adminConsole .adminTableWrap {
+    overflow: visible;
+    max-height: none;
+  }
+
+  .adminConsole table.adminTable,
+  .adminConsole table.adminTable thead,
+  .adminConsole table.adminTable tbody,
+  .adminConsole table.adminTable tr,
+  .adminConsole table.adminTable th,
+  .adminConsole table.adminTable td {
+    display: block;
+    width: 100%;
+  }
+
+  .adminConsole table.adminTable thead {
+    display: none;
+  }
+
+  .adminConsole table.adminTable tr {
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-md, 8px);
+    margin-bottom: 10px;
+    background: color-mix(in srgb, var(--color-bg-secondary) 62%, transparent);
+    overflow: hidden;
+  }
+
+  .adminConsole table.adminTable td {
+    border-bottom: 1px solid var(--color-border-subtle);
+    padding: 10px;
+  }
+
+  .adminConsole table.adminTable td:last-child {
+    border-bottom: 0;
+  }
+
+  .adminConsole table.adminTable td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 4px;
+    color: var(--color-text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
 }

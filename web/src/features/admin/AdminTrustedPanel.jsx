@@ -138,7 +138,7 @@ export default function AdminTrustedPanel() {
         </div>
       ) : null}
       {selectedId ? (
-        <div style={{ display: "grid", gap: "10px", maxWidth: "720px" }}>
+        <div className="adminFieldStack">
           {EDIT_KEYS.map((key) => (
             <div key={key}>
               <label className="fieldLabel" htmlFor={`tr-${key}`}>

@@ -120,7 +120,7 @@ export default function AdminNonprofitPanel() {
       ) : null}
       {status ? <p style={{ color: "var(--color-success, #166534)" }}>{status}</p> : null}
       {ein ? (
-        <div style={{ display: "grid", gap: "10px", maxWidth: "720px" }}>
+        <div className="adminFieldStack">
           {FIELDS.map(([key, label]) => (
             <div key={key}>
               <label className="fieldLabel" htmlFor={`nf-${key}`}>

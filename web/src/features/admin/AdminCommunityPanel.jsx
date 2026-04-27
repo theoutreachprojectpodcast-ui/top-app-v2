@@ -110,7 +110,7 @@ export default function AdminCommunityPanel() {
       ) : null}
       {loading ? <p className="adminMuted">Loading…</p> : null}
       {!loading && posts.length === 0 ? <p className="adminMuted">No posts in this queue.</p> : null}
-      <div style={{ display: "grid", gap: "16px" }}>
+      <div className="adminPanelBody" style={{ gap: "16px" }}>
         {posts.map((p) => (
           <div
             key={p.id}
@@ -128,7 +128,7 @@ export default function AdminCommunityPanel() {
                   {p.admin_bookmark ? " · bookmarked" : ""}
                 </div>
               </div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+              <div className="adminActionCell" style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                 {tab === "pending" ? (
                   <>
                     <button
@@ -177,7 +177,7 @@ export default function AdminCommunityPanel() {
             </div>
             <p style={{ marginTop: "10px", whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{p.body}</p>
             {editId === p.id ? (
-              <div style={{ marginTop: "12px", display: "grid", gap: "8px" }}>
+              <div className="adminFieldStack" style={{ marginTop: "12px" }}>
                 <label className="fieldLabel" htmlFor={`t-${p.id}`}>
                   Title
                 </label>
@@ -191,7 +191,7 @@ export default function AdminCommunityPanel() {
                   Body
                 </label>
                 <textarea id={`b-${p.id}`} className="adminConsoleInput" value={editBody} onChange={(e) => setEditBody(e.target.value)} />
-                <div style={{ display: "flex", gap: "8px" }}>
+                <div className="row wrap">
                   <button type="button" className="btnPrimary" disabled={!!busy} onClick={() => saveEdit(p.id)}>
                     Save edit
                   </button>

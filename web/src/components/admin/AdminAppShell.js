@@ -55,7 +55,7 @@ export default function AdminAppShell({ children, sessionEmail = "" }) {
       </nav>
 
       {sessionEmail ? (
-        <p className="adminMuted" style={{ width: "min(var(--content-max-width), calc(100% - var(--content-gutter)))", margin: "0 auto", padding: "4px 16px 0" }}>
+        <p className="adminMuted adminSessionEmail">
           Signed in as {sessionEmail}
         </p>
       ) : null}
