@@ -1324,6 +1324,16 @@
     overflow: visible;
   }
 
+  /* Mobile podcast dock keeps only Home, Profile, Contact. */
+  .appShell--podcast .bottomNav .navItem:nth-child(2),
+  .appShell--podcast .bottomNav .navItem:nth-child(3),
+  .appShell--podcast .bottomNav .navItem:nth-child(4) {
+    display: none;
+  }
+  .appShell--podcast .bottomNav .navItem:nth-child(1) { order: 1; }
+  .appShell--podcast .bottomNav .navItem:nth-child(5) { order: 2; }
+  .appShell--podcast .bottomNav .navItem:nth-child(6) { order: 3; }
+
   .appShell--podcast .navItem {
     width: 100%;
     min-width: 0;
