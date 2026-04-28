@@ -4587,6 +4587,38 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
     --content-gutter: 18px;
     padding-bottom: 190px;
   }
+  .topbarInner {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "left"
+      "right";
+    gap: 8px;
+  }
+  .topbarCenter {
+    display: none;
+  }
+  .topbarLeft,
+  .topbarRight {
+    justify-content: center;
+    justify-self: stretch;
+    width: 100%;
+  }
+  .topbarLeft .topbarActionsCluster,
+  .topbarRight .topbarActionsCluster {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .topbarLeft .sponsorBtn {
+    display: none;
+  }
+  .topbarRight .sponsorBtn,
+  .topbarRight a.btnSoft,
+  .topbarRight button.btnSoft {
+    min-height: 40px;
+    padding-inline: 12px;
+    min-width: 0;
+  }
   .card,
   .panel {
     padding: 14px;
