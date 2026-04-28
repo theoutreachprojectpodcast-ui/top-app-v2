@@ -6,6 +6,16 @@
     "dev": "pnpm --filter web dev",
     "build": "pnpm --filter web build",
     "start": "pnpm --filter web start",
-    "lint": "pnpm --filter web lint"
+    "lint": "pnpm --filter web lint",
+    "verify:nonprofit-canonical-names": "pnpm --dir web run verify:nonprofit-canonical-names",
+    "seed:sponsors": "pnpm --dir web run seed:sponsors",
+    "enrich:sponsors": "pnpm --dir web run enrich:sponsors",
+    "sync:podcast-youtube": "pnpm --dir web run sync:podcast-youtube",
+    "verify:platform-names": "pnpm --dir web run verify:platform-names",
+    "repair:trusted-display-names": "pnpm --dir web run repair:trusted-display-names",
+    "vercel": "vercel"
+  },
+  "devDependencies": {
+    "vercel": "^51.7.0"
   }
 }

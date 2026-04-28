@@ -1,44 +1,69 @@
+import { SPONSOR_REVIEW_STATUSES } from "@/features/sponsors/admin/reviewStatuses";
+
 const APPLICATION_TABLE = "sponsor_applications";
-const LOCAL_FALLBACK_KEY = "top_sponsor_applications_demo";
+const REVIEWABLE_STATUSES = new Set(SPONSOR_REVIEW_STATUSES);
 
-function pushLocalFallback(record) {
-  if (typeof window === "undefined") return;
+/**
+ * Submit sponsor application — server-side insert (applicants may be logged out).
+ */
+export async function submitSponsorApplication(_supabase, payload) {
   try {
-    const raw = localStorage.getItem(LOCAL_FALLBACK_KEY);
-    const list = raw ? JSON.parse(raw) : [];
-    list.unshift(record);
-    localStorage.setItem(LOCAL_FALLBACK_KEY, JSON.stringify(list.slice(0, 200)));
+    const res = await fetch("/api/sponsor-applications", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (res.ok) {
+      return { ok: true, localOnly: false, id: json.id, inviteQueued: json.inviteQueued };
+    }
+    return {
+      ok: false,
+      error: json.error || json.message || `Submit failed (${res.status})`,
+    };
   } catch {
-    // ignore local fallback failures
+    return { ok: false, error: "Network error while submitting application." };
   }
 }
 
-export async function submitSponsorApplication(supabase, payload) {
-  const application = {
-    ...payload,
-    application_status: payload.application_status || "submitted",
-    payment_status: payload.payment_status || "unpaid",
-    payment_demo_status: payload.payment_demo_status || "unpaid",
-  };
-
-  if (!supabase) {
-    pushLocalFallback({ ...application, local_only: true, created_at: new Date().toISOString() });
-    return { ok: true, localOnly: true };
+export async function listSponsorApplications(_supabase) {
+  try {
+    const res = await fetch("/api/admin/sponsor-applications", { credentials: "include" });
+    if (res.status === 403 || res.status === 401) {
+      return { ok: true, records: [], localOnly: false, forbidden: true };
+    }
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { ok: false, records: [], error: json.error || "Could not load applications." };
+    }
+    return { ok: true, records: Array.isArray(json.records) ? json.records : [], localOnly: false };
+  } catch {
+    return { ok: false, records: [], error: "Network error." };
   }
-
-  const { error } = await supabase.from(APPLICATION_TABLE).insert(application);
-  if (!error) return { ok: true, localOnly: false };
-
-  pushLocalFallback({
-    ...application,
-    local_only: true,
-    created_at: new Date().toISOString(),
-    supabase_error: error.message,
-  });
-  return {
-    ok: true,
-    localOnly: true,
-    warning: "Sponsor application saved locally because the Supabase table is not yet deployed.",
-  };
 }
 
+export async function updateSponsorApplicationReview(_supabase, applicationId, status, internalNotes = "") {
+  if (!applicationId || !REVIEWABLE_STATUSES.has(status)) {
+    return { ok: false, error: "Invalid review update payload." };
+  }
+
+  try {
+    const res = await fetch("/api/admin/sponsor-applications", {
+      method: "PATCH",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: applicationId,
+        application_status: status,
+        internal_notes: String(internalNotes || ""),
+      }),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { ok: false, error: json.error || "Review update failed." };
+    }
+    return { ok: true, localOnly: false };
+  } catch {
+    return { ok: false, error: "Network error." };
+  }
+}

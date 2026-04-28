@@ -1,40 +1,37 @@
 "use client";
 
-import Image from "next/image";
+import { useColorScheme } from "@/components/app/ColorSchemeRoot";
 
-const PROFILE_PX = 44;
+const DEFAULT_LOGO_DARK = "/brand-logo-site-dark.png";
+const DEFAULT_LOGO_LIGHT = "/brand-logo-site-light.png";
+const DEFAULT_MARK_DARK = "/brand-logo-mark-dark.png";
+const DEFAULT_MARK_LIGHT = "/brand-logo-mark-light.png";
 
 /** Committed under `web/public/`. Override with `NEXT_PUBLIC_BRAND_LOGO_PATH` or `src`. */
-const DEFAULT_LOGO = "/brand-logo-full.png";
-
 export default function BrandMark({
   size = "header",
   className = "",
   alt = "The Outreach Project",
   src,
+  variant = "full",
 }) {
-  const logoSrc = src || (typeof process !== "undefined" && process.env.NEXT_PUBLIC_BRAND_LOGO_PATH) || DEFAULT_LOGO;
+  const { colorScheme } = useColorScheme();
+  const isLight = colorScheme === "light";
 
-  if (size === "header") {
-    return (
-      <img
-        src={logoSrc}
-        alt={alt}
-        width={768}
-        height={768}
-        decoding="async"
-        fetchPriority="high"
-        className={`brandMarkImg brandMarkImg--header ${className}`.trim()}
-      />
-    );
-  }
+  const envOverride = typeof process !== "undefined" ? process.env.NEXT_PUBLIC_BRAND_LOGO_PATH : "";
+  const logoSrc = src || envOverride || (variant === "mark"
+    ? (isLight ? DEFAULT_MARK_LIGHT : DEFAULT_MARK_DARK)
+    : (isLight ? DEFAULT_LOGO_LIGHT : DEFAULT_LOGO_DARK));
 
-  const px = PROFILE_PX;
+  const variantClass = size === "header" ? "brandMarkImg--header" : `brandMarkImg--${size}`;
+
   return (
-    <div className={`brandMark brandMark-${size} brandMarkFrame ${className}`.trim()} style={{ width: px, height: px }}>
-      <div className="brandMarkInner">
-        <Image src={logoSrc} alt={alt} fill sizes={`${px}px`} className="brandMarkImg" unoptimized />
-      </div>
-    </div>
+    <img
+      src={logoSrc}
+      alt={alt}
+      decoding="async"
+      fetchPriority={size === "header" ? "high" : "auto"}
+      className={`brandMarkImg ${variantClass} ${className}`.trim()}
+    />
   );
 }

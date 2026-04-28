@@ -1,49 +1,100 @@
 "use client";
 
-import { useState } from "react";
-import BecomeASponsorPage from "@/features/sponsors/components/BecomeASponsorPage";
-import SponsorApplicationForm from "@/features/sponsors/components/SponsorApplicationForm";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { listSponsorsCatalog, mapSponsorsToCardModels } from "@/features/sponsors/api/sponsorCatalogApi";
+import { getSupabaseClient } from "@/lib/supabase/client";
+import MissionPartnerPackagesModal from "@/features/sponsors/components/MissionPartnerPackagesModal";
+import MissionSponsorApplyModal from "@/features/sponsors/components/MissionSponsorApplyModal";
 import SponsorsLandingPage from "@/features/sponsors/components/SponsorsLandingPage";
 import { SPONSOR_TIERS } from "@/features/sponsors/data/sponsorTiers";
 
-export default function SponsorHub({ supabase }) {
-  const [step, setStep] = useState("landing");
-  const [applicationOpen, setApplicationOpen] = useState(false);
-  const [selectedTierId, setSelectedTierId] = useState(SPONSOR_TIERS[0].id);
+export default function SponsorHub({ supabase: supabaseProp }) {
+  const supabaseClient = useMemo(() => getSupabaseClient(), []);
+  const supabase = supabaseProp ?? supabaseClient;
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [sponsors, setSponsors] = useState([]);
+  const [missionApplyOpen, setMissionApplyOpen] = useState(false);
+  const [missionPackagesOpen, setMissionPackagesOpen] = useState(false);
+  const [missionApplyTierId, setMissionApplyTierId] = useState(SPONSOR_TIERS[0]?.id);
+
+  async function loadSponsors() {
+    const rows = await listSponsorsCatalog(supabase);
+    setSponsors(rows);
+  }
+
+  useEffect(() => {
+    loadSponsors();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [supabase]);
+
+  useEffect(() => {
+    const tier = searchParams.get("tier");
+    if (tier && SPONSOR_TIERS.some((t) => t.id === tier)) {
+      setMissionApplyTierId(tier);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    const apply = searchParams.get("apply") === "1";
+    const packages = searchParams.get("packages") === "1";
+    if (apply) {
+      setMissionApplyOpen(true);
+      setMissionPackagesOpen(false);
+    } else if (packages) {
+      setMissionPackagesOpen(true);
+      setMissionApplyOpen(false);
+    }
+  }, [searchParams]);
+
+  function clearModalQueries() {
+    if (!searchParams.get("apply") && !searchParams.get("packages") && !searchParams.get("tier")) return;
+    router.replace("/sponsors", { scroll: false });
+  }
+
+  function openMissionPackages() {
+    setMissionPackagesOpen(true);
+    setMissionApplyOpen(false);
+  }
+
+  function closeMissionPackages() {
+    setMissionPackagesOpen(false);
+    clearModalQueries();
+  }
+
+  function openMissionApply(tierId) {
+    if (tierId && SPONSOR_TIERS.some((t) => t.id === tierId)) {
+      setMissionApplyTierId(tierId);
+    }
+    setMissionPackagesOpen(false);
+    setMissionApplyOpen(true);
+  }
+
+  function closeMissionApply() {
+    setMissionApplyOpen(false);
+    clearModalQueries();
+  }
 
   return (
     <>
-      {step === "landing" ? (
-        <SponsorsLandingPage onExploreOptions={() => setStep("options")} />
-      ) : (
-        <BecomeASponsorPage
-          selectedTierId={selectedTierId}
-          onSelectTier={setSelectedTierId}
-          onBack={() => setStep("landing")}
-          onOpenApplication={() => setApplicationOpen(true)}
-        />
-      )}
-
-      {applicationOpen ? (
-        <div className="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="sponsor-app-title" onClick={() => setApplicationOpen(false)}>
-          <div className="modalCard sponsorApplyModal" onClick={(e) => e.stopPropagation()}>
-            <div className="sponsorApplyModalHead">
-              <h3 id="sponsor-app-title">Sponsor application</h3>
-              <button className="btnSoft sponsorModalClose" type="button" onClick={() => setApplicationOpen(false)}>
-                Close
-              </button>
-            </div>
-            <SponsorApplicationForm
-              supabase={supabase}
-              selectedTierId={selectedTierId}
-              onSelectTier={setSelectedTierId}
-              onClose={() => setApplicationOpen(false)}
-              variant="modal"
-            />
-          </div>
-        </div>
-      ) : null}
+      <SponsorsLandingPage
+        sponsors={mapSponsorsToCardModels(sponsors)}
+        onOpenMissionPackages={openMissionPackages}
+        onOpenMissionApply={openMissionApply}
+      />
+      <MissionPartnerPackagesModal
+        open={missionPackagesOpen}
+        onClose={closeMissionPackages}
+        onRequestApply={(tierId) => openMissionApply(tierId)}
+        initialTierId={searchParams.get("tier") || undefined}
+      />
+      <MissionSponsorApplyModal
+        open={missionApplyOpen}
+        onClose={closeMissionApply}
+        initialTierId={missionApplyTierId}
+        supabase={supabase}
+      />
     </>
   );
 }
-

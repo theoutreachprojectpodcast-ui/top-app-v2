@@ -13,6 +13,7 @@ create table if not exists public.sponsor_applications (
   company_description text,
   contact_role text,
   sponsor_family text not null,
+  sponsor_program_type text not null default 'main_app',
   sponsor_tier_id text,
   sponsor_tier_name text not null,
   sponsor_tier_amount integer not null,
@@ -29,12 +30,59 @@ create table if not exists public.sponsor_applications (
   payment_status text not null default 'unpaid',
   payment_demo_status text not null default 'unpaid',
   application_status text not null default 'draft',
-  internal_notes text
+  internal_notes text,
+  reviewed_at timestamptz
 );
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'sponsor_applications_status_check'
+  ) then
+    alter table public.sponsor_applications
+      add constraint sponsor_applications_status_check
+      check (application_status in ('draft', 'submitted', 'in_review', 'more_info_requested', 'approved', 'denied', 'returned_for_revision'));
+  end if;
+end $$;
 
 create index if not exists sponsor_applications_created_at_idx
   on public.sponsor_applications (created_at desc);
 
 create index if not exists sponsor_applications_status_idx
   on public.sponsor_applications (application_status);
+
+create index if not exists sponsor_applications_reviewed_at_idx
+  on public.sponsor_applications (reviewed_at desc);
+
+do $$
+begin
+  if not exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'sponsor_applications'
+      and column_name = 'sponsor_program_type'
+  ) then
+    alter table public.sponsor_applications
+      add column sponsor_program_type text not null default 'main_app';
+  end if;
+end $$;
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'sponsor_applications_program_type_check'
+  ) then
+    alter table public.sponsor_applications
+      add constraint sponsor_applications_program_type_check
+      check (sponsor_program_type in ('main_app', 'podcast'));
+  end if;
+end $$;
+
+create index if not exists sponsor_applications_program_type_idx
+  on public.sponsor_applications (sponsor_program_type);
 

@@ -2,13 +2,21 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  fetchMyPostsFromApi,
   fetchPublicCommunityFeed,
   getRelativeTime,
   isPostLiked,
   togglePostLike,
+  togglePostLikeApi,
 } from "@/features/community/api/communityApi";
 
-export function useCommunityFeed(supabase, userId) {
+/**
+ * @param {import('@supabase/supabase-js').SupabaseClient | null} supabase
+ * @param {string} userId
+ * @param {{ feedScope?: 'public' | 'mine', sessionKind?: string, isAuthenticated?: boolean }} [options]
+ */
+export function useCommunityFeed(supabase, userId, options = {}) {
+  const { feedScope = "public", sessionKind = "none", isAuthenticated = false } = options;
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -18,14 +26,20 @@ export function useCommunityFeed(supabase, userId) {
     setLoading(true);
     setError("");
     try {
-      const rows = await fetchPublicCommunityFeed(supabase);
+      let rows = [];
+      if (feedScope === "mine" && isAuthenticated && sessionKind === "workos") {
+        rows = await fetchMyPostsFromApi();
+      } else {
+        rows = await fetchPublicCommunityFeed(supabase);
+      }
       setPosts(rows);
       const next = {};
       rows.forEach((p) => {
-        const liked = isPostLiked(userId, p.id);
+        const liked =
+          sessionKind === "workos" && p.viewerHasLiked != null ? p.viewerHasLiked : isPostLiked(userId, p.id);
         next[p.id] = {
           liked,
-          count: (Number(p.likeCount) || 0) + (liked ? 1 : 0),
+          count: Number(p.likeCount) || 0,
         };
       });
       setLikeUi(next);
@@ -34,7 +48,7 @@ export function useCommunityFeed(supabase, userId) {
     } finally {
       setLoading(false);
     }
-  }, [supabase, userId]);
+  }, [supabase, userId, feedScope, isAuthenticated, sessionKind]);
 
   useEffect(() => {
     refresh();
@@ -49,13 +63,26 @@ export function useCommunityFeed(supabase, userId) {
     }));
   }, [posts, likeUi]);
 
-  function onToggleLike(postId, baseLikeCount) {
-    const { liked, displayCount } = togglePostLike(userId, postId, baseLikeCount);
-    setLikeUi((u) => ({
-      ...u,
-      [postId]: { liked, count: displayCount },
-    }));
-  }
+  const onToggleLike = useCallback(
+    async (postId, baseLikeCount) => {
+      if (sessionKind === "workos") {
+        const res = await togglePostLikeApi(postId);
+        if (res.ok) {
+          setLikeUi((u) => ({
+            ...u,
+            [postId]: { liked: res.liked, count: res.likeCount },
+          }));
+        }
+        return;
+      }
+      const { liked, displayCount } = togglePostLike(userId, postId, baseLikeCount);
+      setLikeUi((u) => ({
+        ...u,
+        [postId]: { liked, count: displayCount },
+      }));
+    },
+    [sessionKind, userId],
+  );
 
   return {
     posts: postsWithMeta,
@@ -65,4 +92,3 @@ export function useCommunityFeed(supabase, userId) {
     onToggleLike,
   };
 }
-

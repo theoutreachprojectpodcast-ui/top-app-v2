@@ -6,9 +6,20 @@ export function defaultProfile() {
     email: "",
     tier: "supporter",
     theme: "clean",
-    banner: "How can we assist you today?",
+    banner: "Hi, I’m Andy",
     photoDataUrl: "",
     badges: { veteran: false, youtube: false },
+    identityRole: "",
+    missionStatement: "",
+    organizationAffiliation: "",
+    serviceBackground: "",
+    city: "",
+    state: "",
+    causes: "",
+    skills: "",
+    volunteerInterests: "",
+    supportInterests: "",
+    contributionSummary: "",
   };
 }
 
@@ -30,7 +41,19 @@ export function safeUrl(value) {
   }
 }
 
-export function rowName(r) { return safeText(r?.org_name ?? r?.name ?? r?.NAME ?? "Unknown Organization"); }
+export function rowName(r) {
+  return safeText(
+    r?.orgName ??
+      r?.org_name ??
+      r?.display_name_override ??
+      r?.organization_name ??
+      r?.legal_name ??
+      r?.title ??
+      r?.name ??
+      r?.NAME ??
+      "Unknown Organization"
+  );
+}
 export function rowCity(r) { return safeText(r?.city ?? r?.CITY ?? "", ""); }
 export function rowState(r) { return safeText(r?.state ?? r?.STATE ?? "", ""); }
 export function rowNtee(r) { return safeText(r?.ntee_code ?? r?.ntee ?? r?.NTEE_CODE ?? "", ""); }

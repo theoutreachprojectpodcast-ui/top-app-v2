@@ -1,0 +1,1259 @@
+.appShell--podcast {
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background-color: #070b12;
+  color: #e8f0ff;
+  color-scheme: dark;
+  --color-bg-primary: #070b12;
+  --color-bg-secondary: #0b1422;
+  --color-bg-app: #070b12;
+  --color-bg-subtle: #0b1422;
+  --color-bg-card: #101a2a;
+  --color-bg-card-hover: #15243a;
+  --color-surface: #0f1726;
+  --color-surface-elevated: #132138;
+  --color-surface-card: #0f1726;
+  --color-surface-card-deep: #111d30;
+  --color-surface-soft: #0f1a2b;
+  --color-text-primary: #e8f0ff;
+  --color-text-secondary: #a8b8d3;
+  --color-border: rgba(148, 171, 210, 0.28);
+  --color-border-subtle: rgba(148, 171, 210, 0.24);
+  --color-border-strong: rgba(148, 171, 210, 0.38);
+  --color-accent: #ff7a43;
+  --color-accent-hover: #ffb08f;
+  --color-accent-soft: rgba(255, 122, 67, 0.2);
+  --color-focus-ring: rgba(111, 194, 255, 0.42);
+  --color-ring: rgba(111, 194, 255, 0.42);
+}
+
+.appShell--podcast::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 70% at 16% -20%, rgba(255, 95, 69, 0.18), transparent 46%),
+    radial-gradient(90% 62% at 88% 0%, rgba(111, 194, 255, 0.16), transparent 48%),
+    linear-gradient(180deg, #080c13 0%, #0a101a 46%, #0a111c 100%),
+    var(--bg-texture-image);
+  background-size: auto, auto, auto, 620px 620px;
+  background-blend-mode: screen, screen, normal, soft-light;
+}
+
+/* Full-bleed demo photo (replace /podcasts-demo-band.jpg for production art). Radial mask: soft glow behind header + mid-page band. */
+.appShell--podcast::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: url("/podcasts-demo-band.jpg") center 44% / cover no-repeat;
+  opacity: 0.36;
+  filter: saturate(0.88) contrast(1.05);
+  -webkit-mask-image: radial-gradient(
+    ellipse 125% 72% at 50% 38%,
+    #000 0%,
+    #000 38%,
+    transparent 70%
+  );
+  mask-image: radial-gradient(
+    ellipse 125% 72% at 50% 38%,
+    #000 0%,
+    #000 38%,
+    transparent 70%
+  );
+}
+
+.appShell--podcast .content--subpage {
+  background: transparent;
+}
+
+/* Podcast routes use main.topApp: pin site footer above fixed bottom nav on short pages */
+.topApp.appShell--podcast {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding-bottom: 0;
+}
+.topApp.appShell--podcast .shell {
+  flex: 1 1 auto;
+  min-height: 0;
+  background: transparent;
+}
+.topApp.appShell--podcast .siteFooter {
+  flex-shrink: 0;
+  margin-top: auto;
+  margin-bottom: 0;
+  position: relative;
+  padding: 28px 0 calc(32px + 96px + env(safe-area-inset-bottom, 0px));
+  background: transparent;
+  border-top: none;
+  overflow: hidden;
+}
+/* Full-bleed translucent band (matches home: no opaque slab; page gradient shows through) */
+.topApp.appShell--podcast .siteFooter::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    color-mix(in srgb, var(--color-bg-secondary) 55%, transparent)
+  );
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 65%, transparent);
+}
+.appShell--podcast .footerInner {
+  position: relative;
+  z-index: 1;
+  border-top-color: color-mix(in srgb, var(--color-border) 72%, transparent);
+}
+
+.appShell--podcast .footerNote,
+.appShell--podcast .brandName {
+  color: #d7e4fb;
+}
+
+.appShell--podcast .topbar {
+  background: transparent;
+  border: 0;
+}
+.appShell--podcast .shell {
+  background: transparent;
+}
+.appShell--podcast .card {
+  background: linear-gradient(180deg, #0f1726 0%, #111d30 100%);
+  border-color: rgba(148, 171, 210, 0.24);
+}
+.appShell--podcast .topbarOcclusion {
+  background:
+    radial-gradient(ellipse 54% 44% at 50% 12%, rgba(255, 122, 67, 0.13), transparent 68%),
+    linear-gradient(
+      180deg,
+      rgba(6, 10, 16, 0.96) 0%,
+      rgba(6, 10, 16, 0.9) 62%,
+      rgba(6, 10, 16, 0) 100%
+    );
+}
+
+.appShell--podcast .bottomNav {
+  background: transparent;
+  border: 0;
+}
+/* Align with home .footerDockBackdrop / .footerDock: gradient hint + glass dock, not opaque bar */
+.appShell--podcast .footerDockBackdrop {
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--color-bg-secondary) 92%, transparent));
+  border-top: 1px solid var(--color-border);
+}
+.appShell--podcast .footerDock {
+  background: transparent;
+  border-top: 0;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.appShell--podcast .navItem {
+  color: #e7efff;
+  border-color: rgba(111, 194, 255, 0.34);
+  background: color-mix(in srgb, rgba(14, 25, 41, 0.55) 100%, transparent);
+  box-shadow: inset 0 0 0 1px rgba(111, 194, 255, 0.1);
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.14s ease;
+}
+
+.appShell--podcast .navItem.isActive {
+  color: #fff3ec;
+  background: linear-gradient(180deg, rgba(255, 122, 67, 0.38), rgba(255, 95, 69, 0.2));
+  border-color: rgba(255, 144, 112, 0.88);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 173, 146, 0.22),
+    0 0 0 1px rgba(255, 95, 69, 0.12),
+    0 4px 14px rgba(0, 0, 0, 0.2);
+}
+.appShell--podcast .navItem:hover {
+  color: #ffffff;
+  border-color: rgba(111, 194, 255, 0.78);
+  background: color-mix(in srgb, rgba(20, 36, 58, 0.72) 100%, transparent);
+  box-shadow:
+    inset 0 0 0 1px rgba(111, 194, 255, 0.18),
+    0 0 0 2px rgba(111, 194, 255, 0.18);
+}
+.appShell--podcast .navItem:focus-visible {
+  outline: none;
+  color: #ffffff;
+  border-color: rgba(111, 194, 255, 0.85);
+  background: color-mix(in srgb, rgba(20, 36, 58, 0.78) 100%, transparent);
+  box-shadow:
+    0 0 0 2px rgba(7, 11, 18, 0.95),
+    0 0 0 4px rgba(111, 194, 255, 0.38);
+}
+.appShell--podcast .navItem:active {
+  transform: scale(0.98);
+}
+.appShell--podcast .navItem.isActive:hover {
+  border-color: rgba(255, 186, 160, 0.95);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 200, 180, 0.28),
+    0 0 0 2px rgba(255, 122, 67, 0.2),
+    0 6px 18px rgba(0, 0, 0, 0.22);
+}
+
+.appShell--podcast .sponsorBtn:hover,
+.appShell--podcast .sponsorBtn:focus-visible,
+.appShell--podcast .btnSoft:hover,
+.appShell--podcast .btnSoft:focus-visible {
+  color: #f5f8ff;
+  border-color: rgba(111, 194, 255, 0.62);
+  background: color-mix(in srgb, rgba(17, 30, 50, 0.88) 100%, transparent);
+  box-shadow:
+    inset 0 0 0 1px rgba(111, 194, 255, 0.15),
+    0 4px 16px rgba(0, 0, 0, 0.18);
+}
+.appShell--podcast .btnSoft:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px rgba(7, 11, 18, 0.95),
+    0 0 0 4px rgba(111, 194, 255, 0.35);
+}
+.appShell--podcast .btnPrimary:hover,
+.appShell--podcast .btnPrimary:focus-visible {
+  filter: brightness(1.06);
+  border-color: rgba(255, 186, 160, 0.95);
+  box-shadow:
+    0 0 0 1px rgba(255, 122, 67, 0.35),
+    0 6px 22px rgba(255, 95, 69, 0.28);
+}
+.appShell--podcast .btnPrimary:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px rgba(7, 11, 18, 0.95),
+    0 0 0 4px rgba(255, 122, 67, 0.45),
+    0 8px 24px rgba(255, 95, 69, 0.22);
+}
+.appShell--podcast .btnPrimary:active {
+  transform: scale(0.99);
+  filter: brightness(0.96);
+}
+.appShell--podcast .btnSoft:active {
+  transform: scale(0.99);
+}
+.appShell--podcast .sponsorBtn {
+  color: #ffffff !important;
+  background: linear-gradient(180deg, rgba(24, 41, 66, 0.85), rgba(15, 28, 47, 0.88)) !important;
+  border-color: rgba(111, 194, 255, 0.58) !important;
+  box-shadow: inset 0 0 0 1px rgba(111, 194, 255, 0.2);
+  text-shadow: none;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.14s ease;
+}
+.appShell--podcast .sponsorBtn .iconStroke {
+  stroke: #ffffff;
+}
+.appShell--podcast .sponsorBtn:hover,
+.appShell--podcast .sponsorBtn:focus-visible {
+  color: #ffffff !important;
+  background: linear-gradient(180deg, rgba(34, 57, 88, 0.92), rgba(20, 38, 62, 0.92)) !important;
+  border-color: rgba(255, 122, 67, 0.88) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 122, 67, 0.32),
+    0 0 0 2px rgba(111, 194, 255, 0.22),
+    0 6px 20px rgba(0, 0, 0, 0.2);
+}
+.appShell--podcast .sponsorBtn:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px rgba(7, 11, 18, 0.95),
+    0 0 0 4px rgba(111, 194, 255, 0.4),
+    inset 0 0 0 1px rgba(255, 122, 67, 0.35);
+}
+.appShell--podcast .sponsorBtn:active {
+  transform: scale(0.99);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .appShell--podcast .navItem,
+  .appShell--podcast .btnSoft,
+  .appShell--podcast .btnPrimary,
+  .appShell--podcast .sponsorBtn {
+    transition-duration: 0.01ms;
+  }
+  .appShell--podcast .navItem:active,
+  .appShell--podcast .btnPrimary:active,
+  .appShell--podcast .btnSoft:active,
+  .appShell--podcast .sponsorBtn:active {
+    transform: none;
+  }
+}
+
+.appShell--podcast .podcastBrandLogo {
+  max-height: clamp(149px, 31.2vw, 226px) !important;
+  width: auto;
+  filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.45));
+}
+
+.podcastScope {
+  --pod-bg: #070b12;
+  --pod-surface: #0f1726;
+  --pod-surface-2: #111d30;
+  --pod-text: #e8f0ff;
+  --pod-muted: #a8b8d3;
+  --pod-accent: #ff5f45;
+  --pod-accent-2: #6fc2ff;
+  display: grid;
+  gap: 16px;
+  color: var(--pod-text);
+}
+.appShell--podcast,
+.appShell--podcast * {
+  color-scheme: dark;
+}
+.appShell--podcast .btnSoft {
+  background: rgba(13, 26, 43, 0.82);
+  border-color: rgba(111, 194, 255, 0.35);
+  color: var(--pod-text);
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.14s ease;
+}
+.appShell--podcast .btnPrimary {
+  background: linear-gradient(90deg, var(--pod-accent), #ff7a43);
+  border-color: rgba(255, 95, 69, 0.85);
+  color: #fff;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.14s ease,
+    filter 0.2s ease;
+}
+
+.podcastScope .panel,
+.podcastScope .card,
+.podcastScope .podcastHeroCard,
+.podcastScope .podcastSection,
+.podcastScope .podcastApplySection,
+.podcastScope .podcastSponsorStrip,
+.podcastScope .podcastMemberSection,
+.podcastScope .podcastCtaSection {
+  background:
+    radial-gradient(120% 100% at 12% -20%, rgba(255, 95, 69, 0.16), transparent 45%),
+    radial-gradient(100% 80% at 88% 0%, rgba(111, 194, 255, 0.14), transparent 44%),
+    linear-gradient(180deg, var(--pod-surface) 0%, var(--pod-surface-2) 100%);
+  border: 1px solid rgba(148, 171, 210, 0.24);
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.podcastScope .podcastApplySection.podcastApplySection--modalBody {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  box-shadow: none;
+}
+
+.podcastEyebrow {
+  margin: 0;
+  color: var(--pod-accent);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 800;
+}
+.podcastSectionTitle {
+  margin: 6px 0 2px;
+  font-size: clamp(1.4rem, 2.6vw, 2rem);
+}
+.podcastSectionSubtitle,
+.podcastMuted {
+  margin: 0;
+  color: var(--pod-muted);
+}
+
+.podcastHeroCard {
+  display: grid;
+  gap: 14px;
+}
+.podcastHeroMeta p {
+  margin: 0;
+}
+
+.podcastSection {
+  display: grid;
+  gap: 14px;
+}
+
+.podcastEpisodeGrid,
+.podcastGuestGrid,
+.podcastMemberGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.podcastEpisodeCard,
+.podcastGuestCard,
+.podcastMemberItem {
+  border: 1px solid rgba(157, 179, 214, 0.22);
+  background: rgba(8, 14, 24, 0.72);
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.podcastEpisodeCard {
+  display: grid;
+  grid-template-columns: minmax(0, 240px) minmax(0, 1fr);
+  gap: 18px;
+}
+.podcastEpisodeThumb {
+  border-radius: 10px;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  background: transparent;
+  display: block;
+  line-height: 0;
+  margin: 0;
+  padding: 0;
+}
+.podcastEpisodeThumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center top;
+  display: block;
+  margin: 0;
+  background: transparent;
+}
+.podcastEpisodeBody h3,
+.podcastGuestCard h3,
+.podcastMemberItem h4 {
+  margin: 0;
+  line-height: 1.35;
+}
+.podcastEpisodeBody p,
+.podcastGuestCard p,
+.podcastMemberItem p {
+  margin: 8px 0 0;
+  color: var(--pod-muted);
+}
+.podcastEpisodeGuests {
+  font-size: 12px;
+  color: color-mix(in srgb, var(--pod-accent-2) 76%, var(--pod-text) 24%);
+}
+.podcastEpisodeMeta {
+  font-size: 12px;
+  color: color-mix(in srgb, var(--pod-muted) 85%, #fff 15%);
+}
+.podcastEpisodeBody {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+.podcastEpisodeBody .btnSoft {
+  justify-self: start;
+}
+
+.podcastGuestCard {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: 12px;
+  text-decoration: none;
+  color: inherit;
+}
+.podcastGuestAvatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 95, 69, 0.18);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+}
+.podcastGuestAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.podcastApplyForm {
+  display: grid;
+  gap: 8px;
+}
+.podcastScope input,
+.podcastScope textarea,
+.podcastScope select {
+  background: rgba(8, 14, 24, 0.84);
+  border: 1px solid rgba(157, 179, 214, 0.35);
+  color: var(--pod-text);
+}
+.podcastScope input:focus,
+.podcastScope textarea:focus,
+.podcastScope select:focus {
+  outline: none;
+  border-color: rgba(111, 194, 255, 0.62);
+  box-shadow: 0 0 0 2px rgba(111, 194, 255, 0.25);
+}
+.podcastScope input::placeholder,
+.podcastScope textarea::placeholder {
+  color: color-mix(in srgb, var(--pod-muted) 90%, #fff 10%);
+}
+.podcastScope label {
+  color: var(--pod-text);
+}
+
+.podcastSponsorRow {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.podcastSponsorPill {
+  border: 1px solid rgba(111, 194, 255, 0.32);
+  background: rgba(13, 25, 42, 0.8);
+  color: var(--pod-text);
+  border-radius: 999px;
+  padding: 6px 10px;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 700;
+}
+/* Sponsor org names on the podcast strip only (not generic .podcastSponsorPill CTAs elsewhere). */
+.podcastSponsorStrip .podcastSponsorRow .podcastSponsorPill {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.podcastLockCard {
+  border: 1px dashed rgba(255, 95, 69, 0.45);
+  border-radius: 12px;
+  padding: 12px;
+  background: rgba(10, 15, 24, 0.7);
+}
+
+.podcastLockCardActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.podcastAdminSection {
+  border: 1px solid rgba(157, 179, 214, 0.22);
+  background: rgba(8, 14, 24, 0.72);
+  border-radius: 14px;
+  padding: 12px;
+}
+.podcastAdminGrid {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: minmax(0, 280px) minmax(0, 1fr);
+  gap: 10px;
+}
+.podcastAdminList {
+  display: grid;
+  gap: 8px;
+}
+.podcastAdminRow {
+  border: 1px solid rgba(157, 179, 214, 0.2);
+  border-radius: 10px;
+  background: rgba(11, 20, 34, 0.78);
+  color: var(--pod-text);
+  text-align: left;
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+}
+.podcastAdminRow.isActive {
+  border-color: rgba(255, 95, 69, 0.65);
+}
+.podcastAdminDetail {
+  border: 1px solid rgba(157, 179, 214, 0.2);
+  border-radius: 10px;
+  background: rgba(11, 20, 34, 0.78);
+  padding: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.podcastScope .btnPrimary {
+  background: linear-gradient(90deg, var(--pod-accent), #ff7a43);
+  border-color: rgba(255, 95, 69, 0.85);
+  color: #fff;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.14s ease,
+    filter 0.2s ease;
+}
+.podcastScope .btnSoft {
+  background: rgba(13, 26, 43, 0.82);
+  border-color: rgba(111, 194, 255, 0.35);
+  color: var(--pod-text);
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.14s ease;
+}
+.podcastAdminDivider {
+  margin: 16px 0 6px;
+  border: 0;
+  border-top: 1px solid rgba(157, 179, 214, 0.26);
+}
+.podcastAdminWrap {
+  border-style: dashed;
+}
+.podcastDangerBtn {
+  border-color: rgba(255, 122, 122, 0.52);
+  color: #ffd4d4;
+}
+.podcastDangerBtn:hover,
+.podcastDangerBtn:focus-visible {
+  background: rgba(77, 24, 24, 0.86);
+  border-color: rgba(255, 122, 122, 0.82);
+  color: #ffeaea;
+}
+.podcastGuestProfile {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 16px;
+  border: 1px solid rgba(157, 179, 214, 0.22);
+  border-radius: 14px;
+  background: rgba(8, 14, 24, 0.72);
+  padding: 14px;
+}
+.podcastGuestAvatar--large {
+  width: 120px;
+  height: 120px;
+}
+.podcastModalOverlay {
+  background: rgba(2, 4, 9, 0.92);
+  backdrop-filter: blur(10px);
+}
+.podcastSponsorFlowOverlay {
+  z-index: 110;
+}
+
+/* Backdrop stays dark even when :root is light (theme-light-components.css raises .modalOverlay specificity) */
+:root[data-color-scheme="light"] .modalOverlay.podcastModalOverlay,
+:root[data-color-scheme="light"] .modalOverlay.podcastSponsorFlowOverlay {
+  background: rgba(2, 4, 9, 0.92);
+  color-scheme: dark;
+}
+.podcastModalCard {
+  width: min(760px, 100%);
+  background:
+    radial-gradient(120% 100% at 12% -20%, rgba(255, 95, 69, 0.16), transparent 45%),
+    radial-gradient(100% 80% at 88% 0%, rgba(111, 194, 255, 0.14), transparent 44%),
+    linear-gradient(180deg, var(--pod-surface) 0%, var(--pod-surface-2) 100%);
+  border: 1px solid rgba(148, 171, 210, 0.24);
+  color: var(--pod-text);
+}
+
+.podcastSponsorStripHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.podcastSponsorStripHead h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+.podcastSponsorStripCta {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--pod-accent);
+  text-decoration: none;
+  border: 1px solid rgba(255, 122, 67, 0.45);
+  border-radius: 999px;
+  padding: 6px 12px;
+  background: rgba(255, 122, 67, 0.12);
+}
+.podcastSponsorStripCta:hover,
+.podcastSponsorStripCta:focus-visible {
+  border-color: rgba(255, 186, 160, 0.72);
+}
+.podcastSponsorStripLead {
+  margin: 0 0 10px;
+}
+.podcastSponsorFlowHeading {
+  margin: 0 0 8px;
+  font-size: 1.12rem;
+  color: var(--pod-text);
+}
+.podcastSponsorFlowList {
+  margin: 0 0 12px;
+  padding-left: 1.25rem;
+  color: var(--pod-muted);
+  line-height: 1.55;
+  display: grid;
+  gap: 6px;
+}
+.podcastSponsorTierGrid {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  align-items: stretch;
+}
+.podcastSponsorTierGrid > * {
+  min-width: 0;
+  display: flex;
+}
+.podcastSponsorTierCard {
+  border: 1px solid rgba(157, 179, 214, 0.28);
+  border-radius: 14px;
+  background: rgba(8, 14, 24, 0.72);
+  padding: 14px;
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+.podcastSponsorTierCard.isSelected {
+  border-color: rgba(255, 122, 67, 0.72);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+}
+.podcastSponsorTierCard .sponsorTierFamily {
+  color: color-mix(in srgb, var(--pod-muted) 90%, var(--pod-accent) 10%);
+}
+.podcastSponsorTierCard .sponsorTierPrice {
+  color: var(--pod-accent);
+}
+.podcastSponsorTierCard .sponsorTierTeaser {
+  color: var(--pod-muted);
+}
+.podcastSponsorTierCard .sponsorTierDetails summary {
+  color: color-mix(in srgb, var(--pod-accent-2) 70%, var(--pod-text) 30%);
+}
+
+/* Tier “details” panel + headings use global .sponsorTierDetails / h4 tokens — force dark inside sponsor modal */
+.podcastSponsorFlowModal .podcastSponsorTierCard .sponsorTierDetails {
+  border-color: rgba(111, 194, 255, 0.22);
+  background: rgba(6, 12, 22, 0.62);
+}
+.podcastSponsorFlowModal .podcastSponsorTierCard .sponsorBenefitList {
+  color: var(--pod-muted);
+}
+.podcastSponsorFlowModal .podcastSponsorTierCard h4 {
+  color: var(--pod-text);
+}
+.podcastSponsorFlowModal .podcastSponsorTierCard .sponsorTierSubLabel {
+  color: var(--pod-muted);
+}
+.podcastSponsorPackageActions {
+  margin-top: 8px;
+}
+
+.podcastSponsorFlowModal.modalCard {
+  /* Podcast tokens on the modal root so header/chrome (outside .podcastScope) and all descendants match */
+  --pod-bg: #070b12;
+  --pod-surface: #0f1726;
+  --pod-surface-2: #111d30;
+  --pod-text: #e8f0ff;
+  --pod-muted: #a8b8d3;
+  --pod-accent: #ff5f45;
+  --pod-accent-2: #6fc2ff;
+  /* Map app tokens used by shared sponsor components so light :root cannot leak in */
+  --color-text-primary: var(--pod-text);
+  --color-text-secondary: var(--pod-muted);
+  --color-text-muted: color-mix(in srgb, var(--pod-muted) 92%, transparent);
+  --color-bg-card: rgba(8, 14, 24, 0.92);
+  --color-bg-subtle: rgba(10, 18, 30, 0.88);
+  --color-surface-soft: rgba(12, 22, 38, 0.75);
+  --color-border: rgba(148, 171, 210, 0.28);
+  --color-border-subtle: rgba(148, 171, 210, 0.22);
+  --color-border-soft: rgba(157, 179, 214, 0.2);
+  --color-accent: #ff7a43;
+  --color-accent-hover: #ffb08f;
+  --color-accent-soft: rgba(255, 122, 67, 0.22);
+  --color-focus-ring: rgba(111, 194, 255, 0.42);
+  --color-on-accent: #0a0e14;
+  --color-bg-card-hover: rgba(18, 30, 48, 0.94);
+  --color-border-active: rgba(111, 194, 255, 0.48);
+  --color-shadow: rgba(0, 0, 0, 0.35);
+  color-scheme: dark;
+  color: var(--pod-text);
+  width: min(920px, 98vw);
+  max-height: min(94vh, 980px);
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  background:
+    radial-gradient(120% 100% at 12% -20%, rgba(255, 95, 69, 0.16), transparent 45%),
+    radial-gradient(100% 80% at 88% 0%, rgba(111, 194, 255, 0.14), transparent 44%),
+    linear-gradient(180deg, var(--pod-surface) 0%, var(--pod-surface-2) 100%);
+  border-color: rgba(148, 171, 210, 0.32);
+  box-shadow:
+    0 32px 64px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(111, 194, 255, 0.06);
+}
+
+.podcastApplyGuestModal.podcastSponsorFlowModal.modalCard {
+  width: min(680px, 98vw);
+  max-height: min(90vh, 860px);
+}
+
+.podcastSponsorFlowModal__chrome {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+  max-height: min(94vh, 980px);
+}
+
+.podcastSponsorFlowModal__topBar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px 16px;
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(111, 194, 255, 0.22);
+  background:
+    radial-gradient(120% 140% at 0% 0%, rgba(255, 95, 69, 0.12), transparent 55%),
+    linear-gradient(180deg, rgba(9, 15, 25, 0.96) 0%, rgba(12, 20, 34, 0.9) 100%);
+}
+
+.podcastSponsorFlowModal__topBar header {
+  flex: 1;
+  min-width: 0;
+}
+
+.podcastSponsorFlowModal__close {
+  flex-shrink: 0;
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(111, 194, 255, 0.42);
+  background: rgba(13, 26, 43, 0.78);
+  color: var(--pod-text);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.podcastSponsorFlowModal__close:hover,
+.podcastSponsorFlowModal__close:focus-visible {
+  outline: none;
+  border-color: rgba(255, 122, 67, 0.72);
+  background: rgba(255, 122, 67, 0.14);
+  color: #fff8f5;
+  box-shadow: 0 0 0 2px rgba(111, 194, 255, 0.22);
+}
+
+.podcastSponsorFlowModal .podcastSponsorFlowModal__scroll {
+  padding: 18px 20px 22px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  gap: 18px;
+  max-height: none;
+  scrollbar-width: thin;
+  /* thumb | track */
+  scrollbar-color: rgba(111, 194, 255, 0.52) rgba(5, 10, 18, 0.92);
+}
+
+.podcastSponsorFlowModal .podcastSponsorFlowModal__scroll::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.podcastSponsorFlowModal .podcastSponsorFlowModal__scroll::-webkit-scrollbar-track {
+  background: rgba(5, 10, 18, 0.92);
+  border-radius: 999px;
+}
+
+.podcastSponsorFlowModal .podcastSponsorFlowModal__scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(175deg, rgba(111, 194, 255, 0.58), rgba(255, 122, 67, 0.4));
+  border-radius: 999px;
+  border: 2px solid rgba(5, 10, 18, 0.92);
+}
+
+.podcastSponsorFlowModal .podcastSponsorFlowModal__scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(175deg, rgba(111, 194, 255, 0.78), rgba(255, 122, 67, 0.55));
+}
+
+.podcastSponsorFlowModal .podcastSponsorFlowModal__scroll::-webkit-scrollbar-corner {
+  background: rgba(5, 10, 18, 0.92);
+}
+
+/* Inner panels — same language as podcastSection surfaces (no .podcastSection here: avoids .podcastScope double-card) */
+.podcastSponsorFlowModal__tierBlock,
+.podcastSponsorFlowModal__applyBlock {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 18px;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 171, 210, 0.26);
+  background:
+    radial-gradient(120% 100% at 10% -30%, rgba(255, 95, 69, 0.14), transparent 48%),
+    radial-gradient(100% 70% at 92% 0%, rgba(111, 194, 255, 0.12), transparent 46%),
+    linear-gradient(175deg, rgba(12, 22, 38, 0.92) 0%, rgba(8, 14, 24, 0.88) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.podcastSponsorFlowModal__applyBlock.sponsorSection--modalForm h3 {
+  margin-top: 0;
+}
+
+.podcastSponsorFlowModal__applyBlock .podcastSponsorApplyForm {
+  gap: 12px;
+}
+
+.podcastSponsorFlowModal__applyBlock .applySection {
+  border: 1px solid rgba(111, 194, 255, 0.16);
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: rgba(6, 12, 22, 0.55);
+}
+
+.podcastSponsorFlowModal__applyBlock input,
+.podcastSponsorFlowModal__applyBlock select,
+.podcastSponsorFlowModal__applyBlock textarea {
+  border-color: rgba(111, 194, 255, 0.28);
+  background: rgba(8, 14, 24, 0.88);
+  color: var(--pod-text);
+}
+
+.podcastSponsorFlowModal__applyBlock input::placeholder,
+.podcastSponsorFlowModal__applyBlock textarea::placeholder {
+  color: color-mix(in srgb, var(--pod-muted) 88%, transparent);
+}
+
+.podcastSponsorFlowModal__applyBlock input:hover,
+.podcastSponsorFlowModal__applyBlock select:hover,
+.podcastSponsorFlowModal__applyBlock textarea:hover {
+  border-color: rgba(111, 194, 255, 0.45);
+}
+
+.podcastSponsorFlowModal__applyBlock input:focus-visible,
+.podcastSponsorFlowModal__applyBlock select:focus-visible,
+.podcastSponsorFlowModal__applyBlock textarea:focus-visible {
+  border-color: rgba(255, 122, 67, 0.75);
+  box-shadow: 0 0 0 3px rgba(111, 194, 255, 0.22);
+  outline: none;
+}
+
+.podcastSponsorFlowModal__applyBlock .sponsorTierSelect {
+  max-width: min(100%, 480px);
+}
+
+.podcastSponsorFlowModal__applyBlock .sponsorFormActions {
+  margin-top: 8px;
+}
+
+.podcastSponsorFlowModal__applyBlock .sponsorFormActions .btnPrimary {
+  min-height: 46px;
+  padding-inline: 22px;
+}
+
+.podcastSponsorFlowModal__blockTitle {
+  margin: 0 0 10px;
+  font-size: clamp(1.12rem, 2.2vw, 1.32rem);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--pod-text);
+  line-height: 1.3;
+}
+
+.podcastSponsorFlowModal__blockLead {
+  margin: 0 0 14px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--pod-muted);
+  max-width: 72ch;
+}
+
+.podcastSponsorFlowModal__familyTitle {
+  margin: 0 0 8px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: color-mix(in srgb, var(--pod-accent-2) 78%, var(--pod-text) 22%);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.podcastSponsorFlowModal__applyBlock .applySection h4 {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--pod-accent-2) 72%, var(--pod-text) 28%);
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(111, 194, 255, 0.18);
+}
+
+.podcastSponsorFlowModal__applyBlock .applySection + .applySection {
+  margin-top: 4px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(157, 179, 214, 0.12);
+}
+
+.podcastSponsorFlowModal__applyBlock .sponsorTierSelectLabel {
+  color: var(--pod-text);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.podcastSponsorFlowModal__applyBlock strong {
+  color: var(--pod-accent);
+}
+
+.podcastSponsorFlowModal__applyBlock .dsChoice {
+  color: var(--pod-text);
+  border-radius: 10px;
+  padding: 8px 10px;
+  border: 1px solid rgba(157, 179, 214, 0.16);
+  background: rgba(6, 12, 22, 0.48);
+}
+
+.podcastSponsorFlowModal__applyBlock .dsChoice:hover .dsChoice__control {
+  border-color: rgba(111, 194, 255, 0.55);
+}
+
+.podcastSponsorFlowModal__applyBlock .dsChoice__control {
+  border-color: rgba(111, 194, 255, 0.42);
+  background: rgba(8, 14, 24, 0.92);
+}
+
+.podcastSponsorFlowModal__applyBlock .dsChoice input:checked + .dsChoice__control {
+  border-color: rgba(255, 122, 67, 0.88);
+  background: linear-gradient(145deg, rgba(255, 95, 69, 0.38), rgba(255, 122, 67, 0.22));
+}
+
+.podcastSponsorFlowModal__applyBlock .sponsorPaymentCard {
+  border-color: rgba(111, 194, 255, 0.3);
+  background: linear-gradient(165deg, rgba(14, 24, 40, 0.96) 0%, rgba(8, 14, 24, 0.92) 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 95, 69, 0.08);
+  color: var(--pod-text);
+}
+
+.podcastSponsorFlowModal__applyBlock .sponsorPaymentCard h4 {
+  color: var(--pod-text);
+  margin-top: 0;
+}
+
+.podcastSponsorFlowModal__applyBlock .sponsorPaymentCard p {
+  color: var(--pod-muted);
+  font-size: 14px;
+}
+
+.podcastSponsorFlowModal__applyBlock .applyError {
+  color: #ffb4b4;
+  font-size: 14px;
+  margin: 8px 0 0;
+}
+
+.podcastSponsorFlowModal__applyBlock .applyStatus {
+  color: color-mix(in srgb, var(--pod-accent-2) 88%, #fff 12%);
+  font-size: 14px;
+  margin: 8px 0 0;
+}
+
+.podcastSponsorFlowModal__foot {
+  display: grid;
+  gap: 12px;
+  padding-top: 2px;
+}
+
+.podcastSponsorFlowModal__footNote {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--pod-muted);
+  max-width: 64ch;
+}
+
+.podcastSponsorFlowModal__missionLink {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  color: var(--pod-accent);
+  border: 1px solid rgba(255, 122, 67, 0.48);
+  border-radius: 999px;
+  padding: 8px 14px;
+  background: rgba(255, 122, 67, 0.1);
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.podcastSponsorFlowModal__missionLink:hover,
+.podcastSponsorFlowModal__missionLink:focus-visible {
+  border-color: rgba(255, 186, 160, 0.75);
+  background: rgba(255, 122, 67, 0.16);
+}
+
+.podcastSponsorFlowModal__applyBlock p {
+  color: var(--pod-muted);
+}
+
+/* Global light theme (theme-light-components.css) uses :root[light] + one class — outrank our two-class rules. Re-darken everything inside this modal. */
+:root[data-color-scheme="light"] .podcastSponsorFlowModal .applySection {
+  background: rgba(6, 12, 22, 0.55);
+  border-color: rgba(111, 194, 255, 0.16);
+}
+
+:root[data-color-scheme="light"] .podcastSponsorFlowModal .sponsorPaymentCard {
+  border-color: rgba(111, 194, 255, 0.3);
+  background: linear-gradient(165deg, rgba(14, 24, 40, 0.96) 0%, rgba(8, 14, 24, 0.92) 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 95, 69, 0.08);
+  color: var(--pod-text);
+}
+
+:root[data-color-scheme="light"] .podcastSponsorFlowModal .sponsorPaymentCard h4 {
+  color: var(--pod-text);
+}
+
+:root[data-color-scheme="light"] .podcastSponsorFlowModal .sponsorPaymentCard p {
+  color: var(--pod-muted);
+}
+
+:root[data-color-scheme="light"] .podcastSponsorFlowModal .sponsorTierDetails {
+  border-color: rgba(111, 194, 255, 0.22);
+  background: rgba(6, 12, 22, 0.62);
+}
+
+:root[data-color-scheme="light"] .podcastSponsorFlowModal .sponsorTierDetails summary {
+  color: color-mix(in srgb, var(--pod-accent-2) 70%, var(--pod-text) 30%);
+}
+
+:root[data-color-scheme="light"] .podcastSponsorFlowModal .sponsorBenefitList {
+  color: var(--pod-muted);
+}
+
+:root[data-color-scheme="light"] .podcastSponsorFlowModal input,
+:root[data-color-scheme="light"] .podcastSponsorFlowModal select,
+:root[data-color-scheme="light"] .podcastSponsorFlowModal textarea {
+  border-color: rgba(111, 194, 255, 0.28);
+  background: rgba(8, 14, 24, 0.88);
+  color: var(--pod-text);
+}
+
+:root[data-color-scheme="light"] .podcastSponsorFlowModal input::placeholder,
+:root[data-color-scheme="light"] .podcastSponsorFlowModal textarea::placeholder {
+  color: color-mix(in srgb, var(--pod-muted) 88%, transparent);
+}
+
+.podcastSponsorFlowModal select option {
+  background-color: var(--pod-surface);
+  color: var(--pod-text);
+}
+
+.podcastSponsorCtaBand .row.wrap {
+  margin-top: 4px;
+}
+
+@media (max-width: 860px) {
+  .podcastEpisodeGrid,
+  .podcastGuestGrid,
+  .podcastMemberGrid {
+    grid-template-columns: 1fr;
+  }
+  .podcastAdminGrid {
+    grid-template-columns: 1fr;
+  }
+  .podcastEpisodeCard {
+    grid-template-columns: 1fr;
+  }
+  .podcastGuestProfile {
+    grid-template-columns: 1fr;
+  }
+  .podcastSponsorTierGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .podcastScope {
+    gap: 12px;
+  }
+
+  .podcastScope .podcastSection,
+  .podcastScope .podcastHeroCard,
+  .podcastScope .podcastApplySection,
+  .podcastScope .podcastSponsorStrip,
+  .podcastScope .podcastMemberSection,
+  .podcastScope .podcastCtaSection {
+    padding: 12px;
+    border-radius: 12px;
+  }
+
+  .podcastSponsorFlowModal.modalCard,
+  .podcastApplyGuestModal.podcastSponsorFlowModal.modalCard {
+    width: min(100%, 100%);
+    max-height: calc(100dvh - 20px);
+  }
+
+  .podcastSponsorFlowModal__topBar {
+    padding: 14px 14px 12px;
+    gap: 10px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .podcastSponsorFlowModal__close {
+    width: 100%;
+    justify-content: center;
+    display: inline-flex;
+  }
+
+  .podcastSponsorFlowModal .podcastSponsorFlowModal__scroll {
+    padding: 12px 14px 16px;
+    gap: 12px;
+  }
+
+  .podcastSponsorFlowModal__tierBlock,
+  .podcastSponsorFlowModal__applyBlock {
+    padding: 12px;
+    border-radius: 12px;
+  }
+
+  .podcastSponsorFlowModal__applyBlock .sponsorFormActions .btnPrimary {
+    width: 100%;
+  }
+}

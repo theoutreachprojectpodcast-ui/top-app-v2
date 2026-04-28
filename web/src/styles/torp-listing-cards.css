@@ -1,0 +1,243 @@
+/**
+ * tORP v0.3 — shared listing card shell (Trusted Resources + Sponsors).
+ * Hero geometry, category fallbacks, and body padding for resultCard--listingHero.
+ */
+
+.torpListingCard {
+  position: relative;
+}
+
+/* Full-bleed hero strip (nonprofits) or full-card layer (sponsors reuse .torpListingCardHero on .sponsorPremiumCardBg) */
+.torpListingCardHeroWrap {
+  position: relative;
+  height: 92px;
+  overflow: hidden;
+  border-radius: calc(var(--radius-card, 18px) - 1px) calc(var(--radius-card, 18px) - 1px) 0 0;
+  flex-shrink: 0;
+}
+
+.torpListingCardHero {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.torpListingCardHero--photo {
+  filter: saturate(0.94) contrast(1.03) brightness(0.88);
+}
+
+.torpListingCardHeroScrim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Readable overlay for light card body below (nonprofit strip) */
+.torpListingCardHeroScrim--resource {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-bg-primary) 8%, transparent) 0%,
+    color-mix(in srgb, var(--color-bg-primary) 55%, transparent) 100%
+  );
+}
+
+:root[data-color-scheme="dark"] .torpListingCardHeroScrim--resource,
+.dark .torpListingCardHeroScrim--resource {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0.5) 100%);
+}
+
+/* Directory + trusted org cards: slightly richer scrim than base resource strip (sponsors keep their own shell). */
+.torpListingCardHero--photo + .torpListingCardHeroScrim--orgListing {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-bg-primary) 10%, transparent) 0%,
+    color-mix(in srgb, var(--color-bg-primary) 38%, transparent) 55%,
+    color-mix(in srgb, var(--color-bg-primary) 62%, transparent) 100%
+  );
+}
+
+:root[data-color-scheme="dark"] .torpListingCardHero--photo + .torpListingCardHeroScrim--orgListing,
+.dark .torpListingCardHero--photo + .torpListingCardHeroScrim--orgListing {
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.1) 0%,
+    rgba(4, 10, 18, 0.42) 55%,
+    rgba(4, 10, 18, 0.58) 100%
+  );
+}
+
+/* Category-based hero when no photo URL (deterministic, uses brand np-* tokens) */
+.torpListingCardHero--category {
+  background-image: linear-gradient(
+    125deg,
+    color-mix(in srgb, var(--np-unknownGeneral) 38%, var(--color-surface-card)) 0%,
+    var(--color-surface-card-deep) 100%
+  );
+}
+
+.torpListingCardHero--category[data-torp-listing-category="recreationSports"] {
+  background-image: linear-gradient(
+    125deg,
+    color-mix(in srgb, var(--np-recreationSports) 40%, var(--color-surface-card)) 0%,
+    var(--color-surface-card-deep) 100%
+  );
+}
+.torpListingCardHero--category[data-torp-listing-category="artsCulture"] {
+  background-image: linear-gradient(
+    125deg,
+    color-mix(in srgb, var(--np-artsCulture) 40%, var(--color-surface-card)) 0%,
+    var(--color-surface-card-deep) 100%
+  );
+}
+.torpListingCardHero--category[data-torp-listing-category="publicBenefit"] {
+  background-image: linear-gradient(
+    125deg,
+    color-mix(in srgb, var(--np-publicBenefit) 40%, var(--color-surface-card)) 0%,
+    var(--color-surface-card-deep) 100%
+  );
+}
+.torpListingCardHero--category[data-torp-listing-category="religionSpirituality"] {
+  background-image: linear-gradient(
+    125deg,
+    color-mix(in srgb, var(--np-religionSpirituality) 40%, var(--color-surface-card)) 0%,
+    var(--color-surface-card-deep) 100%
+  );
+}
+.torpListingCardHero--category[data-torp-listing-category="healthWellness"] {
+  background-image: linear-gradient(
+    125deg,
+    color-mix(in srgb, var(--np-healthWellness) 40%, var(--color-surface-card)) 0%,
+    var(--color-surface-card-deep) 100%
+  );
+}
+.torpListingCardHero--category[data-torp-listing-category="education"] {
+  background-image: linear-gradient(
+    125deg,
+    color-mix(in srgb, var(--np-education) 40%, var(--color-surface-card)) 0%,
+    var(--color-surface-card-deep) 100%
+  );
+}
+.torpListingCardHero--category[data-torp-listing-category="humanServices"] {
+  background-image: linear-gradient(
+    125deg,
+    color-mix(in srgb, var(--np-humanServices) 40%, var(--color-surface-card)) 0%,
+    var(--color-surface-card-deep) 100%
+  );
+}
+.torpListingCardHero--category[data-torp-listing-category="veteransMilitary"] {
+  background-image: linear-gradient(
+    125deg,
+    color-mix(in srgb, var(--np-veteransMilitary) 42%, var(--color-surface-card)) 0%,
+    var(--color-surface-card-deep) 100%
+  );
+}
+.torpListingCardHero--category[data-torp-listing-category="firstRespondersSafety"] {
+  background-image: linear-gradient(
+    125deg,
+    color-mix(in srgb, var(--np-firstRespondersSafety) 40%, var(--color-surface-card)) 0%,
+    var(--color-surface-card-deep) 100%
+  );
+}
+.torpListingCardHero--category[data-torp-listing-category="communityDevelopment"] {
+  background-image: linear-gradient(
+    125deg,
+    color-mix(in srgb, var(--np-communityDevelopment) 40%, var(--color-surface-card)) 0%,
+    var(--color-surface-card-deep) 100%
+  );
+}
+.torpListingCardHero--category[data-torp-listing-category="environmentAnimals"] {
+  background-image: linear-gradient(
+    125deg,
+    color-mix(in srgb, var(--np-environmentAnimals) 40%, var(--color-surface-card)) 0%,
+    var(--color-surface-card-deep) 100%
+  );
+}
+.torpListingCardHero--category[data-torp-listing-category="youthDevelopment"] {
+  background-image: linear-gradient(
+    125deg,
+    color-mix(in srgb, var(--np-youthDevelopment) 40%, var(--color-surface-card)) 0%,
+    var(--color-surface-card-deep) 100%
+  );
+}
+.torpListingCardHero--category[data-torp-listing-category="crisisEmergency"] {
+  background-image: linear-gradient(
+    125deg,
+    color-mix(in srgb, var(--np-crisisEmergency) 40%, var(--color-surface-card)) 0%,
+    var(--color-surface-card-deep) 100%
+  );
+}
+.torpListingCardHero--category[data-torp-listing-category="advocacyPolicyRights"] {
+  background-image: linear-gradient(
+    125deg,
+    color-mix(in srgb, var(--np-advocacyPolicyRights) 40%, var(--color-surface-card)) 0%,
+    var(--color-surface-card-deep) 100%
+  );
+}
+
+/* Sponsor card: no DB image — warm metallic placeholder (deterministic per tier styling) */
+.torpListingCardHero--sponsorTone {
+  filter: none;
+  background-image: linear-gradient(
+    130deg,
+    color-mix(in srgb, var(--color-accent) 22%, var(--color-surface-card-deep)) 0%,
+    var(--color-surface-card) 48%,
+    color-mix(in srgb, var(--color-accent-hover) 18%, var(--color-surface-card-deep)) 100%
+  );
+}
+
+.torpListingCardHero--sponsorTone-gold {
+  background-image: linear-gradient(130deg, #1a1510 0%, #2a2218 45%, #1c1712 100%);
+}
+.torpListingCardHero--sponsorTone-copper {
+  background-image: linear-gradient(130deg, #1a1210 0%, #2c1e18 45%, #1a1410 100%);
+}
+.torpListingCardHero--sponsorTone-amber {
+  background-image: linear-gradient(130deg, #18140e 0%, #2a2216 45%, #16120e 100%);
+}
+.torpListingCardHero--sponsorTone-rust {
+  background-image: linear-gradient(130deg, #1a100e 0%, #2a1814 45%, #18100e 100%);
+}
+.torpListingCardHero--sponsorTone-teal {
+  background-image: linear-gradient(130deg, #0e1416 0%, #122022 45%, #0c1214 100%);
+}
+.torpListingCardHero--sponsorTone-rose {
+  background-image: linear-gradient(130deg, #181012 0%, #24181c 45%, #140e10 100%);
+}
+.torpListingCardHero--sponsorTone-sage {
+  background-image: linear-gradient(130deg, #0e1210 0%, #141c18 45%, #0c100e 100%);
+}
+
+.resultCard.resultCard--listingHero {
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.resultCard--listingHero .torpListingCardBody {
+  padding: var(--ds-space-4, 16px);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  flex: 1;
+}
+
+.resultCard--listingHero .nonprofitCardMain {
+  flex: 1;
+}
+
+/* Sponsor: shared family marker + logo size aligned to nonprofit (64px) */
+.sponsorPremiumCard.torpListingCard {
+  border-radius: var(--radius-card, 18px);
+}
+
+.sponsorPremiumCard .sponsorPremiumCardBg.torpListingCardHero--photo {
+  filter: saturate(0.92) contrast(1.04) brightness(0.68);
+}
+
+.sponsorPremiumLogoShell {
+  width: 64px;
+  height: 64px;
+}

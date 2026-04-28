@@ -1,12 +1,13 @@
-import { Globe, Camera, Play, BriefcaseBusiness, MessageCircle } from "lucide-react";
+import { Globe, Instagram, Youtube, Linkedin, Facebook, Twitter, Video } from "lucide-react";
 
 const ICONS = {
   website: Globe,
-  instagram: Camera,
-  facebook: MessageCircle,
-  youtube: Play,
-  linkedin: BriefcaseBusiness,
-  x: MessageCircle,
+  instagram: Instagram,
+  facebook: Facebook,
+  youtube: Youtube,
+  linkedin: Linkedin,
+  x: Twitter,
+  tiktok: Video,
 };
 
 export default function NonprofitSocialLinks({ links = [] }) {
@@ -19,6 +20,7 @@ export default function NonprofitSocialLinks({ links = [] }) {
           <a
             key={`${link.type}-${link.url}`}
             className="nonprofitSocialLink"
+            data-torp-card-interactive
             href={link.url}
             target="_blank"
             rel="noopener noreferrer"

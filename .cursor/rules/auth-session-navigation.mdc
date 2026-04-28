@@ -1,0 +1,14 @@
+---
+description: Keep users signed in across client navigation; avoid spurious logout UI
+alwaysApply: true
+---
+
+# Auth session and client-side navigation
+
+- **TopApp remounts** on every App Router page change (`/`, `/profile`, `/settings`, etc. each render `<TopApp initialNav="…" />`). `useProfileData` **must** rehydrate from **`readNavAuthCache()`** (WorkOS) and **`AUTH_KEY`** (demo) in **`useLayoutEffect`** so the first paint does not show a signed-out header or profile tab.
+- **Never** show the profile “sign out / sign in” empty state while **`loadingProfile && !isAuthenticated`** unless you have confirmed there is no session hint — use a neutral “Loading your profile…” state instead.
+- **`AuthSessionProvider`**: pathname and **visibility** refreshes must use **`refresh({ soft: true })`**. On **soft** refresh, if the UI was authenticated and **`/api/me`** briefly returns unauthenticated, **retry once** after a short delay before clearing session state. **Hard** clears (and `clearNavAuthCache`) belong only to explicit sign-out or a confirmed unauthenticated response after retry.
+- **`fetch("/api/me", …)`** must always include **`credentials: "include"`** and typically **`cache: "no-store"`** so cookies are sent and stale anonymous responses are not reused.
+- When adding new pages or auth checks, **manually smoke-test** navigation: `/` ↔ `/profile` ↔ `/settings` ↔ `/trusted` ↔ `/community` ↔ `/sponsors` ↔ `/contact` ↔ `/notifications` (if applicable) without the header or profile tab flipping to signed-out.
+- If **nav cache** said the user was authenticated but **`/api/me`** is unauthenticated after retry, treat as **signed out** — **never** fall through to **demo `localStorage` profile** (that data can belong to another account on the same device).
+- **Do not** call `openEdit()` then `router.push("/profile")` from the home `TopApp` instance: navigation **unmounts** that tree. Use **`/profile?edit=1`** (optional **`focus=`**) and open the edit overlay **after** the profile route’s `useProfileData` has loaded **`/api/me`** for **that** mount.

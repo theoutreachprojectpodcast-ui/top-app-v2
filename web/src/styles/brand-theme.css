@@ -1,0 +1,411 @@
+/* =============================================================================
+   The Outreach Project — brand theme (light-first)
+   Semantic tokens + legacy aliases for existing components.
+   ============================================================================= */
+
+/* --- Core brand palette (reference) --- */
+:root {
+  --brand-green-700: #188a20;
+  --brand-green-600: #22a52b;
+  --brand-green-500: #32c43b;
+  --brand-green-400: #55d85c;
+  --brand-green-300: #83e387;
+
+  color-scheme: light;
+  --topbar-occlusion-spot: rgba(17, 23, 20, 0.06);
+
+  --font-body: var(--font-roboto, system-ui), system-ui, -apple-system, sans-serif;
+  --font-heading: var(--font-roboto, system-ui), system-ui, -apple-system, sans-serif;
+
+  /* Semantic surfaces — light */
+  --color-bg-app: #f5f7f6;
+  --color-bg-subtle: #eef2ef;
+  --color-bg-elevated: #ffffff;
+  --color-bg-muted: #e7ece8;
+  --color-bg-card: #ffffff;
+  --color-bg-card-hover: #f8faf8;
+
+  --color-border-subtle: #d6ddd8;
+  --color-border-strong: #bec8c1;
+
+  --color-text-primary: #111714;
+  --color-text-secondary: #4f5d55;
+  --color-text-muted: #728077;
+
+  --color-accent: #22a52b;
+  --color-accent-hover: #188a20;
+  --color-accent-soft: rgba(34, 165, 43, 0.1);
+  --color-link: #188a20;
+  --color-focus-ring: rgba(50, 196, 59, 0.3);
+
+  --color-success: #1fa64a;
+  --color-warning: #c58a18;
+  --color-error: #c94b49;
+  --color-info: #2c7be5;
+  --color-overlay: rgba(17, 23, 20, 0.48);
+  --color-overlay-backdrop: rgba(17, 23, 20, 0.45);
+  --color-shadow: rgba(17, 23, 20, 0.08);
+  --color-on-accent: #ffffff;
+  /* Subtle UI lines on light surfaces (replaces slate #0f172a RGBA shortcuts) */
+  --color-veil-06: color-mix(in srgb, var(--color-text-primary) 6%, transparent);
+  --color-veil-08: color-mix(in srgb, var(--color-text-primary) 8%, transparent);
+  --color-veil-10: color-mix(in srgb, var(--color-text-primary) 10%, transparent);
+  --color-veil-12: color-mix(in srgb, var(--color-text-primary) 12%, transparent);
+  --color-navbar: color-mix(in srgb, var(--color-bg-subtle) 92%, transparent);
+  --color-input: var(--color-bg-card);
+  --color-input-border: var(--color-border-subtle);
+  --color-ring: var(--color-focus-ring);
+  /* Topo + noise: visible contour lines on #F5F7F6 without competing with content */
+  --texture-opacity: 0.078;
+
+  /* Map legacy structure */
+  --color-bg-primary: var(--color-bg-app);
+  --color-bg-secondary: var(--color-bg-subtle);
+  --color-surface: var(--color-bg-card);
+  --color-surface-elevated: var(--color-bg-card-hover);
+  --color-surface-soft: var(--color-bg-subtle);
+  --color-surface-muted: color-mix(in srgb, var(--color-bg-muted) 92%, var(--color-bg-card) 8%);
+  --color-surface-card: var(--color-bg-card);
+  --color-surface-card-deep: var(--color-bg-card-hover);
+  --color-surface-raised: var(--color-bg-card-hover);
+
+  --color-background-base: var(--color-bg-app);
+  --color-background-elevated: var(--color-bg-elevated);
+  --color-background-card: var(--color-bg-card);
+
+  --color-border: var(--color-border-subtle);
+  --color-border-soft: color-mix(in srgb, var(--color-border-subtle) 65%, var(--color-bg-card) 35%);
+  --color-border-active: color-mix(in srgb, var(--color-accent) 38%, var(--color-border-subtle) 62%);
+
+  /* Legacy gold/teal → brand green (single accent system) */
+  --color-gold-primary: var(--color-accent-hover);
+  --color-gold-highlight: var(--color-accent);
+  --color-gold-shadow: #146018;
+  --color-gold-soft: var(--color-accent-soft);
+  --color-gold-muted: rgba(34, 165, 43, 0.14);
+
+  --color-cyan-primary: var(--color-accent-hover);
+  --color-cyan-bright: var(--color-accent);
+  --color-cyan-muted: var(--color-accent-hover);
+  --color-teal-primary: var(--color-accent-hover);
+  --color-teal-bright: var(--color-accent);
+  --color-teal-soft: var(--color-accent-soft);
+  --color-accent-interactive: var(--color-accent);
+  --color-accent-interactive-soft: color-mix(in srgb, var(--color-accent) 22%, transparent);
+
+  --color-destructive: var(--color-error);
+
+  --glow-accent: 0 1px 2px rgba(17, 23, 20, 0.06), 0 4px 16px rgba(17, 23, 20, 0.08);
+  --glow-cyan: 0 0 0 1px color-mix(in srgb, var(--color-border-subtle) 80%, transparent), 0 2px 10px rgba(17, 23, 20, 0.06);
+  --glow-gold: var(--glow-accent);
+
+  --shadow-card: 0 4px 18px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(17, 23, 20, 0.04);
+  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(17, 23, 20, 0.05);
+  --shadow-bottom-nav: 0 -8px 32px color-mix(in srgb, var(--color-text-primary) 15%, transparent);
+
+  --color-scrollbar-track: color-mix(in srgb, var(--color-bg-subtle) 96%, var(--color-bg-app) 4%);
+  --color-scrollbar-thumb: color-mix(in srgb, var(--color-border-strong) 55%, var(--color-bg-muted) 45%);
+  --color-scrollbar-thumb-hover: color-mix(in srgb, var(--color-accent) 22%, var(--color-border-strong) 78%);
+  --color-scrollbar-corner: var(--color-bg-subtle);
+
+  /* Typography */
+  --text-page-title: clamp(1.75rem, 2.4vw, 2.125rem);
+  --text-section-title: clamp(1.25rem, 1.5vw, 1.375rem);
+  --text-card-title: 1.125rem;
+  --text-card-section: clamp(1.05rem, 1.25vw, 1.125rem);
+  --text-body: 0.9375rem;
+  --text-body-sm: 0.9375rem;
+  --text-body-lg: 1rem;
+  --text-caption: 0.8125rem;
+  --text-metadata: 0.8125rem;
+  --text-eyebrow: 0.6875rem;
+  --text-button: 0.875rem;
+
+  --line-page-title: 1.18;
+  --line-section-title: 1.27;
+  --line-card-title: 1.33;
+  --line-body: 1.47;
+
+  /* Spacing scale */
+  --ds-space-1: 4px;
+  --ds-space-2: 8px;
+  --ds-space-3: 12px;
+  --ds-space-4: 16px;
+  --ds-space-5: 20px;
+  --ds-space-6: 24px;
+  --ds-space-8: 32px;
+  --ds-space-10: 40px;
+  --ds-space-12: 48px;
+  --ds-space-16: 64px;
+  --ds-section-gap: 24px;
+
+  --radius-input: 12px;
+  --radius-card: 18px;
+  --radius-button: 12px;
+  --radius-pill: 999px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  --bg-texture-image: url("/assets/backgrounds/bg_topographic_brand.png");
+
+  /* Subtle neutral noise (SVG feTurbulence) */
+  --texture-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+}
+
+/* --- Dark mode --- */
+:root[data-color-scheme="dark"],
+.dark {
+  color-scheme: dark;
+  --topbar-occlusion-spot: rgba(255, 255, 255, 0.04);
+
+  /* Charcoal foundation — neutral grays only (no green / olive wash on surfaces) */
+  --color-bg-app: #121212;
+  --color-bg-subtle: #181818;
+  --color-bg-elevated: #1f1f1f;
+  --color-bg-muted: #2a2a2a;
+  --color-bg-card: #1e1e1e;
+  --color-bg-card-hover: #2a2a2a;
+
+  --color-border-subtle: #383838;
+  --color-border-strong: #4a4a4a;
+
+  --color-text-primary: #f0f0f0;
+  --color-text-secondary: #b6b6b6;
+  --color-text-muted: #8a8a8a;
+
+  --color-accent: #55d85c;
+  --color-accent-hover: #83e387;
+  --color-accent-soft: rgba(85, 216, 92, 0.14);
+  --color-link: #83e387;
+  --color-focus-ring: rgba(131, 227, 135, 0.34);
+  --color-success: #32c43b;
+  --color-warning: #d4a12a;
+  --color-error: #d96866;
+  --color-info: #5a9bff;
+  --color-overlay: rgba(0, 0, 0, 0.62);
+  --color-overlay-backdrop: rgba(0, 0, 0, 0.68);
+  --color-shadow: rgba(0, 0, 0, 0.32);
+  --color-on-accent: #0f1412;
+  --color-veil-06: rgba(255, 255, 255, 0.06);
+  --color-veil-08: rgba(255, 255, 255, 0.08);
+  --color-veil-10: rgba(255, 255, 255, 0.1);
+  --color-veil-12: rgba(255, 255, 255, 0.12);
+  --color-navbar: color-mix(in srgb, var(--color-bg-subtle) 88%, transparent);
+  --color-input: var(--color-bg-card);
+  --color-input-border: var(--color-border-subtle);
+  --color-ring: var(--color-focus-ring);
+  /* Dark: overlay blend needs a higher base than light multiply */
+  --texture-opacity: 0.1;
+
+  --color-bg-primary: var(--color-bg-app);
+  --color-bg-secondary: var(--color-bg-subtle);
+  --color-surface: var(--color-bg-card);
+  --color-surface-elevated: var(--color-bg-card-hover);
+  --color-surface-soft: var(--color-bg-subtle);
+  --color-surface-muted: color-mix(in srgb, var(--color-bg-muted) 82%, var(--color-bg-card) 18%);
+  --color-surface-card: var(--color-bg-card);
+  --color-surface-card-deep: color-mix(in srgb, var(--color-bg-app) 35%, var(--color-bg-card) 65%);
+  --color-surface-raised: var(--color-bg-card-hover);
+
+  --color-background-base: var(--color-bg-app);
+  --color-background-elevated: var(--color-bg-elevated);
+  --color-background-card: var(--color-bg-card);
+
+  --color-border: var(--color-border-subtle);
+  --color-border-soft: color-mix(in srgb, var(--color-border-subtle) 75%, transparent 25%);
+  --color-border-active: color-mix(in srgb, var(--color-accent) 42%, var(--color-border-subtle) 58%);
+
+  --color-gold-primary: var(--color-accent-hover);
+  --color-gold-highlight: var(--color-accent);
+  --color-gold-shadow: #1a1f1d;
+  --color-gold-soft: var(--color-accent-soft);
+  --color-gold-muted: rgba(85, 216, 92, 0.16);
+
+  --color-cyan-primary: var(--color-accent-hover);
+  --color-cyan-bright: var(--color-accent);
+  --color-cyan-muted: var(--color-accent-hover);
+  --color-teal-primary: var(--color-accent-hover);
+  --color-teal-bright: var(--color-accent);
+  --color-teal-soft: var(--color-accent-soft);
+  --color-accent-interactive: var(--color-accent);
+  --color-accent-interactive-soft: color-mix(in srgb, var(--color-accent) 26%, transparent);
+
+  /* Depth from neutral shadow only — accent is not a glow source */
+  --glow-accent: 0 2px 10px rgba(0, 0, 0, 0.45), 0 1px 2px rgba(0, 0, 0, 0.35);
+  --glow-cyan: 0 0 0 1px color-mix(in srgb, var(--color-border-strong) 55%, transparent), 0 2px 12px rgba(0, 0, 0, 0.35);
+  --glow-gold: var(--glow-accent);
+
+  --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  --shadow-card-hover: 0 12px 32px rgba(0, 0, 0, 0.24), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  --shadow-bottom-nav: 0 -8px 40px rgba(0, 0, 0, 0.55);
+
+  --color-scrollbar-track: #1a1a1a;
+  --color-scrollbar-thumb: color-mix(in srgb, var(--color-border-strong) 70%, var(--color-text-muted) 30%);
+  --color-scrollbar-thumb-hover: color-mix(in srgb, var(--color-accent) 28%, var(--color-border-strong) 72%);
+  --color-scrollbar-corner: var(--color-bg-app);
+}
+
+body {
+  background-color: var(--color-bg-app);
+  /* No accent in page fill — neutral depth only (green = UI accent only) */
+  background-image:
+    radial-gradient(ellipse 120% 85% at 50% -18%, color-mix(in srgb, var(--color-text-primary) 5%, transparent), transparent 58%),
+    radial-gradient(ellipse 72% 52% at 100% 0%, color-mix(in srgb, var(--color-bg-muted) 42%, transparent), transparent 52%),
+    linear-gradient(180deg, var(--color-bg-subtle) 0%, var(--color-bg-app) 48%, var(--color-bg-app) 100%);
+  color: var(--color-text-primary);
+  font-family: var(--font-body), Helvetica, Arial, sans-serif;
+  position: relative;
+  isolation: isolate;
+}
+
+:root[data-color-scheme="dark"] body,
+.dark body {
+  background-image:
+    radial-gradient(ellipse 100% 72% at 50% -14%, rgba(255, 255, 255, 0.045), transparent 54%),
+    radial-gradient(ellipse 58% 48% at 96% 6%, rgba(255, 255, 255, 0.028), transparent 56%),
+    linear-gradient(168deg, var(--color-bg-subtle) 0%, var(--color-bg-app) 42%, var(--color-bg-app) 100%);
+}
+
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Soft wash + optional topo (large surfaces only — low contrast) */
+body::before {
+  background:
+    radial-gradient(ellipse 80% 55% at 50% 0%, color-mix(in srgb, var(--color-bg-card) 18%, transparent), transparent 70%),
+    linear-gradient(180deg, color-mix(in srgb, var(--color-bg-elevated) 26%, transparent), transparent 44%);
+  opacity: 1;
+}
+
+:root[data-color-scheme="dark"] body::before,
+.dark body::before {
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 0%, rgba(255, 255, 255, 0.035), transparent 65%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 40%);
+}
+
+body::after {
+  opacity: var(--texture-opacity, 0.078);
+  background-image: var(--texture-noise), var(--bg-texture-image);
+  background-size: 180px 180px, cover;
+  background-position: 0 0, center;
+  background-repeat: repeat, no-repeat;
+  mix-blend-mode: multiply;
+  filter: contrast(1.14) brightness(1.05);
+}
+
+:root[data-color-scheme="dark"] body::after,
+.dark body::after {
+  opacity: var(--texture-opacity, 0.1);
+  mix-blend-mode: overlay;
+  filter: grayscale(1) contrast(1.14) brightness(0.9);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-heading), var(--font-body), sans-serif;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--color-focus-ring);
+}
+
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-scrollbar-thumb) var(--color-scrollbar-track);
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--color-scrollbar-track);
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--color-scrollbar-thumb);
+  border-radius: 999px;
+  border: 2px solid var(--color-scrollbar-track);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--color-scrollbar-thumb-hover);
+}
+
+*::-webkit-scrollbar-corner {
+  background: var(--color-scrollbar-corner);
+}
+
+/* Optional: extra topo depth on large bands (not for cards/forms — opt-in per section) */
+.torp-band-texture {
+  position: relative;
+  isolation: isolate;
+}
+.torp-band-texture::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: calc(var(--texture-opacity, 0.078) * 0.92);
+  background-image: var(--texture-noise), var(--bg-texture-image);
+  background-size: 180px 180px, cover;
+  background-position: 0 0, center;
+  background-repeat: repeat, no-repeat;
+  mix-blend-mode: multiply;
+  filter: contrast(1.12) brightness(1.04);
+}
+:root[data-color-scheme="dark"] .torp-band-texture::before,
+.dark .torp-band-texture::before {
+  mix-blend-mode: overlay;
+  filter: grayscale(1) contrast(1.12) brightness(0.88);
+}
+.torp-band-texture > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Nonprofit category colors — icons/labels only */
+:root {
+  --np-recreationSports: #d8a85a;
+  --np-artsCulture: #d78b6a;
+  --np-publicBenefit: #9fb1d1;
+  --np-religionSpirituality: #b193d6;
+  --np-healthWellness: #67b9a8;
+  --np-education: #7ea4da;
+  --np-humanServices: #c7a77a;
+  --np-veteransMilitary: #6ea8cf;
+  --np-firstRespondersSafety: #d57b62;
+  --np-communityDevelopment: #8eaebf;
+  --np-environmentAnimals: #73af7f;
+  --np-youthDevelopment: #91be93;
+  --np-crisisEmergency: #cf7b7b;
+  --np-advocacyPolicyRights: #c68dc9;
+  --np-unknownGeneral: #9ea6b1;
+}
+
+

@@ -100,7 +100,18 @@ async function run() {
 
   let enriched = 0;
   let skipped = 0;
+  let missed = 0;
   let failed = 0;
+
+  async function updateLogoRecord(ein, payload) {
+    const full = await sb.from(args.table).update(payload).eq("ein", ein);
+    if (!full.error) return { ok: true };
+
+    // Fallback for tables that only have logo_url.
+    const minimal = await sb.from(args.table).update({ logo_url: payload.logo_url || null }).eq("ein", ein);
+    if (!minimal.error) return { ok: true };
+    return { ok: false, error: minimal.error || full.error };
+  }
 
   for (const row of data || []) {
     const ein = String(row.ein || "").trim();
@@ -119,8 +130,16 @@ async function run() {
 
     const logoUrl = await resolveLogoUrl(website);
     if (!logoUrl) {
-      failed += 1;
+      missed += 1;
       console.log(`[MISS] ${orgName} (${ein})`);
+      if (!args.dryRun && ein) {
+        await updateLogoRecord(ein, {
+          logo_url: null,
+          logo_source: "unresolved",
+          logo_status: "missing",
+          last_checked_at: new Date().toISOString(),
+        });
+      }
       await sleep(WAIT_MS);
       continue;
     }
@@ -132,8 +151,13 @@ async function run() {
       continue;
     }
 
-    const updateResult = await sb.from(args.table).update({ logo_url: logoUrl }).eq("ein", ein);
-    if (updateResult.error) {
+    const updateResult = await updateLogoRecord(ein, {
+      logo_url: logoUrl,
+      logo_source: "domain_discovery",
+      logo_status: "resolved",
+      last_checked_at: new Date().toISOString(),
+    });
+    if (!updateResult.ok) {
       failed += 1;
       console.log(`[FAIL] ${orgName} (${ein}) -> ${updateResult.error.message}`);
     } else {
@@ -146,7 +170,8 @@ async function run() {
   console.log("\nLogo enrichment finished.");
   console.log(`Enriched: ${enriched}`);
   console.log(`Skipped: ${skipped}`);
-  console.log(`Failed/Missed: ${failed}`);
+  console.log(`Missed: ${missed}`);
+  console.log(`Failed: ${failed}`);
 }
 
 run().catch((e) => {
