@@ -4470,13 +4470,19 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   .bottomNav {
     gap: 6px;
     width: 100%;
-    justify-content: space-between;
+    justify-content: flex-start;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 2px;
   }
+  .bottomNav::-webkit-scrollbar { display: none; }
   .navItem {
-    min-width: 0;
-    flex: 1 1 0;
+    min-width: max-content;
+    flex: 0 0 auto;
     font-size: 12px;
-    padding: 8px 6px;
+    padding: 8px 10px;
+    white-space: nowrap;
   }
   .sponsorTierGrid,
   .sponsorFeaturedGrid {
@@ -4672,13 +4678,14 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   }
   .bottomNav {
     gap: 4px;
+    justify-content: flex-start;
   }
   .navItem {
     min-height: 44px;
     font-size: 11px;
     line-height: 1.15;
-    white-space: normal;
-    padding: 7px 4px;
+    white-space: nowrap;
+    padding: 7px 10px;
   }
 }
 

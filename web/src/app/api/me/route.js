@@ -1,4 +1,6 @@
 import { withAuth } from "@workos-inc/authkit-nextjs";
+import { isWorkOSConfigured } from "@/lib/auth/workosConfigured";
+import { getWorkOSUserFromCookies } from "@/lib/auth/workosSessionFromCookies";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import {
   getProfileRowByWorkOSId,
@@ -8,28 +10,44 @@ import {
 import { computeEntitlementsFromProfileRow } from "@/lib/account/entitlements";
 import { computeProfileCompletion } from "@/lib/profile/profileCompletion";
 
+function unauthenticatedMeResponse() {
+  return Response.json({
+    authenticated: false,
+    profile: null,
+    profileCompletion: null,
+    entitlements: {
+      podcastMemberContent: false,
+      communityStorySubmit: false,
+      isPrivilegedStaff: false,
+      isPlatformAdmin: false,
+    },
+  });
+}
+
 export async function GET() {
-  const auth = await withAuth();
-  if (!auth.user) {
-    return Response.json({
-      authenticated: false,
-      profile: null,
-      profileCompletion: null,
-      entitlements: {
-        podcastMemberContent: false,
-        communityStorySubmit: false,
-        isPrivilegedStaff: false,
-        isPlatformAdmin: false,
-      },
-    });
+  if (!isWorkOSConfigured()) {
+    return unauthenticatedMeResponse();
+  }
+
+  let user = null;
+  try {
+    const auth = await withAuth();
+    user = auth?.user ?? null;
+  } catch {
+    const cookieSession = await getWorkOSUserFromCookies();
+    user = cookieSession?.user ?? null;
+  }
+
+  if (!user) {
+    return unauthenticatedMeResponse();
   }
   const admin = createSupabaseAdminClient();
   let profileDto = null;
   let row = null;
-  const sessionEmail = String(auth.user.email || "").trim();
+  const sessionEmail = String(user.email || "").trim();
   if (admin) {
-    await syncProfileEmailWithWorkOSUser(admin, auth.user);
-    row = await getProfileRowByWorkOSId(admin, auth.user.id);
+    await syncProfileEmailWithWorkOSUser(admin, user);
+    row = await getProfileRowByWorkOSId(admin, user.id);
     profileDto = profileRowToClientDto(row);
   }
   if (profileDto && sessionEmail && !String(profileDto.email || "").trim()) {
@@ -48,9 +66,9 @@ export async function GET() {
     profileCompletion,
     entitlements,
     user: {
-      email: auth.user.email ?? "",
-      firstName: auth.user.firstName ?? "",
-      lastName: auth.user.lastName ?? "",
+      email: user.email ?? "",
+      firstName: user.firstName ?? "",
+      lastName: user.lastName ?? "",
     },
   });
 }
