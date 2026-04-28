@@ -4393,33 +4393,41 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   .topApp {
     --content-gutter: 24px;
     --header-floating-offset: 0px;
-    --header-floating-height: 128px;
-    --header-fade-height: 20px;
+    --header-floating-height: 212px;
+    --header-fade-height: 0px;
+    --mobile-header-brand-row-height: 140px;
   }
   .appShell--subpage {
     --header-floating-offset: 0px;
-    --header-floating-height: 128px;
-    --header-fade-height: 20px;
+    --header-floating-height: 212px;
+    --header-fade-height: 0px;
+    --mobile-header-brand-row-height: 140px;
   }
   .headerBrandStack {
-    position: relative;
-    top: auto;
-    left: auto;
+    position: sticky;
+    top: 0;
+    left: 0;
     transform: none;
     z-index: 101;
     width: 100%;
     max-width: none;
     padding: calc(6px + env(safe-area-inset-top, 0px)) 10px 4px;
+    background: var(--color-bg-primary);
+    border-bottom: 1px solid var(--color-border-subtle);
   }
   .topbar {
     position: sticky;
-    top: 0;
+    top: var(--mobile-header-brand-row-height, 140px);
     z-index: 102;
-    padding-bottom: 6px;
-    background: linear-gradient(180deg, color-mix(in srgb, var(--color-bg-primary) 94%, transparent), transparent);
+    padding: 4px 0 8px;
+    background: var(--color-bg-primary);
+    border-bottom: 1px solid var(--color-border-subtle);
   }
   .topbarOcclusion {
     display: none;
+  }
+  .shell {
+    padding-top: 16px;
   }
   .siteContainer, .shell { width: min(var(--content-max-width), calc(100% - var(--content-gutter))); }
   .topbarInner {
@@ -4445,7 +4453,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
     gap: 8px;
   }
   img.brandMarkImg--header {
-    max-height: clamp(86px, 23vw, 120px) !important;
+    max-height: clamp(150px, 42vw, 210px) !important;
     max-width: min(420px, 90vw) !important;
   }
   .headerBrandTitle {
@@ -4724,7 +4732,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
     gap: 4px;
   }
   img.brandMarkImg--header {
-    max-height: clamp(74px, 22vw, 94px) !important;
+    max-height: clamp(130px, 38vw, 168px) !important;
   }
   .sponsorBtn {
     min-width: 0;

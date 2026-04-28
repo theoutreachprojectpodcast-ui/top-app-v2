@@ -1338,6 +1338,15 @@
     padding: 18px 0 calc(16px + 108px + env(safe-area-inset-bottom, 0px));
   }
 
+  .topApp.appShell--podcast .siteFooter::before {
+    left: 50%;
+    right: auto;
+    width: calc(100% - 24px);
+    max-width: var(--content-max-width, 1200px);
+    transform: translateX(-50%);
+    border-radius: 12px 12px 0 0;
+  }
+
   .appShell--podcast .footerInner {
     gap: 8px;
     text-align: center;
