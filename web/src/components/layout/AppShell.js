@@ -28,7 +28,9 @@ export default function AppShell({
   useFooterDockChrome = false,
   useTopAppStructure = false,
   showThemeToggle = true,
+  navItems,
 }) {
+  const items = Array.isArray(navItems) && navItems.length ? navItems : NAV_ITEMS;
   const RootTag = useTopAppStructure ? "main" : "div";
   return (
     <RootTag className={`${useTopAppStructure ? "topApp" : "appShell"} appShell--subpage ${shellClassName}`.trim()}>
@@ -75,7 +77,7 @@ export default function AppShell({
         <div className="footerDock">
           <FooterInner className="footerNavInner">
             <nav className="bottomNav" aria-label="Primary">
-              {NAV_ITEMS.map((item) => (
+              {items.map((item) => (
                 <Link
                   key={item.key}
                   href={item.href}
@@ -89,7 +91,7 @@ export default function AppShell({
         </div>
       ) : (
         <nav className="bottomNav" aria-label="Primary">
-          {NAV_ITEMS.map((item) => (
+          {items.map((item) => (
             <Link
               key={item.key}
               href={item.href}

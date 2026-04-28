@@ -28,6 +28,12 @@ import PodcastCTASection from "@/features/podcasts/components/PodcastCTASection"
 import PodcastApplyGuestForm from "@/features/podcasts/components/PodcastApplyGuestForm";
 import "@/features/podcasts/styles/podcasts.css";
 
+const PODCAST_NAV_ITEMS = [
+  { href: "/", key: "home", label: "Home" },
+  { href: "/profile", key: "profile", label: "Profile" },
+  { href: "/contact", key: "contact", label: "Contact" },
+];
+
 export default function PodcastsLandingPage({ initialEpisodes = [] }) {
   const supabase = useMemo(() => getSupabaseClient(), []);
   const [canAccessMembers, setCanAccessMembers] = useState(false);
@@ -125,6 +131,7 @@ export default function PodcastsLandingPage({ initialEpisodes = [] }) {
       useFooterDockChrome
       useTopAppStructure
       showThemeToggle={false}
+      navItems={PODCAST_NAV_ITEMS}
     >
       <div className="podcastScope">
         <PodcastHero featured={featured} onApply={() => setApplyOpen(true)} />

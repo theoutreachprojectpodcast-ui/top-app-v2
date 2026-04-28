@@ -1039,7 +1039,6 @@ function TopAppInner({ initialNav = "home" }) {
         <FooterInner className="footerNavInner">
           <nav className="bottomNav" aria-label="Primary navigation">
             <button className={`navItem ${nav === "home" ? "isActive" : ""}`} onClick={dockNavHome} type="button">Home</button>
-            <button className={`navItem ${nav === "trusted" ? "isActive" : ""}`} onClick={() => { setNav("trusted"); if (!trusted.length) loadTrusted(true); }} type="button">Trusted Resources</button>
             <button className={`navItem ${nav === "community" ? "isActive" : ""}`} onClick={() => setNav("community")} type="button">Community</button>
             <button className={`navItem ${nav === "profile" ? "isActive" : ""}`} onClick={dockNavProfile} type="button">Profile</button>
             <button className={`navItem ${nav === "contact" ? "isActive" : ""}`} onClick={() => setNav("contact")} type="button">Contact</button>

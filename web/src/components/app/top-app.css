@@ -4392,12 +4392,34 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   .footerInner { flex-direction: column; }
   .topApp {
     --content-gutter: 24px;
-    --header-floating-offset: 14px;
-    --header-floating-height: 270px;
-    --header-fade-height: 48px;
+    --header-floating-offset: 0px;
+    --header-floating-height: 128px;
+    --header-fade-height: 20px;
   }
   .appShell--subpage {
-    --header-floating-offset: 14px;
+    --header-floating-offset: 0px;
+    --header-floating-height: 128px;
+    --header-fade-height: 20px;
+  }
+  .headerBrandStack {
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
+    z-index: 101;
+    width: 100%;
+    max-width: none;
+    padding: calc(6px + env(safe-area-inset-top, 0px)) 10px 4px;
+  }
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 102;
+    padding-bottom: 6px;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--color-bg-primary) 94%, transparent), transparent);
+  }
+  .topbarOcclusion {
+    display: none;
   }
   .siteContainer, .shell { width: min(var(--content-max-width), calc(100% - var(--content-gutter))); }
   .topbarInner {
@@ -4423,8 +4445,8 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
     gap: 8px;
   }
   img.brandMarkImg--header {
-    max-height: clamp(170px, 67.03vw, 244px) !important;
-    max-width: min(671px, 92vw) !important;
+    max-height: clamp(86px, 23vw, 120px) !important;
+    max-width: min(420px, 90vw) !important;
   }
   .headerBrandTitle {
     letter-spacing: 0.08em;
@@ -4609,14 +4631,19 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
     justify-self: stretch;
     width: 100%;
   }
+  .topbarLeft {
+    display: none;
+  }
   .topbarLeft .topbarActionsCluster,
   .topbarRight .topbarActionsCluster {
     width: 100%;
     justify-content: center;
     flex-wrap: wrap;
   }
-  .topbarLeft .sponsorBtn {
-    display: none;
+  .topbarRight .themeToggle {
+    min-width: 40px;
+    min-height: 40px;
+    padding: 0 10px;
   }
   .topbarRight .sponsorBtn,
   .topbarRight a.btnSoft,
@@ -4695,6 +4722,9 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   }
   .topbarInner {
     gap: 4px;
+  }
+  img.brandMarkImg--header {
+    max-height: clamp(74px, 22vw, 94px) !important;
   }
   .sponsorBtn {
     min-width: 0;
