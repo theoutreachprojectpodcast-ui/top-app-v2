@@ -13,6 +13,8 @@ body {
   margin: 0;
   padding: 0;
   min-height: 100%;
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 a {
@@ -127,13 +129,22 @@ a {
 @media (max-width: 760px) {
   .appShell--subpage .bottomNav {
     width: calc(100% - 24px);
-    justify-content: space-between;
+    justify-content: flex-start;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+
+  .appShell--subpage .bottomNav::-webkit-scrollbar {
+    display: none;
   }
 
   .appShell--subpage .navItem {
-    min-width: 0;
-    flex: 1 1 0;
+    min-width: max-content;
+    flex: 0 0 auto;
     font-size: 12px;
-    padding: 8px 6px;
+    padding: 8px 10px;
+    white-space: nowrap;
   }
 }

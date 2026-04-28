@@ -322,6 +322,10 @@
   color: var(--pod-text);
   min-width: 0;
 }
+
+.podcastScope > * {
+  min-width: 0;
+}
 .appShell--podcast,
 .appShell--podcast * {
   color-scheme: dark;
@@ -419,6 +423,7 @@
   background: rgba(8, 14, 24, 0.72);
   border-radius: 14px;
   padding: 14px;
+  min-width: 0;
 }
 
 .podcastEpisodeCard {
@@ -450,12 +455,16 @@
 .podcastMemberItem h4 {
   margin: 0;
   line-height: 1.35;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 .podcastEpisodeBody p,
 .podcastGuestCard p,
 .podcastMemberItem p {
   margin: 8px 0 0;
   color: var(--pod-muted);
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 .podcastEpisodeGuests {
   font-size: 12px;
@@ -480,6 +489,7 @@
   gap: 12px;
   text-decoration: none;
   color: inherit;
+  min-width: 0;
 }
 .podcastGuestAvatar {
   width: 56px;
@@ -595,6 +605,7 @@
   padding: 10px;
   display: grid;
   gap: 8px;
+  min-width: 0;
 }
 
 .podcastScope .btnPrimary {
@@ -1295,5 +1306,31 @@
 
   .podcastSponsorFlowModal__applyBlock .sponsorFormActions .btnPrimary {
     width: 100%;
+  }
+
+  .appShell--podcast .footerDockBackdrop {
+    height: calc(118px + env(safe-area-inset-bottom));
+  }
+
+  .appShell--podcast .footerNavInner {
+    padding: 6px 0 calc(10px + env(safe-area-inset-bottom));
+  }
+
+  .appShell--podcast .bottomNav {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    overflow: visible;
+  }
+
+  .appShell--podcast .navItem {
+    width: 100%;
+    min-width: 0;
+    min-height: 42px;
+    padding: 7px 6px;
+    white-space: normal;
+    text-align: center;
+    line-height: 1.15;
   }
 }
