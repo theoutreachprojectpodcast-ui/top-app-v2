@@ -3,6 +3,7 @@
   isolation: isolate;
   min-height: 100vh;
   min-height: 100dvh;
+  overflow-x: clip;
   background-color: #070b12;
   color: #e8f0ff;
   color-scheme: dark;
@@ -319,6 +320,7 @@
   display: grid;
   gap: 16px;
   color: var(--pod-text);
+  min-width: 0;
 }
 .appShell--podcast,
 .appShell--podcast * {
@@ -1205,6 +1207,44 @@
   }
   .podcastSponsorTierGrid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .appShell--podcast .topbarInner {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "right";
+    gap: 8px;
+    justify-items: center;
+  }
+
+  .appShell--podcast .topbarLeft {
+    display: none;
+  }
+
+  .appShell--podcast .topbarRight {
+    width: 100%;
+    justify-self: stretch;
+    justify-content: center;
+  }
+
+  .appShell--podcast .topbarRight .topbarActionsCluster {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .appShell--podcast .topbarRight .btnSoft,
+  .appShell--podcast .topbarRight .sponsorBtn {
+    min-width: 0;
+    min-height: 40px;
+    padding-inline: 12px;
+  }
+
+  .appShell--podcast .podcastBrandLogo {
+    max-height: clamp(120px, 28vw, 154px) !important;
   }
 }
 
