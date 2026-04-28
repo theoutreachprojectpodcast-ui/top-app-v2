@@ -107,7 +107,7 @@ Vercel is still treating the project like a **static “Other”** preset with d
 
 Use this as the single review URL instead of bookmarking per-deployment preview hostnames.
 
-**Evidence-based QA runs:** [TOP_v0.4_QA_VALIDATION_REPORT.md](./TOP_v0.4_QA_VALIDATION_REPORT.md) (HTTP probes, env names, blockers). After Deployment Protection is configured, use `pnpm --dir web run smoke:qa:http` with `QA_BASE_URL` and optional `VERCEL_AUTOMATION_BYPASS_SECRET`.
+**Evidence-based QA runs:** [TORP_v0.4_QA_VALIDATION_REPORT.md](./TORP_v0.4_QA_VALIDATION_REPORT.md) (HTTP probes, env names, blockers). After Deployment Protection is configured, use `pnpm --dir web run smoke:qa:http` with `QA_BASE_URL` and optional `VERCEL_AUTOMATION_BYPASS_SECRET`.
 
 ### One-time setup (Vercel dashboard — project owner)
 
@@ -234,6 +234,34 @@ After dashboard and env updates:
 - [ ] `QA` branch deployment **Ready**; **`qa-the-outreach-project.vercel.app`** (if configured) matches latest QA.
 - [ ] WorkOS redirect URIs registered for production + QA origins.
 - [ ] Spot-check: `/`, `/profile`, `/api/me` (auth), static assets.
+
+### Admin entrypoint + endpoint scope (v0.4 decision)
+
+Admin UI stays isolated under `/admin/*` with platform-admin route gating. Public/member-facing routes remain available where needed (for normal product behavior), while privileged actions use explicit scope checks.
+
+Decision map:
+
+- **Platform-admin only:** `/api/admin/*` endpoints, sponsor/logo/trusted/directory/user management, admin enrichment summary.
+- **Moderator scope (non-admin route, intentional):** community moderation actions in `/api/community/posts` pending flow and `/api/community/posts/[id]` approve/reject/hide/edit.
+- **Platform-admin within non-admin route (intentional split):** bookmark/follow-up actions in `/api/community/posts` and `/api/community/posts/[id]`.
+- **Moderator scope (operational workflows):** `/api/nonprofit/enrich`, `/api/sponsors/enrich`, `/api/podcasts/sync-youtube`, notification trigger moderation helpers.
+
+Rationale:
+
+- Community moderation and enrichment operations are role-based workflows and do not require platform-admin by default.
+- Organization-wide administration (directory edits, user role changes, trusted/sponsor catalog management) is restricted to platform-admin endpoints under `/api/admin/*`.
+- Admin UI remains separate from public/member routes.
+
+### QA + production verification checklist (admin and responsive)
+
+- [ ] `/admin` and all admin child routes load only for platform-admin users.
+- [ ] Logged-out and logged-in navigation work on mobile (320/375/390/430), tablet (768/820/1024), desktop (>=1280).
+- [ ] No horizontal overflow on home/profile/settings/community/sponsors/trusted/nonprofit detail/podcast pages.
+- [ ] Modals are fully usable on mobile (scrollable body, accessible close action, no clipped footer actions).
+- [ ] Admin tables/toolbars/forms are usable on mobile/tablet (stacked controls, readable rows/actions).
+- [ ] Community submit/moderation flows remain functional across breakpoints.
+- [ ] Auth/account/billing flows still function after responsive changes (`/api/me`, onboarding, profile/settings).
+- [ ] QA build passes and route smoke remains green.
 
 ---
 

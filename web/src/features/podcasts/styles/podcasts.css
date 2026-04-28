@@ -1207,3 +1207,53 @@
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 520px) {
+  .podcastScope {
+    gap: 12px;
+  }
+
+  .podcastScope .podcastSection,
+  .podcastScope .podcastHeroCard,
+  .podcastScope .podcastApplySection,
+  .podcastScope .podcastSponsorStrip,
+  .podcastScope .podcastMemberSection,
+  .podcastScope .podcastCtaSection {
+    padding: 12px;
+    border-radius: 12px;
+  }
+
+  .podcastSponsorFlowModal.modalCard,
+  .podcastApplyGuestModal.podcastSponsorFlowModal.modalCard {
+    width: min(100%, 100%);
+    max-height: calc(100dvh - 20px);
+  }
+
+  .podcastSponsorFlowModal__topBar {
+    padding: 14px 14px 12px;
+    gap: 10px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .podcastSponsorFlowModal__close {
+    width: 100%;
+    justify-content: center;
+    display: inline-flex;
+  }
+
+  .podcastSponsorFlowModal .podcastSponsorFlowModal__scroll {
+    padding: 12px 14px 16px;
+    gap: 12px;
+  }
+
+  .podcastSponsorFlowModal__tierBlock,
+  .podcastSponsorFlowModal__applyBlock {
+    padding: 12px;
+    border-radius: 12px;
+  }
+
+  .podcastSponsorFlowModal__applyBlock .sponsorFormActions .btnPrimary {
+    width: 100%;
+  }
+}
