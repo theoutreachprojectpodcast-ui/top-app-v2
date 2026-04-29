@@ -9,14 +9,15 @@ import "@/features/podcasts/styles/podcasts.css";
 
 export default function PodcastGuestProfilePage({ slug }) {
   const supabase = useMemo(() => getSupabaseClient(), []);
-  const fallbackGuest = FALLBACK_GUESTS.find((g) => g.slug === slug) || FALLBACK_GUESTS[0] || null;
+  const slugStr = String(slug || "").trim();
+  const fallbackGuest = slugStr.startsWith("ep-") ? null : FALLBACK_GUESTS.find((g) => g.slug === slugStr) || FALLBACK_GUESTS[0] || null;
   const [guest, setGuest] = useState(fallbackGuest);
   const [episodes, setEpisodes] = useState(FALLBACK_EPISODES.slice(0, 3));
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const row = await getPodcastGuestProfile(supabase, slug);
+      const row = await getPodcastGuestProfile(supabase, slugStr);
       if (!row || cancelled) return;
       setGuest(row);
       const linked = await listPodcastEpisodesByGuest(supabase, row.id);
@@ -25,7 +26,7 @@ export default function PodcastGuestProfilePage({ slug }) {
     return () => {
       cancelled = true;
     };
-  }, [slug, supabase]);
+  }, [slugStr, supabase]);
 
   const podcastLogoSrc =
     (typeof process !== "undefined" && process.env.NEXT_PUBLIC_PODCAST_BRAND_LOGO_PATH) ||
@@ -58,8 +59,12 @@ export default function PodcastGuestProfilePage({ slug }) {
             </div>
             <div>
               <h1>{guest?.name || "Guest"}</h1>
+              {guest?.unverified ? (
+                <p className="podcastGuestUnverified">Unverified — inferred from the episode until editorial review.</p>
+              ) : null}
               <p>{guest?.title || "Guest"}</p>
               <p>{guest?.bio || "Biography coming soon."}</p>
+              {guest?.discussionSummary ? <p className="podcastGuestDiscussion">{guest.discussionSummary}</p> : null}
               {guest?.website_url ? (
                 <a className="btnSoft" href={guest.website_url} target="_blank" rel="noopener noreferrer">Visit website</a>
               ) : null}

@@ -86,20 +86,32 @@ export {
   tierAllowsPodcastMemberContent,
 } from "@/lib/podcast/memberAccess";
 
-export async function listPodcastEpisodes(supabase) {
-  try {
-    if (typeof window !== "undefined") {
-      const res = await fetch("/api/podcasts/recent", { cache: "no-store" });
-      if (res.ok) {
-        const payload = await res.json();
-        if (Array.isArray(payload?.episodes) && payload.episodes.length) {
-          return payload.episodes.slice(0, 10);
-        }
-      }
-    }
-  } catch {
-    // fallback to db/local
+export async function fetchPodcastRecentBundle() {
+  if (typeof window === "undefined") {
+    return { ok: false, episodes: [], featuredGuests: [], degraded: false };
   }
+  try {
+    const res = await fetch("/api/podcasts/recent", { credentials: "include", cache: "no-store" });
+    const payload = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { ok: false, episodes: [], featuredGuests: [], degraded: true, error: payload?.error };
+    }
+    return {
+      ok: !!payload.ok,
+      episodes: Array.isArray(payload.episodes) ? payload.episodes : [],
+      featuredGuests: Array.isArray(payload.featuredGuests) ? payload.featuredGuests : [],
+      degraded: !!payload.degraded,
+      source: payload.source,
+      error: payload.error,
+    };
+  } catch {
+    return { ok: false, episodes: [], featuredGuests: [], degraded: true };
+  }
+}
+
+export async function listPodcastEpisodes(supabase) {
+  const bundle = await fetchPodcastRecentBundle();
+  if (bundle.episodes?.length) return bundle.episodes.slice(0, 10);
   if (!supabase) return FALLBACK_EPISODES;
   const { data, error } = await supabase.from(EPISODES_TABLE).select("*").order("published_at", { ascending: false }).limit(100);
   if (error || !Array.isArray(data) || !data.length) return FALLBACK_EPISODES;
@@ -161,6 +173,18 @@ export async function listPodcastGuests(supabase) {
 export async function getPodcastGuestProfile(supabase, slug) {
   const key = String(slug || "").trim();
   if (!key) return null;
+  if (typeof window !== "undefined" && key.startsWith("ep-")) {
+    try {
+      const res = await fetch(`/api/podcasts/guest/${encodeURIComponent(key)}`, {
+        credentials: "include",
+        cache: "no-store",
+      });
+      const body = await res.json().catch(() => ({}));
+      if (res.ok && body?.guest) return body.guest;
+    } catch {
+      // fall through
+    }
+  }
   if (!supabase) return FALLBACK_GUESTS.find((g) => g.slug === key) || null;
   const { data, error } = await supabase.from(GUESTS_TABLE).select("*").eq("slug", key).maybeSingle();
   if (error || !data) return FALLBACK_GUESTS.find((g) => g.slug === key) || null;

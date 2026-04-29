@@ -483,6 +483,33 @@
   justify-self: start;
 }
 
+.podcastEpisodeWatchBtn {
+  min-height: 44px;
+  min-width: 44px;
+  padding-inline: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.podcastGuestCard__body {
+  min-width: 0;
+}
+
+.podcastGuestUnverified {
+  margin: 0 0 4px;
+  font-size: 11px;
+  line-height: 1.35;
+  color: color-mix(in srgb, var(--pod-accent) 72%, var(--pod-text) 28%);
+}
+
+.podcastGuestDiscussion {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: color-mix(in srgb, var(--pod-muted) 92%, #fff 8%);
+}
+
 .podcastGuestCard {
   display: grid;
   grid-template-columns: 56px minmax(0, 1fr);

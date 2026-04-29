@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import PodcastsLandingPage from "@/features/podcasts/components/PodcastsLandingPage";
-import { discoverChannelId, parseYoutubeFeed, youtubeFeedUrls } from "@/features/podcasts/domain/youtubeFeed";
+import { getCachedPodcastLandingBundle } from "@/lib/podcast/getCachedPodcastLanding";
 
 function PodcastsFallback() {
   return (
@@ -11,22 +11,18 @@ function PodcastsFallback() {
 }
 
 export default async function PodcastsPageRoute() {
-  let initialEpisodes = [];
-  try {
-    const channelId = await discoverChannelId();
-    for (const feedUrl of youtubeFeedUrls(channelId)) {
-      const res = await fetch(feedUrl, { cache: "no-store" });
-      if (!res.ok) continue;
-      const xml = await res.text();
-      initialEpisodes = parseYoutubeFeed(xml).slice(0, 10);
-      if (initialEpisodes.length) break;
-    }
-  } catch {
-    initialEpisodes = [];
-  }
+  const bundle = await getCachedPodcastLandingBundle();
   return (
     <Suspense fallback={<PodcastsFallback />}>
-      <PodcastsLandingPage initialEpisodes={initialEpisodes} />
+      <PodcastsLandingPage
+        initialEpisodes={bundle.episodes || []}
+        initialFeaturedGuests={bundle.featuredGuests || []}
+        initialBundleMeta={{
+          degraded: !!bundle.degraded,
+          source: bundle.source || "",
+          error: bundle.error || "",
+        }}
+      />
     </Suspense>
   );
 }

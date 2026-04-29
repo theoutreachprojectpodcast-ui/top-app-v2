@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createClient } from "@supabase/supabase-js";
-import { discoverChannelId, parseYoutubeFeed, youtubeFeedUrls } from "../src/features/podcasts/domain/youtubeFeed.js";
+import { runPodcastYouTubeSync } from "../src/lib/podcast/runPodcastYouTubeSync.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -25,34 +25,17 @@ loadDotEnvLocal();
 
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const TABLE = "podcast_episodes";
 
 if (!URL || !KEY) {
   console.warn("Skipping podcast sync: missing Supabase credentials.");
   process.exit(0);
 }
 
-const channelId = await discoverChannelId();
-let rows = [];
-for (const feedUrl of youtubeFeedUrls(channelId)) {
-  const feed = await fetch(feedUrl);
-  if (!feed.ok) continue;
-  rows = parseYoutubeFeed(await feed.text()).slice(0, 120);
-  if (rows.length) break;
-}
-if (!rows.length) {
-  console.warn("Skipping podcast sync: unable to load YouTube feed.");
-  process.exit(0);
-}
 const supabase = createClient(URL, KEY);
-const { error } = await supabase.from(TABLE).upsert(rows, { onConflict: "youtube_video_id" });
-if (error) {
-  if (String(error.message || "").includes(TABLE)) {
-    console.warn("Skipping podcast sync: podcast_episodes table missing. Apply web/supabase/podcasts.sql first.");
-    process.exit(0);
-  }
-  console.error(error.message);
+const result = await runPodcastYouTubeSync(supabase);
+if (!result.ok) {
+  console.error(result.error || "sync_failed");
   process.exit(1);
 }
 
-console.log(`Podcast episodes synced: ${rows.length}`);
+console.log(`Podcast pipeline sync OK: ${result.synced} rows (source: ${result.source}, featured rows: ${result.featured})`);

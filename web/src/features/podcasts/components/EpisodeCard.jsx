@@ -35,7 +35,9 @@ export default function EpisodeCard({ episode, guests = [] }) {
         <p>{summary || "No description yet."}</p>
         <p className="podcastEpisodeMeta">{formatEpisodeViewCount(episode)} · {formatEpisodePostedAt(episode)}</p>
         {guests.length ? <p className="podcastEpisodeGuests">Guests: {guests.map((g) => g.name).join(", ")}</p> : null}
-        <a className="btnSoft" href={watchUrl} target="_blank" rel="noopener noreferrer">Watch</a>
+        <a className="btnSoft podcastEpisodeWatchBtn" href={watchUrl} target="_blank" rel="noopener noreferrer">
+          Watch
+        </a>
       </div>
     </article>
   );

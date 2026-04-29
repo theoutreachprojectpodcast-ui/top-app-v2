@@ -95,6 +95,20 @@ export default function AuthSessionProvider({ children }) {
     return () => document.removeEventListener("visibilitychange", onVis);
   }, [refresh]);
 
+  /** Bump sliding idle cookie on real pointer activity (throttled); complements proxy on navigations. */
+  useEffect(() => {
+    let last = 0;
+    const throttleMs = 120_000;
+    function ping() {
+      const now = Date.now();
+      if (now - last < throttleMs) return;
+      last = now;
+      void fetch("/api/auth/activity", { method: "POST", credentials: "include", keepalive: true }).catch(() => {});
+    }
+    window.addEventListener("pointerdown", ping, { passive: true });
+    return () => window.removeEventListener("pointerdown", ping);
+  }, []);
+
   const value = useMemo(() => ({ ...state, refresh }), [state, refresh]);
 
   return <AuthSessionContext.Provider value={value}>{children}</AuthSessionContext.Provider>;
