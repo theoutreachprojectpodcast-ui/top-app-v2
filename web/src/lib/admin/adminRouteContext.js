@@ -1,4 +1,4 @@
-import { withAuth } from "@workos-inc/authkit-nextjs";
+import { resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
 import { isPlatformAdminServer } from "@/lib/admin/platformAdminServer";
@@ -10,23 +10,24 @@ import { isPlatformAdminServer } from "@/lib/admin/platformAdminServer";
  * >}
  */
 export async function requirePlatformAdminRouteContext() {
-  const auth = await withAuth();
-  if (!auth.user) {
-    return { ok: false, response: Response.json({ error: "unauthorized" }, { status: 401 }) };
+  const auth = await resolveWorkOSRouteUser();
+  if (!auth.ok) {
+    return { ok: false, response: Response.json({ error: auth.error, message: auth.message }, { status: auth.status }) };
   }
+  const user = auth.user;
   const admin = createSupabaseAdminClient();
   if (!admin) {
     return { ok: false, response: Response.json({ error: "server_storage_unavailable" }, { status: 503 }) };
   }
-  const profileRow = await getProfileRowByWorkOSId(admin, auth.user.id);
+  const profileRow = await getProfileRowByWorkOSId(admin, user.id);
   if (
     !isPlatformAdminServer({
-      email: auth.user.email,
-      workosUserId: auth.user.id,
+      email: user.email,
+      workosUserId: user.id,
       profileRow,
     })
   ) {
     return { ok: false, response: Response.json({ error: "forbidden" }, { status: 403 }) };
   }
-  return { ok: true, user: auth.user, admin, profileRow };
+  return { ok: true, user, admin, profileRow };
 }

@@ -1,4 +1,4 @@
-import { withAuth } from "@workos-inc/authkit-nextjs";
+import { authFailureJson, resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
 import { createSupabaseAdminClient, profileTableName } from "@/lib/supabase/admin";
 import { getProfileRowByWorkOSId, profileRowToClientDto } from "@/lib/profile/serverProfile";
 import { normalizePublicAccountIntent } from "@/lib/account/accountModel";
@@ -30,10 +30,9 @@ const ONBOARDING_STEP_VALUES = new Set(["0", "1", "2"]);
 const CLIENT_ONBOARDING_STATUS = new Set(["in_progress"]);
 
 export async function PATCH(request) {
-  const auth = await withAuth();
-  if (!auth.user) {
-    return Response.json({ error: "unauthorized" }, { status: 401 });
-  }
+  const auth = await resolveWorkOSRouteUser();
+  if (!auth.ok) return authFailureJson(auth);
+  const user = auth.user;
   const admin = createSupabaseAdminClient();
   if (!admin) {
     return Response.json({ error: "server_storage_unavailable" }, { status: 503 });
@@ -46,7 +45,7 @@ export async function PATCH(request) {
     return Response.json({ error: "invalid_json" }, { status: 400 });
   }
 
-  const existing = await getProfileRowByWorkOSId(admin, auth.user.id);
+  const existing = await getProfileRowByWorkOSId(admin, user.id);
   const prevMeta =
     existing?.metadata && typeof existing.metadata === "object" && !Array.isArray(existing.metadata)
       ? { ...existing.metadata }
@@ -88,14 +87,14 @@ export async function PATCH(request) {
 
   if (!existing) {
     const insertRow = {
-      workos_user_id: auth.user.id,
-      email: auth.user.email || row.email || null,
-      first_name: row.first_name ?? auth.user.firstName ?? "",
-      last_name: row.last_name ?? auth.user.lastName ?? "",
+      workos_user_id: user.id,
+      email: user.email || row.email || null,
+      first_name: row.first_name ?? user.firstName ?? "",
+      last_name: row.last_name ?? user.lastName ?? "",
       display_name:
         row.display_name ??
-        ([auth.user.firstName, auth.user.lastName].filter(Boolean).join(" ").trim() ||
-          auth.user.email ||
+        ([user.firstName, user.lastName].filter(Boolean).join(" ").trim() ||
+          user.email ||
           "Member"),
       membership_tier: row.membership_tier ?? "free",
       membership_status: row.membership_status ?? "none",
@@ -107,12 +106,12 @@ export async function PATCH(request) {
       return Response.json({ error: "insert_failed", message: insErr.message }, { status: 500 });
     }
   } else {
-    const { error } = await admin.from(profileTableName()).update(row).eq("workos_user_id", auth.user.id);
+    const { error } = await admin.from(profileTableName()).update(row).eq("workos_user_id", user.id);
     if (error) {
       return Response.json({ error: "update_failed", message: error.message }, { status: 500 });
     }
   }
 
-  const next = await getProfileRowByWorkOSId(admin, auth.user.id);
+  const next = await getProfileRowByWorkOSId(admin, user.id);
   return Response.json({ profile: profileRowToClientDto(next) });
 }

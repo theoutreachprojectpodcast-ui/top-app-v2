@@ -1,5 +1,5 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { withAuth } from "@workos-inc/authkit-nextjs";
+import { authFailureJson, resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
 import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
 import { isCommunityModeratorServer } from "@/lib/community/moderatorServer";
 import { notifyStaffProfiles } from "@/server/notifications/notificationService";
@@ -11,10 +11,9 @@ export const runtime = "nodejs";
  * Verifies the row server-side, then fans out staff notifications (deduped).
  */
 export async function POST(request) {
-  const auth = await withAuth();
-  if (!auth.user) {
-    return Response.json({ error: "unauthorized" }, { status: 401 });
-  }
+  const auth = await resolveWorkOSRouteUser();
+  if (!auth.ok) return authFailureJson(auth);
+  const user = auth.user;
 
   const admin = createSupabaseAdminClient();
   if (!admin) {
@@ -43,11 +42,11 @@ export async function POST(request) {
     return Response.json({ error: "not_found" }, { status: 404 });
   }
 
-  const isOwner = String(row.applicant_email || "").trim().toLowerCase() === String(auth.user.email || "").trim().toLowerCase();
-  const profileRow = await getProfileRowByWorkOSId(admin, auth.user.id);
+  const isOwner = String(row.applicant_email || "").trim().toLowerCase() === String(user.email || "").trim().toLowerCase();
+  const profileRow = await getProfileRowByWorkOSId(admin, user.id);
   const isModerator = isCommunityModeratorServer({
-    email: auth.user.email,
-    workosUserId: auth.user.id,
+    email: user.email,
+    workosUserId: user.id,
     profileRow,
   });
   if (!isOwner && !isModerator) {

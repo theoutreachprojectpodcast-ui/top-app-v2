@@ -1,4 +1,4 @@
-import { withAuth } from "@workos-inc/authkit-nextjs";
+import { authFailureJson, resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
 import Stripe from "stripe";
 import {
   podcastSponsorCheckoutConfigured,
@@ -12,10 +12,9 @@ export async function POST(request) {
     return Response.json({ error: "podcast_billing_not_configured" }, { status: 503 });
   }
 
-  const auth = await withAuth();
-  if (!auth.user) {
-    return Response.json({ error: "unauthorized", message: "Sign in to pay for a podcast sponsorship." }, { status: 401 });
-  }
+  const auth = await resolveWorkOSRouteUser();
+  if (!auth.ok) return authFailureJson(auth);
+  const user = auth.user;
 
   let body;
   try {
@@ -37,14 +36,14 @@ export async function POST(request) {
   const metadata = {
     checkout_kind: "podcast_sponsor",
     podcast_tier_id: podcastTierId,
-    workos_user_id: auth.user.id,
+    workos_user_id: user.id,
   };
 
   try {
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
-      client_reference_id: auth.user.id,
-      customer_email: auth.user.email || undefined,
+      client_reference_id: user.id,
+      customer_email: user.email || undefined,
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${base}${safeReturn}?sponsor_checkout=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${base}${safeReturn}?sponsor_checkout=cancel`,

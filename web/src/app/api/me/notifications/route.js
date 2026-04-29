@@ -1,4 +1,4 @@
-import { withAuth } from "@workos-inc/authkit-nextjs";
+import { authFailureJson, resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
 import { isCommunityModeratorServer } from "@/lib/community/moderatorServer";
@@ -8,24 +8,23 @@ export const runtime = "nodejs";
 const TABLE = "torp_platform_notifications";
 
 export async function GET(request) {
-  const auth = await withAuth();
-  if (!auth.user) {
-    return Response.json({ error: "unauthorized" }, { status: 401 });
-  }
+  const auth = await resolveWorkOSRouteUser();
+  if (!auth.ok) return authFailureJson(auth);
+  const user = auth.user;
 
   const admin = createSupabaseAdminClient();
   if (!admin) {
     return Response.json({ notifications: [], unreadCount: 0 });
   }
 
-  const profile = await getProfileRowByWorkOSId(admin, auth.user.id);
+  const profile = await getProfileRowByWorkOSId(admin, user.id);
   if (!profile?.id) {
     return Response.json({ notifications: [], unreadCount: 0 });
   }
 
   const isStaffViewer = isCommunityModeratorServer({
     email: profile.email,
-    workosUserId: auth.user.id,
+    workosUserId: user.id,
     profileRow: profile,
   });
 
@@ -86,17 +85,16 @@ export async function GET(request) {
 }
 
 export async function PATCH(request) {
-  const auth = await withAuth();
-  if (!auth.user) {
-    return Response.json({ error: "unauthorized" }, { status: 401 });
-  }
+  const auth = await resolveWorkOSRouteUser();
+  if (!auth.ok) return authFailureJson(auth);
+  const user = auth.user;
 
   const admin = createSupabaseAdminClient();
   if (!admin) {
     return Response.json({ error: "server_unavailable" }, { status: 503 });
   }
 
-  const profile = await getProfileRowByWorkOSId(admin, auth.user.id);
+  const profile = await getProfileRowByWorkOSId(admin, user.id);
   if (!profile?.id) {
     return Response.json({ error: "profile_required" }, { status: 403 });
   }
@@ -112,7 +110,7 @@ export async function PATCH(request) {
 
   const isStaffViewer = isCommunityModeratorServer({
     email: profile.email,
-    workosUserId: auth.user.id,
+    workosUserId: user.id,
     profileRow: profile,
   });
 

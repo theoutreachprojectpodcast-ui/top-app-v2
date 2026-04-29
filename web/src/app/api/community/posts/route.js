@@ -1,4 +1,4 @@
-import { withAuth } from "@workos-inc/authkit-nextjs";
+import { authFailureJson, resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
 import { isCommunityModeratorServer } from "@/lib/community/moderatorServer";
@@ -37,9 +37,9 @@ export async function GET(request) {
     }
 
     const rows = data || [];
-    const auth = await withAuth();
+    const auth = await resolveWorkOSRouteUser();
     let likedIds = new Set();
-    if (auth.user) {
+    if (auth.ok && auth.user) {
       const profileRow = await getProfileRowByWorkOSId(admin, auth.user.id);
       if (profileRow?.id) {
         const { data: likes } = await admin
@@ -59,12 +59,11 @@ export async function GET(request) {
     return Response.json({ posts: enriched });
   }
 
-  const auth = await withAuth();
-  if (!auth.user) {
-    return Response.json({ posts: [], error: "unauthorized" }, { status: 401 });
-  }
+  const auth = await resolveWorkOSRouteUser();
+  if (!auth.ok) return authFailureJson(auth);
+  const user = auth.user;
 
-  const profileRow = await getProfileRowByWorkOSId(admin, auth.user.id);
+  const profileRow = await getProfileRowByWorkOSId(admin, user.id);
   if (!profileRow?.id) {
     return Response.json({ posts: [], error: "profile_required" }, { status: 403 });
   }
@@ -87,8 +86,8 @@ export async function GET(request) {
   if (scope === "pending") {
     if (
       !isCommunityModeratorServer({
-        email: auth.user.email,
-        workosUserId: auth.user.id,
+        email: user.email,
+        workosUserId: user.id,
         profileRow,
       })
     ) {
@@ -111,8 +110,8 @@ export async function GET(request) {
   if (scope === "bookmarked") {
     if (
       !isPlatformAdminServer({
-        email: auth.user.email,
-        workosUserId: auth.user.id,
+        email: user.email,
+        workosUserId: user.id,
         profileRow,
       })
     ) {
@@ -136,17 +135,16 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
-  const auth = await withAuth();
-  if (!auth.user) {
-    return Response.json({ ok: false, message: "Sign in to post." }, { status: 401 });
-  }
+  const auth = await resolveWorkOSRouteUser();
+  if (!auth.ok) return authFailureJson(auth);
+  const user = auth.user;
 
   const admin = createSupabaseAdminClient();
   if (!admin) {
     return Response.json({ ok: false, message: "Community storage is not available." }, { status: 503 });
   }
 
-  const profileRow = await getProfileRowByWorkOSId(admin, auth.user.id);
+  const profileRow = await getProfileRowByWorkOSId(admin, user.id);
   if (!profileRow?.id) {
     return Response.json(
       { ok: false, message: "Finish onboarding so we can attach your story to your profile." },
@@ -184,12 +182,12 @@ export async function POST(request) {
   const displayName =
     [profileRow.first_name, profileRow.last_name].filter(Boolean).join(" ").trim() ||
     String(profileRow.display_name || "").trim() ||
-    auth.user.email ||
+    user.email ||
     "Member";
 
   const record = {
     author_profile_id: profileRow.id,
-    author_id: auth.user.id,
+    author_id: user.id,
     author_name: displayName,
     author_avatar_url: profileRow.profile_photo_url || "",
     title,

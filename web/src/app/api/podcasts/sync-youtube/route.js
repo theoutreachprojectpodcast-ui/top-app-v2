@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { withAuth } from "@workos-inc/authkit-nextjs";
+import { authFailureJson, resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
 import { discoverChannelId, parseYoutubeFeed, youtubeFeedUrls } from "@/features/podcasts/domain/youtubeFeed";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
@@ -11,13 +11,12 @@ const TABLE = "podcast_episodes";
 
 export async function POST() {
   if (!URL || !KEY) return Response.json({ error: "Missing Supabase credentials." }, { status: 500 });
-  const auth = await withAuth();
-  if (!auth.user) {
-    return Response.json({ error: "unauthorized", message: "Sign in to run podcast sync." }, { status: 401 });
-  }
+  const auth = await resolveWorkOSRouteUser();
+  if (!auth.ok) return authFailureJson(auth);
+  const user = auth.user;
   const adminProfiles = createSupabaseAdminClient();
-  const profileRow = adminProfiles ? await getProfileRowByWorkOSId(adminProfiles, auth.user.id) : null;
-  if (!isCommunityModeratorServer({ email: auth.user.email, workosUserId: auth.user.id, profileRow })) {
+  const profileRow = adminProfiles ? await getProfileRowByWorkOSId(adminProfiles, user.id) : null;
+  if (!isCommunityModeratorServer({ email: user.email, workosUserId: user.id, profileRow })) {
     const hint =
       process.env.NODE_ENV === "development"
         ? "Add your WorkOS sign-in email to COMMUNITY_MODERATOR_EMAILS in .env.local."

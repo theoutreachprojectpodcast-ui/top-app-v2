@@ -1,4 +1,4 @@
-import { withAuth } from "@workos-inc/authkit-nextjs";
+import { authFailureJson, resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
 import Stripe from "stripe";
 import { podcastSponsorCheckoutConfigured } from "@/lib/billing/stripeConfig";
 
@@ -7,10 +7,9 @@ export async function GET(request) {
     return Response.json({ paid: false, error: "podcast_billing_not_configured" }, { status: 503 });
   }
 
-  const auth = await withAuth();
-  if (!auth.user) {
-    return Response.json({ paid: false, error: "unauthorized" }, { status: 401 });
-  }
+  const auth = await resolveWorkOSRouteUser();
+  if (!auth.ok) return authFailureJson(auth);
+  const user = auth.user;
 
   const sessionId = request.nextUrl.searchParams.get("session_id")?.trim();
   if (!sessionId) {
@@ -23,7 +22,7 @@ export async function GET(request) {
     if (session.metadata?.checkout_kind !== "podcast_sponsor") {
       return Response.json({ paid: false, error: "wrong_session_kind" }, { status: 400 });
     }
-    if (String(session.metadata?.workos_user_id || "") !== auth.user.id) {
+    if (String(session.metadata?.workos_user_id || "") !== user.id) {
       return Response.json({ paid: false, error: "session_user_mismatch" }, { status: 403 });
     }
     const paid = session.payment_status === "paid";

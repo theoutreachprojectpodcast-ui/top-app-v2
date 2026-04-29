@@ -1,4 +1,4 @@
-import { withAuth } from "@workos-inc/authkit-nextjs";
+import { authFailureJson, resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
 import { createSupabaseAdminClient, profileTableName } from "@/lib/supabase/admin";
 import { getProfileRowByWorkOSId, profileRowToClientDto } from "@/lib/profile/serverProfile";
 
@@ -6,10 +6,9 @@ const MAX_BYTES = 5 * 1024 * 1024;
 const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
 
 export async function POST(request) {
-  const auth = await withAuth();
-  if (!auth.user) {
-    return Response.json({ error: "unauthorized" }, { status: 401 });
-  }
+  const auth = await resolveWorkOSRouteUser();
+  if (!auth.ok) return authFailureJson(auth);
+  const user = auth.user;
   const admin = createSupabaseAdminClient();
   if (!admin) {
     return Response.json({ error: "server_storage_unavailable" }, { status: 503 });
@@ -36,7 +35,7 @@ export async function POST(request) {
   }
 
   const ext = type === "image/jpeg" ? "jpg" : type.split("/")[1] || "bin";
-  const path = `${auth.user.id}/${Date.now()}.${ext}`;
+  const path = `${user.id}/${Date.now()}.${ext}`;
   const buffer = Buffer.from(await blob.arrayBuffer());
 
   const { error: upErr } = await admin.storage.from("profile-photos").upload(path, buffer, {
@@ -50,16 +49,16 @@ export async function POST(request) {
   const { data: pub } = admin.storage.from("profile-photos").getPublicUrl(path);
   const url = pub?.publicUrl || "";
 
-  const existing = await getProfileRowByWorkOSId(admin, auth.user.id);
+  const existing = await getProfileRowByWorkOSId(admin, user.id);
   const photoPatch = { profile_photo_url: url, updated_at: new Date().toISOString() };
   if (!existing) {
     const { error: insErr } = await admin.from(profileTableName()).insert({
-      workos_user_id: auth.user.id,
-      email: auth.user.email || null,
-      first_name: auth.user.firstName || "",
-      last_name: auth.user.lastName || "",
+      workos_user_id: user.id,
+      email: user.email || null,
+      first_name: user.firstName || "",
+      last_name: user.lastName || "",
       display_name:
-        [auth.user.firstName, auth.user.lastName].filter(Boolean).join(" ").trim() || auth.user.email || "Member",
+        [user.firstName, user.lastName].filter(Boolean).join(" ").trim() || user.email || "Member",
       membership_tier: "free",
       membership_status: "none",
       onboarding_completed: false,
@@ -73,12 +72,12 @@ export async function POST(request) {
     const { error: dbErr } = await admin
       .from(profileTableName())
       .update(photoPatch)
-      .eq("workos_user_id", auth.user.id);
+      .eq("workos_user_id", user.id);
     if (dbErr) {
       return Response.json({ error: "profile_update_failed", message: dbErr.message }, { status: 500 });
     }
   }
 
-  const next = await getProfileRowByWorkOSId(admin, auth.user.id);
+  const next = await getProfileRowByWorkOSId(admin, user.id);
   return Response.json({ profile: profileRowToClientDto(next), photoUrl: url });
 }

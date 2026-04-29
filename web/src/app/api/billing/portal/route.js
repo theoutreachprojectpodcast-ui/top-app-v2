@@ -1,4 +1,4 @@
-import { withAuth } from "@workos-inc/authkit-nextjs";
+import { authFailureJson, resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
 import Stripe from "stripe";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
@@ -9,17 +9,16 @@ export async function POST(request) {
     return Response.json({ error: "billing_not_configured" }, { status: 503 });
   }
 
-  const auth = await withAuth();
-  if (!auth.user) {
-    return Response.json({ error: "unauthorized" }, { status: 401 });
-  }
+  const auth = await resolveWorkOSRouteUser();
+  if (!auth.ok) return authFailureJson(auth);
+  const user = auth.user;
 
   const admin = createSupabaseAdminClient();
   if (!admin) {
     return Response.json({ error: "server_storage_unavailable" }, { status: 503 });
   }
 
-  const row = await getProfileRowByWorkOSId(admin, auth.user.id);
+  const row = await getProfileRowByWorkOSId(admin, user.id);
   const customerId = row?.stripe_customer_id ? String(row.stripe_customer_id).trim() : "";
   if (!customerId) {
     return Response.json(

@@ -1,4 +1,4 @@
-import { withAuth } from "@workos-inc/authkit-nextjs";
+import { authFailureJson, resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
 import { createSupabaseAdminClient, profileTableName } from "@/lib/supabase/admin";
 import { getProfileRowByWorkOSId, profileRowToClientDto } from "@/lib/profile/serverProfile";
 import {
@@ -17,10 +17,9 @@ function buildMeta(existing) {
 }
 
 export async function POST(request) {
-  const auth = await withAuth();
-  if (!auth.user) {
-    return Response.json({ error: "unauthorized" }, { status: 401 });
-  }
+  const auth = await resolveWorkOSRouteUser();
+  if (!auth.ok) return authFailureJson(auth);
+  const user = auth.user;
   const admin = createSupabaseAdminClient();
   if (!admin) {
     return Response.json({ error: "server_storage_unavailable" }, { status: 503 });
@@ -33,7 +32,7 @@ export async function POST(request) {
     /* optional body */
   }
 
-  const existing = await getProfileRowByWorkOSId(admin, auth.user.id);
+  const existing = await getProfileRowByWorkOSId(admin, user.id);
   const prevMeta = buildMeta(existing);
 
   const intentFromBody = normalizePublicAccountIntent(body.accountIntent);
@@ -153,12 +152,12 @@ export async function POST(request) {
 
   if (!existing) {
     const insertRow = {
-      workos_user_id: auth.user.id,
-      email: auth.user.email || null,
-      first_name: auth.user.firstName || "",
-      last_name: auth.user.lastName || "",
+      workos_user_id: user.id,
+      email: user.email || null,
+      first_name: user.firstName || "",
+      last_name: user.lastName || "",
       display_name:
-        [auth.user.firstName, auth.user.lastName].filter(Boolean).join(" ").trim() || auth.user.email || "Member",
+        [user.firstName, user.lastName].filter(Boolean).join(" ").trim() || user.email || "Member",
       profile_photo_url: null,
       bio: "",
       banner: "",
@@ -170,13 +169,13 @@ export async function POST(request) {
       return Response.json({ error: "insert_failed", message: insErr.message }, { status: 500 });
     }
   } else {
-    const { error } = await admin.from(profileTableName()).update(row).eq("workos_user_id", auth.user.id);
+    const { error } = await admin.from(profileTableName()).update(row).eq("workos_user_id", user.id);
     if (error) {
       return Response.json({ error: "update_failed", message: error.message }, { status: 500 });
     }
   }
 
-  const next = await getProfileRowByWorkOSId(admin, auth.user.id);
+  const next = await getProfileRowByWorkOSId(admin, user.id);
   const dto = profileRowToClientDto(next);
   return Response.json({
     profile: dto,

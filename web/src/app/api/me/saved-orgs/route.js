@@ -1,14 +1,13 @@
-import { withAuth } from "@workos-inc/authkit-nextjs";
+import { authFailureJson, resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
 
 const SAVED_TABLE = process.env.NEXT_PUBLIC_SAVED_ORG_TABLE || "top_app_saved_org_eins";
 
 export async function GET() {
-  const auth = await withAuth();
-  if (!auth.user) {
-    return Response.json({ error: "unauthorized" }, { status: 401 });
-  }
+  const auth = await resolveWorkOSRouteUser();
+  if (!auth.ok) return authFailureJson(auth);
+  const user = auth.user;
   const admin = createSupabaseAdminClient();
   if (!admin) {
     return Response.json({ eins: [] });
@@ -16,7 +15,7 @@ export async function GET() {
   const { data, error } = await admin
     .from(SAVED_TABLE)
     .select("ein,sort_order")
-    .eq("user_id", auth.user.id)
+    .eq("user_id", user.id)
     .order("sort_order", { ascending: true });
   if (error || !Array.isArray(data)) {
     return Response.json({ eins: [] });
@@ -26,10 +25,9 @@ export async function GET() {
 }
 
 export async function PUT(request) {
-  const auth = await withAuth();
-  if (!auth.user) {
-    return Response.json({ error: "unauthorized" }, { status: 401 });
-  }
+  const auth = await resolveWorkOSRouteUser();
+  if (!auth.ok) return authFailureJson(auth);
+  const user = auth.user;
   const admin = createSupabaseAdminClient();
   if (!admin) {
     return Response.json({ error: "server_storage_unavailable" }, { status: 503 });
@@ -44,7 +42,7 @@ export async function PUT(request) {
   const raw = Array.isArray(body.eins) ? body.eins : [];
   const list = [...new Set(raw.map((e) => normalizeEinDigits(e)).filter((e) => e.length === 9))];
 
-  const { error: delErr } = await admin.from(SAVED_TABLE).delete().eq("user_id", auth.user.id);
+  const { error: delErr } = await admin.from(SAVED_TABLE).delete().eq("user_id", user.id);
   if (delErr) {
     return Response.json({ error: "delete_failed", message: delErr.message }, { status: 500 });
   }
@@ -52,7 +50,7 @@ export async function PUT(request) {
     return Response.json({ eins: [] });
   }
   const rows = list.map((ein, i) => ({
-    user_id: auth.user.id,
+    user_id: user.id,
     ein,
     sort_order: i,
   }));

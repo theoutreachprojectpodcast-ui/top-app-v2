@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { withAuth } from "@workos-inc/authkit-nextjs";
+import { resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
 import Stripe from "stripe";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { podcastSponsorCheckoutConfigured } from "@/lib/billing/stripeConfig";
@@ -47,15 +47,16 @@ export async function POST(request) {
     return Response.json({ error: "missing_required_fields" }, { status: 400 });
   }
 
-  const auth = await withAuth();
+  const auth = await resolveWorkOSRouteUser();
 
   if (sponsor_program_type === "podcast" && payment_status_in === "paid_stripe") {
     if (!stripe_checkout_session_id_in) {
       return Response.json({ error: "missing_stripe_checkout_session_id" }, { status: 400 });
     }
-    if (!auth.user) {
+    if (!auth.ok || !auth.user) {
       return Response.json({ error: "unauthorized", message: "Sign in to submit a paid podcast sponsor application." }, { status: 401 });
     }
+    const user = auth.user;
     if (!podcastSponsorCheckoutConfigured()) {
       return Response.json({ error: "podcast_billing_not_configured" }, { status: 503 });
     }
@@ -65,7 +66,7 @@ export async function POST(request) {
       if (session.metadata?.checkout_kind !== "podcast_sponsor") {
         return Response.json({ error: "invalid_checkout_session" }, { status: 400 });
       }
-      if (String(session.metadata?.workos_user_id || "") !== auth.user.id) {
+      if (String(session.metadata?.workos_user_id || "") !== user.id) {
         return Response.json({ error: "session_user_mismatch" }, { status: 403 });
       }
       if (session.payment_status !== "paid") {
@@ -111,7 +112,7 @@ export async function POST(request) {
       sponsor_program_type === "podcast" && payment_status_in === "paid_stripe" && stripe_checkout_session_id_in
         ? stripe_checkout_session_id_in
         : null,
-    applicant_workos_user_id: auth.user?.id ? String(auth.user.id) : null,
+    applicant_workos_user_id: auth.ok && auth.user?.id ? String(auth.user.id) : null,
   };
 
   const { data, error } = await admin.from(TABLE).insert(row).select("id").maybeSingle();
@@ -148,7 +149,7 @@ export async function POST(request) {
       metadata: { sponsor_family, sponsor_program_type, company_name },
     });
 
-    if (auth.user?.id) {
+    if (auth.ok && auth.user?.id) {
       const applicantProfile = await getProfileRowByWorkOSId(admin, auth.user.id);
       if (applicantProfile?.id) {
         await createPlatformNotification(admin, {

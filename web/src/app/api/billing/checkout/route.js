@@ -1,4 +1,4 @@
-import { withAuth } from "@workos-inc/authkit-nextjs";
+import { authFailureJson, resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
 import Stripe from "stripe";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
@@ -13,17 +13,16 @@ import {
 const PAID = new Set(["support", "member", "sponsor"]);
 
 export async function POST(request) {
-  const auth = await withAuth();
-  if (!auth.user) {
-    return Response.json({ error: "unauthorized" }, { status: 401 });
-  }
+  const auth = await resolveWorkOSRouteUser();
+  if (!auth.ok) return authFailureJson(auth);
+  const user = auth.user;
 
   const admin = createSupabaseAdminClient();
   if (!admin) {
     return Response.json({ error: "server_storage_unavailable" }, { status: 503 });
   }
 
-  const profileRow = await getProfileRowByWorkOSId(admin, auth.user.id);
+  const profileRow = await getProfileRowByWorkOSId(admin, user.id);
   if (!profileRow) {
     return Response.json(
       {
@@ -75,7 +74,7 @@ export async function POST(request) {
   const profileId = profileRow.id ? String(profileRow.id) : "";
 
   const metadata = {
-    workos_user_id: auth.user.id,
+    workos_user_id: user.id,
     membership_tier: tier,
     checkout_kind: "membership_subscription",
     ...(profileId ? { torp_profile_id: profileId } : {}),
@@ -85,8 +84,8 @@ export async function POST(request) {
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       customer: customerId || undefined,
-      customer_email: customerId ? undefined : auth.user.email || undefined,
-      client_reference_id: auth.user.id,
+      customer_email: customerId ? undefined : user.email || undefined,
+      client_reference_id: user.id,
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${base}${returnPath}?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${base}${returnPath}?checkout=cancel`,

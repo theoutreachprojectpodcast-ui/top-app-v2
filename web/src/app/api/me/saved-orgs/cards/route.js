@@ -1,4 +1,4 @@
-import { withAuth } from "@workos-inc/authkit-nextjs";
+import { authFailureJson, resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
 import { resolveSavedOrganizationDirectoryRows } from "@/lib/savedOrganizations/resolveSavedOrganizations";
@@ -18,10 +18,9 @@ function orderUniqueFromRows(rows) {
 }
 
 export async function GET() {
-  const auth = await withAuth();
-  if (!auth.user) {
-    return Response.json({ error: "unauthorized" }, { status: 401 });
-  }
+  const auth = await resolveWorkOSRouteUser();
+  if (!auth.ok) return authFailureJson(auth);
+  const user = auth.user;
   const admin = createSupabaseAdminClient();
   if (!admin) {
     return Response.json({ rows: [] });
@@ -29,7 +28,7 @@ export async function GET() {
   const { data, error } = await admin
     .from(SAVED_TABLE)
     .select("ein,sort_order")
-    .eq("user_id", auth.user.id)
+    .eq("user_id", user.id)
     .order("sort_order", { ascending: true });
   if (error || !Array.isArray(data)) {
     return Response.json({ rows: [] });

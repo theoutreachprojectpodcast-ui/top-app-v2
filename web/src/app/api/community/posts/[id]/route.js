@@ -1,4 +1,4 @@
-import { withAuth } from "@workos-inc/authkit-nextjs";
+import { authFailureJson, resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
 import { isCommunityModeratorServer } from "@/lib/community/moderatorServer";
@@ -8,25 +8,24 @@ import { createPlatformNotification } from "@/server/notifications/notificationS
 const TABLE = "community_posts";
 
 export async function PATCH(request, context) {
-  const auth = await withAuth();
-  if (!auth.user) {
-    return Response.json({ ok: false, message: "Unauthorized" }, { status: 401 });
-  }
+  const auth = await resolveWorkOSRouteUser();
+  if (!auth.ok) return authFailureJson(auth);
+  const user = auth.user;
 
   const admin = createSupabaseAdminClient();
   if (!admin) {
     return Response.json({ ok: false, message: "Server storage unavailable." }, { status: 503 });
   }
 
-  const profileRow = await getProfileRowByWorkOSId(admin, auth.user.id);
+  const profileRow = await getProfileRowByWorkOSId(admin, user.id);
   const mod = isCommunityModeratorServer({
-    email: auth.user.email,
-    workosUserId: auth.user.id,
+    email: user.email,
+    workosUserId: user.id,
     profileRow,
   });
   const platAdmin = isPlatformAdminServer({
-    email: auth.user.email,
-    workosUserId: auth.user.id,
+    email: user.email,
+    workosUserId: user.id,
     profileRow,
   });
 
@@ -74,7 +73,7 @@ export async function PATCH(request, context) {
     return Response.json({ ok: true });
   }
 
-  const patch = { updated_at: now, reviewed_by: auth.user.id, reviewed_at: now };
+  const patch = { updated_at: now, reviewed_by: user.id, reviewed_at: now };
 
   if (action === "edit") {
     if (!mod) {

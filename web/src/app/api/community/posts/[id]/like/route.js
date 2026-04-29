@@ -1,4 +1,4 @@
-import { withAuth } from "@workos-inc/authkit-nextjs";
+import { authFailureJson, resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
 
@@ -6,17 +6,16 @@ const POSTS = "community_posts";
 const REACTIONS = "community_post_reactions";
 
 export async function POST(request, context) {
-  const auth = await withAuth();
-  if (!auth.user) {
-    return Response.json({ ok: false, message: "Sign in to like posts." }, { status: 401 });
-  }
+  const auth = await resolveWorkOSRouteUser();
+  if (!auth.ok) return authFailureJson(auth);
+  const user = auth.user;
 
   const admin = createSupabaseAdminClient();
   if (!admin) {
     return Response.json({ ok: false, message: "Unavailable" }, { status: 503 });
   }
 
-  const profileRow = await getProfileRowByWorkOSId(admin, auth.user.id);
+  const profileRow = await getProfileRowByWorkOSId(admin, user.id);
   if (!profileRow?.id) {
     return Response.json({ ok: false, message: "Profile required." }, { status: 403 });
   }

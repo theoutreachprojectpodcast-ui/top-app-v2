@@ -1,6 +1,4 @@
-import { withAuth } from "@workos-inc/authkit-nextjs";
-import { isWorkOSConfigured } from "@/lib/auth/workosConfigured";
-import { getWorkOSUserFromCookies } from "@/lib/auth/workosSessionFromCookies";
+import { resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import {
   getProfileRowByWorkOSId,
@@ -25,22 +23,11 @@ function unauthenticatedMeResponse() {
 }
 
 export async function GET() {
-  if (!isWorkOSConfigured()) {
+  const auth = await resolveWorkOSRouteUser();
+  if (!auth.ok) {
     return unauthenticatedMeResponse();
   }
-
-  let user = null;
-  try {
-    const auth = await withAuth();
-    user = auth?.user ?? null;
-  } catch {
-    const cookieSession = await getWorkOSUserFromCookies();
-    user = cookieSession?.user ?? null;
-  }
-
-  if (!user) {
-    return unauthenticatedMeResponse();
-  }
+  const user = auth.user;
   const admin = createSupabaseAdminClient();
   let profileDto = null;
   let row = null;
