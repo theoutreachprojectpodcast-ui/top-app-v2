@@ -1392,6 +1392,15 @@ textarea:focus-visible {
 .row { display: flex; gap: 10px; align-items: center; margin-top: 10px; }
 .row.space { justify-content: space-between; }
 .row.wrap { flex-wrap: wrap; }
+.directoryPager {
+  align-items: center;
+}
+.directoryPagerLabel {
+  font-size: var(--text-body-sm);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
 .btnPrimary, .btnSoft, .btnBlack, .favBtn,
 a.btnSoft, a.btnPrimary, a.btnBlack {
   border-radius: var(--radius-button);
@@ -4392,12 +4401,43 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   .footerInner { flex-direction: column; }
   .topApp {
     --content-gutter: 24px;
-    --header-floating-offset: 14px;
-    --header-floating-height: 270px;
-    --header-fade-height: 48px;
+    --header-floating-offset: 0px;
+    --header-floating-height: 212px;
+    --header-fade-height: 0px;
+    --mobile-header-brand-row-height: 140px;
   }
   .appShell--subpage {
-    --header-floating-offset: 14px;
+    --header-floating-offset: 0px;
+    --header-floating-height: 212px;
+    --header-fade-height: 0px;
+    --mobile-header-brand-row-height: 140px;
+  }
+  .headerBrandStack {
+    position: sticky;
+    top: 0;
+    left: 0;
+    transform: none;
+    z-index: 101;
+    width: 100%;
+    max-width: none;
+    padding: calc(6px + env(safe-area-inset-top, 0px)) 10px 4px;
+    background: transparent;
+    border-bottom: 0;
+  }
+  .topbar {
+    position: sticky;
+    top: var(--mobile-header-brand-row-height, 140px);
+    z-index: 102;
+    padding: 4px 0 8px;
+    background: transparent;
+    border-bottom: 0;
+  }
+  .topbarOcclusion {
+    display: block;
+    height: calc(var(--mobile-header-brand-row-height, 140px) + 72px);
+  }
+  .shell {
+    padding-top: 16px;
   }
   .siteContainer, .shell { width: min(var(--content-max-width), calc(100% - var(--content-gutter))); }
   .topbarInner {
@@ -4423,8 +4463,8 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
     gap: 8px;
   }
   img.brandMarkImg--header {
-    max-height: clamp(170px, 67.03vw, 244px) !important;
-    max-width: min(671px, 92vw) !important;
+    max-height: clamp(150px, 42vw, 210px) !important;
+    max-width: min(420px, 90vw) !important;
   }
   .headerBrandTitle {
     letter-spacing: 0.08em;
@@ -4609,14 +4649,19 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
     justify-self: stretch;
     width: 100%;
   }
+  .topbarLeft {
+    display: none;
+  }
   .topbarLeft .topbarActionsCluster,
   .topbarRight .topbarActionsCluster {
     width: 100%;
     justify-content: center;
     flex-wrap: wrap;
   }
-  .topbarLeft .sponsorBtn {
-    display: none;
+  .topbarRight .themeToggle {
+    min-width: 40px;
+    min-height: 40px;
+    padding: 0 10px;
   }
   .topbarRight .sponsorBtn,
   .topbarRight a.btnSoft,
@@ -4639,6 +4684,25 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   .row > a.btnSoft {
     width: 100%;
     min-height: 44px;
+  }
+  .directoryPager {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 10px;
+  }
+  .directoryPager > .btnSoft,
+  .directoryPager > .btnPrimary,
+  .directoryPager > a.btnSoft,
+  .directoryPager > a.btnPrimary {
+    width: auto;
+    min-width: 92px;
+    min-height: 40px;
+    padding-inline: 14px;
+  }
+  .directoryPagerLabel {
+    justify-self: center;
+    text-align: center;
   }
   .communityFeedTabs {
     display: grid;
@@ -4695,6 +4759,9 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   }
   .topbarInner {
     gap: 4px;
+  }
+  img.brandMarkImg--header {
+    max-height: clamp(130px, 38vw, 168px) !important;
   }
   .sponsorBtn {
     min-width: 0;

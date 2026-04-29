@@ -703,9 +703,9 @@ function TopAppInner({ initialNav = "home" }) {
                     );
                   })}
                 </div>
-                <div className="row space">
+                <div className="row space directoryPager" role="navigation" aria-label="Directory pagination">
                   <button className="btnSoft" disabled={page <= 1} onClick={() => runSearch(page - 1)} type="button">Prev</button>
-                  <span>Page {page}</span>
+                  <span className="directoryPagerLabel">Page {page}</span>
                   <button className="btnSoft" disabled={!canGoNext} onClick={() => runSearch(page + 1)} type="button">Next</button>
                 </div>
               </div>
