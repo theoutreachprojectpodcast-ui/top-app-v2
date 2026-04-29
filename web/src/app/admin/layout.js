@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getWorkOSUserFromCookies } from "@/lib/auth/workosSessionFromCookies";
+import { sessionMatchesExpectedWorkOSOrganization } from "@/lib/auth/workosOrganizationScope";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
 import { isPlatformAdminServer } from "@/lib/admin/platformAdminServer";
@@ -11,6 +12,9 @@ export const dynamic = "force-dynamic";
 export default async function AdminLayout({ children }) {
   const auth = await getWorkOSUserFromCookies();
   if (!auth.user) {
+    redirect("/?signin=1");
+  }
+  if (!sessionMatchesExpectedWorkOSOrganization(auth)) {
     redirect("/?signin=1");
   }
   const admin = createSupabaseAdminClient();

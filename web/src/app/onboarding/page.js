@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { getWorkOSUserFromCookies } from "@/lib/auth/workosSessionFromCookies";
+import { sessionMatchesExpectedWorkOSOrganization } from "@/lib/auth/workosOrganizationScope";
 import OnboardingFlow from "@/features/onboarding/components/OnboardingFlow";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import {
@@ -24,6 +25,9 @@ async function OnboardingServer({ searchParams }) {
   /* Do not use withAuth() in this RSC — Next 16 RSC requests often lack x-workos-middleware. */
   const auth = await getWorkOSUserFromCookies();
   if (!auth.user) {
+    redirect("/?signin=1");
+  }
+  if (!sessionMatchesExpectedWorkOSOrganization(auth)) {
     redirect("/?signin=1");
   }
   const admin = createSupabaseAdminClient();

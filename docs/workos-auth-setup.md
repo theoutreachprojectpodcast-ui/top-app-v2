@@ -5,6 +5,8 @@ This runbook covers full WorkOS authentication setup for local, QA, production, 
 ## Required WorkOS Dashboard Settings
 
 - Application type: hosted AuthKit for web app.
+- **Organization:** Use a single WorkOS Organization for **The Outreach Project**. Copy its Organization ID (`org_…`) into `WORKOS_ORGANIZATION_ID` in Vercel so sign-in, sign-up, and API sessions are pinned to that org only.
+- **Session length:** In WorkOS, align session / refresh-token policy with your product policy. The app also enforces a **sliding idle timeout** (default **24 hours** without HTTP requests) via `TOP_SESSION_IDLE_MS`; after idle it redirects to `/sign-out`. Set `TOP_SESSION_IDLE_MS=0` to disable only the app idle layer (WorkOS tokens still apply).
 - Redirect URIs must include all active origins:
   - `http://localhost:3000/callback`
   - `http://localhost:3001/callback` (if using `dev:alt`)
@@ -22,8 +24,10 @@ Set these in Vercel for each environment (Preview QA + Production):
 
 - `WORKOS_API_KEY`
 - `WORKOS_CLIENT_ID`
+- `WORKOS_ORGANIZATION_ID` (`org_…` for The Outreach Project — **strongly recommended** for QA/production)
 - `WORKOS_COOKIE_PASSWORD` (32+ chars)
 - `NEXT_PUBLIC_WORKOS_REDIRECT_URI`
+- `TOP_SESSION_IDLE_MS` (optional; default `86400000` = 24h sliding idle → `/sign-out`; `0` disables)
 - `APP_BASE_URL`
 - `NEXT_PUBLIC_APP_URL`
 - `NEXT_PUBLIC_SUPABASE_URL`

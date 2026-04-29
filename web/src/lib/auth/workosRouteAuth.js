@@ -1,6 +1,7 @@
 import { withAuth } from "@workos-inc/authkit-nextjs";
 import { getWorkOSUserFromCookies } from "@/lib/auth/workosSessionFromCookies";
 import { isWorkOSConfigured } from "@/lib/auth/workosConfigured";
+import { sessionMatchesExpectedWorkOSOrganization } from "@/lib/auth/workosOrganizationScope";
 
 /**
  * Resolve WorkOS user in route handlers with a cookie fallback when
@@ -18,12 +19,44 @@ export async function resolveWorkOSRouteUser() {
   }
   try {
     const auth = await withAuth();
-    if (auth?.user) return { ok: true, user: auth.user };
+    if (auth?.user) {
+      if (
+        !sessionMatchesExpectedWorkOSOrganization({
+          organizationId: auth.organizationId,
+          accessToken: auth.accessToken,
+        })
+      ) {
+        return {
+          ok: false,
+          status: 401,
+          error: "organization_not_allowed",
+          message: "This session is not authorized for The Outreach Project organization.",
+          user: null,
+        };
+      }
+      return { ok: true, user: auth.user };
+    }
   } catch {
     // Fall through to cookie session parsing.
   }
   const cookieSession = await getWorkOSUserFromCookies();
-  if (cookieSession?.user) return { ok: true, user: cookieSession.user };
+  if (cookieSession?.user) {
+    if (
+      !sessionMatchesExpectedWorkOSOrganization({
+        organizationId: cookieSession.organizationId,
+        accessToken: cookieSession.accessToken,
+      })
+    ) {
+      return {
+        ok: false,
+        status: 401,
+        error: "organization_not_allowed",
+        message: "This session is not authorized for The Outreach Project organization.",
+        user: null,
+      };
+    }
+    return { ok: true, user: cookieSession.user };
+  }
   return {
     ok: false,
     status: 401,

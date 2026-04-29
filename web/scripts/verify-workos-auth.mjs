@@ -10,6 +10,8 @@ const requiredFiles = [
   "src/app/api/me/route.js",
   "src/lib/auth/workosConfigured.js",
   "src/lib/auth/workosRouteAuth.js",
+  "src/lib/auth/workosOrganizationScope.js",
+  "src/lib/auth/sessionIdle.js",
 ];
 
 const requiredEnvExamples = [
@@ -17,6 +19,8 @@ const requiredEnvExamples = [
   "WORKOS_CLIENT_ID",
   "WORKOS_COOKIE_PASSWORD",
   "NEXT_PUBLIC_WORKOS_REDIRECT_URI",
+  "WORKOS_ORGANIZATION_ID",
+  "TOP_SESSION_IDLE_MS",
   "APP_BASE_URL",
   "NEXT_PUBLIC_APP_URL",
 ];
