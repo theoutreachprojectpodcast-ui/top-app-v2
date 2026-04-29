@@ -1,6 +1,7 @@
 import { classifyPodcastUpload, sortByPublishedDesc } from "./episodeParser";
 import { takeLatestAccepted, partitionEpisodesPipeline } from "./episodePipeline";
-import { fetchRecentUploadsFromRssFallback, fetchRecentUploadsWithDetails } from "./youtubeUploadsServer";
+import { fetchRecentUploadsFromRssFallback } from "./youtubeUploadsServer";
+import { fetchUploadsUntilAcceptedCount } from "./fetchUploadsUntilAccepted";
 import { extractGuestHeuristic } from "./guestHeuristics";
 
 /**
@@ -54,7 +55,7 @@ export async function loadPublicPodcastLandingData(admin) {
 
   if (!episodes.length) {
     degraded = true;
-    const apiTry = await fetchRecentUploadsWithDetails({ maxPlaylistItems: 60 });
+    const apiTry = await fetchUploadsUntilAcceptedCount({ targetAccepted: 14, maxPages: 30 });
     let raw = [];
     if (apiTry.ok && apiTry.videos?.length) {
       raw = apiTry.videos;
@@ -85,17 +86,19 @@ function guestShapeFromEpisodeOnly(ep) {
   const slug = `ep-${vid}`;
   const h = extractGuestHeuristic(String(ep?.title || ""), String(ep?.description || ""));
   const unverified = !h.confidence || h.confidence < 0.75;
+  const watch = String(ep?.youtube_url || "").trim() || (vid ? `https://www.youtube.com/watch?v=${vid}` : "");
   return {
     id: slug,
     slug,
     name: h.guestName || "Guest",
-    title: [h.roleTitle, h.organization].filter(Boolean).join(" · ") || String(ep?.title || "Podcast").slice(0, 120),
+    title: [h.roleTitle, h.organization].filter(Boolean).join(" · ") || "Podcast guest",
     bio: h.shortBio || "Profile details are being verified by the editorial team.",
     avatar_url: "",
     upcoming: false,
     unverified,
     discussionSummary: h.discussionSummary,
     episodeYoutubeId: vid,
+    episodeWatchUrl: watch,
   };
 }
 
@@ -108,23 +111,35 @@ function featuredGuestToCardShape(row, ep) {
   const slug = String(row.public_slug || `ep-${vid}`);
   const verified = !!row.verified_for_public;
   const conf = Number(row.confidence_score);
+  const h = extractGuestHeuristic(String(ep?.title || ""), String(ep?.description || ""));
+  let name = String(row.guest_name || "").trim();
+  const epTitle = String(ep?.title || "").trim();
+  if (!name || name.length > 72 || name === epTitle) {
+    name = h.guestName || "Guest";
+  }
   const avatar =
     String(row.admin_profile_image_url || "").trim() ||
     String(row.profile_image_url || "").trim() ||
     "";
+  const adminBio = String(row.short_bio || "").trim();
   const bio =
-    String(row.short_bio || "").trim() ||
-    (verified ? "" : "Information inferred from the episode; editorial review in progress.");
+    adminBio ||
+    (verified ? h.shortBio : h.shortBio || "We are confirming guest details from this episode before publishing a full bio.");
+  const rawDisc = String(row.discussion_summary || "").trim();
+  const discOk = verified && rawDisc && rawDisc.length <= 260 && !/https?:\/\//i.test(rawDisc);
+  const discussionSummary = discOk ? rawDisc : h.discussionSummary;
+  const watch = String(ep?.youtube_url || "").trim() || (vid ? `https://www.youtube.com/watch?v=${vid}` : "");
   return {
     id: slug,
     slug,
-    name: String(row.guest_name || "Guest").trim(),
+    name,
     title: [String(row.role_title || "").trim(), String(row.organization || "").trim()].filter(Boolean).join(" · ") || "Podcast guest",
     bio: bio || guestShapeFromEpisodeOnly(ep).bio,
     avatar_url: avatar,
     upcoming: false,
     unverified: !verified && (!Number.isFinite(conf) || conf < 0.75),
-    discussionSummary: String(row.discussion_summary || "").trim(),
+    discussionSummary,
     episodeYoutubeId: vid,
+    episodeWatchUrl: watch,
   };
 }

@@ -8,7 +8,7 @@ const EPISODE_NUMBER_PATTERNS = [
   /\bpodcast\s+episode\s*#?\s*(\d{1,4})\b/i,
   /\bepisode\s*#?\s*(\d{1,4})\b/i,
   /\bep\.?\s*#?\s*(\d{1,4})\b/i,
-  /\bep\s+(\d{1,4})\b/i,
+  /\bep\s*(\d{1,4})\b/i,
   /\be(\d{1,4})\b/i,
   /\b#\s*(\d{1,4})\b/,
 ];
@@ -43,7 +43,7 @@ export function minFullEpisodeDurationSeconds() {
   const raw = String(process.env.PODCAST_MIN_FULL_EPISODE_SECONDS || "").trim();
   const n = Number.parseInt(raw, 10);
   if (Number.isFinite(n) && n >= 0) return n;
-  return 420; // 7 minutes — drops typical Shorts; tune via env
+  return 300; // 5 minutes — tune via PODCAST_MIN_FULL_EPISODE_SECONDS
 }
 
 /**

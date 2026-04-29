@@ -20,7 +20,7 @@ export default function SponsorHub({ supabase: supabaseProp }) {
   const [missionApplyTierId, setMissionApplyTierId] = useState(SPONSOR_TIERS[0]?.id);
 
   async function loadSponsors() {
-    const rows = await listSponsorsCatalog(supabase);
+    const rows = await listSponsorsCatalog(supabase, { sponsorScope: "app" });
     setSponsors(rows);
   }
 

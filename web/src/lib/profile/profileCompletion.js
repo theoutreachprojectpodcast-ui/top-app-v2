@@ -2,9 +2,9 @@ import { EMPTY_PROFILE_AVATAR_URL } from "@/lib/avatarFallback";
 import { normalizePublicAccountIntent } from "@/lib/account/accountModel";
 
 /**
- * Profile completion (tORP v0.3) — **persisted Supabase `torp_profiles` only** (via `profileRowToClientDto` / client copy).
- * Does not infer completion from the WorkOS IdP session: if `email` / `first_name` / etc. are empty in the DB row,
- * the step stays incomplete until PATCH `/api/me/profile` (or onboarding) writes them.
+ * Profile completion — evaluates the same client/API profile shape as `torp_profiles` + metadata.
+ * Optional `workOSUser` fills **empty** name/email/display fields from the IdP for step checks only (session hints);
+ * persisted DB values still win when set.
  */
 
 /**
@@ -19,6 +19,8 @@ export function mergeProfileWithWorkOSUser(profile, workOSUser) {
   if (!String(p.email || "").trim() && w.email) p.email = w.email;
   if (!String(p.firstName || "").trim() && w.firstName) p.firstName = w.firstName;
   if (!String(p.lastName || "").trim() && w.lastName) p.lastName = w.lastName;
+  const derived = [w.firstName, w.lastName].filter(Boolean).join(" ").trim();
+  if (derived && !String(p.displayName || "").trim()) p.displayName = derived;
   return p;
 }
 
@@ -192,9 +194,10 @@ function baseStepDefs(p) {
 
 /**
  * @param {Record<string, unknown> | null | undefined} profile — from `profileRowToClientDto` or the same shape on the client
+ * @param {{ workOSUser?: { email?: string, firstName?: string, lastName?: string } | null }} [options]
  */
-export function computeProfileCompletion(profile) {
-  const p = persistedShape(profile);
+export function computeProfileCompletion(profile, options = {}) {
+  const p = persistedShape(mergeProfileWithWorkOSUser(profile, options.workOSUser));
   const defs = baseStepDefs(p);
   const steps = defs.map((d) => {
     const done = !!d.check(p);
@@ -222,8 +225,8 @@ export function computeProfileCompletion(profile) {
 }
 
 /** Incomplete profile-edit focus ids for the Edit Profile modal (same rules as completion, evaluated on `draft`). */
-export function getIncompleteEditFocusIds(profile) {
-  const { steps } = computeProfileCompletion(profile);
+export function getIncompleteEditFocusIds(profile, options = {}) {
+  const { steps } = computeProfileCompletion(profile, options);
   return new Set(
     steps.filter((s) => !s.done && s.actionKind === "profile-edit" && s.editFocus).map((s) => s.editFocus),
   );

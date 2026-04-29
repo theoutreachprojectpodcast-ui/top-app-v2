@@ -16,15 +16,23 @@ export async function GET(request) {
     );
   }
 
+  const scope = String(request.nextUrl.searchParams.get("scope") || "app").toLowerCase();
   const slug = request.nextUrl.searchParams.get("slug");
   if (slug?.trim()) {
-    const { data, error } = await supabase.from("sponsors_catalog").select("*").eq("slug", slug.trim()).maybeSingle();
+    const slugScope = scope === "podcast" ? "podcast" : "app";
+    let q = supabase.from("sponsors_catalog").select("*").eq("slug", slug.trim());
+    if (slugScope === "podcast") {
+      q = q.eq("sponsor_scope", "podcast");
+    } else {
+      q = q.or("sponsor_scope.is.null,sponsor_scope.eq.app");
+    }
+    const { data, error } = await q.maybeSingle();
     if (error) return Response.json({ ok: false, error: error.message }, { status: 500 });
     if (!data) return Response.json({ ok: true, row: null });
     const [row] = await mergeSponsorEnrichmentForRows(supabase, [normalizeSponsorRecord(data)]);
     return Response.json({ ok: true, row });
   }
 
-  const rows = await listSponsorsCatalogWithClient(supabase);
+  const rows = await listSponsorsCatalogWithClient(supabase, { sponsorScope: scope });
   return Response.json({ ok: true, rows });
 }

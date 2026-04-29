@@ -54,6 +54,7 @@ export function normalizeSponsorRecord(row = {}) {
     id: clean(row.id) || slug,
     slug,
     name,
+    sponsor_scope: clean(row.sponsor_scope) || "app",
     sponsor_type: clean(row.sponsor_type || row.industry || "Mission partner"),
     website_url: website,
     logo_url: clean(row.logo_url || row.logoUrl),

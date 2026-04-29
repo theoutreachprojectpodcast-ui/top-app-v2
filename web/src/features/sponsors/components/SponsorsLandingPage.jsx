@@ -19,7 +19,7 @@ export default function SponsorsLandingPage({ sponsors = [], onOpenMissionPackag
   return (
     <div className="sponsorPage sponsorLanding">
       <section className="card cardHero sponsorHero sponsorHero--compact">
-        <p className="introTagline">Mission partners</p>
+        <p className="introTagline">Platform sponsors</p>
         <h2>Partner with The Outreach Project</h2>
         <p className="sponsorHeroBlurb">
           Meet current partners below, then explore Supporting, Growth, and Strategic mission packages in a guided popup. Podcast-only sponsor tiers open from the Podcast hub.

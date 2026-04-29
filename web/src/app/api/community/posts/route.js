@@ -8,6 +8,7 @@ import {
   createPlatformNotification,
   notifyStaffProfiles,
 } from "@/server/notifications/notificationService";
+import { shouldHideDemoCommunitySeeds } from "@/lib/runtime/qaEnv";
 
 const REACTIONS = "community_post_reactions";
 
@@ -36,7 +37,10 @@ export async function GET(request) {
       return Response.json({ posts: [], error: error.message }, { status: 500 });
     }
 
-    const rows = data || [];
+    let rows = data || [];
+    if (shouldHideDemoCommunitySeeds()) {
+      rows = rows.filter((r) => !r?.is_demo_seed);
+    }
     const auth = await resolveWorkOSRouteUser();
     let likedIds = new Set();
     if (auth.ok && auth.user) {

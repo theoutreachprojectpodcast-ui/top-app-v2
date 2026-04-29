@@ -2,6 +2,8 @@ import { Suspense } from "react";
 import PodcastsLandingPage from "@/features/podcasts/components/PodcastsLandingPage";
 import { getCachedPodcastLandingBundle } from "@/lib/podcast/getCachedPodcastLanding";
 
+export const dynamic = "force-dynamic";
+
 function PodcastsFallback() {
   return (
     <div className="appShell appShell--podcast" style={{ minHeight: "60vh", padding: 24 }}>

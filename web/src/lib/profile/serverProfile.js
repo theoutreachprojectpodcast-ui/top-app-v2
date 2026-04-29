@@ -107,6 +107,16 @@ export async function upsertProfileFromWorkOSUser(admin, user) {
   if (!admin) return { ok: false, reason: "no_admin" };
   const existing = await getProfileRowByWorkOSId(admin, user.id);
   const payload = workOSUserToUpsertPayload(user);
+  if (existing) {
+    const savedDisplay = String(existing.display_name || "").trim();
+    if (savedDisplay) delete payload.display_name;
+    const sf = String(existing.first_name || "").trim();
+    const sl = String(existing.last_name || "").trim();
+    const idf = String(user.firstName || "").trim();
+    const idl = String(user.lastName || "").trim();
+    if (sf && sf !== idf) delete payload.first_name;
+    if (sl && sl !== idl) delete payload.last_name;
+  }
   const { error } = await admin.from(TABLE()).upsert(payload, { onConflict: "workos_user_id" });
   if (error) return { ok: false, reason: error.message };
   return { ok: true, isNew: !existing };

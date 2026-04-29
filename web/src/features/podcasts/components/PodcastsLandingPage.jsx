@@ -8,12 +8,9 @@ import { getSupabaseClient } from "@/lib/supabase/client";
 import { listSponsorsCatalog } from "@/features/sponsors/api/sponsorCatalogApi";
 import {
   FALLBACK_EPISODES,
-  FALLBACK_MEMBER,
   fetchPodcastRecentBundle,
   resolvePodcastMemberContentAccess,
   listPodcastEpisodeGuests,
-  listPodcastGuestApplications,
-  listPodcastGuests,
   listPodcastMemberContent,
 } from "@/features/podcasts/api/podcastApi";
 import PodcastHero from "@/features/podcasts/components/PodcastHero";
@@ -21,7 +18,7 @@ import EpisodeCard from "@/features/podcasts/components/EpisodeCard";
 import GuestCard from "@/features/podcasts/components/GuestCard";
 import PodcastSponsorFlowModal from "@/features/podcasts/components/PodcastSponsorFlowModal";
 import PodcastSectionHeader from "@/features/podcasts/components/PodcastSectionHeader";
-import SponsorStrip from "@/features/podcasts/components/SponsorStrip";
+import PodcastSponsorsSection from "@/features/podcasts/components/PodcastSponsorsSection";
 import MemberOnlyLockSection from "@/features/podcasts/components/MemberOnlyLockSection";
 import PodcastCTASection from "@/features/podcasts/components/PodcastCTASection";
 import PodcastApplyGuestForm from "@/features/podcasts/components/PodcastApplyGuestForm";
@@ -40,11 +37,10 @@ export default function PodcastsLandingPage({
   const [featuredVoices, setFeaturedVoices] = useState(
     Array.isArray(initialFeaturedGuests) && initialFeaturedGuests.length ? initialFeaturedGuests : []
   );
-  const [directoryGuests, setDirectoryGuests] = useState([]);
-  const [sponsors, setSponsors] = useState([]);
+  const [podcastSponsors, setPodcastSponsors] = useState([]);
+  const [upcomingGuests, setUpcomingGuests] = useState([]);
   const [memberItems, setMemberItems] = useState([]);
   const [episodeGuests, setEpisodeGuests] = useState([]);
-  const [guestApplications, setGuestApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [bundleNote, setBundleNote] = useState("");
 
@@ -76,12 +72,11 @@ export default function PodcastsLandingPage({
     let cancelled = false;
     (async () => {
       const bundle = await fetchPodcastRecentBundle();
-      const [gs, sp, mc, eg, ga] = await Promise.all([
-        listPodcastGuests(supabase),
-        listSponsorsCatalog(supabase),
+      const [sp, mc, eg, upcomingRes] = await Promise.all([
+        listSponsorsCatalog(supabase, { sponsorScope: "podcast" }),
         listPodcastMemberContent(supabase, { canViewMemberContent: canAccessMembers }),
         listPodcastEpisodeGuests(supabase),
-        listPodcastGuestApplications(supabase),
+        fetch("/api/podcasts/upcoming", { cache: "no-store" }).then((r) => r.json().catch(() => ({}))),
       ]);
       if (cancelled) return;
       if (Array.isArray(bundle?.episodes) && bundle.episodes.length) {
@@ -97,11 +92,21 @@ export default function PodcastsLandingPage({
       } else {
         setBundleNote("");
       }
-      setDirectoryGuests(Array.isArray(gs) ? gs : []);
-      setSponsors(sp.slice(0, 8));
+      setPodcastSponsors(Array.isArray(sp) ? sp : []);
       setMemberItems(mc);
       setEpisodeGuests(eg);
-      setGuestApplications(ga);
+      const ug = Array.isArray(upcomingRes?.guests) ? upcomingRes.guests : [];
+      setUpcomingGuests(
+        ug.map((r) => ({
+          id: r.id,
+          slug: String(r.id || ""),
+          name: r.name || "Guest",
+          title: [String(r.role_title || "").trim(), String(r.organization || "").trim()].filter(Boolean).join(" · ") || "Upcoming guest",
+          bio: String(r.short_description || "").trim() || "Scheduled conversation — details will be announced soon.",
+          avatar_url: String(r.profile_image_url || "").trim(),
+          upcoming: true,
+        })),
+      );
       setLoading(false);
     })();
     return () => {
@@ -111,20 +116,6 @@ export default function PodcastsLandingPage({
 
   const featured = episodes.find((item) => item.is_featured) || episodes[0] || null;
   const publicEpisodes = episodes.filter((item) => !item.is_member_only).slice(0, 10);
-  const approvedApplications = guestApplications.filter((row) => String(row.status || "").toLowerCase() === "approved");
-  const upcomingFromApplications = approvedApplications.map((row) => ({
-    id: `application-${row.id}`,
-    slug: String(row.full_name || "")
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, ""),
-    name: row.full_name || "Approved guest",
-    title: row.organization || "Upcoming conversation",
-    bio: row.topic_pitch || row.why_now || "Approved podcast appearance.",
-    upcoming: true,
-    website_url: row.website_url || "",
-  }));
-  const upcomingGuests = [...directoryGuests.filter((g) => g.upcoming), ...upcomingFromApplications].slice(0, 6);
   const guestsByEpisode = new Map();
   for (const link of episodeGuests) {
     const episodeId = String(link?.episode_id || "");
@@ -191,11 +182,13 @@ export default function PodcastsLandingPage({
         <section className="podcastSection">
           <PodcastSectionHeader eyebrow="Coming Next" title="Upcoming Guests" subtitle="Who is scheduled next on the show." />
           <div className="podcastGuestGrid">
-            {(upcomingGuests.length ? upcomingGuests : directoryGuests.slice(0, 4)).map((guest) => (
+            {upcomingGuests.map((guest) => (
               <GuestCard key={`upcoming-${guest.id}`} guest={guest} />
             ))}
           </div>
-          {!upcomingGuests.length ? <p className="podcastMuted">No approved upcoming conversations yet.</p> : null}
+          {!upcomingGuests.length ? (
+            <p className="podcastMuted">Upcoming guests will appear here when published in the admin Podcasts panel.</p>
+          ) : null}
         </section>
 
         <section className="podcastSection">
@@ -217,11 +210,11 @@ export default function PodcastsLandingPage({
               Sponsor the show
             </button>
             <Link className="btnSoft" href="/sponsors?packages=1">
-              Mission partners (main app)
+              Sponsor hub (main app)
             </Link>
           </div>
         </section>
-        <SponsorStrip sponsors={sponsors} />
+        <PodcastSponsorsSection sponsors={podcastSponsors} />
         <MemberOnlyLockSection canAccess={canAccessMembers} items={memberItems} />
         <PodcastCTASection onApply={() => setApplyOpen(true)} />
       </div>

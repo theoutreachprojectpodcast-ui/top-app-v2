@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import PodcastGuestApplicationsAdmin from "@/features/podcasts/components/PodcastGuestApplicationsAdmin";
+import PodcastUpcomingGuestsAdmin from "@/features/admin/PodcastUpcomingGuestsAdmin";
 
 function reasonLabel(code) {
   const m = {
@@ -114,6 +115,9 @@ export default function AdminPodcastsPanel() {
         <button type="button" className={tab === "featured" ? "btnPrimary" : "btnSoft"} onClick={() => setTab("featured")}>
           Featured guest edit
         </button>
+        <button type="button" className={tab === "upcoming" ? "btnPrimary" : "btnSoft"} onClick={() => setTab("upcoming")}>
+          Upcoming guests
+        </button>
       </div>
 
       {tab === "applications" ? (
@@ -191,6 +195,8 @@ export default function AdminPodcastsPanel() {
           </ul>
         </div>
       ) : null}
+
+      {tab === "upcoming" ? <PodcastUpcomingGuestsAdmin /> : null}
 
       {tab === "featured" ? (
         <div style={{ display: "grid", gap: 12, maxWidth: 720 }}>

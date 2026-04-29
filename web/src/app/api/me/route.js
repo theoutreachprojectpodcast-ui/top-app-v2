@@ -6,7 +6,7 @@ import {
   syncProfileEmailWithWorkOSUser,
 } from "@/lib/profile/serverProfile";
 import { computeEntitlementsFromProfileRow } from "@/lib/account/entitlements";
-import { computeProfileCompletion } from "@/lib/profile/profileCompletion";
+import { computeProfileCompletion, mergeProfileWithWorkOSUser } from "@/lib/profile/profileCompletion";
 
 function unauthenticatedMeResponse() {
   return Response.json({
@@ -46,7 +46,13 @@ export async function GET() {
     isPrivilegedStaff: false,
     isPlatformAdmin: false,
   };
-  const profileCompletion = computeProfileCompletion(profileDto);
+  const profileCompletion = computeProfileCompletion(profileDto, {
+    workOSUser: {
+      email: user.email ?? "",
+      firstName: user.firstName ?? "",
+      lastName: user.lastName ?? "",
+    },
+  });
   return Response.json({
     authenticated: true,
     profile: profileDto,

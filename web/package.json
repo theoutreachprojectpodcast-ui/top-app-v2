@@ -18,6 +18,7 @@
     "verify:nonprofit-canonical-names": "node scripts/verify-nonprofit-canonical-names.mjs",
     "seed:sponsors": "node scripts/seed-sponsors-catalog.mjs",
     "seed:local-dev": "node scripts/seed-local-dev-data.mjs",
+    "seed:qa-community-demo": "node scripts/seed-qa-community-demo.mjs",
     "enrich:sponsors": "node scripts/enrich-sponsors.mjs",
     "sync:podcast-youtube": "node scripts/sync-podcast-youtube.mjs",
     "test:podcast-parser": "node scripts/test-episode-parser.mjs",

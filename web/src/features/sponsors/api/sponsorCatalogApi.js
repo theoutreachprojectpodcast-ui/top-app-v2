@@ -66,23 +66,32 @@ export async function mergeSponsorEnrichmentForRows(supabase, normalizedRows) {
 }
 
 /** Load sponsors from Supabase (no HTTP proxy). Used by API routes with the service role. */
-export async function listSponsorsCatalogWithClient(supabase) {
-  if (!supabase) return fallbackRows();
-  const { data, error } = await supabase
-    .from(SPONSOR_TABLE)
-    .select("*")
+export async function listSponsorsCatalogWithClient(supabase, opts = {}) {
+  const sponsorScope = String(opts.sponsorScope || opts.scope || "app").toLowerCase();
+  if (!supabase) return sponsorScope === "podcast" ? [] : fallbackRows();
+  let q = supabase.from(SPONSOR_TABLE).select("*");
+  if (sponsorScope === "podcast") {
+    q = q.eq("sponsor_scope", "podcast");
+  } else {
+    q = q.or("sponsor_scope.is.null,sponsor_scope.eq.app");
+  }
+  const { data, error } = await q
     .order("display_order", { ascending: true, nullsFirst: false })
     .order("name", { ascending: true });
-  if (error || !Array.isArray(data) || !data.length) return fallbackRows();
+  if (error || !Array.isArray(data) || !data.length) {
+    return sponsorScope === "podcast" ? [] : fallbackRows();
+  }
 
   const rows = data.map((row) => normalizeSponsorRecord(row));
   return mergeSponsorEnrichmentForRows(supabase, rows);
 }
 
-async function fetchSponsorsCatalogFromApi() {
+async function fetchSponsorsCatalogFromApi(sponsorScope = "app") {
   if (typeof window === "undefined") return null;
   try {
-    const res = await fetch("/api/sponsors/catalog", { cache: "no-store" });
+    const qs = new URLSearchParams();
+    qs.set("scope", sponsorScope);
+    const res = await fetch(`/api/sponsors/catalog?${qs.toString()}`, { credentials: "include", cache: "no-store" });
     if (!res.ok) return null;
     const data = await res.json();
     if (!data?.ok || !Array.isArray(data.rows)) return null;
@@ -92,10 +101,11 @@ async function fetchSponsorsCatalogFromApi() {
   }
 }
 
-export async function listSponsorsCatalog(supabase) {
-  const fromApi = await fetchSponsorsCatalogFromApi();
+export async function listSponsorsCatalog(supabase, opts = {}) {
+  const sponsorScope = String(opts.sponsorScope || opts.scope || "app").toLowerCase();
+  const fromApi = await fetchSponsorsCatalogFromApi(sponsorScope);
   if (fromApi) return fromApi;
-  return listSponsorsCatalogWithClient(supabase);
+  return listSponsorsCatalogWithClient(supabase, { sponsorScope });
 }
 
 export async function getSponsorBySlug(supabase, slug) {

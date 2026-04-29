@@ -27,6 +27,7 @@ import { useDirectorySearch } from "@/hooks/useDirectorySearch";
 import { useProfileData } from "@/features/profile/ProfileDataProvider";
 import { useTrustedResources } from "@/hooks/useTrustedResources";
 import DirectoryCategoryQuickPick from "@/features/directory/components/DirectoryCategoryQuickPick";
+import { isQaLikeDeployment } from "@/lib/runtime/qaEnv";
 import MembershipAtAGlance from "@/features/membership/components/MembershipAtAGlance";
 import ColorSchemeToggle from "@/components/app/ColorSchemeToggle";
 import { SERVICE_OPTIONS, STATES } from "@/lib/constants";
@@ -180,8 +181,13 @@ function TopAppInner({ initialNav = "home" }) {
 
   const profileCompletion = useMemo(() => {
     if (!isAuthenticated) return null;
-    return computeProfileCompletion(profile);
-  }, [isAuthenticated, profile]);
+    return computeProfileCompletion(profile, {
+      workOSUser:
+        sessionKind === "workos"
+          ? { email: workOSAccountEmail || undefined, firstName: profile.firstName, lastName: profile.lastName }
+          : null,
+    });
+  }, [isAuthenticated, profile, sessionKind, workOSAccountEmail]);
 
   const prevLoadingProfileForEditRef = useRef(loadingProfile);
 
@@ -244,6 +250,10 @@ function TopAppInner({ initialNav = "home" }) {
     const path = typeof window !== "undefined" ? window.location.pathname : "";
     if (path.startsWith("/onboarding")) return;
     if (path.startsWith("/settings")) return;
+    if (path.startsWith("/profile")) return;
+    if (path.startsWith("/podcasts")) return;
+    if (path.startsWith("/admin")) return;
+    if (path !== "/") return;
     router.replace("/onboarding");
   }, [sessionKind, isAuthenticated, profile?.onboardingCompleted, router]);
 
@@ -635,7 +645,7 @@ function TopAppInner({ initialNav = "home" }) {
                 <button className="card action welcomeSponsorsFeatured" onClick={goToSponsorsHub} type="button">
                   <AppIcon name="sponsors" />
                   <span className="welcomeActionLabel">Sponsors</span>
-                  <span className="welcomeActionHint">Partner page — open packages from there</span>
+                  <span className="welcomeActionHint">Sponsor hub — packages and tiers</span>
                 </button>
                 <div className="welcomeActionTriplet">
                   <button className="card action welcomeTripletBtn" onClick={() => { setNav("trusted"); loadTrusted(true); }} type="button">
@@ -655,7 +665,9 @@ function TopAppInner({ initialNav = "home" }) {
 
               <div className="card" id="home-directory">
                 <h3><AppIcon name="search" />Nonprofit Directory</h3>
-                <DirectoryCategoryQuickPick value={filters.service} onChange={(letter) => setFilters((f) => ({ ...f, service: letter }))} />
+                {!isQaLikeDeployment() ? (
+                  <DirectoryCategoryQuickPick value={filters.service} onChange={(letter) => setFilters((f) => ({ ...f, service: letter }))} />
+                ) : null}
                 <div className="form">
                   <select value={filters.state} onChange={(e) => setFilters((f) => ({ ...f, state: e.target.value }))}>
                     {STATES.map(([v, label]) => <option key={v} value={v}>{label}</option>)}

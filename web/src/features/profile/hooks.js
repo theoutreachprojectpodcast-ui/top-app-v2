@@ -561,7 +561,7 @@ export function useProfileDataState(supabase) {
       membershipStatus: "support",
       membershipTier: "support",
       membershipBillingStatus: "none",
-      banner: "Hi, I’m Andy",
+      banner: "",
       avatarUrl: safeAvatar,
     };
     setIsAuthenticated(true);

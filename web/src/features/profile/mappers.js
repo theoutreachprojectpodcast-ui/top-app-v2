@@ -47,7 +47,7 @@ export function profileFromLegacy(localProfile = {}) {
     lastName: last || (!isPlaceholderLegacyName ? legacyRest.join(" ") : ""),
     email: String(localProfile.email || "").trim(),
     membershipStatus: normalizeMembershipStatus(localProfile.membershipStatus || localProfile.tier),
-    banner: String(localProfile.banner || "Hi, I’m Andy").trim(),
+    banner: String(localProfile.banner || "").trim(),
     avatarUrl: String(localProfile.photoDataUrl || localProfile.avatarUrl || "").trim(),
     theme: String(localProfile.theme || "clean").trim() || "clean",
     colorScheme: String(localProfile.colorScheme || "").trim().toLowerCase(),
@@ -109,7 +109,7 @@ export function toLocalShape(profile) {
     lastName: profile.lastName || "",
     email: profile.email || "",
     membershipStatus: normalizeMembershipStatus(profile.membershipStatus),
-    banner: profile.banner || "Hi, I’m Andy",
+    banner: profile.banner || "",
     avatarUrl: profile.avatarUrl || "",
     theme: profile.theme || "clean",
     colorScheme: String(profile.colorScheme || "").trim().toLowerCase(),
@@ -118,15 +118,24 @@ export function toLocalShape(profile) {
 }
 
 /**
- * When `torp_profiles.email` is empty, expose the WorkOS session email everywhere the profile DTO is used.
+ * When `torp_profiles` fields are empty, fill from the WorkOS session (`GET /api/me` `user`) so UI and
+ * profile completion match sign-in identity without flashing incomplete name/email.
  * @param {Record<string, unknown> | null | undefined} dto
- * @param {{ email?: string } | null | undefined} sessionUser — `user` from `GET /api/me`
+ * @param {{ email?: string, firstName?: string, lastName?: string } | null | undefined} sessionUser — `user` from `GET /api/me`
  */
 export function mergeAccountEmailIntoProfileDto(dto, sessionUser) {
   const d = dto && typeof dto === "object" ? { ...dto } : {};
   const acct = String(sessionUser?.email ?? "").trim();
   if (acct && !String(d.email ?? "").trim()) {
     d.email = acct;
+  }
+  const fn = String(sessionUser?.firstName ?? "").trim();
+  const ln = String(sessionUser?.lastName ?? "").trim();
+  if (fn && !String(d.firstName ?? "").trim()) d.firstName = fn;
+  if (ln && !String(d.lastName ?? "").trim()) d.lastName = ln;
+  const derived = [fn, ln].filter(Boolean).join(" ").trim();
+  if (derived && !String(d.displayName ?? "").trim()) {
+    d.displayName = derived;
   }
   return d;
 }
@@ -151,7 +160,7 @@ export function profileFromApiDto(dto = {}) {
     membershipBillingStatus: String(dto.membershipBillingStatus || "none").toLowerCase(),
     membershipStatus: legacyStatus,
     onboardingCompleted: !!dto.onboardingCompleted,
-    banner: String(dto.banner || "Hi, I’m Andy").trim(),
+    banner: String(dto.banner || "").trim(),
     theme: String(dto.theme || "clean").trim() || "clean",
     colorScheme: String(dto.colorScheme || "").trim().toLowerCase(),
     identityRole: String(dto.identityRole || "").trim(),

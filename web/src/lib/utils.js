@@ -6,7 +6,7 @@ export function defaultProfile() {
     email: "",
     tier: "supporter",
     theme: "clean",
-    banner: "Hi, I’m Andy",
+    banner: "",
     photoDataUrl: "",
     badges: { veteran: false, youtube: false },
     identityRole: "",
