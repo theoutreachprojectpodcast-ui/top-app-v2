@@ -17,11 +17,11 @@
   --font-body: var(--font-roboto, system-ui), system-ui, -apple-system, sans-serif;
   --font-heading: var(--font-roboto, system-ui), system-ui, -apple-system, sans-serif;
 
-  /* Semantic surfaces — light */
-  --color-bg-app: #f5f7f6;
-  --color-bg-subtle: #eef2ef;
+  /* Semantic surfaces — light (page neutrals darkened ~30% toward brand ink for calmer canvas) */
+  --color-bg-app: color-mix(in srgb, #f5f7f6 70%, #0f1412 30%);
+  --color-bg-subtle: color-mix(in srgb, #eef2ef 70%, #0f1412 30%);
   --color-bg-elevated: #ffffff;
-  --color-bg-muted: #e7ece8;
+  --color-bg-muted: color-mix(in srgb, #e7ece8 70%, #0f1412 30%);
   --color-bg-card: #ffffff;
   --color-bg-card-hover: #f8faf8;
 
@@ -56,7 +56,10 @@
   --color-input-border: var(--color-border-subtle);
   --color-ring: var(--color-focus-ring);
   /* Topo + noise: visible contour lines on #F5F7F6 without competing with content */
-  --texture-opacity: 0.078;
+  --texture-opacity: 0.117;
+
+  /* TopApp .topbarOcclusion + .subpageTopbar: near-white fade (~10% neutral) in light */
+  --topbar-gradient-fade: color-mix(in srgb, #ffffff 90%, #9aa0a0 10%);
 
   /* Map legacy structure */
   --color-bg-primary: var(--color-bg-app);
@@ -201,7 +204,7 @@
   --color-input-border: var(--color-border-subtle);
   --color-ring: var(--color-focus-ring);
   /* Dark: overlay blend needs a higher base than light multiply */
-  --texture-opacity: 0.1;
+  --texture-opacity: 0.15;
 
   --color-bg-primary: var(--color-bg-app);
   --color-bg-secondary: var(--color-bg-subtle);
@@ -216,6 +219,8 @@
   --color-background-base: var(--color-bg-app);
   --color-background-elevated: var(--color-bg-elevated);
   --color-background-card: var(--color-bg-card);
+
+  --topbar-gradient-fade: var(--color-bg-primary);
 
   --color-border: var(--color-border-subtle);
   --color-border-soft: color-mix(in srgb, var(--color-border-subtle) 75%, transparent 25%);
@@ -297,7 +302,7 @@ body::before {
 }
 
 body::after {
-  opacity: var(--texture-opacity, 0.078);
+  opacity: var(--texture-opacity, 0.117);
   background-image: var(--texture-noise), var(--bg-texture-image);
   background-size: 180px 180px, cover;
   background-position: 0 0, center;
@@ -308,9 +313,18 @@ body::after {
 
 :root[data-color-scheme="dark"] body::after,
 .dark body::after {
-  opacity: var(--texture-opacity, 0.1);
+  opacity: var(--texture-opacity, 0.15);
   mix-blend-mode: overlay;
   filter: grayscale(1) contrast(1.14) brightness(0.9);
+}
+
+/* Podcast routes: do not apply stronger global body texture (see .appShell--podcast in podcasts.css). */
+html:has(.appShell--podcast) body::after {
+  opacity: 0.078;
+}
+html.dark:has(.appShell--podcast) body::after,
+html[data-color-scheme="dark"]:has(.appShell--podcast) body::after {
+  opacity: 0.1;
 }
 
 h1,

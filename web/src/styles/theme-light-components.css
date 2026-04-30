@@ -1,8 +1,30 @@
 /* Surfaces that used hard-coded dark rgba — light theme counterparts. */
 
+:root[data-color-scheme="light"] .directoryCategoryPick {
+  background: rgba(255, 255, 255, 0.94);
+}
+
 :root[data-color-scheme="light"] .directoryCategoryPickCard {
-  background:
-    linear-gradient(165deg, var(--cat-tint, rgba(158, 166, 177, 0.14)), rgba(255, 255, 255, 0.94));
+  background: linear-gradient(
+    165deg,
+    var(--cat-tint, rgba(158, 166, 177, 0.14)),
+    var(--color-bg-card)
+  );
+}
+
+/* Bottom nav bar backdrop (fixed dock), not .siteFooter */
+:root[data-color-scheme="light"] .footerDockBackdrop {
+  background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.95));
+}
+
+/* Podcast: keep dock scrim from podcasts.css (overrides rule above). */
+:root[data-color-scheme="light"] .appShell--podcast .footerDockBackdrop {
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--color-bg-secondary) 97%, transparent));
+}
+
+:root[data-color-scheme="light"] .appShell--subpage:not(.appShell--podcast) .bottomNav {
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 -8px 28px var(--color-veil-08);
 }
 
 :root[data-color-scheme="light"] .profileFileInput {
@@ -43,6 +65,11 @@
   border: 1px solid var(--color-veil-08);
 }
 
+/* Podcast keeps navy dock chrome even when the document is in light mode */
+:root[data-color-scheme="light"] .appShell--podcast .navItem {
+  border: 1px solid rgba(111, 194, 255, 0.34);
+}
+
 :root[data-color-scheme="light"] .navItem.isActive {
   background: var(--color-accent-soft);
   color: var(--color-accent-hover);
@@ -55,13 +82,12 @@
   background: var(--color-overlay-backdrop);
 }
 
-:root[data-color-scheme="light"] .appShell--subpage .bottomNav {
-  background: color-mix(in srgb, var(--color-bg-secondary) 97%, transparent);
-  box-shadow: 0 -8px 28px var(--color-veil-08);
+:root[data-color-scheme="light"] .appShell--subpage:not(.appShell--podcast) .navItem.isActive {
+  border: 1px solid color-mix(in srgb, var(--color-accent) 35%, transparent);
 }
 
-:root[data-color-scheme="light"] .appShell--subpage .navItem.isActive {
-  border: 1px solid color-mix(in srgb, var(--color-accent) 35%, transparent);
+:root[data-color-scheme="light"] .appShell--podcast .navItem.isActive {
+  border: 1px solid rgba(255, 144, 112, 0.88);
 }
 
 :root[data-color-scheme="light"] .sponsorFeaturedOverlay {

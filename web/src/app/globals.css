@@ -40,7 +40,11 @@ a {
   position: sticky;
   top: 0;
   z-index: 20;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--color-bg-secondary) 94%, transparent), color-mix(in srgb, var(--color-bg-primary) 88%, transparent));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--topbar-gradient-fade, #ffffff) 94%, transparent),
+    color-mix(in srgb, var(--topbar-gradient-fade, #ffffff) 88%, transparent)
+  );
   border-bottom: 1px solid var(--color-border);
   padding: 14px 0 18px;
   backdrop-filter: blur(12px);
@@ -94,7 +98,8 @@ a {
   line-height: 1.5;
 }
 
-.appShell--subpage .bottomNav {
+/* Podcast uses .footerDock + podcasts.css for the dock; skip legacy fixed subpage bar */
+.appShell--subpage:not(.appShell--podcast) .bottomNav {
   position: fixed;
   left: 50%;
   transform: translateX(-50%);
@@ -102,14 +107,14 @@ a {
   width: min(1200px, calc(100% - 48px));
   display: flex;
   gap: var(--ds-space-2, 8px);
-  background: color-mix(in srgb, var(--color-bg-secondary) 96%, transparent);
+  background: color-mix(in srgb, var(--color-bg-secondary) 98%, transparent);
   border-top: 1px solid var(--color-border);
   padding: 10px 24px 14px;
   justify-content: center;
   box-shadow: var(--shadow-bottom-nav);
 }
 
-.appShell--subpage .navItem {
+.appShell--subpage:not(.appShell--podcast) .navItem {
   text-align: center;
   font-size: 13px;
   font-weight: 600;
@@ -120,14 +125,14 @@ a {
   white-space: nowrap;
 }
 
-.appShell--subpage .navItem.isActive {
+.appShell--subpage:not(.appShell--podcast) .navItem.isActive {
   color: var(--color-accent-hover);
   background: var(--color-accent-soft);
   border: 1px solid color-mix(in srgb, var(--color-accent) 28%, var(--color-border-subtle) 72%);
 }
 
 @media (max-width: 760px) {
-  .appShell--subpage .bottomNav {
+  .appShell--subpage:not(.appShell--podcast) .bottomNav {
     width: calc(100% - 24px);
     justify-content: flex-start;
     overflow-x: auto;
@@ -136,11 +141,11 @@ a {
     padding-bottom: 2px;
   }
 
-  .appShell--subpage .bottomNav::-webkit-scrollbar {
+  .appShell--subpage:not(.appShell--podcast) .bottomNav::-webkit-scrollbar {
     display: none;
   }
 
-  .appShell--subpage .navItem {
+  .appShell--subpage:not(.appShell--podcast) .navItem {
     min-width: max-content;
     flex: 0 0 auto;
     font-size: 12px;

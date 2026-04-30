@@ -61,22 +61,26 @@ export default function AppShell({
       )}
 
       {showSiteFooter ? (
-        <footer className="siteFooter">
-          <FooterInner className="footerInner">
-            <div>
-              <div className="brandName">THE OUTREACH PROJECT</div>
-              <p className="footerNote">Mission-first resource navigation for veterans, first responders, and supporters.</p>
-            </div>
-            <p className="footerNote">Trust-driven support, built for clarity under pressure.</p>
-          </FooterInner>
-        </footer>
+        <>
+          {/* Page footer: end of scrollable content (not the fixed bottom nav dock). */}
+          <footer className="siteFooter">
+            <FooterInner className="footerInner">
+              <div>
+                <div className="brandName">THE OUTREACH PROJECT</div>
+                <p className="footerNote">Mission-first resource navigation for veterans, first responders, and supporters.</p>
+              </div>
+              <p className="footerNote">Trust-driven support, built for clarity under pressure.</p>
+            </FooterInner>
+          </footer>
+        </>
       ) : null}
 
+      {/* Fixed bottom nav dock (not .siteFooter). */}
       {useFooterDockChrome ? <div className="footerDockBackdrop" aria-hidden="true" /> : null}
       {useFooterDockChrome ? (
         <div className="footerDock">
           <FooterInner className="footerNavInner">
-            <nav className="bottomNav" aria-label="Primary">
+            <nav className="bottomNav" aria-label="Bottom navigation">
               {items.map((item) => (
                 <Link
                   key={item.key}
@@ -90,7 +94,7 @@ export default function AppShell({
           </FooterInner>
         </div>
       ) : (
-        <nav className="bottomNav" aria-label="Primary">
+        <nav className="bottomNav" aria-label="Bottom navigation">
           {items.map((item) => (
             <Link
               key={item.key}

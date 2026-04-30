@@ -1036,6 +1036,7 @@ function TopAppInner({ initialNav = "home" }) {
         </section>
       )}
 
+      {/* Page footer: end of scrollable content (brand + copy). Not the fixed bottom nav. */}
       <footer className="siteFooter">
         <FooterInner className="footerInner">
           <div>
@@ -1046,10 +1047,11 @@ function TopAppInner({ initialNav = "home" }) {
         </FooterInner>
       </footer>
 
+      {/* Fixed bottom navigation bar (dock). See top-app.css .footerDock / .footerDockBackdrop. */}
       <div className="footerDockBackdrop" aria-hidden="true" />
       <div className="footerDock">
         <FooterInner className="footerNavInner">
-          <nav className="bottomNav" aria-label="Primary navigation">
+          <nav className="bottomNav" aria-label="Bottom navigation">
             <button className={`navItem ${nav === "home" ? "isActive" : ""}`} onClick={dockNavHome} type="button">Home</button>
             <button className={`navItem ${nav === "trusted" ? "isActive" : ""}`} onClick={() => { setNav("trusted"); if (!trusted.length) loadTrusted(true); }} type="button">Trusted Resources</button>
             <button className={`navItem ${nav === "community" ? "isActive" : ""}`} onClick={() => setNav("community")} type="button">Community</button>

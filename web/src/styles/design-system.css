@@ -100,7 +100,7 @@
 .emptyState {
   border-radius: var(--radius-card);
   border: 1px dashed var(--color-border);
-  background: var(--color-surface-muted);
+  background: var(--color-bg-card);
   padding: var(--ds-space-6, 24px) var(--ds-space-5, 20px);
   display: flex;
   gap: var(--ds-space-4, 16px);

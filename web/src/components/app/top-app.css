@@ -34,8 +34,8 @@
     radial-gradient(ellipse 52% 42% at 50% 14%, var(--topbar-occlusion-spot), transparent 70%),
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--color-bg-primary) 96%, transparent) 0%,
-      color-mix(in srgb, var(--color-bg-primary) 88%, transparent) 68%,
+      color-mix(in srgb, var(--topbar-gradient-fade, #ffffff) 96%, transparent) 0%,
+      color-mix(in srgb, var(--topbar-gradient-fade, #ffffff) 88%, transparent) 68%,
       transparent 100%
     );
 }
@@ -505,7 +505,7 @@ img.brandMarkImg--header {
   background: linear-gradient(
     180deg,
     color-mix(in srgb, #ffffff 40%, transparent) 0%,
-    color-mix(in srgb, #eef1f7 85%, transparent) 100%
+    color-mix(in srgb, var(--color-bg-app) 72%, transparent) 100%
   );
 }
 .homeHeroBackdrop__content {
@@ -516,7 +516,7 @@ img.brandMarkImg--header {
   flex-direction: column;
   gap: 0;
 }
-/* When profile progress + welcome card stack: one opaque shell so flex gap is not transparent over the dark hero scrim */
+/* When profile progress + welcome card stack: one opaque shell so flex gap is not transparent over the dark hero scrim; match .card surfaces (not --color-bg-app) */
 .homeHeroBackdrop__welcomeBundle {
   display: flex;
   flex-direction: column;
@@ -524,7 +524,7 @@ img.brandMarkImg--header {
   width: 100%;
   padding: var(--ds-space-3, 12px);
   border-radius: var(--radius-card);
-  background: var(--color-bg-primary);
+  background: linear-gradient(180deg, var(--color-surface-card) 0%, var(--color-surface-card-deep) 100%);
   border: 1px solid var(--color-border-soft);
   box-shadow: var(--shadow-card);
 }
@@ -1289,7 +1289,7 @@ img.brandMarkImg--header {
     linear-gradient(
       165deg,
       var(--cat-tint, rgba(158, 166, 177, 0.12)),
-      color-mix(in srgb, var(--color-bg-card) 94%, var(--color-bg-app) 6%)
+      var(--color-bg-card)
     );
   color: var(--color-text-primary);
   padding: 10px 10px 9px;
@@ -1437,7 +1437,8 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   box-shadow: 0 0 0 1px var(--color-accent-soft);
 }
 .btnBlack {
-  background: var(--color-surface-soft);
+  /* Card white — not page canvas / subtle (avoids grey when app bg is tinted) */
+  background: var(--color-bg-card);
   color: var(--color-text-primary);
   border-color: var(--color-border);
   text-decoration: none;
@@ -1976,7 +1977,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 }
 .resultCard p { margin: 6px 0 0; color: var(--color-text-secondary); font-size: var(--text-body-sm); line-height: 1.5; }
 .favBtn {
-  background: var(--color-surface-muted);
+  background: var(--color-bg-card);
   border-color: var(--color-border);
   color: var(--color-accent);
   font-size: 21px;
@@ -1987,7 +1988,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 .favBtn--on {
   color: color-mix(in srgb, var(--color-accent) 88%, var(--color-text-primary) 12%);
   border-color: color-mix(in srgb, var(--color-accent) 42%, var(--color-border) 58%);
-  background: color-mix(in srgb, var(--color-accent-soft) 55%, var(--color-surface-muted) 45%);
+  background: color-mix(in srgb, var(--color-accent-soft) 55%, var(--color-bg-card) 45%);
 }
 .favBtn--muted {
   opacity: 0.72;
@@ -2006,6 +2007,10 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   font-style: italic;
   max-width: 62ch;
 }
+/*
+ * Fixed bottom NAV bar (pill links), not the scrollable page footer.
+ * Page copy/legal lives in `.siteFooter` above the scroll padding.
+ */
 .footerDockBackdrop {
   position: fixed;
   left: 0;
@@ -2013,7 +2018,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   bottom: 0;
   height: calc(64px + env(safe-area-inset-bottom));
   z-index: 98;
-  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--color-bg-secondary) 92%, transparent));
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--color-bg-secondary) 97%, transparent));
   border-top: 1px solid var(--color-border);
   pointer-events: none;
 }
@@ -2073,6 +2078,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   text-shadow: none;
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 18%, transparent);
 }
+/* End-of-scroll page footer (brand + notes), above bottom padding for the fixed nav dock. */
 .siteFooter {
   margin-top: 28px;
   padding: 0 0 120px;

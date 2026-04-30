@@ -117,7 +117,7 @@
 .appShell--podcast .footerInner {
   position: relative;
   z-index: 1;
-  border-top-color: color-mix(in srgb, var(--color-border) 72%, transparent);
+  border-top: none;
 }
 
 .appShell--podcast .footerNote,
@@ -151,9 +151,9 @@
   background: transparent;
   border: 0;
 }
-/* Align with home .footerDockBackdrop / .footerDock: gradient hint + glass dock, not opaque bar */
+/* Bottom nav dock (fixed): match home gradient + glass, not opaque bar */
 .appShell--podcast .footerDockBackdrop {
-  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--color-bg-secondary) 92%, transparent));
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--color-bg-secondary) 97%, transparent));
   border-top: 1px solid var(--color-border);
 }
 .appShell--podcast .footerDock {
