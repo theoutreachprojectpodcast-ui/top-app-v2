@@ -19,6 +19,15 @@ const KEYS = new Set([
   "featured",
   "display_order",
   "verified",
+  "sponsor_scope",
+  "sponsor_status",
+  "mission_partner",
+  "podcast_sponsor",
+  "supporting_sponsor",
+  "is_active",
+  "payment_status",
+  "onboarding_status",
+  "admin_notes",
 ]);
 
 export async function PATCH(request, context) {
@@ -41,7 +50,7 @@ export async function PATCH(request, context) {
   const patch = { updated_at: new Date().toISOString() };
   for (const [k, v] of Object.entries(body || {})) {
     if (!KEYS.has(k)) continue;
-    if (k === "featured" || k === "verified") {
+    if (k === "featured" || k === "verified" || k === "mission_partner" || k === "podcast_sponsor" || k === "supporting_sponsor" || k === "is_active") {
       patch[k] = Boolean(v);
     } else if (k === "display_order") {
       const n = parseInt(String(v), 10);

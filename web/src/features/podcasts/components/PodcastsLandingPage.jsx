@@ -39,6 +39,7 @@ export default function PodcastsLandingPage({
   );
   const [podcastSponsors, setPodcastSponsors] = useState([]);
   const [upcomingGuests, setUpcomingGuests] = useState([]);
+  const [podcastBandImageUrl, setPodcastBandImageUrl] = useState("");
   const [memberItems, setMemberItems] = useState([]);
   const [episodeGuests, setEpisodeGuests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -114,6 +115,21 @@ export default function PodcastsLandingPage({
     };
   }, [canAccessMembers, supabase, initialBundleMeta?.degraded]);
 
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/page-images?pageKey=podcasts&sectionKey=hero-band", { cache: "no-store" })
+      .then((res) => res.json())
+      .then((body) => {
+        if (cancelled) return;
+        const first = Array.isArray(body?.rows) ? body.rows[0] : null;
+        setPodcastBandImageUrl(String(first?.image_url || "").trim());
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const featured = episodes.find((item) => item.is_featured) || episodes[0] || null;
   const publicEpisodes = episodes.filter((item) => !item.is_member_only).slice(0, 10);
   const guestsByEpisode = new Map();
@@ -141,6 +157,7 @@ export default function PodcastsLandingPage({
       useFooterDockChrome
       useTopAppStructure
       showThemeToggle={false}
+      rootStyle={podcastBandImageUrl ? { "--podcast-band-image": `url("${podcastBandImageUrl}")` } : undefined}
     >
       <div className="podcastScope">
         <PodcastHero featured={featured} onApply={() => setApplyOpen(true)} />

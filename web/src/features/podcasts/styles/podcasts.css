@@ -52,7 +52,7 @@
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background: url("/podcasts-demo-band.jpg") center 44% / cover no-repeat;
+  background: var(--podcast-band-image, url("/podcasts-demo-band.jpg")) center 44% / cover no-repeat;
   opacity: 0.36;
   filter: saturate(0.88) contrast(1.05);
   -webkit-mask-image: radial-gradient(

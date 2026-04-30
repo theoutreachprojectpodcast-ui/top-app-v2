@@ -21,12 +21,21 @@ const EDIT_KEYS = [
   "featured",
   "display_order",
   "verified",
+  "sponsor_scope",
+  "sponsor_status",
+  "mission_partner",
+  "podcast_sponsor",
+  "supporting_sponsor",
+  "is_active",
+  "payment_status",
+  "onboarding_status",
+  "admin_notes",
 ];
 
 function hydrateForm(row) {
   const next = {};
   for (const k of EDIT_KEYS) {
-    if (k === "featured" || k === "verified") {
+    if (k === "featured" || k === "verified" || k === "mission_partner" || k === "podcast_sponsor" || k === "supporting_sponsor" || k === "is_active") {
       next[k] = row[k] ? "true" : "false";
     } else if (k === "display_order") {
       next[k] = row[k] != null ? String(row[k]) : "0";
@@ -92,7 +101,7 @@ export default function AdminSponsorsPanel() {
       const body = {};
       for (const k of EDIT_KEYS) {
         const v = form[k];
-        if (k === "featured" || k === "verified") {
+        if (k === "featured" || k === "verified" || k === "mission_partner" || k === "podcast_sponsor" || k === "supporting_sponsor" || k === "is_active") {
           body[k] = v === "true";
         } else if (k === "display_order") {
           body[k] = parseInt(String(v), 10) || 0;
@@ -171,7 +180,7 @@ export default function AdminSponsorsPanel() {
                   value={form[key] ?? ""}
                   onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
                 />
-              ) : key === "featured" || key === "verified" ? (
+              ) : key === "featured" || key === "verified" || key === "mission_partner" || key === "podcast_sponsor" || key === "supporting_sponsor" || key === "is_active" ? (
                 <select
                   id={`sp-${key}`}
                   className="adminConsoleInput"

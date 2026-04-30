@@ -12,6 +12,9 @@ export default function AdminHomePage() {
       </p>
       <ul style={{ margin: "16px 0 0", paddingLeft: "1.1rem", lineHeight: 1.7 }}>
         <li>
+          <Link href="/admin/status">QA status</Link> — live readiness counters for admin-managed entities
+        </li>
+        <li>
           <Link href="/admin/community">Community</Link> — pending queue, bookmarks for follow-up, edit live posts
         </li>
         <li>
@@ -25,6 +28,18 @@ export default function AdminHomePage() {
         </li>
         <li>
           <Link href="/admin/sponsors">Sponsors</Link> — catalog copy, imagery, and links
+        </li>
+        <li>
+          <Link href="/admin/applications">Applications</Link> — sponsorship review and conversion workflow
+        </li>
+        <li>
+          <Link href="/admin/images">Image manager</Link> — page/section image records and activation
+        </li>
+        <li>
+          <Link href="/admin/contact">Contact settings</Link> — recipient routing and submission review
+        </li>
+        <li>
+          <Link href="/admin/billing">Invoice tools</Link> — send invoice emails and audit records
         </li>
         <li>
           <Link href="/admin/users">Users</Link> — search accounts, roles, and onboarding status

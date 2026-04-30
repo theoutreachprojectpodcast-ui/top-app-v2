@@ -20,6 +20,12 @@ const KEYS = new Set([
   "state",
   "location_label",
   "category_key",
+  "is_active",
+  "status",
+  "contact_email",
+  "contact_phone",
+  "admin_notes",
+  "resource_type",
 ]);
 
 export async function PATCH(request, context) {
@@ -46,6 +52,8 @@ export async function PATCH(request, context) {
       const n = parseInt(String(v), 10);
       if (!Number.isFinite(n)) continue;
       patch[k] = n;
+    } else if (k === "is_active") {
+      patch[k] = Boolean(v);
     } else if (typeof v === "string") {
       patch[k] = v.trim() || null;
     } else if (v === null) {

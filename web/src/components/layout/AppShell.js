@@ -29,11 +29,12 @@ export default function AppShell({
   useTopAppStructure = false,
   showThemeToggle = true,
   navItems,
+  rootStyle,
 }) {
   const items = Array.isArray(navItems) && navItems.length ? navItems : NAV_ITEMS;
   const RootTag = useTopAppStructure ? "main" : "div";
   return (
-    <RootTag className={`${useTopAppStructure ? "topApp" : "appShell"} appShell--subpage ${shellClassName}`.trim()}>
+    <RootTag className={`${useTopAppStructure ? "topApp" : "appShell"} appShell--subpage ${shellClassName}`.trim()} style={rootStyle}>
       <div className="headerBrandStack">
         <BrandMark size="header" src={brandSrc || undefined} alt={brandAlt} className={brandClassName} />
       </div>

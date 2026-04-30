@@ -3,6 +3,7 @@ import { requirePlatformAdminRouteContext } from "@/lib/admin/adminRouteContext"
 export const runtime = "nodejs";
 
 const PLATFORM_ROLES = new Set(["user", "support", "member", "sponsor", "moderator", "admin"]);
+const MEMBERSHIP_TIER_OPTIONS = new Set(["free", "support", "member", "sponsor"]);
 
 export async function PATCH(request, context) {
   const ctx = await requirePlatformAdminRouteContext();
@@ -37,6 +38,13 @@ export async function PATCH(request, context) {
     }
     patch.membership_status = ms;
   }
+  if (body.membership_tier != null) {
+    const mt = String(body.membership_tier).trim().toLowerCase();
+    if (!MEMBERSHIP_TIER_OPTIONS.has(mt)) {
+      return Response.json({ ok: false, error: "invalid_membership_tier" }, { status: 400 });
+    }
+    patch.membership_tier = mt;
+  }
   if (body.onboarding_status != null) {
     const os = String(body.onboarding_status).trim().toLowerCase();
     const allowed = new Set(["not_started", "in_progress", "completed", "needs_review"]);
@@ -45,6 +53,10 @@ export async function PATCH(request, context) {
     }
     patch.onboarding_status = os;
   }
+  if (body.display_name != null) patch.display_name = String(body.display_name).trim() || null;
+  if (body.first_name != null) patch.first_name = String(body.first_name).trim() || null;
+  if (body.last_name != null) patch.last_name = String(body.last_name).trim() || null;
+  if (body.email != null) patch.email = String(body.email).trim() || null;
 
   if (Object.keys(patch).length === 0) {
     return Response.json({ ok: false, error: "no_valid_fields" }, { status: 400 });
@@ -56,7 +68,7 @@ export async function PATCH(request, context) {
     .from("torp_profiles")
     .update(patch)
     .eq("workos_user_id", workosUserId)
-    .select("id, workos_user_id, email, platform_role, membership_status, onboarding_status, updated_at")
+    .select("id, workos_user_id, email, display_name, first_name, last_name, platform_role, membership_tier, membership_status, onboarding_status, updated_at")
     .maybeSingle();
 
   if (error) {
