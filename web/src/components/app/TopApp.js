@@ -20,6 +20,7 @@ import ProfileQuickStats from "@/features/profile/components/ProfileQuickStats";
 import SavedOrganizationsList from "@/features/profile/components/SavedOrganizationsList";
 import HomeWelcomeSection from "@/components/app/HomeWelcomeSection";
 import HomeProfileProgressNotice from "@/components/app/HomeProfileProgressNotice";
+import { useAuthSession } from "@/components/auth/AuthSessionProvider";
 import ProfileCompletionPanel from "@/features/profile/components/ProfileCompletionPanel";
 import HeaderAccountMenu from "@/components/layout/HeaderAccountMenu";
 import HeaderNotificationBell from "@/components/layout/HeaderNotificationBell";
@@ -104,6 +105,7 @@ function TopAppInner({ initialNav = "home" }) {
   const [authError, setAuthError] = useState("");
   const [authStatus, setAuthStatus] = useState("");
   const [signupAvatarDataUrl, setSignupAvatarDataUrl] = useState("");
+  const [editSaveError, setEditSaveError] = useState("");
   const [contactDraft, setContactDraft] = useState({ firstName: "", lastName: "", email: "", phone: "", message: "" });
   const [contactStatus, setContactStatus] = useState("");
   const [contactError, setContactError] = useState("");
@@ -178,6 +180,7 @@ function TopAppInner({ initialNav = "home" }) {
     refreshWorkOSProfile,
     entitlements,
   } = useProfileData();
+  const { refresh: refreshAuthSession } = useAuthSession();
 
   const profileCompletion = useMemo(() => {
     if (!isAuthenticated) return null;
@@ -258,9 +261,21 @@ function TopAppInner({ initialNav = "home" }) {
   }, [sessionKind, isAuthenticated, profile?.onboardingCompleted, router]);
 
   function openEdit(focusKey) {
+    setEditSaveError("");
     setEditDraft(profileFromApiDto(profile));
     setEditFieldFocus(focusKey != null && focusKey !== "" ? focusKey : null);
     setOverlay("edit");
+  }
+
+  async function saveEditProfile() {
+    setEditSaveError("");
+    const result = await persistProfile({ ...profile, ...editDraft });
+    if (!result.ok) {
+      setEditSaveError(String(result.message || "").trim() || "Could not save your profile. Try again.");
+      return;
+    }
+    closeEditOverlay();
+    void refreshAuthSession({ soft: true });
   }
 
   /** Home hero “Finish profile” navigates with ?edit=1 — open overlay only after /api/me profile is loaded on this mount. */
@@ -276,6 +291,7 @@ function TopAppInner({ initialNav = "home" }) {
     const focusKey =
       rawFocus && /^[a-zA-Z][a-zA-Z0-9_-]*$/.test(rawFocus) ? rawFocus : undefined;
     openedProfileEditFromQueryRef.current = true;
+    setEditSaveError("");
     setEditDraft(profileFromApiDto(profile));
     setEditFieldFocus(focusKey != null && focusKey !== "" ? focusKey : null);
     setOverlay("edit");
@@ -328,6 +344,7 @@ function TopAppInner({ initialNav = "home" }) {
   }, [overlay, profileEditMergeKey, profile]);
 
   function closeEditOverlay() {
+    setEditSaveError("");
     setEditFieldFocus(null);
     setOverlay(null);
   }
@@ -589,7 +606,7 @@ function TopAppInner({ initialNav = "home" }) {
                 <div className="homeHeroBackdrop__image" aria-hidden="true" />
                 <div className="homeHeroBackdrop__scrim" aria-hidden="true" />
                 <div className="homeHeroBackdrop__content">
-                  {profileCompletion ? (
+                  {profileCompletion && !loadingProfile ? (
                     <div className="homeHeroBackdrop__welcomeBundle">
                       <HomeProfileProgressNotice
                         completion={profileCompletion}
@@ -656,7 +673,7 @@ function TopAppInner({ initialNav = "home" }) {
                     <AppIcon name="community" />
                     <span className="welcomeActionLabel">Community</span>
                   </button>
-                  <button className="card action welcomeTripletBtn" onClick={() => { window.location.href = "/podcasts"; }} type="button">
+                  <button className="card action welcomeTripletBtn" onClick={() => { router.push("/podcasts"); }} type="button">
                     <AppIcon name="podcast" />
                     <span className="welcomeActionLabel">Podcasts</span>
                   </button>
@@ -1096,7 +1113,18 @@ function TopAppInner({ initialNav = "home" }) {
 
       {overlay === "edit" && editDraft ? (
         <div className="modalOverlay" onClick={closeEditOverlay}>
-          <div className="modalCard modalCard--profileEdit" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="modalCard modalCard--profileEdit"
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => {
+              if (e.key !== "Enter" || e.nativeEvent?.isComposing) return;
+              const t = e.target;
+              if (t && (t.tagName === "TEXTAREA" || (typeof t.closest === "function" && t.closest("textarea")))) return;
+              if (t && t.tagName === "INPUT" && String(t.type || "").toLowerCase() === "file") return;
+              e.preventDefault();
+              void saveEditProfile();
+            }}
+          >
             <h3>Edit profile</h3>
             <p className="ds-page-intro__lead" style={{ margin: 0 }}>
               Core account fields sync when cloud is available. Incomplete items from your profile checklist are highlighted
@@ -1236,16 +1264,14 @@ function TopAppInner({ initialNav = "home" }) {
                 <textarea rows={2} value={editDraft.contributionSummary || ""} onChange={(e) => setEditDraft((d) => ({ ...d, contributionSummary: e.target.value }))} placeholder="How you contribute on this platform" />
               </fieldset>
             </div>
+            {editSaveError ? (
+              <p className="profileEditSaveError" role="alert">
+                {editSaveError}
+              </p>
+            ) : null}
             <div className="row">
               <button className="btnSoft" onClick={closeEditOverlay} type="button">Cancel</button>
-              <button
-                className="btnPrimary"
-                onClick={async () => {
-                  await persistProfile({ ...profile, ...editDraft });
-                  closeEditOverlay();
-                }}
-                type="button"
-              >
+              <button className="btnPrimary" onClick={() => void saveEditProfile()} type="button">
                 Save
               </button>
             </div>

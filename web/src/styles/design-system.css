@@ -192,6 +192,15 @@
   max-height: min(90vh, 880px);
   overflow-y: auto;
 }
+.profileEditSaveError {
+  margin: var(--ds-space-3, 12px) 0 0;
+  padding: var(--ds-space-3, 12px);
+  border-radius: var(--radius-input);
+  font-size: var(--text-body-sm);
+  color: var(--color-danger-text, #b42318);
+  background: var(--color-danger-surface, rgba(180, 35, 24, 0.08));
+  border: 1px solid var(--color-danger-border, rgba(180, 35, 24, 0.35));
+}
 
 .profileHeaderEmail {
   margin: 0;

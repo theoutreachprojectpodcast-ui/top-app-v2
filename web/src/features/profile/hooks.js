@@ -387,10 +387,13 @@ export function useProfileDataState(supabase) {
     loadSavedOrgCards();
   }, [supabase, favoriteEins, isAuthenticated]);
 
+  /**
+   * @returns {Promise<{ ok: true } | { ok: false, message: string }>}
+   */
   async function persistProfile(next) {
     if (!isAuthenticated) {
       setProfile(next);
-      return;
+      return { ok: true };
     }
     if (workosRef.current) {
       try {
@@ -402,9 +405,10 @@ export function useProfileDataState(supabase) {
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
-          setProfileError(data.message || data.error || "Profile could not be saved to the server.");
+          const message = data.message || data.error || "Profile could not be saved to the server.";
+          setProfileError(message);
           await refreshWorkOSProfile();
-          return;
+          return { ok: false, message };
         }
         if (data.profile) {
           setProfile(
@@ -416,18 +420,23 @@ export function useProfileDataState(supabase) {
           );
           setProfileError("");
         } else await refreshWorkOSProfile();
+        return { ok: true };
       } catch {
-        setProfileError("Profile could not be saved to the server.");
+        const message = "Profile could not be saved to the server.";
+        setProfileError(message);
         await refreshWorkOSProfile();
+        return { ok: false, message };
       }
-      return;
     }
     setProfile(next);
-    if (!supabase) return;
+    if (!supabase) return { ok: true };
     try {
       await upsertProfileByUserId(supabase, userId, next);
+      return { ok: true };
     } catch {
-      setProfileError("Profile saved locally, but cloud sync failed.");
+      const message = "Profile saved locally, but cloud sync failed.";
+      setProfileError(message);
+      return { ok: false, message };
     }
   }
 

@@ -4,6 +4,26 @@ import { fetchRecentUploadsFromRssFallback } from "./youtubeUploadsServer";
 import { fetchUploadsUntilAcceptedCount } from "./fetchUploadsUntilAccepted";
 import { extractGuestHeuristic } from "./guestHeuristics";
 
+const MIN_PUBLIC_EPISODES = 10;
+const DB_EPISODE_FETCH_LIMIT = 400;
+
+/**
+ * Avoid showing playlist / episode titles as a person's name on featured cards.
+ * @param {string} name
+ * @param {string} epTitle
+ */
+function guestNameLooksLikeEpisodeMetadata(name, epTitle) {
+  const n = String(name || "").trim();
+  const t = String(epTitle || "").trim();
+  if (!n) return true;
+  if (t && n === t) return true;
+  if (t && n.length > 20 && (t.includes(n) || n.includes(t))) return true;
+  const lower = n.toLowerCase();
+  if (/\b(ep\.?|episode|e\d+|season\s*\d+|#\d{2,}|full episode|clip|highlight|podcast)\b/i.test(lower)) return true;
+  if (n.length > 96) return true;
+  return false;
+}
+
 /**
  * @param {Record<string, unknown>} row
  */
@@ -29,14 +49,57 @@ export async function loadPublicPodcastLandingData(admin) {
   let degraded = false;
   let error;
 
+  async function mergeRuntimeAcceptedIntoMap(byVideoId, minTotal) {
+    const apiTry = await fetchUploadsUntilAcceptedCount({
+      targetAccepted: Math.max(18, minTotal + 8),
+      maxPages: 42,
+    });
+    let raw = [];
+    if (apiTry.ok && apiTry.videos?.length) {
+      raw = apiTry.videos;
+      if (source === "supabase") source = "supabase+youtube_api_runtime";
+    } else {
+      const rss = await fetchRecentUploadsFromRssFallback();
+      raw = rss.videos || [];
+      if (source === "supabase") source = rss.ok ? "supabase+rss_runtime" : "supabase+rss_failed";
+      if (!rss.ok) error = apiTry.error || rss.error;
+    }
+    const { accepted } = partitionEpisodesPipeline(raw);
+    const runtimeSorted = sortByPublishedDesc(accepted);
+    for (const r of runtimeSorted) {
+      const vid = String(r.youtube_video_id || "").trim();
+      if (!vid || byVideoId.has(vid)) continue;
+      byVideoId.set(vid, {
+        ...r,
+        id: vid,
+        pipeline_decision: "accepted",
+      });
+      if (byVideoId.size >= minTotal) break;
+    }
+  }
+
   if (admin) {
     const { data: epData, error: epErr } = await admin
       .from("podcast_episodes")
       .select("*")
       .order("published_at", { ascending: false })
-      .limit(120);
+      .limit(DB_EPISODE_FETCH_LIMIT);
     if (!epErr && Array.isArray(epData)) {
-      episodes = sortByPublishedDesc(epData.filter(episodeRowIsPublicListed)).slice(0, 10);
+      const allListed = sortByPublishedDesc(epData.filter(episodeRowIsPublicListed));
+      const byVideoId = new Map(
+        allListed.map((e) => [String(e.youtube_video_id || "").trim(), e]).filter(([id]) => id),
+      );
+      episodes = sortByPublishedDesc([...byVideoId.values()])
+        .filter(episodeRowIsPublicListed)
+        .slice(0, MIN_PUBLIC_EPISODES);
+
+      if (episodes.length < MIN_PUBLIC_EPISODES) {
+        degraded = true;
+        await mergeRuntimeAcceptedIntoMap(byVideoId, MIN_PUBLIC_EPISODES);
+        episodes = sortByPublishedDesc([...byVideoId.values()])
+          .filter(episodeRowIsPublicListed)
+          .slice(0, MIN_PUBLIC_EPISODES);
+      }
     }
     const topFour = episodes.slice(0, 4);
     const videoIds = topFour.map((e) => e.youtube_video_id).filter(Boolean);
@@ -67,7 +130,7 @@ export async function loadPublicPodcastLandingData(admin) {
       if (!rss.ok) error = apiTry.error || rss.error;
     }
     const { accepted } = partitionEpisodesPipeline(raw);
-    episodes = takeLatestAccepted(accepted, 10).map((r) => ({
+    episodes = takeLatestAccepted(accepted, MIN_PUBLIC_EPISODES).map((r) => ({
       ...r,
       id: r.youtube_video_id,
       pipeline_decision: "accepted",
@@ -84,13 +147,16 @@ export async function loadPublicPodcastLandingData(admin) {
 function guestShapeFromEpisodeOnly(ep) {
   const vid = String(ep?.youtube_video_id || "");
   const slug = `ep-${vid}`;
-  const h = extractGuestHeuristic(String(ep?.title || ""), String(ep?.description || ""));
-  const unverified = !h.confidence || h.confidence < 0.75;
+  const epTitle = String(ep?.title || "");
+  const h = extractGuestHeuristic(epTitle, String(ep?.description || ""));
+  let guestName = String(h.guestName || "").trim() || "Guest";
+  if (guestNameLooksLikeEpisodeMetadata(guestName, epTitle)) guestName = "Guest";
+  const unverified = !h.confidence || h.confidence < 0.75 || guestName === "Guest";
   const watch = String(ep?.youtube_url || "").trim() || (vid ? `https://www.youtube.com/watch?v=${vid}` : "");
   return {
     id: slug,
     slug,
-    name: h.guestName || "Guest",
+    name: guestName,
     title: [h.roleTitle, h.organization].filter(Boolean).join(" · ") || "Podcast guest",
     bio: h.shortBio || "Profile details are being verified by the editorial team.",
     avatar_url: "",
@@ -111,12 +177,13 @@ function featuredGuestToCardShape(row, ep) {
   const slug = String(row.public_slug || `ep-${vid}`);
   const verified = !!row.verified_for_public;
   const conf = Number(row.confidence_score);
-  const h = extractGuestHeuristic(String(ep?.title || ""), String(ep?.description || ""));
-  let name = String(row.guest_name || "").trim();
   const epTitle = String(ep?.title || "").trim();
-  if (!name || name.length > 72 || name === epTitle) {
-    name = h.guestName || "Guest";
+  const h = extractGuestHeuristic(epTitle, String(ep?.description || ""));
+  let name = String(row.guest_name || "").trim();
+  if (!name || name.length > 72 || name === epTitle || guestNameLooksLikeEpisodeMetadata(name, epTitle)) {
+    name = String(h.guestName || "").trim() || "Guest";
   }
+  if (guestNameLooksLikeEpisodeMetadata(name, epTitle)) name = "Guest";
   const avatar =
     String(row.admin_profile_image_url || "").trim() ||
     String(row.profile_image_url || "").trim() ||

@@ -63,6 +63,10 @@ export default function AuthSessionProvider({ children }) {
         await new Promise((r) => setTimeout(r, 150));
         authenticated = await fetchMeAuthenticated();
       }
+      if (soft && sessionRef.current.authenticated && !authenticated) {
+        await new Promise((r) => setTimeout(r, 400));
+        authenticated = await fetchMeAuthenticated();
+      }
       writeNavAuthCache(authenticated, workos);
       setState({ loading: false, authenticated, workos });
     } catch {
