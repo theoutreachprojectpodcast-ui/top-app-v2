@@ -7,6 +7,7 @@ import {
   sessionIdleTimeoutMs,
   workosSessionCookieName,
 } from "@/lib/auth/sessionIdle";
+import { sharedSessionCookieDomain } from "@/lib/runtime/deploymentHosts";
 
 export const runtime = "nodejs";
 
@@ -25,7 +26,9 @@ export async function POST(request) {
   }
   const fp = fingerprintFromSessionCookieValue(sessionVal);
   const secure = request.nextUrl.protocol === "https:";
+  const domain = sharedSessionCookieDomain();
   const opts = { path: "/", httpOnly: true, sameSite: "lax", secure };
+  if (domain) opts.domain = domain;
   const now = Date.now();
   const res = NextResponse.json({ ok: true });
   res.cookies.set(lastActiveCookieName(), String(now), opts);

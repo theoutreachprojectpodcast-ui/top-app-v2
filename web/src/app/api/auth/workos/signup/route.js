@@ -2,7 +2,7 @@ import { getSignUpUrl } from "@workos-inc/authkit-nextjs";
 import { NextResponse } from "next/server";
 import { isWorkOSConfigured } from "@/lib/auth/workosConfigured";
 import { sanitizeWorkOSLoginHint } from "@/lib/auth/workosLoginHint";
-import { safeAppReturnPath } from "@/lib/billing/stripeConfig";
+import { safeWorkOSReturnTarget } from "@/lib/auth/workosSafeReturn";
 import { workOSAuthKitAuthorizeOptions } from "@/lib/auth/workosOrganizationScope";
 
 export async function GET(request) {
@@ -13,7 +13,7 @@ export async function GET(request) {
     );
   }
   const raw = request.nextUrl.searchParams.get("returnTo");
-  const returnTo = safeAppReturnPath(raw || "/onboarding", "/onboarding");
+  const returnTo = safeWorkOSReturnTarget(raw || "/onboarding", "/onboarding");
   const remember = request.nextUrl.searchParams.get("remember");
   const prompt = remember === "0" ? "login" : undefined;
   const loginHint = sanitizeWorkOSLoginHint(request.nextUrl.searchParams.get("loginHint"));

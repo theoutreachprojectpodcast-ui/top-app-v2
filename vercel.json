@@ -1,5 +1,13 @@
 {
   "installCommand": "pnpm install --frozen-lockfile",
   "buildCommand": "pnpm --filter web build",
-  "outputDirectory": "web/.next"
+  "outputDirectory": "web/.next",
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "www.theoutreachproject.app" }],
+      "destination": "https://theoutreachproject.app/:path*",
+      "permanent": true
+    }
+  ]
 }
