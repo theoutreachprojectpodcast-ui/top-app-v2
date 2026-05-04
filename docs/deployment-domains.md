@@ -60,3 +60,14 @@ Register **`https://theoutreachproject.app/callback`** as the redirect URI. Sign
 - Sign in on apex → open admin host → still authenticated (with `WORKOS_COOKIE_DOMAIN` set).
 - Sign out on any host → session cleared everywhere on the registrable domain.
 - Non-admin cannot use admin host (redirect to apex `/`).
+
+## Troubleshooting: “This is not a valid redirect URI” (WorkOS)
+
+The error page lists the **exact** `redirect_uri` your deployment sent (for example `https://the-outreach-project-app.vercel.app/callback`) and the **WorkOS environment** (for example **VolenteLabs (Staging)**).
+
+1. **Open WorkOS → that same environment (Staging vs Production)** — it must match where your **`WORKOS_CLIENT_ID` / `WORKOS_API_KEY`** in Vercel come from.
+2. Under **Redirects**, add **that exact URL** (scheme, host, path `/callback`, no typo). Whitespace and `http` vs `https` must match.
+3. In **Vercel → Settings → Environment Variables** for the deployment you are testing (**Production** vs **Preview**), set **`NEXT_PUBLIC_WORKOS_REDIRECT_URI`** to the **same** string you registered. `NEXT_PUBLIC_*` is baked in at **build** time — **redeploy** after any change.
+4. **Staging keys on Production** — if Vercel Production uses **Staging** WorkOS keys, every redirect URI you use in production (apex **or** `*.vercel.app`) must be allowed in **WorkOS Staging**. To use only apex in prod, either add `https://theoutreachproject.app/callback` there **and** set the env var to that, **or** move Production to **WorkOS Production** keys and register the apex callback in the Production dashboard.
+
+Until the URI in the error message appears in the matching WorkOS environment, sign-in will always fail — a git deploy alone does not fix it.
