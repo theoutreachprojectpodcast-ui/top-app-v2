@@ -4,10 +4,12 @@ The app uses **WorkOS AuthKit** for production sign-in: users are sent to WorkOS
 
 ## 1. WorkOS dashboard
 
-1. Open [WorkOS Dashboard](https://dashboard.workos.com) → your environment.
+1. Open [WorkOS Dashboard](https://dashboard.workos.com) and select the right **environment** (top switcher):
+   - **Staging** — use for local dev and Vercel *Preview* / QA (`sk_test_…` keys).
+   - **Production** — use for the live site and Vercel *Production* (`sk_live_…` keys). Production deploys in this repo must not use Staging keys; the build validator enforces that on Vercel Production.
 2. Under **Redirects**, add a **Redirect URI** that matches **`NEXT_PUBLIC_WORKOS_REDIRECT_URI`** exactly (including `http` vs `https` and port).
-   - Default in `web/.env.local.example`: `http://localhost:3001/callback` for `pnpm dev`.
-   - If you use `pnpm dev:alt` (port 3000), add `http://localhost:3000/callback` and set the env var to that URL while developing on 3000.
+   - Default in `web/.env.local.example`: `http://localhost:3000/callback` for `pnpm dev` (port 3000).
+   - If you use `pnpm dev:alt` (port 3001), add `http://localhost:3001/callback` and set the env var to match.
 3. Configure **Sign-in** / **AuthKit** and any social connections (e.g. Google) you want on the hosted screen.
 4. Set a **Logout redirect** URI if you use sign-out (see AuthKit docs).
 
