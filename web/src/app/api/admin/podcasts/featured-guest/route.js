@@ -38,6 +38,14 @@ export async function PATCH(request) {
   if (body.confidenceScore != null) patch.confidence_score = body.confidenceScore;
   if (Array.isArray(body.source_urls)) patch.source_urls = body.source_urls;
   if (Array.isArray(body.sourceUrls)) patch.source_urls = body.sourceUrls;
+  if (body.public_quote != null) patch.public_quote = body.public_quote;
+  if (body.publicQuote != null) patch.public_quote = body.publicQuote;
+  if (body.card_active != null) patch.card_active = body.card_active;
+  if (body.cardActive != null) patch.card_active = body.cardActive;
+  if (body.display_order != null) patch.display_order = body.display_order;
+  if (body.displayOrder != null) patch.display_order = body.displayOrder;
+  if (body.admin_quote_override != null) patch.admin_quote_override = body.admin_quote_override;
+  if (body.adminQuoteOverride != null) patch.admin_quote_override = body.adminQuoteOverride;
 
   const { error } = await ctx.admin.from("podcast_episode_featured_guest").update(patch).eq("youtube_video_id", youtubeVideoId);
   if (error) return Response.json({ ok: false, error: error.message }, { status: 500 });

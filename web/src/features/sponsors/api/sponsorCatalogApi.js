@@ -71,7 +71,10 @@ export async function listSponsorsCatalogWithClient(supabase, opts = {}) {
   if (!supabase) return sponsorScope === "podcast" ? [] : fallbackRows();
   let q = supabase.from(SPONSOR_TABLE).select("*");
   if (sponsorScope === "podcast") {
-    q = q.eq("sponsor_scope", "podcast");
+    q = q
+      .eq("sponsor_scope", "podcast")
+      .eq("is_active", true)
+      .in("payment_status", ["paid", "paid_stripe", "complete"]);
   } else {
     q = q.or("sponsor_scope.is.null,sponsor_scope.eq.app");
   }

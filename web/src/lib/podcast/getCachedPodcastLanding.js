@@ -19,7 +19,7 @@ export async function getCachedPodcastLandingBundle() {
       const admin = createSupabaseAdminClient();
       return loadPublicPodcastLandingData(admin);
     },
-    ["podcast-public-landing-v1"],
+    ["podcast-public-landing-v2"],
     { revalidate: ttl, tags: ["podcast-public-landing"] }
   );
   return cached();

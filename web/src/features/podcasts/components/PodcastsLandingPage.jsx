@@ -77,7 +77,7 @@ export default function PodcastsLandingPage({
         listSponsorsCatalog(supabase, { sponsorScope: "podcast" }),
         listPodcastMemberContent(supabase, { canViewMemberContent: canAccessMembers }),
         listPodcastEpisodeGuests(supabase),
-        fetch("/api/podcasts/upcoming", { cache: "no-store" }).then((r) => r.json().catch(() => ({}))),
+        fetch("/api/podcasts/upcoming", { credentials: "include", cache: "no-store" }).then((r) => r.json().catch(() => ({}))),
       ]);
       if (cancelled) return;
       if (Array.isArray(bundle?.episodes) && bundle.episodes.length) {
@@ -88,7 +88,7 @@ export default function PodcastsLandingPage({
       }
       if (bundle?.degraded || initialBundleMeta?.degraded) {
         setBundleNote(
-          "Showing the latest validated episodes from the live feed cache. Run a platform-admin sync to persist results in the database."
+          "Fewer than ten full episodes matched the official playlist filters, or YouTube data was unavailable. Check API keys, playlist ID, and admin include/exclude rules."
         );
       } else {
         setBundleNote("");
@@ -131,7 +131,8 @@ export default function PodcastsLandingPage({
   }, []);
 
   const featured = episodes.find((item) => item.is_featured) || episodes[0] || null;
-  const publicEpisodes = episodes.filter((item) => !item.is_member_only).slice(0, 10);
+  /** Ten newest full episodes from the official playlist (member-only rows still listed; card shows lock). */
+  const lastTenFullEpisodes = episodes.slice(0, 10);
   const guestsByEpisode = new Map();
   for (const link of episodeGuests) {
     const episodeId = String(link?.episode_id || "");
@@ -164,14 +165,14 @@ export default function PodcastsLandingPage({
 
         <section className="podcastSection">
           <PodcastSectionHeader
-            eyebrow="Featured Guests"
+            eyebrow="Featured guests"
             title="Voices shaping service communities"
-            subtitle="Automatically tied to the four most recent validated full episodes. Unverified lines are labeled until editorial review."
+            subtitle="Short pull-quotes from episode captions when available; otherwise curated public quotes or tight show-notes lines. Active voice cards: Admin → Podcasts."
           />
           {bundleNote ? <p className="podcastMuted">{bundleNote}</p> : null}
           <div className="podcastGuestGrid">
             {featuredVoices.slice(0, 4).map((guest) => (
-              <GuestCard key={guest.id || guest.slug} guest={guest} />
+              <GuestCard key={guest.id || guest.slug} guest={guest} variant="voiceStrip" />
             ))}
           </div>
           {!featuredVoices.length ? <p className="podcastMuted">Guest highlights will appear after the next successful sync.</p> : null}
@@ -179,13 +180,13 @@ export default function PodcastsLandingPage({
 
         <section className="podcastSection">
           <PodcastSectionHeader
-            eyebrow="Episode Library"
+            eyebrow="Episode library"
             title="Last 10 full episodes"
-            subtitle="Uploaded videos only, with episode numbering in the title or description. Shorts, clips, and trailers are filtered out."
+            subtitle="Pulled from the official full-episodes YouTube playlist only (not the whole channel). Shorts, clips, and trailers are filtered out; order is newest first."
           />
           {loading ? <p className="podcastMuted">Loading episodes...</p> : null}
           <div className="podcastEpisodeGrid">
-            {publicEpisodes.map((episode) => (
+            {lastTenFullEpisodes.map((episode) => (
               <EpisodeCard
                 key={episode.id || episode.youtube_video_id}
                 episode={episode}
@@ -193,14 +194,14 @@ export default function PodcastsLandingPage({
               />
             ))}
           </div>
-          {!publicEpisodes.length ? <p className="podcastMuted">No validated episodes available yet.</p> : null}
+          {!lastTenFullEpisodes.length ? <p className="podcastMuted">No validated episodes available yet.</p> : null}
         </section>
 
         <section className="podcastSection">
           <PodcastSectionHeader eyebrow="Coming Next" title="Upcoming Guests" subtitle="Who is scheduled next on the show." />
-          <div className="podcastGuestGrid">
+          <div className="podcastUpcomingGrid">
             {upcomingGuests.map((guest) => (
-              <GuestCard key={`upcoming-${guest.id}`} guest={guest} />
+              <GuestCard key={`upcoming-${guest.id}`} guest={guest} variant="upcoming" />
             ))}
           </div>
           {!upcomingGuests.length ? (

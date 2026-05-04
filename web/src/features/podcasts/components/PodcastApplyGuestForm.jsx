@@ -6,11 +6,14 @@ import { submitPodcastGuestApplication } from "@/features/podcasts/api/podcastAp
 const INITIAL = {
   full_name: "",
   email: "",
+  phone: "",
   organization: "",
+  role_title: "",
   website_url: "",
   topic_pitch: "",
   why_now: "",
   social_links: "",
+  message: "",
 };
 
 export default function PodcastApplyGuestForm({ supabase, onSubmitted, showHeading = true }) {
@@ -22,7 +25,7 @@ export default function PodcastApplyGuestForm({ supabase, onSubmitted, showHeadi
   async function onSubmit(event) {
     event.preventDefault();
     if (!form.full_name || !form.email || !form.topic_pitch) {
-      setError("Please complete name, email, and topic pitch.");
+      setError("Please complete name, email, and topic.");
       return;
     }
     setBusy(true);
@@ -43,12 +46,15 @@ export default function PodcastApplyGuestForm({ supabase, onSubmitted, showHeadi
       {showHeading ? <h3>Apply to Be on the Podcast</h3> : null}
       <form className="podcastApplyForm" onSubmit={onSubmit}>
         <input placeholder="Full name" value={form.full_name} onChange={(e) => setForm((d) => ({ ...d, full_name: e.target.value }))} />
-        <input placeholder="Email" value={form.email} onChange={(e) => setForm((d) => ({ ...d, email: e.target.value }))} />
+        <input type="email" placeholder="Email" value={form.email} onChange={(e) => setForm((d) => ({ ...d, email: e.target.value }))} />
+        <input type="tel" placeholder="Phone (optional)" value={form.phone} onChange={(e) => setForm((d) => ({ ...d, phone: e.target.value }))} />
         <input placeholder="Organization (optional)" value={form.organization} onChange={(e) => setForm((d) => ({ ...d, organization: e.target.value }))} />
+        <input placeholder="Role / title (optional)" value={form.role_title} onChange={(e) => setForm((d) => ({ ...d, role_title: e.target.value }))} />
         <input placeholder="Website (optional)" value={form.website_url} onChange={(e) => setForm((d) => ({ ...d, website_url: e.target.value }))} />
-        <textarea rows={3} placeholder="Topic pitch" value={form.topic_pitch} onChange={(e) => setForm((d) => ({ ...d, topic_pitch: e.target.value }))} />
-        <textarea rows={2} placeholder="Why now?" value={form.why_now} onChange={(e) => setForm((d) => ({ ...d, why_now: e.target.value }))} />
-        <textarea rows={2} placeholder="Social links" value={form.social_links} onChange={(e) => setForm((d) => ({ ...d, social_links: e.target.value }))} />
+        <textarea rows={3} placeholder="Topic" value={form.topic_pitch} onChange={(e) => setForm((d) => ({ ...d, topic_pitch: e.target.value }))} />
+        <textarea rows={2} placeholder="Why now? (optional)" value={form.why_now} onChange={(e) => setForm((d) => ({ ...d, why_now: e.target.value }))} />
+        <textarea rows={2} placeholder="Social links (optional)" value={form.social_links} onChange={(e) => setForm((d) => ({ ...d, social_links: e.target.value }))} />
+        <textarea rows={3} placeholder="Message (optional)" value={form.message} onChange={(e) => setForm((d) => ({ ...d, message: e.target.value }))} />
         <button className="btnPrimary" type="submit" disabled={busy}>{busy ? "Submitting..." : "Submit Guest Application"}</button>
       </form>
       {error ? <p className="applyError">{error}</p> : null}
