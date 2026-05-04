@@ -1,5 +1,6 @@
 import { resolveSponsorDisplayName } from "@/lib/entityDisplayName";
 import { resolveSponsorListingLogoUrl } from "@/lib/sponsors/resolveSponsorListingLogoUrl";
+import { FEATURED_SPONSOR_CARD_BACKGROUNDS } from "@/features/sponsors/data/featuredSponsors";
 
 function clean(value) {
   return String(value ?? "").trim();
@@ -85,6 +86,8 @@ export function normalizeSponsorRecord(row = {}) {
 
 export function getSponsorCardViewModel(row = {}) {
   const s = normalizeSponsorRecord(row);
+  const fallbackBg =
+    FEATURED_SPONSOR_CARD_BACKGROUNDS[s.slug] || FEATURED_SPONSOR_CARD_BACKGROUNDS[s.id] || "";
   /** Prefer concise site-derived tagline, then long description (enrichment merges into these). */
   const cardSubheader = truncateSponsorLine(s.tagline || s.long_description || s.short_description, 140);
   const logoDisplay = resolveSponsorListingLogoUrl(s) || null;
@@ -101,7 +104,7 @@ export function getSponsorCardViewModel(row = {}) {
     websitePending: !s.website_url,
     logoUrl: logoDisplay,
     warmVariant: s.warm_variant || "gold",
-    backgroundImageUrl: s.background_image_url || "",
+    backgroundImageUrl: s.background_image_url || fallbackBg,
     socialLinks: {
       website: validUrl(s.website_url) ? s.website_url : "",
       instagram: platformVerified(s.instagram_url, "instagram.com") ? s.instagram_url : "",

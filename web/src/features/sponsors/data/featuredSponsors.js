@@ -1,7 +1,7 @@
 /**
  * Featured sponsors — offline fallback when `sponsors_catalog` is empty or unreachable.
  * Logos are null here; use moderator logo enrichment + Supabase for real brand assets.
- * Background imagery should come from Open Graph (`POST /api/sponsors/enrich`) or `background_image_url`.
+ * Card hero backgrounds: static files under `/public/sponsors/` (used when DB `background_image_url` is empty).
  */
 
 export const FEATURED_SPONSORS = [
@@ -17,7 +17,7 @@ export const FEATURED_SPONSORS = [
     websitePending: true,
     logoUrl: null,
     warmVariant: "gold",
-    backgroundImageUrl: "",
+    backgroundImageUrl: "/sponsors/featured-bg-rope-solutions.png",
     socialLinks: {},
   },
   {
@@ -31,7 +31,7 @@ export const FEATURED_SPONSORS = [
     ctaUrl: "https://gamedaymenshealth.com/",
     logoUrl: null,
     warmVariant: "copper",
-    backgroundImageUrl: "",
+    backgroundImageUrl: "/sponsors/featured-bg-gameday-mens-health.png",
     socialLinks: {
       website: "https://gamedaymenshealth.com/",
       instagram: "https://www.instagram.com/gamedaymenshealth/",
@@ -50,7 +50,7 @@ export const FEATURED_SPONSORS = [
     ctaUrl: "https://ruckingrealtygroup.com/",
     logoUrl: null,
     warmVariant: "amber",
-    backgroundImageUrl: "",
+    backgroundImageUrl: "/sponsors/featured-bg-rucking-realty.png",
     socialLinks: {
       website: "https://ruckingrealtygroup.com/",
       facebook: "https://www.facebook.com/ruckingrealtygroup",
@@ -68,7 +68,7 @@ export const FEATURED_SPONSORS = [
     ctaUrl: "https://ironsoldierscoffeeco.com/",
     logoUrl: null,
     warmVariant: "rust",
-    backgroundImageUrl: "",
+    backgroundImageUrl: "/sponsors/featured-bg-iron-soldiers-coffee.png",
     socialLinks: {
       website: "https://ironsoldierscoffeeco.com/",
       instagram: "https://www.instagram.com/ironsoldierscoffee/",
@@ -86,7 +86,7 @@ export const FEATURED_SPONSORS = [
     ctaUrl: "https://eduardopicodesigns.com/",
     logoUrl: null,
     warmVariant: "teal",
-    backgroundImageUrl: "",
+    backgroundImageUrl: "/sponsors/featured-bg-eduardo-pico-designs.png",
     socialLinks: {
       website: "https://eduardopicodesigns.com/",
     },
@@ -102,7 +102,7 @@ export const FEATURED_SPONSORS = [
     ctaUrl: "https://www.warsendmerch.com/",
     logoUrl: null,
     warmVariant: "rose",
-    backgroundImageUrl: "",
+    backgroundImageUrl: "/sponsors/featured-bg-wars-end-merch.png",
     socialLinks: {},
   },
   {
@@ -116,7 +116,7 @@ export const FEATURED_SPONSORS = [
     ctaUrl: "https://braintreatmentcenter.com/",
     logoUrl: null,
     warmVariant: "sage",
-    backgroundImageUrl: "",
+    backgroundImageUrl: "/sponsors/featured-bg-brain-treatment-center.png",
     socialLinks: {
       website: "https://braintreatmentcenter.com/",
       facebook: "https://www.facebook.com/braintreatmentcenter",
@@ -124,3 +124,10 @@ export const FEATURED_SPONSORS = [
     },
   },
 ];
+
+/** Default hero art by sponsor slug/id when `sponsors_catalog.background_image_url` is empty. */
+export const FEATURED_SPONSOR_CARD_BACKGROUNDS = Object.fromEntries(
+  FEATURED_SPONSORS.map((s) => [String(s.id || "").trim(), String(s.backgroundImageUrl || "").trim()]).filter(
+    ([, url]) => url,
+  ),
+);

@@ -132,7 +132,7 @@ export default function FeaturedSponsorCard({ sponsor }) {
     >
       <div
         className={`sponsorPremiumCardBg torpListingCardHero ${hasListingBg ? "torpListingCardHero--photo" : `torpListingCardHero--sponsorTone torpListingCardHero--sponsorTone-${warm}`}`}
-        style={hasListingBg ? { backgroundImage: `url(${JSON.stringify(safeBg)})` } : undefined}
+        style={hasListingBg ? { backgroundImage: `url('${safeBg.replace(/'/g, "%27")}')` } : undefined}
         aria-hidden
       />
       <div className="sponsorPremiumCardScrim" aria-hidden />
