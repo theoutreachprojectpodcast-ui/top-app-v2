@@ -2,6 +2,7 @@ import { resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import {
   getProfileRowByWorkOSId,
+  patchProfileByWorkOSId,
   profileRowToClientDto,
   syncProfileEmailWithWorkOSUser,
 } from "@/lib/profile/serverProfile";
@@ -35,6 +36,15 @@ export async function GET() {
   if (admin) {
     await syncProfileEmailWithWorkOSUser(admin, user);
     row = await getProfileRowByWorkOSId(admin, user.id);
+    if (row) {
+      const throttleMs = 5 * 60 * 1000;
+      const prev = row.last_login_at ? new Date(row.last_login_at).getTime() : 0;
+      const prevOk = Number.isFinite(prev) && prev > 0;
+      if (!prevOk || Date.now() - prev > throttleMs) {
+        await patchProfileByWorkOSId(admin, user.id, { last_login_at: new Date().toISOString() });
+        row = await getProfileRowByWorkOSId(admin, user.id);
+      }
+    }
     profileDto = profileRowToClientDto(row);
   }
   if (profileDto && sessionEmail && !String(profileDto.email || "").trim()) {

@@ -10,7 +10,14 @@ import { isPlatformAdminServer } from "@/lib/admin/platformAdminServer";
  */
 export function hasActiveMemberBilling(membershipStatus) {
   const s = String(membershipStatus || "").toLowerCase();
-  return s === "active";
+  return s === "active" || s === "trialing";
+}
+
+/** Paid tiers that unlock member-style product surfaces when billing is active. */
+function paidTierWithActiveBilling(tier, membershipStatus) {
+  const t = String(tier || "").toLowerCase();
+  if (!["support", "member", "sponsor"].includes(t)) return false;
+  return hasActiveMemberBilling(membershipStatus);
 }
 
 /**
@@ -29,8 +36,7 @@ export function computeEntitlementsFromProfileRow(row) {
   const status = String(row.membership_status || "none").toLowerCase();
   const platformRole = String(row.platform_role || "user").toLowerCase();
   const isPrivilegedStaff = platformRole === "admin" || platformRole === "moderator";
-  const activePro = tier === "member" && hasActiveMemberBilling(status);
-  const privilegedContent = isPrivilegedStaff || activePro;
+  const privilegedContent = isPrivilegedStaff || paidTierWithActiveBilling(tier, status);
   const isPlatformAdmin = isPlatformAdminServer({
     email: String(row.email || ""),
     workosUserId: String(row.workos_user_id || ""),

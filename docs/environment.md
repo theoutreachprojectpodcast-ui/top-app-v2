@@ -13,6 +13,12 @@
 
 See **[deployment-domains.md](./deployment-domains.md)** for Vercel/DNS, `WORKOS_COOKIE_DOMAIN`, `NEXT_PUBLIC_ADMIN_URL`, and the admin subdomain rewrite.
 
+## Auth, accounts, billing (v0.6)
+
+- **[PRODUCTION_AUDIT_V06_AUTH_BILLING.md](./PRODUCTION_AUDIT_V06_AUTH_BILLING.md)** — audit summary  
+- **[production-deployment.md](./production-deployment.md)** — launch checklist  
+- **[membership-billing.md](./membership-billing.md)** · **[stripe-webhooks.md](./stripe-webhooks.md)** · **[admin-user-management.md](./admin-user-management.md)**
+
 ## References
 
 - `web/docs/qa-demo-data.md`
