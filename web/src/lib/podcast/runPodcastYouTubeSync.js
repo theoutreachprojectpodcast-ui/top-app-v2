@@ -7,6 +7,7 @@ import { fetchUploadsUntilAcceptedCount } from "./fetchUploadsUntilAccepted";
 const EPISODES_TABLE = "podcast_episodes";
 const LOG_TABLE = "podcast_sync_logs";
 const FEATURED_TABLE = "podcast_episode_featured_guest";
+const GUESTS_TABLE = "podcast_guests";
 
 function publicSlugForVideo(videoId) {
   return `ep-${String(videoId || "").trim()}`;
@@ -134,6 +135,31 @@ export async function runPodcastYouTubeSync(supabase, opts = {}) {
       await supabase.from(FEATURED_TABLE).upsert(payload, { onConflict: "youtube_video_id" });
     } catch {
       // featured table may not exist until migration applied
+    }
+
+    try {
+      await supabase.from(GUESTS_TABLE).upsert(
+        {
+          slug,
+          name: h.guestName || "Guest",
+          title: [h.roleTitle, h.organization].filter(Boolean).join(" · ") || "Guest",
+          organization: h.organization || null,
+          role_title: h.roleTitle || null,
+          quote: h.discussionSummary || null,
+          avatar_url: null,
+          source_url: ep.youtube_url || null,
+          episode_id: episodeUuid,
+          admin_override: false,
+          display_order: featuredIds.indexOf(vid),
+          active: false,
+          featured: true,
+          upcoming: false,
+          updated_at: nowIso,
+        },
+        { onConflict: "slug" },
+      );
+    } catch {
+      // podcast_guests extra columns may not exist until migration applied
     }
   }
 
