@@ -23,8 +23,8 @@
 }
 
 :root[data-color-scheme="light"] .appShell--subpage:not(.appShell--podcast) .bottomNav {
-  background: rgba(255, 255, 255, 0.97);
-  box-shadow: 0 -8px 28px var(--color-veil-08);
+  background: transparent;
+  box-shadow: none;
 }
 
 :root[data-color-scheme="light"] .profileFileInput {
