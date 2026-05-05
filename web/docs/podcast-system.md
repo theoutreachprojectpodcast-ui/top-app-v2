@@ -29,3 +29,12 @@
   - `podcast-public-landing`
 - Cache TTL uses `PODCAST_CACHE_TTL` (default 900 seconds).
 - Admin mutations revalidate this tag so updates appear quickly.
+
+## QA validation checklist
+
+- 10 latest full episodes appear from the official playlist path.
+- No Shorts / clips / trailers in the public ten.
+- Voices cards show human names + concise quotes (no metadata leaks).
+- Upcoming guests reflect admin CRUD and published state.
+- Apply form saves submissions and returns explicit email-warning state when notify fails.
+- Podcast sponsors are filtered by podcast scope and paid/active workflow.
