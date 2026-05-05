@@ -22,9 +22,12 @@ export async function GET(request) {
     const slugScope = scope === "podcast" ? "podcast" : "app";
     let q = supabase.from("sponsors_catalog").select("*").eq("slug", slug.trim());
     if (slugScope === "podcast") {
-      q = q.eq("sponsor_scope", "podcast");
+      q = q.eq("sponsor_scope", "podcast").eq("is_active", true);
     } else {
-      q = q.or("sponsor_scope.is.null,sponsor_scope.eq.app");
+      q = q
+        .or("sponsor_scope.is.null,sponsor_scope.eq.app")
+        .eq("sponsor_type", "foundational_sponsor")
+        .eq("is_active", true);
     }
     const { data, error } = await q.maybeSingle();
     if (error) return Response.json({ ok: false, error: error.message }, { status: 500 });

@@ -15,7 +15,7 @@ function fallbackRows() {
       id: item.id,
       slug: item.id,
       name: item.name,
-      sponsor_type: item.industry,
+      sponsor_type: "foundational_sponsor",
       website_url: item.ctaUrl,
       logo_url: item.logoUrl,
       background_image_url: item.backgroundImageUrl,
@@ -23,6 +23,8 @@ function fallbackRows() {
       long_description: item.tagline,
       tagline: item.tagline,
       featured: true,
+      is_active: true,
+      sponsor_status: "active",
       display_order: idx + 1,
       enrichment_status: "seed",
       verified: true,
@@ -71,9 +73,14 @@ export async function listSponsorsCatalogWithClient(supabase, opts = {}) {
   if (!supabase) return sponsorScope === "podcast" ? [] : fallbackRows();
   let q = supabase.from(SPONSOR_TABLE).select("*");
   if (sponsorScope === "podcast") {
-    q = q.eq("sponsor_scope", "podcast");
+    q = q
+      .or("sponsor_scope.eq.podcast,sponsor_type.eq.podcast_sponsor")
+      .eq("is_active", true);
   } else {
-    q = q.or("sponsor_scope.is.null,sponsor_scope.eq.app");
+    q = q
+      .or("sponsor_scope.is.null,sponsor_scope.eq.app")
+      .eq("sponsor_type", "foundational_sponsor")
+      .eq("is_active", true);
   }
   const { data, error } = await q
     .order("display_order", { ascending: true, nullsFirst: false })

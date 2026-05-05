@@ -131,7 +131,7 @@ export default function PodcastsLandingPage({
   }, []);
 
   const featured = episodes.find((item) => item.is_featured) || episodes[0] || null;
-  const publicEpisodes = episodes.filter((item) => !item.is_member_only).slice(0, 10);
+  const lastTenFullEpisodes = episodes.slice(0, 10);
   const guestsByEpisode = new Map();
   for (const link of episodeGuests) {
     const episodeId = String(link?.episode_id || "");
@@ -181,11 +181,11 @@ export default function PodcastsLandingPage({
           <PodcastSectionHeader
             eyebrow="Episode Library"
             title="Last 10 full episodes"
-            subtitle="Uploaded videos only, with episode numbering in the title or description. Shorts, clips, and trailers are filtered out."
+            subtitle="Official full-episodes playlist only. Shorts, clips, and trailers are filtered out."
           />
           {loading ? <p className="podcastMuted">Loading episodes...</p> : null}
           <div className="podcastEpisodeGrid">
-            {publicEpisodes.map((episode) => (
+            {lastTenFullEpisodes.map((episode) => (
               <EpisodeCard
                 key={episode.id || episode.youtube_video_id}
                 episode={episode}
@@ -193,7 +193,7 @@ export default function PodcastsLandingPage({
               />
             ))}
           </div>
-          {!publicEpisodes.length ? <p className="podcastMuted">No validated episodes available yet.</p> : null}
+          {!lastTenFullEpisodes.length ? <p className="podcastMuted">No validated episodes available yet.</p> : null}
         </section>
 
         <section className="podcastSection">
