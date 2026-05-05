@@ -16,6 +16,7 @@ function fallbackRows() {
       slug: item.id,
       name: item.name,
       sponsor_type: "foundational_sponsor",
+      sponsor_category: item.industry,
       website_url: item.ctaUrl,
       logo_url: item.logoUrl,
       background_image_url: item.backgroundImageUrl,
