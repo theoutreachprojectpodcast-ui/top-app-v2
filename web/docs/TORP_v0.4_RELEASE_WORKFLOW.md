@@ -16,8 +16,8 @@ Use this section as the source of truth before changing Vercel or GitHub setting
 | **`qa` branch (lowercase)** | Day-to-day development branch. Open PRs **`qa` → `QA`**. Create on `origin` if missing: `git checkout -b qa origin/main` then `git push -u origin qa`. The old **`prototype`** branch is no longer used. |
 | **Vercel Root Directory** | Still **`.`** (repo root) in project settings — Next app is in **`web/`**. **Change to `web`** in the dashboard. |
 | **Framework preset** | Still **Other** with generic output — **set to Next.js** after Root Directory is `web`. |
-| **Production env (Vercel)** | **None** — add all required variables for `Production` before relying on `main` deploys. |
-| **QA env (Vercel)** | **Preview, branch `QA`** — required keys present (values encrypted in dashboard); update `APP_BASE_URL` / `NEXT_PUBLIC_APP_URL` / `NEXT_PUBLIC_WORKOS_REDIRECT_URI` when **`qa-the-outreach-project.vercel.app`** is attached. |
+| **Production env (Vercel)** | **None** — add all required variables for `Production` before relying on `main` deploys. **WorkOS:** use the dashboard **Production** environment (`sk_live_…` + matching `client_…`); Staging keys (`sk_test_…`) fail the build on Vercel Production (`validate-production-env.mjs`). |
+| **QA env (Vercel)** | **Preview, branch `QA`** — required keys present (values encrypted in dashboard); WorkOS **Staging** keys are OK here. Update `APP_BASE_URL` / `NEXT_PUBLIC_APP_URL` / `NEXT_PUBLIC_WORKOS_REDIRECT_URI` when **`qa-the-outreach-project.vercel.app`** is attached. |
 | **Config in repo** | Root `vercel.json`: `pnpm install` + `pnpm --filter web build`. `web/vercel.json`: monorepo install from parent + `pnpm run build` (used when Root Directory is `web`). |
 
 ## Current State (summary)

@@ -7,19 +7,23 @@ import {
 } from "./youtubeUploadsServer";
 
 /**
- * Walk the uploads playlist until we have enough **accepted** full episodes (after filters),
- * or we hit page / raw caps.
+ * Walk a YouTube playlist (defaults to channel **uploads** playlist) until enough rows pass the
+ * episode pipeline, or page caps are hit. Pass `playlistId` to sync a specific list (e.g. full episodes).
  *
- * @param {{ targetAccepted?: number, maxPages?: number, pageSize?: number }} opts
+ * @param {{ targetAccepted?: number, maxPages?: number, playlistId?: string }} opts
  */
 export async function fetchUploadsUntilAcceptedCount(opts = {}) {
   const target = Number(opts.targetAccepted) > 0 ? Number(opts.targetAccepted) : 10;
   const maxPages = Number(opts.maxPages) > 0 ? Number(opts.maxPages) : 25;
 
-  const channelId = await resolveYoutubeChannelId();
-  if (!channelId) return { ok: false, error: "missing_channel_id", videos: [] };
-  const uploadsId = await fetchUploadsPlaylistId(channelId);
-  if (!uploadsId) return { ok: false, error: "missing_uploads_playlist", videos: [] };
+  const customPlaylist = String(opts.playlistId || "").trim();
+  let uploadsId = customPlaylist;
+  if (!uploadsId) {
+    const channelId = await resolveYoutubeChannelId();
+    if (!channelId) return { ok: false, error: "missing_channel_id", videos: [] };
+    uploadsId = await fetchUploadsPlaylistId(channelId);
+    if (!uploadsId) return { ok: false, error: "missing_uploads_playlist", videos: [] };
+  }
 
   const byId = new Map();
   let token = "";

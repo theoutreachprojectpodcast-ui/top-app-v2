@@ -2,8 +2,8 @@
 
 ## What was fixed
 
-- **Last 10 full episodes**: `fetchUploadsUntilAcceptedCount` walks YouTube uploads playlist pages until enough rows pass `episodeParser` heuristics (episode numbering, duration floor, Shorts/clip keyword exclusions). The podcast landing page reads persisted episodes plus a degraded API path with a deeper window when the DB is empty.
-- **Featured guests**: `publicPodcastRead` / `featuredGuestToCardShape` prefer admin `podcast_episode_featured_guest` fields when verified; otherwise `guestHeuristics` supplies readable bios and discussion summaries (no raw JSON in the UI). Cards expose `episodeWatchUrl` for a **Watch episode** link.
+- **Last 10 full episodes**: The landing grid lists the **10 newest** accepted items from the official full-episodes playlist (newest first), including rows marked member-only; locks are shown on the card, not by hiding rows. Pipeline: `fetchOfficialPlaylistAcceptedEpisodes` + `loadPublicPodcastLandingData` (degraded flag if fewer than 10 accepted items).
+- **Voices (featured guests)**: Short pull-quotes prefer **YouTube captions** stored on `podcast_episodes.transcript_text` (backfilled on cached landing rebuild via `youtube-transcript`, capped per rebuild; disable with `PODCAST_LANDING_TRANSCRIPT_FETCH=0`). Otherwise: admin `public_quote`, vetted `discussion_summary`, then trimmed description. Apply `web/supabase/podcast_episodes_transcript.sql` for the transcript columns. Cards use a compact quote layout (`GuestCard` `voiceStrip`).
 - **Upcoming guests**: Stored in `podcast_upcoming_guests`. Only `status = published` rows are returned by `GET /api/podcasts/upcoming`. Admin CRUD lives under **Admin → Podcasts → Upcoming guests** (`/api/admin/podcasts/upcoming-guests`).
 - **Podcast sponsors**: `sponsors_catalog.sponsor_scope` distinguishes `app` vs `podcast`. The podcast page loads `listSponsorsCatalog(..., { sponsorScope: 'podcast' })` and renders `PodcastSponsorsSection` (same `FeaturedSponsorCard` grid styling as the main hub, two-column responsive).
 

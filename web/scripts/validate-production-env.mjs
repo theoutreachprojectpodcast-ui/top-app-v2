@@ -37,4 +37,20 @@ if (missing.length) {
   process.exit(1);
 }
 
+/** Vercel Production must use the WorkOS *Production* dashboard keys (`sk_live_…`), not Staging (`sk_test_…`). */
+const vercelProduction = process.env.VERCEL === "1" && process.env.VERCEL_ENV === "production";
+const workosKey = String(process.env.WORKOS_API_KEY || "").trim();
+if (vercelProduction && workosKey.startsWith("sk_test_")) {
+  console.error(
+    "[validate-production-env] Vercel Production is configured with a WorkOS Staging API key (sk_test_…).",
+  );
+  console.error(
+    "Use WorkOS Dashboard → switch environment to Production → API Keys → copy sk_live_… and client_… for Production.",
+  );
+  console.error(
+    "Register the production Redirect URI (e.g. https://theoutreachproject.app/callback) under that Production environment.",
+  );
+  process.exit(1);
+}
+
 console.log("[validate-production-env] Required production variables are set.");

@@ -235,7 +235,7 @@ function pushLocalApplication(payload) {
 }
 
 export async function submitPodcastGuestApplication(supabase, payload) {
-  const legacyRecord = {
+  const body = {
     full_name: String(payload.full_name || "").trim(),
     email: String(payload.email || "").trim(),
     organization: String(payload.organization || "").trim(),
@@ -243,18 +243,56 @@ export async function submitPodcastGuestApplication(supabase, payload) {
     topic_pitch: String(payload.topic_pitch || "").trim(),
     why_now: String(payload.why_now || "").trim(),
     social_links: String(payload.social_links || "").trim(),
+    phone: String(payload.phone || "").trim(),
+    role_title: String(payload.role_title || "").trim(),
+    message: String(payload.message || "").trim(),
+  };
+
+  if (typeof window !== "undefined") {
+    try {
+      const res = await fetch("/api/podcasts/apply-guest", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        return { ok: false, error: json.error || json.message || "Could not submit application." };
+      }
+      return {
+        ok: true,
+        localOnly: false,
+        warning: json.emailWarning || "",
+      };
+    } catch (e) {
+      return { ok: false, error: String(e?.message || e) };
+    }
+  }
+
+  const legacyRecord = {
+    full_name: body.full_name,
+    email: body.email,
+    organization: body.organization,
+    website_url: body.website_url,
+    topic_pitch: body.topic_pitch,
+    why_now: body.why_now,
+    social_links: body.social_links,
     status: "submitted",
   };
   const record = {
     ...legacyRecord,
-    proposed_topic: String(payload.topic_pitch || "").trim(),
-    why_you_should_be_on: String(payload.why_now || "").trim(),
+    proposed_topic: body.topic_pitch,
+    why_you_should_be_on: body.why_now,
     audience_value: String(payload.audience_value || payload.social_links || "").trim(),
     social_url: String(payload.social_url || payload.website_url || "").trim(),
+    phone: body.phone || null,
+    role_title: body.role_title || null,
+    message: body.message || null,
   };
   if (!supabase) {
     pushLocalApplication(record);
-    return { ok: true, localOnly: true };
+    return { ok: false, error: "Application service is unavailable in this environment." };
   }
   const { error } = await supabase.from(APPLICATIONS_TABLE).insert(record);
   if (!error) return { ok: true, localOnly: false };
@@ -262,8 +300,7 @@ export async function submitPodcastGuestApplication(supabase, payload) {
     const legacyInsert = await supabase.from(APPLICATIONS_TABLE).insert(legacyRecord);
     if (!legacyInsert.error) return { ok: true, localOnly: false, warning: "Saved with legacy podcast application schema." };
   }
-  pushLocalApplication({ ...record, supabase_error: error.message });
-  return { ok: true, localOnly: true, warning: "Saved locally because podcast applications table is not deployed yet." };
+  return { ok: false, error: error.message || "Could not save application." };
 }
 
 function readLocalApplications() {

@@ -416,6 +416,18 @@
   gap: 16px;
 }
 
+/* Upcoming guests: two columns on tablet/desktop, single column on narrow phones */
+.podcastUpcomingGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+@media (max-width: 560px) {
+  .podcastUpcomingGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .podcastEpisodeCard,
 .podcastGuestCard,
 .podcastMemberItem {
@@ -517,6 +529,37 @@
   text-decoration: none;
   color: inherit;
   min-width: 0;
+}
+
+.podcastGuestCard--minimal {
+  align-items: center;
+}
+
+.podcastGuestCard--voiceStrip .podcastGuestQuote {
+  font-size: 13px;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+
+.podcastGuestSubtitle {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--pod-muted);
+}
+
+.podcastGuestSubtitle--muted {
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+.podcastGuestQuote {
+  margin: 8px 0 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: color-mix(in srgb, var(--pod-text) 92%, var(--pod-muted) 8%);
 }
 
 .podcastSponsorsSectionWrap {

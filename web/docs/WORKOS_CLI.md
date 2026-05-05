@@ -34,5 +34,6 @@ Docs: [AI Installer & CLI](https://workos.com/docs/authkit/cli-installer).
 
 ## Align with this app
 
-- **Redirect URI** in the WorkOS dashboard must match **`NEXT_PUBLIC_WORKOS_REDIRECT_URI`** (default `http://localhost:3001/callback`).
+- **Redirect URI** in the WorkOS dashboard must match **`NEXT_PUBLIC_WORKOS_REDIRECT_URI`** (see `web/.env.local.example`; commonly `http://localhost:3000/callback` for `pnpm dev`).
+- **Production** deploys should use the WorkOS **Production** environment keys (`sk_live_…`), not Staging (`sk_test_…`); Vercel Production builds validate this.
 - After the CLI or dashboard changes env vars, restart **`pnpm dev`** from the repo root.

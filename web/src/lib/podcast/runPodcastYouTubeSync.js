@@ -3,6 +3,7 @@ import { extractGuestHeuristic } from "./guestHeuristics";
 import { takeLatestAccepted, partitionEpisodesPipeline } from "./episodePipeline";
 import { fetchRecentUploadsFromRssFallback } from "./youtubeUploadsServer";
 import { fetchUploadsUntilAcceptedCount } from "./fetchUploadsUntilAccepted";
+import { officialFullEpisodesPlaylistId } from "./fetchOfficialPlaylistAcceptedEpisodes";
 
 const EPISODES_TABLE = "podcast_episodes";
 const LOG_TABLE = "podcast_sync_logs";
@@ -33,7 +34,11 @@ async function writeLog(supabase, level, message, meta = {}) {
  */
 export async function runPodcastYouTubeSync(supabase, opts = {}) {
   const dryRun = !!opts.dryRun;
-  const apiTry = await fetchUploadsUntilAcceptedCount({ targetAccepted: 24, maxPages: 30 });
+  const apiTry = await fetchUploadsUntilAcceptedCount({
+    targetAccepted: 24,
+    maxPages: 40,
+    playlistId: officialFullEpisodesPlaylistId(),
+  });
   let videos = [];
   let source = "youtube_api";
   if (!apiTry.ok || !apiTry.videos?.length) {
