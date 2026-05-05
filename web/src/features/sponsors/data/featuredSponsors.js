@@ -19,6 +19,28 @@ export const FEATURED_SPONSORS = [
     backgroundImageUrl: "/sponsors/featured-bg-wars-end-merch.png",
     socialLinks: {},
   },
+  {
+    id: "rope-solutions",
+    name: "Rope Solutions",
+    tag: "Mission partner",
+    industry: "Training & Readiness",
+    tierLabel: "Featured sponsor",
+    subtitle:
+      "Trusted access. Proven under pressure. Built for teams that don’t get second chances.",
+    longDescription:
+      "Rope Solutions delivers elite rope access, rescue systems, and technical training for high-consequence operational teams. Their work supports professionals who need precision, safety, and confidence in unforgiving environments.\n\nFrom vertical mobility to complex rescue scenarios, Rope Solutions equips teams with the systems and skills needed to operate when conditions are at their worst.",
+    ctaLabel: "Visit Website",
+    ctaUrl: "https://www.ropesolutions.com/",
+    logoUrl: null,
+    warmVariant: "gold",
+    backgroundImageUrl: "/sponsors/featured-bg-rope-solutions.png",
+    missionPartner: true,
+    socialLinks: {
+      linkedin: "https://www.linkedin.com/company/rope-solutions-llc/",
+      instagram: "https://www.instagram.com/ropesolutionsofficial/",
+      facebook: "https://www.facebook.com/ROPESolutionsLLC",
+    },
+  },
 ];
 
 /** Default hero art by sponsor slug/id when `sponsors_catalog.background_image_url` is empty. */

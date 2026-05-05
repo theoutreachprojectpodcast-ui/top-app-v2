@@ -7,7 +7,8 @@ import {
 } from "@/features/sponsors/domain/sponsorViewModels";
 
 const SPONSOR_TABLE = "sponsors_catalog";
-const MAIN_SPONSOR_ALLOWED_SLUGS = ["wars-end-merch"];
+/** Foundational sponsors shown on `/sponsors` (app scope). Keep in sync with `sponsor_v06_scope_split.sql`. */
+const MAIN_SPONSOR_ALLOWED_SLUGS = ["wars-end-merch", "rope-solutions"];
 
 function fallbackRows() {
   return FEATURED_SPONSORS.map((item, idx) =>
@@ -22,11 +23,12 @@ function fallbackRows() {
       logo_url: item.logoUrl,
       background_image_url: item.backgroundImageUrl,
       short_description: item.tag,
-      long_description: item.tagline,
-      tagline: item.tagline,
+      long_description: item.longDescription || item.description || item.tagline,
+      tagline: item.subtitle || item.tagline,
       featured: true,
       is_active: true,
       sponsor_status: "active",
+      mission_partner: !!item.missionPartner,
       display_order: idx + 1,
       enrichment_status: "seed",
       verified: true,

@@ -83,6 +83,14 @@ function SocialIcon({ type }) {
       </svg>
     );
   }
+  if (type === "youtube") {
+    return (
+      <svg {...common} aria-hidden>
+        <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z" />
+        <path fill="currentColor" stroke="none" d="M9.75 15.02 15.5 11.75 9.75 8.48z" />
+      </svg>
+    );
+  }
   if (type === "x") {
     return (
       <svg {...common} aria-hidden>
@@ -215,19 +223,18 @@ export default function FeaturedSponsorCard({
             {sponsor.industry ? <p className="sponsorPremiumIndustry">{sponsor.industry}</p> : null}
             <p className="sponsorPremiumTagline">{sponsor.tagline || "Partner supporting service communities."}</p>
             <div className="sponsorPremiumFooter">
-              <div className="sponsorPremiumSocial" aria-label="Sponsor links">
-                {sponsor.ctaUrl && !sponsor.websitePending ? (
-                  <a
-                    className="sponsorPremiumSocialLink"
-                    href={sponsor.ctaUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`${displayName} website`}
-                    onClick={(event) => event.stopPropagation()}
-                  >
-                    <SocialIcon type="website" />
-                  </a>
-                ) : null}
+              {sponsor.ctaUrl && !sponsor.websitePending ? (
+                <a
+                  className="btnSoft sponsorPremiumVisitBtn"
+                  href={sponsor.ctaUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  {sponsor.ctaLabel || "Visit Website"}
+                </a>
+              ) : null}
+              <div className="sponsorPremiumSocial" aria-label="Sponsor social profiles">
                 {Object.entries(social).map(([key, url]) => {
                   if (!url || key === "website") return null;
                   return (
@@ -246,7 +253,7 @@ export default function FeaturedSponsorCard({
                 })}
               </div>
               {sponsor.websitePending || !sponsor.ctaUrl ? (
-                <span className="sponsorPremiumPending">{sponsor.ctaLabel || "Website pending"}</span>
+                <span className="sponsorPremiumPending">Website pending</span>
               ) : null}
             </div>
           </div>

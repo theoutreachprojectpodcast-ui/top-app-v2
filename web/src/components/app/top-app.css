@@ -3487,6 +3487,14 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   color: var(--color-accent-hover);
   margin-bottom: 4px;
 }
+.communityPostAuthorEditRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.communityPostEditBtn {
+  align-self: flex-start;
+}
 .communityPostMedia {
   border-radius: var(--radius-input);
   overflow: hidden;
@@ -3995,6 +4003,14 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   justify-content: flex-start;
   gap: 10px;
   margin-top: 8px;
+}
+.sponsorPremiumVisitBtn {
+  flex: 0 0 auto;
+  padding: 8px 14px;
+  font-size: var(--text-body-sm);
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: var(--radius-input, 10px);
 }
 .sponsorPremiumSocial {
   display: flex;

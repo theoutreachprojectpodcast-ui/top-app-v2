@@ -39,7 +39,45 @@ function platformVerified(url, expectedHost) {
   return new URL(url).hostname.toLowerCase().includes(expectedHost);
 }
 
+function mergeSocialLinksRow(row = {}) {
+  const raw = row.social_links;
+  const obj =
+    raw && typeof raw === "object" && !Array.isArray(raw)
+      ? raw
+      : (() => {
+          try {
+            const parsed = typeof raw === "string" && raw.trim() ? JSON.parse(raw) : null;
+            return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+          } catch {
+            return {};
+          }
+        })();
+  const seed = row.socialLinks && typeof row.socialLinks === "object" && !Array.isArray(row.socialLinks) ? row.socialLinks : {};
+  const pick = (k, ...alts) => {
+    for (const key of [k, ...alts]) {
+      const v = obj[key];
+      if (v != null && String(v).trim()) return v;
+    }
+    return "";
+  };
+  const pickSeed = (k, ...alts) => {
+    for (const key of [k, ...alts]) {
+      const v = seed[key];
+      if (v != null && String(v).trim()) return v;
+    }
+    return "";
+  };
+  return {
+    instagram_url: clean(row.instagram_url || pick("instagram", "instagram_url") || pickSeed("instagram", "instagram_url")),
+    facebook_url: clean(row.facebook_url || pick("facebook", "facebook_url") || pickSeed("facebook", "facebook_url")),
+    linkedin_url: clean(row.linkedin_url || pick("linkedin", "linkedin_url") || pickSeed("linkedin", "linkedin_url")),
+    twitter_url: clean(row.twitter_url || pick("twitter", "x", "twitter_url") || pickSeed("twitter", "x", "twitter_url")),
+    youtube_url: clean(row.youtube_url || pick("youtube", "youtube_url") || pickSeed("youtube", "youtube_url")),
+  };
+}
+
 export function normalizeSponsorRecord(row = {}) {
+  const social = mergeSocialLinksRow(row);
   const website = clean(row.website_url || row.ctaUrl || row.website);
   const slug =
     clean(row.slug) ||
@@ -70,11 +108,11 @@ export function normalizeSponsorRecord(row = {}) {
     short_description: clean(row.short_description || row.tagline),
     long_description: clean(row.long_description || row.description),
     tagline: clean(row.tagline),
-    instagram_url: clean(row.instagram_url || row.socialLinks?.instagram),
-    facebook_url: clean(row.facebook_url || row.socialLinks?.facebook),
-    linkedin_url: clean(row.linkedin_url || row.socialLinks?.linkedin),
-    twitter_url: clean(row.twitter_url || row.socialLinks?.twitter || row.socialLinks?.x),
-    youtube_url: clean(row.youtube_url || row.socialLinks?.youtube),
+    instagram_url: social.instagram_url,
+    facebook_url: social.facebook_url,
+    linkedin_url: social.linkedin_url,
+    twitter_url: social.twitter_url,
+    youtube_url: social.youtube_url,
     additional_links: parseAdditionalLinks(row.additional_links),
     featured: !!row.featured,
     display_order: Number(row.display_order || 0),
@@ -85,6 +123,8 @@ export function normalizeSponsorRecord(row = {}) {
     enrichment_status: clean(row.enrichment_status || "manual"),
     last_enriched_at: clean(row.last_enriched_at),
     warm_variant: clean(row.warm_variant || row.warmVariant || "gold"),
+    mission_partner: row.mission_partner == null ? false : !!row.mission_partner,
+    cta_label: clean(row.cta_label || row.ctaLabel),
   };
 }
 
@@ -92,8 +132,13 @@ export function getSponsorCardViewModel(row = {}) {
   const s = normalizeSponsorRecord(row);
   const fallbackBg =
     FEATURED_SPONSOR_CARD_BACKGROUNDS[s.slug] || FEATURED_SPONSOR_CARD_BACKGROUNDS[s.id] || "";
-  /** Prefer concise site-derived tagline, then long description (enrichment merges into these). */
-  const cardSubheader = truncateSponsorLine(s.tagline || s.long_description || s.short_description, 140);
+  /** Card subtitle (hero line under name). */
+  const cardSubheader = truncateSponsorLine(s.tagline || s.short_description, 140);
+  const longTrim = String(s.long_description || "").trim();
+  const tagTrim = String(s.tagline || "").trim();
+  const bodySource =
+    longTrim && longTrim !== tagTrim ? s.long_description : s.short_description;
+  const bodyTeaser = truncateSponsorLine(bodySource, 280);
   const logoDisplay = resolveSponsorListingLogoUrl(s) || null;
   return {
     id: s.id,
@@ -103,8 +148,9 @@ export function getSponsorCardViewModel(row = {}) {
     tag: s.short_description || "Mission-aligned",
     industry: s.sponsor_category || s.sponsor_type,
     tierLabel: s.featured ? "Featured sponsor" : "Partner sponsor",
-    tagline: s.tagline || s.short_description || "Mission partner supporting community outcomes.",
+    tagline: bodyTeaser || "Mission partner supporting community outcomes.",
     ctaUrl: s.website_url || null,
+    ctaLabel: s.cta_label || (s.website_url ? "Visit Website" : ""),
     websitePending: !s.website_url,
     logoUrl: logoDisplay,
     warmVariant: s.warm_variant || "gold",
