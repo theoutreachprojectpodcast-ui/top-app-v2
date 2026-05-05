@@ -32,6 +32,35 @@ alter table if exists public.podcast_guest_applications
 alter table if exists public.podcast_guest_applications
   add column if not exists message text;
 
+-- Canonical guest cards model for “Voices shaping service communities”.
+-- (Keeps compatibility with existing podcast_guests usage and adds admin-editable quote controls.)
+alter table if exists public.podcast_guests
+  add column if not exists organization text;
+
+alter table if exists public.podcast_guests
+  add column if not exists role_title text;
+
+alter table if exists public.podcast_guests
+  add column if not exists quote text;
+
+alter table if exists public.podcast_guests
+  add column if not exists episode_id uuid references public.podcast_episodes (id) on delete set null;
+
+alter table if exists public.podcast_guests
+  add column if not exists source_url text;
+
+alter table if exists public.podcast_guests
+  add column if not exists admin_override boolean not null default false;
+
+alter table if exists public.podcast_guests
+  add column if not exists display_order integer not null default 0;
+
+alter table if exists public.podcast_guests
+  add column if not exists active boolean not null default false;
+
+create index if not exists podcast_guests_voice_active_idx
+  on public.podcast_guests (active, display_order, updated_at desc);
+
 -- QA podcast sponsor seeds: mark paid so public podcast page shows roster under v0.6 rules
 update public.sponsors_catalog
 set payment_status = 'paid'

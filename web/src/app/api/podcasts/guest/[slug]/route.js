@@ -9,6 +9,9 @@ export async function GET(_req, context) {
   const admin = createSupabaseAdminClient();
   if (!admin) return Response.json({ guest: null, error: "server_unavailable" }, { status: 503 });
 
+  const { data: byGuestSlug } = await admin.from("podcast_guests").select("*").eq("slug", slug).maybeSingle();
+  if (byGuestSlug) return Response.json({ guest: byGuestSlug });
+
   if (slug.startsWith("ep-")) {
     const vid = slug.slice(3);
     const { data: row } = await admin.from("podcast_episode_featured_guest").select("*").eq("public_slug", slug).maybeSingle();
@@ -22,6 +25,7 @@ export async function GET(_req, context) {
           name: row.guest_name,
           title: [row.role_title, row.organization].filter(Boolean).join(" · ") || "Podcast guest",
           bio: row.short_bio,
+          quote: String(row.public_quote || row.discussion_summary || "").trim(),
           avatar_url: row.admin_profile_image_url || row.profile_image_url || "",
           website_url: "",
           upcoming: false,

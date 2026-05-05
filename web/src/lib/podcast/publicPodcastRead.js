@@ -95,6 +95,30 @@ async function attachTranscriptIfNeeded(admin, ep) {
 }
 
 /**
+ * Admin-controlled Voices cards from podcast_guests (v0.6 canonical).
+ * @param {import("@supabase/supabase-js").SupabaseClient} admin
+ * @param {Map<string, Record<string, unknown>>} episodeById
+ */
+async function listActiveGuestVoiceCards(admin, episodeById) {
+  if (!admin) return [];
+  const { data, error } = await admin
+    .from("podcast_guests")
+    .select("*")
+    .eq("active", true)
+    .order("display_order", { ascending: true, nullsFirst: false })
+    .order("updated_at", { ascending: false })
+    .limit(12);
+  if (error || !Array.isArray(data) || !data.length) return [];
+
+  return data
+    .map((row) => {
+      const ep = row.episode_id ? episodeById.get(String(row.episode_id)) : null;
+      return guestCardFromPodcastGuestRow(row, ep);
+    })
+    .filter(Boolean);
+}
+
+/**
  * @param {Record<string, unknown>} row
  */
 export function episodeRowIsPublicListed(row) {
@@ -198,6 +222,15 @@ export async function loadPublicPodcastLandingData(admin) {
   }
 
   if (admin && episodes.length) {
+    const episodeById = new Map(
+      episodes.map((ep) => [String(ep?.id || ""), ep]).filter(([id]) => id),
+    );
+    const activeGuestCards = await listActiveGuestVoiceCards(admin, episodeById);
+    if (activeGuestCards.length) {
+      featuredGuests = activeGuestCards.slice(0, 4);
+      return { episodes, featuredGuests, source, degraded, error };
+    }
+
     for (const ep of episodes.slice(0, TRANSCRIPT_BACKFILL_PER_BUILD)) {
       await attachTranscriptIfNeeded(admin, ep);
     }
@@ -333,6 +366,44 @@ function featuredGuestToCardShape(row, ep) {
     avatar_url: avatar,
     upcoming: false,
     unverified: !verified && !quoteOverride && (!Number.isFinite(conf) || conf < 0.75),
+    discussionSummary: "",
+    episodeYoutubeId: vid,
+    episodeWatchUrl: watch,
+  };
+}
+
+/**
+ * @param {Record<string, unknown>} row
+ * @param {Record<string, unknown> | null} ep
+ */
+function guestCardFromPodcastGuestRow(row, ep) {
+  const id = String(row.id || row.slug || "").trim();
+  const slug = String(row.slug || "").trim();
+  const name = String(row.name || "").trim();
+  if (!id || !slug || !name) return null;
+
+  const vid = String(ep?.youtube_video_id || "").trim();
+  const watch = String(ep?.youtube_url || "").trim() || (vid ? `https://www.youtube.com/watch?v=${vid}` : "");
+  const transcript = String(ep?.transcript_text || "").trim();
+  const fromTranscript = transcript ? extractGuestVoiceQuote(transcript, name, 140) : "";
+  const rowQuote = capPullQuote(String(row.quote || "").trim(), 200);
+  const fromDesc = capPullQuote(extractShortQuoteFromDescription(String(ep?.description || ""), 130), 130);
+
+  return {
+    id,
+    slug,
+    name,
+    title:
+      [String(row.role_title || "").trim(), String(row.organization || "").trim()]
+        .filter(Boolean)
+        .join(" · ") ||
+      String(row.title || "").trim() ||
+      "Guest",
+    bio: String(row.bio || "").trim(),
+    quote: rowQuote || fromTranscript || fromDesc || "We are preparing a short pull-quote from this episode.",
+    avatar_url: String(row.avatar_url || "").trim(),
+    upcoming: false,
+    unverified: false,
     discussionSummary: "",
     episodeYoutubeId: vid,
     episodeWatchUrl: watch,
