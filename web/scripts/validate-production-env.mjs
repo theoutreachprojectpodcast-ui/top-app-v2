@@ -14,12 +14,22 @@ const requiredKeys = [
   "WORKOS_API_KEY",
   "WORKOS_CLIENT_ID",
   "WORKOS_COOKIE_PASSWORD",
-  "WORKOS_COOKIE_DOMAIN",
-  "WORKOS_REDIRECT_URI",
-  "NEXT_PUBLIC_WORKOS_REDIRECT_URI",
 ];
 
 const missing = requiredKeys.filter((key) => !String(process.env[key] || "").trim());
+
+const appUrl = String(process.env.APP_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || "").trim().toLowerCase();
+const isProdLikeHost = appUrl.startsWith("https://") && !appUrl.includes("localhost");
+const cookieDomain = String(process.env.WORKOS_COOKIE_DOMAIN || "").trim();
+if (isProdLikeHost && !cookieDomain) {
+  missing.push("WORKOS_COOKIE_DOMAIN");
+}
+
+const privateRedirect = String(process.env.WORKOS_REDIRECT_URI || "").trim();
+const publicRedirect = String(process.env.NEXT_PUBLIC_WORKOS_REDIRECT_URI || "").trim();
+if (!privateRedirect && !publicRedirect) {
+  missing.push("WORKOS_REDIRECT_URI or NEXT_PUBLIC_WORKOS_REDIRECT_URI");
+}
 
 if (!enforce) {
   if (missing.length) {
