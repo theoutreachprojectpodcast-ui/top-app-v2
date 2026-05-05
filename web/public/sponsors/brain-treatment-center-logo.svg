@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 260" role="img" aria-labelledby="btcTitle btcDesc">
+  <title id="btcTitle">Brain Treatment Center logo</title>
+  <desc id="btcDesc">Stylized cyan brain mark and Brain Treatment Center wordmark.</desc>
+  <rect width="1200" height="260" fill="transparent"/>
+  <g transform="translate(28 24)">
+    <path
+      d="M44 34C63 17 98 8 131 14c34 7 57 30 63 60 6 30-8 62-35 81-25 17-58 22-89 14-31-8-54-29-61-57-8-31 3-70 22-98Z"
+      fill="none"
+      stroke="#13a8e7"
+      stroke-width="8"
+      stroke-linejoin="round"
+    />
+    <path d="M26 52c40 24 104 23 168 4" fill="none" stroke="#13a8e7" stroke-width="7" stroke-linecap="round"/>
+    <path d="M19 74c50 28 118 29 180 8" fill="none" stroke="#13a8e7" stroke-width="7" stroke-linecap="round"/>
+    <path d="M15 97c53 28 124 32 188 11" fill="none" stroke="#13a8e7" stroke-width="7" stroke-linecap="round"/>
+    <path d="M16 121c54 24 123 27 186 8" fill="none" stroke="#13a8e7" stroke-width="7" stroke-linecap="round"/>
+    <path d="M20 145c49 19 112 20 171 5" fill="none" stroke="#13a8e7" stroke-width="7" stroke-linecap="round"/>
+    <path d="M32 166c41 14 93 15 140 4" fill="none" stroke="#13a8e7" stroke-width="7" stroke-linecap="round"/>
+  </g>
+  <g fill="#0c1420" font-family="Georgia, 'Times New Roman', serif">
+    <text x="340" y="102" font-size="92" font-weight="600">Brain</text>
+    <text x="340" y="194" font-size="92" font-weight="600">Treatment Center</text>
+  </g>
+</svg>
