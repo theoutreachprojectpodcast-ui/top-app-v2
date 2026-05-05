@@ -481,6 +481,11 @@ function TopAppInner({ initialNav = "home" }) {
   );
 
   function openSignInOverlay() {
+    if (authBackend.workos) {
+      writeRememberDevicePref(rememberDevice);
+      window.location.assign(workosSignInHereHref);
+      return;
+    }
     setAuthMode("signin");
     setOverlay("signin");
   }
@@ -508,6 +513,11 @@ function TopAppInner({ initialNav = "home" }) {
   }
 
   function openSignInForMembership() {
+    if (authBackend.workos) {
+      writeRememberDevicePref(rememberDevice);
+      window.location.assign(workosSignInHereHref);
+      return;
+    }
     setAuthMode("signin");
     setOverlay("signin");
   }
@@ -846,8 +856,36 @@ function TopAppInner({ initialNav = "home" }) {
                   Sign in or create an account to manage your identity, membership, saved nonprofits, and preferences. Everything stays on this tab once you are signed in.
                 </p>
                 <div className="row wrap">
-                  <button className="btnPrimary" type="button" onClick={() => { setAuthMode("signin"); setOverlay("signin"); }}>Sign in</button>
-                  <button className="btnSoft" type="button" onClick={() => { setAuthMode("signup"); setOverlay("signin"); }}>Create an account</button>
+                  <button
+                    className="btnPrimary"
+                    type="button"
+                    onClick={() => {
+                      if (authBackend.workos) {
+                        writeRememberDevicePref(rememberDevice);
+                        window.location.assign(workosSignInHereHref);
+                        return;
+                      }
+                      setAuthMode("signin");
+                      setOverlay("signin");
+                    }}
+                  >
+                    Sign in
+                  </button>
+                  <button
+                    className="btnSoft"
+                    type="button"
+                    onClick={() => {
+                      if (authBackend.workos) {
+                        writeRememberDevicePref(rememberDevice);
+                        window.location.assign(workosSignUpHref("/onboarding", { rememberDevice }));
+                        return;
+                      }
+                      setAuthMode("signup");
+                      setOverlay("signin");
+                    }}
+                  >
+                    Create an account
+                  </button>
                   <button className="btnSoft" type="button" onClick={() => setNav("home")}>Back to home</button>
                   <button className="btnSoft" type="button" onClick={resetDemo}>Reset Demo</button>
                 </div>

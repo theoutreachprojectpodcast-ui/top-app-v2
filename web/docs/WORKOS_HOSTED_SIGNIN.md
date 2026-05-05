@@ -5,9 +5,11 @@ The app uses **WorkOS AuthKit** for production sign-in: users are sent to WorkOS
 ## 1. WorkOS dashboard
 
 1. Open [WorkOS Dashboard](https://dashboard.workos.com) → your environment.
-2. Under **Redirects**, add a **Redirect URI** that matches **`NEXT_PUBLIC_WORKOS_REDIRECT_URI`** exactly (including `http` vs `https` and port).
-   - Default in `web/.env.local.example`: `http://localhost:3001/callback` for `pnpm dev`.
-   - If you use `pnpm dev:alt` (port 3000), add `http://localhost:3000/callback` and set the env var to that URL while developing on 3000.
+2. Under **Redirects**, add a **Redirect URI** that matches the app callback vars exactly (including `http` vs `https` and port):
+   - `WORKOS_REDIRECT_URI`
+   - `NEXT_PUBLIC_WORKOS_REDIRECT_URI`
+   - Default in `web/.env.local.example`: `http://localhost:3000/callback` for `pnpm dev`.
+   - If you use `pnpm dev:alt` (port 3001), add `http://localhost:3001/callback` and set both vars accordingly.
 3. Configure **Sign-in** / **AuthKit** and any social connections (e.g. Google) you want on the hosted screen.
 4. Set a **Logout redirect** URI if you use sign-out (see AuthKit docs).
 
@@ -20,6 +22,8 @@ Copy `web/.env.local.example` and set at least:
 | `WORKOS_API_KEY` | Server secret from the dashboard |
 | `WORKOS_CLIENT_ID` | Client ID from the dashboard |
 | `WORKOS_COOKIE_PASSWORD` | **≥ 32 characters** (encrypts the session cookie). e.g. `openssl rand -base64 24` |
+| `WORKOS_COOKIE_DOMAIN` | Production shared domain (`theoutreachproject.app`) for cross-subdomain sessions |
+| `WORKOS_REDIRECT_URI` | Server callback URI (`.../callback`) |
 | `NEXT_PUBLIC_WORKOS_REDIRECT_URI` | Must match the dashboard Redirect URI and your dev port (`/callback`) |
 
 Optional tuning: `WORKOS_COOKIE_MAX_AGE`, `WORKOS_COOKIE_DOMAIN`, etc. — see `@workos-inc/authkit-nextjs` README.
