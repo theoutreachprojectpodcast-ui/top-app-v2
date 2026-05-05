@@ -3,6 +3,10 @@
 
 begin;
 
+-- QA environments can lag this column depending on migration order.
+alter table if exists public.community_posts
+  add column if not exists is_demo_seed boolean not null default false;
+
 insert into public.community_posts (
   id,
   author_profile_id,

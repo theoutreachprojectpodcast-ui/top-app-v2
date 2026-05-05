@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { AUTH_KEY, DEMO_ACCOUNT_KEY, FAV_KEY, PROFILE_KEY } from "@/lib/constants";
+import { AUTH_KEY, DEMO_ACCOUNT_KEY, FAV_ENTITY_KEY, FAV_KEY, PROFILE_KEY } from "@/lib/constants";
 import { AUTH_PROVIDER } from "@/lib/auth/providers";
 import {
   clearDemoAccount,
@@ -94,6 +94,7 @@ export function useProfileDataState(supabase) {
   const [profileSource, setProfileSource] = useState("local");
   const [profile, setProfile] = useState(() => createInitialProfile());
   const [favoriteEins, setFavoriteEins] = useState([]);
+  const [favoriteEntityKeys, setFavoriteEntityKeys] = useState([]);
   const [savedOrganizations, setSavedOrganizations] = useState([]);
   const [sessionKind, setSessionKind] = useState("none");
   const [authBackend, setAuthBackend] = useState({
@@ -230,6 +231,13 @@ export function useProfileDataState(supabase) {
           if (Array.isArray(favJson.eins)) {
             setFavoriteEins(favJson.eins);
           }
+          const entityFavRes = await fetch("/api/me/favorites", { credentials: "include" });
+          const entityFavJson = await entityFavRes.json().catch(() => ({}));
+          if (Array.isArray(entityFavJson.keys)) {
+            setFavoriteEntityKeys(
+              [...new Set(entityFavJson.keys.map((k) => String(k || "").trim().toLowerCase()).filter(Boolean))].slice(0, 500),
+            );
+          }
           hydratedRef.current = true;
           setLoadingProfile(false);
           return;
@@ -265,6 +273,7 @@ export function useProfileDataState(supabase) {
         setSessionKind(demoModeEnabled ? "demo" : "none");
         const legacy = loadJson(PROFILE_KEY, defaultProfile());
         const storedFavs = loadJson(FAV_KEY, []);
+        const storedEntityFavs = loadJson(FAV_ENTITY_KEY, []);
         const authState = loadJson(AUTH_KEY, { isAuthenticated: false });
         const authenticated = demoModeEnabled ? !!authState?.isAuthenticated : false;
         const storedProvider = authState?.provider || null;
@@ -280,6 +289,10 @@ export function useProfileDataState(supabase) {
         setProfile(profileFromLegacy(legacy || {}));
         const rawFavs = Array.isArray(storedFavs) ? storedFavs : [];
         setFavoriteEins([...new Set(rawFavs.map((e) => normalizeEinDigits(e)).filter((e) => e.length === 9))]);
+        const rawEntityFavs = Array.isArray(storedEntityFavs) ? storedEntityFavs : [];
+        setFavoriteEntityKeys(
+          [...new Set(rawEntityFavs.map((k) => String(k || "").trim().toLowerCase()).filter(Boolean))].slice(0, 500),
+        );
 
         if (supabase) {
           try {
@@ -342,6 +355,11 @@ export function useProfileDataState(supabase) {
     if (!hydratedRef.current || workosRef.current || !demoModeEnabled) return;
     saveJson(FAV_KEY, favoriteEins.slice(0, 500));
   }, [favoriteEins]);
+
+  useEffect(() => {
+    if (!hydratedRef.current || workosRef.current || !demoModeEnabled) return;
+    saveJson(FAV_ENTITY_KEY, favoriteEntityKeys.slice(0, 500));
+  }, [favoriteEntityKeys]);
 
   useEffect(() => {
     if (workosRef.current || !demoModeEnabled) return;
@@ -489,6 +507,36 @@ export function useProfileDataState(supabase) {
     }
   }
 
+  async function setFavoriteEntityKeyList(nextKeys) {
+    const normalized = [
+      ...new Set(
+        (nextKeys || [])
+          .map((k) => String(k || "").trim().toLowerCase())
+          .filter((k) => k.startsWith("sponsor:") || k.startsWith("trusted:")),
+      ),
+    ].slice(0, 500);
+    setFavoriteEntityKeys(normalized);
+    if (!isAuthenticated) return;
+    if (workosRef.current) {
+      if (syncingRef.current) return;
+      syncingRef.current = true;
+      try {
+        const res = await fetch("/api/me/favorites", {
+          method: "PUT",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ keys: normalized }),
+        });
+        if (!res.ok) setProfileError("Saved favorites could not sync to the server.");
+      } catch {
+        setProfileError("Saved favorites could not sync to the server.");
+      } finally {
+        syncingRef.current = false;
+      }
+      return;
+    }
+  }
+
   async function resetDemo() {
     if (workosRef.current && typeof window !== "undefined") {
       clearNavAuthCache();
@@ -500,6 +548,7 @@ export function useProfileDataState(supabase) {
     const localKeysToClear = [
       PROFILE_KEY,
       FAV_KEY,
+        FAV_ENTITY_KEY,
       AUTH_KEY,
       DEMO_USER_KEY,
       DEMO_ACCOUNT_KEY,
@@ -533,6 +582,7 @@ export function useProfileDataState(supabase) {
     const fresh = profileFromLegacy(defaultProfile());
     setProfile(fresh);
     setFavoriteEins([]);
+    setFavoriteEntityKeys([]);
     setSavedOrganizations([]);
     setProfileError("");
     setIsAuthenticated(false);
@@ -602,6 +652,11 @@ export function useProfileDataState(supabase) {
       const storedFavs = loadJson(FAV_KEY, []);
       const rawFavs = Array.isArray(storedFavs) ? storedFavs : [];
       setFavoriteEins([...new Set(rawFavs.map((e) => normalizeEinDigits(e)).filter((e) => e.length === 9))]);
+      const storedEntityFavs = loadJson(FAV_ENTITY_KEY, []);
+      const rawEntityFavs = Array.isArray(storedEntityFavs) ? storedEntityFavs : [];
+      setFavoriteEntityKeys(
+        [...new Set(rawEntityFavs.map((k) => String(k || "").trim().toLowerCase()).filter(Boolean))].slice(0, 500),
+      );
       setIsAuthenticated(true);
       setAuthProvider(AUTH_PROVIDER.DEMO_EMAIL);
       setSessionKind("demo");
@@ -646,6 +701,7 @@ export function useProfileDataState(supabase) {
     setAuthProvider(null);
     setProfile(createInitialProfile());
     setFavoriteEins([]);
+    setFavoriteEntityKeys([]);
     setSavedOrganizations([]);
     setSessionKind("none");
     setEntitlements({
@@ -684,6 +740,15 @@ export function useProfileDataState(supabase) {
     setFavoriteEinList(next);
   }
 
+  function toggleFavoriteEntityKey(key) {
+    const id = String(key || "").trim().toLowerCase();
+    if (!(id.startsWith("sponsor:") || id.startsWith("trusted:"))) return;
+    const next = favoriteEntityKeys.includes(id)
+      ? favoriteEntityKeys.filter((x) => x !== id)
+      : [id, ...favoriteEntityKeys];
+    setFavoriteEntityKeyList(next);
+  }
+
   const fullName = useMemo(() => `${profile.firstName} ${profile.lastName}`.trim(), [profile.firstName, profile.lastName]);
   const greetingName = fullName || profile.displayName || "Supporter";
   const membership = useMemo(() => getMembershipMeta(profile.membershipStatus), [profile.membershipStatus]);
@@ -709,7 +774,9 @@ export function useProfileDataState(supabase) {
     membership,
     isMember,
     favoriteEins,
+    favoriteEntityKeys,
     toggleFavoriteEin,
+    toggleFavoriteEntityKey,
     setFavoriteEinList,
     savedOrganizations,
     setMembershipStatus,

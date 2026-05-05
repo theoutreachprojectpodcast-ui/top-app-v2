@@ -169,7 +169,9 @@ function TopAppInner({ initialNav = "home" }) {
     membership,
     isMember,
     favoriteEins,
+    favoriteEntityKeys,
     toggleFavoriteEin,
+    toggleFavoriteEntityKey,
     savedOrganizations,
     setMembershipStatus,
     resetDemo,
@@ -478,6 +480,10 @@ function TopAppInner({ initialNav = "home" }) {
   const favoriteEinSet = useMemo(
     () => new Set((favoriteEins || []).map((e) => normalizeEinDigits(e)).filter((e) => e.length === 9)),
     [favoriteEins]
+  );
+  const favoriteEntitySet = useMemo(
+    () => new Set((favoriteEntityKeys || []).map((k) => String(k || "").trim().toLowerCase()).filter(Boolean)),
+    [favoriteEntityKeys],
   );
 
   function openSignInOverlay() {
@@ -823,14 +829,30 @@ function TopAppInner({ initialNav = "home" }) {
                 const card = mapNonprofitCardRow(r, "trusted");
                 const ein = card.ein;
                 const einKey = normalizeEinDigits(ein);
+                const trustedKey = String(card.trustedResourceSlug || card.id || card.name || "")
+                  .trim()
+                  .toLowerCase()
+                  .replace(/[^a-z0-9]+/g, "-")
+                  .replace(/^-+|-+$/g, "");
+                const trustedFavoriteKey = trustedKey ? `trusted:${trustedKey}` : "";
+                const trustedIsFavorite =
+                  (einKey.length === 9 && favoriteEinSet.has(einKey)) ||
+                  (trustedFavoriteKey && favoriteEntitySet.has(trustedFavoriteKey));
                 return (
                   <NonprofitCard
                     key={`trusted-${ein}-${card.name}`}
                     card={card}
                     actionMode="trustedResource"
                     favoritesEnabled={isAuthenticated}
-                    isFavorite={einKey.length === 9 && favoriteEinSet.has(einKey)}
-                    onToggleFavorite={toggleFavoriteEin}
+                    isFavorite={trustedIsFavorite}
+                    onToggleFavorite={(key) => {
+                      const normalizedEin = normalizeEinDigits(key);
+                      if (normalizedEin.length === 9) {
+                        toggleFavoriteEin(normalizedEin);
+                        return;
+                      }
+                      if (trustedFavoriteKey) toggleFavoriteEntityKey(trustedFavoriteKey);
+                    }}
                     onRequestSignIn={!isAuthenticated ? openSignInOverlay : undefined}
                   />
                 );

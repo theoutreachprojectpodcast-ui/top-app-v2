@@ -98,7 +98,13 @@ function SocialIcon({ type }) {
   );
 }
 
-export default function FeaturedSponsorCard({ sponsor }) {
+export default function FeaturedSponsorCard({
+  sponsor,
+  favoritesEnabled = false,
+  isFavorite = false,
+  onToggleFavorite,
+  onRequestSignIn,
+}) {
   const router = useRouter();
   const [logoIndex, setLogoIndex] = useState(0);
   const [logoTone, setLogoTone] = useState("normal");
@@ -113,6 +119,7 @@ export default function FeaturedSponsorCard({ sponsor }) {
   }, [sponsor.logoUrl]);
   const logoSrc = logoCandidates[logoIndex] || "";
   const profileHref = `/sponsors/${encodeURIComponent(sponsor.slug || sponsor.id || "")}`;
+  const favoriteKey = String(sponsor.slug || sponsor.id || "").trim().toLowerCase();
   const logoToneClass = logoTone === "normal" ? "" : ` sponsorPremiumLogoImg--tone-${logoTone}`;
   const shellToneClass = logoTone === "normal" ? "" : ` sponsorPremiumLogoShell--tone-${logoTone}`;
 
@@ -140,6 +147,36 @@ export default function FeaturedSponsorCard({ sponsor }) {
         <div className="sponsorPremiumCardTop">
           <span className="sponsorPremiumTier">{sponsor.tierLabel || "Partner"}</span>
           <span className="sponsorPremiumTag">{sponsor.tag || "Mission-aligned"}</span>
+          {favoriteKey ? (
+            favoritesEnabled ? (
+              <button
+                type="button"
+                className={`favBtn sponsorPremiumFavBtn${isFavorite ? " favBtn--on" : ""}`}
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  onToggleFavorite?.(`sponsor:${favoriteKey}`);
+                }}
+                aria-pressed={isFavorite}
+                aria-label={isFavorite ? "Remove sponsor from saved" : "Save sponsor"}
+              >
+                {isFavorite ? "★" : "☆"}
+              </button>
+            ) : onRequestSignIn ? (
+              <button
+                type="button"
+                className="favBtn favBtn--muted sponsorPremiumFavBtn"
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  onRequestSignIn();
+                }}
+                aria-label="Sign in to save sponsor"
+              >
+                ☆
+              </button>
+            ) : null
+          ) : null}
         </div>
         <div className="sponsorPremiumBrand">
           <div className={`sponsorPremiumLogoShell${shellToneClass}`}>

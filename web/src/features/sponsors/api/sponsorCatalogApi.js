@@ -7,6 +7,7 @@ import {
 } from "@/features/sponsors/domain/sponsorViewModels";
 
 const SPONSOR_TABLE = "sponsors_catalog";
+const MAIN_SPONSOR_ALLOWED_SLUGS = ["wars-end-merch"];
 
 function fallbackRows() {
   return FEATURED_SPONSORS.map((item, idx) =>
@@ -81,7 +82,8 @@ export async function listSponsorsCatalogWithClient(supabase, opts = {}) {
     q = q
       .or("sponsor_scope.is.null,sponsor_scope.eq.app")
       .eq("sponsor_type", "foundational_sponsor")
-      .eq("is_active", true);
+      .eq("is_active", true)
+      .in("slug", MAIN_SPONSOR_ALLOWED_SLUGS);
   }
   const { data, error } = await q
     .order("display_order", { ascending: true, nullsFirst: false })

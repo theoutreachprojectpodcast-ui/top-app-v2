@@ -12,7 +12,15 @@ function ChannelChip({ icon, label }) {
   );
 }
 
-export default function SponsorsLandingPage({ sponsors = [], onOpenMissionPackages, onOpenMissionApply }) {
+export default function SponsorsLandingPage({
+  sponsors = [],
+  onOpenMissionPackages,
+  onOpenMissionApply,
+  favoritesEnabled = false,
+  favoriteKeySet = new Set(),
+  onToggleFavorite,
+  onRequestSignIn,
+}) {
   const openPackages = typeof onOpenMissionPackages === "function" ? onOpenMissionPackages : () => {};
   const openApply = typeof onOpenMissionApply === "function" ? onOpenMissionApply : () => {};
 
@@ -34,7 +42,13 @@ export default function SponsorsLandingPage({ sponsors = [], onOpenMissionPackag
         </div>
       </section>
 
-      <FeaturedSponsorsSection sponsors={sponsors} />
+      <FeaturedSponsorsSection
+        sponsors={sponsors}
+        favoritesEnabled={favoritesEnabled}
+        favoriteKeySet={favoriteKeySet}
+        onToggleFavorite={onToggleFavorite}
+        onRequestSignIn={onRequestSignIn}
+      />
 
       <section className="card sponsorSection">
         <h3>Why sponsor</h3>

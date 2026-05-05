@@ -18,6 +18,12 @@ export default function SponsorHub({ supabase: supabaseProp }) {
   const [missionApplyOpen, setMissionApplyOpen] = useState(false);
   const [missionPackagesOpen, setMissionPackagesOpen] = useState(false);
   const [missionApplyTierId, setMissionApplyTierId] = useState(SPONSOR_TIERS[0]?.id);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [favoriteKeys, setFavoriteKeys] = useState([]);
+  const favoriteKeySet = useMemo(
+    () => new Set((favoriteKeys || []).map((k) => String(k || "").trim().toLowerCase()).filter(Boolean)),
+    [favoriteKeys],
+  );
 
   async function loadSponsors() {
     const rows = await listSponsorsCatalog(supabase, { sponsorScope: "app" });
@@ -28,6 +34,54 @@ export default function SponsorHub({ supabase: supabaseProp }) {
     loadSponsors();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supabase]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const [meRes, favRes] = await Promise.all([
+          fetch("/api/me", { credentials: "include", cache: "no-store" }),
+          fetch("/api/me/favorites", { credentials: "include", cache: "no-store" }),
+        ]);
+        const me = await meRes.json().catch(() => ({}));
+        const fav = await favRes.json().catch(() => ({}));
+        if (cancelled) return;
+        const authed = !!me?.authenticated;
+        setIsAuthenticated(authed);
+        setFavoriteKeys(
+          authed && Array.isArray(fav?.keys)
+            ? [...new Set(fav.keys.map((k) => String(k || "").trim().toLowerCase()).filter(Boolean))]
+            : [],
+        );
+      } catch {
+        if (!cancelled) {
+          setIsAuthenticated(false);
+          setFavoriteKeys([]);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function toggleFavoriteKey(key) {
+    const id = String(key || "").trim().toLowerCase();
+    if (!(id.startsWith("sponsor:") || id.startsWith("trusted:"))) return;
+    const next = favoriteKeySet.has(id) ? favoriteKeys.filter((k) => k !== id) : [id, ...favoriteKeys];
+    setFavoriteKeys(next);
+    try {
+      const res = await fetch("/api/me/favorites", {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ keys: next }),
+      });
+      if (!res.ok) throw new Error("save_failed");
+    } catch {
+      setFavoriteKeys(favoriteKeys);
+    }
+  }
 
   useEffect(() => {
     const tier = searchParams.get("tier");
@@ -82,6 +136,10 @@ export default function SponsorHub({ supabase: supabaseProp }) {
         sponsors={mapSponsorsToCardModels(sponsors)}
         onOpenMissionPackages={openMissionPackages}
         onOpenMissionApply={openMissionApply}
+        favoritesEnabled={isAuthenticated}
+        favoriteKeySet={favoriteKeySet}
+        onToggleFavorite={toggleFavoriteKey}
+        onRequestSignIn={() => router.push("/auth/sign-in?returnTo=/sponsors")}
       />
       <MissionPartnerPackagesModal
         open={missionPackagesOpen}

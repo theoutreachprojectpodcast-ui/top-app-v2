@@ -2,7 +2,13 @@
 
 import FeaturedSponsorCard from "@/features/sponsors/components/FeaturedSponsorCard";
 
-export default function FeaturedSponsorsSection({ sponsors = [] }) {
+export default function FeaturedSponsorsSection({
+  sponsors = [],
+  favoritesEnabled = false,
+  favoriteKeySet = new Set(),
+  onToggleFavorite,
+  onRequestSignIn,
+}) {
   return (
     <section className="card sponsorSection sponsorFeaturedSection">
       <div className="sponsorSectionHead">
@@ -14,7 +20,14 @@ export default function FeaturedSponsorsSection({ sponsors = [] }) {
       </p>
       <div className="sponsorFeaturedShowcase">
         {sponsors.map((sponsor) => (
-          <FeaturedSponsorCard key={sponsor.id} sponsor={sponsor} />
+          <FeaturedSponsorCard
+            key={sponsor.id}
+            sponsor={sponsor}
+            favoritesEnabled={favoritesEnabled}
+            isFavorite={favoriteKeySet.has(`sponsor:${String(sponsor.slug || sponsor.id || "").trim().toLowerCase()}`)}
+            onToggleFavorite={onToggleFavorite}
+            onRequestSignIn={onRequestSignIn}
+          />
         ))}
       </div>
     </section>

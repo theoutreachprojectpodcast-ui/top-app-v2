@@ -8,6 +8,7 @@ export const TRUSTED_PAGE_SIZE = 30;
 export const DEMO_MODE = true;
 
 export const FAV_KEY = "top_favorites_v3";
+export const FAV_ENTITY_KEY = "top_favorites_entities_v1";
 export const PROFILE_KEY = "top_profile_v3";
 export const AUTH_KEY = "top_auth_v1";
 /** Demo-only local credential store (not secure; replace with real auth). */
