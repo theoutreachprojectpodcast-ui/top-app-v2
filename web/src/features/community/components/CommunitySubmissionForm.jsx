@@ -1,14 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FormCheckbox } from "@/components/forms/FormChoice";
 import { STORY_CATEGORIES, SUBMISSION_TYPES } from "@/features/community/data/communitySeed";
-import { submitCommunityStory } from "@/features/community/api/communityApi";
+import { submitCommunityStory, updateAuthorCommunityPost } from "@/features/community/api/communityApi";
 
 const INITIAL = {
   title: "",
   body: "",
   nonprofit_name: "",
+  nonprofit_ein: "",
   post_type: "share_story",
   category: "success_story",
   show_author_name: true,
@@ -24,11 +25,32 @@ export default function CommunitySubmissionForm({
   onClose,
   onSubmitted,
   useWorkOSApi = false,
+  /** When set, form PATCHes this post (`mapCommunityPostRow` shape) instead of creating. */
+  editPost = null,
 }) {
   const [form, setForm] = useState(INITIAL);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
+  const isEdit = Boolean(editPost?.id);
+
+  useEffect(() => {
+    if (!editPost?.id) {
+      setForm(INITIAL);
+      return;
+    }
+    setForm({
+      title: editPost.title || "",
+      body: editPost.body || "",
+      nonprofit_name: editPost.nonprofitName || "",
+      nonprofit_ein: editPost.nonprofitEin ? String(editPost.nonprofitEin) : "",
+      post_type: editPost.postType || "share_story",
+      category: editPost.category || "success_story",
+      show_author_name: editPost.showAuthorName !== false,
+      link_url: editPost.linkUrl || "",
+      photo_url: editPost.photoUrl || "",
+    });
+  }, [editPost]);
 
   async function onPhotoSelected(file) {
     if (!file || !String(file.type || "").startsWith("image/")) return;
@@ -56,6 +78,27 @@ export default function CommunitySubmissionForm({
     setError("");
     setStatus("");
     try {
+      if (isEdit && useWorkOSApi) {
+        const result = await updateAuthorCommunityPost(editPost.id, {
+          title: form.title.trim(),
+          body: form.body.trim(),
+          nonprofit_name: form.nonprofit_name.trim(),
+          nonprofit_ein: form.nonprofit_ein.trim(),
+          post_type: form.post_type,
+          category: form.category,
+          show_author_name: form.show_author_name,
+          link_url: form.link_url.trim(),
+          photo_url: form.photo_url || "",
+        });
+        if (!result.ok) {
+          setError(result.message || "Could not save.");
+          return;
+        }
+        setStatus(result.message || "Changes saved.");
+        onSubmitted?.();
+        onClose?.();
+        return;
+      }
       const result = await submitCommunityStory(
         supabase,
         {
@@ -65,6 +108,7 @@ export default function CommunitySubmissionForm({
           title: form.title.trim(),
           body: form.body.trim(),
           nonprofit_name: form.nonprofit_name.trim(),
+          nonprofit_ein: form.nonprofit_ein.trim(),
           post_type: form.post_type,
           category: form.category,
           show_author_name: form.show_author_name,
@@ -92,7 +136,9 @@ export default function CommunitySubmissionForm({
   return (
     <div className="communitySubmitModal">
       <p className="communitySubmitLead">
-        Stories are read by our team first. Only approved, mission-aligned posts are published—keeping this space safe and useful.
+        {isEdit
+          ? "Update your story below. If it was already published, saving will send it back to moderators and hide it from the public feed until it is approved again."
+          : "Stories are read by our team first. Only approved, mission-aligned posts are published—keeping this space safe and useful."}
       </p>
       <form className="communitySubmitForm communitySubmitForm--ds" onSubmit={onSubmit}>
         <label className="fieldLabel">Title <span className="fieldOptional">(optional)</span></label>
@@ -142,7 +188,6 @@ export default function CommunitySubmissionForm({
         </label>
         {form.photo_url ? (
           <div className="communityUploadPreview">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={form.photo_url} alt="Selected upload preview" />
           </div>
         ) : null}
@@ -158,7 +203,9 @@ export default function CommunitySubmissionForm({
         {status ? <p className="applyStatus">{status}</p> : null}
         <div className="row wrap communitySubmitActions">
           <button type="button" className="btnSoft" onClick={onClose}>Close</button>
-          <button type="submit" className="btnPrimary" disabled={busy}>{busy ? "Submitting…" : "Submit for review"}</button>
+          <button type="submit" className="btnPrimary" disabled={busy}>
+            {busy ? (isEdit ? "Saving…" : "Submitting…") : isEdit ? "Save changes" : "Submit for review"}
+          </button>
         </div>
       </form>
     </div>

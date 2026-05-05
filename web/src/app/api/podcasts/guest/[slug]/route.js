@@ -37,7 +37,5 @@ export async function GET(_req, context) {
     }
   }
 
-  const { data: g } = await admin.from("podcast_guests").select("*").eq("slug", slug).maybeSingle();
-  if (g) return Response.json({ guest: g });
   return Response.json({ guest: null }, { status: 404 });
 }

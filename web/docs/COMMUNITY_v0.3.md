@@ -72,13 +72,13 @@ Optional **client** mirrors exist for UI gating only (`NEXT_PUBLIC_COMMUNITY_MOD
 - **Composer**: WorkOS path submits via POST; confirmation copy reflects review workflow.
 - **Moderation panel** (moderators): cloud queue loaded via `fetchPendingFeedFromApi` (`scope=pending`); Approve/Reject call PATCH (with optional Supabase client fallback in `reviewSubmission` for local dev).
 - **Member profile modal**: click an author name on a post to open a profile sheet. **Seed/demo members** resolve from `COMMUNITY_MEMBERS_SEED` by id; **real authors** use `torp_profiles.id` (`author_profile_id` on the post). Approved posts for that author load via the Supabase client using RLS-safe public read (`fetchApprovedPostsByMember` chooses `author_profile_id` vs `author_id` using `isAuthorProfileLookupKey`).
+- **Author edits** (signed-in, same entitlements as submit): on **My posts**, members can edit posts in `pending_review` or `approved` via `PATCH /api/community/posts/[id]` with `action: "author_edit"`. Editing a **published** story sets status back to `pending_review` and clears `published_at` until moderators approve again.
 
 ## Not in this pass (future)
 
 - Full admin moderation dashboard (bulk actions, filters, audit log).
 - Rich media pipeline / `community_post_media` table (schema can be added later).
 - Comments thread model.
-- Author editing of `pending_review` / `approved` posts (policy + UI TBD).
 
 ## How to test
 

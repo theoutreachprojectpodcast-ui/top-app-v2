@@ -1,11 +1,40 @@
-import Link from "next/link";
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import AppShell from "@/components/layout/AppShell";
+import NonprofitCard from "@/features/nonprofits/components/NonprofitCard";
+import { mapNonprofitCardRow } from "@/features/nonprofits/mappers/nonprofitCardMapper";
+import { fetchTrustedResources } from "@/features/trusted-resources/api";
+import { getSupabaseClient } from "@/lib/supabase/client";
 
 const SHIELD = "M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6z";
 
 export default function TrustedPage() {
+  const supabase = useMemo(() => getSupabaseClient(), []);
+  const [rows, setRows] = useState([]);
+  const [status, setStatus] = useState("Loading trusted resources...");
+
+  async function loadTrusted() {
+    setStatus("Loading trusted resources...");
+    try {
+      const data = await fetchTrustedResources(supabase);
+      const next = Array.isArray(data) ? data : [];
+      setRows(next);
+      setStatus(next.length ? "" : "No trusted resources found.");
+    } catch {
+      setRows([]);
+      setStatus("Unable to load trusted resources right now.");
+    }
+  }
+
+  useEffect(() => {
+    loadTrusted();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [supabase]);
+
   return (
-    <div className="sponsorPage sponsorLanding">
-      <section className="panel">
+    <AppShell activeNav="trusted" shellClassName="appShell--siteChrome" usePrimaryTopbarChrome useFooterDockChrome useTopAppStructure>
+      <section className="card">
         <div className="ds-page-intro" style={{ borderBottom: "none", marginBottom: 0, paddingBottom: 0 }}>
           <h2 style={{ margin: 0, display: "flex", alignItems: "center", gap: "12px" }}>
             <span className="iconWrap" aria-hidden="true">
@@ -16,22 +45,22 @@ export default function TrustedPage() {
             Trusted Resources
           </h2>
           <p className="ds-page-intro__lead">
-            The full directory experience lives on the home app. Open the site root and tap <strong>Trusted Resources</strong>{" "}
-            in the dock for curated, verified organizations.
+            Trusted organizations The Outreach Project can connect veterans, first responders, and families with.
           </p>
         </div>
-        <p style={{ marginTop: "16px", color: "var(--color-text-secondary)", lineHeight: 1.55 }}>
-          This route is kept for navigation parity while we align multi-page flows with the main experience.
-        </p>
-        <div style={{ marginTop: "18px", display: "flex", gap: "12px", flexWrap: "wrap" }}>
-          <Link href="/" className="btnPrimary">
-            Open Home Experience
-          </Link>
-          <Link href="/community" className="btnSoft">
-            Go to Community
-          </Link>
+        <div className="row">
+          <button className="btnPrimary" type="button" onClick={loadTrusted}>
+            Refresh
+          </button>
+        </div>
+        {status ? <p>{status}</p> : null}
+        <div className="results">
+          {rows.map((row) => {
+            const card = mapNonprofitCardRow(row, "trusted");
+            return <NonprofitCard key={`trusted-route-${card.id || card.ein || card.name}`} card={card} actionMode="trustedResource" />;
+          })}
         </div>
       </section>
-    </div>
+    </AppShell>
   );
 }

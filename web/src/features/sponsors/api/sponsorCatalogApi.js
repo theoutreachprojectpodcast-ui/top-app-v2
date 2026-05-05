@@ -10,8 +10,31 @@ const SPONSOR_TABLE = "sponsors_catalog";
 /** Foundational sponsors shown on `/sponsors` (app scope). Keep in sync with `sponsor_v06_scope_split.sql`. */
 const MAIN_SPONSOR_ALLOWED_SLUGS = ["wars-end-merch", "rope-solutions"];
 
+/**
+ * Slugs that must never appear on the main `/sponsors` hub (e.g. podcast-only partners).
+ * Keep in sync with `web/supabase/qa_sponsor_iron_soldiers_podcast_scope.sql`.
+ */
+const APP_SPONSORS_PAGE_EXCLUDED_SLUGS = new Set([
+  "iron-soldiers-coffee-company",
+  "iron-soldiers",
+  "iron-soldiers-coffee",
+]);
+
+export function isExcludedFromAppSponsorsHubSlug(slug) {
+  return APP_SPONSORS_PAGE_EXCLUDED_SLUGS.has(String(slug || "").trim().toLowerCase());
+}
+
+export function filterAppSponsorRows(rows) {
+  return (Array.isArray(rows) ? rows : []).filter(
+    (r) => !APP_SPONSORS_PAGE_EXCLUDED_SLUGS.has(String(r?.slug || "").trim().toLowerCase()),
+  );
+}
+
 function fallbackRows() {
-  return FEATURED_SPONSORS.map((item, idx) =>
+  const seed = FEATURED_SPONSORS.filter(
+    (item) => !APP_SPONSORS_PAGE_EXCLUDED_SLUGS.has(String(item?.id || "").trim().toLowerCase()),
+  );
+  return seed.map((item, idx) =>
     normalizeSponsorRecord({
       ...item,
       id: item.id,
@@ -94,8 +117,14 @@ export async function listSponsorsCatalogWithClient(supabase, opts = {}) {
     return sponsorScope === "podcast" ? [] : fallbackRows();
   }
 
-  const rows = data.map((row) => normalizeSponsorRecord(row));
-  return mergeSponsorEnrichmentForRows(supabase, rows);
+  const scoped = sponsorScope === "app" ? filterAppSponsorRows(data) : data;
+  if (sponsorScope === "app" && !scoped.length) {
+    return fallbackRows();
+  }
+
+  const rows = scoped.map((row) => normalizeSponsorRecord(row));
+  const merged = await mergeSponsorEnrichmentForRows(supabase, rows);
+  return sponsorScope === "app" ? filterAppSponsorRows(merged) : merged;
 }
 
 async function fetchSponsorsCatalogFromApi(sponsorScope = "app") {
@@ -123,9 +152,13 @@ export async function listSponsorsCatalog(supabase, opts = {}) {
 export async function getSponsorBySlug(supabase, slug) {
   const key = String(slug || "").trim();
   if (!key) return null;
+  if (isExcludedFromAppSponsorsHubSlug(key)) return null;
   if (typeof window !== "undefined") {
     try {
-      const res = await fetch(`/api/sponsors/catalog?slug=${encodeURIComponent(key)}`, { cache: "no-store" });
+      const res = await fetch(`/api/sponsors/catalog?slug=${encodeURIComponent(key)}`, {
+        credentials: "include",
+        cache: "no-store",
+      });
       if (res.ok) {
         const data = await res.json();
         if (data?.ok && data.row) return getSponsorProfileViewModel(data.row);

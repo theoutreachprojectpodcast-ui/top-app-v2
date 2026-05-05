@@ -23,12 +23,22 @@ const POST_TYPE_LABEL = {
   community_update: "Community update",
 };
 
-export default function CommunityPostCard({ post, onToggleLike, showModerationStatus = false, onOpenAuthor }) {
+export default function CommunityPostCard({
+  post,
+  onToggleLike,
+  showModerationStatus = false,
+  onOpenAuthor,
+  onRequestAuthorEdit,
+}) {
   const [shareBusy, setShareBusy] = useState(false);
   const displayName = post.showAuthorName ? post.authorName : "Community member";
   const avatarSrc = post.authorAvatarUrl || avatarFallbackUrl(post.authorId || post.id);
   const authorLookupKey = String(post.authorProfileId || post.authorId || "").trim();
   const cat = CATEGORY_LABEL[post.category] || "Story";
+  const canEditStory =
+    typeof onRequestAuthorEdit === "function" &&
+    showModerationStatus &&
+    (post.status === "pending_review" || post.status === "approved");
 
   async function onShare() {
     setShareBusy(true);
@@ -73,7 +83,6 @@ export default function CommunityPostCard({ post, onToggleLike, showModerationSt
       <p className="communityPostBody">{post.body}</p>
       {post.photoUrl ? (
         <div className="communityPostMedia">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={post.photoUrl} alt="" />
         </div>
       ) : null}
@@ -82,6 +91,13 @@ export default function CommunityPostCard({ post, onToggleLike, showModerationSt
           <span className="communityPostNonprofitLabel">Organization</span>
           {post.nonprofitName}
         </p>
+      ) : null}
+      {canEditStory ? (
+        <div className="communityPostAuthorEditRow">
+          <button type="button" className="btnSoft communityPostEditBtn" onClick={() => onRequestAuthorEdit(post)}>
+            Edit story
+          </button>
+        </div>
       ) : null}
       <CommunitySocialActions
         postId={post.id}

@@ -1,5 +1,7 @@
 import { createSupabaseReadClient } from "@/lib/supabase/readServiceClient";
 import {
+  filterAppSponsorRows,
+  isExcludedFromAppSponsorsHubSlug,
   listSponsorsCatalogWithClient,
   mergeSponsorEnrichmentForRows,
 } from "@/features/sponsors/api/sponsorCatalogApi";
@@ -19,8 +21,12 @@ export async function GET(request) {
   const scope = String(request.nextUrl.searchParams.get("scope") || "app").toLowerCase();
   const slug = request.nextUrl.searchParams.get("slug");
   if (slug?.trim()) {
+    const slugKey = slug.trim();
     const slugScope = scope === "podcast" ? "podcast" : "app";
-    let q = supabase.from("sponsors_catalog").select("*").eq("slug", slug.trim());
+    if (slugScope === "app" && isExcludedFromAppSponsorsHubSlug(slugKey)) {
+      return Response.json({ ok: true, row: null });
+    }
+    let q = supabase.from("sponsors_catalog").select("*").eq("slug", slugKey);
     if (slugScope === "podcast") {
       q = q.eq("sponsor_scope", "podcast").eq("is_active", true);
     } else {
@@ -37,5 +43,6 @@ export async function GET(request) {
   }
 
   const rows = await listSponsorsCatalogWithClient(supabase, { sponsorScope: scope });
-  return Response.json({ ok: true, rows });
+  const out = scope === "app" ? filterAppSponsorRows(rows) : rows;
+  return Response.json({ ok: true, rows: out });
 }

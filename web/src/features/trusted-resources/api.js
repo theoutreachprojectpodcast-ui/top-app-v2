@@ -2,6 +2,7 @@ import { TRUSTED_PAGE_SIZE } from "@/lib/constants";
 import {
   TRUSTED_RESOURCES_TABLE,
   isMissingTrustedResourcesTable,
+  isTrustedCatalogReadDenied,
   mapTrustedResourcesDbRowToTrustedRow,
 } from "@/lib/supabase/trustedResourcesCatalog";
 import { attachDirectoryAndEnrichmentToTrustedRows } from "@/features/trusted-resources/trustedDirectoryJoin";
@@ -120,7 +121,11 @@ function buildCanonicalOrderedTrustedRows(rows = []) {
 
 /** Load trusted catalog + directory/enrichment joins (server or browser Supabase client). */
 export async function fetchTrustedResourcesFromSupabase(supabase) {
-  if (!supabase) return [];
+  /** Localhost without `.env.local` (no anon client) or missing keys: still ship curated registry rows. */
+  if (!supabase) {
+    const canonicalOnly = buildCanonicalOrderedTrustedRows(ensureAllCanonicalTrustedRows([]));
+    return attachDirectoryAndEnrichmentToTrustedRows(null, canonicalOnly);
+  }
 
   const catalog = await runQuery(() =>
     supabase
@@ -130,29 +135,34 @@ export async function fetchTrustedResourcesFromSupabase(supabase) {
       .order("sort_order", { ascending: true })
       .order("display_name", { ascending: true })
   );
-  if (!catalog.error && Array.isArray(catalog.data)) {
-    const mapped = (catalog.data || []).map(mapTrustedResourcesDbRowToTrustedRow).filter((row) => {
-      const ein = String(row?.ein ?? "").trim();
-      const name = String(row?.orgName ?? "").trim();
-      const web = String(row?.website ?? "").trim();
-      return !!(ein || name || web);
-    });
-    const canonicalOnly = buildCanonicalOrderedTrustedRows(ensureAllCanonicalTrustedRows(mapped));
-    return attachDirectoryAndEnrichmentToTrustedRows(supabase, canonicalOnly);
-  }
-  if (catalog.error && !isMissingTrustedResourcesTable(catalog.error)) {
+
+  const recoverableCatalogError =
+    !catalog.error ||
+    isMissingTrustedResourcesTable(catalog.error) ||
+    isTrustedCatalogReadDenied(catalog.error);
+
+  if (catalog.error && !recoverableCatalogError) {
     throw catalog.error;
   }
 
-  // Catalog missing/empty: still return curated Trusted list (not directory/nonprofit-profile-derived list).
-  const canonicalOnly = buildCanonicalOrderedTrustedRows(ensureAllCanonicalTrustedRows([]));
+  const mapped =
+    !catalog.error && Array.isArray(catalog.data)
+      ? (catalog.data || []).map(mapTrustedResourcesDbRowToTrustedRow).filter((row) => {
+          const ein = String(row?.ein ?? "").trim();
+          const name = String(row?.orgName ?? "").trim();
+          const web = String(row?.website ?? "").trim();
+          return !!(ein || name || web);
+        })
+      : [];
+
+  const canonicalOnly = buildCanonicalOrderedTrustedRows(ensureAllCanonicalTrustedRows(mapped));
   return attachDirectoryAndEnrichmentToTrustedRows(supabase, canonicalOnly);
 }
 
 async function fetchTrustedCatalogFromApi() {
   if (typeof window === "undefined") return null;
   try {
-    const res = await fetch("/api/trusted/catalog", { cache: "no-store" });
+    const res = await fetch("/api/trusted/catalog", { credentials: "include", cache: "no-store" });
     if (!res.ok) return null;
     const data = await res.json();
     if (!data?.ok || !Array.isArray(data.rows)) return null;

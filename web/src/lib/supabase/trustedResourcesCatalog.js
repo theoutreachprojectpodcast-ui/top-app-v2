@@ -26,6 +26,19 @@ export function isMissingTrustedResourcesTable(error) {
   return c === "PGRST205" || m.includes("could not find the table") || m.includes("does not exist");
 }
 
+/** Anon / JWT cannot read `trusted_resources` under RLS — fall back to curated registry instead of failing the whole hub. */
+export function isTrustedCatalogReadDenied(error) {
+  if (!error) return false;
+  const c = String(error.code || "");
+  const m = String(error.message || "").toLowerCase();
+  if (c === "42501") return true;
+  if (c === "PGRST301") return true;
+  if (m.includes("permission denied")) return true;
+  if (m.includes("row-level security") || m.includes("rls policy")) return true;
+  if (m.includes("jwt")) return true;
+  return false;
+}
+
 /**
  * Maps a Trusted Resources catalog (`trusted_resources`) DB row into the feed shape.
  * Rows are joined to the public directory + enrichment in `trustedDirectoryJoin.js`, then

@@ -11,6 +11,7 @@ import {
   stripeSponsorSubscriptionConfigured,
   stripeWebhookConfigured,
 } from "@/lib/billing/stripeConfig";
+import { isDemoModeEnabled } from "@/lib/runtime/launchMode";
 
 export async function GET() {
   const workos = isWorkOSConfigured();
@@ -23,6 +24,8 @@ export async function GET() {
   const idleMs = sessionIdleTimeoutMs();
   const cookieDomain = sharedSessionCookieDomain() || "";
   return Response.json({
+    /** Local demo email/password and related client-only demo paths (see `isDemoModeEnabled`). */
+    demoFlowsEnabled: isDemoModeEnabled(),
     workos,
     /** When false, lists what to set in `.env.local` to enable hosted AuthKit (no secret values). */
     workosMissingEnv: workos ? [] : workOSEnvironmentIssues(),
