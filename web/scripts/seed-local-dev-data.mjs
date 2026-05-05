@@ -25,13 +25,13 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SEED_TAG = "torp_local_data_seed_v1";
 
 const POST_IDS = {
-  approved1: "b2000000-0000-4000-8000-000000000001",
-  approved2: "b2000000-0000-4000-8000-000000000002",
-  approved3: "b2000000-0000-4000-8000-000000000003",
+  founderWelcome: "b2000000-0000-4000-8000-000000000001",
+  founderHowToProfile: "b2000000-0000-4000-8000-000000000002",
+  founderHowToCommunity: "b2000000-0000-4000-8000-000000000003",
   pending1: "b2000000-0000-4000-8000-000000000004",
   pending2: "b2000000-0000-4000-8000-000000000005",
   rejected1: "b2000000-0000-4000-8000-000000000006",
-  approvedEin: "b2000000-0000-4000-8000-000000000007",
+  founderHowToSponsors: "b2000000-0000-4000-8000-000000000007",
 };
 
 const SPONSOR_APP_IDS = {
@@ -307,7 +307,7 @@ function buildPosts(profileIds, authorIds) {
     post_type: overrides.post_type || "share_story",
     show_author_name: true,
     link_url: "",
-    photo_url: "",
+    photo_url: overrides.photo_url || "",
     status: overrides.status,
     visibility: "community",
     like_count: overrides.like_count ?? 0,
@@ -323,54 +323,59 @@ function buildPosts(profileIds, authorIds) {
   });
 
   return [
-    base(POST_IDS.approved1, {
+    base(POST_IDS.founderWelcome, {
       author_profile_id: a1,
       author_workos_id: authorIds[0],
-      author_name: display(0),
-      title: "Found a nonprofit that actually picked up the phone",
-      body: "After a few dead ends, I reached an organization through the directory that answered on the first try. They walked me through intake without making me feel rushed. Sharing in case someone else is stuck in the same loop I was.",
-      category: "success_story",
+      author_name: "Marcus & Liz (Founders)",
+      title: "Welcome to The Outreach Project community",
+      body: "We built this platform to make trusted support easier to find for veterans, first responders, and families. Start with your profile, save organizations you want to revisit, and use community posts to share what actually helped you. If this space serves you well, tell us what we should improve next.",
+      category: "community_update",
+      post_type: "community_update",
+      photo_url: "/brand-logo-site-dark.png",
       status: "approved",
       reviewed_by: "local-seed",
       reviewed_at: nowIso(-100),
       published_at: nowIso(-100),
       like_count: 3,
     }),
-    base(POST_IDS.approved2, {
+    base(POST_IDS.founderHowToProfile, {
       author_profile_id: a2,
       author_workos_id: authorIds[1],
-      author_name: display(1),
-      title: "Trusted Resources saved me a Saturday of guesswork",
-      body: "I started with the Trusted Resources tab and cross-checked two orgs in the directory. Having a short list of vetted names made it easier to involve my partner in the decision without drowning in tabs.",
-      category: "thank_you",
+      author_name: "Marcus (Co-Founder)",
+      title: "How to set up your profile in under 3 minutes",
+      body: "Quick start: (1) complete your basic account details, (2) add your mission focus and location, and (3) keep your membership current so platform features stay unlocked. A complete profile helps us personalize the experience and helps staff route support faster when you reach out.",
+      category: "resource_help",
+      post_type: "community_update",
+      photo_url: "/brand-logo-mark-dark.png",
       status: "approved",
       reviewed_by: "local-seed",
       reviewed_at: nowIso(-90),
       published_at: nowIso(-90),
       like_count: 1,
     }),
-    base(POST_IDS.approved3, {
+    base(POST_IDS.founderHowToCommunity, {
       author_profile_id: a3,
       author_workos_id: authorIds[2],
-      author_name: display(2),
-      title: "Why moderation matters for community posts",
-      body: "As someone who runs programs on the ground, I appreciate that stories here are reviewed before they go public. It keeps the tone respectful and reduces noise for people who are already under stress.",
+      author_name: "Liz (Co-Founder)",
+      title: "How to post in community so people can act on it",
+      body: "When you share, include what happened, what organization or resource helped, and one practical next step another member can take today. Keep it specific and respectful. Our moderators review every post so the feed stays useful, credible, and safe for the people who need it most.",
       category: "community_update",
       post_type: "community_update",
+      photo_url: "/podcasts-demo-band.jpg",
       status: "approved",
       reviewed_by: "local-seed",
       reviewed_at: nowIso(-80),
       published_at: nowIso(-80),
     }),
-    base(POST_IDS.approvedEin, {
+    base(POST_IDS.founderHowToSponsors, {
       author_profile_id: a1,
       author_workos_id: authorIds[0],
-      author_name: display(0),
-      title: "Shout-out to a small org doing big work",
-      body: "I want to recognize a local nonprofit that helped my family with paperwork and referrals. They were patient with every question. If you are browsing the directory, save a few favorites and follow up — it is worth it.",
-      nonprofit_ein: SAMPLE_EIN,
-      nonprofit_name: "Sample Seeded Organization (local)",
-      category: "nonprofit_impact",
+      author_name: "Marcus & Liz (Founders)",
+      title: "How to use sponsors + podcast to support the mission",
+      body: "Sponsor cards on the main Sponsors page are our foundational partners, and podcast sponsors live on the Podcast page. Check each card for direct links and follow-ups. If your company wants to support this work, use the sponsor flow so our team can route your application and next steps cleanly.",
+      category: "community_update",
+      post_type: "community_update",
+      photo_url: "/sponsors/featured-bg-rope-solutions.png",
       status: "approved",
       reviewed_by: "local-seed",
       reviewed_at: nowIso(-70),
@@ -425,9 +430,9 @@ async function seedCommunity(admin, profileIds, authorIds) {
   const a2 = profileIds[authorIds[1]];
   const a3 = profileIds[authorIds[2]];
   const reactions = [
-    { post_id: POST_IDS.approved1, profile_id: a2, reaction_type: "like" },
-    { post_id: POST_IDS.approved1, profile_id: a3, reaction_type: "like" },
-    { post_id: POST_IDS.approved2, profile_id: a1, reaction_type: "like" },
+    { post_id: POST_IDS.founderWelcome, profile_id: a2, reaction_type: "like" },
+    { post_id: POST_IDS.founderWelcome, profile_id: a3, reaction_type: "like" },
+    { post_id: POST_IDS.founderHowToProfile, profile_id: a1, reaction_type: "like" },
   ].filter((r) => r.profile_id);
 
   if (!reactions.length) return;
@@ -441,8 +446,8 @@ async function seedCommunity(admin, profileIds, authorIds) {
   }
   console.log(`[torp-seed] community_post_reactions upserted: ${reactions.length}`);
 
-  await admin.from("community_posts").update({ like_count: 3 }).eq("id", POST_IDS.approved1);
-  await admin.from("community_posts").update({ like_count: 1 }).eq("id", POST_IDS.approved2);
+  await admin.from("community_posts").update({ like_count: 3 }).eq("id", POST_IDS.founderWelcome);
+  await admin.from("community_posts").update({ like_count: 1 }).eq("id", POST_IDS.founderHowToProfile);
 }
 
 async function seedSavedOrgs(admin, workosUserId) {
