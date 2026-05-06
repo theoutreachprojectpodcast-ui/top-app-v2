@@ -10,9 +10,11 @@ This runbook covers full WorkOS authentication setup for local, QA, production, 
 - Redirect URIs must include all active origins:
   - `http://localhost:3000/callback`
   - `http://localhost:3001/callback` (if using `dev:alt`)
+  - `https://qa-the-outreach-project.vercel.app/callback` (stable QA)
   - `https://the-outreach-project-app-git-qa-the-outreach-project.vercel.app/callback` (QA)
   - `https://the-outreach-project-app.vercel.app/callback` (production)
 - Logout redirect URI:
+  - `https://qa-the-outreach-project.vercel.app/` (stable QA)
   - `https://the-outreach-project-app.vercel.app/`
 - Ensure the WorkOS App provides:
   - API key (`sk_*`)

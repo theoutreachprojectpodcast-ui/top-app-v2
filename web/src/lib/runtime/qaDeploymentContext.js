@@ -7,6 +7,7 @@
  */
 
 const MARKERS = [
+  "https://qa-the-outreach-project.vercel.app/",
   "qa-the-outreach-project.vercel.app",
   "the-outreach-project-app-git-qa",
   "-git-qa-the-outreach-project",

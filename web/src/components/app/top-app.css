@@ -2207,6 +2207,38 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   text-shadow: none;
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 18%, transparent), 0 4px 14px color-mix(in srgb, var(--color-accent) 18%, transparent);
 }
+
+:root[data-color-scheme="dark"] .bottomNav {
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, #1a1f2a 92%, #0f1218 8%) 0%,
+    color-mix(in srgb, #252c39 88%, #11151d 12%) 100%
+  );
+  border-color: color-mix(in srgb, #cdd5e2 14%, transparent);
+  box-shadow: 0 10px 24px color-mix(in srgb, #000 34%, transparent);
+}
+
+:root[data-color-scheme="dark"] .navItem {
+  color: color-mix(in srgb, #e7edf9 82%, #b2bfd5 18%);
+}
+
+:root[data-color-scheme="dark"] .navItem:hover,
+:root[data-color-scheme="dark"] .navItem:focus-visible {
+  background: color-mix(in srgb, #ffffff 10%, transparent);
+  border-color: color-mix(in srgb, #dce4f4 20%, transparent);
+  color: #f3f7ff;
+}
+
+:root[data-color-scheme="dark"] .navItem.isActive {
+  background: linear-gradient(
+    155deg,
+    color-mix(in srgb, #b8f0c4 86%, #74d68a 14%) 0%,
+    color-mix(in srgb, #8ae3a1 84%, #4cbf73 16%) 100%
+  );
+  color: #103322;
+  border-color: color-mix(in srgb, #8bdca0 70%, #3b8c56 30%);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, #ffffff 24%, transparent), 0 6px 14px color-mix(in srgb, #74d68a 28%, transparent);
+}
 /* End-of-scroll page footer (brand + notes), above bottom padding for the fixed nav dock. */
 .siteFooter {
   margin-top: 28px;
@@ -4720,18 +4752,22 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
     column-gap: 8px;
   }
   .footerDockBackdrop { height: calc(60px + env(safe-area-inset-bottom)); }
-  .footerNavInner { padding: 8px 0 calc(8px + env(safe-area-inset-bottom)); }
-  .bottomNav {
-    gap: 6px;
-    width: fit-content;
-    max-width: 100%;
+  .footerNavInner {
+    padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
     justify-content: flex-start;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    padding: 4px 6px calc(6px + env(safe-area-inset-bottom));
   }
-  .bottomNav::-webkit-scrollbar { display: none; }
+  .footerNavInner::-webkit-scrollbar { display: none; }
+  .bottomNav {
+    gap: 6px;
+    width: max-content;
+    max-width: none;
+    justify-content: flex-start;
+    overflow: visible;
+    padding: 4px 6px;
+  }
   .navItem {
     min-width: max-content;
     flex: 0 0 auto;
