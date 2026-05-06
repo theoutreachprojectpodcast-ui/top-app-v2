@@ -9,6 +9,17 @@ import { normalizeSponsorRecord } from "@/features/sponsors/domain/sponsorViewMo
 
 export const runtime = "nodejs";
 
+function isBlockedAppSponsorRow(row) {
+  const slug = String(row?.slug || "").trim().toLowerCase();
+  const name = String(row?.name || "").trim().toLowerCase();
+  const website = String(row?.website_url || row?.website || "").trim().toLowerCase();
+  return (
+    slug.includes("iron-soldiers") ||
+    name.includes("iron soldiers") ||
+    website.includes("ironsoldierscoffee")
+  );
+}
+
 export async function GET(request) {
   const supabase = createSupabaseReadClient();
   if (!supabase) {
@@ -38,11 +49,14 @@ export async function GET(request) {
     const { data, error } = await q.maybeSingle();
     if (error) return Response.json({ ok: false, error: error.message }, { status: 500 });
     if (!data) return Response.json({ ok: true, row: null });
+    if (slugScope === "app" && isBlockedAppSponsorRow(data)) {
+      return Response.json({ ok: true, row: null });
+    }
     const [row] = await mergeSponsorEnrichmentForRows(supabase, [normalizeSponsorRecord(data)]);
     return Response.json({ ok: true, row });
   }
 
   const rows = await listSponsorsCatalogWithClient(supabase, { sponsorScope: scope });
-  const out = scope === "app" ? filterAppSponsorRows(rows) : rows;
+  const out = scope === "app" ? filterAppSponsorRows(rows).filter((row) => !isBlockedAppSponsorRow(row)) : rows;
   return Response.json({ ok: true, rows: out });
 }

@@ -111,6 +111,7 @@ function matchRecordByHosts(rowHosts) {
 /** @type {TrustedResourceCanonicalRecord[]} */
 export const TRUSTED_RESOURCE_CANONICAL_RECORDS = [
   {
+    eins: ["923487010"],
     nameKeys: ["say when and remember him", "saywhenandrememberhim"],
     slug: "say-when-and-remember-him",
     displayName: "Say When and Remember Him",
@@ -122,6 +123,7 @@ export const TRUSTED_RESOURCE_CANONICAL_RECORDS = [
     nonprofit_type: "Veteran and first responder support",
   },
   {
+    eins: ["993469766"],
     nameKeys: ["back country heroes", "backcountryheroes"],
     slug: "back-country-heroes",
     displayName: "Back Country Heroes",
@@ -143,8 +145,12 @@ export const TRUSTED_RESOURCE_CANONICAL_RECORDS = [
     locationLabel: "Huntsville, TX",
     website: "https://hero2theline.org/",
     nonprofit_type: "Veteran and Gold Star family support",
+    socialOverrides: {
+      facebookUrl: "https://www.facebook.com/Hero2theline/",
+    },
   },
   {
+    eins: ["412739043"],
     nameKeys: ["hero's journey healing foundation", "heros journey healing foundation", "herosjourneyhealingfoundation"],
     slug: "heros-journey-healing-foundation",
     displayName: "Hero’s Journey Healing Foundation",
@@ -202,8 +208,13 @@ export const TRUSTED_RESOURCE_CANONICAL_RECORDS = [
     locationLabel: "Bandera, TX",
     website: "https://frontlinehealingfoundation.org/",
     nonprofit_type: "Behavioral health and recovery support",
+    socialOverrides: {
+      facebookUrl: "https://www.facebook.com/frontlinehealingfoundation",
+      instagramUrl: "https://www.instagram.com/frontlinehealingfoundation/",
+    },
   },
   {
+    eins: ["823021911"],
     nameKeys: ["hometown hero outdoors", "hometownherooutdoors"],
     slug: "hometown-hero-outdoors",
     displayName: "Hometown Hero Outdoors",
@@ -213,6 +224,9 @@ export const TRUSTED_RESOURCE_CANONICAL_RECORDS = [
     locationLabel: "Stillwater, MN",
     website: "https://www.hometownherooutdoors.org/",
     nonprofit_type: "Veteran and first responder outdoor wellness",
+    socialOverrides: {
+      facebookUrl: "https://www.facebook.com/HometownHeroOutdoors/",
+    },
   },
 ];
 

@@ -298,7 +298,7 @@ function buildPosts(profileIds, authorIds) {
     author_profile_id: overrides.author_profile_id,
     author_id: overrides.author_workos_id,
     author_name: overrides.author_name,
-    author_avatar_url: "",
+    author_avatar_url: overrides.author_avatar_url || "",
     title: overrides.title,
     body: overrides.body,
     nonprofit_ein: overrides.nonprofit_ein ?? null,
@@ -326,7 +326,8 @@ function buildPosts(profileIds, authorIds) {
     base(POST_IDS.founderWelcome, {
       author_profile_id: a1,
       author_workos_id: authorIds[0],
-      author_name: "Marcus & Liz (Founders)",
+      author_name: "Josh & Hodge",
+      author_avatar_url: "/community/admin-josh.png",
       title: "Welcome to The Outreach Project community",
       body: "We built this platform to make trusted support easier to find for veterans, first responders, and families. Start with your profile, save organizations you want to revisit, and use community posts to share what actually helped you. If this space serves you well, tell us what we should improve next.",
       category: "community_update",
@@ -341,7 +342,8 @@ function buildPosts(profileIds, authorIds) {
     base(POST_IDS.founderHowToProfile, {
       author_profile_id: a2,
       author_workos_id: authorIds[1],
-      author_name: "Marcus (Co-Founder)",
+      author_name: "Josh",
+      author_avatar_url: "/community/admin-josh.png",
       title: "How to set up your profile in under 3 minutes",
       body: "Quick start: (1) complete your basic account details, (2) add your mission focus and location, and (3) keep your membership current so platform features stay unlocked. A complete profile helps us personalize the experience and helps staff route support faster when you reach out.",
       category: "resource_help",
@@ -356,7 +358,8 @@ function buildPosts(profileIds, authorIds) {
     base(POST_IDS.founderHowToCommunity, {
       author_profile_id: a3,
       author_workos_id: authorIds[2],
-      author_name: "Liz (Co-Founder)",
+      author_name: "Hodge",
+      author_avatar_url: "/community/admin-hodge.png",
       title: "How to post in community so people can act on it",
       body: "When you share, include what happened, what organization or resource helped, and one practical next step another member can take today. Keep it specific and respectful. Our moderators review every post so the feed stays useful, credible, and safe for the people who need it most.",
       category: "community_update",
@@ -370,7 +373,8 @@ function buildPosts(profileIds, authorIds) {
     base(POST_IDS.founderHowToSponsors, {
       author_profile_id: a1,
       author_workos_id: authorIds[0],
-      author_name: "Marcus & Liz (Founders)",
+      author_name: "Josh & Hodge",
+      author_avatar_url: "/community/admin-hodge.png",
       title: "How to use sponsors + podcast to support the mission",
       body: "Sponsor cards on the main Sponsors page are our foundational partners, and podcast sponsors live on the Podcast page. Check each card for direct links and follow-ups. If your company wants to support this work, use the sponsor flow so our team can route your application and next steps cleanly.",
       category: "community_update",

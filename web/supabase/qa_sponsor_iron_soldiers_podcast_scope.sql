@@ -11,6 +11,14 @@ set
     else coalesce(nullif(trim(sponsor_type), ''), 'podcast_sponsor')
   end,
   updated_at = now()
-where slug = 'iron-soldiers-coffee-company';
+where
+  slug in (
+    'iron-soldiers-coffee-company',
+    'iron-soldiers',
+    'iron-soldiers-coffee',
+    'iron-soldiers-coffee-co',
+    'iron-soldiers-coffee-company-llc'
+  )
+  or lower(coalesce(name, '')) like '%iron soldiers%';
 
 commit;

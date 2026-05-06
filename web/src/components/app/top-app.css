@@ -3821,7 +3821,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   position: relative;
   border-radius: 18px;
   overflow: hidden;
-  min-height: 236px;
+  min-height: 268px;
   border: 1px solid var(--color-border-soft);
   cursor: pointer;
 }
@@ -3835,7 +3835,8 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 .sponsorPremiumCardScrim {
   position: absolute;
   inset: 0;
-  background: linear-gradient(125deg, rgba(7, 10, 14, 0.96) 0%, rgba(7, 10, 14, 0.66) 48%, rgba(7, 10, 14, 0.9) 100%);
+  /* Stronger legibility on the left copy column; keep the right side of the photo a bit more visible. */
+  background: linear-gradient(108deg, rgba(7, 10, 14, 0.96) 0%, rgba(7, 10, 14, 0.62) 44%, rgba(7, 10, 14, 0.42) 100%);
 }
 .sponsorPremiumCard--gold .sponsorPremiumCardScrim {
   background: linear-gradient(125deg, rgba(12, 10, 8, 0.93) 0%, rgba(18, 14, 10, 0.55) 50%, rgba(14, 11, 8, 0.88) 100%),
@@ -3870,8 +3871,8 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   z-index: 1;
   padding: var(--ds-space-5, 22px);
   display: grid;
-  gap: 14px;
-  min-height: 220px;
+  gap: 16px;
+  min-height: 248px;
   align-content: space-between;
 }
 .sponsorPremiumCardTop {
@@ -3901,16 +3902,46 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 }
 .sponsorPremiumBrand {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+@media (min-width: 768px) {
+  .sponsorPremiumBrand {
+    grid-template-columns: minmax(240px, 38%) minmax(0, 1fr);
+    column-gap: 28px;
+    row-gap: 4px;
+  }
+}
+.sponsorPremiumBrandIdentity {
+  display: flex;
   gap: 14px;
-  align-items: center;
+  align-items: flex-start;
+  min-width: 0;
+}
+.sponsorPremiumTitleBlock {
+  flex: 1;
+  min-width: 0;
+}
+.sponsorPremiumBrandBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+}
+@media (min-width: 768px) {
+  .sponsorPremiumBrandBody {
+    min-height: 100%;
+  }
 }
 .sponsorPremiumLogoShell {
   width: 58px;
   height: 58px;
   border-radius: 999px;
   background: rgba(8, 12, 16, 0.88);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.35),
+    0 10px 28px rgba(0, 0, 0, 0.45);
   display: grid;
   place-items: center;
   overflow: hidden;
@@ -3992,9 +4023,20 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 .sponsorPremiumTagline {
   margin: 0;
   font-size: var(--text-body-sm);
-  line-height: 1.5;
+  line-height: 1.55;
   color: rgba(233, 240, 247, 0.9);
-  max-width: 58ch;
+  max-width: none;
+}
+.sponsorPremiumBrandBody .sponsorPremiumTagline {
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+@media (min-width: 768px) {
+  .sponsorPremiumBrandBody .sponsorPremiumTagline {
+    -webkit-line-clamp: 6;
+  }
 }
 .sponsorPremiumFooter {
   display: flex;
@@ -4002,7 +4044,19 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   align-items: center;
   justify-content: flex-start;
   gap: 10px;
-  margin-top: 8px;
+  margin-top: 12px;
+}
+@media (min-width: 768px) {
+  .sponsorPremiumFooter {
+    margin-top: auto;
+    padding-top: 14px;
+    justify-content: space-between;
+    width: 100%;
+  }
+  .sponsorPremiumBrandBody .sponsorPremiumSocial {
+    margin-left: auto;
+    justify-content: flex-end;
+  }
 }
 .sponsorPremiumVisitBtn {
   flex: 0 0 auto;

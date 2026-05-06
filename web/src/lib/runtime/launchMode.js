@@ -1,10 +1,13 @@
+import { isQaDeploymentContext } from "@/lib/runtime/qaDeploymentContext";
+
 /**
  * Demo-only flows (local email/password sign-in, demo payment UX, etc.).
  *
  * - Explicit: `NEXT_PUBLIC_ENABLE_DEMO_FLOWS=1|0|true|false` always wins.
- * - Vercel Preview (e.g. QA branch deploys): on by default so https://…-git-qa-….vercel.app can use demo auth
- *   without a manual env toggle. Set `NEXT_PUBLIC_ENABLE_DEMO_FLOWS=0` on Preview to disable.
- * - Vercel Production: off unless `NEXT_PUBLIC_ENABLE_DEMO_FLOWS=1`.
+ * - Vercel Preview (e.g. QA branch deploys): on by default. Set `NEXT_PUBLIC_ENABLE_DEMO_FLOWS=0` to disable.
+ * - Stable QA hostname (`qa-the-outreach-project.vercel.app`, `…-git-qa-…`): on by default even when that
+ *   project is wired to Vercel **Production** (NODE_ENV=production). See `isQaDeploymentContext`.
+ * - Other Vercel Production: off unless `NEXT_PUBLIC_ENABLE_DEMO_FLOWS=1`.
  * - Local dev: on when `NODE_ENV !== "production"`.
  */
 export function isDemoModeEnabled() {
@@ -17,5 +20,6 @@ export function isDemoModeEnabled() {
     .trim()
     .toLowerCase();
   if (vercelEnv === "preview") return true;
+  if (isQaDeploymentContext()) return true;
   return process.env.NODE_ENV !== "production";
 }

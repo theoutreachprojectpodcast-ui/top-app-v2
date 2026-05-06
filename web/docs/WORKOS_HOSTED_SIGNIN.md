@@ -41,3 +41,7 @@ Optional tuning: `WORKOS_COOKIE_MAX_AGE`, `WORKOS_COOKIE_DOMAIN`, etc. — see `
 - **Sign-in / sign-up** (`web/src/app/api/auth/workos/signin|signup/route.js`) call **`getSignInUrl` / `getSignUpUrl`** (hosted UI).
 
 CLI tips: `web/docs/WORKOS_CLI.md` and `pnpm workos doctor`.
+
+## QA (Vercel)
+
+Set `APP_BASE_URL` / `NEXT_PUBLIC_APP_URL` to the QA origin (see `web/.env.local.example`). **Demo** auth stays on for Preview and for stable QA hostnames (`qaDeploymentContext`). For `/admin` on QA without copying production `PLATFORM_ADMIN_EMAILS`, set server-only **`QA_PLATFORM_ADMIN_EMAILS`** (comma-separated). WorkOS still needs redirect URIs and org membership for those accounts.

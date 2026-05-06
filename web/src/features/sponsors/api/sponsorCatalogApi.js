@@ -18,16 +18,29 @@ const APP_SPONSORS_PAGE_EXCLUDED_SLUGS = new Set([
   "iron-soldiers-coffee-company",
   "iron-soldiers",
   "iron-soldiers-coffee",
+  "iron-soldiers-coffee-co",
+  "iron-soldiers-coffee-company-llc",
 ]);
 
 export function isExcludedFromAppSponsorsHubSlug(slug) {
-  return APP_SPONSORS_PAGE_EXCLUDED_SLUGS.has(String(slug || "").trim().toLowerCase());
+  const key = String(slug || "").trim().toLowerCase();
+  if (!key) return false;
+  if (APP_SPONSORS_PAGE_EXCLUDED_SLUGS.has(key)) return true;
+  return key.includes("iron-soldiers");
+}
+
+function isExcludedFromAppSponsorsHubRow(row) {
+  const slug = String(row?.slug || "").trim().toLowerCase();
+  if (isExcludedFromAppSponsorsHubSlug(slug)) return true;
+  const name = String(row?.name || "").trim().toLowerCase();
+  if (name.includes("iron soldiers")) return true;
+  const website = String(row?.website_url || row?.website || "").trim().toLowerCase();
+  if (website.includes("ironsoldierscoffee")) return true;
+  return false;
 }
 
 export function filterAppSponsorRows(rows) {
-  return (Array.isArray(rows) ? rows : []).filter(
-    (r) => !APP_SPONSORS_PAGE_EXCLUDED_SLUGS.has(String(r?.slug || "").trim().toLowerCase()),
-  );
+  return (Array.isArray(rows) ? rows : []).filter((r) => !isExcludedFromAppSponsorsHubRow(r));
 }
 
 function fallbackRows() {

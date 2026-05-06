@@ -22,7 +22,7 @@
   background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--color-bg-secondary) 97%, transparent));
 }
 
-:root[data-color-scheme="light"] .appShell--subpage:not(.appShell--podcast) .bottomNav {
+:root[data-color-scheme="light"] .appShell--subpage:not(.appShell--podcast) > .bottomNav {
   background: transparent;
   box-shadow: none;
 }

@@ -36,7 +36,9 @@ export default function AppShell({
   return (
     <RootTag className={`${useTopAppStructure ? "topApp" : "appShell"} appShell--subpage ${shellClassName}`.trim()} style={rootStyle}>
       <div className="headerBrandStack">
-        <BrandMark size="header" src={brandSrc || undefined} alt={brandAlt} className={brandClassName} />
+        <Link href="/" aria-label="Go to home">
+          <BrandMark size="header" src={brandSrc || undefined} alt={brandAlt} className={brandClassName} />
+        </Link>
       </div>
       <header className={usePrimaryTopbarChrome ? "topbar" : "subpageTopbar"}>
         <HeaderInner className="topbarInner">

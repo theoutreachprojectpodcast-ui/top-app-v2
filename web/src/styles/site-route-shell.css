@@ -45,6 +45,23 @@
   z-index: 91;
 }
 
+/* Docked bottom nav: fill the bar so pills use horizontal space (footerDock already spans full width). */
+.appShell--siteChrome .footerDock .bottomNav,
+.appShell--sponsors .footerDock .bottomNav {
+  width: min(1100px, calc(100% - 24px));
+  justify-content: space-evenly;
+}
+
+@media (max-width: 760px) {
+  .appShell--siteChrome .footerDock .bottomNav,
+  .appShell--sponsors .footerDock .bottomNav {
+    justify-content: flex-start;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+}
+
 .appShell--siteChrome .sponsorFeaturedCard,
 .appShell--siteChrome .sponsorSection,
 .appShell--siteChrome .sponsorHero,

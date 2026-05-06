@@ -550,7 +550,9 @@ function TopAppInner({ initialNav = "home" }) {
   return (
     <main className={`topApp theme-${profile.theme}`}>
       <div className="headerBrandStack">
-        <BrandMark size="header" />
+        <Link href="/" aria-label="Go to home">
+          <BrandMark size="header" />
+        </Link>
       </div>
       <header className="topbar">
         <HeaderInner className="topbarInner">
