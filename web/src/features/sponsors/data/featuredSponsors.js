@@ -30,7 +30,7 @@ export const FEATURED_SPONSORS = [
     industry: "Training & Readiness",
     tierLabel: "Featured sponsor",
     subtitle:
-      "Trusted access. Proven under pressure. Built for teams that don’t get second chances.",
+      "Trusted access. Proven under pressure. Built for teams that don't get second chances.",
     longDescription:
       "Rope Solutions delivers elite rope access, rescue systems, and technical training for high-consequence operational teams. Their work supports professionals who need precision, safety, and confidence in unforgiving environments.\n\nFrom vertical mobility to complex rescue scenarios, Rope Solutions equips teams with the systems and skills needed to operate when conditions are at their worst.",
     ctaLabel: "Visit Website",
