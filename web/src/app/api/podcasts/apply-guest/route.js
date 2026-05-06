@@ -1,8 +1,8 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { getAdminSetting } from "@/lib/admin/adminSettings";
 import { sendPodcastGuestApplicationNotify } from "@/server/podcasts/sendPodcastGuestApplicationNotify";
 
 export const runtime = "nodejs";
+const DEFAULT_PODCAST_GUEST_RECIPIENT = "Hodge5403@gmail.com";
 
 function pickString(v, max = 8000) {
   const s = String(v ?? "").trim();
@@ -83,36 +83,33 @@ export async function POST(request) {
 
   let emailWarning = "";
   try {
-    const contact = await getAdminSetting(admin, "contact.form", {});
-    const recipient = String(contact?.recipientEmail || "").trim();
-    if (recipient) {
-      const bodyText = [
-        phone ? `Phone: ${phone}` : "",
-        organization ? `Organization: ${organization}` : "",
-        role_title ? `Role / title: ${role_title}` : "",
-        website_url ? `Website: ${website_url}` : "",
-        "",
-        "Topic pitch:",
-        topic_pitch,
-        "",
-        why_now ? `Why now:\n${why_now}` : "",
-        social_links ? `Social / links:\n${social_links}` : "",
-        message ? `\nMessage:\n${message}` : "",
-      ]
-        .filter(Boolean)
-        .join("\n");
+    const recipient = String(process.env.PODCAST_GUEST_APPLICATION_RECIPIENT || DEFAULT_PODCAST_GUEST_RECIPIENT).trim();
+    const bodyText = [
+      `Submitted at: ${new Date().toISOString()}`,
+      `Status: submitted`,
+      phone ? `Phone: ${phone}` : "",
+      organization ? `Organization: ${organization}` : "",
+      role_title ? `Role / title: ${role_title}` : "",
+      website_url ? `Website: ${website_url}` : "",
+      "",
+      "Topic pitch:",
+      topic_pitch,
+      "",
+      why_now ? `Why now:\n${why_now}` : "",
+      social_links ? `Social / links:\n${social_links}` : "",
+      message ? `\nMessage:\n${message}` : "",
+    ]
+      .filter(Boolean)
+      .join("\n");
 
-      const sent = await sendPodcastGuestApplicationNotify({
-        to: recipient,
-        applicantName: full_name,
-        applicantEmail: email,
-        topic: topic_pitch.slice(0, 200),
-        bodyText,
-      });
-      if (!sent.ok) emailWarning = `Saved, but email was not sent (${sent.error}).`;
-    } else {
-      emailWarning = "Saved. Configure Admin → Contact primary recipient email to receive notifications.";
-    }
+    const sent = await sendPodcastGuestApplicationNotify({
+      to: recipient,
+      applicantName: full_name,
+      applicantEmail: email,
+      topic: topic_pitch.slice(0, 200),
+      bodyText,
+    });
+    if (!sent.ok) emailWarning = `Saved, but email was not sent (${sent.error}).`;
   } catch (e) {
     emailWarning = `Saved, but notification step failed (${String(e?.message || e)}).`;
   }

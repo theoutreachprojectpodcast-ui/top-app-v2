@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 export default function PodcastCTASection({ onApply }) {
   return (
     <section className="podcastCtaSection">
@@ -9,8 +7,7 @@ export default function PodcastCTASection({ onApply }) {
         <a className="btnPrimary" href="https://www.youtube.com/@TheOutreachProjectHq" target="_blank" rel="noopener noreferrer">
           Watch Episodes
         </a>
-        <Link className="btnSoft" href="/podcasts/guests">View Guest Profiles</Link>
-        <Link className="btnSoft" href="/podcasts/members">Members-Only Content</Link>
+        <span className="btnSoft" aria-disabled="true">Members Only Content — Coming Soon</span>
         <button className="btnSoft" type="button" onClick={onApply}>Apply to Be on the Podcast</button>
       </div>
     </section>

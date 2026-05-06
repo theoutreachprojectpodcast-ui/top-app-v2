@@ -1,4 +1,10 @@
-import { classifyPodcastUpload, sortByPublishedDesc } from "./episodeParser";
+import {
+  classifyPodcastUpload,
+  isBelowMinEpisodeDuration,
+  isShortsUrl,
+  sortByPublishedDesc,
+  titleContainsExcludedContentMarker,
+} from "./episodeParser";
 import { fetchPlaylistItemsPage, fetchVideosByIds } from "./youtubeUploadsServer";
 
 /** Official “full episodes” playlist (env override). */
@@ -73,12 +79,16 @@ export async function fetchOfficialPlaylistAcceptedEpisodes(opts = {}) {
         }
 
         const c = classifyPodcastUpload(row);
-        if (!c.ok) continue;
+        const isFullEpisodeLike =
+          !isShortsUrl(row.youtube_url, id) &&
+          !titleContainsExcludedContentMarker(row.title, row.description) &&
+          !isBelowMinEpisodeDuration(row.duration_seconds);
+        if (!c.ok && !isFullEpisodeLike) continue;
         accepted.push({
           ...row,
-          episode_number: c.episodeNumber,
+          episode_number: c.ok ? c.episodeNumber : null,
           pipeline_decision: "accepted",
-          pipeline_reason: "matched_rules",
+          pipeline_reason: c.ok ? "matched_rules" : "playlist_full_episode_fallback",
         });
         if (accepted.length >= maxAccepted) break;
       }
