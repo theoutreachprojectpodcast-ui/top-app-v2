@@ -119,12 +119,25 @@ export default function FeaturedSponsorCard({
   const warm = sponsor.warmVariant || "gold";
   const safeBg = sanitizeDisplayableImageUrl(String(sponsor.backgroundImageUrl || "").trim());
   const hasListingBg = !!safeBg;
-  const social = sponsor.socialLinks || {};
   const displayName = resolveSponsorDisplayName(sponsor.name || "") || String(sponsor.name || "").trim() || "Partner";
   const logoCandidates = useMemo(() => {
     const u = sanitizeDisplayableImageUrl(String(sponsor.logoUrl || "").trim());
     return u ? [u] : [];
   }, [sponsor.logoUrl]);
+  const socialLinkItems = useMemo(() => {
+    const social = sponsor.socialLinks || {};
+    const out = [];
+    const site = sanitizeDisplayableImageUrl(String(sponsor.ctaUrl || social.website || "").trim());
+    if (site) out.push({ key: "website", url: site });
+    const order = ["instagram", "facebook", "linkedin", "twitter", "youtube"];
+    for (const key of order) {
+      const raw = String(social[key] || "").trim();
+      const u = sanitizeDisplayableImageUrl(raw);
+      if (!u) continue;
+      out.push({ key: key === "twitter" ? "x" : key, url: u });
+    }
+    return out;
+  }, [sponsor.ctaUrl, sponsor.socialLinks]);
   const logoSrc = logoCandidates[logoIndex] || "";
   const profileHref = `/sponsors/${encodeURIComponent(sponsor.slug || sponsor.id || "")}`;
   const favoriteKey = String(sponsor.slug || sponsor.id || "").trim().toLowerCase();
@@ -187,40 +200,43 @@ export default function FeaturedSponsorCard({
           ) : null}
         </div>
         <div className="sponsorPremiumBrand">
-          <div className={`sponsorPremiumLogoShell${shellToneClass}`}>
-            {logoSrc ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                className={`sponsorPremiumLogoImg${logoToneClass}`}
-                src={logoSrc}
-                alt=""
-                loading="lazy"
-                onLoad={(event) => {
-                  if (toneCache.has(logoSrc)) {
-                    setLogoTone(toneCache.get(logoSrc));
-                    return;
-                  }
-                  const tone = assessLogoToneFromElement(event.currentTarget);
-                  toneCache.set(logoSrc, tone);
-                  setLogoTone(tone);
-                }}
-                onError={() => {
-                  if (logoIndex < logoCandidates.length - 1) {
-                    setLogoIndex((v) => v + 1);
+          <div className="sponsorPremiumBrandIdentity">
+            <div className={`sponsorPremiumLogoShell${shellToneClass}`}>
+              {logoSrc ? (
+                <img
+                  className={`sponsorPremiumLogoImg${logoToneClass}`}
+                  src={logoSrc}
+                  alt=""
+                  loading="lazy"
+                  onLoad={(event) => {
+                    if (toneCache.has(logoSrc)) {
+                      setLogoTone(toneCache.get(logoSrc));
+                      return;
+                    }
+                    const tone = assessLogoToneFromElement(event.currentTarget);
+                    toneCache.set(logoSrc, tone);
+                    setLogoTone(tone);
+                  }}
+                  onError={() => {
+                    if (logoIndex < logoCandidates.length - 1) {
+                      setLogoIndex((v) => v + 1);
+                      setLogoTone("normal");
+                      return;
+                    }
                     setLogoTone("normal");
-                    return;
-                  }
-                  setLogoTone("normal");
-                }}
-              />
-            ) : (
-              <span className="sponsorPremiumWordmark">{displayName}</span>
-            )}
+                  }}
+                />
+              ) : (
+                <span className="sponsorPremiumWordmark">{displayName}</span>
+              )}
+            </div>
+            <div className="sponsorPremiumTitleBlock">
+              <h4>{displayName}</h4>
+              {sponsor.cardSubheader ? <p className="sponsorPremiumSubheader">{sponsor.cardSubheader}</p> : null}
+              {sponsor.industry ? <p className="sponsorPremiumIndustry">{sponsor.industry}</p> : null}
+            </div>
           </div>
-          <div className="sponsorPremiumCopy">
-            <h4>{displayName}</h4>
-            {sponsor.cardSubheader ? <p className="sponsorPremiumSubheader">{sponsor.cardSubheader}</p> : null}
-            {sponsor.industry ? <p className="sponsorPremiumIndustry">{sponsor.industry}</p> : null}
+          <div className="sponsorPremiumBrandBody">
             <p className="sponsorPremiumTagline">{sponsor.tagline || "Partner supporting service communities."}</p>
             <div className="sponsorPremiumFooter">
               {sponsor.ctaUrl && !sponsor.websitePending ? (
@@ -234,23 +250,22 @@ export default function FeaturedSponsorCard({
                   {sponsor.ctaLabel || "Visit Website"}
                 </a>
               ) : null}
-              <div className="sponsorPremiumSocial" aria-label="Sponsor social profiles">
-                {Object.entries(social).map(([key, url]) => {
-                  if (!url || key === "website") return null;
-                  return (
-                    <a
-                      key={key}
-                      className="sponsorPremiumSocialLink"
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label={`${displayName} on ${key}`}
-                      onClick={(event) => event.stopPropagation()}
-                    >
-                      <SocialIcon type={key === "twitter" ? "x" : key} />
-                    </a>
-                  );
-                })}
+              <div className="sponsorPremiumSocial" aria-label="Sponsor website and social profiles">
+                {socialLinkItems.map(({ key, url }) => (
+                  <a
+                    key={`${key}-${url}`}
+                    className="sponsorPremiumSocialLink"
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={
+                      key === "website" ? `${displayName} website` : `${displayName} on ${key === "x" ? "X" : key}`
+                    }
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <SocialIcon type={key} />
+                  </a>
+                ))}
               </div>
               {sponsor.websitePending || !sponsor.ctaUrl ? (
                 <span className="sponsorPremiumPending">Website pending</span>

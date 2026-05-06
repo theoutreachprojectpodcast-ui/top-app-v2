@@ -13,6 +13,16 @@ function truncateSponsorLine(value, max = 140) {
   return `${text.slice(0, max - 1)}…`;
 }
 
+/** Hide category line when it only repeats the mission pill (e.g. "Apparel" vs "Apparel & impact"). */
+function isIndustryRedundantWithMissionPill(industry, missionPill) {
+  const i = String(industry || "").trim().toLowerCase();
+  const t = String(missionPill || "").trim().toLowerCase();
+  if (!i || !t) return false;
+  if (t === i) return true;
+  if (t.startsWith(`${i} `) || t.startsWith(`${i}&`) || t.startsWith(`${i},`)) return true;
+  return false;
+}
+
 function parseAdditionalLinks(value) {
   if (Array.isArray(value)) return value.filter((item) => item && item.url);
   const raw = clean(value);
@@ -132,21 +142,24 @@ export function getSponsorCardViewModel(row = {}) {
   const s = normalizeSponsorRecord(row);
   const fallbackBg =
     FEATURED_SPONSOR_CARD_BACKGROUNDS[s.slug] || FEATURED_SPONSOR_CARD_BACKGROUNDS[s.id] || "";
-  /** Card subtitle (hero line under name). */
-  const cardSubheader = truncateSponsorLine(s.tagline || s.short_description, 140);
   const longTrim = String(s.long_description || "").trim();
   const tagTrim = String(s.tagline || "").trim();
-  const bodySource =
-    longTrim && longTrim !== tagTrim ? s.long_description : s.short_description;
-  const bodyTeaser = truncateSponsorLine(bodySource, 280);
+  const hasDistinctLongBody = longTrim.length > 0 && longTrim !== tagTrim;
+  /** Hero line under the name only when the body is a separate long blurb (avoids repeating the same sentence). */
+  const cardSubheader = hasDistinctLongBody ? truncateSponsorLine(tagTrim, 160) : "";
+  const bodySource = hasDistinctLongBody ? s.long_description : tagTrim || s.short_description;
+  const bodyTeaser = truncateSponsorLine(bodySource, 320);
+  const missionPill = s.short_description || "Mission-aligned";
+  const industryRaw = clean(s.sponsor_category || s.sponsor_type);
+  const industry = isIndustryRedundantWithMissionPill(industryRaw, missionPill) ? "" : industryRaw;
   const logoDisplay = resolveSponsorListingLogoUrl(s) || null;
   return {
     id: s.id,
     slug: s.slug,
     name: s.name,
     cardSubheader,
-    tag: s.short_description || "Mission-aligned",
-    industry: s.sponsor_category || s.sponsor_type,
+    tag: missionPill,
+    industry,
     tierLabel: s.featured ? "Featured sponsor" : "Partner sponsor",
     tagline: bodyTeaser || "Mission partner supporting community outcomes.",
     ctaUrl: s.website_url || null,

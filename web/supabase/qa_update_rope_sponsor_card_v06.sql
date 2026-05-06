@@ -22,6 +22,7 @@ set
     || 'From vertical mobility to complex rescue scenarios, Rope Solutions equips teams with the systems and skills needed to operate when conditions are at their worst.',
   tagline = 'Trusted access. Proven under pressure. Built for teams that don''t get second chances.',
   website_url = 'https://www.ropesolutions.com/',
+  cta_label = 'Visit Website',
   background_image_url = coalesce(nullif(trim(background_image_url), ''), '/sponsors/featured-bg-rope-solutions.png'),
   logo_url = null,
   logo_status = null,
