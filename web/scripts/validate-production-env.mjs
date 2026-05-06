@@ -1,16 +1,17 @@
 const strictArg = process.argv.includes("--strict");
+const vercel = process.env.VERCEL === "1";
+const vercelEnv = String(process.env.VERCEL_ENV || "").trim().toLowerCase();
+const vercelProduction = vercel && vercelEnv === "production";
 const enforce =
   strictArg ||
   process.env.TOP_VALIDATE_ENV === "1" ||
-  process.env.CI === "true" ||
-  process.env.VERCEL === "1";
+  (process.env.CI === "true" && !vercel) ||
+  vercelProduction;
 
 const requiredKeys = [
   "NEXT_PUBLIC_SUPABASE_URL",
   "NEXT_PUBLIC_SUPABASE_ANON_KEY",
   "SUPABASE_SERVICE_ROLE_KEY",
-  "APP_BASE_URL",
-  "NEXT_PUBLIC_APP_URL",
   "WORKOS_API_KEY",
   "WORKOS_CLIENT_ID",
   "WORKOS_COOKIE_PASSWORD",
@@ -21,8 +22,7 @@ const missing = requiredKeys.filter((key) => !String(process.env[key] || "").tri
 const appUrl = String(process.env.APP_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || "").trim().toLowerCase();
 const isProdLikeHost = appUrl.startsWith("https://") && !appUrl.includes("localhost");
 const cookieDomain = String(process.env.WORKOS_COOKIE_DOMAIN || "").trim();
-const vercelEnv = String(process.env.VERCEL_ENV || "").trim().toLowerCase();
-const isVercelPreview = process.env.VERCEL === "1" && vercelEnv === "preview";
+const isVercelPreview = vercel && vercelEnv === "preview";
 // Cookie domain is for apex/subdomain session sharing on the real prod host; preview URLs are a single *.vercel.app host.
 if (isProdLikeHost && !cookieDomain && !isVercelPreview) {
   missing.push("WORKOS_COOKIE_DOMAIN");
@@ -32,6 +32,10 @@ const privateRedirect = String(process.env.WORKOS_REDIRECT_URI || "").trim();
 const publicRedirect = String(process.env.NEXT_PUBLIC_WORKOS_REDIRECT_URI || "").trim();
 if (!privateRedirect && !publicRedirect) {
   missing.push("WORKOS_REDIRECT_URI or NEXT_PUBLIC_WORKOS_REDIRECT_URI");
+}
+
+if (!String(process.env.APP_BASE_URL || "").trim() && !String(process.env.NEXT_PUBLIC_APP_URL || "").trim()) {
+  missing.push("APP_BASE_URL or NEXT_PUBLIC_APP_URL");
 }
 
 if (!enforce) {
@@ -51,7 +55,6 @@ if (missing.length) {
 }
 
 /** Vercel Production must use the WorkOS *Production* dashboard keys (`sk_live_…`), not Staging (`sk_test_…`). */
-const vercelProduction = process.env.VERCEL === "1" && process.env.VERCEL_ENV === "production";
 const workosKey = String(process.env.WORKOS_API_KEY || "").trim();
 if (vercelProduction && workosKey.startsWith("sk_test_")) {
   console.error(
