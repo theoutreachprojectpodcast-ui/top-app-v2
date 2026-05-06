@@ -5,7 +5,7 @@
   --header-floating-offset: 24px;
   --header-floating-height: 300px;
   --header-fade-height: 56px;
-  --home-hero-image: url("/home/home-trusted-mountain.png");
+  --home-hero-image: url("/home/home-hero-flag-mission.png");
   --home-sponsors-image: url("/home/home-sponsors-city.png");
   --home-trusted-image: url("/home/home-trusted-mountain.png");
   --home-community-image: url("/home/home-community-group.png");
@@ -495,25 +495,10 @@ img.brandMarkImg--header {
   box-shadow: 0 22px 50px color-mix(in srgb, #000 30%, transparent);
 }
 .homeHeroBackdrop__image {
-  position: absolute;
-  inset: 0;
-  background-color: var(--color-bg-muted);
-  background-image: var(--home-hero-image, url("/brand/home-hero-placeholder.svg"));
-  background-size: cover;
-  background-position: center 36%;
-  transform: scale(1.02);
-  filter: saturate(1.08) contrast(1.06);
+  display: none;
 }
 .homeHeroBackdrop__scrim {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, #030609 80%, transparent) 0%,
-    color-mix(in srgb, #030609 32%, transparent) 34%,
-    color-mix(in srgb, #030609 78%, transparent) 100%
-  );
+  display: none;
 }
 :root[data-color-scheme="light"] .homeHeroBackdrop__scrim {
   background: linear-gradient(
@@ -1366,6 +1351,10 @@ img.brandMarkImg--header {
 .directoryCategoryPickDisclosure > summary {
   cursor: pointer;
   list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.06em;
@@ -1376,6 +1365,14 @@ img.brandMarkImg--header {
 }
 .directoryCategoryPickDisclosure > summary::-webkit-details-marker {
   display: none;
+}
+.directoryCategoryPickDisclosureChevron {
+  font-size: 14px;
+  line-height: 1;
+  transition: transform 160ms ease;
+}
+.directoryCategoryPickDisclosure[open] .directoryCategoryPickDisclosureChevron {
+  transform: rotate(180deg);
 }
 .directoryCategoryPickDisclosure[open] > summary {
   border-bottom: 1px solid var(--color-border-soft);
@@ -2211,33 +2208,37 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 :root[data-color-scheme="dark"] .bottomNav {
   background: linear-gradient(
     165deg,
-    color-mix(in srgb, #1a1f2a 92%, #0f1218 8%) 0%,
-    color-mix(in srgb, #252c39 88%, #11151d 12%) 100%
+    color-mix(in srgb, var(--color-surface-card) 94%, #0b0d12 6%) 0%,
+    color-mix(in srgb, var(--color-surface-card-deep) 90%, #0b0d12 10%) 100%
   );
-  border-color: color-mix(in srgb, #cdd5e2 14%, transparent);
-  box-shadow: 0 10px 24px color-mix(in srgb, #000 34%, transparent);
+  border-color: color-mix(in srgb, var(--color-border-subtle) 80%, transparent);
+  box-shadow:
+    0 10px 24px color-mix(in srgb, #000 34%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #ffffff 7%, transparent);
 }
 
 :root[data-color-scheme="dark"] .navItem {
-  color: color-mix(in srgb, #e7edf9 82%, #b2bfd5 18%);
+  color: color-mix(in srgb, var(--color-text-secondary) 90%, #ffffff 10%);
 }
 
 :root[data-color-scheme="dark"] .navItem:hover,
 :root[data-color-scheme="dark"] .navItem:focus-visible {
-  background: color-mix(in srgb, #ffffff 10%, transparent);
-  border-color: color-mix(in srgb, #dce4f4 20%, transparent);
-  color: #f3f7ff;
+  background: color-mix(in srgb, var(--color-bg-card-hover) 82%, transparent);
+  border-color: color-mix(in srgb, var(--color-border-active) 64%, transparent);
+  color: var(--color-text-primary);
 }
 
 :root[data-color-scheme="dark"] .navItem.isActive {
   background: linear-gradient(
     155deg,
-    color-mix(in srgb, #b8f0c4 86%, #74d68a 14%) 0%,
-    color-mix(in srgb, #8ae3a1 84%, #4cbf73 16%) 100%
+    color-mix(in srgb, var(--color-accent-soft) 86%, #0e2016 14%) 0%,
+    color-mix(in srgb, var(--color-accent) 40%, #10261a 60%) 100%
   );
-  color: #103322;
-  border-color: color-mix(in srgb, #8bdca0 70%, #3b8c56 30%);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, #ffffff 24%, transparent), 0 6px 14px color-mix(in srgb, #74d68a 28%, transparent);
+  color: color-mix(in srgb, var(--color-accent-hover) 88%, #e8fff0 12%);
+  border-color: color-mix(in srgb, var(--color-accent) 64%, var(--color-border-subtle) 36%);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, #ffffff 14%, transparent),
+    0 6px 14px color-mix(in srgb, var(--color-accent) 24%, transparent);
 }
 /* End-of-scroll page footer (brand + notes), above bottom padding for the fixed nav dock. */
 .siteFooter {
@@ -3985,6 +3986,21 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   min-height: 268px;
   border: 1px solid var(--color-border-soft);
   cursor: pointer;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+.sponsorPremiumCard:hover {
+  border-color: color-mix(in srgb, var(--sponsor-card-accent, var(--color-accent)) 42%, var(--color-border-soft));
+  box-shadow:
+    0 16px 44px rgba(0, 0, 0, 0.2),
+    0 0 0 1px color-mix(in srgb, var(--sponsor-card-accent, var(--color-accent)) 22%, transparent);
+  transform: translateY(-2px);
+}
+.sponsorPremiumCard:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--sponsor-card-accent, var(--color-accent)) 65%, var(--color-border-strong));
+  outline-offset: 3px;
 }
 .sponsorPremiumCardBg {
   position: absolute;
@@ -4038,28 +4054,95 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 }
 .sponsorPremiumCardTop {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
 }
-.sponsorPremiumTier {
-  font-size: 11px;
+.sponsorPremiumCardBadges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  align-content: flex-start;
+}
+.sponsorPremiumCardTopActions {
+  flex-shrink: 0;
+}
+.sponsorPremiumBadge {
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--color-accent);
-  border: 1px solid color-mix(in srgb, var(--color-accent) 35%, transparent);
+  color: rgba(248, 250, 252, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 999px;
-  padding: 4px 10px;
-  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+  padding: 5px 10px;
+  background: rgba(6, 10, 14, 0.72);
+  line-height: 1.2;
 }
-.sponsorPremiumTag {
+.sponsorPremiumBadge--foundational {
+  color: color-mix(in srgb, var(--color-accent-hover) 88%, #f8fafc 12%);
+  border-color: color-mix(in srgb, var(--color-accent) 42%, rgba(255, 255, 255, 0.2));
+  background: color-mix(in srgb, var(--color-accent) 14%, rgba(6, 10, 14, 0.75));
+}
+.sponsorPremiumBadge--featured {
+  color: #fefce8;
+  border-color: rgba(250, 204, 21, 0.45);
+  background: rgba(113, 63, 18, 0.45);
+}
+.sponsorPremiumBadge--mission {
+  color: #ecfeff;
+  border-color: rgba(34, 211, 238, 0.35);
+  background: rgba(8, 47, 73, 0.55);
+}
+.sponsorPremiumBadge--veteran {
+  color: #f0fdf4;
+  border-color: color-mix(in srgb, var(--color-accent) 38%, rgba(255, 255, 255, 0.2));
+  background: color-mix(in srgb, var(--color-accent) 18%, rgba(6, 10, 14, 0.72));
+}
+.sponsorPremiumBadge--community {
+  color: #faf5ff;
+  border-color: rgba(196, 181, 253, 0.42);
+  background: rgba(76, 29, 149, 0.42);
+}
+.sponsorPremiumMetaChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.sponsorPremiumMetaChip {
   font-size: 11px;
   font-weight: 700;
-  color: rgba(241, 245, 249, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--sponsor-card-accent, var(--color-accent)) 72%, #f8fafc 28%);
+  border: 1px solid color-mix(in srgb, var(--sponsor-card-accent, var(--color-accent)) 35%, rgba(255, 255, 255, 0.2));
   border-radius: 999px;
-  padding: 4px 10px;
-  background: rgba(8, 12, 16, 0.72);
+  padding: 3px 9px;
+  background: rgba(6, 10, 14, 0.45);
+}
+.sponsorPremiumMetaChip--muted {
+  color: rgba(233, 240, 247, 0.88);
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(8, 12, 16, 0.5);
+}
+.sponsorPremiumLocationChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.sponsorPremiumLocationChip {
+  font-size: 11px;
+  font-weight: 650;
+  color: rgba(248, 250, 252, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  padding: 3px 9px;
+  background: rgba(6, 10, 14, 0.55);
 }
 .sponsorPremiumBrand {
   display: grid;
@@ -4095,8 +4178,8 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   }
 }
 .sponsorPremiumLogoShell {
-  width: 58px;
-  height: 58px;
+  width: 96px;
+  height: 96px;
   border-radius: 999px;
   background: rgba(8, 12, 16, 0.88);
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -4114,6 +4197,24 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 .sponsorPremiumLogoShell--tone-darkmono {
   background: rgba(242, 246, 250, 0.98);
 }
+.sponsorPremiumLogoShell--tone-highsat {
+  background: color-mix(in srgb, var(--color-bg-card) 70%, var(--color-accent-soft) 30%);
+  border-color: color-mix(in srgb, var(--color-border-strong) 55%, rgba(255, 255, 255, 0.12));
+}
+/* Dark or black logos on transparent art — light inset so marks stay legible on dark cards */
+.sponsorPremiumLogoShell.sponsorPremiumLogoShell--panel-light {
+  background: #f8fafc;
+  border-color: color-mix(in srgb, var(--color-border-strong) 35%, rgba(15, 23, 42, 0.14));
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.75),
+    0 8px 24px rgba(0, 0, 0, 0.28);
+}
+.sponsorPremiumLogoShell--panel-light .sponsorPremiumLogoImg {
+  filter: none;
+}
+.sponsorPremiumLogoShell--panel-light .sponsorPremiumWordmark {
+  color: #0f172a;
+}
 .sponsorPremiumLogoImg {
   width: 100%;
   height: 100%;
@@ -4121,9 +4222,12 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   max-height: 100%;
   object-fit: contain;
   object-position: center;
-  padding: 4px;
+  padding: 8px;
   box-sizing: border-box;
   border-radius: 999px;
+}
+.sponsorPremiumLogoImg--tone-highsat {
+  filter: saturate(0.95) contrast(1.04);
 }
 :root .sponsorPremiumLogoImg--tone-lightmono {
   filter: invert(1) brightness(0.34) contrast(1.08);
@@ -4157,14 +4261,16 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
+.sponsorPremiumTitleBlock .sponsorPremiumOrgName,
 .sponsorPremiumCopy h4 {
   margin: 0;
-  font-size: clamp(1.1rem, 2.2vw, 1.45rem);
+  font-size: clamp(1.28rem, 2.6vw, 1.72rem);
   font-weight: 800;
-  line-height: 1.25;
+  line-height: 1.2;
   color: #f8fafc;
-  text-transform: uppercase;
-  letter-spacing: 0.055em;
+  text-transform: none;
+  letter-spacing: 0.02em;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.35);
 }
 .sponsorPremiumSubheader {
   margin: 6px 0 0;
@@ -4179,7 +4285,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   font-weight: 700;
   letter-spacing: 0.07em;
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--color-accent) 82%, #f8fafc 18%);
+  color: color-mix(in srgb, var(--sponsor-card-accent, var(--color-accent)) 78%, #f8fafc 22%);
 }
 .sponsorPremiumTagline {
   margin: 0;
@@ -4226,6 +4332,13 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   font-weight: 600;
   text-decoration: none;
   border-radius: var(--radius-input, 10px);
+  color: var(--color-text-primary);
+  background: color-mix(in srgb, var(--color-bg-card) 92%, #ffffff 8%);
+  border: 1px solid color-mix(in srgb, var(--color-border-strong) 65%, transparent);
+}
+.sponsorPremiumVisitBtn:hover {
+  border-color: color-mix(in srgb, var(--sponsor-card-accent, var(--color-accent)) 45%, var(--color-border));
+  color: var(--color-text-primary);
 }
 .sponsorPremiumSocial {
   display: flex;
@@ -4425,6 +4538,9 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   display: grid;
   align-items: end;
 }
+.sponsorProfileHero .sponsorPremiumIndustry {
+  color: color-mix(in srgb, var(--color-accent) 55%, #f8fafc 45%);
+}
 .sponsorProfileIdentity {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -4434,9 +4550,39 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 .sponsorProfileTitle {
   margin: 0;
   color: #f8fafc;
-  text-transform: uppercase;
-  letter-spacing: 0.055em;
+  text-transform: none;
+  letter-spacing: 0.02em;
   font-weight: 800;
+  font-size: clamp(1.35rem, 3vw, 1.85rem);
+  line-height: 1.2;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.35);
+}
+.sponsorProfileHero .sponsorPremiumTagline {
+  color: rgba(248, 250, 252, 0.92);
+}
+.sponsorProfileOutboundLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: var(--radius-input, 10px);
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-bg-subtle);
+  color: var(--color-text-primary);
+  font-size: var(--text-body-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+.sponsorProfileOutboundLink:hover {
+  border-color: color-mix(in srgb, var(--color-accent) 40%, var(--color-border));
+  background: var(--color-bg-card);
+}
+.sponsorProfileLinks {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
 }
 .sponsorProfileGrid {
   display: grid;
@@ -4754,26 +4900,25 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   .footerDockBackdrop { height: calc(60px + env(safe-area-inset-bottom)); }
   .footerNavInner {
     padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
-    justify-content: flex-start;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-  }
-  .footerNavInner::-webkit-scrollbar { display: none; }
-  .bottomNav {
-    gap: 6px;
-    width: max-content;
-    max-width: none;
-    justify-content: flex-start;
+    justify-content: center;
     overflow: visible;
-    padding: 4px 6px;
+  }
+  .bottomNav {
+    gap: 4px;
+    width: 100%;
+    max-width: 100%;
+    justify-content: space-between;
+    overflow: visible;
+    padding: 4px;
   }
   .navItem {
-    min-width: max-content;
-    flex: 0 0 auto;
-    font-size: 12px;
-    padding: 8px 10px;
+    min-width: 0;
+    flex: 1 1 0;
+    font-size: 11px;
+    padding: 8px 6px;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .sponsorTierGrid,
   .sponsorFeaturedGrid {

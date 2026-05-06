@@ -79,7 +79,7 @@ export default function SponsorProfilePage({ slug }) {
               style={
                 sponsorHeroBg
                   ? {
-                      backgroundImage: `linear-gradient(130deg, rgba(6,10,14,0.84), rgba(6,10,14,0.68)), url(${JSON.stringify(sponsorHeroBg)})`,
+                      backgroundImage: `linear-gradient(130deg, rgba(6,10,14,0.84), rgba(6,10,14,0.68)), url('${sponsorHeroBg.replace(/'/g, "%27")}')`,
                       backgroundSize: "cover",
                       backgroundPosition: "center",
                     }
@@ -87,7 +87,9 @@ export default function SponsorProfilePage({ slug }) {
               }
             >
               <div className="sponsorProfileIdentity">
-                <div className="sponsorPremiumLogoShell">
+                <div
+                  className={`sponsorPremiumLogoShell${profile.logoPanelMode === "light" ? " sponsorPremiumLogoShell--panel-light" : ""}`}
+                >
                   {sponsorLogoSrc ? (
                     <img className="sponsorPremiumLogoImg" src={sponsorLogoSrc} alt="" loading="lazy" />
                   ) : (
@@ -109,10 +111,24 @@ export default function SponsorProfilePage({ slug }) {
               </article>
               <article>
                 <h3>Links</h3>
-                <div className="sponsorPremiumSocial">
-                  {profile.socialLinks?.map((item) => (
-                    <a key={item.key} className="sponsorPremiumSocialLink" href={item.url} target="_blank" rel="noopener noreferrer">{item.label}</a>
-                  ))}
+                <div className="sponsorProfileLinks">
+                  {profile.socialLinks?.length ? (
+                    profile.socialLinks.map((item) => (
+                      <a
+                        key={item.key}
+                        className="sponsorProfileOutboundLink"
+                        href={item.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {item.label}
+                      </a>
+                    ))
+                  ) : (
+                    <p style={{ margin: 0, color: "var(--color-text-secondary)", fontSize: "var(--text-body-sm)" }}>
+                      No external links on file yet.
+                    </p>
+                  )}
                 </div>
                 {(profile.additional_links || []).length ? (
                   <>

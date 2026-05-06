@@ -9,6 +9,20 @@ export default function FeaturedSponsorsSection({
   onToggleFavorite,
   onRequestSignIn,
 }) {
+  const deduped = (() => {
+    const seen = new Set();
+    const out = [];
+    for (const s of sponsors) {
+      const k = String(s?.slug || s?.id || "")
+        .trim()
+        .toLowerCase();
+      if (!k || seen.has(k)) continue;
+      seen.add(k);
+      out.push(s);
+    }
+    return out;
+  })();
+
   return (
     <section className="card sponsorSection sponsorFeaturedSection">
       <div className="sponsorSectionHead">
@@ -19,9 +33,9 @@ export default function FeaturedSponsorsSection({
         Curated sponsor spotlights with custom brand visuals, designed to honor each partner identity while staying mission-aligned.
       </p>
       <div className="sponsorFeaturedShowcase">
-        {sponsors.map((sponsor) => (
+        {deduped.map((sponsor) => (
           <FeaturedSponsorCard
-            key={sponsor.id}
+            key={sponsor.slug || sponsor.id}
             sponsor={sponsor}
             favoritesEnabled={favoritesEnabled}
             isFavorite={favoriteKeySet.has(`sponsor:${String(sponsor.slug || sponsor.id || "").trim().toLowerCase()}`)}

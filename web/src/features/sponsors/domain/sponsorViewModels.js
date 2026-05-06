@@ -1,6 +1,7 @@
 import { resolveSponsorDisplayName } from "@/lib/entityDisplayName";
 import { resolveSponsorListingLogoUrl } from "@/lib/sponsors/resolveSponsorListingLogoUrl";
 import { FEATURED_SPONSOR_CARD_BACKGROUNDS } from "@/features/sponsors/data/featuredSponsors";
+import { getSponsorCardPresentation } from "@/features/sponsors/domain/sponsorCardPresentation";
 
 function clean(value) {
   return String(value ?? "").trim();
@@ -134,12 +135,17 @@ export function normalizeSponsorRecord(row = {}) {
     last_enriched_at: clean(row.last_enriched_at),
     warm_variant: clean(row.warm_variant || row.warmVariant || "gold"),
     mission_partner: row.mission_partner == null ? false : !!row.mission_partner,
+    veteran_owned:
+      row.veteran_owned == null && row.veteranOwned == null
+        ? false
+        : !!(row.veteran_owned ?? row.veteranOwned),
     cta_label: clean(row.cta_label || row.ctaLabel),
   };
 }
 
 export function getSponsorCardViewModel(row = {}) {
   const s = normalizeSponsorRecord(row);
+  const presentation = getSponsorCardPresentation(s.slug);
   const fallbackBg =
     FEATURED_SPONSOR_CARD_BACKGROUNDS[s.slug] || FEATURED_SPONSOR_CARD_BACKGROUNDS[s.id] || "";
   const longTrim = String(s.long_description || "").trim();
@@ -153,6 +159,27 @@ export function getSponsorCardViewModel(row = {}) {
   const industryRaw = clean(s.sponsor_category || s.sponsor_type);
   const industry = isIndustryRedundantWithMissionPill(industryRaw, missionPill) ? "" : industryRaw;
   const logoDisplay = resolveSponsorListingLogoUrl(s) || null;
+  const veteranOwned = !!s.veteran_owned || !!presentation.veteranOwnedDefault;
+  const typeLc = String(s.sponsor_type || "").toLowerCase();
+  const isFoundational = typeLc === "foundational_sponsor";
+  const isCommunityPartner = typeLc === "community_partner";
+  const badges = [];
+  if (isFoundational) {
+    badges.push({ key: "foundational", label: "Foundational sponsor" });
+  }
+  if (s.featured) {
+    badges.push({ key: "featured", label: "Featured sponsor" });
+  }
+  if (s.mission_partner) {
+    badges.push({ key: "mission", label: "Mission partner" });
+  }
+  if (isCommunityPartner) {
+    badges.push({ key: "community", label: "Community partner" });
+  }
+  if (veteranOwned) {
+    badges.push({ key: "veteran", label: "Veteran-owned" });
+  }
+  const locationChips = presentation.locationChips?.length ? presentation.locationChips : [];
   return {
     id: s.id,
     slug: s.slug,
@@ -168,6 +195,15 @@ export function getSponsorCardViewModel(row = {}) {
     logoUrl: logoDisplay,
     warmVariant: s.warm_variant || "gold",
     backgroundImageUrl: s.background_image_url || fallbackBg,
+    cardScrimGradient: presentation.cardScrimGradient || "",
+    sponsorAccentColor: presentation.accentColor || "",
+    logoFallbackUrls: Array.isArray(presentation.logoFallbackUrls) ? presentation.logoFallbackUrls : [],
+    logoPanelMode: presentation.logoPanelMode || "auto",
+    missionPartner: !!s.mission_partner,
+    featured: !!s.featured,
+    veteranOwned,
+    badges,
+    locationChips,
     socialLinks: {
       website: validUrl(s.website_url) ? s.website_url : "",
       instagram: platformVerified(s.instagram_url, "instagram.com") ? s.instagram_url : "",
@@ -187,10 +223,12 @@ export function getSponsorCardViewModel(row = {}) {
 
 export function getSponsorProfileViewModel(row = {}) {
   const s = normalizeSponsorRecord(row);
+  const presentation = getSponsorCardPresentation(s.slug);
   const logoDisplay = resolveSponsorListingLogoUrl(s) || "";
   return {
     ...s,
     logo_url: logoDisplay,
+    logoPanelMode: presentation.logoPanelMode || "auto",
     socialLinks: [
       { key: "website", label: "Website", url: validUrl(s.website_url) ? s.website_url : "" },
       { key: "instagram", label: "Instagram", url: platformVerified(s.instagram_url, "instagram.com") ? s.instagram_url : "" },

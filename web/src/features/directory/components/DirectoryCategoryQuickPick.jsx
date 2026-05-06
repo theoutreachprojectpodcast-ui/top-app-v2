@@ -50,7 +50,10 @@ export default function DirectoryCategoryQuickPick({ value, onChange, collapsibl
 
   return (
     <details className="directoryCategoryPickDisclosure">
-      <summary>Quick Category Focus</summary>
+      <summary>
+        <span>Quick Category Focus</span>
+        <span className="directoryCategoryPickDisclosureChevron" aria-hidden="true">▾</span>
+      </summary>
       {content}
     </details>
   );

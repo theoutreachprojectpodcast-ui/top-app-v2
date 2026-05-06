@@ -7,6 +7,18 @@ import { sanitizeDisplayableImageUrl } from "@/lib/media/safeImageUrl";
 
 const toneCache = new Map();
 
+function googleFaviconUrl(fromUrl) {
+  try {
+    const u = new URL(String(fromUrl || "").trim());
+    if (!/^https?:$/i.test(u.protocol)) return "";
+    const host = u.hostname.replace(/^www\./i, "");
+    if (!host) return "";
+    return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=128`;
+  } catch {
+    return "";
+  }
+}
+
 function assessLogoToneFromElement(imgEl) {
   if (!imgEl?.naturalWidth || !imgEl?.naturalHeight) return "normal";
   const canvas = document.createElement("canvas");
@@ -43,6 +55,7 @@ function assessLogoToneFromElement(imgEl) {
 
     if (avgLuma >= 0.9 && avgSat <= 0.11) return "lightmono";
     if (avgLuma <= 0.16 && avgSat <= 0.15) return "darkmono";
+    if (avgSat >= 0.42 && avgLuma >= 0.2 && avgLuma <= 0.85) return "highsat";
     return "normal";
   } catch {
     return "normal";
@@ -121,9 +134,19 @@ export default function FeaturedSponsorCard({
   const hasListingBg = !!safeBg;
   const displayName = resolveSponsorDisplayName(sponsor.name || "") || String(sponsor.name || "").trim() || "Partner";
   const logoCandidates = useMemo(() => {
-    const u = sanitizeDisplayableImageUrl(String(sponsor.logoUrl || "").trim());
-    return u ? [u] : [];
-  }, [sponsor.logoUrl]);
+    const seen = new Set();
+    const out = [];
+    const push = (raw) => {
+      const u = sanitizeDisplayableImageUrl(String(raw || "").trim());
+      if (!u || seen.has(u)) return;
+      seen.add(u);
+      out.push(u);
+    };
+    push(sponsor.logoUrl);
+    for (const extra of sponsor.logoFallbackUrls || []) push(extra);
+    push(googleFaviconUrl(sponsor.ctaUrl));
+    return out;
+  }, [sponsor.logoUrl, sponsor.logoFallbackUrls, sponsor.ctaUrl]);
   const socialLinkItems = useMemo(() => {
     const social = sponsor.socialLinks || {};
     const out = [];
@@ -141,12 +164,22 @@ export default function FeaturedSponsorCard({
   const logoSrc = logoCandidates[logoIndex] || "";
   const profileHref = `/sponsors/${encodeURIComponent(sponsor.slug || sponsor.id || "")}`;
   const favoriteKey = String(sponsor.slug || sponsor.id || "").trim().toLowerCase();
-  const logoToneClass = logoTone === "normal" ? "" : ` sponsorPremiumLogoImg--tone-${logoTone}`;
-  const shellToneClass = logoTone === "normal" ? "" : ` sponsorPremiumLogoShell--tone-${logoTone}`;
+  const useLightLogoPanel = sponsor.logoPanelMode === "light";
+  const logoToneClass =
+    useLightLogoPanel || logoTone === "normal" ? "" : ` sponsorPremiumLogoImg--tone-${logoTone}`;
+  const shellToneClass = useLightLogoPanel
+    ? " sponsorPremiumLogoShell--panel-light"
+    : logoTone === "normal"
+      ? ""
+      : ` sponsorPremiumLogoShell--tone-${logoTone}`;
+  const accentStyle = sponsor.sponsorAccentColor
+    ? { "--sponsor-card-accent": sponsor.sponsorAccentColor }
+    : undefined;
 
   return (
     <article
       className={`torpListingCard sponsorPremiumCard sponsorPremiumCard--${warm}`}
+      style={accentStyle}
       role="button"
       tabIndex={0}
       onClick={() => router.push(profileHref)}
@@ -163,40 +196,51 @@ export default function FeaturedSponsorCard({
         style={hasListingBg ? { backgroundImage: `url('${safeBg.replace(/'/g, "%27")}')` } : undefined}
         aria-hidden
       />
-      <div className="sponsorPremiumCardScrim" aria-hidden />
+      <div
+        className="sponsorPremiumCardScrim"
+        style={sponsor.cardScrimGradient ? { background: sponsor.cardScrimGradient } : undefined}
+        aria-hidden
+      />
       <div className="sponsorPremiumCardInner">
         <div className="sponsorPremiumCardTop">
-          <span className="sponsorPremiumTier">{sponsor.tierLabel || "Partner"}</span>
-          <span className="sponsorPremiumTag">{sponsor.tag || "Mission-aligned"}</span>
+          <div className="sponsorPremiumCardBadges" aria-label="Sponsor recognition">
+            {(Array.isArray(sponsor.badges) ? sponsor.badges : []).map((b) => (
+              <span key={b.key} className={`sponsorPremiumBadge sponsorPremiumBadge--${b.key}`}>
+                {b.label}
+              </span>
+            ))}
+          </div>
           {favoriteKey ? (
-            favoritesEnabled ? (
-              <button
-                type="button"
-                className={`favBtn sponsorPremiumFavBtn${isFavorite ? " favBtn--on" : ""}`}
-                onClick={(event) => {
-                  event.preventDefault();
-                  event.stopPropagation();
-                  onToggleFavorite?.(`sponsor:${favoriteKey}`);
-                }}
-                aria-pressed={isFavorite}
-                aria-label={isFavorite ? "Remove sponsor from saved" : "Save sponsor"}
-              >
-                {isFavorite ? "★" : "☆"}
-              </button>
-            ) : onRequestSignIn ? (
-              <button
-                type="button"
-                className="favBtn favBtn--muted sponsorPremiumFavBtn"
-                onClick={(event) => {
-                  event.preventDefault();
-                  event.stopPropagation();
-                  onRequestSignIn();
-                }}
-                aria-label="Sign in to save sponsor"
-              >
-                ☆
-              </button>
-            ) : null
+            <div className="sponsorPremiumCardTopActions">
+              {favoritesEnabled ? (
+                <button
+                  type="button"
+                  className={`favBtn sponsorPremiumFavBtn${isFavorite ? " favBtn--on" : ""}`}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    onToggleFavorite?.(`sponsor:${favoriteKey}`);
+                  }}
+                  aria-pressed={isFavorite}
+                  aria-label={isFavorite ? "Remove sponsor from saved" : "Save sponsor"}
+                >
+                  {isFavorite ? "★" : "☆"}
+                </button>
+              ) : onRequestSignIn ? (
+                <button
+                  type="button"
+                  className="favBtn favBtn--muted sponsorPremiumFavBtn"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    onRequestSignIn();
+                  }}
+                  aria-label="Sign in to save sponsor"
+                >
+                  ☆
+                </button>
+              ) : null}
+            </div>
           ) : null}
         </div>
         <div className="sponsorPremiumBrand">
@@ -231,9 +275,25 @@ export default function FeaturedSponsorCard({
               )}
             </div>
             <div className="sponsorPremiumTitleBlock">
-              <h4>{displayName}</h4>
+              <h4 className="sponsorPremiumOrgName">{displayName}</h4>
               {sponsor.cardSubheader ? <p className="sponsorPremiumSubheader">{sponsor.cardSubheader}</p> : null}
-              {sponsor.industry ? <p className="sponsorPremiumIndustry">{sponsor.industry}</p> : null}
+              {sponsor.industry || sponsor.tag ? (
+                <div className="sponsorPremiumMetaChips">
+                  {sponsor.industry ? <span className="sponsorPremiumMetaChip">{sponsor.industry}</span> : null}
+                  {sponsor.tag && sponsor.tag !== sponsor.industry ? (
+                    <span className="sponsorPremiumMetaChip sponsorPremiumMetaChip--muted">{sponsor.tag}</span>
+                  ) : null}
+                </div>
+              ) : null}
+              {Array.isArray(sponsor.locationChips) && sponsor.locationChips.length ? (
+                <div className="sponsorPremiumLocationChips" aria-label="Locations">
+                  {sponsor.locationChips.map((loc) => (
+                    <span key={loc} className="sponsorPremiumLocationChip">
+                      {loc}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
             </div>
           </div>
           <div className="sponsorPremiumBrandBody">

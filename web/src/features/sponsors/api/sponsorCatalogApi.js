@@ -41,6 +41,7 @@ function fallbackRows() {
       is_active: true,
       sponsor_status: "active",
       mission_partner: !!item.missionPartner,
+      veteran_owned: !!item.veteranOwned,
       display_order: idx + 1,
       enrichment_status: "seed",
       verified: true,

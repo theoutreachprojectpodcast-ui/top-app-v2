@@ -155,7 +155,7 @@
   --space-6: 24px;
   --space-8: 32px;
 
-  --bg-texture-image: url("/assets/backgrounds/bg_topographic_brand.png");
+  --bg-texture-image: url("/home/home-hero-flag-mission.png");
 
   /* Subtle neutral noise (SVG feTurbulence) */
   --texture-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
@@ -325,6 +325,15 @@ html:has(.appShell--podcast) body::after {
 html.dark:has(.appShell--podcast) body::after,
 html[data-color-scheme="dark"]:has(.appShell--podcast) body::after {
   opacity: 0.1;
+}
+
+/* Main app (TopApp home + in-app tabs): stronger background art vs global texture */
+html:has(main.topApp):not(:has(.appShell--podcast)) body::after {
+  opacity: 0.26;
+}
+html.dark:has(main.topApp):not(:has(.appShell--podcast)) body::after,
+html[data-color-scheme="dark"]:has(main.topApp):not(:has(.appShell--podcast)) body::after {
+  opacity: 0.32;
 }
 
 h1,

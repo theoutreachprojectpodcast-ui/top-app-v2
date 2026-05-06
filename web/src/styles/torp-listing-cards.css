@@ -228,7 +228,7 @@
   flex: 1;
 }
 
-/* Sponsor: shared family marker + logo size aligned to nonprofit (64px) */
+/* Sponsor: shared family marker + logo (enlarged for sponsor roster legibility) */
 .sponsorPremiumCard.torpListingCard {
   border-radius: var(--radius-card, 18px);
 }
@@ -238,6 +238,6 @@
 }
 
 .sponsorPremiumLogoShell {
-  width: 64px;
-  height: 64px;
+  width: 96px;
+  height: 96px;
 }
