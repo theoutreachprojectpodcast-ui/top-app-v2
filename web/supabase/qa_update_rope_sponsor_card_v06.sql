@@ -10,6 +10,9 @@ alter table if exists public.sponsors_catalog
 alter table if exists public.sponsors_catalog
   add column if not exists mission_partner boolean not null default false;
 
+alter table if exists public.sponsors_catalog
+  add column if not exists social_links jsonb;
+
 update public.sponsors_catalog
 set
   name = 'Rope Solutions',
@@ -32,6 +35,14 @@ set
   instagram_url = 'https://www.instagram.com/ropesolutionsofficial/',
   facebook_url = 'https://www.facebook.com/ROPESolutionsLLC',
   youtube_url = null,
+  social_links = jsonb_strip_nulls(
+    jsonb_build_object(
+      'linkedin', 'https://www.linkedin.com/company/rope-solutions-llc/',
+      'instagram', 'https://www.instagram.com/ropesolutionsofficial/',
+      'facebook', 'https://www.facebook.com/ROPESolutionsLLC',
+      'youtube', null
+    )
+  ),
   sponsor_scope = 'app',
   sponsor_status = 'active',
   featured = true,
