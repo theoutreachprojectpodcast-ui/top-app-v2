@@ -1,24 +1,12 @@
 import { createSupabaseReadClient } from "@/lib/supabase/readServiceClient";
 import {
   filterAppSponsorRows,
-  isExcludedFromAppSponsorsHubSlug,
   listSponsorsCatalogWithClient,
   mergeSponsorEnrichmentForRows,
 } from "@/features/sponsors/api/sponsorCatalogApi";
 import { normalizeSponsorRecord } from "@/features/sponsors/domain/sponsorViewModels";
 
 export const runtime = "nodejs";
-
-function isBlockedAppSponsorRow(row) {
-  const slug = String(row?.slug || "").trim().toLowerCase();
-  const name = String(row?.name || "").trim().toLowerCase();
-  const website = String(row?.website_url || row?.website || "").trim().toLowerCase();
-  return (
-    slug.includes("iron-soldiers") ||
-    name.includes("iron soldiers") ||
-    website.includes("ironsoldierscoffee")
-  );
-}
 
 export async function GET(request) {
   const supabase = createSupabaseReadClient();
@@ -34,9 +22,6 @@ export async function GET(request) {
   if (slug?.trim()) {
     const slugKey = slug.trim();
     const slugScope = scope === "podcast" ? "podcast" : "app";
-    if (slugScope === "app" && isExcludedFromAppSponsorsHubSlug(slugKey)) {
-      return Response.json({ ok: true, row: null });
-    }
     let q = supabase.from("sponsors_catalog").select("*").eq("slug", slugKey);
     if (slugScope === "podcast") {
       q = q.eq("sponsor_scope", "podcast").eq("is_active", true);
@@ -49,14 +34,11 @@ export async function GET(request) {
     const { data, error } = await q.maybeSingle();
     if (error) return Response.json({ ok: false, error: error.message }, { status: 500 });
     if (!data) return Response.json({ ok: true, row: null });
-    if (slugScope === "app" && isBlockedAppSponsorRow(data)) {
-      return Response.json({ ok: true, row: null });
-    }
     const [row] = await mergeSponsorEnrichmentForRows(supabase, [normalizeSponsorRecord(data)]);
     return Response.json({ ok: true, row });
   }
 
   const rows = await listSponsorsCatalogWithClient(supabase, { sponsorScope: scope });
-  const out = scope === "app" ? filterAppSponsorRows(rows).filter((row) => !isBlockedAppSponsorRow(row)) : rows;
+  const out = scope === "app" ? filterAppSponsorRows(rows) : rows;
   return Response.json({ ok: true, rows: out });
 }

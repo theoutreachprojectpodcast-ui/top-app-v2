@@ -7,46 +7,22 @@ import {
 } from "@/features/sponsors/domain/sponsorViewModels";
 
 const SPONSOR_TABLE = "sponsors_catalog";
-/** Foundational sponsors shown on `/sponsors` (app scope). Keep in sync with `sponsor_v06_scope_split.sql`. */
-const MAIN_SPONSOR_ALLOWED_SLUGS = ["wars-end-merch", "rope-solutions"];
-
-/**
- * Slugs that must never appear on the main `/sponsors` hub (e.g. podcast-only partners).
- * Keep in sync with `web/supabase/qa_sponsor_iron_soldiers_podcast_scope.sql`.
- */
-const APP_SPONSORS_PAGE_EXCLUDED_SLUGS = new Set([
-  "iron-soldiers-coffee-company",
-  "iron-soldiers",
-  "iron-soldiers-coffee",
-  "iron-soldiers-coffee-co",
-  "iron-soldiers-coffee-company-llc",
-]);
 
 export function isExcludedFromAppSponsorsHubSlug(slug) {
-  const key = String(slug || "").trim().toLowerCase();
-  if (!key) return false;
-  if (APP_SPONSORS_PAGE_EXCLUDED_SLUGS.has(key)) return true;
-  return key.includes("iron-soldiers");
-}
-
-function isExcludedFromAppSponsorsHubRow(row) {
-  const slug = String(row?.slug || "").trim().toLowerCase();
-  if (isExcludedFromAppSponsorsHubSlug(slug)) return true;
-  const name = String(row?.name || "").trim().toLowerCase();
-  if (name.includes("iron soldiers")) return true;
-  const website = String(row?.website_url || row?.website || "").trim().toLowerCase();
-  if (website.includes("ironsoldierscoffee")) return true;
   return false;
 }
 
 export function filterAppSponsorRows(rows) {
-  return (Array.isArray(rows) ? rows : []).filter((r) => !isExcludedFromAppSponsorsHubRow(r));
+  return (Array.isArray(rows) ? rows : []).filter((r) => {
+    const scope = String(r?.sponsor_scope || "").trim().toLowerCase();
+    const type = String(r?.sponsor_type || "").trim().toLowerCase();
+    const active = r?.is_active == null ? true : !!r.is_active;
+    return (scope === "" || scope === "app") && type === "foundational_sponsor" && active;
+  });
 }
 
 function fallbackRows() {
-  const seed = FEATURED_SPONSORS.filter(
-    (item) => !APP_SPONSORS_PAGE_EXCLUDED_SLUGS.has(String(item?.id || "").trim().toLowerCase()),
-  );
+  const seed = FEATURED_SPONSORS;
   return seed.map((item, idx) =>
     normalizeSponsorRecord({
       ...item,
@@ -120,8 +96,7 @@ export async function listSponsorsCatalogWithClient(supabase, opts = {}) {
     q = q
       .or("sponsor_scope.is.null,sponsor_scope.eq.app")
       .eq("sponsor_type", "foundational_sponsor")
-      .eq("is_active", true)
-      .in("slug", MAIN_SPONSOR_ALLOWED_SLUGS);
+      .eq("is_active", true);
   }
   const { data, error } = await q
     .order("display_order", { ascending: true, nullsFirst: false })

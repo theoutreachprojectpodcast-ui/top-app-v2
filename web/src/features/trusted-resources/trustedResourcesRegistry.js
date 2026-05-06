@@ -126,7 +126,7 @@ export const TRUSTED_RESOURCE_CANONICAL_RECORDS = [
     eins: ["993469766"],
     nameKeys: ["back country heroes", "backcountryheroes"],
     slug: "back-country-heroes",
-    displayName: "Back Country Heroes",
+    displayName: "Backcountry Heroes",
     trustedResourceCategoryKey: "veteransMilitary",
     shortDescription:
       "Provides outdoor sporting opportunities that build camaraderie, independence, and mental/physical healing for veterans, first responders, and families.",
@@ -153,7 +153,7 @@ export const TRUSTED_RESOURCE_CANONICAL_RECORDS = [
     eins: ["412739043"],
     nameKeys: ["hero's journey healing foundation", "heros journey healing foundation", "herosjourneyhealingfoundation"],
     slug: "heros-journey-healing-foundation",
-    displayName: "Hero’s Journey Healing Foundation",
+    displayName: "Heroes Journey Healing Foundation",
     trustedResourceCategoryKey: "healthWellness",
     shortDescription:
       "Provides free therapeutic adventures and community-based healing support for veterans, first responders, healthcare professionals, and spouses.",
