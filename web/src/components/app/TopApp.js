@@ -677,23 +677,23 @@ function TopAppInner({ initialNav = "home" }) {
               </div>
 
               <div className="welcomeActionLayout">
-                <button className="card action welcomeSponsorsFeatured welcomeActionCard welcomeActionCard--sponsors" onClick={goToSponsorsHub} type="button">
-                  <AppIcon name="sponsors" />
-                  <span className="welcomeActionLabel">Sponsors</span>
-                  <span className="welcomeActionHint">Partner page — open packages from there</span>
-                </button>
-                <div className="welcomeActionTriplet">
-                  <button className="card action welcomeTripletBtn welcomeActionCard welcomeActionCard--trusted" onClick={() => { setNav("trusted"); loadTrusted(true); }} type="button">
+                <div className="welcomeActionList">
+                  <button className="card action welcomeActionCard welcomeActionCard--uniform welcomeActionCard--sponsors" onClick={goToSponsorsHub} type="button">
+                    <AppIcon name="sponsors" />
+                    <span className="welcomeActionLabel">Sponsors</span>
+                    <span className="welcomeActionHint">Partner page — open packages from there</span>
+                  </button>
+                  <button className="card action welcomeActionCard welcomeActionCard--uniform welcomeActionCard--trusted" onClick={() => { setNav("trusted"); loadTrusted(true); }} type="button">
                     <AppIcon name="trusted" />
                     <span className="welcomeActionLabel">Trusted Resources</span>
                     <span className="welcomeActionHint">Real help. Real impact.</span>
                   </button>
-                  <button className="card action welcomeTripletBtn welcomeActionCard welcomeActionCard--community" onClick={openCommunity} type="button">
+                  <button className="card action welcomeActionCard welcomeActionCard--uniform welcomeActionCard--community" onClick={openCommunity} type="button">
                     <AppIcon name="community" />
                     <span className="welcomeActionLabel">Community</span>
                     <span className="welcomeActionHint">Connect. Share. Support each other.</span>
                   </button>
-                  <button className="card action welcomeTripletBtn welcomeActionCard welcomeActionCard--podcasts" onClick={() => { router.push("/podcasts"); }} type="button">
+                  <button className="card action welcomeActionCard welcomeActionCard--uniform welcomeActionCard--podcasts" onClick={() => { router.push("/podcasts"); }} type="button">
                     <AppIcon name="podcast" />
                     <span className="welcomeActionLabel">Podcasts</span>
                     <span className="welcomeActionHint">Stories that inspire. Voices that matter.</span>

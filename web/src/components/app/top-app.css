@@ -550,15 +550,13 @@ img.brandMarkImg--header {
   position: relative;
   z-index: 1;
   margin: 0;
-  background:
-    linear-gradient(
-      135deg,
-      color-mix(in srgb, #0f281a 74%, transparent) 0%,
-      color-mix(in srgb, #163823 72%, transparent) 36%,
-      color-mix(in srgb, #0f1f16 82%, transparent) 100%
-    );
-  border-color: color-mix(in srgb, var(--color-accent) 32%, var(--color-border-strong) 68%);
-  box-shadow: 0 16px 34px color-mix(in srgb, #000 36%, transparent), inset 0 0 0 1px color-mix(in srgb, var(--color-accent-soft) 26%, transparent);
+  background: linear-gradient(
+    125deg,
+    color-mix(in srgb, var(--color-surface-elevated) 78%, transparent) 0%,
+    color-mix(in srgb, var(--color-surface-card-deep) 74%, transparent) 100%
+  );
+  border-color: var(--color-border-strong);
+  box-shadow: 0 16px 34px color-mix(in srgb, #000 28%, transparent);
   -webkit-backdrop-filter: blur(12px) saturate(1.1);
   backdrop-filter: blur(12px) saturate(1.1);
 }
@@ -1240,21 +1238,10 @@ img.brandMarkImg--header {
   gap: var(--ds-space-4, 16px);
   margin-bottom: var(--ds-space-4, 16px);
 }
-.welcomeSponsorsFeatured {
-  width: 100%;
-  min-height: 72px;
-  padding: var(--ds-space-5, 20px) var(--ds-space-5, 20px);
-  border-radius: var(--radius-card, 16px);
-  border: 1px solid var(--color-border-strong);
-  box-shadow: inset 0 0 0 1px var(--color-border-subtle);
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-end;
-  gap: 4px;
-}
-.welcomeSponsorsFeatured .iconWrap {
-  width: 28px;
-  height: 28px;
+.welcomeActionList {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--ds-space-3, 12px);
 }
 .welcomeActionLabel {
   font-size: clamp(1.05rem, 2.4vw, 1.25rem);
@@ -1266,19 +1253,6 @@ img.brandMarkImg--header {
   font-weight: 650;
   color: color-mix(in srgb, #ffffff 90%, transparent);
   max-width: 52ch;
-}
-.welcomeActionTriplet {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--ds-space-3, 12px);
-}
-.welcomeTripletBtn {
-  min-height: 128px;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-end;
-  gap: 4px;
-  padding: var(--ds-space-4, 16px);
 }
 .welcomeActionCard {
   position: relative;
@@ -1351,6 +1325,16 @@ img.brandMarkImg--header {
 .welcomeActionCard .welcomeActionLabel {
   color: #f9fcff;
   text-shadow: 0 2px 12px color-mix(in srgb, #000 46%, transparent);
+}
+.welcomeActionCard--uniform {
+  width: 100%;
+  min-height: 128px;
+  border-radius: var(--radius-card, 16px);
+  padding: var(--ds-space-4, 16px);
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 4px;
 }
 #home-directory.card {
   background:
@@ -2157,8 +2141,8 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   bottom: 0;
   height: calc(64px + env(safe-area-inset-bottom));
   z-index: 98;
-  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--color-bg-secondary) 70%, transparent) 38%, color-mix(in srgb, var(--color-bg-secondary) 94%, transparent) 100%);
-  border-top: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  background: transparent;
+  border-top: 0;
   pointer-events: none;
 }
 .footerDock {
@@ -2169,7 +2153,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   z-index: 99;
   background: transparent;
   border-top: 0;
-  backdrop-filter: blur(14px) saturate(1.06);
+  backdrop-filter: none;
   overflow: visible;
 }
 .footerNavInner {
@@ -2182,19 +2166,23 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  width: min(760px, 100%);
-  max-width: 100%;
+  width: fit-content;
+  max-width: min(760px, 100%);
   margin: 0 auto;
-  background: linear-gradient(160deg, color-mix(in srgb, #ffffff 34%, transparent), color-mix(in srgb, var(--color-bg-card) 52%, transparent));
-  border: 1px solid color-mix(in srgb, var(--color-border-soft) 72%, transparent);
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--color-bg-card) 94%, #ffffff 6%) 0%,
+    color-mix(in srgb, var(--color-bg-card-hover) 90%, #ffffff 10%) 100%
+  );
+  border: 1px solid color-mix(in srgb, var(--color-border-soft) 78%, transparent);
   border-radius: calc(var(--radius-pill) + 8px);
-  padding: 6px;
-  box-shadow: 0 8px 26px color-mix(in srgb, #000 20%, transparent);
+  padding: 6px 8px;
+  box-shadow: 0 8px 18px color-mix(in srgb, #000 14%, transparent);
 }
 .navItem {
-  background: linear-gradient(165deg, color-mix(in srgb, var(--color-bg-card) 88%, #ffffff 12%), color-mix(in srgb, var(--color-bg-card-hover) 90%, #ffffff 10%));
+  background: transparent;
   color: var(--color-text-secondary);
-  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 84%, #ffffff 16%);
+  border: 1px solid transparent;
   min-height: 44px;
   min-width: 108px;
   border-radius: var(--radius-pill);
@@ -4611,10 +4599,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   .homeHeroBackdrop__card.cardHero {
     padding: 16px 14px;
   }
-  .welcomeActionTriplet {
-    grid-template-columns: 1fr;
-  }
-  .welcomeTripletBtn {
+  .welcomeActionCard--uniform {
     min-height: 104px;
   }
   .moderationQueuePreviewRow,
@@ -4738,12 +4723,13 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   .footerNavInner { padding: 8px 0 calc(8px + env(safe-area-inset-bottom)); }
   .bottomNav {
     gap: 6px;
-    width: 100%;
+    width: fit-content;
+    max-width: 100%;
     justify-content: flex-start;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    padding: 2px 2px 4px;
+    padding: 4px 6px calc(6px + env(safe-area-inset-bottom));
   }
   .bottomNav::-webkit-scrollbar { display: none; }
   .navItem {
