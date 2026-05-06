@@ -617,7 +617,7 @@ function TopAppInner({ initialNav = "home" }) {
       <div className="topbarOcclusion" aria-hidden="true" />
 
       {(nav === "home" || nav === "community") && (
-        <section className="shell">
+        <section className={nav === "home" ? "shell shell--home" : "shell"}>
           {nav === "home" && (
             <>
               <div className="homeHeroBackdrop">

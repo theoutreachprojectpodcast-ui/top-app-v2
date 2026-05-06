@@ -472,6 +472,9 @@ img.brandMarkImg--header {
   display: grid;
   gap: var(--ds-section-gap, 24px);
 }
+.shell--home {
+  gap: var(--ds-space-3, 12px);
+}
 .card {
   background: linear-gradient(180deg, var(--color-surface-card) 0%, var(--color-surface-card-deep) 100%);
   border: 1px solid var(--color-border-subtle);
@@ -491,7 +494,7 @@ img.brandMarkImg--header {
   position: relative;
   border-radius: var(--radius-card);
   overflow: hidden;
-  min-height: clamp(320px, 45vw, 460px);
+  min-height: clamp(280px, 40vw, 420px);
   box-shadow: 0 22px 50px color-mix(in srgb, #000 30%, transparent);
 }
 .homeHeroBackdrop__image {
@@ -514,15 +517,15 @@ img.brandMarkImg--header {
   display: flex;
   flex-direction: column;
   gap: 0;
-  padding: clamp(14px, 2vw, 20px);
+  padding: clamp(8px, 1.4vw, 14px);
 }
 /* When profile progress + welcome card stack: one opaque shell so flex gap is not transparent over the dark hero scrim; match .card surfaces (not --color-bg-app) */
 .homeHeroBackdrop__welcomeBundle {
   display: flex;
   flex-direction: column;
-  gap: var(--ds-space-3, 12px);
+  gap: var(--ds-space-2, 8px);
   width: 100%;
-  padding: var(--ds-space-3, 12px);
+  padding: var(--ds-space-2, 8px);
   border-radius: var(--radius-card);
   background: linear-gradient(180deg, var(--color-surface-card) 0%, var(--color-surface-card-deep) 100%);
   border: 1px solid var(--color-border-soft);
@@ -531,19 +534,32 @@ img.brandMarkImg--header {
 .homeHeroBackdrop__welcomeBundle .homeHeroBackdrop__card.cardHero {
   margin: 0;
 }
+/* Welcome copy sits on the photo (no glass panel); bundle path keeps opaque shell behind the card */
 .homeHeroBackdrop__card.cardHero {
   position: relative;
   z-index: 1;
   margin: 0;
-  background: linear-gradient(
-    125deg,
-    color-mix(in srgb, var(--color-surface-elevated) 78%, transparent) 0%,
-    color-mix(in srgb, var(--color-surface-card-deep) 74%, transparent) 100%
-  );
-  border-color: var(--color-border-strong);
-  box-shadow: 0 16px 34px color-mix(in srgb, #000 28%, transparent);
-  -webkit-backdrop-filter: blur(12px) saturate(1.1);
-  backdrop-filter: blur(12px) saturate(1.1);
+  padding: var(--ds-space-4, 16px) var(--ds-space-4, 16px);
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+/* Direct hero card only: readable type on busy photography */
+.homeHeroBackdrop__content > .homeHeroBackdrop__card.cardHero .introTagline {
+  color: color-mix(in srgb, #f4f8fb 88%, var(--color-accent) 12%);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+}
+.homeHeroBackdrop__content > .homeHeroBackdrop__card.cardHero .homeWelcomeCopy h2 {
+  color: #f8fafb;
+  text-shadow:
+    0 2px 14px rgba(0, 0, 0, 0.45),
+    0 1px 2px rgba(0, 0, 0, 0.65);
+}
+.homeHeroBackdrop__content > .homeHeroBackdrop__card.cardHero .homeWelcomeLead {
+  color: color-mix(in srgb, #f4f8fb 90%, var(--color-text-secondary) 10%);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
 }
 
 /* Profile completion — home hero (subtle green, above welcome card) */
@@ -4769,13 +4785,13 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 }
 @media (max-width: 760px) {
   .homeHeroBackdrop {
-    min-height: clamp(240px, 56vw, 340px);
+    min-height: clamp(220px, 52vw, 320px);
   }
   .homeHeroBackdrop__content {
-    padding: 12px;
+    padding: 8px;
   }
   .homeHeroBackdrop__card.cardHero {
-    padding: 16px 14px;
+    padding: 12px;
   }
   .welcomeActionCard--uniform {
     min-height: 104px;

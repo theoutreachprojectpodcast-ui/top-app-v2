@@ -165,11 +165,12 @@ export default function FeaturedSponsorCard({
   const profileHref = `/sponsors/${encodeURIComponent(sponsor.slug || sponsor.id || "")}`;
   const favoriteKey = String(sponsor.slug || sponsor.id || "").trim().toLowerCase();
   const useLightLogoPanel = sponsor.logoPanelMode === "light";
+  const lockLogoShellDefault = sponsor.logoPanelMode === "dark";
   const logoToneClass =
-    useLightLogoPanel || logoTone === "normal" ? "" : ` sponsorPremiumLogoImg--tone-${logoTone}`;
+    useLightLogoPanel || lockLogoShellDefault || logoTone === "normal" ? "" : ` sponsorPremiumLogoImg--tone-${logoTone}`;
   const shellToneClass = useLightLogoPanel
     ? " sponsorPremiumLogoShell--panel-light"
-    : logoTone === "normal"
+    : lockLogoShellDefault || logoTone === "normal"
       ? ""
       : ` sponsorPremiumLogoShell--tone-${logoTone}`;
   const accentStyle = sponsor.sponsorAccentColor

@@ -2,13 +2,20 @@
  * Featured sponsors — offline fallback when `sponsors_catalog` is empty or unreachable.
  * Card hero backgrounds: `/public/sponsors/` (used when DB `background_image_url` is empty).
  *
- * Brain Treatment Center NoVA / Alexandria / Ashburn are represented as **one** foundational card
- * with location chips (matches public messaging as a single regional brand).
+ * Brain Treatment Center — California (Danville) foundational card with regional location chips.
  */
 
 /** Official War's End wordmark (brand-provided asset on Squarespace CDN). */
 export const WARS_END_OFFICIAL_LOGO_URL =
   "https://images.squarespace-cdn.com/content/v1/6959573fd567e738e7c613f3/cfd220a6-7daf-4845-8d83-fdb8c2ffa128/ChatGPT+Image+Jan+7%2C+2026%2C+08_37_51+PM.png?format=2500w";
+
+/** Eduardo Pico Designs monogram (Shopify CDN). */
+export const EDUARDO_PICO_DESIGNS_LOGO_URL =
+  "https://eduardopicodesigns.com/cdn/shop/files/eduardo_pico_logo.png?v=1775735693&width=240";
+
+/** Brain Treatment Center wordmark — white on black PNG (BTC affiliate site; same brand mark as franchise locations). */
+export const BRAIN_TREATMENT_CENTER_LOGO_URL =
+  "https://braincaredanville.com/wp-content/uploads/2023/10/brain-treatment-center-white.png";
 
 export const FEATURED_SPONSORS = [
   {
@@ -65,7 +72,7 @@ export const FEATURED_SPONSORS = [
       "Eduardo Pico Designs is a veteran-owned Texas studio specializing in laser engraving and CNC work — from drinkware and door hangers to custom awards and business-branded products. Each piece is built with craftsmanship, clarity, and pride, supporting mission-driven causes and local nonprofit partners across the community.",
     ctaLabel: "Visit Website",
     ctaUrl: "https://eduardopicodesigns.com/",
-    logoUrl: null,
+    logoUrl: EDUARDO_PICO_DESIGNS_LOGO_URL,
     warmVariant: "copper",
     backgroundImageUrl: "/sponsors/featured-bg-eduardo-pico-designs.png",
     missionPartner: true,
@@ -94,31 +101,34 @@ export const FEATURED_SPONSORS = [
     socialLinks: {},
   },
   {
-    id: "brain-treatment-center-nova",
-    name: "Brain Treatment Center — Northern Virginia",
+    id: "brain-treatment-center-california",
+    name: "Brain Treatment Center — California",
     tag: "Integrative brain & functional health",
     industry: "Health & wellness",
     tierLabel: "Featured sponsor",
-    subtitle: "MeRT and integrative care for veterans, first responders, autism families, and complex brain health needs.",
+    subtitle: "MeRT and integrative care in Danville — for veterans, first responders, autism families, and complex brain health needs.",
     longDescription:
-      "Brain Treatment Center Northern Virginia delivers integrative brain and functional health care — including MeRT (Magnetic e-Resonance Therapy), psychiatry, hyperbaric oxygen therapy, occupational therapy, nutrition, and related services. Veteran-owned and operated, the team serves the National Capital Region with clinics in Alexandria and Ashburn, supporting PTSD, TBI, autism spectrum, depression, anxiety, cognitive recovery, and sports-related brain health with a compassionate, measurement-guided approach.",
+      "Brain Treatment Center Danville delivers integrative brain and functional health care — including MeRT (Magnetic e-Resonance Therapy) and personalized, measurement-guided treatment plans. The team serves the San Francisco Bay Area and Northern California from Danville, supporting PTSD, TBI, autism spectrum, depression, anxiety, cognitive recovery, and sports-related brain health with a compassionate, evidence-informed approach.",
     ctaLabel: "Visit Website",
-    ctaUrl: "https://www.braintreatmentcenterashburn.com/",
-    logoUrl: "/sponsors/brain-treatment-center-logo.svg",
+    ctaUrl: "https://braincaredanville.com/",
+    logoUrl: BRAIN_TREATMENT_CENTER_LOGO_URL,
     warmVariant: "teal",
     backgroundImageUrl: "/sponsors/featured-bg-brain-treatment-center.png",
     missionPartner: true,
     veteranOwned: true,
     featured: true,
-    socialLinks: {
-      instagram: "https://www.instagram.com/braintreatmentcenter_ashburn/",
-    },
+    socialLinks: {},
   },
 ];
 
 /** Default hero art by sponsor slug/id when `sponsors_catalog.background_image_url` is empty. */
-export const FEATURED_SPONSOR_CARD_BACKGROUNDS = Object.fromEntries(
-  FEATURED_SPONSORS.map((s) => [String(s.id || "").trim(), String(s.backgroundImageUrl || "").trim()]).filter(
-    ([, url]) => url,
-  ),
-);
+export const FEATURED_SPONSOR_CARD_BACKGROUNDS = (() => {
+  const map = Object.fromEntries(
+    FEATURED_SPONSORS.map((s) => [String(s.id || "").trim(), String(s.backgroundImageUrl || "").trim()]).filter(
+      ([, url]) => url,
+    ),
+  );
+  const cal = map["brain-treatment-center-california"];
+  if (cal) map["brain-treatment-center-nova"] = cal;
+  return map;
+})();

@@ -224,7 +224,10 @@ export function getSponsorCardViewModel(row = {}) {
 export function getSponsorProfileViewModel(row = {}) {
   const s = normalizeSponsorRecord(row);
   const presentation = getSponsorCardPresentation(s.slug);
-  const logoDisplay = resolveSponsorListingLogoUrl(s) || "";
+  const logoDisplay =
+    resolveSponsorListingLogoUrl(s) ||
+    (Array.isArray(presentation.logoFallbackUrls) ? String(presentation.logoFallbackUrls[0] || "").trim() : "") ||
+    "";
   return {
     ...s,
     logo_url: logoDisplay,
