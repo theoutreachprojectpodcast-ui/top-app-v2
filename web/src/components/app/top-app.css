@@ -6,6 +6,8 @@
   --header-floating-height: 300px;
   --header-fade-height: 56px;
   --home-hero-image: url("/home/home-hero-flag-mission.png");
+  --home-atmosphere-image: url("/home/home-atmosphere-cinematic-scene.png");
+  --header-occlusion-image: url("/home/home-header-flag-horizontal.png");
   --home-sponsors-image: url("/home/home-sponsors-city.png");
   --home-trusted-image: url("/home/home-trusted-mountain.png");
   --home-community-image: url("/home/home-community-group.png");
@@ -14,6 +16,36 @@
   background: transparent;
   color: var(--color-text-primary);
   padding-bottom: 170px;
+}
+.topApp[data-page-atmosphere="home"] {
+  position: relative;
+  isolation: isolate;
+}
+.topApp[data-page-atmosphere="home"]::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 84% 56% at 14% 6%, color-mix(in srgb, #f7c383 22%, transparent), transparent 60%),
+    radial-gradient(ellipse 80% 50% at 82% 16%, color-mix(in srgb, #d7e6f0 22%, transparent), transparent 64%),
+    linear-gradient(180deg, color-mix(in srgb, #131f2e 18%, transparent) 0%, color-mix(in srgb, #101824 44%, transparent) 100%),
+    var(--home-atmosphere-image) 42% 14% / cover no-repeat;
+}
+.topApp[data-page-atmosphere="home"]::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, #fff6e9 20%, transparent) 0%,
+      color-mix(in srgb, #000000 0%, transparent) 34%,
+      color-mix(in srgb, #101824 20%, transparent) 100%
+    );
 }
 .topbar {
   position: fixed;
@@ -35,14 +67,84 @@
   height: calc(var(--header-floating-offset) + var(--header-floating-height) + var(--header-fade-height));
   z-index: 94;
   pointer-events: none;
+  isolation: isolate;
+  /* Gradients only; photo sits in ::before (~10% more visible vs prior single-stack). */
   background:
-    radial-gradient(ellipse 64% 52% at 50% 10%, var(--topbar-occlusion-spot), transparent 72%),
+    radial-gradient(ellipse 60% 46% at 50% 8%, color-mix(in srgb, #ffffff 18%, transparent), transparent 72%),
+    radial-gradient(ellipse 58% 48% at 86% 0%, color-mix(in srgb, #ffffff 9%, transparent), transparent 64%),
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--topbar-gradient-fade, #ffffff) 98%, transparent) 0%,
-      color-mix(in srgb, var(--topbar-gradient-fade, #ffffff) 90%, transparent) 62%,
+      color-mix(in srgb, var(--topbar-gradient-fade, #ffffff) 82%, transparent) 0%,
+      color-mix(in srgb, var(--topbar-gradient-fade, #ffffff) 58%, transparent) 30%,
+      color-mix(in srgb, var(--topbar-gradient-fade, #ffffff) 36%, transparent) 56%,
+      color-mix(in srgb, var(--topbar-gradient-fade, #ffffff) 14%, transparent) 78%,
       transparent 100%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-bg-app) 11%, transparent) 0%,
+      color-mix(in srgb, var(--color-bg-app) 16%, transparent) 100%
     );
+  background-size: auto, auto, auto, auto;
+  background-position: center top, right top, center, center;
+  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat;
+}
+.topbarOcclusion::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--header-occlusion-image) center 38% / cover no-repeat;
+  filter: contrast(1.07) saturate(1.04);
+}
+.topApp[data-page-atmosphere="home"] .topbarOcclusion {
+  background:
+    radial-gradient(ellipse 62% 48% at 48% 8%, color-mix(in srgb, #fff6dc 20%, transparent), transparent 72%),
+    linear-gradient(180deg, color-mix(in srgb, #08111c 22%, transparent) 0%, transparent 76%);
+  background-size: auto, auto;
+  background-position: center top, center;
+  background-repeat: no-repeat, no-repeat;
+}
+.topApp[data-page-atmosphere="home"] .topbarOcclusion::before {
+  background: var(--home-atmosphere-image) 42% 16% / cover no-repeat;
+  filter: contrast(1.05) saturate(1.03);
+}
+/* Podcast header uses its own stacked treatment — no duplicate flag layer. */
+.appShell--podcast .topbarOcclusion::before {
+  display: none;
+}
+.topbarOcclusion::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    transparent 52%,
+    color-mix(in srgb, #ffffff 22%, transparent) 70%,
+    color-mix(in srgb, #ffffff 58%, transparent) 84%,
+    color-mix(in srgb, #ffffff 88%, transparent) 100%
+  );
+}
+.topApp[data-page-atmosphere="home"] .topbarOcclusion::after {
+  background: linear-gradient(
+    180deg,
+    transparent 48%,
+    color-mix(in srgb, #1b2634 24%, transparent) 70%,
+    color-mix(in srgb, #111a25 52%, transparent) 100%
+  );
+}
+:root[data-color-scheme="dark"] .topbarOcclusion::after,
+.dark .topbarOcclusion::after {
+  background: linear-gradient(
+    180deg,
+    transparent 50%,
+    color-mix(in srgb, var(--color-bg-app) 28%, transparent) 68%,
+    color-mix(in srgb, var(--color-bg-app) 62%, transparent) 82%,
+    color-mix(in srgb, var(--color-bg-app) 88%, transparent) 100%
+  );
 }
 .siteContainer {
   width: min(var(--content-max-width), calc(100% - var(--content-gutter)));
@@ -419,6 +521,11 @@ img.brandMarkImg--header {
   -webkit-tap-highlight-color: transparent;
   forced-color-adjust: none;
 }
+:root[data-color-scheme="dark"] img.brandMarkImg--header,
+.dark img.brandMarkImg--header {
+  /* Dark mode: increase OP green vibrance and edge separation over photo header. */
+  filter: saturate(1.28) contrast(1.08) brightness(1.06) drop-shadow(0 2px 10px rgba(0, 0, 0, 0.42));
+}
 .brandTag {
   font-size: 24px;
   color: var(--color-text-secondary);
@@ -494,8 +601,31 @@ img.brandMarkImg--header {
   position: relative;
   border-radius: var(--radius-card);
   overflow: hidden;
-  min-height: clamp(280px, 40vw, 420px);
+  min-height: 0;
   box-shadow: 0 22px 50px color-mix(in srgb, #000 30%, transparent);
+}
+.topApp[data-page-atmosphere="home"] .homeHeroBackdrop {
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, #fff1d8 16%, transparent) 0%,
+      color-mix(in srgb, #152130 20%, transparent) 56%,
+      color-mix(in srgb, #101722 52%, transparent) 100%
+    ),
+    var(--home-atmosphere-image) 46% 22% / cover no-repeat;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #ffffff 22%, transparent),
+    0 18px 38px color-mix(in srgb, #000 22%, transparent);
+}
+.topApp[data-page-atmosphere="home"] .homeHeroBackdrop::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: clamp(100px, 18vh, 200px);
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent 0%, color-mix(in srgb, #101824 55%, transparent) 100%);
 }
 .homeHeroBackdrop__image {
   display: none;
@@ -514,21 +644,37 @@ img.brandMarkImg--header {
   position: relative;
   z-index: 1;
   width: 100%;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   gap: 0;
-  padding: clamp(8px, 1.4vw, 14px);
+  padding: clamp(12px, 2vw, 22px);
 }
-/* When profile progress + welcome card stack: one opaque shell so flex gap is not transparent over the dark hero scrim; match .card surfaces (not --color-bg-app) */
+/* Profile progress + welcome: no outer white/glass shell — stack sits on hero photography */
 .homeHeroBackdrop__welcomeBundle {
   display: flex;
   flex-direction: column;
   gap: var(--ds-space-2, 8px);
   width: 100%;
-  padding: var(--ds-space-2, 8px);
+  padding: var(--ds-space-3, 12px);
   border-radius: var(--radius-card);
-  background: linear-gradient(180deg, var(--color-surface-card) 0%, var(--color-surface-card-deep) 100%);
-  border: 1px solid var(--color-border-soft);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #ffffff 96%, var(--color-bg-card) 4%) 0%,
+    color-mix(in srgb, #f6faf7 92%, var(--color-bg-card) 8%) 100%
+  );
+  border: 1px solid color-mix(in srgb, var(--color-border-soft) 70%, #ffffff 30%);
+  box-shadow: 0 10px 24px color-mix(in srgb, #000 8%, transparent);
+}
+/* Dark mode: bundle uses real card surfaces so semantic text colors stay legible (no light panel + light text). */
+:root[data-color-scheme="dark"] .homeHeroBackdrop__welcomeBundle,
+.dark .homeHeroBackdrop__welcomeBundle {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-bg-card) 94%, var(--color-bg-muted) 6%) 0%,
+    color-mix(in srgb, var(--color-bg-subtle) 78%, var(--color-bg-card) 22%) 100%
+  );
+  border: 1px solid var(--color-border-subtle);
   box-shadow: var(--shadow-card);
 }
 .homeHeroBackdrop__welcomeBundle .homeHeroBackdrop__card.cardHero {
@@ -546,20 +692,21 @@ img.brandMarkImg--header {
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
-/* Direct hero card only: readable type on busy photography */
-.homeHeroBackdrop__content > .homeHeroBackdrop__card.cardHero .introTagline {
-  color: color-mix(in srgb, #f4f8fb 88%, var(--color-accent) 12%);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+/* Hero welcome copy: theme tokens (works on opaque bundle + on page background when card is standalone). */
+.homeHeroBackdrop__content > .homeHeroBackdrop__card.cardHero .introTagline,
+.homeHeroBackdrop__welcomeBundle .homeHeroBackdrop__card.cardHero .introTagline {
+  color: var(--color-text-secondary);
+  text-shadow: none;
 }
-.homeHeroBackdrop__content > .homeHeroBackdrop__card.cardHero .homeWelcomeCopy h2 {
-  color: #f8fafb;
-  text-shadow:
-    0 2px 14px rgba(0, 0, 0, 0.45),
-    0 1px 2px rgba(0, 0, 0, 0.65);
+.homeHeroBackdrop__content > .homeHeroBackdrop__card.cardHero .homeWelcomeCopy h2,
+.homeHeroBackdrop__welcomeBundle .homeHeroBackdrop__card.cardHero .homeWelcomeCopy h2 {
+  color: var(--color-text-primary);
+  text-shadow: none;
 }
-.homeHeroBackdrop__content > .homeHeroBackdrop__card.cardHero .homeWelcomeLead {
-  color: color-mix(in srgb, #f4f8fb 90%, var(--color-text-secondary) 10%);
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
+.homeHeroBackdrop__content > .homeHeroBackdrop__card.cardHero .homeWelcomeLead,
+.homeHeroBackdrop__welcomeBundle .homeHeroBackdrop__card.cardHero .homeWelcomeLead {
+  color: var(--color-text-secondary);
+  text-shadow: none;
 }
 
 /* Profile completion — home hero (subtle green, above welcome card) */
@@ -1364,13 +1511,17 @@ img.brandMarkImg--header {
   margin: 14px 0 10px;
   overflow: hidden;
 }
-.directoryCategoryPickDisclosure > summary {
+.directoryCategoryPickDisclosureToggle {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  border: none;
   cursor: pointer;
-  list-style: none;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+  font-family: inherit;
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.06em;
@@ -1378,19 +1529,24 @@ img.brandMarkImg--header {
   color: var(--color-text-secondary);
   padding: 12px 14px;
   background: color-mix(in srgb, var(--color-accent-soft) 38%, transparent);
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
-.directoryCategoryPickDisclosure > summary::-webkit-details-marker {
-  display: none;
+.directoryCategoryPickDisclosureToggle:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }
 .directoryCategoryPickDisclosureChevron {
   font-size: 14px;
   line-height: 1;
+  flex-shrink: 0;
   transition: transform 160ms ease;
 }
-.directoryCategoryPickDisclosure[open] .directoryCategoryPickDisclosureChevron {
+.directoryCategoryPickDisclosure.isOpen .directoryCategoryPickDisclosureChevron {
   transform: rotate(180deg);
 }
-.directoryCategoryPickDisclosure[open] > summary {
+.directoryCategoryPickDisclosure.isOpen .directoryCategoryPickDisclosureToggle {
   border-bottom: 1px solid var(--color-border-soft);
 }
 .directoryCategoryPick {
@@ -1415,6 +1571,8 @@ img.brandMarkImg--header {
   max-height: 220px;
   overflow-y: auto;
   padding-bottom: 2px;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 .directoryCategoryPickCard {
   text-align: left;
@@ -1432,6 +1590,8 @@ img.brandMarkImg--header {
   font: inherit;
   transition: border-color 160ms ease, box-shadow 160ms ease, transform 120ms ease;
   box-shadow: 0 4px 10px color-mix(in srgb, #000 10%, transparent);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 .directoryCategoryPickCard:hover {
   border-color: color-mix(in srgb, var(--cat-border, var(--color-accent)) 55%, var(--color-border));
@@ -1460,6 +1620,20 @@ img.brandMarkImg--header {
   font-size: 10px;
   color: var(--color-text-muted);
   font-weight: 600;
+}
+@media (max-width: 760px) {
+  .directoryCategoryPickDisclosureToggle {
+    min-height: 48px;
+    padding: 14px 16px;
+  }
+  .directoryCategoryPickGrid {
+    max-height: min(52vh, 340px);
+    gap: 10px;
+  }
+  .directoryCategoryPickCard {
+    min-height: 48px;
+    padding: 12px 12px 11px;
+  }
 }
 .action {
   text-align: left;
@@ -2257,6 +2431,28 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
     0 6px 14px color-mix(in srgb, var(--color-accent) 24%, transparent);
 }
 /* End-of-scroll page footer (brand + notes), above bottom padding for the fixed nav dock. */
+.adminUtilityEntry {
+  width: min(var(--content-max-width), calc(100% - var(--content-gutter)));
+  margin: 8px auto 0;
+  padding: 6px 0 2px;
+}
+.adminUtilityEntryLink {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--color-border-strong) 58%, transparent);
+  background: color-mix(in srgb, var(--color-bg-card) 86%, transparent);
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.03em;
+  text-decoration: none;
+  padding: 6px 12px;
+}
+.adminUtilityEntryLink:hover {
+  color: var(--color-text-primary);
+  border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-border-strong));
+}
 .siteFooter {
   margin-top: 28px;
   padding: 0 0 120px;
@@ -4065,7 +4261,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   padding: var(--ds-space-5, 22px);
   display: grid;
   gap: 16px;
-  min-height: 248px;
+  min-height: 300px;
   align-content: space-between;
 }
 .sponsorPremiumCardTop {
@@ -4167,7 +4363,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 }
 @media (min-width: 768px) {
   .sponsorPremiumBrand {
-    grid-template-columns: minmax(240px, 38%) minmax(0, 1fr);
+    grid-template-columns: minmax(280px, 38%) minmax(0, 1fr);
     column-gap: 28px;
     row-gap: 4px;
   }
@@ -4194,8 +4390,8 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   }
 }
 .sponsorPremiumLogoShell {
-  width: 96px;
-  height: 96px;
+  width: 144px;
+  height: 144px;
   border-radius: 999px;
   background: rgba(8, 12, 16, 0.88);
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -4238,7 +4434,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   max-height: 100%;
   object-fit: contain;
   object-position: center;
-  padding: 8px;
+  padding: 12px;
   box-sizing: border-box;
   border-radius: 999px;
 }
@@ -4268,11 +4464,11 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   filter: invert(1) brightness(1.24) contrast(1.06);
 }
 .sponsorPremiumWordmark {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
   text-align: center;
   line-height: 1.2;
-  padding: 4px;
+  padding: 6px;
   color: var(--color-text-primary);
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -4550,7 +4746,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   color: var(--color-text-secondary);
 }
 .sponsorProfileHero {
-  min-height: 220px;
+  min-height: 280px;
   display: grid;
   align-items: end;
 }
@@ -4785,10 +4981,10 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 }
 @media (max-width: 760px) {
   .homeHeroBackdrop {
-    min-height: clamp(220px, 52vw, 320px);
+    min-height: 0;
   }
   .homeHeroBackdrop__content {
-    padding: 8px;
+    padding: 12px;
   }
   .homeHeroBackdrop__card.cardHero {
     padding: 12px;
@@ -4843,6 +5039,22 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   .topbarOcclusion {
     display: block;
     height: calc(var(--mobile-header-brand-row-height, 140px) + 72px);
+    background-size: auto, auto, auto, auto;
+    background-position: center top, right top, center, center;
+  }
+  .topbarOcclusion::before {
+    background-size: 170% auto;
+    background-position: 58% 22%;
+  }
+  .topApp[data-page-atmosphere="home"]::before {
+    background-position: 36% 9%;
+  }
+  .topApp[data-page-atmosphere="home"] .topbarOcclusion::before {
+    background-size: 190% auto;
+    background-position: 35% 14%;
+  }
+  .topApp[data-page-atmosphere="home"] .homeHeroBackdrop {
+    background-position: 40% 24%;
   }
   .shell {
     padding-top: 16px;
@@ -5051,6 +5263,12 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
       "left"
       "right";
     gap: 8px;
+  }
+  .topApp[data-page-atmosphere="home"]::before {
+    background-position: 33% 8%;
+  }
+  .topApp[data-page-atmosphere="home"] .homeHeroBackdrop {
+    background-position: 36% 26%;
   }
   .topbarCenter {
     display: none;

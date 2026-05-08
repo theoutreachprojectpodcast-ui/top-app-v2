@@ -1,0 +1,175 @@
+/* =============================================================================
+   TOP v0.6 — Page atmosphere: coordinated body layers + content depth
+   Driven by `data-page-atmosphere` on main.topApp (see pageAtmosphere.js).
+   Podcast shell keeps its own full-bleed treatment (.appShell--podcast).
+   ============================================================================= */
+
+/* --- Shared: content cards read against atmospheric backgrounds --- */
+main.topApp:not(.appShell--podcast) .shell > .card:not(.cardHero):not(.action):not(.welcomeActionCard):not(.homeProfileProgressNotice) {
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--color-surface-card) 92%, var(--color-bg-elevated) 8%) 0%,
+    color-mix(in srgb, var(--color-surface-card-deep) 94%, transparent) 100%
+  );
+  border-color: color-mix(in srgb, var(--color-border-subtle) 82%, var(--color-accent-soft) 18%);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #ffffff 55%, transparent),
+    0 14px 36px color-mix(in srgb, var(--color-text-primary) 9%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--color-text-primary) 4%, transparent);
+}
+
+:root[data-color-scheme="dark"] main.topApp:not(.appShell--podcast) .shell > .card:not(.cardHero):not(.action):not(.welcomeActionCard):not(.homeProfileProgressNotice),
+.dark main.topApp:not(.appShell--podcast) .shell > .card:not(.cardHero):not(.action):not(.welcomeActionCard):not(.homeProfileProgressNotice) {
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--color-surface-card) 88%, var(--color-bg-muted) 12%) 0%,
+    color-mix(in srgb, var(--color-surface-card-deep) 92%, transparent) 100%
+  );
+  border-color: color-mix(in srgb, var(--color-border-subtle) 75%, var(--color-accent-soft) 25%);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #ffffff 6%, transparent),
+    0 18px 44px color-mix(in srgb, #000 42%, transparent),
+    0 0 0 1px color-mix(in srgb, #ffffff 5%, transparent);
+}
+
+/* Home (default TopApp): slightly stronger topo continuation + cool atmospheric wash */
+html:has(main.topApp[data-page-atmosphere="home"]):not(:has(.appShell--podcast)) body::before {
+  background:
+    radial-gradient(ellipse 90% 52% at 50% -10%, color-mix(in srgb, var(--color-accent-soft) 14%, transparent), transparent 66%),
+    radial-gradient(ellipse 66% 44% at 8% 16%, color-mix(in srgb, var(--color-bg-muted) 18%, transparent), transparent 62%),
+    linear-gradient(185deg, color-mix(in srgb, var(--color-bg-elevated) 10%, transparent), transparent 52%);
+}
+
+html:has(main.topApp[data-page-atmosphere="home"]):not(:has(.appShell--podcast)) body::after {
+  background-image: var(--texture-noise), var(--bg-texture-image);
+  background-size: 200px 200px, min(140vw, 2100px) auto;
+  background-position: 0 0, center -4vh;
+  opacity: 0.1;
+}
+
+:root[data-color-scheme="dark"] html:has(main.topApp[data-page-atmosphere="home"]):not(:has(.appShell--podcast)) body::after,
+.dark html:has(main.topApp[data-page-atmosphere="home"]):not(:has(.appShell--podcast)) body::after {
+  opacity: 0.12;
+}
+
+/* Trusted + nonprofit: mountain-adjacent cool depth, softer community wash */
+html:has(main.topApp[data-page-atmosphere="trusted"]):not(:has(.appShell--podcast)) body::before {
+  background:
+    radial-gradient(ellipse 92% 55% at 50% -12%, color-mix(in srgb, var(--color-bg-muted) 38%, transparent), transparent 65%),
+    radial-gradient(ellipse 62% 48% at 8% 22%, color-mix(in srgb, var(--color-accent-soft) 18%, transparent), transparent 58%),
+    linear-gradient(188deg, color-mix(in srgb, var(--color-bg-subtle) 55%, transparent), transparent 52%);
+}
+
+html:has(main.topApp[data-page-atmosphere="trusted"]):not(:has(.appShell--podcast)) body::after {
+  background-image: var(--texture-noise), var(--bg-texture-image);
+  background-size: 220px 220px, min(130vw, 2000px) auto;
+  background-position: 0 0, 40% 12%;
+  opacity: 0.2;
+}
+
+:root[data-color-scheme="dark"] html:has(main.topApp[data-page-atmosphere="trusted"]):not(:has(.appShell--podcast)) body::after,
+.dark html:has(main.topApp[data-page-atmosphere="trusted"]):not(:has(.appShell--podcast)) body::after {
+  opacity: 0.24;
+}
+
+/* Sponsors: premium depth, subtle warm spotlight */
+html:has(main.topApp[data-page-atmosphere="sponsors"]):not(:has(.appShell--podcast)) body::before {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -18%, color-mix(in srgb, var(--color-text-primary) 8%, transparent), transparent 58%),
+    radial-gradient(ellipse 70% 56% at 82% 6%, color-mix(in srgb, var(--color-accent-soft) 24%, transparent), transparent 52%),
+    linear-gradient(182deg, color-mix(in srgb, var(--color-bg-elevated) 24%, transparent), transparent 50%);
+}
+
+html:has(main.topApp[data-page-atmosphere="sponsors"]):not(:has(.appShell--podcast)) body::after {
+  background-image: var(--texture-noise), var(--bg-texture-image);
+  background-size: 190px 190px, min(125vw, 1900px) auto;
+  background-position: 0 0, 55% 0%;
+  filter: contrast(1.05) brightness(0.98);
+  opacity: 0.18;
+}
+
+:root[data-color-scheme="dark"] html:has(main.topApp[data-page-atmosphere="sponsors"]):not(:has(.appShell--podcast)) body::after,
+.dark html:has(main.topApp[data-page-atmosphere="sponsors"]):not(:has(.appShell--podcast)) body::after {
+  opacity: 0.22;
+  filter: grayscale(1) contrast(1.08) brightness(0.88);
+}
+
+/* Community: warm social atmosphere */
+html:has(main.topApp[data-page-atmosphere="community"]):not(:has(.appShell--podcast)) body::before {
+  background:
+    radial-gradient(ellipse 95% 58% at 50% -10%, color-mix(in srgb, var(--color-warning) 12%, transparent), transparent 60%),
+    radial-gradient(ellipse 68% 50% at 18% 12%, color-mix(in srgb, var(--color-accent-soft) 22%, transparent), transparent 55%),
+    linear-gradient(185deg, color-mix(in srgb, var(--color-bg-subtle) 48%, transparent), transparent 55%);
+}
+
+html:has(main.topApp[data-page-atmosphere="community"]):not(:has(.appShell--podcast)) body::after {
+  background-image: var(--texture-noise), var(--bg-texture-image);
+  background-size: 210px 210px, min(135vw, 2000px) auto;
+  background-position: 0 0, 48% 8%;
+  opacity: 0.19;
+}
+
+:root[data-color-scheme="dark"] html:has(main.topApp[data-page-atmosphere="community"]):not(:has(.appShell--podcast)) body::after,
+.dark html:has(main.topApp[data-page-atmosphere="community"]):not(:has(.appShell--podcast)) body::after {
+  opacity: 0.24;
+}
+
+/* Profile + settings: calmer, minimal wash; lighter texture */
+html:has(main.topApp[data-page-atmosphere="profile"]):not(:has(.appShell--podcast)) body::before {
+  background:
+    radial-gradient(ellipse 78% 46% at 50% -14%, color-mix(in srgb, var(--color-bg-card) 30%, transparent), transparent 62%),
+    linear-gradient(180deg, color-mix(in srgb, var(--color-bg-elevated) 16%, transparent), transparent 44%);
+}
+
+html:has(main.topApp[data-page-atmosphere="profile"]):not(:has(.appShell--podcast)) body::after {
+  background-image: var(--texture-noise), var(--bg-texture-image);
+  background-size: 200px 200px, min(120vw, 1800px) auto;
+  background-position: 0 0, center 0;
+  opacity: 0.16;
+}
+
+:root[data-color-scheme="dark"] html:has(main.topApp[data-page-atmosphere="profile"]):not(:has(.appShell--podcast)) body::after,
+.dark html:has(main.topApp[data-page-atmosphere="profile"]):not(:has(.appShell--podcast)) body::after {
+  opacity: 0.2;
+}
+
+/* Contact: clear, trustworthy neutral */
+html:has(main.topApp[data-page-atmosphere="contact"]):not(:has(.appShell--podcast)) body::before {
+  background:
+    radial-gradient(ellipse 85% 50% at 50% -16%, color-mix(in srgb, var(--color-info) 8%, transparent), transparent 58%),
+    linear-gradient(182deg, color-mix(in srgb, var(--color-bg-subtle) 40%, transparent), transparent 50%);
+}
+
+html:has(main.topApp[data-page-atmosphere="contact"]):not(:has(.appShell--podcast)) body::after {
+  opacity: 0.14;
+}
+
+:root[data-color-scheme="dark"] html:has(main.topApp[data-page-atmosphere="contact"]):not(:has(.appShell--podcast)) body::after,
+.dark html:has(main.topApp[data-page-atmosphere="contact"]):not(:has(.appShell--podcast)) body::after {
+  opacity: 0.18;
+}
+
+/* Optional: very slow atmospheric drift (disabled for reduced motion) */
+@keyframes pageAtmoWashDrift {
+  0%,
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    opacity: 0.97;
+    transform: translate3d(0, -0.35%, 0) scale(1.002);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html:has(main.topApp[data-page-atmosphere]):not(:has(.appShell--podcast)) body::before {
+    animation: pageAtmoWashDrift 85s ease-in-out infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html:has(main.topApp[data-page-atmosphere]):not(:has(.appShell--podcast)) body::before {
+    animation: none;
+  }
+}
