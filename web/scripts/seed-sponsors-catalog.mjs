@@ -37,13 +37,14 @@ const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 const rows = FEATURED_SPONSORS.map((item, idx) => ({
   slug: String(item.id || "").trim(),
   name: String(item.name || "").trim(),
-  sponsor_type: String(item.industry || "").trim() || "Mission partner",
+  sponsor_type: "foundational_sponsor",
+  sponsor_category: String(item.industry || "").trim() || null,
   website_url: String(item.ctaUrl || "").trim() || null,
   logo_url: String(item.logoUrl || "").trim() || null,
   background_image_url: String(item.backgroundImageUrl || "").trim() || null,
   short_description: String(item.tag || "").trim() || null,
-  long_description: String(item.tagline || "").trim() || null,
-  tagline: String(item.tagline || "").trim() || null,
+  long_description: String(item.longDescription || item.description || item.tagline || "").trim() || null,
+  tagline: String(item.subtitle || item.tagline || "").trim() || null,
   instagram_url: String(item.socialLinks?.instagram || "").trim() || null,
   facebook_url: String(item.socialLinks?.facebook || "").trim() || null,
   linkedin_url: String(item.socialLinks?.linkedin || "").trim() || null,
@@ -56,6 +57,9 @@ const rows = FEATURED_SPONSORS.map((item, idx) => ({
   verified: true,
   enrichment_status: "seed",
   last_enriched_at: new Date().toISOString(),
+  sponsor_scope: "app",
+  mission_partner: !!item.missionPartner,
+  is_active: true,
 }));
 
 const { error } = await supabase.from(TABLE).upsert(rows, { onConflict: "slug" });

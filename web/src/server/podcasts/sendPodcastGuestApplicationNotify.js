@@ -24,17 +24,17 @@ export async function sendPodcastGuestApplicationNotify(opts) {
     return { ok: false, error: "email_provider_not_configured" };
   }
 
-  const subject = `Podcast guest application: ${escapeHtml(opts.applicantName || "Applicant")}`;
+  const subject = `New Podcast Guest Application — The Outreach Project`;
   const html = `
     <div style="font-family:Arial,sans-serif;line-height:1.5;color:#0f172a;">
-      <h2 style="margin:0 0 12px;">The Outreach Project — Podcast</h2>
-      <p><strong>Name:</strong> ${escapeHtml(opts.applicantName)}</p>
-      <p><strong>Email:</strong> ${escapeHtml(opts.applicantEmail)}</p>
-      <p><strong>Topic:</strong> ${escapeHtml(opts.topic)}</p>
+      <h2 style="margin:0 0 12px;">New podcast guest application</h2>
+      <p><strong>Applicant name:</strong> ${escapeHtml(opts.applicantName)}</p>
+      <p><strong>Applicant email:</strong> ${escapeHtml(opts.applicantEmail)}</p>
+      <p><strong>Topic / story (summary):</strong> ${escapeHtml(opts.topic)}</p>
       <pre style="white-space:pre-wrap;font-family:inherit;background:#f8fafc;padding:12px;border-radius:8px;">${escapeHtml(
         opts.bodyText || "",
       )}</pre>
-      <p>Reply directly to the applicant at their email address.</p>
+      <p style="margin-top:16px;">Reply directly to the applicant at the email address above.</p>
     </div>
   `;
 

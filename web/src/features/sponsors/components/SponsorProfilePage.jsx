@@ -41,7 +41,7 @@ export default function SponsorProfilePage({ slug }) {
     session.authenticated || (session.loading && !!navCache?.authenticated);
 
   return (
-    <main className="topApp sponsorProfileShell">
+    <main className="topApp sponsorProfileShell" data-page-atmosphere="sponsors">
       <div className="headerBrandStack">
         <Link href="/" aria-label="Go to home">
           <BrandMark size="header" />
@@ -79,7 +79,7 @@ export default function SponsorProfilePage({ slug }) {
               style={
                 sponsorHeroBg
                   ? {
-                      backgroundImage: `linear-gradient(130deg, rgba(6,10,14,0.84), rgba(6,10,14,0.68)), url('${sponsorHeroBg.replace(/'/g, "%27")}')`,
+                      backgroundImage: `linear-gradient(130deg, rgba(6,10,14,0.67), rgba(6,10,14,0.54)), url('${sponsorHeroBg.replace(/'/g, "%27")}')`,
                       backgroundSize: "cover",
                       backgroundPosition: "center",
                     }
@@ -98,7 +98,11 @@ export default function SponsorProfilePage({ slug }) {
                 </div>
                 <div>
                   <h1 className="sponsorProfileTitle">{profile.name}</h1>
-                  <p className="sponsorPremiumIndustry">{profile.sponsor_type}</p>
+                  <p className="sponsorPremiumIndustry">
+                    {String(profile.sponsor_type || "")
+                      .replace(/_/g, " ")
+                      .replace(/\b\w/g, (c) => c.toUpperCase())}
+                  </p>
                   <p className="sponsorPremiumTagline">{profile.tagline || profile.short_description}</p>
                 </div>
               </div>

@@ -98,12 +98,16 @@ export function normalizeSponsorRecord(row = {}) {
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "") ||
     "sponsor";
-  const name = resolveSponsorDisplayName(clean(row.name)) || clean(row.name) || "Partner";
+  const rawTitle = clean(row.display_name) || clean(row.name);
+  const name = resolveSponsorDisplayName(rawTitle) || rawTitle || "Partner";
 
   return {
     id: clean(row.id) || slug,
     slug,
     name,
+    display_name: clean(row.display_name || row.displayName),
+    internal_alias: clean(row.internal_alias || row.internalAlias),
+    primary_display_tag: clean(row.primary_display_tag || row.primaryDisplayTag),
     sponsor_scope: clean(row.sponsor_scope) || "app",
     sponsor_type: clean(row.sponsor_type || row.industry || "Mission partner"),
     sponsor_category: clean(row.sponsor_category || row.industry || ""),
@@ -116,9 +120,9 @@ export function normalizeSponsorRecord(row = {}) {
     logo_review_status: clean(row.logo_review_status),
     logo_notes: clean(row.logo_notes),
     background_image_url: clean(row.background_image_url || row.backgroundImageUrl),
-    short_description: clean(row.short_description || row.tagline),
-    long_description: clean(row.long_description || row.description),
-    tagline: clean(row.tagline),
+    short_description: clean(row.short_description || row.tag || row.tagline),
+    long_description: clean(row.long_description || row.description || row.longDescription),
+    tagline: clean(row.tagline || row.subtitle),
     instagram_url: social.instagram_url,
     facebook_url: social.facebook_url,
     linkedin_url: social.linkedin_url,
@@ -143,6 +147,29 @@ export function normalizeSponsorRecord(row = {}) {
   };
 }
 
+/** Single upper-left card badge — admin `primary_display_tag` or a safe default from sponsor_type. */
+function resolvePrimaryDisplayBadge(s) {
+  const custom = String(s.primary_display_tag || "").trim();
+  if (custom) {
+    const key = custom
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "primary";
+    return { key: `tag-${key}`, label: custom };
+  }
+  const typeLc = String(s.sponsor_type || "").toLowerCase();
+  if (typeLc === "foundational_sponsor") {
+    return { key: "foundational", label: "Foundational Sponsor" };
+  }
+  if (typeLc === "community_partner") {
+    return { key: "community", label: "Community Partner" };
+  }
+  if (typeLc === "podcast_sponsor" || typeLc === "podcast") {
+    return { key: "podcast", label: "Podcast Sponsor" };
+  }
+  return { key: "partner", label: "Partner Sponsor" };
+}
+
 export function getSponsorCardViewModel(row = {}) {
   const s = normalizeSponsorRecord(row);
   const presentation = getSponsorCardPresentation(s.slug);
@@ -160,25 +187,7 @@ export function getSponsorCardViewModel(row = {}) {
   const industry = isIndustryRedundantWithMissionPill(industryRaw, missionPill) ? "" : industryRaw;
   const logoDisplay = resolveSponsorListingLogoUrl(s) || null;
   const veteranOwned = !!s.veteran_owned || !!presentation.veteranOwnedDefault;
-  const typeLc = String(s.sponsor_type || "").toLowerCase();
-  const isFoundational = typeLc === "foundational_sponsor";
-  const isCommunityPartner = typeLc === "community_partner";
-  const badges = [];
-  if (isFoundational) {
-    badges.push({ key: "foundational", label: "Foundational sponsor" });
-  }
-  if (s.featured) {
-    badges.push({ key: "featured", label: "Featured sponsor" });
-  }
-  if (s.mission_partner) {
-    badges.push({ key: "mission", label: "Mission partner" });
-  }
-  if (isCommunityPartner) {
-    badges.push({ key: "community", label: "Community partner" });
-  }
-  if (veteranOwned) {
-    badges.push({ key: "veteran", label: "Veteran-owned" });
-  }
+  const primaryBadge = resolvePrimaryDisplayBadge(s);
   const locationChips = presentation.locationChips?.length ? presentation.locationChips : [];
   return {
     id: s.id,
@@ -188,6 +197,7 @@ export function getSponsorCardViewModel(row = {}) {
     tag: missionPill,
     industry,
     tierLabel: s.featured ? "Featured sponsor" : "Partner sponsor",
+    primaryBadge,
     tagline: bodyTeaser || "Mission partner supporting community outcomes.",
     ctaUrl: s.website_url || null,
     ctaLabel: s.cta_label || (s.website_url ? "Visit Website" : ""),
@@ -202,7 +212,6 @@ export function getSponsorCardViewModel(row = {}) {
     missionPartner: !!s.mission_partner,
     featured: !!s.featured,
     veteranOwned,
-    badges,
     locationChips,
     socialLinks: {
       website: validUrl(s.website_url) ? s.website_url : "",

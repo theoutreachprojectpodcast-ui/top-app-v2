@@ -150,14 +150,20 @@ export default function FeaturedSponsorCard({
   const socialLinkItems = useMemo(() => {
     const social = sponsor.socialLinks || {};
     const out = [];
-    const site = sanitizeDisplayableImageUrl(String(sponsor.ctaUrl || social.website || "").trim());
-    if (site) out.push({ key: "website", url: site });
-    const order = ["instagram", "facebook", "linkedin", "twitter", "youtube"];
+    const seen = new Set();
+    const push = (key, raw) => {
+      const u = sanitizeDisplayableImageUrl(String(raw || "").trim());
+      if (!u || seen.has(u)) return;
+      seen.add(u);
+      out.push({ key, url: u });
+    };
+    const site = String(sponsor.ctaUrl || social.website || "").trim();
+    if (site) push("website", site);
+    const order = ["instagram", "facebook", "linkedin", "youtube", "twitter"];
     for (const key of order) {
       const raw = String(social[key] || "").trim();
-      const u = sanitizeDisplayableImageUrl(raw);
-      if (!u) continue;
-      out.push({ key: key === "twitter" ? "x" : key, url: u });
+      if (!raw) continue;
+      push(key === "twitter" ? "x" : key, raw);
     }
     return out;
   }, [sponsor.ctaUrl, sponsor.socialLinks]);
@@ -205,11 +211,13 @@ export default function FeaturedSponsorCard({
       <div className="sponsorPremiumCardInner">
         <div className="sponsorPremiumCardTop">
           <div className="sponsorPremiumCardBadges" aria-label="Sponsor recognition">
-            {(Array.isArray(sponsor.badges) ? sponsor.badges : []).map((b) => (
-              <span key={b.key} className={`sponsorPremiumBadge sponsorPremiumBadge--${b.key}`}>
-                {b.label}
+            {sponsor.primaryBadge ? (
+              <span
+                className={`sponsorPremiumBadge sponsorPremiumBadge--primary sponsorPremiumBadge--${sponsor.primaryBadge.key}`}
+              >
+                {sponsor.primaryBadge.label}
               </span>
-            ))}
+            ) : null}
           </div>
           {favoriteKey ? (
             <div className="sponsorPremiumCardTopActions">
@@ -297,42 +305,42 @@ export default function FeaturedSponsorCard({
               ) : null}
             </div>
           </div>
-          <div className="sponsorPremiumBrandBody">
-            <p className="sponsorPremiumTagline">{sponsor.tagline || "Partner supporting service communities."}</p>
-            <div className="sponsorPremiumFooter">
-              {sponsor.ctaUrl && !sponsor.websitePending ? (
-                <a
-                  className="btnSoft sponsorPremiumVisitBtn"
-                  href={sponsor.ctaUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(event) => event.stopPropagation()}
-                >
-                  {sponsor.ctaLabel || "Visit Website"}
-                </a>
-              ) : null}
-              <div className="sponsorPremiumSocial" aria-label="Sponsor website and social profiles">
-                {socialLinkItems.map(({ key, url }) => (
-                  <a
-                    key={`${key}-${url}`}
-                    className="sponsorPremiumSocialLink"
-                    href={url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={
-                      key === "website" ? `${displayName} website` : `${displayName} on ${key === "x" ? "X" : key}`
-                    }
-                    onClick={(event) => event.stopPropagation()}
-                  >
-                    <SocialIcon type={key} />
-                  </a>
-                ))}
-              </div>
-              {sponsor.websitePending || !sponsor.ctaUrl ? (
-                <span className="sponsorPremiumPending">Website pending</span>
-              ) : null}
-            </div>
+          <p className="sponsorPremiumTagline sponsorPremiumTagline--card">
+            {sponsor.tagline || "Partner supporting service communities."}
+          </p>
+        </div>
+        <div className="sponsorPremiumFooter">
+          {sponsor.ctaUrl && !sponsor.websitePending ? (
+            <a
+              className="btnSoft sponsorPremiumVisitBtn"
+              href={sponsor.ctaUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(event) => event.stopPropagation()}
+            >
+              {sponsor.ctaLabel || "Visit Website"}
+            </a>
+          ) : null}
+          <div className="sponsorPremiumSocial" aria-label="Sponsor website and social profiles">
+            {socialLinkItems.map(({ key, url }) => (
+              <a
+                key={`${key}-${url}`}
+                className="sponsorPremiumSocialLink"
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={
+                  key === "website" ? `${displayName} website` : `${displayName} on ${key === "x" ? "X" : key}`
+                }
+                onClick={(event) => event.stopPropagation()}
+              >
+                <SocialIcon type={key} />
+              </a>
+            ))}
           </div>
+          {sponsor.websitePending || !sponsor.ctaUrl ? (
+            <span className="sponsorPremiumPending">Website pending</span>
+          ) : null}
         </div>
       </div>
     </article>

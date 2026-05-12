@@ -1,10 +1,13 @@
 "use client";
 
+import { useId, useState } from "react";
 import { SERVICE_OPTIONS } from "@/lib/constants";
 import { mapNonprofitCategory } from "@/features/nonprofits/mappers/categoryMapper";
 
 export default function DirectoryCategoryQuickPick({ value, onChange, collapsible = false }) {
   const options = SERVICE_OPTIONS.filter(([k]) => k);
+  const panelId = useId();
+  const [panelOpen, setPanelOpen] = useState(false);
 
   const content = (
     <div className="directoryCategoryPick" aria-label="Filter by nonprofit category">
@@ -49,12 +52,28 @@ export default function DirectoryCategoryQuickPick({ value, onChange, collapsibl
   if (!collapsible) return content;
 
   return (
-    <details className="directoryCategoryPickDisclosure">
-      <summary>
+    <div className={`directoryCategoryPickDisclosure${panelOpen ? " isOpen" : ""}`}>
+      <button
+        type="button"
+        className="directoryCategoryPickDisclosureToggle"
+        aria-expanded={panelOpen}
+        aria-controls={panelId}
+        onClick={() => setPanelOpen((o) => !o)}
+      >
         <span>Quick Category Focus</span>
-        <span className="directoryCategoryPickDisclosureChevron" aria-hidden="true">▾</span>
-      </summary>
-      {content}
-    </details>
+        <span className="directoryCategoryPickDisclosureChevron" aria-hidden="true">
+          ▾
+        </span>
+      </button>
+      <div
+        id={panelId}
+        className="directoryCategoryPickDisclosurePanel"
+        role="region"
+        aria-label="Category options"
+        hidden={!panelOpen}
+      >
+        {content}
+      </div>
+    </div>
   );
 }

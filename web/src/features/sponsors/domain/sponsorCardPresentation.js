@@ -3,10 +3,7 @@
  * Merges with runtime logo tone detection in `FeaturedSponsorCard`.
  */
 
-import {
-  BRAIN_TREATMENT_CENTER_LOGO_URL,
-  EDUARDO_PICO_DESIGNS_LOGO_URL,
-} from "@/features/sponsors/data/featuredSponsors";
+import { EDUARDO_PICO_DESIGNS_LOGO_URL, GAMEDAY_MENS_HEALTH_LOGO_URL } from "@/features/sponsors/data/featuredSponsors";
 
 const DEFAULT = {
   accentColor: "color-mix(in srgb, var(--color-accent) 88%, #ffffff 12%)",
@@ -53,14 +50,14 @@ const BY_SLUG = {
     /* Wordmark is black/dark on transparent; dark circular shell hides it — use a light panel. */
     logoPanelMode: "light",
   },
-  "brain-treatment-center-california": {
-    accentColor: "#93c5fd",
+  "gameday-mens-health": {
+    accentColor: "#f87171",
     cardScrimGradient:
-      "linear-gradient(118deg, rgba(6, 12, 22, 0.96) 0%, rgba(10, 18, 32, 0.78) 50%, rgba(8, 14, 24, 0.52) 100%)",
-    veteranOwnedDefault: true,
-    locationChips: ["Danville, CA", "California"],
-    logoPanelMode: "dark",
-    logoFallbackUrls: [BRAIN_TREATMENT_CENTER_LOGO_URL, "/sponsors/brain-treatment-center-logo.svg"],
+      "linear-gradient(118deg, rgba(14, 8, 8, 0.96) 0%, rgba(22, 10, 10, 0.76) 48%, rgba(12, 6, 6, 0.52) 100%)",
+    veteranOwnedDefault: false,
+    locationChips: ["U.S. & Canada", "400+ clinics"],
+    logoPanelMode: "light",
+    logoFallbackUrls: [GAMEDAY_MENS_HEALTH_LOGO_URL],
   },
 };
 
@@ -68,14 +65,9 @@ const BY_SLUG = {
  * @param {string} slug
  * @returns {typeof DEFAULT & { locationChips: string[] }}
  */
-const SPONSOR_PRESENTATION_SLUG_ALIASES = {
-  "brain-treatment-center-nova": "brain-treatment-center-california",
-};
-
 export function getSponsorCardPresentation(slug) {
   const raw = String(slug || "").trim().toLowerCase();
-  const key = SPONSOR_PRESENTATION_SLUG_ALIASES[raw] || raw;
-  const row = BY_SLUG[key];
+  const row = BY_SLUG[raw];
   if (!row) {
     return { ...DEFAULT, locationChips: [], logoFallbackUrls: [] };
   }

@@ -29,6 +29,9 @@ function fallbackRows() {
       id: item.id,
       slug: item.id,
       name: item.name,
+      display_name: item.displayName,
+      internal_alias: item.internalAlias,
+      primary_display_tag: item.primaryDisplayTag || "Foundational Sponsor",
       sponsor_type: "foundational_sponsor",
       sponsor_category: item.industry,
       website_url: item.ctaUrl,
@@ -72,9 +75,11 @@ export async function mergeSponsorEnrichmentForRows(supabase, normalizedRows) {
     if (!enrich) return row;
     const extTitle = String(enrich.extracted_site_title || "").trim();
     const extDesc = String(enrich.extracted_meta_description || "").trim();
+    const explicitDisplay = String(row.display_name || "").trim();
+    const mergedName = explicitDisplay ? row.name : enrich.canonical_display_name || row.name;
     return normalizeSponsorRecord({
       ...row,
-      name: enrich.canonical_display_name || row.name,
+      name: mergedName,
       short_description: String(row.short_description || "").trim() || extDesc || row.short_description,
       long_description: String(row.long_description || "").trim() || extDesc || row.long_description,
       tagline: String(row.tagline || "").trim() || extTitle || row.tagline,

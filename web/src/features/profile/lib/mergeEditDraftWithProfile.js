@@ -1,4 +1,5 @@
 import { profileFromApiDto } from "@/features/profile/mappers";
+import { normalizeContributionInterests } from "@/lib/profile/profileCompletenessModel";
 
 function pickNonEmptyStringFields(obj) {
   const out = {};
@@ -18,5 +19,13 @@ function pickNonEmptyStringFields(obj) {
  */
 export function mergeEditDraftWithProfile(draft, profile) {
   if (!draft || !profile) return draft;
-  return { ...profileFromApiDto(profile), ...pickNonEmptyStringFields(draft) };
+  const base = profileFromApiDto(profile);
+  const out = { ...base, ...pickNonEmptyStringFields(draft) };
+  if (draft.contributionInterests && typeof draft.contributionInterests === "object") {
+    out.contributionInterests = { ...normalizeContributionInterests(draft.contributionInterests) };
+  }
+  if (Array.isArray(draft.notificationPreferences)) {
+    out.notificationPreferences = [...draft.notificationPreferences];
+  }
+  return out;
 }

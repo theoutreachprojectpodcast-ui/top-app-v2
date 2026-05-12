@@ -3,7 +3,7 @@
 ## Source of truth
 
 - Public episode grid uses **only** the official full-episodes playlist:
-  - `PLxrmox4oWE7d-ZmMCc2lNkk4nXE8zKcKP`
+  - `PLxrmox4oWE7d-ZmMCc2lNkk4nXE8zKcKP` ([playlist on YouTube](https://www.youtube.com/playlist?list=PLxrmox4oWE7d-ZmMCc2lNkk4nXE8zKcKP); [example video in list](https://www.youtube.com/watch?v=xvS90sf5Md0&list=PLxrmox4oWE7d-ZmMCc2lNkk4nXE8zKcKP))
 - Fetch path:
   - `fetchOfficialPlaylistAcceptedEpisodes()` (playlist-scoped, not channel-wide)
   - `loadPublicPodcastLandingData()` (merge runtime + DB overrides, then newest-first)

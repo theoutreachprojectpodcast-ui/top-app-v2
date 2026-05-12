@@ -16,11 +16,8 @@ function apexOrigin() {
 
 function adminSignInRedirectUrl() {
   const apex = apexOrigin();
-  const adminBase = String(process.env.NEXT_PUBLIC_ADMIN_URL || "").trim().replace(/\/$/, "");
-  const returnTo = adminBase ? `${adminBase}/` : "/admin";
-  const q = new URLSearchParams();
-  q.set("returnTo", returnTo);
-  return `${apex}/api/auth/workos/signin?${q.toString()}`;
+  const q = new URLSearchParams({ returnTo: "/admin" });
+  return `${apex}/admin-login?${q.toString()}`;
 }
 
 export default async function AdminLayout({ children }) {

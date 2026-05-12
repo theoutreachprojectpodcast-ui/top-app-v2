@@ -148,14 +148,14 @@ function resolveTrustedLocation(row = {}, profile = {}) {
 
 const TRUSTED_CATEGORY_HEADER_FALLBACKS = {
   veteransMilitary: "/sponsors/featured-bg-rope-solutions.png",
-  firstRespondersSafety: "/sponsors/featured-bg-brain-treatment-center.png",
-  healthWellness: "/sponsors/featured-bg-brain-treatment-center.png",
+  firstRespondersSafety: "/sponsors/featured-bg-rope-solutions.png",
+  healthWellness: "/sponsors/featured-bg-gameday-mens-health.png",
   education: "/sponsors/featured-bg-wars-end-merch.png",
   humanServices: "/sponsors/featured-bg-rucking-realty.png",
   communityDevelopment: "/sponsors/featured-bg-eduardo-pico-designs.png",
   environmentAnimals: "/assets/backgrounds/bg_cinematic.png",
   youthDevelopment: "/assets/backgrounds/bg_cinematic.png",
-  crisisEmergency: "/sponsors/featured-bg-brain-treatment-center.png",
+  crisisEmergency: "/sponsors/featured-bg-wars-end-merch.png",
   advocacyPolicyRights: "/sponsors/featured-bg-eduardo-pico-designs.png",
   unknownGeneral: "/assets/backgrounds/bg_topographic_brand.png",
 };

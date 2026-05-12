@@ -155,7 +155,7 @@
   --space-6: 24px;
   --space-8: 32px;
 
-  --bg-texture-image: url("/home/home-hero-flag-mission.png");
+  --bg-texture-image: url("/home/home-main-topographic-complementary.svg");
 
   /* Subtle neutral noise (SVG feTurbulence) */
   --texture-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
@@ -167,13 +167,13 @@
   color-scheme: dark;
   --topbar-occlusion-spot: rgba(255, 255, 255, 0.04);
 
-  /* Charcoal foundation — neutral grays only (no green / olive wash on surfaces) */
-  --color-bg-app: #121212;
-  --color-bg-subtle: #181818;
-  --color-bg-elevated: #1f1f1f;
-  --color-bg-muted: #2a2a2a;
-  --color-bg-card: #1e1e1e;
-  --color-bg-card-hover: #2a2a2a;
+  /* Charcoal foundation — brand-neutral greys (warm ink #0f1412 tint, not slate blue) */
+  --color-bg-app: color-mix(in srgb, #121212 92%, #0f1412 8%);
+  --color-bg-subtle: color-mix(in srgb, #181818 90%, #0f1412 10%);
+  --color-bg-elevated: color-mix(in srgb, #1f1f1f 90%, #0f1412 10%);
+  --color-bg-muted: color-mix(in srgb, #2a2a2a 92%, #0f1412 8%);
+  --color-bg-card: color-mix(in srgb, #1e1e1e 90%, #0f1412 10%);
+  --color-bg-card-hover: color-mix(in srgb, #2a2a2a 92%, #0f1412 8%);
 
   --color-border-subtle: #383838;
   --color-border-strong: #4a4a4a;
@@ -190,7 +190,7 @@
   --color-success: #32c43b;
   --color-warning: #d4a12a;
   --color-error: #d96866;
-  --color-info: #5a9bff;
+  --color-info: #8a9590;
   --color-overlay: rgba(0, 0, 0, 0.62);
   --color-overlay-backdrop: rgba(0, 0, 0, 0.68);
   --color-shadow: rgba(0, 0, 0, 0.32);
@@ -260,8 +260,16 @@ body {
   background-color: var(--color-bg-app);
   /* No accent in page fill — neutral depth only (green = UI accent only) */
   background-image:
-    radial-gradient(ellipse 120% 85% at 50% -18%, color-mix(in srgb, var(--color-text-primary) 5%, transparent), transparent 58%),
-    radial-gradient(ellipse 72% 52% at 100% 0%, color-mix(in srgb, var(--color-bg-muted) 42%, transparent), transparent 52%),
+    radial-gradient(
+      ellipse 120% 85% at 50% -18%,
+      rgb(from var(--color-text-primary) r g b / 0.05),
+      rgb(from var(--color-text-primary) r g b / 0) 58%
+    ),
+    radial-gradient(
+      ellipse 72% 52% at 100% 0%,
+      rgb(from var(--color-bg-muted) r g b / 0.42),
+      rgb(from var(--color-bg-muted) r g b / 0) 52%
+    ),
     linear-gradient(180deg, var(--color-bg-subtle) 0%, var(--color-bg-app) 48%, var(--color-bg-app) 100%);
   color: var(--color-text-primary);
   font-family: var(--font-body), Helvetica, Arial, sans-serif;
@@ -272,8 +280,8 @@ body {
 :root[data-color-scheme="dark"] body,
 .dark body {
   background-image:
-    radial-gradient(ellipse 100% 72% at 50% -14%, rgba(255, 255, 255, 0.045), transparent 54%),
-    radial-gradient(ellipse 58% 48% at 96% 6%, rgba(255, 255, 255, 0.028), transparent 56%),
+    radial-gradient(ellipse 100% 72% at 50% -14%, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0) 54%),
+    radial-gradient(ellipse 58% 48% at 96% 6%, rgba(255, 255, 255, 0.028), rgba(255, 255, 255, 0) 56%),
     linear-gradient(168deg, var(--color-bg-subtle) 0%, var(--color-bg-app) 42%, var(--color-bg-app) 100%);
 }
 

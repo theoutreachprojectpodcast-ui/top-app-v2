@@ -7,7 +7,11 @@ import {
 } from "./episodeParser";
 import { fetchPlaylistItemsPage, fetchVideosByIds } from "./youtubeUploadsServer";
 
-/** Official “full episodes” playlist (env override). */
+/**
+ * Official “full episodes” playlist (env override).
+ * Canonical list (The Outreach Project): https://www.youtube.com/playlist?list=PLxrmox4oWE7d-ZmMCc2lNkk4nXE8zKcKP
+ * Example watch URL with same list param: https://www.youtube.com/watch?v=xvS90sf5Md0&list=PLxrmox4oWE7d-ZmMCc2lNkk4nXE8zKcKP
+ */
 export function officialFullEpisodesPlaylistId() {
   return String(process.env.YOUTUBE_FULL_EPISODES_PLAYLIST_ID || "PLxrmox4oWE7d-ZmMCc2lNkk4nXE8zKcKP").trim();
 }
@@ -35,11 +39,16 @@ export async function fetchOfficialPlaylistAcceptedEpisodes(opts = {}) {
     const page = await fetchPlaylistItemsPage(playlistId, token);
     if (!page.ok) return { ok: false, error: page.error, videos: [], scannedPages };
 
+    /** @type {string[]} */
     const ids = [];
+    /** Playlist snippet `publishedAt` when `videos` API omits it (rare) — keeps sort stable. */
+    const playlistPublishedAtById = new Map();
     for (const it of page.items) {
       const vid = String(it?.contentDetails?.videoId || it?.snippet?.resourceId?.videoId || "").trim();
       if (!vid || seen.has(vid)) continue;
       seen.add(vid);
+      const plPub = String(it?.snippet?.publishedAt || "").trim();
+      if (plPub) playlistPublishedAtById.set(vid, plPub);
       ids.push(vid);
     }
 
@@ -61,7 +70,7 @@ export async function fetchOfficialPlaylistAcceptedEpisodes(opts = {}) {
           youtube_video_id: id,
           title: d.title,
           description: d.description,
-          published_at: d.published_at,
+          published_at: d.published_at || playlistPublishedAtById.get(id) || null,
           thumbnail_url: thumb,
           youtube_url: `https://www.youtube.com/watch?v=${id}`,
           duration_seconds: d.duration_seconds,
@@ -78,18 +87,40 @@ export async function fetchOfficialPlaylistAcceptedEpisodes(opts = {}) {
           continue;
         }
 
+        if (
+          isShortsUrl(row.youtube_url, id) ||
+          titleContainsExcludedContentMarker(row.title, row.description) ||
+          isBelowMinEpisodeDuration(row.duration_seconds)
+        ) {
+          continue;
+        }
+
         const c = classifyPodcastUpload(row);
-        const isFullEpisodeLike =
-          !isShortsUrl(row.youtube_url, id) &&
-          !titleContainsExcludedContentMarker(row.title, row.description) &&
-          !isBelowMinEpisodeDuration(row.duration_seconds);
-        if (!c.ok && !isFullEpisodeLike) continue;
-        accepted.push({
-          ...row,
-          episode_number: c.ok ? c.episodeNumber : null,
-          pipeline_decision: "accepted",
-          pipeline_reason: c.ok ? "matched_rules" : "playlist_full_episode_fallback",
-        });
+        if (c.ok) {
+          accepted.push({
+            ...row,
+            episode_number: c.episodeNumber,
+            pipeline_decision: "accepted",
+            pipeline_reason: "matched_rules",
+          });
+        } else if (String(c.reason || "") === "no_episode_number") {
+          // Full-episodes playlist items often omit "Episode N" in the title; duration + exclusion filters still apply above.
+          accepted.push({
+            ...row,
+            episode_number: null,
+            pipeline_decision: "accepted",
+            pipeline_reason: "playlist_full_episode",
+          });
+        } else {
+          // Curated full-episodes playlist: trust items that already passed Shorts / keyword / duration gates above.
+          accepted.push({
+            ...row,
+            episode_number: null,
+            pipeline_decision: "accepted",
+            pipeline_reason: "playlist_trust_fallback",
+            playlist_classify_note: String(c.reason || ""),
+          });
+        }
         if (accepted.length >= maxAccepted) break;
       }
     }

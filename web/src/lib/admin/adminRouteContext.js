@@ -20,6 +20,9 @@ export async function requirePlatformAdminRouteContext() {
     return { ok: false, response: Response.json({ error: "server_storage_unavailable" }, { status: 503 }) };
   }
   const profileRow = await getProfileRowByWorkOSId(admin, user.id);
+  // Match `app/admin/layout.js`: console access is `isPlatformAdminServer` only.
+  // Bootstrap-approved emails may not yet have `platform_role` / `admin:access` on the profile row;
+  // requiring `canAccessAdmin` here caused 403 on admin APIs (e.g. QA status) while pages still loaded.
   if (
     !isPlatformAdminServer({
       email: user.email,

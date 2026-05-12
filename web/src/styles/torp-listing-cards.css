@@ -234,10 +234,10 @@
 }
 
 .sponsorPremiumCard .sponsorPremiumCardBg.torpListingCardHero--photo {
-  filter: saturate(0.92) contrast(1.04) brightness(0.68);
+  filter: saturate(0.94) contrast(1.03) brightness(1.02);
 }
 
 .sponsorPremiumLogoShell {
-  width: 96px;
-  height: 96px;
+  width: 144px;
+  height: 144px;
 }

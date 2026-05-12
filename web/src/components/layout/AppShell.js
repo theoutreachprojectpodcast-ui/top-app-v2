@@ -1,8 +1,14 @@
+"use client";
+
+import { useRef } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import BrandMark from "@/components/BrandMark";
 import HeaderInner from "@/components/layout/HeaderInner";
 import SubpageTopbarActions from "@/components/layout/SubpageTopbarActions";
 import FooterInner from "@/components/layout/FooterInner";
+import { resolvePageAtmosphere } from "@/lib/design/pageAtmosphere";
+import { useImmersiveHeaderScroll } from "@/hooks/useImmersiveHeaderScroll";
 
 const NAV_ITEMS = [
   { href: "/", key: "home", label: "Home" },
@@ -30,11 +36,35 @@ export default function AppShell({
   showThemeToggle = true,
   navItems,
   rootStyle,
+  pageAtmosphere: pageAtmosphereProp,
 }) {
+  const mainRef = useRef(null);
+  const pathname = usePathname();
   const items = Array.isArray(navItems) && navItems.length ? navItems : NAV_ITEMS;
   const RootTag = useTopAppStructure ? "main" : "div";
+  const pageAtmosphere = pageAtmosphereProp ?? resolvePageAtmosphere(pathname, activeNav);
+  const podcastThemeShell =
+    pageAtmosphere === "podcast" || String(shellClassName || "").includes("appShell--podcast");
+  const immersiveHeaderScroll = useTopAppStructure && !podcastThemeShell;
+  useImmersiveHeaderScroll({ rootRef: mainRef, enabled: immersiveHeaderScroll });
+
+  const mainChromeClass = immersiveHeaderScroll ? " header-at-top" : "";
+  const podcastRouteAttrs =
+    useTopAppStructure && podcastThemeShell
+      ? {
+          "data-use-podcast-theme": "true",
+          "data-disable-global-background": "true",
+          "data-disable-main-page-header-blend": "true",
+        }
+      : {};
   return (
-    <RootTag className={`${useTopAppStructure ? "topApp" : "appShell"} appShell--subpage ${shellClassName}`.trim()} style={rootStyle}>
+    <RootTag
+      ref={useTopAppStructure ? mainRef : undefined}
+      className={`${useTopAppStructure ? "topApp" : "appShell"} appShell--subpage ${shellClassName}${mainChromeClass}`.trim()}
+      style={rootStyle}
+      {...(useTopAppStructure ? { "data-page-atmosphere": pageAtmosphere } : {})}
+      {...podcastRouteAttrs}
+    >
       <div className="headerBrandStack">
         <Link href="/" aria-label="Go to home">
           <BrandMark size="header" src={brandSrc || undefined} alt={brandAlt} className={brandClassName} />

@@ -11,6 +11,7 @@ function emptyForm() {
     short_description: "",
     profile_image_url: "",
     expected_episode_date: "",
+    episode_topic: "",
     status: "draft",
     sort_order: 0,
   };
@@ -67,6 +68,8 @@ export default function PodcastUpcomingGuestsAdmin() {
   }
 
   function editRow(r) {
+    const st = String(r.status || "draft").toLowerCase();
+    const allowed = new Set(["draft", "scheduled", "confirmed", "published", "hidden"]);
     setForm({
       id: r.id,
       name: r.name || "",
@@ -75,7 +78,8 @@ export default function PodcastUpcomingGuestsAdmin() {
       short_description: r.short_description || "",
       profile_image_url: r.profile_image_url || "",
       expected_episode_date: r.expected_episode_date ? String(r.expected_episode_date).slice(0, 10) : "",
-      status: r.status === "published" ? "published" : "draft",
+      episode_topic: r.episode_topic || "",
+      status: allowed.has(st) ? st : "draft",
       sort_order: Number(r.sort_order) || 0,
     });
     setMsg("");
@@ -90,6 +94,7 @@ export default function PodcastUpcomingGuestsAdmin() {
       short_description: form.short_description.trim(),
       profile_image_url: form.profile_image_url.trim(),
       expected_episode_date: form.expected_episode_date || null,
+      episode_topic: form.episode_topic.trim(),
       status: form.status,
       sort_order: Number(form.sort_order) || 0,
     };
@@ -144,7 +149,9 @@ export default function PodcastUpcomingGuestsAdmin() {
   return (
     <div style={{ display: "grid", gap: 16 }}>
       <p className="adminMuted">
-        Published rows appear on the podcast page &ldquo;Upcoming Guests&rdquo; section. Drafts stay admin-only.
+        Rows in <strong>scheduled</strong>, <strong>confirmed</strong>, or <strong>published</strong> appear on the public podcast page.
+        <strong> Draft</strong> and <strong>hidden</strong> stay admin-only. Apply DB migration{" "}
+        <code>podcast_upcoming_guests_v09_status_topic.sql</code> if status updates fail.
       </p>
       <div className="row wrap" style={{ gap: 8 }}>
         <button type="button" className="btnSoft" disabled={loading} onClick={() => void load()}>
@@ -164,6 +171,7 @@ export default function PodcastUpcomingGuestsAdmin() {
               <th align="left">Status</th>
               <th align="left">Name</th>
               <th align="left">Org</th>
+              <th align="left">Topic</th>
               <th align="left">Expected</th>
               <th align="left">Actions</th>
             </tr>
@@ -182,6 +190,9 @@ export default function PodcastUpcomingGuestsAdmin() {
                 <td style={{ padding: "6px 8px" }}>{r.status}</td>
                 <td style={{ padding: "6px 8px" }}>{r.name}</td>
                 <td style={{ padding: "6px 8px" }}>{r.organization}</td>
+                <td style={{ padding: "6px 8px", maxWidth: 180 }} title={r.episode_topic || ""}>
+                  {r.episode_topic ? `${String(r.episode_topic).slice(0, 48)}${String(r.episode_topic).length > 48 ? "…" : ""}` : "—"}
+                </td>
                 <td style={{ padding: "6px 8px" }}>{r.expected_episode_date || "—"}</td>
                 <td style={{ padding: "6px 8px", whiteSpace: "nowrap" }}>
                   <button type="button" className="btnSoft" onClick={() => editRow(r)}>
@@ -242,6 +253,15 @@ export default function PodcastUpcomingGuestsAdmin() {
             />
           </label>
           <label className="fieldLabel">
+            Episode / topic (optional)
+            <input
+              className="input"
+              value={form.episode_topic}
+              onChange={(e) => setForm((f) => ({ ...f, episode_topic: e.target.value }))}
+              style={{ width: "100%", marginTop: 4 }}
+            />
+          </label>
+          <label className="fieldLabel">
             Expected episode date
             <input
               className="input"
@@ -259,8 +279,11 @@ export default function PodcastUpcomingGuestsAdmin() {
               onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
               style={{ width: "100%", marginTop: 4 }}
             >
-              <option value="draft">draft</option>
-              <option value="published">published</option>
+              <option value="draft">Draft</option>
+              <option value="scheduled">Scheduled</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="published">Published</option>
+              <option value="hidden">Hidden</option>
             </select>
           </label>
           <label className="fieldLabel">

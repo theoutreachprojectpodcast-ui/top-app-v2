@@ -13,6 +13,7 @@ const INITIAL = {
   topic_pitch: "",
   why_now: "",
   social_links: "",
+  community_context: "",
   message: "",
 };
 
@@ -54,6 +55,12 @@ export default function PodcastApplyGuestForm({ supabase, onSubmitted, showHeadi
         <textarea rows={3} placeholder="Topic" value={form.topic_pitch} onChange={(e) => setForm((d) => ({ ...d, topic_pitch: e.target.value }))} />
         <textarea rows={2} placeholder="Why now? (optional)" value={form.why_now} onChange={(e) => setForm((d) => ({ ...d, why_now: e.target.value }))} />
         <textarea rows={2} placeholder="Social links (optional)" value={form.social_links} onChange={(e) => setForm((d) => ({ ...d, social_links: e.target.value }))} />
+        <textarea
+          rows={2}
+          placeholder="Veteran, first responder, or community relevance (optional)"
+          value={form.community_context}
+          onChange={(e) => setForm((d) => ({ ...d, community_context: e.target.value }))}
+        />
         <textarea rows={3} placeholder="Message (optional)" value={form.message} onChange={(e) => setForm((d) => ({ ...d, message: e.target.value }))} />
         <button className="btnPrimary" type="submit" disabled={busy}>{busy ? "Submitting..." : "Submit Guest Application"}</button>
       </form>

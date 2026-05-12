@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1200" role="img" aria-label="Topographic complementary background">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e6edf8"/>
+      <stop offset="48%" stop-color="#dce6f2"/>
+      <stop offset="100%" stop-color="#d2deea"/>
+    </linearGradient>
+    <linearGradient id="warmGlow" x1="0.55" y1="0.15" x2="0.62" y2="0.72">
+      <stop offset="0%" stop-color="#f2c8a4" stop-opacity="0.34"/>
+      <stop offset="45%" stop-color="#e8b995" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#cfa289" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="vignette" cx="50%" cy="40%" r="72%">
+      <stop offset="68%" stop-color="#000000" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#0e1622" stop-opacity="0.14"/>
+    </radialGradient>
+    <filter id="soften" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="0.6"/>
+    </filter>
+  </defs>
+
+  <rect width="1920" height="1200" fill="url(#bg)"/>
+  <rect width="1920" height="1200" fill="url(#warmGlow)"/>
+
+  <g fill="none" stroke="#5b6f84" stroke-opacity="0.30" stroke-width="1.4" filter="url(#soften)">
+    <path d="M-120 190C140 102 278 286 498 230S856 20 1082 108s302 306 546 276 338-182 534-142"/>
+    <path d="M-116 240C150 162 292 330 512 282S870 72 1094 160s302 304 546 274 338-184 538-144"/>
+    <path d="M-108 292C164 224 304 386 526 334S882 124 1108 212s300 306 548 276 342-190 542-148"/>
+    <path d="M-98 346C176 286 320 444 544 390s358-214 586-126 302 312 554 282 350-198 552-154"/>
+    <path d="M-88 404C190 350 338 500 564 450s362-224 592-136 306 314 560 286 354-204 560-158"/>
+    <path d="M-72 468C208 420 356 566 588 518s368-236 600-150 312 322 570 298 364-214 574-166"/>
+    <path d="M-54 538C226 496 380 636 614 592s374-246 610-164 320 332 580 310 372-224 588-174"/>
+    <path d="M-34 612C248 574 404 712 642 672s382-260 620-178 330 342 592 324 384-236 604-184"/>
+    <path d="M-10 694C274 662 434 794 674 760s388-272 634-192 340 354 606 338 396-248 622-194"/>
+    <path d="M16 782C306 754 468 882 712 852s400-286 652-208 352 368 622 354 410-262 640-206"/>
+    <path d="M44 878C336 854 502 976 752 950s410-298 670-224 366 382 640 370 426-278 660-220"/>
+    <path d="M76 982C372 962 546 1080 802 1058s424-314 692-242 382 398 662 390 444-296 684-236"/>
+  </g>
+
+  <g fill="none" stroke="#8ea0b4" stroke-opacity="0.22" stroke-width="0.9">
+    <path d="M-84 154C188 88 304 214 526 172s340-190 560-106 296 286 540 254 324-164 520-122"/>
+    <path d="M-80 872C220 838 418 1012 674 976s420-296 686-220 360 384 630 366 416-268 654-214"/>
+  </g>
+
+  <rect width="1920" height="1200" fill="url(#vignette)"/>
+</svg>

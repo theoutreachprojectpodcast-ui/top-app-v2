@@ -104,17 +104,18 @@ export async function fetchPodcastRecentBundle() {
       source: payload.source,
       error: payload.error,
     };
-  } catch {
-    return { ok: false, episodes: [], featuredGuests: [], degraded: true };
+  } catch (e) {
+    return { ok: false, episodes: [], featuredGuests: [], degraded: true, error: String(e?.message || e || "network_error") };
   }
 }
 
 export async function listPodcastEpisodes(supabase) {
   const bundle = await fetchPodcastRecentBundle();
   if (bundle.episodes?.length) return bundle.episodes.slice(0, 10);
-  if (!supabase) return FALLBACK_EPISODES;
+  const dev = typeof process !== "undefined" && process.env.NODE_ENV === "development";
+  if (!supabase) return dev ? FALLBACK_EPISODES : [];
   const { data, error } = await supabase.from(EPISODES_TABLE).select("*").order("published_at", { ascending: false }).limit(100);
-  if (error || !Array.isArray(data) || !data.length) return FALLBACK_EPISODES;
+  if (error || !Array.isArray(data) || !data.length) return dev ? FALLBACK_EPISODES : [];
   return data.slice(0, 10);
 }
 
@@ -246,6 +247,7 @@ export async function submitPodcastGuestApplication(supabase, payload) {
     phone: String(payload.phone || "").trim(),
     role_title: String(payload.role_title || "").trim(),
     message: String(payload.message || "").trim(),
+    community_context: String(payload.community_context || "").trim(),
   };
 
   if (typeof window !== "undefined") {
@@ -288,7 +290,10 @@ export async function submitPodcastGuestApplication(supabase, payload) {
     social_url: String(payload.social_url || payload.website_url || "").trim(),
     phone: body.phone || null,
     role_title: body.role_title || null,
-    message: body.message || null,
+    message:
+      [body.message, body.community_context ? `Veteran / first responder / community relevance:\n${body.community_context}` : ""]
+        .filter(Boolean)
+        .join("\n\n") || null,
   };
   if (!supabase) {
     pushLocalApplication(record);

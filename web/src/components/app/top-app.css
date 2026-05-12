@@ -17,36 +17,82 @@
   color: var(--color-text-primary);
   padding-bottom: 170px;
 }
-.topApp[data-page-atmosphere="home"] {
+
+/* Home: less floating chrome above the hero — logo + bar sit closer to the safe area. */
+main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) {
+  --header-floating-offset: 12px;
+  --header-floating-height: 252px;
+  --header-fade-height: 40px;
+}
+
+/* Full-bleed cinematic background + read overlays: all TopApp-style shells except podcast */
+main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) {
   position: relative;
   isolation: isolate;
 }
-.topApp[data-page-atmosphere="home"]::before {
+main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])::before {
   content: "";
   position: fixed;
   inset: 0;
   z-index: -2;
   pointer-events: none;
-  background:
-    radial-gradient(ellipse 84% 56% at 14% 6%, color-mix(in srgb, #f7c383 22%, transparent), transparent 60%),
-    radial-gradient(ellipse 80% 50% at 82% 16%, color-mix(in srgb, #d7e6f0 22%, transparent), transparent 64%),
-    linear-gradient(180deg, color-mix(in srgb, #131f2e 18%, transparent) 0%, color-mix(in srgb, #101824 44%, transparent) 100%),
-    var(--home-atmosphere-image) 42% 14% / cover no-repeat;
+  background: var(--home-atmosphere-image) 42% 14% / cover no-repeat;
+  opacity: 0.8;
+  /* Pull extreme sunrise saturation down slightly so UI chrome and cards read more clearly */
+  filter: saturate(0.88) contrast(1.04) brightness(0.94);
 }
-.topApp[data-page-atmosphere="home"]::after {
+:root[data-color-scheme="dark"] main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])::before,
+.dark main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])::before {
+  opacity: 0.72;
+  filter: saturate(0.82) contrast(1.08) brightness(0.78);
+}
+main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])::after {
   content: "";
   position: fixed;
   inset: 0;
   z-index: -1;
   pointer-events: none;
   background:
+    /* Top: cool neutral veil — tames blown highlights behind logo / top bar */
+    radial-gradient(ellipse 120% 55% at 50% -8%, rgba(12, 18, 25, 0.38), rgba(12, 18, 25, 0) 58%),
+    radial-gradient(ellipse 70% 45% at 12% 10%, rgba(26, 40, 56, 0.22), rgba(26, 40, 56, 0) 52%),
+    /* Mid: light lift so body doesn’t go flat gray */
     linear-gradient(
       180deg,
-      color-mix(in srgb, #fff6e9 20%, transparent) 0%,
-      color-mix(in srgb, #000000 0%, transparent) 34%,
-      color-mix(in srgb, #101824 20%, transparent) 100%
+      rgba(244, 247, 250, 0.12) 0%,
+      rgba(232, 238, 245, 0.06) 28%,
+      rgba(244, 247, 250, 0) 52%
+    ),
+    /* Bottom: deeper read bed behind scroll content + dock */
+    linear-gradient(
+      180deg,
+      rgba(15, 20, 28, 0) 38%,
+      rgba(15, 20, 28, 0.18) 72%,
+      rgba(10, 14, 20, 0.42) 100%
     );
 }
+:root[data-color-scheme="dark"] main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])::after,
+.dark main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])::after {
+  background:
+    radial-gradient(ellipse 115% 52% at 50% -6%, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0) 55%),
+    radial-gradient(ellipse 65% 42% at 10% 8%, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0) 50%),
+    linear-gradient(180deg, rgb(from var(--color-bg-subtle) r g b / 0.28) 0%, rgb(from var(--color-bg-subtle) r g b / 0) 45%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0) 35%, rgba(0, 0, 0, 0.5) 88%, rgba(0, 0, 0, 0.62) 100%);
+}
+
+/* Home: simpler read veil — avoids stacked radials + light wash fighting the hero. */
+main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast)::after {
+  background:
+    linear-gradient(180deg, rgba(12, 18, 25, 0.16) 0%, rgba(12, 18, 25, 0) 52%),
+    linear-gradient(180deg, rgba(15, 20, 28, 0) 48%, rgba(15, 20, 28, 0.14) 100%);
+}
+:root[data-color-scheme="dark"] main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast)::after,
+.dark main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast)::after {
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.34) 0%, rgba(0, 0, 0, 0) 52%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0) 46%, rgba(0, 0, 0, 0.38) 100%);
+}
+
 .topbar {
   position: fixed;
   top: var(--header-floating-offset);
@@ -59,6 +105,55 @@
   padding: 0;
   pointer-events: none;
 }
+
+/* --------------------------------------------------------------------------
+   Immersive header scroll (main app only): fill on .topbarOcclusion::before (viewport top → header height). No backdrop-filter
+   here — animated full-bleed backdrop often draws a transient vertical white seam at the viewport edge (esp. next to scrollbar).
+   Podcast: `appShell--podcast` / `data-page-atmosphere="podcast"` — excluded (see podcasts.css).
+   --header-scroll-progress 0–1 set by useImmersiveHeaderScroll; classes header-at-top | header-scrolled | header-solid.
+   -------------------------------------------------------------------------- */
+main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) {
+  --header-scroll-progress: 0;
+}
+main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbar {
+  isolation: isolate;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  transition: box-shadow 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+  border-bottom: none;
+  box-shadow: none;
+}
+/* No bar shadow on scroll — full-width box-shadow often reads as a stray solid band at the header edge. */
+main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]).header-solid .topbar {
+  box-shadow: none;
+}
+:root[data-color-scheme="dark"] main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]).header-solid .topbar,
+.dark main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]).header-solid .topbar {
+  box-shadow: none;
+}
+main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]).header-at-top .topbar .sponsorBtn,
+main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]).header-at-top .topbar .btnSoft,
+main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]).header-scrolled .topbar .sponsorBtn,
+main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]).header-scrolled .topbar .btnSoft {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.42);
+}
+main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]).header-at-top .headerBrandStack > a,
+main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]).header-scrolled .headerBrandStack > a {
+  filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.45));
+}
+main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]).header-solid .headerBrandStack > a {
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.14));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbar {
+    transition: none;
+  }
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarOcclusion::before {
+    transition: none;
+  }
+}
+
 .topbarOcclusion {
   position: fixed;
   left: 0;
@@ -70,15 +165,15 @@
   isolation: isolate;
   /* Gradients only; photo sits in ::before (~10% more visible vs prior single-stack). */
   background:
-    radial-gradient(ellipse 60% 46% at 50% 8%, color-mix(in srgb, #ffffff 18%, transparent), transparent 72%),
-    radial-gradient(ellipse 58% 48% at 86% 0%, color-mix(in srgb, #ffffff 9%, transparent), transparent 64%),
+    radial-gradient(ellipse 60% 46% at 50% 8%, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0) 72%),
+    radial-gradient(ellipse 58% 48% at 86% 0%, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0) 64%),
     linear-gradient(
       180deg,
       color-mix(in srgb, var(--topbar-gradient-fade, #ffffff) 82%, transparent) 0%,
       color-mix(in srgb, var(--topbar-gradient-fade, #ffffff) 58%, transparent) 30%,
       color-mix(in srgb, var(--topbar-gradient-fade, #ffffff) 36%, transparent) 56%,
       color-mix(in srgb, var(--topbar-gradient-fade, #ffffff) 14%, transparent) 78%,
-      transparent 100%
+      rgba(255, 255, 255, 0) 100%
     ),
     linear-gradient(
       180deg,
@@ -98,17 +193,51 @@
   background: var(--header-occlusion-image) center 38% / cover no-repeat;
   filter: contrast(1.07) saturate(1.04);
 }
-.topApp[data-page-atmosphere="home"] .topbarOcclusion {
-  background:
-    radial-gradient(ellipse 62% 48% at 48% 8%, color-mix(in srgb, #fff6dc 20%, transparent), transparent 72%),
-    linear-gradient(180deg, color-mix(in srgb, #08111c 22%, transparent) 0%, transparent 76%);
-  background-size: auto, auto;
-  background-position: center top, center;
-  background-repeat: no-repeat, no-repeat;
+/* Main app: full header chrome (fixed top:0 → bottom of occlusion). ::before = vertical fill + scroll opacity; no flag photo. */
+main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarOcclusion::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  filter: none;
+  background-image: linear-gradient(
+    180deg,
+    #ffffff 0%,
+    #ffffff 14%,
+    rgba(255, 255, 255, 0.98) 32%,
+    rgba(255, 255, 255, 0.94) 50%,
+    rgba(255, 255, 255, 0.88) 66%,
+    rgba(255, 255, 255, 0.72) 80%,
+    rgba(255, 255, 255, 0.28) 92%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  /* Full bleed; mobile `.topbarOcclusion::before` photo sizing must not stretch this gradient. */
+  background-size: 100% 100%;
+  background-position: 0 0;
+  background-repeat: no-repeat;
+  /* High floor + scroll to 1: content must not read through the top chrome while scrolling.
+     Floor = ~20% less transparent than prior 0.82 when at top (progress 0). */
+  opacity: max(0.856, var(--header-scroll-progress, 0));
+  transition: opacity 0.32s cubic-bezier(0.22, 1, 0.36, 1);
 }
-.topApp[data-page-atmosphere="home"] .topbarOcclusion::before {
-  background: var(--home-atmosphere-image) 42% 16% / cover no-repeat;
-  filter: contrast(1.05) saturate(1.03);
+:root[data-color-scheme="dark"] main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarOcclusion::before,
+.dark main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarOcclusion::before {
+  background-image: linear-gradient(
+    180deg,
+    var(--color-bg-elevated) 0%,
+    color-mix(in srgb, var(--color-bg-elevated) 98%, transparent) 16%,
+    color-mix(in srgb, var(--color-bg-elevated) 94%, transparent) 34%,
+    color-mix(in srgb, var(--color-bg-app) 92%, transparent) 52%,
+    color-mix(in srgb, var(--color-bg-app) 86%, transparent) 68%,
+    color-mix(in srgb, var(--color-bg-app) 72%, transparent) 82%,
+    color-mix(in srgb, var(--color-bg-app) 38%, transparent) 93%,
+    rgb(from var(--color-bg-app) r g b / 0) 100%
+  );
+  background-size: 100% 100%;
+  background-position: 0 0;
+  /* ~20% less transparent than prior 0.86 at progress 0 (scroll at top). */
+  opacity: max(0.888, var(--header-scroll-progress, 0));
 }
 /* Podcast header uses its own stacked treatment — no duplicate flag layer. */
 .appShell--podcast .topbarOcclusion::before {
@@ -122,30 +251,34 @@
   pointer-events: none;
   background: linear-gradient(
     180deg,
-    transparent 52%,
-    color-mix(in srgb, #ffffff 22%, transparent) 70%,
-    color-mix(in srgb, #ffffff 58%, transparent) 84%,
-    color-mix(in srgb, #ffffff 88%, transparent) 100%
-  );
-}
-.topApp[data-page-atmosphere="home"] .topbarOcclusion::after {
-  background: linear-gradient(
-    180deg,
-    transparent 48%,
-    color-mix(in srgb, #1b2634 24%, transparent) 70%,
-    color-mix(in srgb, #111a25 52%, transparent) 100%
+    rgba(255, 255, 255, 0) 52%,
+    rgba(255, 255, 255, 0.22) 70%,
+    rgba(255, 255, 255, 0.58) 84%,
+    rgba(255, 255, 255, 0.88) 100%
   );
 }
 :root[data-color-scheme="dark"] .topbarOcclusion::after,
 .dark .topbarOcclusion::after {
   background: linear-gradient(
     180deg,
-    transparent 50%,
-    color-mix(in srgb, var(--color-bg-app) 28%, transparent) 68%,
-    color-mix(in srgb, var(--color-bg-app) 62%, transparent) 82%,
-    color-mix(in srgb, var(--color-bg-app) 88%, transparent) 100%
+    rgb(from var(--color-bg-app) r g b / 0) 50%,
+    rgb(from var(--color-bg-app) r g b / 0.28) 68%,
+    rgb(from var(--color-bg-app) r g b / 0.62) 82%,
+    rgb(from var(--color-bg-app) r g b / 0.88) 100%
   );
 }
+
+main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarOcclusion {
+  background: none;
+  background-blend-mode: normal;
+  overflow: hidden;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarOcclusion::after {
+  content: none;
+}
+
 .siteContainer {
   width: min(var(--content-max-width), calc(100% - var(--content-gutter)));
   margin: 0 auto;
@@ -160,6 +293,8 @@
   --header-floating-offset: 24px;
 }
 .topbarInner {
+  position: relative;
+  z-index: 1;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   grid-template-areas:
@@ -591,8 +726,16 @@ img.brandMarkImg--header {
 }
 .cardHero {
   background:
-    radial-gradient(120% 140% at 12% -18%, color-mix(in srgb, var(--color-bg-muted) 38%, transparent), transparent 52%),
-    radial-gradient(80% 60% at 88% 0%, color-mix(in srgb, var(--color-border-strong) 22%, transparent), transparent 46%),
+    radial-gradient(
+      120% 140% at 12% -18%,
+      rgb(from var(--color-bg-muted) r g b / 0.38),
+      rgb(from var(--color-bg-muted) r g b / 0) 52%
+    ),
+    radial-gradient(
+      80% 60% at 88% 0%,
+      rgb(from var(--color-border-strong) r g b / 0.22),
+      rgb(from var(--color-border-strong) r g b / 0) 46%
+    ),
     linear-gradient(180deg, var(--color-surface-elevated) 0%, var(--color-surface-card-deep) 100%);
   border-color: var(--color-border-strong);
 }
@@ -604,29 +747,6 @@ img.brandMarkImg--header {
   min-height: 0;
   box-shadow: 0 22px 50px color-mix(in srgb, #000 30%, transparent);
 }
-.topApp[data-page-atmosphere="home"] .homeHeroBackdrop {
-  background:
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, #fff1d8 16%, transparent) 0%,
-      color-mix(in srgb, #152130 20%, transparent) 56%,
-      color-mix(in srgb, #101722 52%, transparent) 100%
-    ),
-    var(--home-atmosphere-image) 46% 22% / cover no-repeat;
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, #ffffff 22%, transparent),
-    0 18px 38px color-mix(in srgb, #000 22%, transparent);
-}
-.topApp[data-page-atmosphere="home"] .homeHeroBackdrop::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -1px;
-  height: clamp(100px, 18vh, 200px);
-  pointer-events: none;
-  background: linear-gradient(180deg, transparent 0%, color-mix(in srgb, #101824 55%, transparent) 100%);
-}
 .homeHeroBackdrop__image {
   display: none;
 }
@@ -636,8 +756,8 @@ img.brandMarkImg--header {
 :root[data-color-scheme="light"] .homeHeroBackdrop__scrim {
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, #ffffff 40%, transparent) 0%,
-    color-mix(in srgb, var(--color-bg-app) 72%, transparent) 100%
+    rgba(255, 255, 255, 0.4) 0%,
+    rgb(from var(--color-bg-app) r g b / 0.72) 100%
   );
 }
 .homeHeroBackdrop__content {
@@ -1484,30 +1604,49 @@ img.brandMarkImg--header {
   justify-content: flex-end;
   gap: 4px;
 }
+/* Use semantic surfaces only — hardcoded #fff gradients broke dark mode (light card + light text). */
 #home-directory.card {
-  background:
-    linear-gradient(
-      170deg,
-      color-mix(in srgb, #ffffff 90%, var(--color-surface-card) 10%) 0%,
-      color-mix(in srgb, #eef4ef 84%, var(--color-surface-card) 16%) 46%,
-      color-mix(in srgb, #f8fbf8 78%, var(--color-surface-card-deep) 22%) 100%
-    );
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--color-surface-card) 92%, var(--color-bg-elevated) 8%) 0%,
+    color-mix(in srgb, var(--color-surface-card-deep) 94%, transparent) 100%
+  );
   border-color: color-mix(in srgb, var(--color-accent-soft) 24%, var(--color-border-subtle) 76%);
+  color: var(--color-text-primary);
   box-shadow:
-    0 18px 30px color-mix(in srgb, #000 10%, transparent),
-    inset 0 0 0 1px color-mix(in srgb, #ffffff 42%, transparent);
+    0 18px 30px color-mix(in srgb, var(--color-text-primary) 9%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--color-text-primary) 4%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #ffffff 8%, transparent);
+}
+:root[data-color-scheme="dark"] #home-directory.card,
+.dark #home-directory.card {
+  box-shadow:
+    0 18px 30px color-mix(in srgb, #000 42%, transparent),
+    0 0 0 1px color-mix(in srgb, #ffffff 5%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #ffffff 6%, transparent);
 }
 #home-directory h3 {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  color: var(--color-text-primary);
+}
+#home-directory .row p {
+  color: var(--color-text-secondary);
+}
+#home-directory .directoryPagerLabel {
+  color: var(--color-text-secondary);
 }
 
 /* Directory search — category quick pick */
 .directoryCategoryPickDisclosure {
   border: 1px solid color-mix(in srgb, var(--color-accent) 22%, var(--color-border-soft));
   border-radius: 14px;
-  background: linear-gradient(170deg, color-mix(in srgb, #ffffff 84%, var(--color-bg-card) 16%) 0%, color-mix(in srgb, var(--color-bg-card) 88%, transparent) 100%);
+  background: linear-gradient(
+    170deg,
+    color-mix(in srgb, var(--color-surface-card) 90%, var(--color-bg-muted) 10%) 0%,
+    color-mix(in srgb, var(--color-surface-card-deep) 92%, transparent) 100%
+  );
   margin: 14px 0 10px;
   overflow: hidden;
 }
@@ -1923,7 +2062,11 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   border-radius: 999px;
   border: 1px solid var(--color-border-subtle);
   background:
-    radial-gradient(circle at 30% 24%, var(--nonprofit-icon-tint, var(--color-accent-soft)), transparent 58%),
+    radial-gradient(
+      circle at 30% 24%,
+      var(--nonprofit-icon-tint, var(--color-accent-soft)),
+      rgb(from var(--nonprofit-icon-tint, var(--color-accent-soft)) r g b / 0) 58%
+    ),
     linear-gradient(180deg, var(--color-bg-card) 0%, var(--color-bg-card-hover) 100%);
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 8%, transparent);
   display: grid;
@@ -2455,20 +2598,69 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 }
 .siteFooter {
   margin-top: 28px;
-  padding: 0 0 120px;
+  padding: 8px max(var(--content-gutter), env(safe-area-inset-left)) 120px
+    max(var(--content-gutter), env(safe-area-inset-right));
 }
 .footerInner {
-  border-top: 1px solid var(--color-border);
-  padding-top: 20px;
   display: flex;
   justify-content: space-between;
-  gap: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 20px 32px;
+  padding: 22px 22px 20px;
+  border-radius: var(--radius-card);
+  border: 1px solid color-mix(in srgb, var(--color-border) 88%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--color-border-strong) 55%, transparent);
+  background: color-mix(in srgb, var(--color-surface-elevated) 96%, #ffffff 4%);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #ffffff 55%, transparent),
+    0 10px 36px color-mix(in srgb, var(--color-text-primary) 10%, transparent);
+}
+:root[data-color-scheme="dark"] .footerInner,
+.dark .footerInner {
+  background: color-mix(in srgb, var(--color-surface-card-deep) 92%, #0a0a0a 8%);
+  border-color: color-mix(in srgb, var(--color-border-strong) 72%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #ffffff 8%, transparent),
+    0 14px 40px color-mix(in srgb, #000 42%, transparent);
+}
+.siteFooter .brandName {
+  margin: 0 0 10px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  line-height: 1.25;
+  color: var(--color-text-primary);
+  text-transform: uppercase;
+}
+.footerInner > div:first-child {
+  flex: 1 1 min(320px, 100%);
+  min-width: 0;
+}
+.footerInner > div:first-child .footerNote {
+  margin: 0;
+}
+.footerInner > p.footerNote {
+  flex: 1 1 min(260px, 100%);
+  max-width: 52ch;
+  margin: 0;
+  align-self: center;
+}
+@media (min-width: 761px) {
+  .footerInner > p.footerNote {
+    text-align: right;
+  }
 }
 .footerNote {
-  margin: 6px 0 0;
-  color: var(--color-text-secondary);
-  font-size: 13px;
-  max-width: 460px;
+  margin: 0;
+  color: color-mix(in srgb, var(--color-text-secondary) 42%, var(--color-text-primary) 58%);
+  font-size: 14px;
+  line-height: 1.6;
+  font-weight: 500;
+}
+:root[data-color-scheme="dark"] .footerNote,
+.dark .footerNote {
+  color: color-mix(in srgb, var(--color-text-secondary) 35%, #e8eef8 65%);
 }
 .onboardingShell {
   max-width: 960px;
@@ -4219,50 +4411,51 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   inset: 0;
   background-size: cover;
   background-position: center;
-  filter: saturate(0.92) contrast(1.04) brightness(0.68);
+  /* Sponsors page: brighter listing photos; scrim opacity reduced separately ~20%. */
+  filter: saturate(0.94) contrast(1.03) brightness(1.02);
 }
 .sponsorPremiumCardScrim {
   position: absolute;
   inset: 0;
   /* Stronger legibility on the left copy column; keep the right side of the photo a bit more visible. */
-  background: linear-gradient(108deg, rgba(7, 10, 14, 0.96) 0%, rgba(7, 10, 14, 0.62) 44%, rgba(7, 10, 14, 0.42) 100%);
+  background: linear-gradient(108deg, rgba(7, 10, 14, 0.77) 0%, rgba(7, 10, 14, 0.5) 44%, rgba(7, 10, 14, 0.34) 100%);
 }
 .sponsorPremiumCard--gold .sponsorPremiumCardScrim {
-  background: linear-gradient(125deg, rgba(12, 10, 8, 0.93) 0%, rgba(18, 14, 10, 0.55) 50%, rgba(14, 11, 8, 0.88) 100%),
-    radial-gradient(circle at 90% 20%, rgba(255, 255, 255, 0.04), transparent 42%);
+  background: linear-gradient(125deg, rgba(12, 10, 8, 0.74) 0%, rgba(18, 14, 10, 0.44) 50%, rgba(14, 11, 8, 0.7) 100%),
+    radial-gradient(circle at 90% 20%, rgba(255, 255, 255, 0.032), rgba(255, 255, 255, 0) 42%);
 }
 .sponsorPremiumCard--copper .sponsorPremiumCardScrim {
-  background: linear-gradient(125deg, rgba(16, 10, 8, 0.94) 0%, rgba(20, 12, 8, 0.52) 50%, rgba(14, 9, 7, 0.9) 100%),
-    radial-gradient(circle at 12% 18%, rgba(200, 120, 80, 0.14), transparent 45%);
+  background: linear-gradient(125deg, rgba(16, 10, 8, 0.75) 0%, rgba(20, 12, 8, 0.42) 50%, rgba(14, 9, 7, 0.72) 100%),
+    radial-gradient(circle at 12% 18%, rgba(200, 120, 80, 0.11), rgba(200, 120, 80, 0) 45%);
 }
 .sponsorPremiumCard--amber .sponsorPremiumCardScrim {
-  background: linear-gradient(125deg, rgba(14, 11, 7, 0.93) 0%, rgba(18, 14, 9, 0.54) 50%, rgba(12, 9, 6, 0.88) 100%),
-    radial-gradient(circle at 80% 30%, rgba(212, 160, 84, 0.15), transparent 40%);
+  background: linear-gradient(125deg, rgba(14, 11, 7, 0.74) 0%, rgba(18, 14, 9, 0.43) 50%, rgba(12, 9, 6, 0.7) 100%),
+    radial-gradient(circle at 80% 30%, rgba(212, 160, 84, 0.12), rgba(212, 160, 84, 0) 40%);
 }
 .sponsorPremiumCard--rust .sponsorPremiumCardScrim {
-  background: linear-gradient(125deg, rgba(14, 9, 8, 0.94) 0%, rgba(18, 10, 8, 0.55) 50%, rgba(12, 7, 6, 0.9) 100%),
-    radial-gradient(circle at 20% 22%, rgba(180, 90, 70, 0.12), transparent 42%);
+  background: linear-gradient(125deg, rgba(14, 9, 8, 0.75) 0%, rgba(18, 10, 8, 0.44) 50%, rgba(12, 7, 6, 0.72) 100%),
+    radial-gradient(circle at 20% 22%, rgba(180, 90, 70, 0.1), rgba(180, 90, 70, 0) 42%);
 }
 .sponsorPremiumCard--teal .sponsorPremiumCardScrim {
-  background: linear-gradient(125deg, rgba(8, 12, 14, 0.94) 0%, rgba(8, 14, 16, 0.52) 50%, rgba(7, 11, 13, 0.9) 100%),
-    radial-gradient(circle at 70% 12%, rgba(255, 255, 255, 0.035), transparent 46%);
+  background: linear-gradient(125deg, rgba(8, 12, 14, 0.75) 0%, rgba(8, 14, 16, 0.42) 50%, rgba(7, 11, 13, 0.72) 100%),
+    radial-gradient(circle at 70% 12%, rgba(255, 255, 255, 0.028), rgba(255, 255, 255, 0) 46%);
 }
 .sponsorPremiumCard--rose .sponsorPremiumCardScrim {
-  background: linear-gradient(125deg, rgba(14, 9, 11, 0.93) 0%, rgba(16, 10, 12, 0.54) 50%, rgba(12, 7, 9, 0.88) 100%),
-    radial-gradient(circle at 15% 70%, rgba(200, 100, 110, 0.12), transparent 44%);
+  background: linear-gradient(125deg, rgba(14, 9, 11, 0.74) 0%, rgba(16, 10, 12, 0.43) 50%, rgba(12, 7, 9, 0.7) 100%),
+    radial-gradient(circle at 15% 70%, rgba(200, 100, 110, 0.1), rgba(200, 100, 110, 0) 44%);
 }
 .sponsorPremiumCard--sage .sponsorPremiumCardScrim {
-  background: linear-gradient(125deg, rgba(8, 11, 10, 0.94) 0%, rgba(9, 13, 12, 0.54) 50%, rgba(7, 10, 10, 0.9) 100%),
-    radial-gradient(circle at 88% 78%, rgba(255, 255, 255, 0.04), transparent 48%);
+  background: linear-gradient(125deg, rgba(8, 11, 10, 0.75) 0%, rgba(9, 13, 12, 0.43) 50%, rgba(7, 10, 10, 0.72) 100%),
+    radial-gradient(circle at 88% 78%, rgba(255, 255, 255, 0.032), rgba(255, 255, 255, 0) 48%);
 }
 .sponsorPremiumCardInner {
   position: relative;
   z-index: 1;
   padding: var(--ds-space-5, 22px);
-  display: grid;
-  gap: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
   min-height: 300px;
-  align-content: space-between;
 }
 .sponsorPremiumCardTop {
   display: flex;
@@ -4294,7 +4487,8 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   background: rgba(6, 10, 14, 0.72);
   line-height: 1.2;
 }
-.sponsorPremiumBadge--foundational {
+.sponsorPremiumBadge--foundational,
+.sponsorPremiumBadge--primary {
   color: color-mix(in srgb, var(--color-accent-hover) 88%, #f8fafc 12%);
   border-color: color-mix(in srgb, var(--color-accent) 42%, rgba(255, 255, 255, 0.2));
   background: color-mix(in srgb, var(--color-accent) 14%, rgba(6, 10, 14, 0.75));
@@ -4357,16 +4551,11 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   background: rgba(6, 10, 14, 0.55);
 }
 .sponsorPremiumBrand {
-  display: grid;
-  gap: 16px;
-  align-items: start;
-}
-@media (min-width: 768px) {
-  .sponsorPremiumBrand {
-    grid-template-columns: minmax(280px, 38%) minmax(0, 1fr);
-    column-gap: 28px;
-    row-gap: 4px;
-  }
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 .sponsorPremiumBrandIdentity {
   display: flex;
@@ -4377,17 +4566,6 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 .sponsorPremiumTitleBlock {
   flex: 1;
   min-width: 0;
-}
-.sponsorPremiumBrandBody {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  min-width: 0;
-}
-@media (min-width: 768px) {
-  .sponsorPremiumBrandBody {
-    min-height: 100%;
-  }
 }
 .sponsorPremiumLogoShell {
   width: 144px;
@@ -4416,7 +4594,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 /* Dark or black logos on transparent art — light inset so marks stay legible on dark cards */
 .sponsorPremiumLogoShell.sponsorPremiumLogoShell--panel-light {
   background: #f8fafc;
-  border-color: color-mix(in srgb, var(--color-border-strong) 35%, rgba(15, 23, 42, 0.14));
+  border-color: color-mix(in srgb, var(--color-border-strong) 35%, rgba(20, 22, 21, 0.14));
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.75),
     0 8px 24px rgba(0, 0, 0, 0.28);
@@ -4425,7 +4603,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   filter: none;
 }
 .sponsorPremiumLogoShell--panel-light .sponsorPremiumWordmark {
-  color: #0f172a;
+  color: #141816;
 }
 .sponsorPremiumLogoImg {
   width: 100%;
@@ -4449,7 +4627,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 }
 :root[data-color-scheme="dark"] .sponsorPremiumLogoShell--tone-lightmono,
 .dark .sponsorPremiumLogoShell--tone-lightmono {
-  background: rgba(12, 16, 20, 0.9);
+  background: rgb(from var(--color-bg-card) r g b / 0.9);
 }
 :root[data-color-scheme="dark"] .sponsorPremiumLogoShell--tone-darkmono,
 .dark .sponsorPremiumLogoShell--tone-darkmono {
@@ -4506,14 +4684,15 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   color: rgba(233, 240, 247, 0.9);
   max-width: none;
 }
-.sponsorPremiumBrandBody .sponsorPremiumTagline {
+.sponsorPremiumTagline--card {
   display: -webkit-box;
   -webkit-line-clamp: 5;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  margin: 0;
 }
 @media (min-width: 768px) {
-  .sponsorPremiumBrandBody .sponsorPremiumTagline {
+  .sponsorPremiumTagline--card {
     -webkit-line-clamp: 6;
   }
 }
@@ -4523,16 +4702,16 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   align-items: center;
   justify-content: flex-start;
   gap: 10px;
-  margin-top: 12px;
+  margin-top: auto;
+  padding-top: 4px;
+  width: 100%;
 }
 @media (min-width: 768px) {
   .sponsorPremiumFooter {
-    margin-top: auto;
-    padding-top: 14px;
+    padding-top: 12px;
     justify-content: space-between;
-    width: 100%;
   }
-  .sponsorPremiumBrandBody .sponsorPremiumSocial {
+  .sponsorPremiumFooter .sponsorPremiumSocial {
     margin-left: auto;
     justify-content: flex-end;
   }
@@ -4572,6 +4751,10 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 .sponsorPremiumSocialLink:hover {
   border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-border));
   color: var(--color-accent);
+}
+.sponsorPremiumSocialLink:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-accent) 70%, #f8fafc 30%);
+  outline-offset: 2px;
 }
 .sponsorPremiumPending {
   font-size: var(--text-body-sm);
@@ -5042,19 +5225,17 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
     background-size: auto, auto, auto, auto;
     background-position: center top, right top, center, center;
   }
+  /* Flag-hero occlusion photo sizing — do not apply to main immersive gradient (would tile / band). */
   .topbarOcclusion::before {
     background-size: 170% auto;
     background-position: 58% 22%;
   }
-  .topApp[data-page-atmosphere="home"]::before {
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarOcclusion::before {
+    background-size: 100% 100%;
+    background-position: 0 0;
+  }
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])::before {
     background-position: 36% 9%;
-  }
-  .topApp[data-page-atmosphere="home"] .topbarOcclusion::before {
-    background-size: 190% auto;
-    background-position: 35% 14%;
-  }
-  .topApp[data-page-atmosphere="home"] .homeHeroBackdrop {
-    background-position: 40% 24%;
   }
   .shell {
     padding-top: 16px;
@@ -5264,11 +5445,8 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
       "right";
     gap: 8px;
   }
-  .topApp[data-page-atmosphere="home"]::before {
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])::before {
     background-position: 33% 8%;
-  }
-  .topApp[data-page-atmosphere="home"] .homeHeroBackdrop {
-    background-position: 36% 26%;
   }
   .topbarCenter {
     display: none;

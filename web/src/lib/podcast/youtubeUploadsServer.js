@@ -7,7 +7,9 @@ import { discoverChannelId, parseYoutubeFeed, youtubeFeedUrls } from "../../feat
 const API = "https://www.googleapis.com/youtube/v3";
 
 function cleanKey() {
-  return String(process.env.YOUTUBE_API_KEY || "").trim();
+  return String(
+    process.env.YOUTUBE_API_KEY || process.env.YOUTUBE_DATA_API_KEY || process.env.GOOGLE_API_KEY || ""
+  ).trim();
 }
 
 export function youtubeChannelIdConfigured() {

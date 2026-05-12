@@ -2,7 +2,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { sendPodcastGuestApplicationNotify } from "@/server/podcasts/sendPodcastGuestApplicationNotify";
 
 export const runtime = "nodejs";
-const DEFAULT_PODCAST_GUEST_RECIPIENT = "Hodge5403@gmail.com";
+const DEFAULT_PODCAST_GUEST_RECIPIENT = "jmelching1@gmail.com";
 
 function pickString(v, max = 8000) {
   const s = String(v ?? "").trim();
@@ -28,6 +28,7 @@ export async function POST(request) {
   const phone = pickString(body.phone, 80);
   const role_title = pickString(body.role_title, 240);
   const message = pickString(body.message, 8000);
+  const community_context = pickString(body.community_context, 4000);
 
   if (!full_name || !email || !topic_pitch) {
     return Response.json({ ok: false, error: "missing_required_fields" }, { status: 400 });
@@ -84,7 +85,9 @@ export async function POST(request) {
   let emailWarning = "";
   try {
     const recipient = String(process.env.PODCAST_GUEST_APPLICATION_RECIPIENT || DEFAULT_PODCAST_GUEST_RECIPIENT).trim();
+    const envHint = String(process.env.NEXT_PUBLIC_VERCEL_ENV || process.env.NODE_ENV || "unknown").trim();
     const bodyText = [
+      `Environment: ${envHint}`,
       `Submitted at: ${new Date().toISOString()}`,
       `Status: submitted`,
       phone ? `Phone: ${phone}` : "",
@@ -97,7 +100,8 @@ export async function POST(request) {
       "",
       why_now ? `Why now:\n${why_now}` : "",
       social_links ? `Social / links:\n${social_links}` : "",
-      message ? `\nMessage:\n${message}` : "",
+      community_context ? `Veteran / first responder / community relevance:\n${community_context}` : "",
+      message ? `\nApplicant message:\n${message}` : "",
     ]
       .filter(Boolean)
       .join("\n");
@@ -110,8 +114,15 @@ export async function POST(request) {
       bodyText,
     });
     if (!sent.ok) emailWarning = `Saved, but email was not sent (${sent.error}).`;
+    else if (process.env.NODE_ENV === "development") {
+      console.info("[podcast-apply-guest] notify sent", { to: recipient, id: insertedId });
+    }
   } catch (e) {
     emailWarning = `Saved, but notification step failed (${String(e?.message || e)}).`;
+  }
+
+  if (process.env.NODE_ENV === "development" && emailWarning) {
+    console.warn("[podcast-apply-guest]", emailWarning, { defaultRecipient: DEFAULT_PODCAST_GUEST_RECIPIENT });
   }
 
   return Response.json({ ok: true, id: insertedId, emailWarning });

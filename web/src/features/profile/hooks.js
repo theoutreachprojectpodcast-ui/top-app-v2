@@ -53,6 +53,18 @@ function profileToApiPatch(p) {
     banner: p.banner,
     theme: p.theme,
     avatarUrl: p.avatarUrl,
+    phoneNumber: p.phoneNumber,
+    postalCode: p.postalCode,
+    preferredContactMethod: p.preferredContactMethod,
+    notificationPreferences: Array.isArray(p.notificationPreferences) ? p.notificationPreferences : undefined,
+    identitySegment: p.identitySegment,
+    jobTitle: p.jobTitle,
+    reasonForJoining: p.reasonForJoining,
+    supportNeeds: p.supportNeeds,
+    communities: p.communities,
+    contributionInterests:
+      p.contributionInterests && typeof p.contributionInterests === "object" ? p.contributionInterests : undefined,
+    preferredContributionContact: p.preferredContributionContact,
     identityRole: p.identityRole,
     missionStatement: p.missionStatement,
     organizationAffiliation: p.organizationAffiliation,
@@ -72,6 +84,7 @@ function profileToApiPatch(p) {
   if (p.accountIntent != null && String(p.accountIntent).trim()) {
     patch.accountIntent = String(p.accountIntent).trim();
   }
+  if (typeof p.onboardingSkipped === "boolean") patch.onboardingSkipped = p.onboardingSkipped;
   return patch;
 }
 

@@ -29,6 +29,8 @@ import { useProfileData } from "@/features/profile/ProfileDataProvider";
 import { useTrustedResources } from "@/hooks/useTrustedResources";
 import DirectoryCategoryQuickPick from "@/features/directory/components/DirectoryCategoryQuickPick";
 import { isQaLikeDeployment } from "@/lib/runtime/qaEnv";
+import { showLocalDemoChrome } from "@/lib/runtime/demoUiVisibility";
+import { useImmersiveHeaderScroll } from "@/hooks/useImmersiveHeaderScroll";
 import MembershipAtAGlance from "@/features/membership/components/MembershipAtAGlance";
 import ColorSchemeToggle from "@/components/app/ColorSchemeToggle";
 import { SERVICE_OPTIONS, STATES } from "@/lib/constants";
@@ -47,10 +49,16 @@ import {
 } from "@/lib/auth/lastUsedEmail";
 import { workosSignInLink, workosSignUpHref } from "@/lib/auth/workosReturnTo";
 import { computeProfileCompletion, getIncompleteEditFocusIds } from "@/lib/profile/profileCompletion";
+import {
+  CONTRIBUTION_INTEREST_KEYS,
+  IDENTITY_SEGMENT_OPTIONS,
+  PREFERRED_CONTACT_OPTIONS,
+} from "@/lib/profile/profileCompletenessModel";
 import { profileFromApiDto } from "@/features/profile/mappers";
 import { mergeEditDraftWithProfile } from "@/features/profile/lib/mergeEditDraftWithProfile";
 import AccountSettingsPage from "@/features/settings/components/AccountSettingsPage";
 import { FormCheckbox } from "@/components/forms/FormChoice";
+import { resolvePageAtmosphere } from "@/lib/design/pageAtmosphere";
 
 function AppIcon({ name }) {
   const icons = {
@@ -106,6 +114,7 @@ function TopAppInner({ initialNav = "home" }) {
   const [authStatus, setAuthStatus] = useState("");
   const [signupAvatarDataUrl, setSignupAvatarDataUrl] = useState("");
   const [editSaveError, setEditSaveError] = useState("");
+  const [editSaveOk, setEditSaveOk] = useState("");
   const [contactDraft, setContactDraft] = useState({ firstName: "", lastName: "", email: "", phone: "", message: "" });
   const [contactStatus, setContactStatus] = useState("");
   const [contactError, setContactError] = useState("");
@@ -249,18 +258,15 @@ function TopAppInner({ initialNav = "home" }) {
     }));
   }, [nav, isAuthenticated, profile.email, profile.firstName, profile.lastName]);
 
-  useEffect(() => {
-    if (sessionKind !== "workos" || !isAuthenticated) return;
-    if (profile?.onboardingCompleted) return;
-    const path = typeof window !== "undefined" ? window.location.pathname : "";
-    if (path.startsWith("/onboarding")) return;
-    if (path.startsWith("/settings")) return;
-    if (path.startsWith("/profile")) return;
-    if (path.startsWith("/podcasts")) return;
-    if (path.startsWith("/admin")) return;
-    if (path !== "/") return;
-    router.replace("/onboarding");
-  }, [sessionKind, isAuthenticated, profile?.onboardingCompleted, router]);
+  function openOnboardingFlow() {
+    if (sessionKind === "workos") {
+      router.push("/onboarding");
+      return;
+    }
+    // Demo/local auth does not have server-backed WorkOS onboarding APIs.
+    // Route to profile edit instead of bouncing through /onboarding -> signin.
+    router.push("/profile?edit=1");
+  }
 
   function openEdit(focusKey) {
     setEditSaveError("");
@@ -271,13 +277,17 @@ function TopAppInner({ initialNav = "home" }) {
 
   async function saveEditProfile() {
     setEditSaveError("");
+    setEditSaveOk("");
     const result = await persistProfile({ ...profile, ...editDraft });
     if (!result.ok) {
       setEditSaveError(String(result.message || "").trim() || "Could not save your profile. Try again.");
       return;
     }
-    closeEditOverlay();
+    setEditSaveOk("Profile saved.");
     void refreshAuthSession({ soft: true });
+    window.setTimeout(() => {
+      closeEditOverlay();
+    }, 900);
   }
 
   /** Home hero “Finish profile” navigates with ?edit=1 — open overlay only after /api/me profile is loaded on this mount. */
@@ -289,9 +299,19 @@ function TopAppInner({ initialNav = "home" }) {
     }
     if (openedProfileEditFromQueryRef.current) return;
     if (loadingProfile || !isAuthenticated) return;
-    const rawFocus = searchParams.get("focus") || "";
+    const section = String(searchParams.get("section") || "").trim().toLowerCase();
+    const SECTION_TO_FOCUS = {
+      main: "displayName",
+      identity: "identitySegment",
+      contribution: "contribution",
+      interests: "interests",
+      preferences: "preferences",
+    };
+    const rawFocus = String(searchParams.get("focus") || searchParams.get("field") || "").trim();
+    const fromSection = section && SECTION_TO_FOCUS[section] ? SECTION_TO_FOCUS[section] : "";
     const focusKey =
-      rawFocus && /^[a-zA-Z][a-zA-Z0-9_-]*$/.test(rawFocus) ? rawFocus : undefined;
+      (fromSection && /^[a-zA-Z][a-zA-Z0-9_-]*$/.test(fromSection) ? fromSection : "") ||
+      (rawFocus && /^[a-zA-Z][a-zA-Z0-9_-]*$/.test(rawFocus) ? rawFocus : "");
     openedProfileEditFromQueryRef.current = true;
     setEditSaveError("");
     setEditDraft(profileFromApiDto(profile));
@@ -336,6 +356,18 @@ function TopAppInner({ initialNav = "home" }) {
         profile.supportInterests,
         profile.contributionSummary,
         profile.accountIntent,
+        profile.phoneNumber,
+        profile.postalCode,
+        profile.preferredContactMethod,
+        profile.notificationPreferences?.join(","),
+        profile.identitySegment,
+        profile.jobTitle,
+        profile.reasonForJoining,
+        profile.supportNeeds,
+        profile.communities,
+        profile.preferredContributionContact,
+        JSON.stringify(profile.contributionInterests || {}),
+        profile.onboardingSkipped,
       ].join("\u001f"),
     [profile],
   );
@@ -347,8 +379,27 @@ function TopAppInner({ initialNav = "home" }) {
 
   function closeEditOverlay() {
     setEditSaveError("");
+    setEditSaveOk("");
     setEditFieldFocus(null);
     setOverlay(null);
+  }
+
+  function toggleEditNotificationPref(id) {
+    setEditDraft((d) => {
+      const arr = Array.isArray(d.notificationPreferences) ? [...d.notificationPreferences] : [];
+      const s = new Set(arr.map((x) => String(x || "").toLowerCase()));
+      const k = String(id || "").toLowerCase();
+      if (s.has(k)) s.delete(k);
+      else s.add(k);
+      return { ...d, notificationPreferences: [...s] };
+    });
+  }
+
+  function toggleEditContributionInterest(key) {
+    setEditDraft((d) => {
+      const prev = d.contributionInterests && typeof d.contributionInterests === "object" ? d.contributionInterests : {};
+      return { ...d, contributionInterests: { ...prev, [key]: !prev[key] } };
+    });
   }
 
   useEffect(() => {
@@ -528,6 +579,11 @@ function TopAppInner({ initialNav = "home" }) {
     setOverlay("signin");
   }
 
+  const pageAtmosphere = useMemo(() => resolvePageAtmosphere(pathname, nav), [pathname, nav]);
+  const mainScrollRef = useRef(null);
+  const immersiveHeaderScroll = pageAtmosphere !== "podcast";
+  useImmersiveHeaderScroll({ rootRef: mainScrollRef, enabled: immersiveHeaderScroll });
+
   function onContactSubmit(e) {
     e.preventDefault();
     setContactError("");
@@ -548,7 +604,11 @@ function TopAppInner({ initialNav = "home" }) {
   }
 
   return (
-    <main className={`topApp theme-${profile.theme}`}>
+    <main
+      ref={mainScrollRef}
+      className={`topApp theme-${profile.theme}${immersiveHeaderScroll ? " header-at-top" : ""}`}
+      data-page-atmosphere={pageAtmosphere}
+    >
       <div className="headerBrandStack">
         <Link href="/" aria-label="Go to home">
           <BrandMark size="header" />
@@ -635,7 +695,7 @@ function TopAppInner({ initialNav = "home" }) {
                           if (focus) qs.set("focus", focus);
                           router.push(`/profile?${qs.toString()}`);
                         }}
-                        onOpenOnboarding={() => router.push("/onboarding")}
+                        onOpenOnboarding={openOnboardingFlow}
                         onOpenMembership={openMembershipJourney}
                       />
                       <div className="card cardHero homeHeroBackdrop__card">
@@ -918,11 +978,15 @@ function TopAppInner({ initialNav = "home" }) {
                     Create an account
                   </button>
                   <button className="btnSoft" type="button" onClick={() => setNav("home")}>Back to home</button>
-                  <button className="btnSoft" type="button" onClick={resetDemo}>Reset Demo</button>
+                  {showLocalDemoChrome() ? (
+                    <button className="btnSoft" type="button" onClick={resetDemo}>Reset Demo</button>
+                  ) : null}
                 </div>
-                <p className="sponsorSectionLead profileDemoResetNote">
-                  Reset Demo clears local profile, saved organizations, and demo-only application data on this device. You do not need to be signed in.
-                </p>
+                {showLocalDemoChrome() ? (
+                  <p className="sponsorSectionLead profileDemoResetNote">
+                    Reset Demo clears local profile, saved organizations, and demo-only application data on this device. You do not need to be signed in.
+                  </p>
+                ) : null}
               </div>
               <MembershipAtAGlance
                 surface="profile"
@@ -969,9 +1033,10 @@ function TopAppInner({ initialNav = "home" }) {
           />
           <ProfileCompletionPanel
             completion={profileCompletion}
+            profile={profile}
             onEditProfile={() => openEdit()}
             onEditProfileFocus={(key) => openEdit(key)}
-            onOpenOnboarding={() => router.push("/onboarding")}
+            onOpenOnboarding={openOnboardingFlow}
             onOpenMembership={openMembershipJourney}
           />
 
@@ -1033,7 +1098,9 @@ function TopAppInner({ initialNav = "home" }) {
           />
           <div className="card">
             <div className="row wrap">
-              <button className="btnSoft" onClick={resetDemo} type="button">Reset Demo</button>
+              {showLocalDemoChrome() ? (
+                <button className="btnSoft" onClick={resetDemo} type="button">Reset Demo</button>
+              ) : null}
               <button className="btnSoft" onClick={signOut} type="button">Sign Out</button>
             </div>
           </div>
@@ -1122,6 +1189,14 @@ function TopAppInner({ initialNav = "home" }) {
         </section>
       )}
 
+      {isAuthenticated && entitlements?.isPlatformAdmin ? (
+        <div className="adminUtilityEntry">
+          <Link className="adminUtilityEntryLink" href="/admin">
+            Admin Console
+          </Link>
+        </div>
+      ) : null}
+
       {/* Page footer: end of scrollable content (brand + copy). Not the fixed bottom nav. */}
       <footer className="siteFooter">
         <FooterInner className="footerInner">
@@ -1163,7 +1238,7 @@ function TopAppInner({ initialNav = "home" }) {
                 <a className="btnPrimary" href="/onboarding">
                   Open membership onboarding
                 </a>
-              ) : (
+              ) : showLocalDemoChrome() ? (
                 <button
                   className="btnPrimary"
                   onClick={async () => {
@@ -1174,7 +1249,7 @@ function TopAppInner({ initialNav = "home" }) {
                 >
                   Become a Member (demo)
                 </button>
-              )}
+              ) : null}
             </div>
           </div>
         </div>
@@ -1196,13 +1271,15 @@ function TopAppInner({ initialNav = "home" }) {
           >
             <h3>Edit profile</h3>
             <p className="ds-page-intro__lead" style={{ margin: 0 }}>
-              Core account fields sync when cloud is available. Incomplete items from your profile checklist are highlighted
-              in green. Deeper account controls live in{" "}
+              Sections mirror onboarding. Incomplete checklist items show a green outline. Billing lives in{" "}
               <button type="button" className="accountSettingsInlineLink" onClick={() => router.push("/settings")}>
                 Settings
               </button>
               .
             </p>
+            <h4 className="introTagline" style={{ marginTop: 16 }}>
+              Main account information
+            </h4>
             <div
               className={`profileEditChunk${editIncompleteKeys.has("avatar") ? " profileEditChunk--incomplete" : ""}`}
               data-profile-edit-focus="avatar"
@@ -1269,6 +1346,43 @@ function TopAppInner({ initialNav = "home" }) {
               />
             </div>
             <div
+              className={`profileEditChunk${editIncompleteKeys.has("phone") ? " profileEditChunk--incomplete" : ""}`}
+              data-profile-edit-focus="phone"
+            >
+              <input
+                type="tel"
+                autoComplete="tel"
+                value={editDraft.phoneNumber || ""}
+                onChange={(e) => setEditDraft((d) => ({ ...d, phoneNumber: e.target.value }))}
+                placeholder="Phone number"
+              />
+            </div>
+            <div
+              className={`profileEditChunk${editIncompleteKeys.has("location") ? " profileEditChunk--incomplete" : ""}`}
+              data-profile-edit-focus="location"
+            >
+              <div className="form">
+                <input
+                  value={editDraft.city || ""}
+                  onChange={(e) => setEditDraft((d) => ({ ...d, city: e.target.value }))}
+                  placeholder="City"
+                  autoComplete="address-level2"
+                />
+                <input
+                  value={editDraft.state || ""}
+                  onChange={(e) => setEditDraft((d) => ({ ...d, state: e.target.value }))}
+                  placeholder="State / region"
+                  autoComplete="address-level1"
+                />
+              </div>
+              <input
+                value={editDraft.postalCode || ""}
+                onChange={(e) => setEditDraft((d) => ({ ...d, postalCode: e.target.value }))}
+                placeholder="ZIP / postal code"
+                autoComplete="postal-code"
+              />
+            </div>
+            <div
               className={`profileEditChunk${editIncompleteKeys.has("about") ? " profileEditChunk--incomplete" : ""}`}
               data-profile-edit-focus="about"
             >
@@ -1283,8 +1397,172 @@ function TopAppInner({ initialNav = "home" }) {
                 rows={3}
                 value={editDraft.bio || ""}
                 onChange={(e) => setEditDraft((d) => ({ ...d, bio: e.target.value }))}
-                placeholder="Bio (optional longer description, 12+ characters counts toward profile completion)"
+                placeholder="Bio"
               />
+            </div>
+            <h4 className="introTagline" style={{ marginTop: 16 }}>
+              Identity
+            </h4>
+            <div
+              className={`profileEditChunk${editIncompleteKeys.has("identitySegment") ? " profileEditChunk--incomplete" : ""}`}
+              data-profile-edit-focus="identitySegment"
+            >
+              <label className="fieldLabel" htmlFor="torp-edit-id-seg">
+                How you identify with this community
+                <select
+                  id="torp-edit-id-seg"
+                  value={editDraft.identitySegment || ""}
+                  onChange={(e) => setEditDraft((d) => ({ ...d, identitySegment: e.target.value }))}
+                >
+                  <option value="">Select…</option>
+                  {IDENTITY_SEGMENT_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <div
+              className={`profileEditChunk${editIncompleteKeys.has("organizationName") ? " profileEditChunk--incomplete" : ""}`}
+              data-profile-edit-focus="organizationName"
+            >
+              <input
+                value={editDraft.organizationAffiliation || ""}
+                onChange={(e) => setEditDraft((d) => ({ ...d, organizationAffiliation: e.target.value }))}
+                placeholder="Organization name / affiliation"
+              />
+            </div>
+            <div
+              className={`profileEditChunk${editIncompleteKeys.has("jobTitle") ? " profileEditChunk--incomplete" : ""}`}
+              data-profile-edit-focus="jobTitle"
+            >
+              <input
+                value={editDraft.jobTitle || ""}
+                onChange={(e) => setEditDraft((d) => ({ ...d, jobTitle: e.target.value }))}
+                placeholder="Role / title"
+              />
+            </div>
+            <div
+              className={`profileEditChunk${editIncompleteKeys.has("serviceBackground") ? " profileEditChunk--incomplete" : ""}`}
+              data-profile-edit-focus="serviceBackground"
+            >
+              <input
+                value={editDraft.serviceBackground || ""}
+                onChange={(e) => setEditDraft((d) => ({ ...d, serviceBackground: e.target.value }))}
+                placeholder="Branch or service affiliation"
+              />
+            </div>
+            <div
+              className={`profileEditChunk${editIncompleteKeys.has("reasonForJoining") ? " profileEditChunk--incomplete" : ""}`}
+              data-profile-edit-focus="reasonForJoining"
+            >
+              <textarea
+                rows={3}
+                value={editDraft.reasonForJoining || ""}
+                onChange={(e) => setEditDraft((d) => ({ ...d, reasonForJoining: e.target.value }))}
+                placeholder="Reason for joining The Outreach Project"
+              />
+            </div>
+            <div
+              className={`profileEditChunk${editIncompleteKeys.has("interests") ? " profileEditChunk--incomplete" : ""}`}
+              data-profile-edit-focus="interests"
+            >
+              <textarea
+                rows={2}
+                value={editDraft.causes || ""}
+                onChange={(e) => setEditDraft((d) => ({ ...d, causes: e.target.value }))}
+                placeholder="Interests / categories you care about"
+              />
+            </div>
+            <div
+              className={`profileEditChunk${editIncompleteKeys.has("supportNeeds") ? " profileEditChunk--incomplete" : ""}`}
+              data-profile-edit-focus="supportNeeds"
+            >
+              <textarea
+                rows={2}
+                value={editDraft.supportNeeds || ""}
+                onChange={(e) => setEditDraft((d) => ({ ...d, supportNeeds: e.target.value }))}
+                placeholder="Support needs"
+              />
+            </div>
+            <div
+              className={`profileEditChunk${editIncompleteKeys.has("communities") ? " profileEditChunk--incomplete" : ""}`}
+              data-profile-edit-focus="communities"
+            >
+              <textarea
+                rows={2}
+                value={editDraft.communities || ""}
+                onChange={(e) => setEditDraft((d) => ({ ...d, communities: e.target.value }))}
+                placeholder="Communities you identify with on the platform"
+              />
+            </div>
+            <div className="profileEditChunk" data-profile-edit-focus="identity">
+              <fieldset className="profileEditFieldset">
+                <legend>Additional identity (optional)</legend>
+                <textarea
+                  rows={2}
+                  value={editDraft.missionStatement || ""}
+                  onChange={(e) => setEditDraft((d) => ({ ...d, missionStatement: e.target.value }))}
+                  placeholder="Mission or personal statement"
+                />
+                <input
+                  value={editDraft.identityRole || ""}
+                  onChange={(e) => setEditDraft((d) => ({ ...d, identityRole: e.target.value }))}
+                  placeholder="Legacy role label (optional)"
+                />
+              </fieldset>
+            </div>
+            <h4 className="introTagline" style={{ marginTop: 16 }}>
+              Contribution
+            </h4>
+            <div
+              className={`profileEditChunk${editIncompleteKeys.has("contribution") ? " profileEditChunk--incomplete" : ""}`}
+              data-profile-edit-focus="contribution"
+            >
+              <fieldset className="profileEditFieldset">
+                <legend>Ways you want to contribute</legend>
+                <div className="communityPillRow" style={{ flexDirection: "column", alignItems: "stretch", gap: 10 }}>
+                  {CONTRIBUTION_INTEREST_KEYS.map(([key, label]) => (
+                    <label key={key} style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                      <input
+                        type="checkbox"
+                        checked={!!editDraft.contributionInterests?.[key]}
+                        onChange={() => toggleEditContributionInterest(key)}
+                      />
+                      {label}
+                    </label>
+                  ))}
+                </div>
+                <textarea
+                  rows={2}
+                  value={editDraft.skills || ""}
+                  onChange={(e) => setEditDraft((d) => ({ ...d, skills: e.target.value }))}
+                  placeholder="Skills or services you can offer"
+                />
+                <textarea
+                  rows={2}
+                  value={editDraft.volunteerInterests || ""}
+                  onChange={(e) => setEditDraft((d) => ({ ...d, volunteerInterests: e.target.value }))}
+                  placeholder="Volunteer interests"
+                />
+                <textarea
+                  rows={2}
+                  value={editDraft.contributionSummary || ""}
+                  onChange={(e) => setEditDraft((d) => ({ ...d, contributionSummary: e.target.value }))}
+                  placeholder="How you want to contribute (summary)"
+                />
+                <input
+                  value={editDraft.preferredContributionContact || ""}
+                  onChange={(e) => setEditDraft((d) => ({ ...d, preferredContributionContact: e.target.value }))}
+                  placeholder="Preferred contact for opportunities"
+                />
+                <input
+                  value={editDraft.supportInterests || ""}
+                  onChange={(e) => setEditDraft((d) => ({ ...d, supportInterests: e.target.value }))}
+                  placeholder="Support and outreach interests"
+                />
+              </fieldset>
             </div>
             {String(editDraft.accountIntent || profile.accountIntent || "").toLowerCase() === "sponsor_user" ? (
               <>
@@ -1311,28 +1589,49 @@ function TopAppInner({ initialNav = "home" }) {
                 </div>
               </>
             ) : null}
+            <h4 className="introTagline" style={{ marginTop: 16 }}>
+              Preferences
+            </h4>
             <div
-              className={`profileEditChunk${editIncompleteKeys.has("identity") ? " profileEditChunk--incomplete" : ""}`}
-              data-profile-edit-focus="identity"
+              className={`profileEditChunk${editIncompleteKeys.has("preferences") ? " profileEditChunk--incomplete" : ""}`}
+              data-profile-edit-focus="preferences"
             >
+              <label className="fieldLabel" htmlFor="torp-edit-contact-pref">
+                Preferred contact method
+                <select
+                  id="torp-edit-contact-pref"
+                  value={editDraft.preferredContactMethod || ""}
+                  onChange={(e) => setEditDraft((d) => ({ ...d, preferredContactMethod: e.target.value }))}
+                >
+                  <option value="">Select…</option>
+                  {PREFERRED_CONTACT_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
               <fieldset className="profileEditFieldset">
-                <legend>Identity &amp; contribution</legend>
-                <p className="profileEditFieldsetHint">These fields power the Identity &amp; contribution card on your profile.</p>
-                <textarea rows={3} value={editDraft.missionStatement || ""} onChange={(e) => setEditDraft((d) => ({ ...d, missionStatement: e.target.value }))} placeholder="Mission or personal statement" />
-                <input value={editDraft.identityRole || ""} onChange={(e) => setEditDraft((d) => ({ ...d, identityRole: e.target.value }))} placeholder="Role (e.g. Veteran, First Responder, Nonprofit leader)" />
-                <div className="form">
-                  <input value={editDraft.city || ""} onChange={(e) => setEditDraft((d) => ({ ...d, city: e.target.value }))} placeholder="City" />
-                  <input value={editDraft.state || ""} onChange={(e) => setEditDraft((d) => ({ ...d, state: e.target.value }))} placeholder="State (e.g. TX)" />
+                <legend>Notification preferences</legend>
+                <div className="communityPillRow" style={{ flexWrap: "wrap" }}>
+                  {["email", "sms", "push", "in_app"].map((nid) => (
+                    <label key={nid} style={{ display: "inline-flex", gap: 8, marginRight: 12 }}>
+                      <input
+                        type="checkbox"
+                        checked={!!editDraft.notificationPreferences?.includes(nid)}
+                        onChange={() => toggleEditNotificationPref(nid)}
+                      />
+                      {nid.replace("_", " ")}
+                    </label>
+                  ))}
                 </div>
-                <input value={editDraft.organizationAffiliation || ""} onChange={(e) => setEditDraft((d) => ({ ...d, organizationAffiliation: e.target.value }))} placeholder="Organization affiliation" />
-                <input value={editDraft.serviceBackground || ""} onChange={(e) => setEditDraft((d) => ({ ...d, serviceBackground: e.target.value }))} placeholder="Service background (branch, years, role)" />
-                <input value={editDraft.causes || ""} onChange={(e) => setEditDraft((d) => ({ ...d, causes: e.target.value }))} placeholder="Causes you care about (comma-separated)" />
-                <input value={editDraft.skills || ""} onChange={(e) => setEditDraft((d) => ({ ...d, skills: e.target.value }))} placeholder="Skills / ways you help (comma-separated)" />
-                <input value={editDraft.volunteerInterests || ""} onChange={(e) => setEditDraft((d) => ({ ...d, volunteerInterests: e.target.value }))} placeholder="Volunteer interests (comma-separated)" />
-                <input value={editDraft.supportInterests || ""} onChange={(e) => setEditDraft((d) => ({ ...d, supportInterests: e.target.value }))} placeholder="Support and outreach interests" />
-                <textarea rows={2} value={editDraft.contributionSummary || ""} onChange={(e) => setEditDraft((d) => ({ ...d, contributionSummary: e.target.value }))} placeholder="How you contribute on this platform" />
               </fieldset>
             </div>
+            {editSaveOk ? (
+              <p className="applyStatus" role="status">
+                {editSaveOk}
+              </p>
+            ) : null}
             {editSaveError ? (
               <p className="profileEditSaveError" role="alert">
                 {editSaveError}
@@ -1583,7 +1882,7 @@ function TopAppInner({ initialNav = "home" }) {
 
 function TopAppFallback() {
   return (
-    <main className="topApp theme-clean">
+    <main className="topApp theme-clean" data-page-atmosphere="home">
       <p style={{ padding: 24 }}>Loading…</p>
     </main>
   );

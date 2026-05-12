@@ -7,7 +7,7 @@ import {
   syncProfileEmailWithWorkOSUser,
 } from "@/lib/profile/serverProfile";
 import { computeEntitlementsFromProfileRow } from "@/lib/account/entitlements";
-import { computeProfileCompletion, mergeProfileWithWorkOSUser } from "@/lib/profile/profileCompletion";
+import { computeProfileCompletion } from "@/lib/profile/profileCompletion";
 
 function unauthenticatedMeResponse() {
   return Response.json({

@@ -3,8 +3,11 @@ import { extractGuestHeuristic } from "./guestHeuristics";
 import { fetchOfficialPlaylistAcceptedEpisodes } from "./fetchOfficialPlaylistAcceptedEpisodes";
 import { extractGuestVoiceQuote } from "./transcriptQuote";
 import { fetchTranscriptPlainText } from "./youtubeTranscriptFetch";
+import { getDemoFeaturedVoicesForLanding } from "./demoFeaturedVoices";
 
-const MIN_PUBLIC_EPISODES = 10;
+/** Last N full episodes on the public podcast landing (playlist + DB rules). */
+export const PODCAST_LANDING_FULL_EPISODE_COUNT = 10;
+const MIN_PUBLIC_EPISODES = PODCAST_LANDING_FULL_EPISODE_COUNT;
 const DB_EPISODE_FETCH_LIMIT = 400;
 /** Cap YouTube transcript fetches per landing rebuild (cold cache); avoids long serverless runs. */
 const TRANSCRIPT_BACKFILL_PER_BUILD = 6;
@@ -152,12 +155,16 @@ function mergePlaylistRuntimeWithDb(runtime, dbRow) {
       description: descOverride || String(dbRow.description || runtime.description || "").trim(),
       thumbnail_url: thumbOverride || String(dbRow.thumbnail_url || runtime.thumbnail_url || "").trim(),
       youtube_url: String(dbRow.youtube_url || runtime.youtube_url || "").trim(),
+      /* JSON/cache drops `undefined`; DB null would strip playlist acceptance and break public listing. */
+      pipeline_decision: "accepted",
+      pipeline_reason: String(runtime.pipeline_reason || dbRow.pipeline_reason || "youtube_playlist+db"),
     };
   }
   return {
     ...runtime,
     id: runtime.youtube_video_id,
     pipeline_decision: "accepted",
+    pipeline_reason: String(runtime.pipeline_reason || "youtube_playlist"),
   };
 }
 
@@ -268,7 +275,7 @@ export async function loadPublicPodcastLandingData(admin) {
         await attachTranscriptIfNeeded(admin, ep);
         featuredGuests.push(featuredGuestToCardShape(row, ep));
       }
-    } else {
+    } else if (process.env.NODE_ENV === "development") {
       const topFour = episodes.slice(0, 4);
       const videoIds = topFour.map((e) => e.youtube_video_id).filter(Boolean);
       if (videoIds.length) {
@@ -283,9 +290,15 @@ export async function loadPublicPodcastLandingData(admin) {
       } else {
         featuredGuests = [];
       }
+    } else {
+      featuredGuests = [];
     }
-  } else if (episodes.length) {
+  } else if (episodes.length && process.env.NODE_ENV === "development") {
     featuredGuests = episodes.slice(0, 4).map((ep) => guestShapeFromEpisodeOnly(ep));
+  }
+
+  if (process.env.NODE_ENV === "development" && !featuredGuests.length) {
+    featuredGuests = getDemoFeaturedVoicesForLanding().slice(0, 4);
   }
 
   return { episodes, featuredGuests, source, degraded, error };

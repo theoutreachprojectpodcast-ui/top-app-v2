@@ -22,6 +22,7 @@ export default function PodcastApplyPage() {
       usePrimaryTopbarChrome
       useFooterDockChrome
       useTopAppStructure
+      pageAtmosphere="podcast"
       showThemeToggle={false}
     >
       <div className="podcastScope">

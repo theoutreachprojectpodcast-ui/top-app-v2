@@ -12,8 +12,10 @@ export async function GET() {
   }
   const { data, error } = await admin
     .from(TABLE)
-    .select("id,sort_order,name,organization,role_title,short_description,profile_image_url,expected_episode_date,status,created_at")
-    .eq("status", "published")
+    .select(
+      "id,sort_order,name,organization,role_title,short_description,profile_image_url,expected_episode_date,episode_topic,status,created_at",
+    )
+    .in("status", ["scheduled", "confirmed", "published"])
     .order("sort_order", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: false });
 

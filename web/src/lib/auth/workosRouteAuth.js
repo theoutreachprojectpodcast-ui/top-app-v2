@@ -3,9 +3,40 @@ import { getWorkOSUserFromCookies } from "@/lib/auth/workosSessionFromCookies";
 import { isWorkOSConfigured } from "@/lib/auth/workosConfigured";
 import { sessionMatchesExpectedWorkOSOrganization } from "@/lib/auth/workosOrganizationScope";
 
+const ORG_DENIED = Object.freeze({
+  ok: false,
+  status: 401,
+  error: "organization_not_allowed",
+  message: "This session is not authorized for The Outreach Project organization.",
+  user: null,
+});
+
 /**
- * Resolve WorkOS user in route handlers with a cookie fallback when
- * authkit middleware headers are unavailable on a request.
+ * @param {unknown} session
+ * @returns {{ kind: "ok", user: import('@workos-inc/node').User } | { kind: "no_user" } | { kind: "org_blocked" }}
+ */
+function classifyRouteSession(session) {
+  if (!session || typeof session !== "object" || !("user" in session) || !session.user) {
+    return { kind: "no_user" };
+  }
+  const s = /** @type {{ user: import('@workos-inc/node').User, organizationId?: string, accessToken?: string }} */ (
+    session
+  );
+  if (
+    !sessionMatchesExpectedWorkOSOrganization({
+      organizationId: s.organizationId,
+      accessToken: s.accessToken,
+    })
+  ) {
+    return { kind: "org_blocked" };
+  }
+  return { kind: "ok", user: s.user };
+}
+
+/**
+ * Resolve WorkOS user in route handlers.
+ * Tries the iron-sealed session cookie first (same path as `getWorkOSUserFromCookies` in RSC / admin layout),
+ * then `withAuth()` so requests still work when `x-workos-middleware` headers are missing on a handler.
  */
 export async function resolveWorkOSRouteUser() {
   if (!isWorkOSConfigured()) {
@@ -17,46 +48,20 @@ export async function resolveWorkOSRouteUser() {
       user: null,
     };
   }
+
+  const cookieHit = classifyRouteSession(await getWorkOSUserFromCookies());
+  if (cookieHit.kind === "ok") return { ok: true, user: cookieHit.user };
+  if (cookieHit.kind === "org_blocked") return { ...ORG_DENIED };
+
   try {
     const auth = await withAuth();
-    if (auth?.user) {
-      if (
-        !sessionMatchesExpectedWorkOSOrganization({
-          organizationId: auth.organizationId,
-          accessToken: auth.accessToken,
-        })
-      ) {
-        return {
-          ok: false,
-          status: 401,
-          error: "organization_not_allowed",
-          message: "This session is not authorized for The Outreach Project organization.",
-          user: null,
-        };
-      }
-      return { ok: true, user: auth.user };
-    }
+    const w = classifyRouteSession(auth);
+    if (w.kind === "ok") return { ok: true, user: w.user };
+    if (w.kind === "org_blocked") return { ...ORG_DENIED };
   } catch {
-    // Fall through to cookie session parsing.
+    // withAuth unavailable for this request; cookie path already attempted.
   }
-  const cookieSession = await getWorkOSUserFromCookies();
-  if (cookieSession?.user) {
-    if (
-      !sessionMatchesExpectedWorkOSOrganization({
-        organizationId: cookieSession.organizationId,
-        accessToken: cookieSession.accessToken,
-      })
-    ) {
-      return {
-        ok: false,
-        status: 401,
-        error: "organization_not_allowed",
-        message: "This session is not authorized for The Outreach Project organization.",
-        user: null,
-      };
-    }
-    return { ok: true, user: cookieSession.user };
-  }
+
   return {
     ok: false,
     status: 401,

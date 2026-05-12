@@ -43,6 +43,7 @@ export default function PodcastMembersPage() {
       usePrimaryTopbarChrome
       useFooterDockChrome
       useTopAppStructure
+      pageAtmosphere="podcast"
       showThemeToggle={false}
     >
       <div className="podcastScope">
