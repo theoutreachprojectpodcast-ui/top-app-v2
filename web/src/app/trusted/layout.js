@@ -1,5 +1,6 @@
 import AppShell from "@/components/layout/AppShell";
 import "@/styles/site-route-shell.css";
+import "@/features/trusted-resources/trusted-resources-cards.css";
 
 export default function TrustedLayout({ children }) {
   return (

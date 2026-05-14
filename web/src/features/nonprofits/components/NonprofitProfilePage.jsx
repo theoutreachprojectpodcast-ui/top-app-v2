@@ -15,6 +15,7 @@ import { mapDirectoryRow } from "@/lib/supabase/mappers";
 import { mapNonprofitCardRow } from "@/features/nonprofits/mappers/nonprofitCardMapper";
 import { PROFILE_KEY } from "@/lib/constants";
 import { loadJson } from "@/lib/storage";
+import { sanitizeDisplayableImageUrl } from "@/lib/media/safeImageUrl";
 
 function sanitizePlainText(text) {
   if (!text) return "";
@@ -167,10 +168,7 @@ export default function NonprofitProfilePage({ ein: einParam }) {
 
   const socialLinks = card?.links?.filter((l) => l.type !== "website") || [];
   const websiteLinks = card?.links?.filter((l) => l.type === "website") || [];
-  const heroUrl =
-    card?.heroImageUrl && /^https?:\/\//i.test(String(card.heroImageUrl))
-      ? String(card.heroImageUrl)
-      : "";
+  const heroUrl = sanitizeDisplayableImageUrl(String(card?.heroImageUrl || "").trim());
 
   return (
     <div className={`theme-${theme} nonprofitProfileShell nonprofitProfileShell--inSiteChrome`}>

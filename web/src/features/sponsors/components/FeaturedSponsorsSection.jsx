@@ -4,6 +4,8 @@ import FeaturedSponsorCard from "@/features/sponsors/components/FeaturedSponsorC
 
 export default function FeaturedSponsorsSection({
   sponsors = [],
+  sectionTitle = "Platform sponsors",
+  sectionLead = "Curated sponsor spotlights with custom brand visuals, designed to honor each partner identity while staying mission-aligned.",
   favoritesEnabled = false,
   favoriteKeySet = new Set(),
   onToggleFavorite,
@@ -26,12 +28,10 @@ export default function FeaturedSponsorsSection({
   return (
     <section className="card sponsorSection sponsorFeaturedSection">
       <div className="sponsorSectionHead">
-        <h3>Platform sponsors</h3>
+        <h3>{sectionTitle}</h3>
         <span className="sponsorFeaturedValuePill">App sponsor roster</span>
       </div>
-      <p className="sponsorSectionLead">
-        Curated sponsor spotlights with custom brand visuals, designed to honor each partner identity while staying mission-aligned.
-      </p>
+      <p className="sponsorSectionLead">{sectionLead}</p>
       <div className="sponsorFeaturedShowcase">
         {deduped.map((sponsor) => (
           <FeaturedSponsorCard

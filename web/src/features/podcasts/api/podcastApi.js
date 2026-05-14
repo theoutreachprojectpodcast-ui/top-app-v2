@@ -139,6 +139,7 @@ export function resolveEpisodeThumbnailFallback(episode = {}) {
 }
 
 export function resolveEpisodeWatchUrl(episode = {}) {
+  if (String(episode.episode_link_status || "").trim() === "needs_link") return "";
   if (episode.youtube_url) return episode.youtube_url;
   if (episode.video_url) return episode.video_url;
   const videoId = String(episode.youtube_video_id || episode.video_id || "").trim();

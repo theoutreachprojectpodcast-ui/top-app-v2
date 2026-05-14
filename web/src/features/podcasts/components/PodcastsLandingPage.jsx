@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import AppShell from "@/components/layout/AppShell";
 import { getSupabaseClient } from "@/lib/supabase/client";
-import { listSponsorsCatalog } from "@/features/sponsors/api/sponsorCatalogApi";
+import { listPodcastSponsorsCatalog } from "@/features/podcasts/api/podcastSponsorsCatalog";
 import {
   FALLBACK_EPISODES,
   fetchPodcastRecentBundle,
@@ -21,7 +21,9 @@ import PodcastCTASection from "@/features/podcasts/components/PodcastCTASection"
 import PodcastApplyGuestForm from "@/features/podcasts/components/PodcastApplyGuestForm";
 import "@/features/podcasts/styles/podcasts.css";
 
-const FULL_EPISODES_SECTION_COUNT = 10;
+import { PODCAST_LANDING_CURATED_SLOT_COUNT } from "@/lib/podcast/podcastLandingCuratedEpisodes";
+
+const FULL_EPISODES_SECTION_COUNT = PODCAST_LANDING_CURATED_SLOT_COUNT;
 const isDevBuild = typeof process !== "undefined" && process.env.NODE_ENV === "development";
 
 export default function PodcastsLandingPage({
@@ -65,7 +67,7 @@ export default function PodcastsLandingPage({
     (async () => {
       const bundle = await fetchPodcastRecentBundle();
       const [sp, eg, upcomingRes] = await Promise.all([
-        listSponsorsCatalog(supabase, { sponsorScope: "podcast" }),
+        listPodcastSponsorsCatalog(supabase),
         listPodcastEpisodeGuests(supabase),
         fetch("/api/podcasts/upcoming", { credentials: "include", cache: "no-store" }).then((r) => r.json().catch(() => ({}))),
       ]);
@@ -84,7 +86,7 @@ export default function PodcastsLandingPage({
       }
       if (bundle?.degraded || initialBundleMeta?.degraded) {
         setBundleNote(
-          "Fewer than ten full episodes matched the official playlist filters, or YouTube data was unavailable. Check API keys, playlist ID, and admin include/exclude rules."
+          "Fewer than five episodes in the curated strip matched the official playlist, or YouTube data was unavailable. Check API keys, playlist ID, and admin include/exclude rules."
         );
       } else {
         setBundleNote("");
@@ -199,8 +201,8 @@ export default function PodcastsLandingPage({
         <section className="podcastSection">
           <PodcastSectionHeader
             eyebrow="Episode library"
-            title="Last 10 full episodes"
-            subtitle="Official full-episodes playlist only. Shorts, clips, and trailers are filtered out."
+            title="Curated episode strip (21)"
+            subtitle="Ordered guest/organization slots matched to the official full-episodes playlist when possible. Slots without a confident match show “Episode link needed” until verified in admin."
           />
           {episodeFetchError || initialBundleMeta?.error ? (
             <p className="podcastMuted" role="alert">

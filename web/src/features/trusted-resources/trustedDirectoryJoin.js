@@ -6,7 +6,7 @@
  * is the canonical bridge to `nonprofits_search_app_v1` + `nonprofit_directory_enrichment`.
  */
 
-import { resolveOrgListingHeaderImageUrl } from "@/lib/nonprofits/resolveOrgListingHeaderImageUrl";
+import { resolveTrustedResourceListingHeroImageUrl } from "@/lib/nonprofits/resolveOrgListingHeaderImageUrl";
 
 const DIRECTORY_TABLE = "nonprofits_search_app_v1";
 const ENRICHMENT_TABLE = "nonprofit_directory_enrichment";
@@ -228,7 +228,7 @@ export async function attachDirectoryAndEnrichmentToTrustedRows(supabase, rows =
       if (tv) next.thumbnail_url = tv;
     }
 
-    const heroResolved = resolveOrgListingHeaderImageUrl(next);
+    const heroResolved = resolveTrustedResourceListingHeroImageUrl(next);
     next.heroImageUrl = heroResolved;
     next.hero_image_url = heroResolved;
 

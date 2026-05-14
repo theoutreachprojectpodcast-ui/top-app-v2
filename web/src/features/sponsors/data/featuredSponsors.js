@@ -3,34 +3,95 @@
  * Card hero backgrounds: `/public/sponsors/` (used when DB `background_image_url` is empty).
  */
 
-/** Official War's End wordmark (brand-provided asset on Squarespace CDN). */
-export const WARS_END_OFFICIAL_LOGO_URL =
-  "https://images.squarespace-cdn.com/content/v1/6959573fd567e738e7c613f3/cfd220a6-7daf-4845-8d83-fdb8c2ffa128/ChatGPT+Image+Jan+7%2C+2026%2C+08_37_51+PM.png?format=2500w";
-
 /** Eduardo Pico Designs monogram (Shopify CDN). */
 export const EDUARDO_PICO_DESIGNS_LOGO_URL =
   "https://eduardopicodesigns.com/cdn/shop/files/eduardo_pico_logo.png?v=1775735693&width=240";
 
-/** Gameday Men's Health wordmark (red/black on white) — app-hosted asset. */
-export const GAMEDAY_MENS_HEALTH_LOGO_URL = "/sponsors/gameday-mens-health-logo.png";
+/** Gameday Men's Health wordmark — edge-keyed transparent PNG for overlays on clinic photography. */
+export const GAMEDAY_MENS_HEALTH_LOGO_URL = "/sponsors/gameday-mens-health-logo-transparent.png";
+
+/** Rope Solutions official mark (square PNG, dark-friendly). */
+export const ROPE_SOLUTIONS_LOGO_URL = "/sponsors/rope-solutions-logo.png";
+
+/** Apex Global Outdoors — official circular wordmark PNG (card logo slot); hero art is `featured-bg-apex-global-outdoors.png`. */
+export const APEX_GLOBAL_OUTDOORS_LOGO_URL = "/sponsors/apex-global-outdoors-logo.png";
+
+/** Iron Soldiers Coffee Company round emblem — app-hosted PNG. */
+export const IRON_SOLDIERS_COFFEE_LOGO_URL = "/sponsors/iron-soldiers-coffee-company-logo.png";
+
+/** The Veterans Veteran — official mark (black field, high-contrast wordmark). */
+export const THE_VETERANS_VETERAN_LOGO_URL = "/sponsors/the-veterans-veteran-logo.png";
+
+/** Vet Nav Services — circular compass mark (black on white). */
+export const VET_NAV_SERVICES_LOGO_URL = "/sponsors/vetnav-services-logo.png";
 
 export const FEATURED_SPONSORS = [
   {
+    id: "apex-global-outdoors",
+    name: "Apex Global Outdoors",
+    sponsorType: "mission_partner_sponsor",
+    sponsorDisplayGroup: "mission_partner",
+    primaryDisplayTag: "Mission Partner Sponsor",
+    tag: "Outdoor gear & expedition retail",
+    industry: "Outdoor retail",
+    tierLabel: "Mission partner",
+    subtitle:
+      "Curated gear and global outdoor brands for people who train, travel, and serve in demanding environments.",
+    longDescription:
+      "Apex Global Outdoors is building a mission-aligned outdoor retail experience—pairing trusted equipment with education on preparedness, fieldcraft, and responsible land use. The team partners with The Outreach Project to expand outdoor access for veterans, first responders, and families who rely on dependable kit when conditions turn serious. Official site: apexglobaloutdoors.com.",
+    ctaLabel: "Visit Website",
+    ctaUrl: "https://apexglobaloutdoors.com/",
+    logoUrl: APEX_GLOBAL_OUTDOORS_LOGO_URL,
+    warmVariant: "gold",
+    backgroundImageUrl: "/sponsors/featured-bg-apex-global-outdoors.png",
+    missionPartner: true,
+    veteranOwned: false,
+    featured: true,
+    socialLinks: {},
+  },
+  {
+    id: "gameday-mens-health",
+    name: "Gameday Men's Health",
+    sponsorType: "mission_partner_sponsor",
+    sponsorDisplayGroup: "mission_partner",
+    primaryDisplayTag: "Mission Partner Sponsor",
+    tag: "Men's health clinics",
+    industry: "Men's health",
+    tierLabel: "Featured sponsor",
+    subtitle:
+      "Stone Oak, San Antonio — same-day visits, on-site labs, and physician-guided men’s health care in a private clinic.",
+    longDescription:
+      "Gameday Men's Health Stone Oak is the San Antonio clinic in the national Gameday network. Patients get same-day scheduling, on-site labs with rapid turnaround, and physician-guided treatment plans across testosterone therapy, weight management, sexual wellness, hair restoration, and recovery support—delivered in a discreet, sports-lounge-style setting built for busy professionals and veterans juggling shift work and family life.",
+    ctaLabel: "Visit Website",
+    ctaUrl: "https://gamedaymenshealth.com/stone-oak/",
+    logoUrl: GAMEDAY_MENS_HEALTH_LOGO_URL,
+    warmVariant: "rust",
+    backgroundImageUrl: "/sponsors/featured-bg-gameday-mens-health.png",
+    missionPartner: true,
+    veteranOwned: false,
+    featured: true,
+    socialLinks: {
+      instagram: "https://www.instagram.com/gameday_stone_oak/",
+    },
+  },
+  {
     id: "rope-solutions",
     name: "Rope Solutions",
+    sponsorType: "foundational_sponsor",
+    sponsorDisplayGroup: "foundational",
     displayName: "",
     internalAlias: "",
     primaryDisplayTag: "Foundational Sponsor",
-    tag: "Training & readiness",
-    industry: "Training & Readiness",
+    tag: "Rope access, rescue & training",
+    industry: "Training & readiness",
     tierLabel: "Featured sponsor",
     subtitle:
       "Trusted access. Proven under pressure. Built for teams that don't get second chances.",
     longDescription:
-      "Rope Solutions delivers elite rope access, rescue systems, and technical training for high-consequence operational teams. Veteran-led and service-disabled veteran-owned, the team focuses on leadership, high-performing teams, and strategy under pressure — equipping professionals who need precision, safety, and confidence in unforgiving environments.\n\nFrom vertical mobility to complex rescue scenarios, Rope Solutions provides the systems and skills to operate when conditions are at their worst.",
+      "Rope Solutions delivers industrial rope access, confined-space rescue, and technical training for teams that work at height and in high-consequence environments. Veteran-led and service-disabled veteran-owned, the company combines field-proven systems with leadership development so crews can plan, communicate, and execute safely when there is no room for error.\n\nFrom vertical mobility to complex rescue scenarios, Rope Solutions equips public safety, industrial, and defense-adjacent organizations with the skills and hardware to operate in unforgiving conditions.",
     ctaLabel: "Visit Website",
     ctaUrl: "https://www.ropesolutions.com/",
-    logoUrl: null,
+    logoUrl: ROPE_SOLUTIONS_LOGO_URL,
     warmVariant: "gold",
     backgroundImageUrl: "/sponsors/featured-bg-rope-solutions.png",
     missionPartner: true,
@@ -43,16 +104,43 @@ export const FEATURED_SPONSORS = [
     },
   },
   {
+    id: "the-veterans-veteran",
+    name: "The Veterans Veteran",
+    sponsorType: "foundational_sponsor",
+    sponsorDisplayGroup: "foundational",
+    primaryDisplayTag: "Foundational Sponsor",
+    tag: "Handmade American flags & custom woodworking",
+    industry: "Veteran nonprofit & craft",
+    tierLabel: "Foundational sponsor",
+    subtitle:
+      "Veteran-owned flags and custom woodworking from Texas—each piece honors service and recovery while proceeds support veteran-serving nonprofits.",
+    longDescription:
+      "The Veterans Veteran is a veteran-owned organization in Texas that hand-builds American flags and custom woodworking with patience, precision, and respect for the uniform. Work is crafted to honor service, recovery, and resilience. Proceeds and collaborations fund veteran-focused nonprofits so craftsmanship in the shop translates into concrete help for people navigating transition, health care, employment, and community reintegration.",
+    ctaLabel: "Visit Website",
+    ctaUrl: "https://www.warsendmerch.com/",
+    logoUrl: THE_VETERANS_VETERAN_LOGO_URL,
+    warmVariant: "rose",
+    backgroundImageUrl: "/sponsors/featured-bg-wars-end-merch.png",
+    missionPartner: true,
+    veteranOwned: true,
+    featured: true,
+    socialLinks: {
+      instagram: "https://www.instagram.com/wars__end/",
+    },
+  },
+  {
     id: "rucking-realty-group",
     name: "Rucking Realty Group",
-    primaryDisplayTag: "Foundational Sponsor",
-    tag: "Texas real estate",
+    sponsorType: "impact_sponsor",
+    sponsorDisplayGroup: "impact",
+    primaryDisplayTag: "Impact Sponsor",
+    tag: "Texas residential real estate",
     industry: "Real estate",
     tierLabel: "Featured sponsor",
     subtitle:
-      "Mike and Natalie Evans — husband-and-wife Realtors helping clients buy and sell in San Antonio with integrity.",
+      "Mike & Natalie Evans — Marine-led, family-first Realtors helping clients buy, sell, rent, and invest across Texas.",
     longDescription:
-      "Rucking Realty Group is led by Mike and Natalie Evans — a husband-and-wife real estate team rooted in service and family. Mike is a United States Marine Corps veteran; together they help clients buy, sell, rent, and invest with honesty, integrity, and steady communication. They proudly serve the greater San Antonio area and communities across Texas, with a special heart for military families and those navigating life transitions.",
+      "Rucking Realty Group is led by Mike and Natalie Evans, a husband-and-wife team based near San Antonio. Mike served as a United States Marine Corps infantry Marine (2005–2009) and carries that discipline into every transaction; Natalie brings a decade of HR leadership and a calm, people-first style that keeps complex deals on track. Together they serve Military City USA and communities statewide with honest pricing guidance, proactive communication, and extra care for military families, first-time buyers, and folks navigating life transitions.",
     ctaLabel: "Visit Website",
     ctaUrl: "https://ruckingrealtygroup.com/",
     logoUrl: null,
@@ -67,16 +155,63 @@ export const FEATURED_SPONSORS = [
     },
   },
   {
+    id: "iron-soldiers-coffee-company",
+    name: "Iron Soldiers Coffee Company",
+    sponsorType: "impact_sponsor",
+    sponsorDisplayGroup: "impact",
+    primaryDisplayTag: "Impact Sponsor",
+    tag: "Veteran-owned coffee roaster",
+    industry: "Food & beverage",
+    tierLabel: "Impact sponsor",
+    subtitle: "Small-batch roasts, wholesale programs, and retail for crews who live on coffee between missions.",
+    longDescription:
+      "Iron Soldiers Coffee Company is a veteran-owned specialty roaster focused on bold, consistent profiles for shift workers, athletes, and community fundraisers. Beans are roasted in small batches with transparent sourcing so wholesale partners, nonprofits, and local retailers can serve cups that taste as intentional as the mission behind the brand.",
+    ctaLabel: "Visit Website",
+    ctaUrl: "https://www.ironsoldierscoffee.com/",
+    logoUrl: IRON_SOLDIERS_COFFEE_LOGO_URL,
+    warmVariant: "amber",
+    backgroundImageUrl: "/sponsors/featured-bg-iron-soldiers-coffee-company.png",
+    missionPartner: false,
+    veteranOwned: true,
+    featured: true,
+    socialLinks: {},
+  },
+  {
+    id: "vetnav-services",
+    name: "Vet Nav Services",
+    sponsorType: "impact_sponsor",
+    sponsorDisplayGroup: "impact",
+    primaryDisplayTag: "Impact Sponsor",
+    tag: "Veteran benefits & resource navigation",
+    industry: "Veteran services",
+    tierLabel: "Impact sponsor",
+    subtitle:
+      "Human navigation that sequences VA benefits, healthcare, employment, and community programs without the runaround.",
+    longDescription:
+      "Vet Nav Services pairs veterans and military families with navigators who speak the language of DD-214s, disability claims, vocational rehab, and local aid networks. The focus is practical sequencing—what to file first, which clinic or VSO can help, and how to avoid dead ends—so people spend less time searching portals and more time moving toward stable housing, healthcare, and work.",
+    ctaLabel: "Website pending verification",
+    ctaUrl: "",
+    logoUrl: VET_NAV_SERVICES_LOGO_URL,
+    warmVariant: "gold",
+    backgroundImageUrl: "/sponsors/featured-bg-vetnav-services.png",
+    missionPartner: false,
+    veteranOwned: true,
+    featured: true,
+    socialLinks: {},
+  },
+  {
     id: "eduardo-pico-designs",
     name: "Eduardo Pico Designs",
-    primaryDisplayTag: "Foundational Sponsor",
-    tag: "Veteran-made custom builds",
+    sponsorType: "community_sponsor",
+    sponsorDisplayGroup: "community",
+    primaryDisplayTag: "Community Sponsor",
+    tag: "Laser engraving & CNC fabrication",
     industry: "Design & fabrication",
     tierLabel: "Featured sponsor",
     subtitle:
-      "Veteran-owned laser & CNC studio — home décor, signs, tumblers, military awards, and custom builds.",
+      "Veteran-owned Texas studio for awards, signage, drinkware, and bespoke shop projects with museum-grade finishing.",
     longDescription:
-      "Eduardo Pico Designs is a veteran-owned Texas studio specializing in laser engraving and CNC work — from drinkware and door hangers to custom awards and business-branded products. Each piece is built with craftsmanship, clarity, and pride, supporting mission-driven causes and local nonprofit partners across the community.",
+      "Eduardo Pico Designs is a veteran-owned laser and CNC studio outside San Antonio, Texas. The team produces everything from personalized tumblers and ranch-style door hangers to unit coins, nonprofit gala awards, and full custom shop fit-outs. Expect collaborative proofs, disciplined timelines, and finishes that hold up to Texas heat, humidity, and the scrutiny of clients who care about detail.",
     ctaLabel: "Visit Website",
     ctaUrl: "https://eduardopicodesigns.com/",
     logoUrl: EDUARDO_PICO_DESIGNS_LOGO_URL,
@@ -91,53 +226,27 @@ export const FEATURED_SPONSORS = [
     },
   },
   {
-    id: "wars-end-merch",
-    name: "War's End",
-    displayName: "War's End",
-    internalAlias:
-      "Legacy listing titles may have referenced Warzone Veteran or War's End Veteran Owned and Operated; public name: War's End.",
-    primaryDisplayTag: "Foundational Sponsor",
-    tag: "Veteran-owned woodworking & flags",
-    industry: "Woodworking",
-    tierLabel: "Featured sponsor",
+    id: "green-gorilla-land-management",
+    name: "Green Gorilla Land Management",
+    sponsorType: "community_sponsor",
+    sponsorDisplayGroup: "community",
+    primaryDisplayTag: "Community Sponsor",
+    tag: "Forestry mulching & land clearing",
+    industry: "Land management",
+    tierLabel: "Community sponsor",
     subtitle:
-      "Handmade American flags and woodworking from a veteran-owned shop in Texas — honoring service through craft.",
+      "Charleston, SC–based crew for forestry mulching, brush clearing, storm cleanup, and large-lot mowing with daily field reporting.",
     longDescription:
-      "War's End is veteran-owned, creating handmade American flags and custom woodworking from Texas. Each piece is built with care to honor service, recovery, and resilience, with proceeds supporting veteran-focused nonprofit partners.",
-    ctaLabel: "Visit website",
-    ctaUrl: "https://www.warsendmerch.com/",
-    logoUrl: WARS_END_OFFICIAL_LOGO_URL,
-    warmVariant: "rose",
-    backgroundImageUrl: "/sponsors/featured-bg-wars-end-merch.png",
-    missionPartner: true,
+      "Green Gorilla Land Management is a veteran-owned land services contractor serving Charleston, the South Carolina Lowcountry, and nearby coastal counties. Services include forestry mulching, selective clearing, bush hogging, storm debris removal, and pre-sale property cleanup. Crews document progress with photos, stick to agreed scopes, and prioritize ecological balance so residential, commercial, and nonprofit partners can put land back to work safely.",
+    ctaLabel: "Visit Website",
+    ctaUrl: "https://gglandmanagement.com/",
+    logoUrl: null,
+    warmVariant: "gold",
+    backgroundImageUrl: "/sponsors/featured-bg-green-gorilla-land-management.png",
+    missionPartner: false,
     veteranOwned: true,
     featured: true,
-    socialLinks: {
-      instagram: "https://www.instagram.com/wars__end/",
-    },
-  },
-  {
-    id: "gameday-mens-health",
-    name: "Gameday Men's Health",
-    primaryDisplayTag: "Foundational Sponsor",
-    tag: "Men's health clinics",
-    industry: "Men's health",
-    tierLabel: "Featured sponsor",
-    subtitle:
-      "Stone Oak, San Antonio — same-day visits, on-site labs, and physician-guided men’s health care.",
-    longDescription:
-      "Gameday Men's Health Stone Oak delivers fast, decisive men's health care in San Antonio: same-day appointments, on-site lab testing with rapid turnaround, and physician-guided plans spanning testosterone therapy, weight management, sexual wellness, hair loss, and recovery support — in a private, sports-lounge-style clinic.",
-    ctaLabel: "Visit Website",
-    ctaUrl: "https://gamedaymenshealth.com/stone-oak/",
-    logoUrl: GAMEDAY_MENS_HEALTH_LOGO_URL,
-    warmVariant: "rust",
-    backgroundImageUrl: "/sponsors/featured-bg-gameday-mens-health.png",
-    missionPartner: true,
-    veteranOwned: false,
-    featured: true,
-    socialLinks: {
-      instagram: "https://www.instagram.com/gameday_stone_oak/",
-    },
+    socialLinks: {},
   },
 ];
 

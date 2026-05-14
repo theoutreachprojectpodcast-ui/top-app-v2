@@ -17,6 +17,7 @@ const requiredRouteFiles = [
   "src/app/api/me/profile/route.js",
   "src/app/api/community/posts/route.js",
   "src/app/api/sponsors/catalog/route.js",
+  "src/app/api/podcasts/sponsors/catalog/route.js",
   "src/app/api/trusted/catalog/route.js",
 ];
 

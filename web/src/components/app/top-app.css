@@ -7,15 +7,17 @@
   --header-fade-height: 56px;
   --home-hero-image: url("/home/home-hero-flag-mission.png");
   --home-atmosphere-image: url("/home/home-atmosphere-cinematic-scene.png");
-  --header-occlusion-image: url("/home/home-header-flag-horizontal.png");
+  --topapp-page-atmosphere-image: url("/home/home-page-background-highres-2560.png");
   --home-sponsors-image: url("/home/home-sponsors-city.png");
   --home-trusted-image: url("/home/home-trusted-mountain.png");
   --home-community-image: url("/home/home-community-group.png");
   --home-podcasts-image: url("/home/home-podcast-mic.png");
+  /* Same portrait asset as desktop; `main::before` uses `100% auto` + solid fill below the image. */
+  --topapp-mobile-atmosphere-image: var(--topapp-page-atmosphere-image);
   min-height: 100vh;
   background: transparent;
   color: var(--color-text-primary);
-  padding-bottom: 170px;
+  padding-bottom: calc(186px + env(safe-area-inset-bottom, 0px));
 }
 
 /* Home: less floating chrome above the hero — logo + bar sit closer to the safe area. */
@@ -25,72 +27,67 @@ main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) {
   --header-fade-height: 40px;
 }
 
-/* Full-bleed cinematic background + read overlays: all TopApp-style shells except podcast */
+/* Main canvas + stacking: full-bleed photo on `main::before` (full document height); read veils on `::after`; header chrome = gradient on `.topbarOcclusion::before` only. Podcast excluded. */
 main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) {
   position: relative;
   isolation: isolate;
 }
+/* Full-bleed atmosphere: same image edge-to-edge and top-to-bottom of `main` (scrolls with content). */
 main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])::before {
   content: "";
-  position: fixed;
-  inset: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: -2;
   pointer-events: none;
-  background: var(--home-atmosphere-image) 42% 14% / cover no-repeat;
-  opacity: 0.8;
-  /* Pull extreme sunrise saturation down slightly so UI chrome and cards read more clearly */
-  filter: saturate(0.88) contrast(1.04) brightness(0.94);
+  background-color: #ffffff;
+  background-image: var(--topapp-page-atmosphere-image);
+  /* Top-anchored portrait: scale to viewport width only (no `cover` crop); solid `background-color` fills below. */
+  background-size: 100% auto;
+  background-position: center top;
+  background-repeat: no-repeat;
+  filter: none;
 }
 :root[data-color-scheme="dark"] main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])::before,
 .dark main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])::before {
-  opacity: 0.72;
-  filter: saturate(0.82) contrast(1.08) brightness(0.78);
+  background-color: #1a1a1b;
+  filter: none;
 }
 main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])::after {
   content: "";
-  position: fixed;
-  inset: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: -1;
   pointer-events: none;
   background:
-    /* Top: cool neutral veil — tames blown highlights behind logo / top bar */
-    radial-gradient(ellipse 120% 55% at 50% -8%, rgba(12, 18, 25, 0.38), rgba(12, 18, 25, 0) 58%),
-    radial-gradient(ellipse 70% 45% at 12% 10%, rgba(26, 40, 56, 0.22), rgba(26, 40, 56, 0) 52%),
-    /* Mid: light lift so body doesn’t go flat gray */
+    radial-gradient(ellipse 115% 52% at 50% -6%, rgba(12, 18, 25, 0.28), rgba(12, 18, 25, 0) 55%),
     linear-gradient(
       180deg,
-      rgba(244, 247, 250, 0.12) 0%,
-      rgba(232, 238, 245, 0.06) 28%,
-      rgba(244, 247, 250, 0) 52%
-    ),
-    /* Bottom: deeper read bed behind scroll content + dock */
-    linear-gradient(
-      180deg,
-      rgba(15, 20, 28, 0) 38%,
-      rgba(15, 20, 28, 0.18) 72%,
-      rgba(10, 14, 20, 0.42) 100%
+      rgba(244, 247, 250, 0.14) 0%,
+      rgba(244, 247, 250, 0.04) 38%,
+      rgba(244, 247, 250, 0) 52%,
+      rgba(15, 20, 28, 0) 58%,
+      rgba(15, 20, 28, 0.16) 82%,
+      rgba(10, 14, 20, 0.32) 100%
     );
 }
 :root[data-color-scheme="dark"] main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])::after,
 .dark main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])::after {
   background:
-    radial-gradient(ellipse 115% 52% at 50% -6%, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0) 55%),
-    radial-gradient(ellipse 65% 42% at 10% 8%, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0) 50%),
-    linear-gradient(180deg, rgb(from var(--color-bg-subtle) r g b / 0.28) 0%, rgb(from var(--color-bg-subtle) r g b / 0) 45%),
-    linear-gradient(180deg, rgba(0, 0, 0, 0) 35%, rgba(0, 0, 0, 0.5) 88%, rgba(0, 0, 0, 0.62) 100%);
-}
-
-/* Home: simpler read veil — avoids stacked radials + light wash fighting the hero. */
-main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast)::after {
-  background:
-    linear-gradient(180deg, rgba(12, 18, 25, 0.16) 0%, rgba(12, 18, 25, 0) 52%),
-    linear-gradient(180deg, rgba(15, 20, 28, 0) 48%, rgba(15, 20, 28, 0.14) 100%);
-}
-:root[data-color-scheme="dark"] main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast)::after,
-.dark main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast)::after {
-  background:
-    linear-gradient(180deg, rgba(0, 0, 0, 0.34) 0%, rgba(0, 0, 0, 0) 52%),
-    linear-gradient(180deg, rgba(0, 0, 0, 0) 46%, rgba(0, 0, 0, 0.38) 100%);
+    radial-gradient(ellipse 110% 48% at 50% -4%, rgba(0, 0, 0, 0.42), rgba(0, 0, 0, 0) 54%),
+    linear-gradient(
+      180deg,
+      rgb(from var(--color-bg-subtle) r g b / 0.22) 0%,
+      rgb(from var(--color-bg-subtle) r g b / 0) 44%,
+      rgba(0, 0, 0, 0) 52%,
+      rgba(0, 0, 0, 0.38) 88%,
+      rgba(0, 0, 0, 0.52) 100%
+    );
 }
 
 .topbar {
@@ -107,13 +104,15 @@ main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast)::after {
 }
 
 /* --------------------------------------------------------------------------
-   Immersive header scroll (main app only): fill on .topbarOcclusion::before (viewport top → header height). No backdrop-filter
+   Immersive header scroll (main app only): read veil on `.topbarOcclusion::before` only (photo is on `main::before`). No backdrop-filter
    here — animated full-bleed backdrop often draws a transient vertical white seam at the viewport edge (esp. next to scrollbar).
    Podcast: `appShell--podcast` / `data-page-atmosphere="podcast"` — excluded (see podcasts.css).
-   --header-scroll-progress 0–1 set by useImmersiveHeaderScroll; classes header-at-top | header-scrolled | header-solid.
+   --header-scroll-progress 0–1 + classes header-at-top | header-scrolled | header-solid (position).
+   --header-white-veil-opacity 0–1 (JS): white gradient layer — transparent when scrolling up / at top; up to 100% when scrolled down (~prior 0.8 + 30%).
    -------------------------------------------------------------------------- */
 main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) {
   --header-scroll-progress: 0;
+  --header-white-veil-opacity: 0;
 }
 main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbar {
   isolation: isolate;
@@ -184,16 +183,16 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]).header
   background-position: center top, right top, center, center;
   background-repeat: no-repeat, no-repeat, no-repeat, no-repeat;
 }
+/* Occlusion strip: optional backdrop for non–TopApp-main shells (photo lives on `main::before` when present). */
 .topbarOcclusion::before {
   content: "";
   position: absolute;
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background: var(--header-occlusion-image) center 38% / cover no-repeat;
-  filter: contrast(1.07) saturate(1.04);
+  background: transparent;
 }
-/* Main app: full header chrome (fixed top:0 → bottom of occlusion). ::before = vertical fill + scroll opacity; no flag photo. */
+/* Main app: header chrome = read veil only (full-bleed photo is on `main::before`). */
 main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarOcclusion::before {
   content: "";
   position: absolute;
@@ -201,43 +200,32 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topba
   z-index: 0;
   pointer-events: none;
   filter: none;
+  /* White header read veil: fixed gradient shape; overall strength = `--header-white-veil-opacity` (0–1, scroll-direction JS). */
   background-image: linear-gradient(
     180deg,
-    #ffffff 0%,
-    #ffffff 14%,
-    rgba(255, 255, 255, 0.98) 32%,
-    rgba(255, 255, 255, 0.94) 50%,
-    rgba(255, 255, 255, 0.88) 66%,
-    rgba(255, 255, 255, 0.72) 80%,
-    rgba(255, 255, 255, 0.28) 92%,
-    rgba(255, 255, 255, 0) 100%
+    rgb(255 255 255 / 0.58) 0%,
+    rgb(255 255 255 / 0.3) 28%,
+    rgb(255 255 255 / 0.12) 48%,
+    rgb(255 255 255 / 0) 72%
   );
-  /* Full bleed; mobile `.topbarOcclusion::before` photo sizing must not stretch this gradient. */
+  background-color: transparent;
   background-size: 100% 100%;
   background-position: 0 0;
   background-repeat: no-repeat;
-  /* High floor + scroll to 1: content must not read through the top chrome while scrolling.
-     Floor = ~20% less transparent than prior 0.82 when at top (progress 0). */
-  opacity: max(0.856, var(--header-scroll-progress, 0));
-  transition: opacity 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+  opacity: var(--header-white-veil-opacity, 0);
+  transition: opacity 0.28s cubic-bezier(0.22, 1, 0.36, 1);
 }
 :root[data-color-scheme="dark"] main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarOcclusion::before,
 .dark main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarOcclusion::before {
   background-image: linear-gradient(
     180deg,
-    var(--color-bg-elevated) 0%,
-    color-mix(in srgb, var(--color-bg-elevated) 98%, transparent) 16%,
-    color-mix(in srgb, var(--color-bg-elevated) 94%, transparent) 34%,
-    color-mix(in srgb, var(--color-bg-app) 92%, transparent) 52%,
-    color-mix(in srgb, var(--color-bg-app) 86%, transparent) 68%,
-    color-mix(in srgb, var(--color-bg-app) 72%, transparent) 82%,
-    color-mix(in srgb, var(--color-bg-app) 38%, transparent) 93%,
-    rgb(from var(--color-bg-app) r g b / 0) 100%
+    rgba(22, 24, 28, 0.72) 0%,
+    rgba(22, 24, 28, 0.4) 32%,
+    rgba(22, 24, 28, 0.14) 52%,
+    rgba(22, 24, 28, 0) 74%
   );
-  background-size: 100% 100%;
-  background-position: 0 0;
-  /* ~20% less transparent than prior 0.86 at progress 0 (scroll at top). */
-  opacity: max(0.888, var(--header-scroll-progress, 0));
+  filter: none;
+  opacity: var(--header-white-veil-opacity, 0);
 }
 /* Podcast header uses its own stacked treatment — no duplicate flag layer. */
 .appShell--podcast .topbarOcclusion::before {
@@ -596,7 +584,8 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topba
   gap: 10px;
 }
 
-/* Fixed header logo column */
+/* Fixed header logo column — OP/TOP mark (required). Desktop: centered fixed mark; mobile @760px: sticky row.
+   Do not remove; responsive edits must keep .headerBrandStack above .topbar (see mobile z-index). */
 .headerBrandStack {
   position: fixed;
   top: calc(var(--header-floating-offset, 20px) + 4px + env(safe-area-inset-top, 0px));
@@ -642,7 +631,9 @@ img.brandMarkImg--header {
   height: auto;
   max-height: clamp(220px, 33.51vw, 317px);
   max-width: min(793px, 92vw);
-  object-fit: scale-down;
+  min-width: 120px;
+  min-height: 44px;
+  object-fit: contain;
   object-position: center center;
   padding: 0;
   margin: 0;
@@ -658,8 +649,36 @@ img.brandMarkImg--header {
 }
 :root[data-color-scheme="dark"] img.brandMarkImg--header,
 .dark img.brandMarkImg--header {
-  /* Dark mode: increase OP green vibrance and edge separation over photo header. */
-  filter: saturate(1.28) contrast(1.08) brightness(1.06) drop-shadow(0 2px 10px rgba(0, 0, 0, 0.42));
+  /* Dark mode: brighter mark + edge separation over atmospheric header. */
+  filter: saturate(1.32) contrast(1.05) brightness(1.16) drop-shadow(0 2px 10px rgba(0, 0, 0, 0.42));
+}
+
+/* Visible fallback when the mark asset fails (title/alt still on <img> before swap). */
+span.headerBrandMarkFallback {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  max-width: min(793px, 92vw);
+  min-width: min(100%, 160px);
+  min-height: 48px;
+  padding: 8px 12px;
+  font-family: var(--font-heading), var(--font-body), sans-serif;
+  font-size: clamp(10px, 2.6vw, 13px);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  color: var(--color-text-primary);
+  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 72%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--color-bg-card) 90%, transparent);
+}
+:root[data-color-scheme="dark"] span.headerBrandMarkFallback,
+.dark span.headerBrandMarkFallback {
+  color: color-mix(in srgb, var(--color-text-primary) 88%, #f4f7fa 12%);
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.35));
 }
 .brandTag {
   font-size: 24px;
@@ -770,7 +789,7 @@ img.brandMarkImg--header {
   gap: 0;
   padding: clamp(12px, 2vw, 22px);
 }
-/* Profile progress + welcome: no outer white/glass shell — stack sits on hero photography */
+/* Profile progress strip when the home checklist is active */
 .homeHeroBackdrop__welcomeBundle {
   display: flex;
   flex-direction: column;
@@ -797,39 +816,7 @@ img.brandMarkImg--header {
   border: 1px solid var(--color-border-subtle);
   box-shadow: var(--shadow-card);
 }
-.homeHeroBackdrop__welcomeBundle .homeHeroBackdrop__card.cardHero {
-  margin: 0;
-}
-/* Welcome copy sits on the photo (no glass panel); bundle path keeps opaque shell behind the card */
-.homeHeroBackdrop__card.cardHero {
-  position: relative;
-  z-index: 1;
-  margin: 0;
-  padding: var(--ds-space-4, 16px) var(--ds-space-4, 16px);
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-}
-/* Hero welcome copy: theme tokens (works on opaque bundle + on page background when card is standalone). */
-.homeHeroBackdrop__content > .homeHeroBackdrop__card.cardHero .introTagline,
-.homeHeroBackdrop__welcomeBundle .homeHeroBackdrop__card.cardHero .introTagline {
-  color: var(--color-text-secondary);
-  text-shadow: none;
-}
-.homeHeroBackdrop__content > .homeHeroBackdrop__card.cardHero .homeWelcomeCopy h2,
-.homeHeroBackdrop__welcomeBundle .homeHeroBackdrop__card.cardHero .homeWelcomeCopy h2 {
-  color: var(--color-text-primary);
-  text-shadow: none;
-}
-.homeHeroBackdrop__content > .homeHeroBackdrop__card.cardHero .homeWelcomeLead,
-.homeHeroBackdrop__welcomeBundle .homeHeroBackdrop__card.cardHero .homeWelcomeLead {
-  color: var(--color-text-secondary);
-  text-shadow: none;
-}
-
-/* Profile completion — home hero (subtle green, above welcome card) */
+/* Profile completion — home hero */
 .homeProfileProgressNotice {
   position: relative;
   z-index: 1;
@@ -1118,37 +1105,6 @@ img.brandMarkImg--header {
   margin: 0;
   color: var(--color-text-secondary);
   max-width: 62ch;
-}
-.homeWelcomeSection {
-  display: grid;
-  gap: 16px;
-}
-.homeWelcomeCopy {
-  display: grid;
-  gap: 8px;
-}
-.homeWelcomeCopy h2 {
-  margin: 0;
-  font-size: clamp(24px, 2.7vw, 32px);
-  line-height: 1.2;
-}
-.homeWelcomeLead {
-  margin: 0;
-  color: var(--color-text-secondary);
-  max-width: 62ch;
-  line-height: 1.55;
-  font-size: 15px;
-}
-.homeWelcomeActions {
-  margin-top: 2px;
-}
-.homeWelcomeActions .btnPrimary {
-  background: linear-gradient(145deg, color-mix(in srgb, var(--color-accent) 78%, #1f5d34) 0%, color-mix(in srgb, var(--color-accent-hover) 72%, #163d24) 100%);
-  border-color: color-mix(in srgb, var(--color-accent-soft) 58%, var(--color-accent) 42%);
-  box-shadow: 0 10px 24px color-mix(in srgb, #000 28%, transparent), inset 0 1px 0 color-mix(in srgb, #ffffff 20%, transparent);
-}
-.homeWelcomeActions .btnPrimary:hover {
-  transform: translateY(-1px);
 }
 /* Profile tab: single vertical rhythm; avoid stacking margin + grid gap */
 .profileTabShell {
@@ -1625,6 +1581,238 @@ img.brandMarkImg--header {
     0 0 0 1px color-mix(in srgb, #ffffff 5%, transparent),
     inset 0 1px 0 color-mix(in srgb, #ffffff 6%, transparent);
 }
+
+/* Home — sponsor banner placements (partner + partner + reserved) */
+.homeSponsorBannerRow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--ds-space-3, 12px);
+  margin-bottom: var(--ds-space-4, 16px);
+}
+.homeSponsorBannerSlot {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  min-height: 112px;
+  padding: 12px 14px;
+  border-radius: var(--radius-card, 14px);
+  overflow: hidden;
+  text-decoration: none;
+  color: #f8fafc;
+  border: 1px solid color-mix(in srgb, #ffffff 22%, transparent);
+  box-shadow:
+    0 14px 28px color-mix(in srgb, #000 24%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, #ffffff 8%, transparent);
+  transition: transform 160ms ease, box-shadow 200ms ease, border-color 200ms ease;
+}
+.homeSponsorBannerSlot:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, #ffffff 38%, transparent);
+  box-shadow:
+    0 18px 36px color-mix(in srgb, #000 32%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, #ffffff 12%, transparent);
+}
+.homeSponsorBannerSlot:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+.homeSponsorBannerSlot__bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-color: #1a2330;
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  transform: scale(1.02);
+}
+.homeSponsorBannerSlot__scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #03080c 0%, transparent) 0%,
+    color-mix(in srgb, #03080c 55%, transparent) 100%
+  );
+  pointer-events: none;
+}
+.homeSponsorBannerSlot__scrim--muted {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-bg-subtle) 12%, transparent) 0%,
+    color-mix(in srgb, var(--color-bg-app) 88%, transparent) 100%
+  );
+}
+/* Logo-forward spotlight (Gameday, etc.): mark centered; text band at bottom */
+.homeSponsorBannerSlot--logo {
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--color-surface-card) 92%, #ffffff 8%) 0%,
+    color-mix(in srgb, var(--color-surface-card-deep) 94%, #0b1420 6%) 100%
+  );
+}
+:root[data-color-scheme="dark"] .homeSponsorBannerSlot--logo,
+.dark .homeSponsorBannerSlot--logo {
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--color-surface-card) 88%, #0a0e14 12%) 0%,
+    color-mix(in srgb, var(--color-surface-card-deep) 96%, #000 4%) 100%
+  );
+}
+.homeSponsorBannerSlot__scrim--logo {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #03080c 0%, transparent) 0%,
+    color-mix(in srgb, #03080c 0%, transparent) 42%,
+    color-mix(in srgb, #03080c 62%, transparent) 100%
+  );
+}
+/* Photo + logo mark: hero fill; mark sits in a frosted plate beside the title */
+.homeSponsorBannerSlot--brandStack {
+  background-color: #1a2330;
+  min-height: 118px;
+}
+.homeSponsorBannerSlot__scrim--brandStack {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #03080c 0%, transparent) 0%,
+    color-mix(in srgb, #03080c 0%, transparent) 38%,
+    color-mix(in srgb, #03080c 45%, transparent) 72%,
+    color-mix(in srgb, #03080c 82%, transparent) 100%
+  );
+}
+.homeSponsorBannerSlot--brandStack .homeSponsorBannerSlot__bg {
+  transform: scale(1.03);
+}
+/* Bottom bar: logo on a frosted plate + title (replaces centered floating mark) */
+.homeSponsorBannerSlot__content--brandStack {
+  z-index: 3;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding-top: 4px;
+}
+.homeSponsorBannerSlot__brandPlate {
+  flex: 0 1 auto;
+  max-width: min(200px, 46%);
+  min-width: 48px;
+  min-height: 48px;
+  padding: 6px 10px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, #070d16 72%, transparent);
+  border: 1px solid color-mix(in srgb, #ffffff 22%, transparent);
+  box-shadow:
+    0 4px 18px color-mix(in srgb, #000 38%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #ffffff 12%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+:root[data-color-scheme="light"] .homeSponsorBannerSlot__brandPlate {
+  background: color-mix(in srgb, #ffffff 78%, transparent);
+  border-color: color-mix(in srgb, var(--color-border) 55%, #ffffff 45%);
+  box-shadow:
+    0 4px 16px color-mix(in srgb, #000 12%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #ffffff 90%, transparent);
+}
+.homeSponsorBannerSlot__textStack {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-start;
+  text-align: left;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.homeSponsorBannerSlot__brandMark {
+  display: block;
+  max-width: 100%;
+  max-height: 36px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  object-position: center;
+}
+.homeSponsorBannerSlot__logo {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  max-width: min(220px, 78%);
+  max-height: 52%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  pointer-events: none;
+  filter: drop-shadow(0 10px 24px color-mix(in srgb, #000 35%, transparent));
+}
+.homeSponsorBannerSlot--placeholder {
+  color: var(--color-text-primary);
+  border-style: dashed;
+  border-color: color-mix(in srgb, var(--color-border-subtle) 70%, var(--color-accent-soft) 30%);
+  background: color-mix(in srgb, var(--color-surface-card) 88%, transparent);
+}
+.homeSponsorBannerSlot--placeholder .homeSponsorBannerSlot__content {
+  position: relative;
+  z-index: 2;
+}
+.homeSponsorBannerSlot__content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-start;
+  text-align: left;
+}
+.homeSponsorBannerSlot__eyebrow {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.88;
+}
+.homeSponsorBannerSlot__title {
+  font-size: clamp(0.95rem, 2.2vw, 1.1rem);
+  font-weight: 800;
+  line-height: 1.2;
+  text-shadow: 0 2px 12px color-mix(in srgb, #000 55%, transparent);
+}
+.homeSponsorBannerSlot--placeholder .homeSponsorBannerSlot__title {
+  text-shadow: none;
+}
+.homeSponsorBannerSlot__hint {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  max-width: 28ch;
+  line-height: 1.35;
+}
+@media (max-width: 760px) {
+  .homeSponsorBannerRow {
+    grid-template-columns: 1fr;
+  }
+  .homeSponsorBannerSlot {
+    min-height: 100px;
+  }
+  .homeSponsorBannerSlot--brandStack {
+    min-height: 108px;
+  }
+  .homeSponsorBannerSlot__content--brandStack {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .homeSponsorBannerSlot__brandPlate {
+    max-width: min(240px, 100%);
+  }
+}
+
 #home-directory h3 {
   display: inline-flex;
   align-items: center;
@@ -2004,6 +2192,13 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 }
 .nonprofitCardMedia--trustedResource {
   align-self: start;
+}
+.resultCard--trustedResource .nonprofitLogoPlate {
+  padding: 5px;
+  background: color-mix(in srgb, var(--color-bg-card) 90%, var(--color-bg-muted) 10%);
+}
+.resultCard--trustedResource .nonprofitLogoImg {
+  object-fit: contain;
 }
 .nonprofitIconBadge--logo {
   padding: 0;
@@ -2462,7 +2657,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 }
 /*
  * Fixed bottom NAV bar (pill links), not the scrollable page footer.
- * Page copy/legal lives in `.siteFooter` above the scroll padding.
+ * Mission strip: `MissionPageTopStrip` — home tab uses `placement="top"` (first in `.shell`); other shells use `placement="bottom"` (after main content).
  */
 .footerDockBackdrop {
   position: fixed;
@@ -2490,6 +2685,9 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   padding: 10px 0 12px;
   display: flex;
   justify-content: center;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 .bottomNav {
   display: flex;
@@ -2508,6 +2706,27 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   border-radius: calc(var(--radius-pill) + 8px);
   padding: 6px 8px;
   box-shadow: 0 8px 18px color-mix(in srgb, #000 14%, transparent);
+}
+/* Icon + label dock: fills parent (e.g. `.siteContainer`), never use wide pill `min-width` / single-line nowrap. */
+.bottomNav.bottomNav--withIcons {
+  width: 100%;
+  max-width: min(900px, 100%);
+  box-sizing: border-box;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  align-items: stretch;
+  gap: clamp(2px, 0.6vw, 8px);
+  padding: clamp(5px, 0.9vw, 8px) clamp(4px, 1vw, 12px);
+}
+.bottomNav.bottomNav--withIcons .navItem.navItem--dockCol {
+  min-width: 0;
+  flex: 1 1 0;
+  max-width: 100%;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+  padding: clamp(6px, 1.2vw, 10px) clamp(2px, 1.2vw, 8px);
+  word-break: break-word;
 }
 .navItem {
   background: transparent;
@@ -2573,7 +2792,6 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
     inset 0 0 0 1px color-mix(in srgb, #ffffff 14%, transparent),
     0 6px 14px color-mix(in srgb, var(--color-accent) 24%, transparent);
 }
-/* End-of-scroll page footer (brand + notes), above bottom padding for the fixed nav dock. */
 .adminUtilityEntry {
   width: min(var(--content-max-width), calc(100% - var(--content-gutter)));
   margin: 8px auto 0;
@@ -2596,10 +2814,38 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   color: var(--color-text-primary);
   border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-border-strong));
 }
+/* Brand + mission strip: `.siteFooter--pageTop` under the bar on home; `.siteFooter--pageBottom` after scrollable content elsewhere. */
 .siteFooter {
   margin-top: 28px;
-  padding: 8px max(var(--content-gutter), env(safe-area-inset-left)) 120px
+  padding: 8px max(var(--content-gutter), env(safe-area-inset-left)) calc(120px + env(safe-area-inset-bottom, 0px))
     max(var(--content-gutter), env(safe-area-inset-right));
+}
+.siteFooter.siteFooter--pageTop {
+  margin-top: 0;
+  margin-bottom: 16px;
+  padding: 8px max(var(--content-gutter), env(safe-area-inset-left)) 12px
+    max(var(--content-gutter), env(safe-area-inset-right));
+}
+.siteFooter.siteFooter--pageBottom {
+  margin-top: var(--ds-section-gap, 24px);
+  margin-bottom: 0;
+  /* Same reserve as base `.siteFooter`: fixed icon dock + safe area — do not shrink to 12px or the strip stays under the pill nav. */
+  padding: 8px max(var(--content-gutter), env(safe-area-inset-left))
+    calc(120px + env(safe-area-inset-bottom, 0px)) max(var(--content-gutter), env(safe-area-inset-right));
+}
+/* Inside `.shell`: align with other grid blocks; sit above home welcome / sponsor actions */
+.siteFooter.siteFooter--inMainShell {
+  width: 100%;
+  margin-bottom: var(--ds-space-3, 12px);
+}
+/* Shell / subpage content already apply horizontal gutters — do not inset again (was narrower than cards). */
+.siteFooter.siteFooter--pageTop.siteFooter--inMainShell,
+.siteFooter.siteFooter--pageBottom.siteFooter--inMainShell {
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+.shell.shell--home > .siteFooter.siteFooter--inMainShell:first-child {
+  margin-top: 0;
 }
 .footerInner {
   display: flex;
@@ -2714,8 +2960,12 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   backdrop-filter: blur(6px);
   display: grid;
   place-items: center;
-  padding: var(--ds-space-4, 16px);
+  padding: max(var(--ds-space-4, 16px), env(safe-area-inset-top, 0px))
+    max(var(--ds-space-4, 16px), env(safe-area-inset-right, 0px))
+    max(var(--ds-space-4, 16px), env(safe-area-inset-bottom, 0px))
+    max(var(--ds-space-4, 16px), env(safe-area-inset-left, 0px));
   z-index: 100;
+  box-sizing: border-box;
 }
 .missionSponsorModalOverlay {
   z-index: 110;
@@ -2724,7 +2974,12 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   z-index: 105;
 }
 .modalCard {
-  width: min(560px, 100%);
+  width: min(560px, calc(100vw - 24px));
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  max-height: min(90dvh, 900px);
+  overflow-y: auto;
   background: linear-gradient(180deg, var(--color-surface-elevated) 0%, var(--color-surface-card-deep) 100%);
   border-radius: var(--radius-card);
   border: 1px solid var(--color-border);
@@ -3006,6 +3261,8 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
+  align-items: stretch;
+  justify-items: stretch;
 }
 .sponsorFeaturedCard {
   display: flex;
@@ -3045,6 +3302,11 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 .sponsorFeaturedSection {
   padding: 18px;
 }
+.sponsorRosterStack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-section-gap, 24px);
+}
 .sponsorSectionHead {
   display: flex;
   align-items: center;
@@ -3067,7 +3329,148 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--ds-space-5, 20px);
+  width: 100%;
+  align-items: stretch;
+  justify-items: stretch;
 }
+
+/* Cards in tier grids: stretch with the grid cell and push footer to the bottom of the card */
+.sponsorFeaturedShowcase > .sponsorPremiumCard.torpListingCard {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  min-height: 0;
+}
+.sponsorFeaturedShowcase > .sponsorPremiumCard .sponsorPremiumCardInner {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.sponsorFeaturedShowcase > .sponsorPremiumCard .sponsorPremiumBrand {
+  flex: 1 1 auto;
+  min-height: min-content;
+}
+
+/* Hub grid equal-height rows: do not shrink the copy column below its content (was clipping taglines). */
+.sponsorFeaturedShowcase .sponsorPremiumTagline--card {
+  -webkit-line-clamp: 9;
+}
+@media (min-width: 768px) {
+  .sponsorFeaturedShowcase .sponsorPremiumTagline--card {
+    -webkit-line-clamp: 12;
+  }
+}
+
+/* v0.8 — tiered sponsor hub (Mission → Foundational → Impact → Community) */
+.sponsorTierSection .sponsorFeaturedShowcase {
+  width: 100%;
+  max-width: none;
+}
+.sponsorTierSection--mission_partner .sponsorSectionHead h3 {
+  font-size: clamp(1.35rem, 2.6vw, 1.85rem);
+  letter-spacing: -0.02em;
+}
+.sponsorTierSection--foundational .sponsorSectionHead h3 {
+  font-size: clamp(1.2rem, 2.2vw, 1.55rem);
+}
+.sponsorTierSection--impact .sponsorSectionHead h3,
+.sponsorTierSection--community .sponsorSectionHead h3 {
+  font-size: clamp(1.1rem, 2vw, 1.35rem);
+}
+@media (min-width: 600px) {
+  .sponsorFeaturedShowcase--tier-mission_partner {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--ds-space-6, 24px);
+  }
+  .sponsorFeaturedShowcase--tier-foundational {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--ds-space-6, 24px);
+  }
+  .sponsorFeaturedShowcase--tier-impact {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  }
+  .sponsorFeaturedShowcase--tier-community {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  }
+}
+@media (min-width: 900px) {
+  .sponsorFeaturedShowcase--tier-impact {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+  .sponsorFeaturedShowcase--tier-community {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+}
+@media (min-width: 1280px) {
+  .sponsorFeaturedShowcase--tier-impact {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  }
+  .sponsorFeaturedShowcase--tier-community {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  }
+}
+.sponsorFeaturedShowcase--tier-community .sponsorPremiumCard {
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
+}
+
+.sponsorFeaturedShowcase--tier-community {
+  gap: clamp(14px, 2.5vw, 20px);
+}
+.sponsorFeaturedShowcase--tier-impact {
+  gap: clamp(14px, 2.5vw, 22px);
+}
+
+/* Narrow tier columns (~248–300px): fixed 144px logo + flex row crushed the title — use grid + capped logo */
+.sponsorPremiumCard--displayTier-community .sponsorPremiumBrandIdentity,
+.sponsorPremiumCard--displayTier-impact .sponsorPremiumBrandIdentity {
+  display: grid;
+  grid-template-columns: minmax(0, min(36%, 108px)) minmax(0, 1fr);
+  column-gap: 12px;
+  row-gap: 10px;
+  align-items: start;
+}
+.sponsorPremiumCard--displayTier-community .sponsorPremiumLogoShell,
+.sponsorPremiumCard--displayTier-impact .sponsorPremiumLogoShell {
+  width: 100%;
+  max-width: 108px;
+  height: auto;
+  aspect-ratio: 1;
+  max-height: 108px;
+  justify-self: start;
+}
+.sponsorPremiumCard--displayTier-community .sponsorPremiumTitleBlock,
+.sponsorPremiumCard--displayTier-impact .sponsorPremiumTitleBlock {
+  min-width: 0;
+  width: 100%;
+}
+.sponsorPremiumCard--displayTier-community .sponsorPremiumSubheader,
+.sponsorPremiumCard--displayTier-impact .sponsorPremiumSubheader {
+  max-width: none;
+}
+.sponsorPremiumCard--displayTier-community .sponsorPremiumOrgName,
+.sponsorPremiumCard--displayTier-impact .sponsorPremiumOrgName {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+@media (max-width: 520px) {
+  .sponsorPremiumCard--displayTier-community .sponsorPremiumBrandIdentity,
+  .sponsorPremiumCard--displayTier-impact .sponsorPremiumBrandIdentity {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+  }
+  .sponsorPremiumCard--displayTier-community .sponsorPremiumLogoShell,
+  .sponsorPremiumCard--displayTier-impact .sponsorPremiumLogoShell {
+    justify-self: center;
+  }
+  .sponsorPremiumCard--displayTier-community .sponsorPremiumTitleBlock,
+  .sponsorPremiumCard--displayTier-impact .sponsorPremiumTitleBlock {
+    text-align: center;
+  }
+}
+
 .sponsorFeaturedSpotlight {
   position: relative;
   border: 1px solid color-mix(in srgb, var(--sponsor-brand-primary, var(--color-accent)) 35%, var(--color-border) 65%);
@@ -4529,6 +4932,9 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   border-radius: 999px;
   padding: 3px 9px;
   background: rgba(6, 10, 14, 0.45);
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-wrap: anywhere;
 }
 .sponsorPremiumMetaChip--muted {
   color: rgba(233, 240, 247, 0.88);
@@ -4690,6 +5096,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   -webkit-box-orient: vertical;
   overflow: hidden;
   margin: 0;
+  min-height: 0;
 }
 @media (min-width: 768px) {
   .sponsorPremiumTagline--card {
@@ -4928,61 +5335,240 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   font-size: 12px;
   color: var(--color-text-secondary);
 }
-.sponsorProfileHero {
-  min-height: 280px;
+/* --- Sponsor detail (/sponsors/[slug]) — scoped to `.sponsorProfilePageRoot` inside sponsors AppShell --- */
+.sponsorProfilePageRoot {
+  position: relative;
+  z-index: 1;
   display: grid;
-  align-items: end;
+  gap: var(--ds-space-4, 16px);
+  width: 100%;
+  min-width: 0;
 }
-.sponsorProfileHero .sponsorPremiumIndustry {
-  color: color-mix(in srgb, var(--color-accent) 55%, #f8fafc 45%);
+.appShell--siteChrome.appShell--subpage .shell > .sponsorProfilePageRoot,
+.appShell--sponsors.appShell--subpage .shell > .sponsorProfilePageRoot {
+  padding-bottom: clamp(56px, 12vh, 120px);
 }
-.sponsorProfileIdentity {
+.sponsorProfileCard,
+.sponsorProfileIntro {
+  border-radius: var(--radius-card, 14px);
+  overflow: hidden;
+}
+.sponsorProfileIntro {
+  padding: 0;
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+.sponsorProfileHeroMedia {
+  position: relative;
+  width: 100%;
+  min-height: 0;
+  max-height: min(200px, 32vw);
+  overflow: hidden;
+}
+.sponsorProfileHeroImg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-height: min(200px, 32vw);
+  object-fit: cover;
+  object-position: center;
+}
+.sponsorProfileHeroScrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(6, 10, 14, 0.12) 0%, rgba(6, 10, 14, 0.55) 100%);
+  pointer-events: none;
+}
+.sponsorProfileIntroBody {
+  padding: var(--ds-space-4, 16px) var(--ds-space-5, 20px) var(--ds-space-5, 20px);
+  display: grid;
+  gap: var(--ds-space-4, 16px);
+  background: var(--color-bg-card);
+}
+.sponsorProfileIdentityRow {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  gap: 14px;
-  align-items: center;
+  gap: var(--ds-space-4, 16px);
+  align-items: start;
+}
+.sponsorProfileLogoShell.sponsorPremiumLogoShell {
+  width: 88px;
+  height: 88px;
+  flex-shrink: 0;
+}
+.sponsorProfileTitleBlock {
+  min-width: 0;
 }
 .sponsorProfileTitle {
+  margin: 0 0 4px;
+  font-size: clamp(1.2rem, 3.2vw, 1.55rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--color-text-primary);
+}
+.sponsorProfileTypeLine {
+  margin: 0 0 6px;
+  font-size: var(--text-caption);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+.sponsorProfileLead {
   margin: 0;
-  color: #f8fafc;
+  font-size: var(--text-body-sm);
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--color-text-primary) 88%, var(--color-text-secondary) 12%);
+  max-width: 62ch;
+}
+.sponsorProfileMetaChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.sponsorProfileMetaChip {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-bg-subtle);
+  color: var(--color-text-secondary);
+}
+.sponsorProfileMetaChip--muted {
+  font-weight: 600;
   text-transform: none;
   letter-spacing: 0.02em;
-  font-weight: 800;
-  font-size: clamp(1.35rem, 3vw, 1.85rem);
-  line-height: 1.2;
-  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.35);
+  font-size: var(--text-caption);
 }
-.sponsorProfileHero .sponsorPremiumTagline {
-  color: rgba(248, 250, 252, 0.92);
-}
-.sponsorProfileOutboundLink {
-  display: inline-flex;
+.sponsorProfileIconRow {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-  padding: 10px 14px;
-  border-radius: var(--radius-input, 10px);
+}
+.sponsorProfileIconLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
   border: 1px solid var(--color-border-strong);
   background: var(--color-bg-subtle);
   color: var(--color-text-primary);
+  text-decoration: none;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.sponsorProfileIconLink:hover {
+  border-color: color-mix(in srgb, var(--color-accent) 42%, var(--color-border));
+  background: var(--color-bg-card-hover);
+  color: var(--color-accent);
+}
+.sponsorProfileIconLinkSvg {
+  width: 20px;
+  height: 20px;
+}
+.sponsorProfileOverview,
+.sponsorProfileMore {
+  padding: var(--ds-space-4, 16px) var(--ds-space-5, 20px);
+}
+.sponsorProfileSectionTitle {
+  margin: 0 0 10px;
+  font-size: var(--text-section-title);
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+.sponsorProfileProseStack {
+  display: grid;
+  gap: 10px;
+}
+.sponsorProfileProse {
+  margin: 0;
+  font-size: var(--text-body-sm);
+  line-height: 1.55;
+  color: var(--color-text-primary);
+  max-width: 68ch;
+}
+.sponsorProfileProse--lead {
+  font-weight: 600;
+  color: color-mix(in srgb, var(--color-text-primary) 92%, var(--color-text-secondary) 8%);
+}
+.sponsorProfileProse--muted {
+  color: var(--color-text-secondary);
+}
+.sponsorProfileStatus {
+  margin: 0;
+  font-size: var(--text-body-sm);
+}
+.sponsorProfileMoreList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+.sponsorProfileMoreLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-size: var(--text-body-sm);
   font-weight: 600;
+  color: var(--color-accent);
   text-decoration: none;
-  transition: border-color 160ms ease, background 160ms ease;
 }
-.sponsorProfileOutboundLink:hover {
-  border-color: color-mix(in srgb, var(--color-accent) 40%, var(--color-border));
-  background: var(--color-bg-card);
+.sponsorProfileMoreLink:hover {
+  text-decoration: underline;
 }
-.sponsorProfileLinks {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  align-items: flex-start;
+.sponsorProfileMoreLinkIcon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
 }
-.sponsorProfileGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+.sponsorProfileMoreLinkText {
+  min-width: 0;
+  word-break: break-word;
+}
+.sponsorProfileBackRow {
+  margin: 0;
+  padding: 0 4px 8px;
+}
+.sponsorProfileBackLink {
+  font-size: var(--text-body-sm);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+}
+.sponsorProfileBackLink:hover {
+  color: var(--color-accent);
+  text-decoration: underline;
+}
+
+@media (max-width: 760px) {
+  .sponsorProfileHeroMedia,
+  .sponsorProfileHeroImg {
+    max-height: min(160px, 42vw);
+  }
+  .sponsorProfileIdentityRow {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+  }
+  .sponsorProfileLogoShell.sponsorPremiumLogoShell {
+    width: 80px;
+    height: 80px;
+  }
+  .sponsorProfileMetaChips {
+    justify-content: center;
+  }
+  .sponsorProfileIconRow {
+    justify-content: center;
+  }
 }
 
 /* Moderation queue preview (staging) — same surface system as live admin card */
@@ -5169,9 +5755,6 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   .homeHeroBackdrop__content {
     padding: 12px;
   }
-  .homeHeroBackdrop__card.cardHero {
-    padding: 12px;
-  }
   .welcomeActionCard--uniform {
     min-height: 104px;
   }
@@ -5189,22 +5772,24 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   .topApp {
     --content-gutter: 24px;
     --header-floating-offset: 0px;
-    --header-floating-height: 212px;
+    --header-floating-height: 254px;
     --header-fade-height: 0px;
-    --mobile-header-brand-row-height: 140px;
+    /* Reserve vertical space for sticky `.topbar` offset; keep ≥ max header mark height on narrow phones. */
+    --mobile-header-brand-row-height: 240px;
   }
   .appShell--subpage {
     --header-floating-offset: 0px;
-    --header-floating-height: 212px;
+    --header-floating-height: 254px;
     --header-fade-height: 0px;
-    --mobile-header-brand-row-height: 140px;
+    --mobile-header-brand-row-height: 240px;
   }
   .headerBrandStack {
     position: sticky;
     top: 0;
     left: 0;
     transform: none;
-    z-index: 101;
+    /* Above `.topbar` / `.subpageTopbar` (102), below account dropdown (120) and high overlays (105+). */
+    z-index: 103;
     width: 100%;
     max-width: none;
     padding: calc(6px + env(safe-area-inset-top, 0px)) 10px 4px;
@@ -5213,29 +5798,29 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   }
   .topbar {
     position: sticky;
-    top: var(--mobile-header-brand-row-height, 140px);
+    top: var(--mobile-header-brand-row-height, 240px);
     z-index: 102;
     padding: 4px 0 8px;
     background: transparent;
     border-bottom: 0;
   }
+  /* Subpage bar: `globals.css` sets `top:0` after this file — use higher specificity so the bar clears the brand row. */
+  div.appShell.appShell--subpage header.subpageTopbar {
+    position: sticky;
+    top: var(--mobile-header-brand-row-height, 240px);
+    z-index: 102;
+  }
   .topbarOcclusion {
     display: block;
-    height: calc(var(--mobile-header-brand-row-height, 140px) + 72px);
+    height: calc(var(--mobile-header-brand-row-height, 240px) + 72px);
     background-size: auto, auto, auto, auto;
     background-position: center top, right top, center, center;
   }
-  /* Flag-hero occlusion photo sizing — do not apply to main immersive gradient (would tile / band). */
-  .topbarOcclusion::before {
-    background-size: 170% auto;
-    background-position: 58% 22%;
-  }
+  /* Main-app header: single gradient veil (full-bleed photo is on `main::before`). */
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarOcclusion::before {
     background-size: 100% 100%;
     background-position: 0 0;
-  }
-  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])::before {
-    background-position: 36% 9%;
+    transition-duration: 0.18s;
   }
   .shell {
     padding-top: 16px;
@@ -5263,9 +5848,44 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
     flex-wrap: wrap;
     gap: 8px;
   }
-  img.brandMarkImg--header {
-    max-height: clamp(150px, 42vw, 210px) !important;
-    max-width: min(420px, 90vw) !important;
+  /* Home: mobile header hierarchy — guests get auth CTAs in the first chrome row; signed-in keeps corners for bell + avatar. */
+  main.topApp.topApp--auth-out[data-page-atmosphere="home"] .topbarInner {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "auth"
+      "lead";
+    gap: 10px;
+    align-items: stretch;
+  }
+  main.topApp.topApp--auth-out[data-page-atmosphere="home"] .topbarRight {
+    grid-area: auth;
+    justify-self: stretch;
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  main.topApp.topApp--auth-out[data-page-atmosphere="home"] .topbarLeft {
+    grid-area: lead;
+    width: 100%;
+    justify-content: space-between;
+  }
+  main.topApp.topApp--auth-out[data-page-atmosphere="home"] .topbarCenter {
+    display: none;
+  }
+  main.topApp.topApp--auth-in[data-page-atmosphere="home"] .topbarInner {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "left right"
+      "center center";
+  }
+  main.topApp.topApp--auth-in[data-page-atmosphere="home"] .topbarLeft {
+    display: flex;
+  }
+  img.brandMarkImg--header:not(.podcastBrandLogo) {
+    max-height: clamp(206px, 60vw, 293px) !important;
+    max-width: min(576px, 94vw) !important;
   }
   .headerBrandTitle {
     letter-spacing: 0.08em;
@@ -5306,28 +5926,46 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
     grid-template-columns: 54px minmax(0, 1fr);
     column-gap: 8px;
   }
-  .footerDockBackdrop { height: calc(60px + env(safe-area-inset-bottom)); }
+  .footerDockBackdrop { height: calc(76px + env(safe-area-inset-bottom)); }
   .footerNavInner {
     padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
     justify-content: center;
     overflow: visible;
   }
   .bottomNav {
-    gap: 4px;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-content: flex-start;
+    row-gap: 8px;
+    column-gap: 4px;
     width: 100%;
     max-width: 100%;
-    justify-content: space-between;
+    padding: 6px 4px;
     overflow: visible;
-    padding: 4px;
   }
   .navItem {
+    flex: 1 1 calc(33.333% - 6px);
+    min-width: min(100%, 86px);
+    max-width: 100%;
+    min-height: 44px;
+    font-size: clamp(10px, 2.85vw, 12px);
+    padding: 8px 4px;
+    white-space: normal;
+    line-height: 1.2;
+    overflow: visible;
+    text-overflow: unset;
+    text-align: center;
+    word-break: break-word;
+  }
+  /* Icon dock: global `.bottomNav--withIcons` rules apply; keep full width inside padded shell. */
+  .bottomNav.bottomNav--withIcons {
+    width: 100%;
+    max-width: 100%;
+  }
+  .bottomNav.bottomNav--withIcons .navItem.navItem--dockCol {
     min-width: 0;
     flex: 1 1 0;
-    font-size: 11px;
-    padding: 8px 6px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    max-width: 100%;
   }
   .sponsorTierGrid,
   .sponsorFeaturedGrid {
@@ -5373,13 +6011,63 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
     grid-template-columns: 1fr;
   }
   .sponsorAdminEditorGrid,
-  .sponsorProfileGrid,
   .sponsorAdminSelectorGrid {
     grid-template-columns: 1fr;
+  }
+  .sponsorFeaturedShowcase > .sponsorPremiumCard {
+    min-height: 232px;
+  }
+  .sponsorPremiumCardInner {
+    min-height: 0;
+    padding: 16px;
+    gap: 12px;
+  }
+  .sponsorPremiumBrandIdentity {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .sponsorPremiumLogoShell {
+    width: 120px;
+    height: 120px;
+  }
+  .sponsorPremiumTitleBlock .sponsorPremiumOrgName {
+    font-size: clamp(1rem, 4.2vw, 1.2rem);
+    line-height: 1.2;
+  }
+  .sponsorPremiumSubheader {
+    font-size: 0.875rem;
+  }
+  .sponsorPremiumTagline--card {
+    font-size: 0.9rem;
+    line-height: 1.45;
   }
   .sponsorPremiumFooter {
     flex-direction: column;
     align-items: flex-start;
+  }
+  @media (max-width: 520px) {
+    .sponsorPremiumBrandIdentity {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    .sponsorPremiumTitleBlock {
+      width: 100%;
+      text-align: center;
+    }
+    .sponsorPremiumMetaChips,
+    .sponsorPremiumLocationChips {
+      justify-content: center;
+    }
+    .sponsorPremiumCardTop {
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .sponsorPremiumCardTopActions {
+      width: 100%;
+      display: flex;
+      justify-content: flex-end;
+    }
   }
   .sponsorStickyApplyInner {
     flex-direction: column;
@@ -5433,10 +6121,16 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   }
 }
 
+@media (max-width: 719px) {
+  main.topApp.appShell--withMobileNavDock {
+    padding-bottom: calc(118px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 @media (max-width: 520px) {
   .topApp {
     --content-gutter: 18px;
-    padding-bottom: 190px;
+    padding-bottom: calc(118px + env(safe-area-inset-bottom, 0px));
   }
   .topbarInner {
     grid-template-columns: 1fr;
@@ -5444,9 +6138,6 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
       "left"
       "right";
     gap: 8px;
-  }
-  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])::before {
-    background-position: 33% 8%;
   }
   .topbarCenter {
     display: none;
@@ -5459,6 +6150,28 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   }
   .topbarLeft {
     display: none;
+  }
+  /* Home: keep theme + sponsor row visible; guest layout keeps auth in first row (see grid-template-areas). */
+  main.topApp[data-page-atmosphere="home"] .topbarLeft {
+    display: flex !important;
+    justify-content: flex-start;
+  }
+  /* Podcast: keep header row + hamburger visible (same idea as home) — do not hide .topbarLeft here. */
+  main.topApp[data-page-atmosphere="podcast"] .topbarLeft,
+  main.topApp.appShell--podcast .topbarLeft {
+    display: flex !important;
+    justify-content: flex-start;
+  }
+  main.topApp.topApp--auth-out[data-page-atmosphere="home"] .topbarInner {
+    grid-template-areas:
+      "right"
+      "left";
+  }
+  main.topApp.topApp--auth-out[data-page-atmosphere="home"] .topbarRight {
+    grid-area: right;
+  }
+  main.topApp.topApp--auth-out[data-page-atmosphere="home"] .topbarLeft {
+    grid-area: left;
   }
   .topbarLeft .topbarActionsCluster,
   .topbarRight .topbarActionsCluster {
@@ -5533,13 +6246,14 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   }
   .modalOverlay {
     place-items: start center;
-    padding: 10px;
+    padding: max(10px, env(safe-area-inset-top, 0px)) max(10px, env(safe-area-inset-right, 0px))
+      max(10px, env(safe-area-inset-bottom, 0px)) max(10px, env(safe-area-inset-left, 0px));
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
   .modalCard {
     width: min(100%, 100%);
-    max-height: calc(100dvh - 20px);
+    max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
     overflow-y: auto;
   }
   .footerDockBackdrop {
@@ -5549,15 +6263,33 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
     padding: 8px 0 calc(10px + env(safe-area-inset-bottom));
   }
   .bottomNav {
-    gap: 4px;
-    justify-content: flex-start;
+    flex-wrap: wrap;
+    justify-content: center;
+    row-gap: 6px;
+    column-gap: 4px;
+    max-width: 100%;
   }
   .navItem {
     min-height: 44px;
-    font-size: 11px;
-    line-height: 1.15;
-    white-space: nowrap;
-    padding: 7px 10px;
+    min-width: min(100%, 80px);
+    flex: 1 1 calc(50% - 4px);
+    max-width: calc(50% - 2px);
+    font-size: clamp(10px, 3.1vw, 12px);
+    line-height: 1.2;
+    white-space: normal;
+    padding: 8px 6px;
+    text-align: center;
+    word-break: break-word;
+    overflow: visible;
+    text-overflow: unset;
+  }
+  .bottomNav.bottomNav--withIcons {
+    flex-wrap: nowrap;
+  }
+  .bottomNav.bottomNav--withIcons .navItem.navItem--dockCol {
+    flex: 1 1 0;
+    max-width: none;
+    min-width: 0;
   }
 }
 
@@ -5568,8 +6300,8 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   .topbarInner {
     gap: 4px;
   }
-  img.brandMarkImg--header {
-    max-height: clamp(130px, 38vw, 168px) !important;
+  img.brandMarkImg--header:not(.podcastBrandLogo) {
+    max-height: clamp(178px, 50vw, 235px) !important;
   }
   .sponsorBtn {
     min-width: 0;
@@ -5798,12 +6530,6 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 }
 
 @media (max-width: 760px) {
-  .sponsorProfileIdentity {
-    grid-template-columns: 1fr;
-    justify-items: start;
-    gap: 10px;
-  }
-
   .notificationsPage__actions {
     display: grid;
     grid-template-columns: 1fr;

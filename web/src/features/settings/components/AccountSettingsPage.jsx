@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import MissionPageTopStrip from "@/components/layout/MissionPageTopStrip";
 import MembershipAtAGlance from "@/features/membership/components/MembershipAtAGlance";
 import ManageBillingButton from "@/features/profile/components/ManageBillingButton";
 import AccountInfoCard from "@/features/profile/components/AccountInfoCard";
@@ -196,6 +197,7 @@ export default function AccountSettingsPage({
           View on profile
         </Link>
       </div>
+      <MissionPageTopStrip placement="bottom" />
     </section>
   );
 }

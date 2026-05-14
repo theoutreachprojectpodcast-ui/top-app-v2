@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useState } from "react";
 import { useColorScheme } from "@/components/app/ColorSchemeRoot";
 
 const DEFAULT_LOGO_DARK = "/brand-logo-site-dark.png";
@@ -17,6 +18,7 @@ export default function BrandMark({
 }) {
   const { colorScheme } = useColorScheme();
   const isLight = colorScheme === "light";
+  const [imgFailed, setImgFailed] = useState(false);
 
   const envOverride = typeof process !== "undefined" ? process.env.NEXT_PUBLIC_BRAND_LOGO_PATH : "";
   const logoSrc = src || envOverride || (variant === "mark"
@@ -24,14 +26,34 @@ export default function BrandMark({
     : (isLight ? DEFAULT_LOGO_LIGHT : DEFAULT_LOGO_DARK));
 
   const variantClass = size === "header" ? "brandMarkImg--header" : `brandMarkImg--${size}`;
+  const mergedClass = `brandMarkImg ${variantClass} ${className}`.trim();
+
+  const onImgError = useCallback(() => {
+    setImgFailed(true);
+  }, []);
+
+  if (imgFailed) {
+    return (
+      <span
+        role="img"
+        title={alt}
+        aria-label={alt}
+        className={`headerBrandMarkFallback ${variantClass}`.trim()}
+      >
+        {alt}
+      </span>
+    );
+  }
 
   return (
     <img
       src={logoSrc}
       alt={alt}
+      title={alt}
       decoding="async"
       fetchPriority={size === "header" ? "high" : "auto"}
-      className={`brandMarkImg ${variantClass} ${className}`.trim()}
+      className={mergedClass}
+      onError={onImgError}
     />
   );
 }

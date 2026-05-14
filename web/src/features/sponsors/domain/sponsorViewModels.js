@@ -2,6 +2,7 @@ import { resolveSponsorDisplayName } from "@/lib/entityDisplayName";
 import { resolveSponsorListingLogoUrl } from "@/lib/sponsors/resolveSponsorListingLogoUrl";
 import { FEATURED_SPONSOR_CARD_BACKGROUNDS } from "@/features/sponsors/data/featuredSponsors";
 import { getSponsorCardPresentation } from "@/features/sponsors/domain/sponsorCardPresentation";
+import { inferSponsorDisplayGroup } from "@/features/sponsors/domain/sponsorDisplayGroups";
 
 function clean(value) {
   return String(value ?? "").trim();
@@ -12,6 +13,28 @@ function truncateSponsorLine(value, max = 140) {
   if (!text) return "";
   if (text.length <= max) return text;
   return `${text.slice(0, max - 1)}…`;
+}
+
+function collapseSponsorBlurb(value) {
+  return String(value ?? "")
+    .trim()
+    .replace(/\s+/g, " ");
+}
+
+/**
+ * True when two sponsor blurbs carry the same lead message (exact match, shared long prefix, or one extends the other).
+ * Used to avoid repeating tagline / subtitle / short description on cards and profiles.
+ */
+export function sponsorBlurbsRedundant(a, b) {
+  const x = collapseSponsorBlurb(a).toLowerCase();
+  const y = collapseSponsorBlurb(b).toLowerCase();
+  if (!x || !y) return false;
+  if (x === y) return true;
+  const [shorter, longer] = x.length <= y.length ? [x, y] : [y, x];
+  if (shorter.length >= 28 && longer.startsWith(shorter.slice(0, 28))) return true;
+  const n = Math.min(52, shorter.length, longer.length);
+  if (n >= 14 && x.slice(0, n) === y.slice(0, n)) return true;
+  return false;
 }
 
 /** Hide category line when it only repeats the mission pill (e.g. "Apparel" vs "Apparel & impact"). */
@@ -111,6 +134,7 @@ export function normalizeSponsorRecord(row = {}) {
     sponsor_scope: clean(row.sponsor_scope) || "app",
     sponsor_type: clean(row.sponsor_type || row.industry || "Mission partner"),
     sponsor_category: clean(row.sponsor_category || row.industry || ""),
+    sponsor_display_group: clean(row.sponsor_display_group || row.sponsorDisplayGroup || ""),
     website_url: website,
     logo_url: clean(row.logo_url || row.logoUrl),
     logo_source_url: clean(row.logo_source_url),
@@ -161,6 +185,15 @@ function resolvePrimaryDisplayBadge(s) {
   if (typeLc === "foundational_sponsor") {
     return { key: "foundational", label: "Foundational Sponsor" };
   }
+  if (typeLc === "mission_partner_sponsor") {
+    return { key: "mission-partner", label: "Mission Partner Sponsor" };
+  }
+  if (typeLc === "impact_sponsor") {
+    return { key: "impact", label: "Impact Sponsor" };
+  }
+  if (typeLc === "community_sponsor") {
+    return { key: "community-sponsor", label: "Community Sponsor" };
+  }
   if (typeLc === "community_partner") {
     return { key: "community", label: "Community Partner" };
   }
@@ -170,24 +203,69 @@ function resolvePrimaryDisplayBadge(s) {
   return { key: "partner", label: "Partner Sponsor" };
 }
 
+function pillRedundantWithPrimaryBadge(pillText, badge) {
+  const p = collapseSponsorBlurb(pillText).toLowerCase();
+  const lbl = collapseSponsorBlurb(badge?.label || "").toLowerCase();
+  if (!p || !lbl) return false;
+  if (p === lbl) return true;
+  const pn = p.replace(/[^a-z0-9]+/g, "");
+  const ln = lbl.replace(/[^a-z0-9]+/g, "");
+  if (pn && ln && (pn === ln || pn.includes(ln) || ln.includes(pn))) return true;
+  return false;
+}
+
+/** DB sometimes stores tier enum in `sponsor_type` — do not surface as an "industry" chip. */
+function sponsorTypeLooksLikeTierKey(value) {
+  const t = String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "_");
+  return /^(foundational_sponsor|mission_partner_sponsor|impact_sponsor|community_sponsor|community_partner|podcast_sponsor|partner_sponsor)$/.test(
+    t,
+  );
+}
+
 export function getSponsorCardViewModel(row = {}) {
   const s = normalizeSponsorRecord(row);
   const presentation = getSponsorCardPresentation(s.slug);
   const fallbackBg =
     FEATURED_SPONSOR_CARD_BACKGROUNDS[s.slug] || FEATURED_SPONSOR_CARD_BACKGROUNDS[s.id] || "";
-  const longTrim = String(s.long_description || "").trim();
-  const tagTrim = String(s.tagline || "").trim();
-  const hasDistinctLongBody = longTrim.length > 0 && longTrim !== tagTrim;
-  /** Hero line under the name only when the body is a separate long blurb (avoids repeating the same sentence). */
-  const cardSubheader = hasDistinctLongBody ? truncateSponsorLine(tagTrim, 160) : "";
-  const bodySource = hasDistinctLongBody ? s.long_description : tagTrim || s.short_description;
-  const bodyTeaser = truncateSponsorLine(bodySource, 320);
-  const missionPill = s.short_description || "Mission-aligned";
-  const industryRaw = clean(s.sponsor_category || s.sponsor_type);
+  const primaryBadge = resolvePrimaryDisplayBadge(s);
+  const pillRaw = collapseSponsorBlurb(s.short_description);
+  const pill = pillRaw && !pillRedundantWithPrimaryBadge(pillRaw, primaryBadge) ? pillRaw : "";
+  const sub = collapseSponsorBlurb(s.tagline);
+  const long = collapseSponsorBlurb(s.long_description);
+  const missionPill = pill;
+
+  const subAddsBeyondPill = sub.length > 0 && !sponsorBlurbsRedundant(sub, pill);
+  const longAddsBeyondPill = long.length > 0 && !sponsorBlurbsRedundant(long, pill);
+  const longAddsBeyondSub = long.length > 0 && sub.length > 0 && !sponsorBlurbsRedundant(long, sub);
+
+  let cardSubheader = "";
+  let bodyTeaser = "";
+
+  if (longAddsBeyondPill && longAddsBeyondSub) {
+    bodyTeaser = truncateSponsorLine(long, 320);
+    const subOverlapsLongOpening =
+      subAddsBeyondPill && sponsorBlurbsRedundant(sub, long.slice(0, Math.min(long.length, Math.max(sub.length + 24, 96))));
+    cardSubheader = subAddsBeyondPill && !subOverlapsLongOpening ? truncateSponsorLine(sub, 160) : "";
+  } else if (longAddsBeyondPill) {
+    bodyTeaser = truncateSponsorLine(long, 320);
+    cardSubheader = subAddsBeyondPill && !sponsorBlurbsRedundant(sub, long) ? truncateSponsorLine(sub, 160) : "";
+  } else if (subAddsBeyondPill) {
+    bodyTeaser = truncateSponsorLine(sub, 320);
+  }
+
+  if (bodyTeaser && sponsorBlurbsRedundant(bodyTeaser, missionPill)) bodyTeaser = "";
+  if (cardSubheader && sponsorBlurbsRedundant(cardSubheader, missionPill)) cardSubheader = "";
+  if (cardSubheader && bodyTeaser && sponsorBlurbsRedundant(cardSubheader, bodyTeaser)) cardSubheader = "";
+  const industryCat = clean(s.sponsor_category);
+  const industryType = clean(s.sponsor_type);
+  const industryRaw =
+    industryCat || (!sponsorTypeLooksLikeTierKey(industryType) ? industryType : "");
   const industry = isIndustryRedundantWithMissionPill(industryRaw, missionPill) ? "" : industryRaw;
   const logoDisplay = resolveSponsorListingLogoUrl(s) || null;
   const veteranOwned = !!s.veteran_owned || !!presentation.veteranOwnedDefault;
-  const primaryBadge = resolvePrimaryDisplayBadge(s);
   const locationChips = presentation.locationChips?.length ? presentation.locationChips : [];
   return {
     id: s.id,
@@ -198,7 +276,7 @@ export function getSponsorCardViewModel(row = {}) {
     industry,
     tierLabel: s.featured ? "Featured sponsor" : "Partner sponsor",
     primaryBadge,
-    tagline: bodyTeaser || "Mission partner supporting community outcomes.",
+    tagline: bodyTeaser,
     ctaUrl: s.website_url || null,
     ctaLabel: s.cta_label || (s.website_url ? "Visit Website" : ""),
     websitePending: !s.website_url,
@@ -213,6 +291,7 @@ export function getSponsorCardViewModel(row = {}) {
     featured: !!s.featured,
     veteranOwned,
     locationChips,
+    displayGroup: inferSponsorDisplayGroup(s),
     socialLinks: {
       website: validUrl(s.website_url) ? s.website_url : "",
       instagram: platformVerified(s.instagram_url, "instagram.com") ? s.instagram_url : "",
@@ -233,13 +312,29 @@ export function getSponsorCardViewModel(row = {}) {
 export function getSponsorProfileViewModel(row = {}) {
   const s = normalizeSponsorRecord(row);
   const presentation = getSponsorCardPresentation(s.slug);
-  const logoDisplay =
-    resolveSponsorListingLogoUrl(s) ||
-    (Array.isArray(presentation.logoFallbackUrls) ? String(presentation.logoFallbackUrls[0] || "").trim() : "") ||
-    "";
+  const primary = resolveSponsorListingLogoUrl(s);
+  const fallbacks = Array.isArray(presentation.logoFallbackUrls)
+    ? presentation.logoFallbackUrls.map((u) => clean(u)).filter(Boolean)
+    : [];
+  const seen = new Set();
+  const logoCandidates = [];
+  for (const u of [primary, ...fallbacks]) {
+    if (!u || seen.has(u)) continue;
+    seen.add(u);
+    logoCandidates.push(u);
+  }
+  const logoDisplay = logoCandidates[0] || "";
+
+  const fallbackBg =
+    FEATURED_SPONSOR_CARD_BACKGROUNDS[s.slug] || FEATURED_SPONSOR_CARD_BACKGROUNDS[s.id] || "";
+  const heroImage = clean(s.background_image_url) || fallbackBg;
+
   return {
     ...s,
+    sponsor_display_group: clean(s.sponsor_display_group) || inferSponsorDisplayGroup(s),
+    background_image_url: heroImage,
     logo_url: logoDisplay,
+    logo_candidate_urls: logoCandidates,
     logoPanelMode: presentation.logoPanelMode || "auto",
     socialLinks: [
       { key: "website", label: "Website", url: validUrl(s.website_url) ? s.website_url : "" },

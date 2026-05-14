@@ -1,39 +1,31 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { listSponsorsCatalog, mapSponsorsToCardModels } from "@/features/sponsors/api/sponsorCatalogApi";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import MissionPartnerPackagesModal from "@/features/sponsors/components/MissionPartnerPackagesModal";
 import MissionSponsorApplyModal from "@/features/sponsors/components/MissionSponsorApplyModal";
 import SponsorsLandingPage from "@/features/sponsors/components/SponsorsLandingPage";
 import { SPONSOR_TIERS } from "@/features/sponsors/data/sponsorTiers";
+import { useSponsorHubCatalog } from "@/features/sponsors/hooks/useSponsorHubCatalog";
 
 export default function SponsorHub({ supabase: supabaseProp }) {
   const supabaseClient = useMemo(() => getSupabaseClient(), []);
   const supabase = supabaseProp ?? supabaseClient;
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [sponsors, setSponsors] = useState([]);
+  const { sponsorCatalogRows } = useSponsorHubCatalog(supabase);
   const [missionApplyOpen, setMissionApplyOpen] = useState(false);
   const [missionPackagesOpen, setMissionPackagesOpen] = useState(false);
   const [missionApplyTierId, setMissionApplyTierId] = useState(SPONSOR_TIERS[0]?.id);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [favoriteKeys, setFavoriteKeys] = useState([]);
+  /** Favorites for `/sponsors` only — `sponsor:*` keys. Trusted (`trusted:*`) stays on `/trusted` and is preserved when saving. */
+  const [sponsorFavoriteKeys, setSponsorFavoriteKeys] = useState([]);
+  const nonSponsorFavoriteKeysRef = useRef([]);
   const favoriteKeySet = useMemo(
-    () => new Set((favoriteKeys || []).map((k) => String(k || "").trim().toLowerCase()).filter(Boolean)),
-    [favoriteKeys],
+    () => new Set((sponsorFavoriteKeys || []).map((k) => String(k || "").trim().toLowerCase()).filter(Boolean)),
+    [sponsorFavoriteKeys],
   );
-
-  async function loadSponsors() {
-    const rows = await listSponsorsCatalog(supabase, { sponsorScope: "app" });
-    setSponsors(rows);
-  }
-
-  useEffect(() => {
-    loadSponsors();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [supabase]);
 
   useEffect(() => {
     let cancelled = false;
@@ -48,15 +40,17 @@ export default function SponsorHub({ supabase: supabaseProp }) {
         if (cancelled) return;
         const authed = !!me?.authenticated;
         setIsAuthenticated(authed);
-        setFavoriteKeys(
+        const all =
           authed && Array.isArray(fav?.keys)
             ? [...new Set(fav.keys.map((k) => String(k || "").trim().toLowerCase()).filter(Boolean))]
-            : [],
-        );
+            : [];
+        nonSponsorFavoriteKeysRef.current = all.filter((k) => !k.startsWith("sponsor:"));
+        setSponsorFavoriteKeys(all.filter((k) => k.startsWith("sponsor:")));
       } catch {
         if (!cancelled) {
           setIsAuthenticated(false);
-          setFavoriteKeys([]);
+          nonSponsorFavoriteKeysRef.current = [];
+          setSponsorFavoriteKeys([]);
         }
       }
     })();
@@ -65,21 +59,23 @@ export default function SponsorHub({ supabase: supabaseProp }) {
     };
   }, []);
 
-  async function toggleFavoriteKey(key) {
+  async function toggleSponsorFavoriteKey(key) {
     const id = String(key || "").trim().toLowerCase();
-    if (!(id.startsWith("sponsor:") || id.startsWith("trusted:"))) return;
-    const next = favoriteKeySet.has(id) ? favoriteKeys.filter((k) => k !== id) : [id, ...favoriteKeys];
-    setFavoriteKeys(next);
+    if (!id.startsWith("sponsor:")) return;
+    const prevSponsor = sponsorFavoriteKeys;
+    const nextSponsor = favoriteKeySet.has(id) ? prevSponsor.filter((k) => k !== id) : [id, ...prevSponsor];
+    const payloadKeys = [...new Set([...nextSponsor, ...nonSponsorFavoriteKeysRef.current])];
+    setSponsorFavoriteKeys(nextSponsor);
     try {
       const res = await fetch("/api/me/favorites", {
         method: "PUT",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ keys: next }),
+        body: JSON.stringify({ keys: payloadKeys }),
       });
       if (!res.ok) throw new Error("save_failed");
     } catch {
-      setFavoriteKeys(favoriteKeys);
+      setSponsorFavoriteKeys(prevSponsor);
     }
   }
 
@@ -133,12 +129,12 @@ export default function SponsorHub({ supabase: supabaseProp }) {
   return (
     <>
       <SponsorsLandingPage
-        sponsors={mapSponsorsToCardModels(sponsors)}
+        sponsorCatalogRows={sponsorCatalogRows}
         onOpenMissionPackages={openMissionPackages}
         onOpenMissionApply={openMissionApply}
         favoritesEnabled={isAuthenticated}
         favoriteKeySet={favoriteKeySet}
-        onToggleFavorite={toggleFavoriteKey}
+        onToggleFavorite={toggleSponsorFavoriteKey}
         onRequestSignIn={() => router.push("/auth/sign-in?returnTo=/sponsors")}
       />
       <MissionPartnerPackagesModal

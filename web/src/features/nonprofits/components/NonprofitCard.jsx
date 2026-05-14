@@ -17,7 +17,9 @@ export default function NonprofitCard({
 }) {
   const favoriteKey = String(card.ein || card.id || "").trim();
   const isTrustedResourcesCard = actionMode === "trustedResource";
-  const listingPhoto = String(card.heroImageUrl || card.thumbnailUrl || "").trim();
+  const listingPhoto = isTrustedResourcesCard
+    ? String(card.heroImageUrl || "").trim()
+    : String(card.heroImageUrl || card.thumbnailUrl || "").trim();
   const categoryKey = card.category?.key || "unknownGeneral";
   const einDigits =
     card.einNormalized?.length === 9 ? card.einNormalized : normalizeEinDigits(card.ein);

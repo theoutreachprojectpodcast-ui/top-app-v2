@@ -1,0 +1,67 @@
+/**
+ * tORP v0.8 — global mobile / small-viewport polish.
+ * Loaded after `top-app.css` so these rules can complement (not fight) existing breakpoints.
+ */
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Prevent flex/grid children from forcing horizontal overflow */
+.results,
+.shell .card .results {
+  min-width: 0;
+}
+.shell,
+.siteContainer,
+.content,
+.adminConsoleMain,
+.modalCard,
+.podcastEpisodeCard,
+.sponsorPremiumCardBg,
+.resultCard.resultCard--listingHero,
+.torpListingCard,
+.sponsorFeaturedShowcase {
+  min-width: 0;
+}
+
+/* In-flow images: never spill past the card (logos use object-fit in component CSS) */
+.torpListingCard img,
+.podcastEpisodeCard img,
+.communityPostCard img,
+.nonprofitCard img,
+.sponsorPremiumLogoShell img {
+  max-width: 100%;
+}
+
+/* Long URLs / emails in tables and metadata */
+.adminConsole td,
+.adminConsole th,
+.break-anywhere {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* OP/TOP header mark: never shrink away in flex layouts (see AppHeaderBrand + `top-app.css`). */
+.headerBrandStack .brandMarkImg--header,
+.headerBrandStack .headerBrandMarkFallback {
+  flex-shrink: 0;
+}
+
+.nonprofitProfileShell {
+  padding-bottom: calc(var(--ds-space-10, 40px) + env(safe-area-inset-bottom, 0px));
+}
+
+@media (max-width: 430px) {
+  .fieldLabel,
+  .dsChoice .fieldLabel {
+    line-height: 1.35;
+  }
+
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    max-width: 100%;
+  }
+}

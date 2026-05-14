@@ -6,20 +6,23 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import HeaderInner from "@/components/layout/HeaderInner";
 import FooterInner from "@/components/layout/FooterInner";
 import Avatar from "@/components/shared/Avatar";
-import BrandMark from "@/components/BrandMark";
+import AppHeaderBrand from "@/components/layout/AppHeaderBrand";
 import IconWrap from "@/components/shared/IconWrap";
 import AccountInfoCard from "@/features/profile/components/AccountInfoCard";
 import ManageBillingButton from "@/features/profile/components/ManageBillingButton";
 import NonprofitCard from "@/features/nonprofits/components/NonprofitCard";
 import { mapNonprofitCardRow } from "@/features/nonprofits/mappers/nonprofitCardMapper";
 import TrustedResourceApplicationForm from "@/features/trusted-resources/application/TrustedResourceApplicationForm";
+import "@/features/trusted-resources/trusted-resources-cards.css";
 import CommunityPage from "@/features/community/components/CommunityPage";
 import ProfileHeader from "@/features/profile/components/ProfileHeader";
 import ProfileIdentitySection from "@/features/profile/components/ProfileIdentitySection";
 import ProfileQuickStats from "@/features/profile/components/ProfileQuickStats";
 import SavedOrganizationsList from "@/features/profile/components/SavedOrganizationsList";
-import HomeWelcomeSection from "@/components/app/HomeWelcomeSection";
+import SiteBottomNavGlyph from "@/components/navigation/SiteBottomNavGlyph";
+import SiteMobileNavMoreMenu from "@/components/navigation/SiteMobileNavMoreMenu";
 import HomeProfileProgressNotice from "@/components/app/HomeProfileProgressNotice";
+import HomeSponsorBannerPlacements from "@/components/app/HomeSponsorBannerPlacements";
 import { useAuthSession } from "@/components/auth/AuthSessionProvider";
 import ProfileCompletionPanel from "@/features/profile/components/ProfileCompletionPanel";
 import HeaderAccountMenu from "@/components/layout/HeaderAccountMenu";
@@ -59,6 +62,7 @@ import { mergeEditDraftWithProfile } from "@/features/profile/lib/mergeEditDraft
 import AccountSettingsPage from "@/features/settings/components/AccountSettingsPage";
 import { FormCheckbox } from "@/components/forms/FormChoice";
 import { resolvePageAtmosphere } from "@/lib/design/pageAtmosphere";
+import MissionPageTopStrip from "@/components/layout/MissionPageTopStrip";
 
 function AppIcon({ name }) {
   const icons = {
@@ -202,6 +206,17 @@ function TopAppInner({ initialNav = "home" }) {
           : null,
     });
   }, [isAuthenticated, profile, sessionKind, workOSAccountEmail]);
+
+  const showHomeProfileHeroNotice = useMemo(
+    () =>
+      Boolean(
+        profileCompletion &&
+          !loadingProfile &&
+          !profileCompletion.isComplete &&
+          profileCompletion.total >= 1,
+      ),
+    [profileCompletion, loadingProfile],
+  );
 
   const prevLoadingProfileForEditRef = useRef(loadingProfile);
 
@@ -511,10 +526,6 @@ function TopAppInner({ initialNav = "home" }) {
     setOverlay("upgrade");
   }
 
-  function scrollToDirectory() {
-    document.getElementById("home-directory")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-
   function openCommunity() {
     setNav("community");
   }
@@ -528,6 +539,7 @@ function TopAppInner({ initialNav = "home" }) {
     return fallbackSavedOrganizations.map((raw) => mapNonprofitCardRow(raw, "saved"));
   }, [savedOrganizations, isAuthenticated, favoriteEins, fallbackSavedOrganizations]);
   const isLoggedIn = isAuthenticated;
+  const sponsorsDockActive = Boolean(pathname?.startsWith("/sponsors"));
   const favoriteEinSet = useMemo(
     () => new Set((favoriteEins || []).map((e) => normalizeEinDigits(e)).filter((e) => e.length === 9)),
     [favoriteEins]
@@ -606,23 +618,39 @@ function TopAppInner({ initialNav = "home" }) {
   return (
     <main
       ref={mainScrollRef}
-      className={`topApp theme-${profile.theme}${immersiveHeaderScroll ? " header-at-top" : ""}`}
+      className={`topApp theme-${profile.theme}${immersiveHeaderScroll ? " header-at-top" : ""} ${isLoggedIn ? "topApp--auth-in" : "topApp--auth-out"} appShell--withMobileNavDock`}
       data-page-atmosphere={pageAtmosphere}
     >
-      <div className="headerBrandStack">
-        <Link href="/" aria-label="Go to home">
-          <BrandMark size="header" />
-        </Link>
-      </div>
+      <AppHeaderBrand />
       <header className="topbar">
         <HeaderInner className="topbarInner">
           <div className="topbarZone topbarLeft">
             <div className="topbarActionsCluster topbarActionsCluster--start">
+              <SiteMobileNavMoreMenu tone="app">
+                <button
+                  type="button"
+                  className="siteMobileNavMore__entry"
+                  onClick={() => {
+                    setNav("trusted");
+                    if (!trusted.length) loadTrusted(true);
+                  }}
+                >
+                  Trusted Resources
+                </button>
+                <button type="button" className="siteMobileNavMore__entry" onClick={openCommunity}>
+                  Community
+                </button>
+                <button type="button" className="siteMobileNavMore__entry" onClick={goToSponsorsHub}>
+                  Sponsors
+                </button>
+                <button type="button" className="siteMobileNavMore__entry" onClick={() => router.push("/podcasts")}>
+                  Podcast
+                </button>
+                <button type="button" className="siteMobileNavMore__entry" onClick={goToSponsorsHub}>
+                  Become a Sponsor
+                </button>
+              </SiteMobileNavMoreMenu>
               <ColorSchemeToggle />
-              <button className="btnSoft sponsorBtn" onClick={goToSponsorsHub} type="button">
-                <AppIcon name="sponsors" />
-                Become a Sponsor
-              </button>
             </div>
           </div>
           <div className="topbarZone topbarCenter" aria-hidden="true" />
@@ -678,13 +706,14 @@ function TopAppInner({ initialNav = "home" }) {
 
       {(nav === "home" || nav === "community") && (
         <section className={nav === "home" ? "shell shell--home" : "shell"}>
+          {nav === "home" ? <MissionPageTopStrip placement="top" /> : null}
           {nav === "home" && (
             <>
-              <div className="homeHeroBackdrop">
-                <div className="homeHeroBackdrop__image" aria-hidden="true" />
-                <div className="homeHeroBackdrop__scrim" aria-hidden="true" />
-                <div className="homeHeroBackdrop__content">
-                  {profileCompletion && !loadingProfile ? (
+              {showHomeProfileHeroNotice ? (
+                <div className="homeHeroBackdrop">
+                  <div className="homeHeroBackdrop__image" aria-hidden="true" />
+                  <div className="homeHeroBackdrop__scrim" aria-hidden="true" />
+                  <div className="homeHeroBackdrop__content">
                     <div className="homeHeroBackdrop__welcomeBundle">
                       <HomeProfileProgressNotice
                         completion={profileCompletion}
@@ -698,43 +727,10 @@ function TopAppInner({ initialNav = "home" }) {
                         onOpenOnboarding={openOnboardingFlow}
                         onOpenMembership={openMembershipJourney}
                       />
-                      <div className="card cardHero homeHeroBackdrop__card">
-                        <HomeWelcomeSection
-                          isAuthenticated={isAuthenticated}
-                          isMember={isMember}
-                          onOpenTrusted={() => {
-                            setNav("trusted");
-                            loadTrusted(true);
-                          }}
-                          onOpenMembershipJourney={openMembershipJourney}
-                          onBrowseFree={scrollToDirectory}
-                          onOpenProfile={() => {
-                            if (pathname !== "/profile") router.push("/profile");
-                            else setNav("profile");
-                          }}
-                        />
-                      </div>
                     </div>
-                  ) : (
-                    <div className="card cardHero homeHeroBackdrop__card">
-                      <HomeWelcomeSection
-                        isAuthenticated={isAuthenticated}
-                        isMember={isMember}
-                        onOpenTrusted={() => {
-                          setNav("trusted");
-                          loadTrusted(true);
-                        }}
-                        onOpenMembershipJourney={openMembershipJourney}
-                        onBrowseFree={scrollToDirectory}
-                        onOpenProfile={() => {
-                          if (pathname !== "/profile") router.push("/profile");
-                          else setNav("profile");
-                        }}
-                      />
-                    </div>
-                  )}
+                  </div>
                 </div>
-              </div>
+              ) : null}
 
               <div className="welcomeActionLayout">
                 <div className="welcomeActionList">
@@ -760,6 +756,8 @@ function TopAppInner({ initialNav = "home" }) {
                   </button>
                 </div>
               </div>
+
+              <HomeSponsorBannerPlacements />
 
               <div className="card" id="home-directory">
                 <h3><AppIcon name="search" />Nonprofit Directory</h3>
@@ -863,12 +861,13 @@ function TopAppInner({ initialNav = "home" }) {
               }}
             />
           )}
+          {nav === "community" ? <MissionPageTopStrip placement="bottom" /> : null}
         </section>
       )}
 
       {nav === "trusted" && (
         <section className="shell">
-          <div className="card">
+          <div className="card trustedRouteCard">
             <div className="ds-page-intro" style={{ borderBottom: "none", marginBottom: 0, paddingBottom: 0 }}>
               <h2>
                 <AppIcon name="trusted" />
@@ -883,8 +882,8 @@ function TopAppInner({ initialNav = "home" }) {
               <button className="btnSoft" onClick={() => loadTrusted(false)} type="button">Load More</button>
               <button className="btnSoft" onClick={() => setOverlay("applyTrustedResource")} type="button">Apply to Become a Trusted Resource</button>
             </div>
-            <p>{trustedStatus}</p>
-            <div className="results">
+            <p className="trustedRouteStatus">{trustedStatus}</p>
+            <div className="results results--trustedBranded">
               {!trusted.length && !trustedStatus && (
                 <div className="emptyState">
                   <AppIcon name="trusted" />
@@ -928,6 +927,7 @@ function TopAppInner({ initialNav = "home" }) {
               })}
             </div>
           </div>
+          <MissionPageTopStrip placement="bottom" />
         </section>
       )}
 
@@ -1106,6 +1106,7 @@ function TopAppInner({ initialNav = "home" }) {
           </div>
             </>
           )}
+          <MissionPageTopStrip placement="bottom" />
         </section>
       )}
 
@@ -1133,6 +1134,7 @@ function TopAppInner({ initialNav = "home" }) {
               Sign in
             </button>
           </div>
+          <MissionPageTopStrip placement="bottom" />
         </section>
       ) : null}
 
@@ -1186,6 +1188,7 @@ function TopAppInner({ initialNav = "home" }) {
               </div>
             </form>
           </div>
+          <MissionPageTopStrip placement="bottom" />
         </section>
       )}
 
@@ -1197,27 +1200,68 @@ function TopAppInner({ initialNav = "home" }) {
         </div>
       ) : null}
 
-      {/* Page footer: end of scrollable content (brand + copy). Not the fixed bottom nav. */}
-      <footer className="siteFooter">
-        <FooterInner className="footerInner">
-          <div>
-            <div className="brandName">THE OUTREACH PROJECT</div>
-            <p className="footerNote">Mission-first resource navigation for veterans, first responders, and supporters.</p>
-          </div>
-          <p className="footerNote">Trust-driven support, built for clarity under pressure.</p>
-        </FooterInner>
-      </footer>
-
       {/* Fixed bottom navigation bar (dock). See top-app.css .footerDock / .footerDockBackdrop. */}
       <div className="footerDockBackdrop" aria-hidden="true" />
       <div className="footerDock">
         <FooterInner className="footerNavInner">
-          <nav className="bottomNav" aria-label="Bottom navigation">
-            <button className={`navItem ${nav === "home" ? "isActive" : ""}`} onClick={dockNavHome} type="button">Home</button>
-            <button className={`navItem ${nav === "trusted" ? "isActive" : ""}`} onClick={() => { setNav("trusted"); if (!trusted.length) loadTrusted(true); }} type="button">Trusted Resources</button>
-            <button className={`navItem ${nav === "community" ? "isActive" : ""}`} onClick={() => setNav("community")} type="button">Community</button>
-            <button className={`navItem ${nav === "profile" ? "isActive" : ""}`} onClick={dockNavProfile} type="button">Profile</button>
-            <button className={`navItem ${nav === "contact" ? "isActive" : ""}`} onClick={() => setNav("contact")} type="button">Contact</button>
+          <nav className="bottomNav bottomNav--withIcons bottomNav--mobileDock" aria-label="Bottom navigation">
+            <button
+              className={`navItem navItem--dockCol navItem--dockPrimary ${nav === "home" && !sponsorsDockActive ? "isActive" : ""}`}
+              onClick={dockNavHome}
+              type="button"
+              title="Home"
+            >
+              <SiteBottomNavGlyph navKey="home" className="navItemGlyph" />
+              <span className="navItemLabel">Home</span>
+            </button>
+            <button
+              className={`navItem navItem--dockCol navItem--dockOverflow ${nav === "trusted" ? "isActive" : ""}`}
+              onClick={() => {
+                setNav("trusted");
+                if (!trusted.length) loadTrusted(true);
+              }}
+              type="button"
+              title="Trusted Resources"
+            >
+              <SiteBottomNavGlyph navKey="trusted" className="navItemGlyph" />
+              <span className="navItemLabel">Trusted</span>
+            </button>
+            <button
+              className={`navItem navItem--dockCol navItem--dockOverflow ${nav === "community" ? "isActive" : ""}`}
+              onClick={() => setNav("community")}
+              type="button"
+              title="Community"
+            >
+              <SiteBottomNavGlyph navKey="community" className="navItemGlyph" />
+              <span className="navItemLabel">Community</span>
+            </button>
+            <button
+              className={`navItem navItem--dockCol navItem--dockOverflow ${sponsorsDockActive ? "isActive" : ""}`}
+              onClick={() => router.push("/sponsors")}
+              type="button"
+              title="Sponsors"
+            >
+              <SiteBottomNavGlyph navKey="sponsors" className="navItemGlyph" />
+              <span className="navItemLabel">Sponsors</span>
+            </button>
+            <button
+              className={`navItem navItem--dockCol navItem--dockPrimary ${nav === "profile" ? "isActive" : ""}`}
+              onClick={dockNavProfile}
+              type="button"
+              title="Profile"
+            >
+              <SiteBottomNavGlyph navKey="profile" className="navItemGlyph" />
+              <span className="navItemLabel">Profile</span>
+            </button>
+            <button
+              className={`navItem navItem--dockCol navItem--dockPrimary ${nav === "contact" ? "isActive" : ""}`}
+              onClick={() => setNav("contact")}
+              type="button"
+              title="Contact"
+            >
+              <SiteBottomNavGlyph navKey="contact" className="navItemGlyph" />
+              <span className="navItemLabel">Contact</span>
+            </button>
           </nav>
         </FooterInner>
       </div>

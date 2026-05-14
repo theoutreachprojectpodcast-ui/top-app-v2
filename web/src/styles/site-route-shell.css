@@ -42,20 +42,37 @@
   z-index: 91;
 }
 
-/* Docked bottom nav: fill the bar so pills use horizontal space (footerDock already spans full width). */
-.appShell--siteChrome .footerDock .bottomNav,
-.appShell--sponsors .footerDock .bottomNav {
+/* Docked bottom nav: legacy text-only rows may wrap; icon dock manages its own layout in `top-app.css`. */
+.appShell--siteChrome .footerDock .bottomNav:not(.bottomNav--withIcons),
+.appShell--sponsors .footerDock .bottomNav:not(.bottomNav--withIcons) {
   width: min(1100px, calc(100% - 24px));
   justify-content: space-evenly;
+  flex-wrap: wrap;
+  row-gap: 6px;
+}
+
+.appShell--siteChrome .footerDock .bottomNav.bottomNav--withIcons,
+.appShell--sponsors .footerDock .bottomNav.bottomNav--withIcons {
+  width: 100%;
+  max-width: min(900px, calc(100% - 12px));
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  row-gap: 0;
 }
 
 @media (max-width: 760px) {
-  .appShell--siteChrome .footerDock .bottomNav,
-  .appShell--sponsors .footerDock .bottomNav {
-    justify-content: flex-start;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
+  .appShell--siteChrome .footerDock .bottomNav:not(.bottomNav--withIcons),
+  .appShell--sponsors .footerDock .bottomNav:not(.bottomNav--withIcons) {
+    justify-content: center;
+    overflow-x: visible;
+    overflow-y: visible;
+    width: calc(100% - 16px);
+    max-width: 100%;
+  }
+  .appShell--siteChrome .footerDock .bottomNav.bottomNav--withIcons,
+  .appShell--sponsors .footerDock .bottomNav.bottomNav--withIcons {
+    width: 100%;
+    max-width: 100%;
   }
 }
 
@@ -87,16 +104,125 @@
   }
 }
 
+/* Tablet/desktop: fixed icon dock is still present; default shell bottom (24px) was too tight to scroll the mission strip clear. */
+@media (min-width: 761px) {
+  .appShell--siteChrome.appShell--subpage .shell,
+  .appShell--sponsors.appShell--subpage .shell {
+    padding-bottom: calc(28px + 108px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 @media (max-width: 760px) {
   .appShell--siteChrome.appShell--subpage .shell,
   .appShell--sponsors.appShell--subpage .shell {
     gap: 16px;
-    padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(28px + 108px + env(safe-area-inset-bottom, 0px));
   }
 
   .onboardingRouteToolbar,
   .nonprofitProfileToolbar {
     width: min(var(--content-max-width), calc(100% - var(--content-gutter)));
     padding-top: 6px;
+  }
+}
+
+/* Trusted Resources route (`/trusted`) — readable stack + tap targets on phones */
+@media (max-width: 760px) {
+  .trustedRouteCard {
+    min-width: 0;
+  }
+
+  .trustedRouteCard .ds-page-intro h2 {
+    font-size: clamp(1.05rem, 4.6vw, 1.35rem);
+    line-height: 1.22;
+    flex-wrap: wrap;
+  }
+
+  .trustedRouteCard .ds-page-intro__lead {
+    max-width: none;
+    font-size: clamp(0.9375rem, 3.5vw, 1rem);
+  }
+
+  .trustedRouteCard .row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .trustedRouteCard .row .btnPrimary,
+  .trustedRouteCard .row .btnSoft {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+  }
+
+  .trustedRouteStatus {
+    margin: 0;
+    font-size: var(--text-body-sm, 0.9375rem);
+    line-height: 1.45;
+    color: var(--color-text-secondary);
+    overflow-wrap: anywhere;
+  }
+
+  .trustedRouteCard .results {
+    min-width: 0;
+    gap: 12px;
+  }
+}
+
+/* Sponsors hub (`/sponsors`) — hero CTAs + channel chips stack cleanly */
+@media (max-width: 760px) {
+  .appShell--siteChrome .sponsorLanding .sponsorHero .row.wrap,
+  .appShell--sponsors .sponsorLanding .sponsorHero .row.wrap {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .appShell--siteChrome .sponsorLanding .sponsorHero .row.wrap .btnPrimary,
+  .appShell--siteChrome .sponsorLanding .sponsorHero .row.wrap .btnSoft,
+  .appShell--sponsors .sponsorLanding .sponsorHero .row.wrap .btnPrimary,
+  .appShell--sponsors .sponsorLanding .sponsorHero .row.wrap .btnSoft {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+  }
+
+  .appShell--siteChrome .sponsorChannelRow,
+  .appShell--sponsors .sponsorChannelRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .appShell--siteChrome .sponsorChannelChip,
+  .appShell--sponsors .sponsorChannelChip {
+    justify-content: flex-start;
+    min-height: 44px;
+  }
+
+  .appShell--siteChrome .sponsorCtaBand .row.wrap,
+  .appShell--sponsors .sponsorCtaBand .row.wrap {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .appShell--siteChrome .sponsorCtaBand .row.wrap .btnPrimary,
+  .appShell--siteChrome .sponsorCtaBand .row.wrap .btnSoft,
+  .appShell--sponsors .sponsorCtaBand .row.wrap .btnPrimary,
+  .appShell--sponsors .sponsorCtaBand .row.wrap .btnSoft {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+  }
+
+  .appShell--siteChrome .sponsorSectionLead,
+  .appShell--sponsors .sponsorSectionLead {
+    max-width: none;
+  }
+
+  .appShell--siteChrome .sponsorHeroBlurb,
+  .appShell--sponsors .sponsorHeroBlurb {
+    max-width: none;
   }
 }

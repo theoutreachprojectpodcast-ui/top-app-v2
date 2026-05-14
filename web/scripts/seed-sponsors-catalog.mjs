@@ -37,7 +37,8 @@ const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 const rows = FEATURED_SPONSORS.map((item, idx) => ({
   slug: String(item.id || "").trim(),
   name: String(item.name || "").trim(),
-  sponsor_type: "foundational_sponsor",
+  sponsor_type: String(item.sponsorType || "foundational_sponsor").trim(),
+  sponsor_display_group: String(item.sponsorDisplayGroup || "").trim() || null,
   sponsor_category: String(item.industry || "").trim() || null,
   website_url: String(item.ctaUrl || "").trim() || null,
   logo_url: String(item.logoUrl || "").trim() || null,

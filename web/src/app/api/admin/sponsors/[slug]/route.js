@@ -8,6 +8,7 @@ const KEYS = new Set([
   "internal_alias",
   "primary_display_tag",
   "sponsor_type",
+  "sponsor_display_group",
   "sponsor_category",
   "cta_label",
   "website_url",

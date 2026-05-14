@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import BrandMark from "@/components/BrandMark";
+import AppHeaderBrand from "@/components/layout/AppHeaderBrand";
 import HeaderInner from "@/components/layout/HeaderInner";
 
 const LINKS = [
@@ -29,9 +29,7 @@ export default function AdminAppShell({ children, sessionEmail = "" }) {
   const pathname = usePathname() || "";
   return (
     <div className="appShell appShell--subpage appShell--siteChrome adminConsole">
-      <div className="headerBrandStack">
-        <BrandMark size="header" alt="The Outreach Project" />
-      </div>
+      <AppHeaderBrand brandAlt="The Outreach Project" />
       <header className="subpageTopbar">
         <HeaderInner className="topbarInner">
           <div className="topbarZone topbarLeft">

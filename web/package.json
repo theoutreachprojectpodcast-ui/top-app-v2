@@ -14,6 +14,7 @@
     "smoke:qa:http": "node scripts/qa-http-smoke.mjs",
     "verify:entity-names": "node scripts/verify-entity-display-names.mjs",
     "verify:trusted-titles": "node scripts/verify-trusted-resources-titles.mjs",
+    "verify:youtube-podcast": "node scripts/verify-youtube-podcast-env.mjs",
     "verify:platform-names": "node scripts/verify-platform-organization-names.mjs",
     "verify:nonprofit-canonical-names": "node scripts/verify-nonprofit-canonical-names.mjs",
     "seed:sponsors": "node scripts/seed-sponsors-catalog.mjs",

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import FeaturedSponsorsSection from "@/features/sponsors/components/FeaturedSponsorsSection";
+import SponsorsTieredSections from "@/features/sponsors/components/SponsorsTieredSections";
 
 function ChannelChip({ icon, label }) {
   return (
@@ -13,7 +13,7 @@ function ChannelChip({ icon, label }) {
 }
 
 export default function SponsorsLandingPage({
-  sponsors = [],
+  sponsorCatalogRows = [],
   onOpenMissionPackages,
   onOpenMissionApply,
   favoritesEnabled = false,
@@ -30,7 +30,8 @@ export default function SponsorsLandingPage({
         <p className="introTagline">Platform sponsors</p>
         <h2>Partner with The Outreach Project</h2>
         <p className="sponsorHeroBlurb">
-          Meet current partners below, then explore Supporting, Growth, and Strategic mission packages in a guided popup. Podcast-only sponsor tiers open from the Podcast hub.
+          Browse the full partner roster below, then explore Supporting, Growth, and Strategic mission packages in a guided popup.
+          Podcast sponsors are a separate roster and checkout — open them from the Podcast hub only.
         </p>
         <div className="row wrap">
           <button className="btnPrimary" type="button" onClick={() => openPackages()}>
@@ -42,13 +43,24 @@ export default function SponsorsLandingPage({
         </div>
       </section>
 
-      <FeaturedSponsorsSection
-        sponsors={sponsors}
-        favoritesEnabled={favoritesEnabled}
-        favoriteKeySet={favoriteKeySet}
-        onToggleFavorite={onToggleFavorite}
-        onRequestSignIn={onRequestSignIn}
-      />
+      <div className="sponsorRosterStack">
+        <section className="card sponsorSection sponsorFeaturedSection">
+          <div className="sponsorSectionHead">
+            <h3>Sponsor roster</h3>
+            <span className="sponsorFeaturedValuePill">App sponsor roster</span>
+          </div>
+          <p className="sponsorSectionLead">
+            Partners by tier — open a card for the full profile, verified links, and favorites.
+          </p>
+        </section>
+        <SponsorsTieredSections
+          sponsorRecords={sponsorCatalogRows}
+          favoritesEnabled={favoritesEnabled}
+          favoriteKeySet={favoriteKeySet}
+          onToggleFavorite={onToggleFavorite}
+          onRequestSignIn={onRequestSignIn}
+        />
+      </div>
 
       <section className="card sponsorSection">
         <h3>Why sponsor</h3>

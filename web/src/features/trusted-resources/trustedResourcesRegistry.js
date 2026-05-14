@@ -10,6 +10,14 @@
  *    trustedResourceCategoryKey, shortDescription, locationLabel, website, ntee_code, nonprofit_type.
  * 2. Run: pnpm verify:trusted-resources  (must pass before merge; wired into prebuild).
  * 3. Spot-check the Trusted Resources tab: name, category, location, description, links.
+ * 4. Optional curated art (same-origin under `/public/trusted/`):
+ *    - `registryHeaderImageUrl` — wide hero / listing strip only, e.g. `/trusted/{slug}-hero.svg`
+ *    - `registryLogoUrl` — organization mark for the card logo slot, e.g. `/trusted/{slug}-org-logo.png`
+ *    Do not point both at the same file; hero art belongs in header fields, marks in logo/profile only.
+ *
+ * ── Curated art on disk (`/public/trusted/`) ───────────────────────────────────
+ * Wide listing strips: generated `*-hero.svg` per slug. Organization marks: `*-org-logo.png` (curated raster marks).
+ * Warrior's Refuge uses `warriors-refuge-logo.png` plus `warriors-refuge-hero.svg`.
  */
 
 /** IRS EIN is 9 digits; DBs may pad or concatenate — normalize to exactly 9 digits. */
@@ -87,6 +95,7 @@ function matchRecordByHosts(rowHosts) {
  * @property {string} [youtubeUrl]
  * @property {string} [xUrl]
  * @property {string} [linkedinUrl]
+ * @property {string} [tiktokUrl]
  */
 
 /**
@@ -106,6 +115,8 @@ function matchRecordByHosts(rowHosts) {
  * @property {string} [nonprofit_type] Human category line for text-based inference
  * @property {TrustedResourceSocialOverrides} [socialOverrides] Verified URLs only; merges onto row
  * @property {boolean} [clearUnlistedSocials] When true, omit socials not listed in socialOverrides (website kept)
+ * @property {string} [registryHeaderImageUrl] Same-origin path for listing-card hero strip only (e.g. `/trusted/{slug}-hero.svg`)
+ * @property {string} [registryLogoUrl] Same-origin path for the trusted card logo slot (e.g. `/trusted/{slug}-org-logo.png`)
  */
 
 /** @type {TrustedResourceCanonicalRecord[]} */
@@ -121,6 +132,10 @@ export const TRUSTED_RESOURCE_CANONICAL_RECORDS = [
     locationLabel: "St. Augustine, FL",
     website: "https://saywhenandrememberhim.org/",
     nonprofit_type: "Veteran and first responder support",
+    registryHeaderImageUrl: "/trusted/say-when-and-remember-him-hero.svg",
+    registryLogoUrl: "/trusted/say-when-and-remember-him-org-logo.png",
+    clearUnlistedSocials: true,
+    socialOverrides: {},
   },
   {
     eins: ["993469766"],
@@ -133,6 +148,10 @@ export const TRUSTED_RESOURCE_CANONICAL_RECORDS = [
     locationLabel: "National",
     website: "https://www.backcountryheroes.org/",
     nonprofit_type: "Veteran and first responder support",
+    registryHeaderImageUrl: "/trusted/back-country-heroes-hero.svg",
+    registryLogoUrl: "/trusted/back-country-heroes-org-logo.png",
+    clearUnlistedSocials: true,
+    socialOverrides: {},
   },
   {
     eins: ["883575938"],
@@ -145,13 +164,25 @@ export const TRUSTED_RESOURCE_CANONICAL_RECORDS = [
     locationLabel: "Huntsville, TX",
     website: "https://hero2theline.org/",
     nonprofit_type: "Veteran and Gold Star family support",
+    clearUnlistedSocials: true,
     socialOverrides: {
+      /* From hero2theline.org site footer (GoDaddy builder). */
       facebookUrl: "https://www.facebook.com/Hero2theline/",
+      instagramUrl: "https://www.instagram.com/hero2theline/",
+      xUrl: "https://x.com/HerototheLine",
     },
+    registryHeaderImageUrl: "/trusted/hero-to-the-line-hero.svg",
+    registryLogoUrl: "/trusted/hero-to-the-line-org-logo.png",
   },
   {
     eins: ["412739043"],
-    nameKeys: ["hero's journey healing foundation", "heros journey healing foundation", "herosjourneyhealingfoundation"],
+    nameKeys: [
+      "hero's journey healing foundation",
+      "heros journey healing foundation",
+      "herosjourneyhealingfoundation",
+      "hero's journey",
+      "heros journey",
+    ],
     slug: "heros-journey-healing-foundation",
     displayName: "Heroes Journey Healing Foundation",
     trustedResourceCategoryKey: "healthWellness",
@@ -160,6 +191,10 @@ export const TRUSTED_RESOURCE_CANONICAL_RECORDS = [
     locationLabel: "National",
     website: "https://www.herosjourneyheals.org/",
     nonprofit_type: "Healing and wellness support",
+    registryHeaderImageUrl: "/trusted/heros-journey-healing-foundation-hero.svg",
+    registryLogoUrl: "/trusted/heros-journey-healing-foundation-org-logo.png",
+    clearUnlistedSocials: true,
+    socialOverrides: {},
   },
   {
     eins: ["541411430", "0541411430"],
@@ -173,10 +208,13 @@ export const TRUSTED_RESOURCE_CANONICAL_RECORDS = [
     website: "https://www.freedomalliance.org/",
     ntee_code: "O",
     nonprofit_type: "Veterans & military families — scholarships, programs, and support",
+    clearUnlistedSocials: true,
     socialOverrides: {
       // Official site (freedomalliance.org) links to this handle in page chrome — not a guessed handle.
       instagramUrl: "https://www.instagram.com/freedom.alliance/",
     },
+    registryHeaderImageUrl: "/trusted/freedom-alliance-hero.svg",
+    registryLogoUrl: "/trusted/freedom-alliance-org-logo.png",
   },
   {
     eins: ["813997855", "0813997855"],
@@ -196,6 +234,10 @@ export const TRUSTED_RESOURCE_CANONICAL_RECORDS = [
     website: "https://www.southernoutdoordreams.org/",
     ntee_code: "P",
     nonprofit_type: "Outdoor experiences for veterans, youth, and heroes with health challenges",
+    registryHeaderImageUrl: "/trusted/southern-outdoor-dreams-hero.svg",
+    registryLogoUrl: "/trusted/southern-outdoor-dreams-org-logo.png",
+    clearUnlistedSocials: true,
+    socialOverrides: {},
   },
   {
     eins: ["474655361"],
@@ -208,10 +250,13 @@ export const TRUSTED_RESOURCE_CANONICAL_RECORDS = [
     locationLabel: "Bandera, TX",
     website: "https://frontlinehealingfoundation.org/",
     nonprofit_type: "Behavioral health and recovery support",
+    clearUnlistedSocials: true,
     socialOverrides: {
       facebookUrl: "https://www.facebook.com/frontlinehealingfoundation",
       instagramUrl: "https://www.instagram.com/frontlinehealingfoundation/",
     },
+    registryHeaderImageUrl: "/trusted/frontline-healing-foundation-hero.svg",
+    registryLogoUrl: "/trusted/frontline-healing-foundation-org-logo.png",
   },
   {
     eins: ["823021911"],
@@ -224,8 +269,108 @@ export const TRUSTED_RESOURCE_CANONICAL_RECORDS = [
     locationLabel: "Stillwater, MN",
     website: "https://www.hometownherooutdoors.org/",
     nonprofit_type: "Veteran and first responder outdoor wellness",
+    clearUnlistedSocials: true,
     socialOverrides: {
       facebookUrl: "https://www.facebook.com/HometownHeroOutdoors/",
+      instagramUrl: "https://www.instagram.com/hometownherooutdoors/",
+      youtubeUrl: "https://www.youtube.com/@HometownHeroOutdoors",
+    },
+    registryHeaderImageUrl: "/trusted/hometown-hero-outdoors-hero.svg",
+    registryLogoUrl: "/trusted/hometown-hero-outdoors-org-logo.png",
+  },
+  {
+    nameKeys: ["veterans creed outdoors", "veteranscreedoutdoors", "veterans creed", "vcousa"],
+    slug: "veterans-creed-outdoors",
+    displayName: "Veterans Creed Outdoors",
+    trustedResourceCategoryKey: "veteransMilitary",
+    shortDescription:
+      "501(c)(3) volunteer nonprofit connecting veterans and first responders with hunting, fishing, and outdoor adventures to build resilience and camaraderie across state chapters.",
+    locationLabel: "Multi-state, U.S. (see vcousa.org chapters)",
+    website: "https://www.vcousa.org/",
+    nonprofit_type: "Veteran and first responder outdoor experiences",
+    registryHeaderImageUrl: "/trusted/veterans-creed-outdoors-hero.svg",
+    registryLogoUrl: "/trusted/veterans-creed-outdoors-org-logo.png",
+  },
+  {
+    nameKeys: ["the warriors refuge", "warriors refuge", "warriorsrefuge", "warrior's refuge"],
+    slug: "warriors-refuge",
+    displayName: "Warrior's Refuge",
+    trustedResourceCategoryKey: "veteransMilitary",
+    shortDescription:
+      "Texas-based 501(c)(3) providing transitional housing, counseling, and employment support for veterans experiencing homelessness and crisis.",
+    locationLabel: "West Columbia, TX",
+    website: "https://thewarriorsrefuge.us/",
+    nonprofit_type: "Veteran housing and crisis recovery",
+    registryHeaderImageUrl: "/trusted/warriors-refuge-hero.svg",
+    registryLogoUrl: "/trusted/warriors-refuge-logo.png",
+    clearUnlistedSocials: true,
+    socialOverrides: {},
+  },
+  {
+    nameKeys: ["hoof to heart", "hooftoheart", "hoof to heart veterans", "hooftoheartvets"],
+    slug: "hoof-to-heart-veterans",
+    displayName: "Hoof to Heart Veterans",
+    trustedResourceCategoryKey: "veteransMilitary",
+    shortDescription:
+      "Veteran-founded nonprofit offering equine-facilitated learning and groundwork programs for veterans and first responders at no cost.",
+    locationLabel: "Southwick, MA",
+    website: "https://hooftoheartvets.com/",
+    nonprofit_type: "Equine-assisted veteran wellness",
+    registryHeaderImageUrl: "/trusted/hoof-to-heart-veterans-hero.svg",
+    registryLogoUrl: "/trusted/hoof-to-heart-veterans-org-logo.png",
+    clearUnlistedSocials: true,
+    socialOverrides: {},
+  },
+  {
+    nameKeys: ["mos veteran adventures", "mosveteranadventures", "m o s veteran adventures"],
+    slug: "mos-veteran-adventures",
+    displayName: "M.O.S. Veteran Adventures",
+    trustedResourceCategoryKey: "veteransMilitary",
+    shortDescription:
+      "Arizona-based nonprofit organizing outdoor adventures plus support services for disabled veterans including recreation, rehabilitation navigation, and community events.",
+    locationLabel: "Glendale, AZ",
+    website: "https://mosveteranadventures.com/",
+    nonprofit_type: "Disabled veteran outdoor adventures",
+    registryHeaderImageUrl: "/trusted/mos-veteran-adventures-hero.svg",
+    registryLogoUrl: "/trusted/mos-veteran-adventures-org-logo.png",
+    clearUnlistedSocials: true,
+    socialOverrides: {},
+  },
+  {
+    nameKeys: ["the fallen outdoors", "thefallenoutdoors", "fallen outdoors"],
+    slug: "the-fallen-outdoors",
+    displayName: "The Fallen Outdoors",
+    trustedResourceCategoryKey: "veteransMilitary",
+    shortDescription:
+      "National nonprofit coordinating volunteer-led outdoor adventures for veterans, active-duty members, and Gold Star families at no cost nationwide.",
+    locationLabel: "National",
+    website: "https://thefallenoutdoors.org/",
+    nonprofit_type: "Outdoor adventures for veterans and Gold Star families",
+    registryHeaderImageUrl: "/trusted/the-fallen-outdoors-hero.svg",
+    registryLogoUrl: "/trusted/the-fallen-outdoors-org-logo.png",
+    clearUnlistedSocials: true,
+    socialOverrides: {
+      /* Official TFO posts use this Facebook page slug (see facebook.com/thefallenoutdoors). */
+      facebookUrl: "https://www.facebook.com/thefallenoutdoors/",
+    },
+  },
+  {
+    nameKeys: ["sheepdog impact assistance", "sheep dog impact assistance", "sheepdogia", "sdia"],
+    slug: "sheepdog-impact-assistance",
+    displayName: "Sheepdog Impact Assistance",
+    trustedResourceCategoryKey: "veteransMilitary",
+    shortDescription:
+      "National nonprofit engaging veterans and first responders through outdoor adventures, resilience programming, and disaster response volunteer missions.",
+    locationLabel: "Rogers, AR",
+    website: "https://sheepdogia.org/",
+    nonprofit_type: "Veteran and first responder empowerment",
+    registryHeaderImageUrl: "/trusted/sheepdog-impact-assistance-hero.svg",
+    registryLogoUrl: "/trusted/sheepdog-impact-assistance-org-logo.png",
+    clearUnlistedSocials: true,
+    socialOverrides: {
+      /* Official SDIA news links these handles (sheepdogia.org/news/...instagram...). */
+      facebookUrl: "https://www.facebook.com/SheepDogIA/",
+      instagramUrl: "https://www.instagram.com/sheepdog_ia/",
     },
   },
 ];

@@ -183,9 +183,11 @@ export default function FeaturedSponsorCard({
     ? { "--sponsor-card-accent": sponsor.sponsorAccentColor }
     : undefined;
 
+  const tierClass = sponsor.displayGroup ? ` sponsorPremiumCard--displayTier-${sponsor.displayGroup}` : "";
+
   return (
     <article
-      className={`torpListingCard sponsorPremiumCard sponsorPremiumCard--${warm}`}
+      className={`torpListingCard sponsorPremiumCard sponsorPremiumCard--${warm}${tierClass}`}
       style={accentStyle}
       role="button"
       tabIndex={0}
@@ -305,9 +307,9 @@ export default function FeaturedSponsorCard({
               ) : null}
             </div>
           </div>
-          <p className="sponsorPremiumTagline sponsorPremiumTagline--card">
-            {sponsor.tagline || "Partner supporting service communities."}
-          </p>
+          {sponsor.tagline ? (
+            <p className="sponsorPremiumTagline sponsorPremiumTagline--card">{sponsor.tagline}</p>
+          ) : null}
         </div>
         <div className="sponsorPremiumFooter">
           {sponsor.ctaUrl && !sponsor.websitePending ? (
