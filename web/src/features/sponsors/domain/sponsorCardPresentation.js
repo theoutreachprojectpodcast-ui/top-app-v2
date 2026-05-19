@@ -7,9 +7,11 @@ import {
   APEX_GLOBAL_OUTDOORS_LOGO_URL,
   EDUARDO_PICO_DESIGNS_LOGO_URL,
   GAMEDAY_MENS_HEALTH_LOGO_URL,
+  GREEN_GORILLA_LAND_MANAGEMENT_LOGO_URL,
   ROPE_SOLUTIONS_LOGO_URL,
   THE_VETERANS_VETERAN_LOGO_URL,
   VET_NAV_SERVICES_LOGO_URL,
+  WARS_END_MERCH_LOGO_URL,
 } from "@/features/sponsors/data/featuredSponsors";
 
 const DEFAULT = {
@@ -62,14 +64,22 @@ const BY_SLUG = {
     logoFallbackUrls: [EDUARDO_PICO_DESIGNS_LOGO_URL],
   },
   "the-veterans-veteran": {
-    accentColor: "#f472b6",
+    accentColor: "#60a5fa",
     cardScrimGradient:
-      "linear-gradient(118deg, rgba(16, 10, 12, 0.96) 0%, rgba(24, 14, 16, 0.76) 46%, rgba(12, 8, 10, 0.55) 100%)",
+      "linear-gradient(118deg, rgba(8, 12, 20, 0.96) 0%, rgba(14, 18, 28, 0.78) 46%, rgba(8, 10, 18, 0.55) 100%)",
     veteranOwnedDefault: true,
-    locationChips: [],
-    /* Official mark is white/red/blue on black — dark logo shell reads cleanly on the workshop hero art. */
+    locationChips: ["U.S.", "VA claims support"],
     logoPanelMode: "dark",
     logoFallbackUrls: [THE_VETERANS_VETERAN_LOGO_URL],
+  },
+  "wars-end-merch": {
+    accentColor: "#f59e0b",
+    cardScrimGradient:
+      "linear-gradient(118deg, rgba(18, 12, 8, 0.96) 0%, rgba(28, 18, 10, 0.76) 46%, rgba(12, 8, 6, 0.55) 100%)",
+    veteranOwnedDefault: true,
+    locationChips: ["Texas"],
+    logoPanelMode: "dark",
+    logoFallbackUrls: [WARS_END_MERCH_LOGO_URL],
   },
   "gameday-mens-health": {
     accentColor: "#f87171",
@@ -89,6 +99,15 @@ const BY_SLUG = {
     /* Official mark is black linework on white — light logo shell preserves edge clarity on the hero strip. */
     logoPanelMode: "light",
     logoFallbackUrls: [VET_NAV_SERVICES_LOGO_URL],
+  },
+  "green-gorilla-land-management": {
+    accentColor: "#4ade80",
+    cardScrimGradient:
+      "linear-gradient(118deg, rgba(8, 14, 10, 0.96) 0%, rgba(12, 20, 14, 0.78) 44%, rgba(8, 12, 10, 0.55) 100%)",
+    veteranOwnedDefault: true,
+    locationChips: ["Charleston, SC", "Lowcountry"],
+    logoPanelMode: "light",
+    logoFallbackUrls: [GREEN_GORILLA_LAND_MANAGEMENT_LOGO_URL],
   },
 };
 

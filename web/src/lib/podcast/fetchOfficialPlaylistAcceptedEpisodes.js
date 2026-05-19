@@ -5,7 +5,12 @@ import {
   sortByPublishedDesc,
   titleContainsExcludedContentMarker,
 } from "./episodeParser";
-import { fetchPlaylistItemsPage, fetchVideosByIds } from "./youtubeUploadsServer";
+import {
+  fetchPlaylistItemsPage,
+  fetchPlaylistVideosFromRssFallback,
+  fetchVideosByIds,
+  youtubeApiKeyConfigured,
+} from "./youtubeUploadsServer";
 
 /**
  * Official “full episodes” playlist (env override).
@@ -14,6 +19,106 @@ import { fetchPlaylistItemsPage, fetchVideosByIds } from "./youtubeUploadsServer
  */
 export function officialFullEpisodesPlaylistId() {
   return String(process.env.YOUTUBE_FULL_EPISODES_PLAYLIST_ID || "PLxrmox4oWE7d-ZmMCc2lNkk4nXE8zKcKP").trim();
+}
+
+/**
+ * @param {Record<string, unknown>} row
+ * @param {Set<string>} excludeVideoIds
+ * @param {Set<string>} forceIncludeVideoIds
+ * @param {number} maxAccepted
+ * @param {Record<string, unknown>[]} acceptedOut
+ */
+function tryAcceptPlaylistRow(row, excludeVideoIds, forceIncludeVideoIds, maxAccepted, acceptedOut) {
+  const id = String(row.youtube_video_id || "").trim();
+  if (!id || excludeVideoIds.has(id)) return;
+  if (acceptedOut.length >= maxAccepted) return;
+
+  if (forceIncludeVideoIds.has(id)) {
+    acceptedOut.push({
+      ...row,
+      pipeline_decision: "accepted",
+      manual_override: "include",
+    });
+    return;
+  }
+
+  if (
+    isShortsUrl(row.youtube_url, id) ||
+    titleContainsExcludedContentMarker(row.title, row.description) ||
+    isBelowMinEpisodeDuration(row.duration_seconds)
+  ) {
+    return;
+  }
+
+  const c = classifyPodcastUpload(row);
+  if (c.ok) {
+    acceptedOut.push({
+      ...row,
+      episode_number: c.episodeNumber,
+      pipeline_decision: "accepted",
+      pipeline_reason: "matched_rules",
+    });
+  } else if (String(c.reason || "") === "no_episode_number") {
+    acceptedOut.push({
+      ...row,
+      episode_number: null,
+      pipeline_decision: "accepted",
+      pipeline_reason: "playlist_full_episode",
+    });
+  } else {
+    acceptedOut.push({
+      ...row,
+      episode_number: null,
+      pipeline_decision: "accepted",
+      pipeline_reason: "playlist_trust_fallback",
+      playlist_classify_note: String(c.reason || ""),
+    });
+  }
+}
+
+/**
+ * @param {Record<string, unknown>[]} rows
+ * @param {{ excludeVideoIds?: Set<string>, forceIncludeVideoIds?: Set<string>, maxAccepted?: number }} opts
+ */
+function acceptOfficialPlaylistCandidates(rows, opts = {}) {
+  const maxAccepted = Math.max(10, Number(opts.maxAccepted) || 200);
+  const excludeVideoIds = opts.excludeVideoIds instanceof Set ? opts.excludeVideoIds : new Set();
+  const forceIncludeVideoIds = opts.forceIncludeVideoIds instanceof Set ? opts.forceIncludeVideoIds : new Set();
+  const accepted = [];
+  for (const row of rows) {
+    tryAcceptPlaylistRow(row, excludeVideoIds, forceIncludeVideoIds, maxAccepted, accepted);
+    if (accepted.length >= maxAccepted) break;
+  }
+  return sortByPublishedDesc(accepted);
+}
+
+/**
+ * @param {string} playlistId
+ * @param {{ excludeVideoIds?: Set<string>, forceIncludeVideoIds?: Set<string>, maxAccepted?: number }} opts
+ */
+async function fetchAcceptedFromPlaylistRss(playlistId, opts) {
+  const maxAccepted = Math.max(10, Number(opts.maxAccepted) || 200);
+  const rss = await fetchPlaylistVideosFromRssFallback(playlistId, { maxItems: maxAccepted + 20 });
+  if (!rss.ok) return { ok: false, error: rss.error, videos: [], scannedPages: 0, source: "playlist_rss" };
+  const videos = acceptOfficialPlaylistCandidates(
+    (rss.videos || []).map((r) => ({
+      youtube_video_id: r.youtube_video_id,
+      title: r.title,
+      description: r.description,
+      published_at: r.published_at,
+      thumbnail_url: r.thumbnail_url,
+      youtube_url: r.youtube_url,
+      duration_seconds: null,
+      view_count: r.view_count ?? null,
+    })),
+    opts,
+  );
+  return {
+    ok: true,
+    videos,
+    scannedPages: 0,
+    source: "playlist_rss",
+  };
 }
 
 /**
@@ -30,6 +135,10 @@ export async function fetchOfficialPlaylistAcceptedEpisodes(opts = {}) {
 
   if (!playlistId) return { ok: false, error: "missing_playlist_id", videos: [], scannedPages: 0 };
 
+  if (!youtubeApiKeyConfigured()) {
+    return fetchAcceptedFromPlaylistRss(playlistId, { excludeVideoIds, forceIncludeVideoIds, maxAccepted });
+  }
+
   const accepted = [];
   const seen = new Set();
   let token = "";
@@ -37,7 +146,18 @@ export async function fetchOfficialPlaylistAcceptedEpisodes(opts = {}) {
 
   for (; scannedPages < maxPages && accepted.length < maxAccepted; scannedPages += 1) {
     const page = await fetchPlaylistItemsPage(playlistId, token);
-    if (!page.ok) return { ok: false, error: page.error, videos: [], scannedPages };
+    if (!page.ok) {
+      if (page.error === "missing_youtube_api_key") {
+        return fetchAcceptedFromPlaylistRss(playlistId, { excludeVideoIds, forceIncludeVideoIds, maxAccepted });
+      }
+      const rssFallback = await fetchAcceptedFromPlaylistRss(playlistId, {
+        excludeVideoIds,
+        forceIncludeVideoIds,
+        maxAccepted,
+      });
+      if (rssFallback.ok && rssFallback.videos.length) return rssFallback;
+      return { ok: false, error: page.error, videos: sortByPublishedDesc(accepted), scannedPages };
+    }
 
     /** @type {string[]} */
     const ids = [];
@@ -54,10 +174,21 @@ export async function fetchOfficialPlaylistAcceptedEpisodes(opts = {}) {
 
     if (ids.length) {
       const detail = await fetchVideosByIds(ids);
-      if (!detail.ok) return { ok: false, error: detail.error, videos: sortByPublishedDesc(accepted), scannedPages };
+      if (!detail.ok) {
+        if (detail.error === "missing_youtube_api_key") {
+          return fetchAcceptedFromPlaylistRss(playlistId, { excludeVideoIds, forceIncludeVideoIds, maxAccepted });
+        }
+        const rssFallback = await fetchAcceptedFromPlaylistRss(playlistId, {
+          excludeVideoIds,
+          forceIncludeVideoIds,
+          maxAccepted,
+        });
+        if (rssFallback.ok && rssFallback.videos.length) return rssFallback;
+        return { ok: false, error: detail.error, videos: sortByPublishedDesc(accepted), scannedPages };
+      }
 
       for (const id of ids) {
-        if (excludeVideoIds.has(id)) continue;
+        if (accepted.length >= maxAccepted) break;
         const d = detail.byId[id];
         if (!d) continue;
         const thumb =
@@ -76,52 +207,7 @@ export async function fetchOfficialPlaylistAcceptedEpisodes(opts = {}) {
           duration_seconds: d.duration_seconds,
           view_count: null,
         };
-
-        if (forceIncludeVideoIds.has(id)) {
-          accepted.push({
-            ...row,
-            pipeline_decision: "accepted",
-            manual_override: "include",
-          });
-          if (accepted.length >= maxAccepted) break;
-          continue;
-        }
-
-        if (
-          isShortsUrl(row.youtube_url, id) ||
-          titleContainsExcludedContentMarker(row.title, row.description) ||
-          isBelowMinEpisodeDuration(row.duration_seconds)
-        ) {
-          continue;
-        }
-
-        const c = classifyPodcastUpload(row);
-        if (c.ok) {
-          accepted.push({
-            ...row,
-            episode_number: c.episodeNumber,
-            pipeline_decision: "accepted",
-            pipeline_reason: "matched_rules",
-          });
-        } else if (String(c.reason || "") === "no_episode_number") {
-          // Full-episodes playlist items often omit "Episode N" in the title; duration + exclusion filters still apply above.
-          accepted.push({
-            ...row,
-            episode_number: null,
-            pipeline_decision: "accepted",
-            pipeline_reason: "playlist_full_episode",
-          });
-        } else {
-          // Curated full-episodes playlist: trust items that already passed Shorts / keyword / duration gates above.
-          accepted.push({
-            ...row,
-            episode_number: null,
-            pipeline_decision: "accepted",
-            pipeline_reason: "playlist_trust_fallback",
-            playlist_classify_note: String(c.reason || ""),
-          });
-        }
-        if (accepted.length >= maxAccepted) break;
+        tryAcceptPlaylistRow(row, excludeVideoIds, forceIncludeVideoIds, maxAccepted, accepted);
       }
     }
 
@@ -129,9 +215,19 @@ export async function fetchOfficialPlaylistAcceptedEpisodes(opts = {}) {
     token = page.nextPageToken;
   }
 
+  if (!accepted.length) {
+    const rssFallback = await fetchAcceptedFromPlaylistRss(playlistId, {
+      excludeVideoIds,
+      forceIncludeVideoIds,
+      maxAccepted,
+    });
+    if (rssFallback.ok && rssFallback.videos.length) return rssFallback;
+  }
+
   return {
     ok: true,
     videos: sortByPublishedDesc(accepted),
     scannedPages,
+    source: "youtube_api",
   };
 }

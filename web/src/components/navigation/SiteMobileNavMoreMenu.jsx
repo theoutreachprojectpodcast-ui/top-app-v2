@@ -3,13 +3,12 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 
 /**
- * Header overflow menu (hamburger). Hidden at min-width 720px on most shells; podcast can pass
- * `forceDesktopVisible` so the same control appears on desktop web while keeping podcast theming.
+ * Header overflow menu (hamburger). Mobile only — hidden from 720px up (`mobile-nav-dock.css`).
  * Children should be full-width links or buttons; panel closes on selection / Escape / outside click.
  *
- * @param {{ tone?: "app" | "podcast", children: import("react").ReactNode, align?: "start" | "end", forceDesktopVisible?: boolean }} props
+ * @param {{ tone?: "app" | "podcast", children: import("react").ReactNode, align?: "start" | "end" }} props
  */
-export default function SiteMobileNavMoreMenu({ tone = "app", children, align = "start", forceDesktopVisible = false }) {
+export default function SiteMobileNavMoreMenu({ tone = "app", children, align = "start" }) {
   const menuId = useId();
   const [open, setOpen] = useState(false);
   const rootRef = useRef(null);
@@ -45,7 +44,7 @@ export default function SiteMobileNavMoreMenu({ tone = "app", children, align = 
   return (
     <div
       ref={rootRef}
-      className={`siteMobileNavMore siteMobileNavMore--${tone} siteMobileNavMore--align-${align}${forceDesktopVisible ? " siteMobileNavMore--desktopVisible" : ""}`}
+      className={`siteMobileNavMore siteMobileNavMore--${tone} siteMobileNavMore--align-${align}`}
     >
       <button
         type="button"

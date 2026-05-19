@@ -2,7 +2,11 @@
  * YouTube Data API v3 — uploads playlist only (Videos tab equivalent). Server-only; never expose API key.
  */
 
-import { discoverChannelId, parseYoutubeFeed, youtubeFeedUrls } from "../../features/podcasts/domain/youtubeFeed";
+import {
+  discoverChannelId,
+  parseYoutubeFeed,
+  youtubeFeedUrls,
+} from "../../features/podcasts/domain/youtubeFeed";
 
 const API = "https://www.googleapis.com/youtube/v3";
 
@@ -10,6 +14,10 @@ function cleanKey() {
   return String(
     process.env.YOUTUBE_API_KEY || process.env.YOUTUBE_DATA_API_KEY || process.env.GOOGLE_API_KEY || ""
   ).trim();
+}
+
+export function youtubeApiKeyConfigured() {
+  return Boolean(cleanKey());
 }
 
 export function youtubeChannelIdConfigured() {
@@ -188,4 +196,26 @@ export async function fetchRecentUploadsFromRssFallback() {
     if (rows.length) return { ok: true, videos: rows, source: "rss" };
   }
   return { ok: false, error: "rss_unavailable", videos: [], source: "rss" };
+}
+
+/**
+ * Official playlist Atom feed — no API key (thumbnails + titles from feed).
+ * @param {string} playlistId
+ * @param {{ maxItems?: number }} [opts]
+ */
+export async function fetchPlaylistVideosFromRssFallback(playlistId, opts = {}) {
+  const pid = String(playlistId || "").trim();
+  if (!pid) return { ok: false, error: "missing_playlist_id", videos: [], source: "playlist_rss" };
+  const maxItems = Math.max(1, Number(opts.maxItems) || 50);
+  const feedUrl = `https://www.youtube.com/feeds/videos.xml?playlist_id=${encodeURIComponent(pid)}`;
+  try {
+    const res = await fetch(feedUrl, { redirect: "follow", next: { revalidate: 0 } });
+    if (!res.ok) return { ok: false, error: `playlist_rss_http_${res.status}`, videos: [], source: "playlist_rss" };
+    const xml = await res.text();
+    const rows = parseYoutubeFeed(xml).slice(0, maxItems);
+    if (!rows.length) return { ok: false, error: "playlist_rss_empty", videos: [], source: "playlist_rss" };
+    return { ok: true, videos: rows, source: "playlist_rss" };
+  } catch (e) {
+    return { ok: false, error: String(e?.message || e || "playlist_rss_failed"), videos: [], source: "playlist_rss" };
+  }
 }

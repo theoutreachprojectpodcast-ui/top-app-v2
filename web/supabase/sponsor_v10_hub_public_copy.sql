@@ -54,20 +54,17 @@ set
   primary_display_tag = 'Foundational Sponsor',
   name = 'The Veterans Veteran',
   display_name = 'The Veterans Veteran',
-  sponsor_category = 'Veteran nonprofit & craft',
-  short_description = 'Handmade American flags & custom woodworking',
+  sponsor_category = 'Veteran benefits consulting',
+  short_description = 'VA disability claims & post-service coaching',
   tagline =
-    'Veteran-owned flags and custom woodworking from Texas—each piece honors service and recovery while proceeds support veteran-serving nonprofits.',
+    'Veteran-led guidance through VA disability claims, ratings, appeals, and GI Bill planning—so you do not navigate the system alone.',
   long_description =
     $tvv$
-The Veterans Veteran is a veteran-owned organization in Texas that hand-builds American flags and custom woodworking with patience, precision, and respect for the uniform. Work is crafted to honor service, recovery, and resilience. Proceeds and collaborations fund veteran-focused nonprofits so craftsmanship in the shop translates into concrete help for people navigating transition, health care, employment, and community reintegration.
+The Veterans Veteran, founded and led by Drew Jones, helps veterans move through the VA disability and benefits process with clarity and advocacy. The team provides educational and administrative support—not legal representation—including claims and ratings review, medical evidence organization, appeals guidance, and GI Bill maximization. Post-service coaching helps veterans set career goals and build a roadmap after the uniform.
 $tvv$,
-  website_url = coalesce(nullif(trim(website_url), ''), 'https://www.warsendmerch.com/'),
-  instagram_url = coalesce(nullif(trim(instagram_url), ''), 'https://www.instagram.com/wars__end/'),
-  social_links = coalesce(
-    social_links,
-    '{}'::jsonb
-  ) || jsonb_strip_nulls(jsonb_build_object('instagram', 'https://www.instagram.com/wars__end/')),
+  website_url = coalesce(nullif(trim(website_url), ''), 'https://thevetsvet.com/'),
+  instagram_url = null,
+  social_links = '{}'::jsonb,
   updated_at = now()
 where slug = 'the-veterans-veteran';
 

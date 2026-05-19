@@ -10,8 +10,11 @@ import HeaderInner from "@/components/layout/HeaderInner";
 import SubpageTopbarActions from "@/components/layout/SubpageTopbarActions";
 import FooterInner from "@/components/layout/FooterInner";
 import MissionPageTopStrip from "@/components/layout/MissionPageTopStrip";
+import { useAuthSession } from "@/components/auth/AuthSessionProvider";
+import { usePodcastDarkSchemeLock } from "@/hooks/usePodcastDarkSchemeLock";
 import { resolvePageAtmosphere } from "@/lib/design/pageAtmosphere";
 import { useImmersiveHeaderScroll } from "@/hooks/useImmersiveHeaderScroll";
+import { readNavAuthCache } from "@/lib/auth/navAuthCache";
 
 const PRIMARY_BOTTOM_NAV_KEYS = new Set(["home", "profile", "contact"]);
 
@@ -53,8 +56,16 @@ export default function AppShell({
     pageAtmosphere === "podcast" || String(shellClassName || "").includes("appShell--podcast");
   const immersiveHeaderScroll = useTopAppStructure && !podcastThemeShell;
   useImmersiveHeaderScroll({ rootRef: mainRef, enabled: immersiveHeaderScroll });
+  usePodcastDarkSchemeLock(podcastThemeShell);
+
+  const session = useAuthSession();
+  const navAuthCache = typeof window !== "undefined" ? readNavAuthCache() : null;
+  const optimisticAuthed = session.loading && navAuthCache?.authenticated;
+  const isLoggedIn = session.authenticated || optimisticAuthed;
 
   const mainChromeClass = immersiveHeaderScroll ? " header-at-top" : "";
+  const authChromeClass =
+    useTopAppStructure && podcastThemeShell ? (isLoggedIn ? " topApp--auth-in" : " topApp--auth-out") : "";
   const podcastRouteAttrs =
     useTopAppStructure && podcastThemeShell
       ? {
@@ -66,21 +77,28 @@ export default function AppShell({
   return (
     <RootTag
       ref={useTopAppStructure ? mainRef : undefined}
-      className={`${useTopAppStructure ? "topApp" : "appShell"} appShell--subpage ${useFooterDockChrome ? "appShell--withMobileNavDock " : ""}${shellClassName}${mainChromeClass}`.trim()}
+      className={`${useTopAppStructure ? "topApp" : "appShell"} appShell--subpage ${useFooterDockChrome ? "appShell--withMobileNavDock " : ""}${shellClassName}${mainChromeClass}${authChromeClass}`.trim()}
+      {...(podcastThemeShell ? { "data-podcast-theme-locked": "dark" } : {})}
       style={rootStyle}
       {...(useTopAppStructure ? { "data-page-atmosphere": pageAtmosphere } : {})}
       {...podcastRouteAttrs}
     >
-      <AppHeaderBrand brandSrc={brandSrc || undefined} brandAlt={brandAlt} brandClassName={brandClassName} />
       <header className={usePrimaryTopbarChrome ? "topbar" : "subpageTopbar"}>
         <HeaderInner className="topbarInner">
           <div className="topbarZone topbarLeft">
             <div className="topbarActionsCluster topbarActionsCluster--start">
+              <SubpageTopbarActions
+                section="lead"
+                showThemeToggle={podcastThemeShell ? false : showThemeToggle}
+              />
+            </div>
+          </div>
+          <div className="topbarZone topbarCenter" aria-hidden="true" />
+          <div className="topbarZone topbarRight">
+            <div className="topbarActionsCluster">
+              <SubpageTopbarActions section="auth" />
               {useFooterDockChrome ? (
-                <SiteMobileNavMoreMenu
-                  tone={podcastThemeShell ? "podcast" : "app"}
-                  forceDesktopVisible={!!podcastThemeShell}
-                >
+                <SiteMobileNavMoreMenu tone={podcastThemeShell ? "podcast" : "app"} align="end">
                   <Link className="siteMobileNavMore__entry" href="/trusted">
                     Trusted Resources
                   </Link>
@@ -104,17 +122,11 @@ export default function AppShell({
                   </Link>
                 </SiteMobileNavMoreMenu>
               ) : null}
-              <SubpageTopbarActions section="lead" showThemeToggle={showThemeToggle} />
-            </div>
-          </div>
-          <div className="topbarZone topbarCenter" aria-hidden="true" />
-          <div className="topbarZone topbarRight">
-            <div className="topbarActionsCluster">
-              <SubpageTopbarActions section="auth" />
             </div>
           </div>
         </HeaderInner>
       </header>
+      <AppHeaderBrand brandSrc={brandSrc || undefined} brandAlt={brandAlt} brandClassName={brandClassName} />
       {usePrimaryTopbarChrome ? <div className="topbarOcclusion" aria-hidden="true" /> : null}
 
       {useTopAppStructure ? (

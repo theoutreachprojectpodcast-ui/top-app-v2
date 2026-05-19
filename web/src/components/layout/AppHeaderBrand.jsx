@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import BrandMark from "@/components/BrandMark";
+import { useColorScheme } from "@/components/app/ColorSchemeRoot";
+import { resolvePodcastBrandLogoSrc } from "@/lib/podcast/podcastBrandLogo";
 
 /**
  * OP / TOP header brand (required site chrome).
@@ -17,10 +19,14 @@ export default function AppHeaderBrand({
   brandAlt = "The Outreach Project",
   brandClassName = "",
 }) {
+  const { colorScheme } = useColorScheme();
+  const isPodcastMark = String(brandClassName || "").includes("podcastBrandLogo");
+  const resolvedSrc = isPodcastMark ? resolvePodcastBrandLogoSrc(colorScheme) : brandSrc || undefined;
+
   return (
     <div className="headerBrandStack" data-torp-header-brand="1">
       <Link href={homeHref} aria-label={ariaLabel}>
-        <BrandMark size="header" src={brandSrc || undefined} alt={brandAlt} className={brandClassName} />
+        <BrandMark size="header" src={resolvedSrc} alt={brandAlt} className={brandClassName} />
       </Link>
     </div>
   );

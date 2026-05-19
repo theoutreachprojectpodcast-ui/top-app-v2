@@ -132,10 +132,15 @@ export const TRUSTED_RESOURCE_CANONICAL_RECORDS = [
     locationLabel: "St. Augustine, FL",
     website: "https://saywhenandrememberhim.org/",
     nonprofit_type: "Veteran and first responder support",
-    registryHeaderImageUrl: "/trusted/say-when-and-remember-him-hero.svg",
+    registryHeaderImageUrl: "/trusted/say-when-and-remember-him-hero.png?v=1",
     registryLogoUrl: "/trusted/say-when-and-remember-him-org-logo.png",
     clearUnlistedSocials: true,
-    socialOverrides: {},
+    socialOverrides: {
+      /* Event recap (saywhenandrememberhim.org/2024/11/26/157/) directs to Facebook page "saywhenandrememberhim". */
+      facebookUrl: "https://www.facebook.com/saywhenandrememberhim",
+      /* Matching org handle; profile URL resolves — site contact page lists Instagram but uses a placeholder link. */
+      instagramUrl: "https://www.instagram.com/saywhenandrememberhim/",
+    },
   },
   {
     eins: ["993469766"],
@@ -148,7 +153,7 @@ export const TRUSTED_RESOURCE_CANONICAL_RECORDS = [
     locationLabel: "National",
     website: "https://www.backcountryheroes.org/",
     nonprofit_type: "Veteran and first responder support",
-    registryHeaderImageUrl: "/trusted/back-country-heroes-hero.svg",
+    registryHeaderImageUrl: "/trusted/back-country-heroes-hero.png?v=1",
     registryLogoUrl: "/trusted/back-country-heroes-org-logo.png",
     clearUnlistedSocials: true,
     socialOverrides: {},
@@ -171,7 +176,7 @@ export const TRUSTED_RESOURCE_CANONICAL_RECORDS = [
       instagramUrl: "https://www.instagram.com/hero2theline/",
       xUrl: "https://x.com/HerototheLine",
     },
-    registryHeaderImageUrl: "/trusted/hero-to-the-line-hero.svg",
+    registryHeaderImageUrl: "/trusted/hero-to-the-line-hero.png?v=1",
     registryLogoUrl: "/trusted/hero-to-the-line-org-logo.png",
   },
   {
@@ -234,7 +239,7 @@ export const TRUSTED_RESOURCE_CANONICAL_RECORDS = [
     website: "https://www.southernoutdoordreams.org/",
     ntee_code: "P",
     nonprofit_type: "Outdoor experiences for veterans, youth, and heroes with health challenges",
-    registryHeaderImageUrl: "/trusted/southern-outdoor-dreams-hero.svg",
+    registryHeaderImageUrl: "/trusted/southern-outdoor-dreams-hero.png?v=1",
     registryLogoUrl: "/trusted/southern-outdoor-dreams-org-logo.png",
     clearUnlistedSocials: true,
     socialOverrides: {},

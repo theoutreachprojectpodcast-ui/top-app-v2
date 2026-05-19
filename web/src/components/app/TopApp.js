@@ -7,7 +7,7 @@ import HeaderInner from "@/components/layout/HeaderInner";
 import FooterInner from "@/components/layout/FooterInner";
 import Avatar from "@/components/shared/Avatar";
 import AppHeaderBrand from "@/components/layout/AppHeaderBrand";
-import IconWrap from "@/components/shared/IconWrap";
+import { Handshake, Mail, Mic, Search, UserRound, Users } from "lucide-react";
 import AccountInfoCard from "@/features/profile/components/AccountInfoCard";
 import ManageBillingButton from "@/features/profile/components/ManageBillingButton";
 import NonprofitCard from "@/features/nonprofits/components/NonprofitCard";
@@ -30,6 +30,7 @@ import HeaderNotificationBell from "@/components/layout/HeaderNotificationBell";
 import { useDirectorySearch } from "@/hooks/useDirectorySearch";
 import { useProfileData } from "@/features/profile/ProfileDataProvider";
 import { useTrustedResources } from "@/hooks/useTrustedResources";
+import DirectoryCategoryHeader from "@/features/directory/components/DirectoryCategoryHeader";
 import DirectoryCategoryQuickPick from "@/features/directory/components/DirectoryCategoryQuickPick";
 import { isQaLikeDeployment } from "@/lib/runtime/qaEnv";
 import { showLocalDemoChrome } from "@/lib/runtime/demoUiVisibility";
@@ -64,18 +65,87 @@ import { FormCheckbox } from "@/components/forms/FormChoice";
 import { resolvePageAtmosphere } from "@/lib/design/pageAtmosphere";
 import MissionPageTopStrip from "@/components/layout/MissionPageTopStrip";
 
-function AppIcon({ name }) {
-  const icons = {
-    sponsors: "M4 6h16v12H4z M4 10h16",
-    trusted: "M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6z",
-    community: "M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6m8 0a3 3 0 1 1 0-6 3 3 0 0 1 0 6M3 19c0-2.8 2.8-4 5-4s5 1.2 5 4m3 0c0-2.4 2.3-3.5 5-3.5 2.1 0 5 1 5 3.5",
-    podcast:
-      "M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3zm7 8v2a7 7 0 0 1-14 0v-2M12 19v3",
-    search: "M11 4a7 7 0 1 1 0 14 7 7 0 0 1 0-14m9 16-4-4",
-    profile: "M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4m-7 8c.5-3.5 3.5-5.5 7-5.5s6.5 2 7 5.5",
-    contact: "M3 6h18v12H3z M3 7l9 7 9-7",
+const APP_ICON_SIZE = 14;
+/** Lucide glyph size for home welcome action cards (matches `.welcomeActionCard--uniform .iconStroke`). */
+const WELCOME_ACTION_ICON_SIZE = 42;
+
+function AppIconShell({ children }) {
+  return <span className="iconWrap" aria-hidden="true">{children}</span>;
+}
+
+/** Shield outline with centered cross (trusted resources). */
+function TrustedShieldCrossIcon() {
+  return (
+    <AppIconShell>
+      <svg
+        viewBox="0 0 24 24"
+        className="iconStroke"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
+        <path d="M12 8v8M8 12h8" />
+      </svg>
+    </AppIconShell>
+  );
+}
+
+function AppIcon({ name, size = APP_ICON_SIZE }) {
+  const lucideProps = {
+    className: "iconStroke",
+    size,
+    strokeWidth: 2,
+    absoluteStrokeWidth: true,
+    "aria-hidden": true,
+    focusable: false,
   };
-  return <IconWrap path={icons[name] || icons.search} />;
+
+  switch (name) {
+    case "sponsors":
+      return (
+        <AppIconShell>
+          <Handshake {...lucideProps} />
+        </AppIconShell>
+      );
+    case "trusted":
+      return <TrustedShieldCrossIcon />;
+    case "community":
+      return (
+        <AppIconShell>
+          <Users {...lucideProps} />
+        </AppIconShell>
+      );
+    case "podcast":
+      return (
+        <AppIconShell>
+          <Mic {...lucideProps} />
+        </AppIconShell>
+      );
+    case "profile":
+      return (
+        <AppIconShell>
+          <UserRound {...lucideProps} />
+        </AppIconShell>
+      );
+    case "contact":
+      return (
+        <AppIconShell>
+          <Mail {...lucideProps} />
+        </AppIconShell>
+      );
+    case "search":
+    default:
+      return (
+        <AppIconShell>
+          <Search {...lucideProps} />
+        </AppIconShell>
+      );
+  }
 }
 
 function DemoAuthPasswordVisibilityIcon({ revealed }) {
@@ -626,30 +696,6 @@ function TopAppInner({ initialNav = "home" }) {
         <HeaderInner className="topbarInner">
           <div className="topbarZone topbarLeft">
             <div className="topbarActionsCluster topbarActionsCluster--start">
-              <SiteMobileNavMoreMenu tone="app">
-                <button
-                  type="button"
-                  className="siteMobileNavMore__entry"
-                  onClick={() => {
-                    setNav("trusted");
-                    if (!trusted.length) loadTrusted(true);
-                  }}
-                >
-                  Trusted Resources
-                </button>
-                <button type="button" className="siteMobileNavMore__entry" onClick={openCommunity}>
-                  Community
-                </button>
-                <button type="button" className="siteMobileNavMore__entry" onClick={goToSponsorsHub}>
-                  Sponsors
-                </button>
-                <button type="button" className="siteMobileNavMore__entry" onClick={() => router.push("/podcasts")}>
-                  Podcast
-                </button>
-                <button type="button" className="siteMobileNavMore__entry" onClick={goToSponsorsHub}>
-                  Become a Sponsor
-                </button>
-              </SiteMobileNavMoreMenu>
               <ColorSchemeToggle />
             </div>
           </div>
@@ -698,6 +744,30 @@ function TopAppInner({ initialNav = "home" }) {
                   </button>
                 </>
               )}
+              <SiteMobileNavMoreMenu tone="app" align="end">
+                <button
+                  type="button"
+                  className="siteMobileNavMore__entry"
+                  onClick={() => {
+                    setNav("trusted");
+                    if (!trusted.length) loadTrusted(true);
+                  }}
+                >
+                  Trusted Resources
+                </button>
+                <button type="button" className="siteMobileNavMore__entry" onClick={openCommunity}>
+                  Community
+                </button>
+                <button type="button" className="siteMobileNavMore__entry" onClick={goToSponsorsHub}>
+                  Sponsors
+                </button>
+                <button type="button" className="siteMobileNavMore__entry" onClick={() => router.push("/podcasts")}>
+                  Podcast
+                </button>
+                <button type="button" className="siteMobileNavMore__entry" onClick={goToSponsorsHub}>
+                  Become a Sponsor
+                </button>
+              </SiteMobileNavMoreMenu>
             </div>
           </div>
         </HeaderInner>
@@ -709,6 +779,8 @@ function TopAppInner({ initialNav = "home" }) {
           {nav === "home" ? <MissionPageTopStrip placement="top" /> : null}
           {nav === "home" && (
             <>
+              <HomeSponsorBannerPlacements />
+
               {showHomeProfileHeroNotice ? (
                 <div className="homeHeroBackdrop">
                   <div className="homeHeroBackdrop__image" aria-hidden="true" />
@@ -735,29 +807,35 @@ function TopAppInner({ initialNav = "home" }) {
               <div className="welcomeActionLayout">
                 <div className="welcomeActionList">
                   <button className="card action welcomeActionCard welcomeActionCard--uniform welcomeActionCard--sponsors" onClick={goToSponsorsHub} type="button">
-                    <AppIcon name="sponsors" />
-                    <span className="welcomeActionLabel">Sponsors</span>
-                    <span className="welcomeActionHint">Partner page — open packages from there</span>
+                    <AppIcon name="sponsors" size={WELCOME_ACTION_ICON_SIZE} />
+                    <span className="welcomeActionText">
+                      <span className="welcomeActionLabel">Sponsors</span>
+                      <span className="welcomeActionHint">Partner page — open packages from there</span>
+                    </span>
                   </button>
                   <button className="card action welcomeActionCard welcomeActionCard--uniform welcomeActionCard--trusted" onClick={() => { setNav("trusted"); loadTrusted(true); }} type="button">
-                    <AppIcon name="trusted" />
-                    <span className="welcomeActionLabel">Trusted Resources</span>
-                    <span className="welcomeActionHint">Real help. Real impact.</span>
+                    <AppIcon name="trusted" size={WELCOME_ACTION_ICON_SIZE} />
+                    <span className="welcomeActionText">
+                      <span className="welcomeActionLabel">Trusted Resources</span>
+                      <span className="welcomeActionHint">Real help. Real impact.</span>
+                    </span>
                   </button>
                   <button className="card action welcomeActionCard welcomeActionCard--uniform welcomeActionCard--community" onClick={openCommunity} type="button">
-                    <AppIcon name="community" />
-                    <span className="welcomeActionLabel">Community</span>
-                    <span className="welcomeActionHint">Connect. Share. Support each other.</span>
+                    <AppIcon name="community" size={WELCOME_ACTION_ICON_SIZE} />
+                    <span className="welcomeActionText">
+                      <span className="welcomeActionLabel">Community</span>
+                      <span className="welcomeActionHint">Connect. Share. Support each other.</span>
+                    </span>
                   </button>
                   <button className="card action welcomeActionCard welcomeActionCard--uniform welcomeActionCard--podcasts" onClick={() => { router.push("/podcasts"); }} type="button">
-                    <AppIcon name="podcast" />
-                    <span className="welcomeActionLabel">Podcasts</span>
-                    <span className="welcomeActionHint">Stories that inspire. Voices that matter.</span>
+                    <AppIcon name="podcast" size={WELCOME_ACTION_ICON_SIZE} />
+                    <span className="welcomeActionText">
+                      <span className="welcomeActionLabel">Podcasts</span>
+                      <span className="welcomeActionHint">Stories that inspire. Voices that matter.</span>
+                    </span>
                   </button>
                 </div>
               </div>
-
-              <HomeSponsorBannerPlacements />
 
               <div className="card" id="home-directory">
                 <h3><AppIcon name="search" />Nonprofit Directory</h3>
@@ -768,6 +846,7 @@ function TopAppInner({ initialNav = "home" }) {
                     onChange={(letter) => setFilters((f) => ({ ...f, service: letter }))}
                   />
                 ) : null}
+                {filters.service ? <DirectoryCategoryHeader letter={filters.service} /> : null}
                 <div className="form">
                   <select value={filters.state} onChange={(e) => setFilters((f) => ({ ...f, state: e.target.value }))}>
                     {STATES.map(([v, label]) => <option key={v} value={v}>{label}</option>)}

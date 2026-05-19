@@ -2,6 +2,7 @@
 @import "../styles/theme-light-components.css";
 @import "../styles/design-system.css";
 @import "../components/app/top-app.css";
+@import "../components/app/home-sponsor-banner.css";
 @import "../styles/page-atmosphere.css";
 @import "../styles/torp-listing-cards.css";
 @import "../styles/mobile-shell.css";
@@ -140,6 +141,11 @@ a {
 }
 
 @media (max-width: 760px) {
+  .subpageTopbar {
+    position: relative;
+    top: auto;
+  }
+
   .appShell--subpage:not(.appShell--podcast) > .bottomNav {
     width: calc(100% - 24px);
     justify-content: center;

@@ -22,8 +22,17 @@ export default function SubpageTopbarActions({ showThemeToggle = true, section =
   const pathname = usePathname();
   /** Avoid useSearchParams here (static routes like /contact must not CSR-bailout without Suspense). */
   const rememberDevice = readRememberDevicePref();
-  const workosSignInHereHref = workosSignInLink(pathname, null, "/", { rememberDevice });
+  const signInReturnFallback = pathname?.startsWith("/podcasts") ? pathname : "/";
+  const workosSignInHereHref = workosSignInLink(pathname, null, signInReturnFallback, { rememberDevice });
   const workosOnboardingSignUpHref = workosSignUpHref("/onboarding", { rememberDevice });
+  const legacySignUpHref =
+    pathname && pathname !== "/"
+      ? `/?signin=1&signup=1&returnTo=${encodeURIComponent(pathname)}`
+      : "/?signin=1&signup=1";
+  const legacySignInHref =
+    pathname && pathname !== "/"
+      ? `/?signin=1&returnTo=${encodeURIComponent(pathname)}`
+      : "/?signin=1";
 
   const session = useAuthSession();
   const cache = typeof window !== "undefined" ? readNavAuthCache() : null;
@@ -49,7 +58,7 @@ export default function SubpageTopbarActions({ showThemeToggle = true, section =
       <span className="subpageAuthActionsPlaceholder" aria-hidden="true" />
     ) : authState.authenticated ? (
       <>
-        <HeaderNotificationBell variant="subpage" />
+        <HeaderNotificationBell variant="subpage" skipSessionGate />
         <Link className="btnSoft sponsorBtn" href="/profile">
           Profile
         </Link>
@@ -65,10 +74,10 @@ export default function SubpageTopbarActions({ showThemeToggle = true, section =
       </>
     ) : (
       <>
-        <Link className="btnSoft sponsorBtn" href="/?signin=1&signup=1">
+        <Link className="btnSoft sponsorBtn" href={legacySignUpHref}>
           Create account
         </Link>
-        <Link className="btnSoft sponsorBtn" href="/?signin=1">
+        <Link className="btnSoft sponsorBtn" href={legacySignInHref}>
           Sign in
         </Link>
       </>

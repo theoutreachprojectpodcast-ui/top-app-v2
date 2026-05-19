@@ -314,6 +314,11 @@ body::before {
     linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 40%);
 }
 
+/* Main app: full-bleed topo PNG on `html` replaces this wash (see `top-app.css`). */
+html:has(main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])) body::before {
+  display: none;
+}
+
 body::after {
   opacity: var(--texture-opacity, 0.117);
   background-image: var(--texture-noise), var(--bg-texture-image);
@@ -340,13 +345,14 @@ html[data-color-scheme="dark"]:has(.appShell--podcast) body::after {
   opacity: 0.1;
 }
 
-/* Main app (TopApp home + in-app tabs): stronger background art vs global texture */
+/* Main app topo: `top-app.css` — do not stack legacy SVG texture over page backgrounds */
 html:has(main.topApp):not(:has(.appShell--podcast)) body::after {
-  opacity: 0.26;
+  background-image: var(--texture-noise);
+  opacity: 0.035;
 }
 html.dark:has(main.topApp):not(:has(.appShell--podcast)) body::after,
 html[data-color-scheme="dark"]:has(main.topApp):not(:has(.appShell--podcast)) body::after {
-  opacity: 0.32;
+  opacity: 0.05;
 }
 
 h1,

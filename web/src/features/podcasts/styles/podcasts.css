@@ -79,10 +79,10 @@
   flex-direction: column;
   box-sizing: border-box;
   padding-bottom: 0;
-  /* Vertical band reserved for centered mark; `.topbar` is offset below this (see podcastBrandLogo rules). */
-  --podcast-header-brand-band: clamp(276px, 65vw, 420px);
-  /* Fixed topbar row(s) below the mark; used with brand band for `.shell` top inset (occlusion is position:fixed — no layout height). */
-  --podcast-topbar-stack-height: 96px;
+  --header-floating-offset: 12px;
+  /* Action row at top (main-app layout); logo band sits below it. */
+  --podcast-topbar-stack-height: 56px;
+  --podcast-header-brand-band: clamp(240px, 52vw, 380px);
 }
 
 /* Keep header chrome from flex-shrinking under the scroll column (CTAs can paint over the hero). */
@@ -95,49 +95,33 @@
   flex: 1 1 auto;
   min-height: 0;
   background: transparent;
-  /* Clear fixed/sticky header chrome; global `.shell` uses `--header-floating-height` (too short on podcast at ≤760px). */
   padding-top: calc(
-    env(safe-area-inset-top, 0px) + var(--header-floating-offset, 24px) + 4px + var(--podcast-header-brand-band) +
-      var(--podcast-topbar-stack-height) + 12px
+    env(safe-area-inset-top, 0px) + var(--header-floating-offset, 12px) + var(--podcast-topbar-stack-height) +
+      var(--podcast-header-brand-band) + 12px
   );
 }
 /* Mission strip: home uses top placement under the bar; other routes use bottom placement (see `MissionPageTopStrip`). */
-.topApp.appShell--podcast .siteFooter.siteFooter--pageTop {
+.topApp.appShell--podcast .siteFooter.siteFooter--pageTop,
+.topApp.appShell--podcast .siteFooter.siteFooter--pageBottom {
   flex-shrink: 0;
   margin-top: 0;
   margin-bottom: 0;
   position: relative;
   padding: 10px 0 14px;
   background: transparent;
-  border-top: none;
-  overflow: hidden;
+  border: 0;
+  overflow: visible;
 }
-.topApp.appShell--podcast .siteFooter.siteFooter--pageTop::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 0;
-  pointer-events: none;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--color-bg-secondary) 50%, transparent),
-    transparent 72%
-  );
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 55%, transparent);
+.topApp.appShell--podcast .siteFooter.siteFooter--pageTop::before,
+.topApp.appShell--podcast .siteFooter.siteFooter--pageBottom::before {
+  content: none;
 }
-.appShell--podcast .footerInner {
+.appShell--podcast .siteFooter .footerInner {
   position: relative;
   z-index: 1;
-  border-top: 1px solid color-mix(in srgb, var(--color-border) 55%, transparent);
-  background: color-mix(in srgb, #070b12 82%, transparent);
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, #ffffff 6%, transparent),
-    0 12px 40px color-mix(in srgb, #000 38%, transparent);
+  border: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .appShell--podcast .footerNote,
@@ -155,6 +139,31 @@
 }
 .appShell--podcast .topbarCenter {
   display: none;
+}
+
+/* Guest chrome: menu + sponsor left, auth right — same row as main app (all breakpoints). */
+main.topApp.appShell--podcast.topApp--auth-out .topbarInner,
+main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarInner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "left right";
+  gap: 8px 12px;
+  align-items: center;
+}
+
+main.topApp.appShell--podcast.topApp--auth-out .topbarLeft,
+main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarLeft {
+  grid-area: left;
+  display: flex !important;
+  width: 100%;
+  justify-content: flex-start;
+}
+
+main.topApp.appShell--podcast.topApp--auth-out .topbarRight,
+main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
+  grid-area: right;
+  justify-self: end;
+  width: auto;
 }
 .appShell--podcast .shell {
   background: transparent;
@@ -192,7 +201,7 @@
 /* Bottom nav dock (fixed): match home gradient + glass, not opaque bar */
 .appShell--podcast .footerDockBackdrop {
   background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--color-bg-secondary) 97%, transparent));
-  border-top: 1px solid var(--color-border);
+  border-top: 0;
 }
 .appShell--podcast .footerDock {
   background: transparent;
@@ -349,6 +358,8 @@
   ) !important;
   max-width: min(720px, calc(100vw - 160px)) !important;
   width: auto;
+}
+.appShell--podcast .podcastBrandLogo {
   filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.45));
 }
 
@@ -372,44 +383,102 @@
   justify-content: center;
 }
 
-/* Fixed chrome: bar + occlusion clear the brand band (desktop / tablet). */
-.topApp.appShell--podcast header.topbar {
+/* Main-app order: action row at top, podcast mark below (see AppShell DOM). */
+.topApp.appShell--podcast > header.topbar {
+  top: calc(var(--header-floating-offset, 12px) + env(safe-area-inset-top, 0px));
+}
+
+.topApp.appShell--podcast > .headerBrandStack {
   top: calc(
-    var(--header-floating-offset, 24px) + env(safe-area-inset-top, 0px) + var(--podcast-header-brand-band)
+    var(--header-floating-offset, 12px) + env(safe-area-inset-top, 0px) + var(--podcast-topbar-stack-height)
   );
 }
 
-.topApp.appShell--podcast .topbarOcclusion {
+.topApp.appShell--podcast > .topbarOcclusion {
   height: calc(
-    var(--header-floating-offset, 24px) + env(safe-area-inset-top, 0px) + var(--podcast-header-brand-band) +
-      var(--podcast-topbar-stack-height)
+    var(--header-floating-offset, 12px) + env(safe-area-inset-top, 0px) + var(--podcast-topbar-stack-height) +
+      var(--podcast-header-brand-band)
   );
 }
 
 @media (max-width: 760px) {
   .topApp.appShell--podcast {
-    /* ≥ podcast mark min-height (~252px) + `.headerBrandStack` padding; cap below old 460px to reduce dead air. */
-    --mobile-header-brand-row-height: clamp(268px, 58vw, 380px);
-    /* Guest CTAs can wrap to two rows; reserve enough so occlusion + fixed tablet chrome stay aligned. */
-    --podcast-topbar-stack-height: 72px;
+    --podcast-topbar-stack-height: 52px;
+    --podcast-header-brand-band: clamp(220px, 54vw, 340px);
   }
 
-  .topApp.appShell--podcast header.topbar {
-    top: var(--mobile-header-brand-row-height);
+  /* In-flow chrome: topbar → logo (DOM order); no second `top` offset under the mark. */
+  .topApp.appShell--podcast > header.topbar {
+    position: relative;
+    top: auto;
+    z-index: 98;
+    order: 1;
+    padding: calc(4px + env(safe-area-inset-top, 0px)) 0 8px;
+    background:
+      radial-gradient(ellipse 70% 40% at 50% 0%, rgba(255, 122, 67, 0.1), transparent 60%),
+      linear-gradient(180deg, rgba(6, 10, 16, 0.96) 0%, rgba(6, 10, 16, 0.55) 100%);
   }
 
-  .topApp.appShell--podcast .topbarOcclusion {
-    height: calc(var(--mobile-header-brand-row-height, 280px) + var(--podcast-topbar-stack-height, 72px));
+  .topApp.appShell--podcast > .headerBrandStack {
+    position: relative;
+    left: auto;
+    transform: none;
+    order: 2;
+    z-index: 97;
+    width: 100%;
+    max-width: min(900px, calc(100vw - 24px));
+    margin-inline: auto;
+    padding: 0 10px 4px;
+    background: linear-gradient(180deg, rgba(6, 10, 16, 0.72) 0%, rgba(6, 10, 16, 0.2) 100%);
   }
 
-  /* Sticky brand + topbar already occupy layout height — do not re-add the full chrome stack as padding (was doubling ~300–500px). */
+  .topApp.appShell--podcast > .topbarOcclusion {
+    display: none !important;
+  }
+
   .topApp.appShell--podcast .shell {
-    padding-top: 22px;
+    padding-top: 16px;
+    order: 4;
+  }
+}
+
+@media (min-width: 761px) {
+  .topApp.appShell--podcast > .headerBrandStack {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 97;
+    pointer-events: none;
   }
 
-  .topApp.appShell--podcast .headerBrandStack {
-    padding-top: calc(4px + env(safe-area-inset-top, 0px));
-    padding-bottom: 2px;
+  .topApp.appShell--podcast > .headerBrandStack > a {
+    pointer-events: auto;
+  }
+
+  .topApp.appShell--podcast > header.topbar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    z-index: 102;
+  }
+
+  .topApp.appShell--podcast > .topbarOcclusion {
+    position: fixed !important;
+    display: block !important;
+    left: 0;
+    right: 0;
+    top: 0;
+    overflow: visible;
+    min-height: 0;
+    z-index: 94;
+    background:
+      radial-gradient(ellipse 54% 44% at 50% 12%, rgba(255, 122, 67, 0.13), rgba(255, 122, 67, 0) 68%),
+      linear-gradient(
+        180deg,
+        rgba(6, 10, 16, 0.96) 0%,
+        rgba(6, 10, 16, 0.9) 62%,
+        rgba(6, 10, 16, 0) 100%
+      ) !important;
   }
 }
 
@@ -431,7 +500,9 @@
   min-width: 0;
 }
 .appShell--podcast,
-.appShell--podcast * {
+.appShell--podcast[data-podcast-theme-locked="dark"],
+.appShell--podcast *,
+.appShell--podcast[data-podcast-theme-locked="dark"] * {
   color-scheme: dark;
 }
 .appShell--podcast .btnSoft {
@@ -1562,20 +1633,12 @@
     width: 100%;
   }
 
-  .topApp.appShell--podcast .siteFooter.siteFooter--pageTop {
+  .topApp.appShell--podcast .siteFooter.siteFooter--pageTop,
+  .topApp.appShell--podcast .siteFooter.siteFooter--pageBottom {
     padding: 8px 0 12px;
   }
 
-  .topApp.appShell--podcast .siteFooter.siteFooter--pageTop::before {
-    left: 50%;
-    right: auto;
-    width: calc(100% - 24px);
-    max-width: var(--content-max-width, 1200px);
-    transform: translateX(-50%);
-    border-radius: 0 0 12px 12px;
-  }
-
-  .appShell--podcast .footerInner {
+  .appShell--podcast .siteFooter .footerInner {
     gap: 12px;
     text-align: center;
     padding-left: 16px;
@@ -1591,3 +1654,4 @@
     margin: 0;
   }
 }
+

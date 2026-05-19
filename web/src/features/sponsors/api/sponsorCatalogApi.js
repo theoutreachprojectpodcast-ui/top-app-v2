@@ -10,10 +10,8 @@ import { resolveSponsorListingLogoUrl } from "@/lib/sponsors/resolveSponsorListi
 const SPONSOR_TABLE = "sponsors_catalog";
 
 /** Slugs hidden from /sponsors roster only (direct `/sponsors/[slug]` may still resolve when active in DB). */
-export function isHiddenFromSponsorHubRosterSlug(slug) {
-  return String(slug || "")
-    .trim()
-    .toLowerCase() === "wars-end-merch";
+export function isHiddenFromSponsorHubRosterSlug(_slug) {
+  return false;
 }
 
 /** @deprecated Use isHiddenFromSponsorHubRosterSlug — kept for any external imports. */

@@ -9,6 +9,7 @@ import { listPodcastSponsorsCatalog } from "@/features/podcasts/api/podcastSpons
 import {
   FALLBACK_EPISODES,
   fetchPodcastRecentBundle,
+  humanizePodcastBundleError,
   listPodcastEpisodeGuests,
 } from "@/features/podcasts/api/podcastApi";
 import PodcastHero from "@/features/podcasts/components/PodcastHero";
@@ -21,9 +22,9 @@ import PodcastCTASection from "@/features/podcasts/components/PodcastCTASection"
 import PodcastApplyGuestForm from "@/features/podcasts/components/PodcastApplyGuestForm";
 import "@/features/podcasts/styles/podcasts.css";
 
-import { PODCAST_LANDING_CURATED_SLOT_COUNT } from "@/lib/podcast/podcastLandingCuratedEpisodes";
+import { PODCAST_LANDING_RECENT_EPISODE_COUNT } from "@/lib/podcast/podcastLandingCuratedEpisodes";
 
-const FULL_EPISODES_SECTION_COUNT = PODCAST_LANDING_CURATED_SLOT_COUNT;
+const FULL_EPISODES_SECTION_COUNT = PODCAST_LANDING_RECENT_EPISODE_COUNT;
 const isDevBuild = typeof process !== "undefined" && process.env.NODE_ENV === "development";
 
 export default function PodcastsLandingPage({
@@ -45,7 +46,10 @@ export default function PodcastsLandingPage({
   const [episodeGuests, setEpisodeGuests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [bundleNote, setBundleNote] = useState("");
-  const [episodeFetchError, setEpisodeFetchError] = useState(() => String(initialBundleMeta?.error || "").trim());
+  const [episodeFetchError, setEpisodeFetchError] = useState(() => {
+    if (Array.isArray(initialEpisodes) && initialEpisodes.length) return "";
+    return humanizePodcastBundleError(initialBundleMeta?.error);
+  });
   const [podcastSponsorBillingReady, setPodcastSponsorBillingReady] = useState(true);
   const [podcastSponsorBillingMissingEnv, setPodcastSponsorBillingMissingEnv] = useState([]);
 
@@ -72,17 +76,24 @@ export default function PodcastsLandingPage({
         fetch("/api/podcasts/upcoming", { credentials: "include", cache: "no-store" }).then((r) => r.json().catch(() => ({}))),
       ]);
       if (cancelled) return;
-      if (bundle.ok) {
+      const nextEpisodes = Array.isArray(bundle.episodes) ? bundle.episodes : [];
+      if (bundle.ok && nextEpisodes.length) {
         setEpisodeFetchError("");
-        const nextEpisodes = Array.isArray(bundle.episodes) ? bundle.episodes : [];
-        /* Avoid wiping SSR episodes when a refetch returns [] (cache/API hiccup). */
-        if (nextEpisodes.length) setEpisodes(nextEpisodes);
-        else setEpisodes((prev) => (Array.isArray(prev) && prev.length ? prev : nextEpisodes));
+        setEpisodes(nextEpisodes);
+        if (Array.isArray(bundle.featuredGuests) && bundle.featuredGuests.length) {
+          setFeaturedVoices(bundle.featuredGuests);
+        }
+      } else if (nextEpisodes.length) {
+        setEpisodeFetchError("");
+        setEpisodes(nextEpisodes);
         if (Array.isArray(bundle.featuredGuests) && bundle.featuredGuests.length) {
           setFeaturedVoices(bundle.featuredGuests);
         }
       } else {
-        setEpisodeFetchError(String(bundle.error || "").trim() || "Episodes could not be refreshed.");
+        setEpisodes((prev) => (Array.isArray(prev) && prev.length ? prev : nextEpisodes));
+        setEpisodeFetchError(
+          humanizePodcastBundleError(bundle.error) || "Episodes could not be refreshed.",
+        );
       }
       if (bundle?.degraded || initialBundleMeta?.degraded) {
         setBundleNote(
@@ -177,7 +188,6 @@ export default function PodcastsLandingPage({
       useFooterDockChrome
       useTopAppStructure
       pageAtmosphere="podcast"
-      showThemeToggle={false}
       rootStyle={podcastBandImageUrl ? { "--podcast-band-image": `url("${podcastBandImageUrl}")` } : undefined}
     >
       <div className="podcastScope">
@@ -201,12 +211,12 @@ export default function PodcastsLandingPage({
         <section className="podcastSection">
           <PodcastSectionHeader
             eyebrow="Episode library"
-            title="Curated episode strip (21)"
-            subtitle="Ordered guest/organization slots matched to the official full-episodes playlist when possible. Slots without a confident match show “Episode link needed” until verified in admin."
+            title="Latest full episodes"
+            subtitle="The ten most recent episodes from our official YouTube full-episodes playlist, with thumbnails synced from YouTube."
           />
-          {episodeFetchError || initialBundleMeta?.error ? (
+          {episodeFetchError && !lastTenFullEpisodes.length ? (
             <p className="podcastMuted" role="alert">
-              {episodeFetchError || initialBundleMeta.error}
+              {episodeFetchError}
             </p>
           ) : null}
           {loading ? <p className="podcastMuted">Loading episodes…</p> : null}
@@ -221,7 +231,7 @@ export default function PodcastsLandingPage({
           </div>
           {!loading && !lastTenFullEpisodes.length ? (
             <p className="podcastMuted" role="status">
-              {episodeFetchError || initialBundleMeta?.error
+              {episodeFetchError
                 ? "Episodes are temporarily unavailable. Please try again shortly."
                 : "No full episodes matched the official filters yet. If this persists, verify the YouTube playlist and API configuration."}
             </p>

@@ -7,12 +7,11 @@
   --header-fade-height: 56px;
   --home-hero-image: url("/home/home-hero-flag-mission.png");
   --home-atmosphere-image: url("/home/home-atmosphere-cinematic-scene.png");
-  --topapp-page-atmosphere-image: url("/home/home-page-background-highres-2560.png");
+  --topapp-page-atmosphere-image: var(--topapp-page-atmosphere-image-light, url("/home/app-page-background-light.png?v=11"));
   --home-sponsors-image: url("/home/home-sponsors-city.png");
   --home-trusted-image: url("/home/home-trusted-mountain.png");
   --home-community-image: url("/home/home-community-group.png");
   --home-podcasts-image: url("/home/home-podcast-mic.png");
-  /* Same portrait asset as desktop; `main::before` uses `100% auto` + solid fill below the image. */
   --topapp-mobile-atmosphere-image: var(--topapp-page-atmosphere-image);
   min-height: 100vh;
   background: transparent;
@@ -31,62 +30,80 @@ main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) {
 main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) {
   position: relative;
   isolation: isolate;
+  overflow-x: clip;
 }
-/* Full-bleed atmosphere: same image edge-to-edge and top-to-bottom of `main` (scrolls with content). */
-main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: -2;
-  pointer-events: none;
-  background-color: #ffffff;
-  background-image: var(--topapp-page-atmosphere-image);
-  /* Top-anchored portrait: scale to viewport width only (no `cover` crop); solid `background-color` fills below. */
-  background-size: 100% auto;
-  background-position: center top;
+/*
+ * Full-viewport topo backgrounds on `html` (not `main::before`) — `main.topApp` uses overflow-x: clip,
+ * which clips fixed descendants. Vars must live on `html` because they do not inherit from `main` upward.
+ * Assets: `public/home/app-page-background-light.png` + `app-page-background-dark.png` (user-provided topo art).
+ */
+html:has(main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])) {
+  --topapp-page-atmosphere-image-light: url("/home/app-page-background-light.png?v=11");
+  --topapp-page-atmosphere-image-dark: url("/home/app-page-background-dark.png?v=11");
+  position: relative;
+  min-height: 100%;
+  background-color: #e4efd8;
+  background-image: var(--topapp-page-atmosphere-image-light);
   background-repeat: no-repeat;
-  filter: none;
+  background-position: center center;
+  background-size: cover;
+  background-attachment: fixed;
 }
-:root[data-color-scheme="dark"] main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])::before,
-.dark main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])::before {
-  background-color: #1a1a1b;
-  filter: none;
+html[data-color-scheme="dark"]:has(main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])),
+html.dark:has(main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])) {
+  background-color: #0f1612;
+  background-image: var(--topapp-page-atmosphere-image-dark);
+}
+html:has(main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])) body {
+  background-color: transparent;
+  background-image: none;
+}
+html:has(main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]))::before {
+  display: none;
+}
+
+html:has(main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])) body::after {
+  background-image: var(--texture-noise);
+  opacity: 0.035;
+  mix-blend-mode: multiply;
+}
+html[data-color-scheme="dark"]:has(main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])) body::after,
+html.dark:has(main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])) body::after {
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+}
+main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])::before {
+  display: none;
 }
 main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])::after {
   content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: -1;
+  position: fixed;
+  inset: 0;
+  z-index: -2;
   pointer-events: none;
   background:
-    radial-gradient(ellipse 115% 52% at 50% -6%, rgba(12, 18, 25, 0.28), rgba(12, 18, 25, 0) 55%),
+    radial-gradient(ellipse 115% 52% at 50% -6%, rgba(12, 18, 25, 0.04), rgba(12, 18, 25, 0) 55%),
     linear-gradient(
       180deg,
-      rgba(244, 247, 250, 0.14) 0%,
-      rgba(244, 247, 250, 0.04) 38%,
-      rgba(244, 247, 250, 0) 52%,
-      rgba(15, 20, 28, 0) 58%,
-      rgba(15, 20, 28, 0.16) 82%,
-      rgba(10, 14, 20, 0.32) 100%
+      rgba(244, 247, 250, 0.02) 0%,
+      rgba(244, 247, 250, 0) 42%,
+      rgba(244, 247, 250, 0) 58%,
+      rgba(15, 20, 28, 0) 62%,
+      rgba(15, 20, 28, 0.04) 88%,
+      rgba(10, 14, 20, 0.06) 100%
     );
 }
 :root[data-color-scheme="dark"] main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])::after,
 .dark main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])::after {
   background:
-    radial-gradient(ellipse 110% 48% at 50% -4%, rgba(0, 0, 0, 0.42), rgba(0, 0, 0, 0) 54%),
+    radial-gradient(ellipse 110% 48% at 12% -4%, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0) 54%),
     linear-gradient(
       180deg,
-      rgb(from var(--color-bg-subtle) r g b / 0.22) 0%,
-      rgb(from var(--color-bg-subtle) r g b / 0) 44%,
-      rgba(0, 0, 0, 0) 52%,
-      rgba(0, 0, 0, 0.38) 88%,
-      rgba(0, 0, 0, 0.52) 100%
+      rgba(0, 0, 0, 0.04) 0%,
+      rgba(0, 0, 0, 0) 46%,
+      rgba(0, 0, 0, 0) 58%,
+      rgba(0, 0, 0, 0.08) 88%,
+      rgba(0, 0, 0, 0.12) 100%
     );
 }
 
@@ -584,7 +601,7 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topba
   gap: 10px;
 }
 
-/* Fixed header logo column — OP/TOP mark (required). Desktop: centered fixed mark; mobile @760px: sticky row.
+/* Fixed header logo column — OP/TOP mark (required). Desktop: centered fixed mark; mobile @760px: in-flow (scrolls).
    Do not remove; responsive edits must keep .headerBrandStack above .topbar (see mobile z-index). */
 .headerBrandStack {
   position: fixed;
@@ -647,10 +664,20 @@ img.brandMarkImg--header {
   -webkit-tap-highlight-color: transparent;
   forced-color-adjust: none;
 }
-:root[data-color-scheme="dark"] img.brandMarkImg--header,
-.dark img.brandMarkImg--header {
-  /* Dark mode: brighter mark + edge separation over atmospheric header. */
-  filter: saturate(1.32) contrast(1.05) brightness(1.16) drop-shadow(0 2px 10px rgba(0, 0, 0, 0.42));
+:root[data-color-scheme="light"] img.brandMarkImg--header:not(.podcastBrandLogo) {
+  filter:
+    drop-shadow(0 2px 8px rgba(255, 255, 255, 0.92))
+    drop-shadow(0 4px 18px rgba(255, 255, 255, 0.55));
+}
+:root[data-color-scheme="dark"] img.brandMarkImg--header:not(.podcastBrandLogo),
+.dark img.brandMarkImg--header:not(.podcastBrandLogo) {
+  /* Dark mode: brighter mark + dark edge separation over atmospheric header. */
+  filter:
+    saturate(1.32)
+    contrast(1.05)
+    brightness(1.16)
+    drop-shadow(0 2px 10px rgba(0, 0, 0, 0.52))
+    drop-shadow(0 4px 20px rgba(0, 0, 0, 0.38));
 }
 
 /* Visible fallback when the mark asset fails (title/alt still on <img> before swap). */
@@ -675,10 +702,17 @@ span.headerBrandMarkFallback {
   border-radius: 10px;
   background: color-mix(in srgb, var(--color-bg-card) 90%, transparent);
 }
+:root[data-color-scheme="light"] span.headerBrandMarkFallback {
+  filter:
+    drop-shadow(0 2px 8px rgba(255, 255, 255, 0.92))
+    drop-shadow(0 4px 18px rgba(255, 255, 255, 0.55));
+}
 :root[data-color-scheme="dark"] span.headerBrandMarkFallback,
 .dark span.headerBrandMarkFallback {
   color: color-mix(in srgb, var(--color-text-primary) 88%, #f4f7fa 12%);
-  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.35));
+  filter:
+    drop-shadow(0 2px 10px rgba(0, 0, 0, 0.52))
+    drop-shadow(0 4px 20px rgba(0, 0, 0, 0.38));
 }
 .brandTag {
   font-size: 24px;
@@ -1558,7 +1592,50 @@ span.headerBrandMarkFallback {
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-end;
+  gap: 6px;
+}
+/* `.action` sets align-items: center later in this file — win for homepage feature cards. */
+.card.action.welcomeActionCard--uniform {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  text-align: left;
+}
+.welcomeActionText {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 4px;
+  width: 100%;
+  min-width: 0;
+}
+.welcomeActionText .welcomeActionLabel,
+.welcomeActionText .welcomeActionHint {
+  display: block;
+  width: 100%;
+}
+/* Home main action buttons: icon plate + glyph at 200% of prior size (33→66, 21→42). */
+.card.action.welcomeActionCard--uniform .iconWrap {
+  width: 66px;
+  height: 66px;
+  flex-shrink: 0;
+}
+.card.action.welcomeActionCard--uniform .iconStroke {
+  width: 42px;
+  height: 42px;
+}
+.card.action.welcomeActionCard--uniform .welcomeActionHint {
+  width: 100%;
+  max-width: none;
+}
+@media (min-width: 761px) {
+  .card.action.welcomeActionCard--uniform {
+    align-items: center;
+    text-align: center;
+  }
+  .welcomeActionText {
+    align-items: center;
+  }
 }
 /* Use semantic surfaces only — hardcoded #fff gradients broke dark mode (light card + light text). */
 #home-directory.card {
@@ -1582,236 +1659,7 @@ span.headerBrandMarkFallback {
     inset 0 1px 0 color-mix(in srgb, #ffffff 6%, transparent);
 }
 
-/* Home — sponsor banner placements (partner + partner + reserved) */
-.homeSponsorBannerRow {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--ds-space-3, 12px);
-  margin-bottom: var(--ds-space-4, 16px);
-}
-.homeSponsorBannerSlot {
-  position: relative;
-  display: flex;
-  align-items: flex-end;
-  min-height: 112px;
-  padding: 12px 14px;
-  border-radius: var(--radius-card, 14px);
-  overflow: hidden;
-  text-decoration: none;
-  color: #f8fafc;
-  border: 1px solid color-mix(in srgb, #ffffff 22%, transparent);
-  box-shadow:
-    0 14px 28px color-mix(in srgb, #000 24%, transparent),
-    inset 0 0 0 1px color-mix(in srgb, #ffffff 8%, transparent);
-  transition: transform 160ms ease, box-shadow 200ms ease, border-color 200ms ease;
-}
-.homeSponsorBannerSlot:hover {
-  transform: translateY(-2px);
-  border-color: color-mix(in srgb, #ffffff 38%, transparent);
-  box-shadow:
-    0 18px 36px color-mix(in srgb, #000 32%, transparent),
-    inset 0 0 0 1px color-mix(in srgb, #ffffff 12%, transparent);
-}
-.homeSponsorBannerSlot:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 3px;
-}
-.homeSponsorBannerSlot__bg {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  background-color: #1a2330;
-  background-size: cover;
-  background-position: center top;
-  background-repeat: no-repeat;
-  transform: scale(1.02);
-}
-.homeSponsorBannerSlot__scrim {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, #03080c 0%, transparent) 0%,
-    color-mix(in srgb, #03080c 55%, transparent) 100%
-  );
-  pointer-events: none;
-}
-.homeSponsorBannerSlot__scrim--muted {
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--color-bg-subtle) 12%, transparent) 0%,
-    color-mix(in srgb, var(--color-bg-app) 88%, transparent) 100%
-  );
-}
-/* Logo-forward spotlight (Gameday, etc.): mark centered; text band at bottom */
-.homeSponsorBannerSlot--logo {
-  background: linear-gradient(
-    165deg,
-    color-mix(in srgb, var(--color-surface-card) 92%, #ffffff 8%) 0%,
-    color-mix(in srgb, var(--color-surface-card-deep) 94%, #0b1420 6%) 100%
-  );
-}
-:root[data-color-scheme="dark"] .homeSponsorBannerSlot--logo,
-.dark .homeSponsorBannerSlot--logo {
-  background: linear-gradient(
-    165deg,
-    color-mix(in srgb, var(--color-surface-card) 88%, #0a0e14 12%) 0%,
-    color-mix(in srgb, var(--color-surface-card-deep) 96%, #000 4%) 100%
-  );
-}
-.homeSponsorBannerSlot__scrim--logo {
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, #03080c 0%, transparent) 0%,
-    color-mix(in srgb, #03080c 0%, transparent) 42%,
-    color-mix(in srgb, #03080c 62%, transparent) 100%
-  );
-}
-/* Photo + logo mark: hero fill; mark sits in a frosted plate beside the title */
-.homeSponsorBannerSlot--brandStack {
-  background-color: #1a2330;
-  min-height: 118px;
-}
-.homeSponsorBannerSlot__scrim--brandStack {
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, #03080c 0%, transparent) 0%,
-    color-mix(in srgb, #03080c 0%, transparent) 38%,
-    color-mix(in srgb, #03080c 45%, transparent) 72%,
-    color-mix(in srgb, #03080c 82%, transparent) 100%
-  );
-}
-.homeSponsorBannerSlot--brandStack .homeSponsorBannerSlot__bg {
-  transform: scale(1.03);
-}
-/* Bottom bar: logo on a frosted plate + title (replaces centered floating mark) */
-.homeSponsorBannerSlot__content--brandStack {
-  z-index: 3;
-  flex-direction: row;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 12px;
-  width: 100%;
-  padding-top: 4px;
-}
-.homeSponsorBannerSlot__brandPlate {
-  flex: 0 1 auto;
-  max-width: min(200px, 46%);
-  min-width: 48px;
-  min-height: 48px;
-  padding: 6px 10px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: color-mix(in srgb, #070d16 72%, transparent);
-  border: 1px solid color-mix(in srgb, #ffffff 22%, transparent);
-  box-shadow:
-    0 4px 18px color-mix(in srgb, #000 38%, transparent),
-    inset 0 1px 0 color-mix(in srgb, #ffffff 12%, transparent);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-:root[data-color-scheme="light"] .homeSponsorBannerSlot__brandPlate {
-  background: color-mix(in srgb, #ffffff 78%, transparent);
-  border-color: color-mix(in srgb, var(--color-border) 55%, #ffffff 45%);
-  box-shadow:
-    0 4px 16px color-mix(in srgb, #000 12%, transparent),
-    inset 0 1px 0 color-mix(in srgb, #ffffff 90%, transparent);
-}
-.homeSponsorBannerSlot__textStack {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  align-items: flex-start;
-  text-align: left;
-  min-width: 0;
-  flex: 1 1 auto;
-}
-.homeSponsorBannerSlot__brandMark {
-  display: block;
-  max-width: 100%;
-  max-height: 36px;
-  width: auto;
-  height: auto;
-  object-fit: contain;
-  object-position: center;
-}
-.homeSponsorBannerSlot__logo {
-  position: absolute;
-  left: 50%;
-  top: 40%;
-  transform: translate(-50%, -50%);
-  z-index: 2;
-  max-width: min(220px, 78%);
-  max-height: 52%;
-  width: auto;
-  height: auto;
-  object-fit: contain;
-  pointer-events: none;
-  filter: drop-shadow(0 10px 24px color-mix(in srgb, #000 35%, transparent));
-}
-.homeSponsorBannerSlot--placeholder {
-  color: var(--color-text-primary);
-  border-style: dashed;
-  border-color: color-mix(in srgb, var(--color-border-subtle) 70%, var(--color-accent-soft) 30%);
-  background: color-mix(in srgb, var(--color-surface-card) 88%, transparent);
-}
-.homeSponsorBannerSlot--placeholder .homeSponsorBannerSlot__content {
-  position: relative;
-  z-index: 2;
-}
-.homeSponsorBannerSlot__content {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  align-items: flex-start;
-  text-align: left;
-}
-.homeSponsorBannerSlot__eyebrow {
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  opacity: 0.88;
-}
-.homeSponsorBannerSlot__title {
-  font-size: clamp(0.95rem, 2.2vw, 1.1rem);
-  font-weight: 800;
-  line-height: 1.2;
-  text-shadow: 0 2px 12px color-mix(in srgb, #000 55%, transparent);
-}
-.homeSponsorBannerSlot--placeholder .homeSponsorBannerSlot__title {
-  text-shadow: none;
-}
-.homeSponsorBannerSlot__hint {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--color-text-secondary);
-  max-width: 28ch;
-  line-height: 1.35;
-}
-@media (max-width: 760px) {
-  .homeSponsorBannerRow {
-    grid-template-columns: 1fr;
-  }
-  .homeSponsorBannerSlot {
-    min-height: 100px;
-  }
-  .homeSponsorBannerSlot--brandStack {
-    min-height: 108px;
-  }
-  .homeSponsorBannerSlot__content--brandStack {
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-  .homeSponsorBannerSlot__brandPlate {
-    max-width: min(240px, 100%);
-  }
-}
+/* Home sponsor spotlight — see `home-sponsor-banner.css` (imported by HomeSponsorBannerPlacements.jsx). */
 
 #home-directory h3 {
   display: inline-flex;
@@ -1947,6 +1795,70 @@ span.headerBrandMarkFallback {
   font-size: 10px;
   color: var(--color-text-muted);
   font-weight: 600;
+}
+.directoryCategoryPickCard--hasPhoto {
+  color: #f4f8ff;
+  border-color: color-mix(in srgb, var(--cat-border, var(--color-border)) 72%, #ffffff 28%);
+}
+.directoryCategoryPickCard--hasPhoto .directoryCategoryPickCardLetter,
+.directoryCategoryPickCard--hasPhoto .directoryCategoryPickCardTitle,
+.directoryCategoryPickCard--hasPhoto .directoryCategoryPickCardHint {
+  color: #f4f8ff;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.55);
+}
+.directoryCategoryHeader {
+  --directory-category-header-min-height: 264px;
+  position: relative;
+  margin: 12px 0 14px;
+  min-height: var(--directory-category-header-min-height);
+  border-radius: var(--radius-card, 16px);
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+}
+.directoryCategoryHeader__image {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: saturate(0.96) contrast(1.04) brightness(0.9);
+}
+.directoryCategoryHeader__scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(4, 10, 18, 0.2) 0%,
+    rgba(4, 10, 18, 0.72) 100%
+  );
+}
+.directoryCategoryHeader__content {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 4px;
+  padding: 18px 18px 16px;
+  min-height: var(--directory-category-header-min-height, 264px);
+  align-content: end;
+}
+/* Nonprofit directory result cards: category / org header strip (default listing hero is 92px). */
+#home-directory .torpListingCardHeroWrap {
+  height: 184px;
+}
+.directoryCategoryHeader__eyebrow {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, #ffffff 78%, var(--color-accent) 22%);
+}
+.directoryCategoryHeader__title {
+  margin: 0;
+  font-size: clamp(1.1rem, 2.4vw, 1.45rem);
+  font-weight: 800;
+  line-height: 1.2;
+  color: #ffffff;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.45);
 }
 @media (max-width: 760px) {
   .directoryCategoryPickDisclosureToggle {
@@ -2172,8 +2084,8 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   pointer-events: auto;
 }
 .nonprofitCardMain--trustedResource {
-  grid-template-columns: 64px minmax(0, 1fr);
-  column-gap: 14px;
+  grid-template-columns: 80px minmax(0, 1fr);
+  column-gap: 16px;
   align-items: start;
 }
 .nonprofitCardMedia {
@@ -2193,12 +2105,30 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 .nonprofitCardMedia--trustedResource {
   align-self: start;
 }
+.resultCard--trustedResource .nonprofitCardMedia,
+.resultCard--trustedResource .nonprofitCardMediaSlot {
+  width: 80px;
+  flex: 0 0 80px;
+}
+.resultCard--trustedResource .nonprofitIconBadge {
+  width: 76px;
+  height: 76px;
+}
 .resultCard--trustedResource .nonprofitLogoPlate {
-  padding: 5px;
-  background: color-mix(in srgb, var(--color-bg-card) 90%, var(--color-bg-muted) 10%);
+  display: block;
+  padding: 0;
+  box-sizing: border-box;
+  background: #0a100e;
 }
 .resultCard--trustedResource .nonprofitLogoImg {
-  object-fit: contain;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 0;
+  transform: scale(1.05);
 }
 .nonprofitIconBadge--logo {
   padding: 0;
@@ -2846,6 +2776,19 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 }
 .shell.shell--home > .siteFooter.siteFooter--inMainShell:first-child {
   margin-top: 0;
+}
+/* Mission card: match `.shell` column width (no nested `siteContainer` gutter). */
+.shell > .siteFooter.siteFooter--inMainShell {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+.shell > .siteFooter.siteFooter--inMainShell > .footerInner {
+  width: 100%;
+  max-width: 100%;
+  margin-inline: 0;
+  box-sizing: border-box;
 }
 .footerInner {
   display: flex;
@@ -5756,7 +5699,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
     padding: 12px;
   }
   .welcomeActionCard--uniform {
-    min-height: 104px;
+    min-height: 120px;
   }
   .moderationQueuePreviewRow,
   .moderationQueuePreviewRow--head {
@@ -5772,49 +5715,53 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   .topApp {
     --content-gutter: 24px;
     --header-floating-offset: 0px;
-    --header-floating-height: 254px;
+    --header-floating-height: 0px;
     --header-fade-height: 0px;
-    /* Reserve vertical space for sticky `.topbar` offset; keep ≥ max header mark height on narrow phones. */
-    --mobile-header-brand-row-height: 240px;
+    --mobile-header-brand-row-height: 0px;
   }
   .appShell--subpage {
     --header-floating-offset: 0px;
-    --header-floating-height: 254px;
+    --header-floating-height: 0px;
     --header-fade-height: 0px;
-    --mobile-header-brand-row-height: 240px;
+    --mobile-header-brand-row-height: 0px;
   }
+  /* Mobile: header scrolls with content (no sticky/fixed chrome). */
   .headerBrandStack {
-    position: sticky;
-    top: 0;
-    left: 0;
+    position: relative;
+    top: auto;
+    left: auto;
     transform: none;
-    /* Above `.topbar` / `.subpageTopbar` (102), below account dropdown (120) and high overlays (105+). */
-    z-index: 103;
+    z-index: 1;
     width: 100%;
     max-width: none;
     padding: calc(6px + env(safe-area-inset-top, 0px)) 10px 4px;
     background: transparent;
     border-bottom: 0;
+    pointer-events: auto;
   }
   .topbar {
-    position: sticky;
-    top: var(--mobile-header-brand-row-height, 240px);
-    z-index: 102;
+    position: relative;
+    top: auto;
+    z-index: 1;
     padding: 4px 0 8px;
     background: transparent;
     border-bottom: 0;
   }
-  /* Subpage bar: `globals.css` sets `top:0` after this file — use higher specificity so the bar clears the brand row. */
   div.appShell.appShell--subpage header.subpageTopbar {
-    position: sticky;
-    top: var(--mobile-header-brand-row-height, 240px);
-    z-index: 102;
+    position: relative;
+    top: auto;
+    z-index: 1;
   }
   .topbarOcclusion {
+    position: static;
     display: block;
-    height: calc(var(--mobile-header-brand-row-height, 240px) + 72px);
-    background-size: auto, auto, auto, auto;
-    background-position: center top, right top, center, center;
+    height: 0;
+    min-height: 0;
+    overflow: hidden;
+    background: none;
+  }
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarOcclusion::before {
+    display: none;
   }
   /* Main-app header: single gradient veil (full-bleed photo is on `main::before`). */
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarOcclusion::before {
@@ -5925,6 +5872,19 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   .nonprofitCardMain {
     grid-template-columns: 54px minmax(0, 1fr);
     column-gap: 8px;
+  }
+  .nonprofitCardMain--trustedResource {
+    grid-template-columns: 76px minmax(0, 1fr);
+    column-gap: 12px;
+  }
+  .resultCard--trustedResource .nonprofitCardMedia,
+  .resultCard--trustedResource .nonprofitCardMediaSlot {
+    width: 76px;
+    flex: 0 0 76px;
+  }
+  .resultCard--trustedResource .nonprofitIconBadge {
+    width: 72px;
+    height: 72px;
   }
   .footerDockBackdrop { height: calc(76px + env(safe-area-inset-bottom)); }
   .footerNavInner {
@@ -6156,11 +6116,33 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
     display: flex !important;
     justify-content: flex-start;
   }
-  /* Podcast: keep header row + hamburger visible (same idea as home) — do not hide .topbarLeft here. */
-  main.topApp[data-page-atmosphere="podcast"] .topbarLeft,
-  main.topApp.appShell--podcast .topbarLeft {
-    display: flex !important;
+  /* Podcast: one chrome row at top — theme/sponsor left | auth + menu right. */
+  main.topApp.appShell--podcast.topApp--auth-out .topbarInner,
+  main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarInner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "left right";
+    gap: 8px 10px;
+    align-items: center;
+  }
+  main.topApp.appShell--podcast.topApp--auth-out .topbarLeft,
+  main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarLeft {
+    grid-area: left;
+    width: 100%;
     justify-content: flex-start;
+  }
+  main.topApp.appShell--podcast.topApp--auth-out .topbarRight,
+  main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
+    grid-area: right;
+    justify-self: end;
+    width: auto;
+    justify-content: flex-end;
+  }
+  /* Mobile hamburger: header top-right (`.topbarRight`), not bottom dock. */
+  main.topApp.appShell--withMobileNavDock .topbarRight .topbarActionsCluster {
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+    gap: 8px;
   }
   main.topApp.topApp--auth-out[data-page-atmosphere="home"] .topbarInner {
     grid-template-areas:

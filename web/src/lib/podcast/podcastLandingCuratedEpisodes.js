@@ -5,6 +5,9 @@
 
 export const PODCAST_LANDING_CURATED_SLOT_COUNT = 21;
 
+/** Public landing episode cards — most recent from the official full-episodes playlist. */
+export const PODCAST_LANDING_RECENT_EPISODE_COUNT = 10;
+
 /** Display order for the landing “episode library” strip (curator-facing labels). */
 export const PODCAST_LANDING_CURATED_LABELS = [
   "Hometown Hero Outdoors",

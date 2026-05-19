@@ -4,13 +4,10 @@ import { fetchOfficialPlaylistAcceptedEpisodes } from "./fetchOfficialPlaylistAc
 import { extractGuestVoiceQuote } from "./transcriptQuote";
 import { fetchTranscriptPlainText } from "./youtubeTranscriptFetch";
 import { getDemoFeaturedVoicesForLanding } from "./demoFeaturedVoices";
-import {
-  buildCuratedPodcastLandingEpisodes,
-  PODCAST_LANDING_CURATED_SLOT_COUNT,
-} from "./podcastLandingCuratedEpisodes";
+import { PODCAST_LANDING_RECENT_EPISODE_COUNT } from "./podcastLandingCuratedEpisodes";
 
-/** Curated episode strip length on the public podcast landing (v0.8). */
-export const PODCAST_LANDING_FULL_EPISODE_COUNT = PODCAST_LANDING_CURATED_SLOT_COUNT;
+/** Episode library card count on the public podcast landing (YouTube playlist order). */
+export const PODCAST_LANDING_FULL_EPISODE_COUNT = PODCAST_LANDING_RECENT_EPISODE_COUNT;
 const DB_EPISODE_FETCH_LIMIT = 400;
 /** Cap YouTube transcript fetches per landing rebuild (cold cache); avoids long serverless runs. */
 const TRANSCRIPT_BACKFILL_PER_BUILD = 6;
@@ -156,7 +153,10 @@ function mergePlaylistRuntimeWithDb(runtime, dbRow) {
       id: dbRow.id,
       title: titleOverride || String(dbRow.title || runtime.title || "").trim(),
       description: descOverride || String(dbRow.description || runtime.description || "").trim(),
-      thumbnail_url: thumbOverride || String(dbRow.thumbnail_url || runtime.thumbnail_url || "").trim(),
+      thumbnail_url:
+        thumbOverride ||
+        String(runtime.thumbnail_url || "").trim() ||
+        String(dbRow.thumbnail_url || "").trim(),
       youtube_url: String(dbRow.youtube_url || runtime.youtube_url || "").trim(),
       /* JSON/cache drops `undefined`; DB null would strip playlist acceptance and break public listing. */
       pipeline_decision: "accepted",
@@ -182,28 +182,17 @@ export async function loadPublicPodcastLandingData(admin) {
   let degraded = false;
   let error;
   let dbPublicEpisodes = [];
-  /** Optional rows from `podcast_landing_curated_slots` (pin YouTube ids / labels per strip index). */
-  let landingCuratedSlotOverrides = [];
-
   const excludeVideoIds = new Set();
   const forceIncludeVideoIds = new Set();
   /** @type {Map<string, Record<string, unknown>>} */
   let byVideoId = new Map();
 
   if (admin) {
-    const [epRes, slotRes] = await Promise.all([
-      admin.from("podcast_episodes").select("*").order("published_at", { ascending: false }).limit(DB_EPISODE_FETCH_LIMIT),
-      admin
-        .from("podcast_landing_curated_slots")
-        .select("sort_order,curator_label,youtube_video_id")
-        .order("sort_order", { ascending: true })
-        .limit(PODCAST_LANDING_CURATED_SLOT_COUNT),
-    ]);
-    const { data: epData, error: epErr } = epRes;
-    const { data: slotData, error: slotErr } = slotRes;
-    if (!slotErr && Array.isArray(slotData) && slotData.length) {
-      landingCuratedSlotOverrides = slotData;
-    }
+    const { data: epData, error: epErr } = await admin
+      .from("podcast_episodes")
+      .select("*")
+      .order("published_at", { ascending: false })
+      .limit(DB_EPISODE_FETCH_LIMIT);
 
     if (!epErr && Array.isArray(epData)) {
       byVideoId = new Map(
@@ -232,27 +221,24 @@ export async function loadPublicPodcastLandingData(admin) {
 
   if (!pl.ok) {
     degraded = true;
-    error = pl.error;
-    episodes = buildCuratedPodcastLandingEpisodes(
-      sortByPublishedDesc(dbPublicEpisodes),
-      landingCuratedSlotOverrides,
-    );
-    source = episodes.some((e) => String(e?.episode_link_status || "") !== "needs_link")
-      ? "youtube_playlist_failed+supabase_fallback+curated_strip"
-      : "youtube_playlist_failed+curated_placeholders";
+    episodes = sortByPublishedDesc(dbPublicEpisodes)
+      .slice(0, PODCAST_LANDING_RECENT_EPISODE_COUNT)
+      .map((ep) => ({ ...ep, episode_link_status: "live" }));
+    source = episodes.length ? "youtube_playlist_failed+supabase_fallback" : "youtube_playlist_failed";
+    if (!episodes.length) error = pl.error;
   } else {
     const merged = (pl.videos || [])
       .map((r) => mergePlaylistRuntimeWithDb(r, byVideoId.get(String(r.youtube_video_id || "").trim())))
       .filter((ep) => episodeRowIsPublicListed(ep));
     const mergedSorted = sortByPublishedDesc(merged);
-    const mergedVideoIds = new Set(mergedSorted.map((ep) => String(ep?.youtube_video_id || "").trim()).filter(Boolean));
-    const dbTopups = dbPublicEpisodes.filter((ep) => !mergedVideoIds.has(String(ep?.youtube_video_id || "").trim()));
-    const pool = sortByPublishedDesc([...mergedSorted, ...dbTopups]);
-    episodes = buildCuratedPodcastLandingEpisodes(pool, landingCuratedSlotOverrides);
-    const liveLinked = episodes.filter((e) => String(e?.episode_link_status || "live") === "live").length;
-    if (liveLinked < 5) degraded = true;
-    if (admin && byVideoId.size) source = "youtube_playlist+supabase+curated_v08";
-    else source = "youtube_playlist+curated_v08";
+    episodes = mergedSorted.slice(0, PODCAST_LANDING_RECENT_EPISODE_COUNT).map((ep) => ({
+      ...ep,
+      episode_link_status: "live",
+    }));
+    if (episodes.length < 5) degraded = true;
+    const feedSource = String(pl.source || "youtube_api");
+    if (admin && byVideoId.size) source = `${feedSource}+supabase+recent10`;
+    else source = `${feedSource}+recent10`;
   }
 
   if (admin && episodes.length) {

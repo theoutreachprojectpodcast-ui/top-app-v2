@@ -91,7 +91,7 @@ export default function TrustedResourceCard({ resource }) {
               />
             ) : (
               <div className="trustedResourceCard__logoFallback" aria-hidden>
-                <NonprofitIcon category={cat} size={34} variant="default" />
+                <NonprofitIcon category={cat} size={42} variant="default" />
               </div>
             )}
           </div>

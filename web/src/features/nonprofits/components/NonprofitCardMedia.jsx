@@ -90,7 +90,7 @@ export default function NonprofitCardMedia({ category, tier, logoUrl, layout = "
             />
           </span>
         ) : (
-          <NonprofitIcon category={category} size={layout === "trustedResource" ? 30 : 28} variant={isFeatured ? "featured" : "default"} />
+          <NonprofitIcon category={category} size={layout === "trustedResource" ? 38 : 28} variant={isFeatured ? "featured" : "default"} />
         )}
       </div>
     </div>

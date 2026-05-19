@@ -12,9 +12,9 @@ set
   sponsor_display_group = 'foundational',
   primary_display_tag = 'Foundational Sponsor',
   name = 'The Veterans Veteran',
-  short_description = 'Handmade American flags & custom woodworking',
+  short_description = 'VA disability claims & post-service coaching',
   tagline =
-    'Veteran-owned flags and custom woodworking from Texas—each piece honors service and recovery while proceeds support veteran-serving nonprofits.',
+    'Veteran-led guidance through VA disability claims, ratings, appeals, and GI Bill planning.',
   updated_at = now()
 where slug = 'the-veterans-veteran';
 

@@ -32,60 +32,27 @@ main.topApp:not(.appShell--podcast) .shell > .card:not(.cardHero):not(.action):n
     0 0 0 1px color-mix(in srgb, #ffffff 5%, transparent);
 }
 
-/* Body wash + texture: unified for all TopApp routes except podcast (cinematic bg lives on main::before in top-app.css) */
-html:has(main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])) body::before {
-  /* Lighter, cooler washes so they don’t stack extra warmth on the cinematic photo */
-  background:
-    radial-gradient(
-      ellipse 92% 50% at 50% -12%,
-      rgb(from var(--color-accent-soft) r g b / 0.08),
-      rgb(from var(--color-accent-soft) r g b / 0) 68%
-    ),
-    radial-gradient(
-      ellipse 64% 40% at 8% 14%,
-      rgb(from var(--color-bg-muted) r g b / 0.1),
-      rgb(from var(--color-bg-muted) r g b / 0) 64%
-    ),
-    linear-gradient(
-      185deg,
-      rgb(from var(--color-bg-elevated) r g b / 0.06),
-      rgb(from var(--color-bg-elevated) r g b / 0) 55%
-    );
-}
-
-html:has(main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])) body::after {
-  background-image: var(--texture-noise), var(--bg-texture-image);
-  background-size: 200px 200px, min(140vw, 2100px) auto;
-  background-position: 0 0, center -4vh;
-  opacity: 0.07;
-}
-
-:root[data-color-scheme="dark"] html:has(main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])) body::after,
-.dark html:has(main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])) body::after {
-  opacity: 0.09;
-}
+/* TopApp topo PNGs + light noise: see `top-app.css` (`html` full-bleed cover). Do not override with gradient-only washes here. */
 
 /* Optional: very slow atmospheric drift (disabled for reduced motion) */
 @keyframes pageAtmoWashDrift {
   0%,
   100% {
     opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1);
   }
   50% {
     opacity: 0.97;
-    transform: translate3d(0, -0.35%, 0) scale(1.002);
   }
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  html:has(main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])) body::before {
+  html:has(main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])) {
     animation: pageAtmoWashDrift 85s ease-in-out infinite;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html:has(main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])) body::before {
+  html:has(main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])) {
     animation: none;
   }
 }

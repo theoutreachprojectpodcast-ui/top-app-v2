@@ -155,25 +155,24 @@
 
 .trustedResourceCard__profileHead {
   display: grid;
-  grid-template-columns: 78px minmax(0, 1fr);
+  grid-template-columns: 96px minmax(0, 1fr);
   gap: 12px 14px;
   align-items: start;
 }
 
 /* Circular brand mark: distinct from wide header frame (no visible “logo” / “header” labels). */
 .trustedResourceCard__logoFrame {
-  width: 78px;
-  height: 78px;
+  width: 96px;
+  height: 96px;
   border-radius: 50%;
-  background: var(--color-bg-card);
+  /* Dark plate so letterboxing never reads as white gaps inside the ring. */
+  background: #0a100e;
   border: 2px solid var(--color-border-strong);
-  display: grid;
-  place-items: center;
   overflow: hidden;
   box-shadow:
     inset 0 1px 0 color-mix(in srgb, #ffffff 45%, transparent),
     0 10px 22px var(--color-shadow);
-  margin-top: -46px;
+  margin-top: -52px;
   position: relative;
   z-index: 3;
 }
@@ -187,11 +186,15 @@
 }
 
 .trustedResourceCard__logoImg {
+  position: absolute;
+  inset: 0;
+  display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  padding: 7px;
-  box-sizing: border-box;
+  object-fit: cover;
+  object-position: center;
+  /* Slight overscan hides sub-pixel gaps at the circular clip edge. */
+  transform: scale(1.05);
 }
 
 .trustedResourceCard__logoFallback {
@@ -320,13 +323,13 @@
 
 @media (max-width: 520px) {
   .trustedResourceCard__profileHead {
-    grid-template-columns: 72px minmax(0, 1fr);
+    grid-template-columns: 84px minmax(0, 1fr);
   }
 
   .trustedResourceCard__logoFrame {
-    width: 72px;
-    height: 72px;
-    margin-top: -44px;
+    width: 84px;
+    height: 84px;
+    margin-top: -48px;
   }
 
   .trustedResourceCard__titleBlock {

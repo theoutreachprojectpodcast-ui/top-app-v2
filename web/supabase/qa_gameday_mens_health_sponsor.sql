@@ -29,7 +29,7 @@ values (
   'Men''s health',
   'app',
   'https://gamedaymenshealth.com/',
-  '/sponsors/gameday-mens-health-logo-transparent.png',
+  '/sponsors/gameday-mens-health-wordmark.jpg',
   '/sponsors/featured-bg-gameday-mens-health.png',
   'Men''s health clinics',
   $gd$

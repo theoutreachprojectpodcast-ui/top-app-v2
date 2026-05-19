@@ -9,6 +9,7 @@ import { nteeToService } from "@/lib/utils";
 import { mapNonprofitLinks } from "@/features/nonprofits/mappers/nonprofitLinksMapper";
 import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
 import { resolveFindInfoHref } from "@/features/nonprofits/domain/nonprofitCardActions";
+import { resolveNteeCategoryHeaderImageUrl } from "@/features/directory/nteeCategoryHeaderImages";
 import {
   resolveOrgListingHeaderImageUrl,
   resolveTrustedResourceListingHeroImageUrl,
@@ -152,7 +153,9 @@ function resolveTrustedLocation(row = {}, profile = {}) {
 /** Neutral Outreach-style strip when no org-specific header is available (not sponsor art). */
 const TRUSTED_LISTING_HERO_FALLBACK = "/home/home-main-topographic-complementary.svg";
 
-function resolveTrustedCategoryHeaderFallback(categoryKey) {
+function resolveTrustedCategoryHeaderFallback(categoryKey, nteeCode) {
+  const nteeHeader = resolveNteeCategoryHeaderImageUrl(nteeCode);
+  if (nteeHeader) return nteeHeader;
   void categoryKey;
   return TRUSTED_LISTING_HERO_FALLBACK;
 }
@@ -298,9 +301,11 @@ export function mapNonprofitCardRow(row = {}, source = "directory") {
       if (applyTrustedPresentation) {
         const trustedHero = resolveTrustedResourceListingHeroImageUrl(patchedRow);
         if (trustedHero) return trustedHero;
-        return resolveTrustedCategoryHeaderFallback(category.key);
+        return resolveTrustedCategoryHeaderFallback(category.key, nteeCode);
       }
-      return resolveOrgListingHeaderImageUrl(patchedRow);
+      const orgHeader = resolveOrgListingHeaderImageUrl(patchedRow);
+      if (orgHeader) return orgHeader;
+      return resolveNteeCategoryHeaderImageUrl(nteeCode);
     })(),
     thumbnailUrl: sanitizeDisplayableImageUrl(String(patchedRow.thumbnailUrl ?? patchedRow.thumbnail_url ?? "").trim()),
     publicSlug: String(patchedRow.publicSlug ?? patchedRow.public_slug ?? "").trim(),

@@ -86,6 +86,23 @@ export {
   tierAllowsPodcastMemberContent,
 } from "@/lib/podcast/memberAccess";
 
+/** User-facing copy for server bundle errors (never show raw env codes when episodes loaded). */
+export function humanizePodcastBundleError(code = "") {
+  const c = String(code || "").trim();
+  if (!c) return "";
+  if (c === "missing_youtube_api_key") {
+    return "Episode list is temporarily limited. Add YOUTUBE_API_KEY in server env for full metadata, or retry shortly.";
+  }
+  if (c === "missing_playlist_id") {
+    return "The full-episodes playlist is not configured on the server.";
+  }
+  if (c.startsWith("playlist_rss_") || c === "rss_unavailable") {
+    return "Could not reach YouTube’s public playlist feed. Please try again shortly.";
+  }
+  if (c.startsWith("youtube_") || c.includes("YouTube")) return c;
+  return "Episodes could not be loaded right now. Please try again shortly.";
+}
+
 export async function fetchPodcastRecentBundle() {
   if (typeof window === "undefined") {
     return { ok: false, episodes: [], featuredGuests: [], degraded: false };
@@ -120,14 +137,20 @@ export async function listPodcastEpisodes(supabase) {
 }
 
 export function resolveEpisodeThumbnail(episode = {}) {
+  const videoId = String(episode.youtube_video_id || episode.video_id || "").trim();
   const provided = String(episode.thumbnail_url || "").trim();
+  if (provided && videoId) {
+    const thumbVid = provided.match(/ytimg\.com\/vi\/([^/]+)/i)?.[1];
+    if (thumbVid && thumbVid !== videoId) {
+      return `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`;
+    }
+  }
   if (provided) {
     if (/ytimg\.com\/vi\/.+\/hqdefault\.jpg/i.test(provided)) {
       return provided.replace(/hqdefault\.jpg/i, "maxresdefault.jpg");
     }
     return provided;
   }
-  const videoId = String(episode.youtube_video_id || episode.video_id || "").trim();
   if (videoId) return `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`;
   return "";
 }

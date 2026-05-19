@@ -27,15 +27,18 @@ export default function ColorSchemeRoot({ children }) {
     setColorSchemeState(readDomScheme());
   }, []);
 
-  const setColorScheme = useCallback((next) => {
+  const setColorScheme = useCallback((next, options = {}) => {
     const v = next === "dark" ? "dark" : "light";
+    const persist = options.persist !== false;
     setColorSchemeState(v);
     document.documentElement.dataset.colorScheme = v;
     document.documentElement.classList.toggle("dark", v === "dark");
-    try {
-      localStorage.setItem(COLOR_SCHEME_STORAGE_KEY, v);
-    } catch {
-      /* ignore quota / private mode */
+    if (persist) {
+      try {
+        localStorage.setItem(COLOR_SCHEME_STORAGE_KEY, v);
+      } catch {
+        /* ignore quota / private mode */
+      }
     }
   }, []);
 
@@ -49,4 +52,26 @@ export default function ColorSchemeRoot({ children }) {
   );
 
   return <ColorSchemeContext.Provider value={value}>{children}</ColorSchemeContext.Provider>;
+}
+
+/** Podcast routes are dark-only; restore the user's saved scheme when leaving. */
+export function usePodcastDarkSchemeLock(enabled) {
+  const { setColorScheme } = useColorScheme();
+
+  useEffect(() => {
+    if (!enabled) return;
+    setColorScheme("dark", { persist: false });
+    return () => {
+      try {
+        const stored = localStorage.getItem(COLOR_SCHEME_STORAGE_KEY);
+        if (stored === "dark" || stored === "light") {
+          setColorScheme(stored, { persist: false });
+          return;
+        }
+      } catch {
+        /* ignore */
+      }
+      setColorScheme("light", { persist: false });
+    };
+  }, [enabled, setColorScheme]);
 }

@@ -1,8 +1,8 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { resolveApplicationNotifyRecipients } from "@/lib/platform/applicationNotifyRecipients";
 import { sendPodcastGuestApplicationNotify } from "@/server/podcasts/sendPodcastGuestApplicationNotify";
 
 export const runtime = "nodejs";
-const DEFAULT_PODCAST_GUEST_RECIPIENT = "jmelching1@gmail.com";
 
 function pickString(v, max = 8000) {
   const s = String(v ?? "").trim();
@@ -84,9 +84,10 @@ export async function POST(request) {
 
   let emailWarning = "";
   try {
-    const recipient = String(process.env.PODCAST_GUEST_APPLICATION_RECIPIENT || DEFAULT_PODCAST_GUEST_RECIPIENT).trim();
+    const recipients = resolveApplicationNotifyRecipients();
     const envHint = String(process.env.NEXT_PUBLIC_VERCEL_ENV || process.env.NODE_ENV || "unknown").trim();
     const bodyText = [
+      `Application ID: ${insertedId || "(unknown)"}`,
       `Environment: ${envHint}`,
       `Submitted at: ${new Date().toISOString()}`,
       `Status: submitted`,
@@ -107,7 +108,7 @@ export async function POST(request) {
       .join("\n");
 
     const sent = await sendPodcastGuestApplicationNotify({
-      to: recipient,
+      to: recipients,
       applicantName: full_name,
       applicantEmail: email,
       topic: topic_pitch.slice(0, 200),
@@ -115,14 +116,14 @@ export async function POST(request) {
     });
     if (!sent.ok) emailWarning = `Saved, but email was not sent (${sent.error}).`;
     else if (process.env.NODE_ENV === "development") {
-      console.info("[podcast-apply-guest] notify sent", { to: recipient, id: insertedId });
+      console.info("[podcast-apply-guest] notify sent", { to: recipients, id: insertedId });
     }
   } catch (e) {
     emailWarning = `Saved, but notification step failed (${String(e?.message || e)}).`;
   }
 
   if (process.env.NODE_ENV === "development" && emailWarning) {
-    console.warn("[podcast-apply-guest]", emailWarning, { defaultRecipient: DEFAULT_PODCAST_GUEST_RECIPIENT });
+    console.warn("[podcast-apply-guest]", emailWarning);
   }
 
   return Response.json({ ok: true, id: insertedId, emailWarning });

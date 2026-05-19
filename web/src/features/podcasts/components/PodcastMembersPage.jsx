@@ -44,7 +44,6 @@ export default function PodcastMembersPage() {
       useFooterDockChrome
       useTopAppStructure
       pageAtmosphere="podcast"
-      showThemeToggle={false}
     >
       <div className="podcastScope">
         <section className="podcastSection">

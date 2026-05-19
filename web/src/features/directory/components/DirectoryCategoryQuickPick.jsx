@@ -2,6 +2,7 @@
 
 import { useId, useState } from "react";
 import { SERVICE_OPTIONS } from "@/lib/constants";
+import { resolveNteeCategoryHeaderImageUrl } from "@/features/directory/nteeCategoryHeaderImages";
 import { mapNonprofitCategory } from "@/features/nonprofits/mappers/categoryMapper";
 
 export default function DirectoryCategoryQuickPick({ value, onChange, collapsible = false }) {
@@ -29,16 +30,24 @@ export default function DirectoryCategoryQuickPick({ value, onChange, collapsibl
           const cat = mapNonprofitCategory({ ntee_code: letter });
           const tint = cat.tint || "rgba(158, 166, 177, 0.12)";
           const border = `var(${cat.iconColorVar || "--np-unknownGeneral"})`;
+          const headerImage = resolveNteeCategoryHeaderImageUrl(letter);
+          const cardStyle = {
+            "--cat-tint": tint,
+            "--cat-border": border,
+          };
+          if (headerImage) {
+            cardStyle.backgroundImage = `linear-gradient(180deg, rgba(6, 10, 18, 0.55), rgba(6, 10, 18, 0.82)), url('${headerImage.replace(/'/g, "%27")}')`;
+            cardStyle.backgroundSize = "cover";
+            cardStyle.backgroundPosition = "center";
+            cardStyle.backgroundRepeat = "no-repeat";
+          }
           return (
             <button
               key={letter}
               type="button"
-              className={`directoryCategoryPickCard category-${cat.key} ${value === letter ? "isActive" : ""}`}
+              className={`directoryCategoryPickCard category-${cat.key} ${value === letter ? "isActive" : ""}${headerImage ? " directoryCategoryPickCard--hasPhoto" : ""}`}
               onClick={() => onChange(letter)}
-              style={{
-                "--cat-tint": tint,
-                "--cat-border": border,
-              }}
+              style={cardStyle}
             >
               <span className="directoryCategoryPickCardLetter">{letter}</span>
               <span className="directoryCategoryPickCardTitle">{label}</span>

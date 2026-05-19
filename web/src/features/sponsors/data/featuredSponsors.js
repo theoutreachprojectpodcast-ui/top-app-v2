@@ -7,8 +7,8 @@
 export const EDUARDO_PICO_DESIGNS_LOGO_URL =
   "https://eduardopicodesigns.com/cdn/shop/files/eduardo_pico_logo.png?v=1775735693&width=240";
 
-/** Gameday Men's Health wordmark — edge-keyed transparent PNG for overlays on clinic photography. */
-export const GAMEDAY_MENS_HEALTH_LOGO_URL = "/sponsors/gameday-mens-health-logo-transparent.png";
+/** Gameday Men's Health official horizontal wordmark (franchise brand kit). */
+export const GAMEDAY_MENS_HEALTH_LOGO_URL = "/sponsors/gameday-mens-health-wordmark.jpg";
 
 /** Rope Solutions official mark (square PNG, dark-friendly). */
 export const ROPE_SOLUTIONS_LOGO_URL = "/sponsors/rope-solutions-logo.png";
@@ -22,8 +22,15 @@ export const IRON_SOLDIERS_COFFEE_LOGO_URL = "/sponsors/iron-soldiers-coffee-com
 /** The Veterans Veteran — official mark (black field, high-contrast wordmark). */
 export const THE_VETERANS_VETERAN_LOGO_URL = "/sponsors/the-veterans-veteran-logo.png";
 
+/** War's End — veteran-owned woodworking & flags shop (warsendmerch.com). */
+export const WARS_END_MERCH_LOGO_URL =
+  "https://images.squarespace-cdn.com/content/v1/6959573fd567e738e7c613f3/cfd220a6-7daf-4845-8d83-fdb8c2ffa128/ChatGPT+Image+Jan+7%2C+2026%2C+08_37_51+PM.png?format=2500w";
+
 /** Vet Nav Services — circular compass mark (black on white). */
 export const VET_NAV_SERVICES_LOGO_URL = "/sponsors/vetnav-services-logo.png";
+
+/** Green Gorilla Land Management — official wordmark (gglandmanagement.com). */
+export const GREEN_GORILLA_LAND_MANAGEMENT_LOGO_URL = "/sponsors/green-gorilla-land-management-logo.png";
 
 export const FEATURED_SPONSORS = [
   {
@@ -109,17 +116,40 @@ export const FEATURED_SPONSORS = [
     sponsorType: "foundational_sponsor",
     sponsorDisplayGroup: "foundational",
     primaryDisplayTag: "Foundational Sponsor",
-    tag: "Handmade American flags & custom woodworking",
-    industry: "Veteran nonprofit & craft",
+    tag: "VA disability claims & post-service coaching",
+    industry: "Veteran benefits consulting",
     tierLabel: "Foundational sponsor",
     subtitle:
-      "Veteran-owned flags and custom woodworking from Texas—each piece honors service and recovery while proceeds support veteran-serving nonprofits.",
+      "Veteran-led guidance through VA disability claims, ratings, appeals, GI Bill planning, and post-service transition—so you do not navigate the system alone.",
     longDescription:
-      "The Veterans Veteran is a veteran-owned organization in Texas that hand-builds American flags and custom woodworking with patience, precision, and respect for the uniform. Work is crafted to honor service, recovery, and resilience. Proceeds and collaborations fund veteran-focused nonprofits so craftsmanship in the shop translates into concrete help for people navigating transition, health care, employment, and community reintegration.",
+      "The Veterans Veteran, founded and led by Drew Jones, helps veterans move through the VA disability and benefits process with clarity and advocacy. The team provides educational and administrative support—not legal representation—including claims and ratings review, medical evidence organization, appeals guidance, and GI Bill maximization. Post-service coaching helps veterans set career goals and build a roadmap after the uniform. Fellow service members built this practice after walking the same transition; the mission is to ensure veterans understand their options and receive the benefits they earned.",
     ctaLabel: "Visit Website",
-    ctaUrl: "https://www.warsendmerch.com/",
+    ctaUrl: "https://thevetsvet.com/",
     logoUrl: THE_VETERANS_VETERAN_LOGO_URL,
     warmVariant: "rose",
+    backgroundImageUrl: "/sponsors/featured-bg-the-veterans-veteran.png",
+    missionPartner: true,
+    veteranOwned: true,
+    featured: true,
+    socialLinks: {},
+  },
+  {
+    id: "wars-end-merch",
+    name: "War's End",
+    sponsorType: "foundational_sponsor",
+    sponsorDisplayGroup: "foundational",
+    primaryDisplayTag: "Foundational Sponsor",
+    tag: "Handmade American flags & custom woodworking",
+    industry: "Custom woodworking & flags",
+    tierLabel: "Foundational sponsor",
+    subtitle:
+      "Veteran-owned Texas shop—hand-built American flags and custom woodwork honoring service, recovery, and resilience.",
+    longDescription:
+      "War's End is a veteran-owned custom woodworking business led by Joshua Melching after twenty years of military service. The shop hand-builds American flags and one-of-a-kind wood pieces with discipline and intention. A portion of proceeds supports veteran nonprofit partners, and the team donates flags to mission-aligned organizations including Freedom Alliance, War Heroes On Water, and Frontline Heroes Outdoors across Texas and beyond.",
+    ctaLabel: "Visit Website",
+    ctaUrl: "https://www.warsendmerch.com/",
+    logoUrl: WARS_END_MERCH_LOGO_URL,
+    warmVariant: "amber",
     backgroundImageUrl: "/sponsors/featured-bg-wars-end-merch.png",
     missionPartner: true,
     veteranOwned: true,
@@ -240,7 +270,7 @@ export const FEATURED_SPONSORS = [
       "Green Gorilla Land Management is a veteran-owned land services contractor serving Charleston, the South Carolina Lowcountry, and nearby coastal counties. Services include forestry mulching, selective clearing, bush hogging, storm debris removal, and pre-sale property cleanup. Crews document progress with photos, stick to agreed scopes, and prioritize ecological balance so residential, commercial, and nonprofit partners can put land back to work safely.",
     ctaLabel: "Visit Website",
     ctaUrl: "https://gglandmanagement.com/",
-    logoUrl: null,
+    logoUrl: GREEN_GORILLA_LAND_MANAGEMENT_LOGO_URL,
     warmVariant: "gold",
     backgroundImageUrl: "/sponsors/featured-bg-green-gorilla-land-management.png",
     missionPartner: false,
