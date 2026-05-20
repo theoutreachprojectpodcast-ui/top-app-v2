@@ -23,8 +23,9 @@ const appUrl = String(process.env.APP_BASE_URL || process.env.NEXT_PUBLIC_APP_UR
 const isProdLikeHost = appUrl.startsWith("https://") && !appUrl.includes("localhost");
 const cookieDomain = String(process.env.WORKOS_COOKIE_DOMAIN || "").trim();
 const isVercelPreview = vercel && vercelEnv === "preview";
+const isGithubCiBuild = process.env.CI === "true" && !vercel;
 // Cookie domain is for apex/subdomain session sharing on the real prod host; preview URLs are a single *.vercel.app host.
-if (isProdLikeHost && !cookieDomain && !isVercelPreview) {
+if (isProdLikeHost && !cookieDomain && !isVercelPreview && !isGithubCiBuild) {
   missing.push("WORKOS_COOKIE_DOMAIN");
 }
 
