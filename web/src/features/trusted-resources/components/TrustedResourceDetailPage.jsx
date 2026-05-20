@@ -35,15 +35,12 @@ function FavoriteButton({ active, busy, onClick, className = "" }) {
   );
 }
 
-/**
- * @param {{ slug: string, initialResource?: object | null }} props
- */
-export default function TrustedResourceDetailPage({ slug, initialResource = null }) {
+export default function TrustedResourceDetailPage({ slug }) {
   const pathname = usePathname();
   const supabase = useMemo(() => getSupabaseClient(), []);
   const { isAuthenticated, favoriteEntityKeys, toggleFavoriteEntityKey } = useProfileData();
-  const [resource, setResource] = useState(initialResource);
-  const [status, setStatus] = useState(initialResource ? "" : "Loading trusted resource…");
+  const [resource, setResource] = useState(null);
+  const [status, setStatus] = useState("Loading trusted resource…");
   const [favBusy, setFavBusy] = useState(false);
 
   const returnPath = `/trusted/${slug}`;
@@ -53,7 +50,7 @@ export default function TrustedResourceDetailPage({ slug, initialResource = null
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      if (!initialResource) setStatus("Loading trusted resource…");
+      setStatus("Loading trusted resource…");
       const row = await getTrustedResourceDetailForSlug(supabase, slug);
       if (cancelled) return;
       setResource(row);
@@ -62,7 +59,7 @@ export default function TrustedResourceDetailPage({ slug, initialResource = null
     return () => {
       cancelled = true;
     };
-  }, [supabase, slug, initialResource]);
+  }, [supabase, slug]);
 
   const favoriteKey = resource?.trustedResourceSlug ? `trusted:${resource.trustedResourceSlug}` : "";
   const isFavorited = favoriteKey && favoriteEntityKeys.includes(favoriteKey);

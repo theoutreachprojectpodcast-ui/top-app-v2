@@ -7,6 +7,7 @@ import {
 } from "@/lib/supabase/trustedResourcesCatalog";
 import { attachDirectoryAndEnrichmentToTrustedRows } from "@/features/trusted-resources/trustedDirectoryJoin";
 import {
+  TRUSTED_RESOURCE_BY_SLUG,
   TRUSTED_RESOURCE_CANONICAL_RECORDS,
   canonicalHostname,
   normalizeTrustedResourceEin,
@@ -26,6 +27,20 @@ function rowIdentityKey(row = {}) {
   const host = canonicalHostname(row?.website || "");
   if (host) return `host:${host}`;
   return `name:${String(row?.orgName || "").trim().toLowerCase()}`;
+}
+
+/** Build a catalog row from the canonical registry (no Supabase). Used for SSG/CI and offline fallback. */
+export function buildTrustedRowFromRegistrySlug(slug) {
+  const key = String(slug || "").trim().toLowerCase();
+  const record = TRUSTED_RESOURCE_BY_SLUG[key];
+  if (!record) return null;
+  const row = registryRecordToTrustedRow(record);
+  if (record.registryLogoUrl) row.logoUrl = String(record.registryLogoUrl).trim();
+  if (record.registryHeaderImageUrl) {
+    row.heroImageUrl = String(record.registryHeaderImageUrl).trim();
+    row.registryHeaderImageUrl = row.heroImageUrl;
+  }
+  return row;
 }
 
 function registryRecordToTrustedRow(record = {}) {

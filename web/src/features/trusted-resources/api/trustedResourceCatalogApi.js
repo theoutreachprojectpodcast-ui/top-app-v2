@@ -1,4 +1,8 @@
-import { fetchTrustedResources, fetchTrustedResourcesFromSupabase } from "@/features/trusted-resources/api";
+import {
+  buildTrustedRowFromRegistrySlug,
+  fetchTrustedResources,
+  fetchTrustedResourcesFromSupabase,
+} from "@/features/trusted-resources/api";
 import { buildTrustedResourceDetailViewModel } from "@/features/trusted-resources/domain/trustedResourceDetailViewModel";
 import { buildTrustedResourceViewModel } from "@/features/trusted-resources/domain/trustedResourceViewModel";
 import { TRUSTED_RESOURCE_BY_SLUG } from "@/features/trusted-resources/trustedResourcesRegistry";
@@ -7,6 +11,14 @@ import { TRUSTED_RESOURCE_BY_SLUG } from "@/features/trusted-resources/trustedRe
  * @param {unknown[]} rows
  * @param {string} slug
  */
+/** Registry + curated detail profiles only (safe for CI/SSG without Supabase). */
+export function buildTrustedResourceDetailFromRegistrySlug(slug) {
+  const row = buildTrustedRowFromRegistrySlug(slug);
+  if (!row) return null;
+  const card = buildTrustedResourceViewModel(row);
+  return buildTrustedResourceDetailViewModel(card, row);
+}
+
 export function resolveTrustedResourceDetailFromRows(rows, slug) {
   const key = String(slug || "").trim().toLowerCase();
   if (!key || !TRUSTED_RESOURCE_BY_SLUG[key]) return null;
@@ -47,8 +59,14 @@ export async function getTrustedResourceDetailForSlug(supabase, slug) {
     return resolveTrustedResourceDetailFromRows(rows, key);
   }
 
-  const rows = await fetchTrustedResourcesFromSupabase(supabase);
-  return resolveTrustedResourceDetailFromRows(rows, key);
+  try {
+    const rows = await fetchTrustedResourcesFromSupabase(supabase);
+    const live = resolveTrustedResourceDetailFromRows(rows, key);
+    if (live) return live;
+  } catch {
+    /* CI dummy host, network offline, or RLS — fall back to canonical registry */
+  }
+  return buildTrustedResourceDetailFromRegistrySlug(key);
 }
 
 /** @deprecated Use `getTrustedResourceDetailForSlug` — alias for existing imports. */
