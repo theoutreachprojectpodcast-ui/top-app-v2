@@ -19,19 +19,26 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createClient } from "@supabase/supabase-js";
+import { buildFounderOnboardingPostRows } from "../src/features/community/data/founderOnboardingPosts.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+function mapFounderRowsForLocalSeed(rows) {
+  return rows.map((row) => ({
+    ...row,
+    id: String(row.id).replace(/^d2000000/, "b2000000"),
+    reviewed_by: "local-seed",
+    reviewed_at: row.reviewed_at || nowIso(-1),
+    published_at: row.published_at || row.created_at,
+  }));
+}
 
 const SEED_TAG = "torp_local_data_seed_v1";
 
 const POST_IDS = {
-  founderWelcome: "b2000000-0000-4000-8000-000000000001",
-  founderHowToProfile: "b2000000-0000-4000-8000-000000000002",
-  founderHowToCommunity: "b2000000-0000-4000-8000-000000000003",
-  pending1: "b2000000-0000-4000-8000-000000000004",
-  pending2: "b2000000-0000-4000-8000-000000000005",
-  rejected1: "b2000000-0000-4000-8000-000000000006",
-  founderHowToSponsors: "b2000000-0000-4000-8000-000000000007",
+  pending1: "b2000000-0000-4000-8000-000000000101",
+  pending2: "b2000000-0000-4000-8000-000000000102",
+  rejected1: "b2000000-0000-4000-8000-000000000103",
 };
 
 const SPONSOR_APP_IDS = {
@@ -322,69 +329,10 @@ function buildPosts(profileIds, authorIds) {
     created_at: overrides.created_at ?? nowIso(-120),
   });
 
+  const founderGuides = mapFounderRowsForLocalSeed(buildFounderOnboardingPostRows());
+
   return [
-    base(POST_IDS.founderWelcome, {
-      author_profile_id: a1,
-      author_workos_id: authorIds[0],
-      author_name: "Josh & Hodge",
-      author_avatar_url: "/community/admin-josh.png",
-      title: "Welcome to The Outreach Project community",
-      body: "We built this platform to make trusted support easier to find for veterans, first responders, and families. Start with your profile, save organizations you want to revisit, and use community posts to share what actually helped you. If this space serves you well, tell us what we should improve next.",
-      category: "community_update",
-      post_type: "community_update",
-      photo_url: "/brand-logo-site-dark.png",
-      status: "approved",
-      reviewed_by: "local-seed",
-      reviewed_at: nowIso(-100),
-      published_at: nowIso(-100),
-      like_count: 3,
-    }),
-    base(POST_IDS.founderHowToProfile, {
-      author_profile_id: a2,
-      author_workos_id: authorIds[1],
-      author_name: "Josh",
-      author_avatar_url: "/community/admin-josh.png",
-      title: "How to set up your profile in under 3 minutes",
-      body: "Quick start: (1) complete your basic account details, (2) add your mission focus and location, and (3) keep your membership current so platform features stay unlocked. A complete profile helps us personalize the experience and helps staff route support faster when you reach out.",
-      category: "resource_help",
-      post_type: "community_update",
-      photo_url: "/brand-logo-mark-dark.png",
-      status: "approved",
-      reviewed_by: "local-seed",
-      reviewed_at: nowIso(-90),
-      published_at: nowIso(-90),
-      like_count: 1,
-    }),
-    base(POST_IDS.founderHowToCommunity, {
-      author_profile_id: a3,
-      author_workos_id: authorIds[2],
-      author_name: "Hodge",
-      author_avatar_url: "/community/admin-hodge.png",
-      title: "How to post in community so people can act on it",
-      body: "When you share, include what happened, what organization or resource helped, and one practical next step another member can take today. Keep it specific and respectful. Our moderators review every post so the feed stays useful, credible, and safe for the people who need it most.",
-      category: "community_update",
-      post_type: "community_update",
-      photo_url: "/podcasts-demo-band.jpg",
-      status: "approved",
-      reviewed_by: "local-seed",
-      reviewed_at: nowIso(-80),
-      published_at: nowIso(-80),
-    }),
-    base(POST_IDS.founderHowToSponsors, {
-      author_profile_id: a1,
-      author_workos_id: authorIds[0],
-      author_name: "Josh & Hodge",
-      author_avatar_url: "/community/admin-hodge.png",
-      title: "How to use sponsors + podcast to support the mission",
-      body: "Sponsor cards on the main Sponsors page are our foundational partners, and podcast sponsors live on the Podcast page. Check each card for direct links and follow-ups. If your company wants to support this work, use the sponsor flow so our team can route your application and next steps cleanly.",
-      category: "community_update",
-      post_type: "community_update",
-      photo_url: "/sponsors/featured-bg-rope-solutions.png",
-      status: "approved",
-      reviewed_by: "local-seed",
-      reviewed_at: nowIso(-70),
-      published_at: nowIso(-70),
-    }),
+    ...founderGuides,
     base(POST_IDS.pending1, {
       author_profile_id: a2,
       author_workos_id: authorIds[1],

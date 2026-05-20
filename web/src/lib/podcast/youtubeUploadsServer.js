@@ -199,7 +199,85 @@ export async function fetchRecentUploadsFromRssFallback() {
 }
 
 /**
+ * Decode a JSON-escaped string captured from YouTube's inline page data.
+ * @param {string} raw
+ */
+function decodeYoutubeInlineString(raw = "") {
+  const s = String(raw || "");
+  try {
+    return JSON.parse(`"${s}"`);
+  } catch {
+    return s.replace(/\\u0026/g, "&").replace(/\\"/g, '"');
+  }
+}
+
+/**
+ * Parse public playlist page HTML when Atom RSS is unavailable (404).
+ * @param {string} html
+ * @param {number} [maxItems]
+ */
+export function parsePlaylistPageHtmlVideos(html = "", maxItems = 50) {
+  const text = String(html || "");
+  const cap = Math.max(1, Number(maxItems) || 50);
+  const videos = [];
+  const seen = new Set();
+  const re =
+    /"playlistVideoRenderer"\s*:\s*\{[\s\S]*?"videoId"\s*:\s*"([a-zA-Z0-9_-]{11})"[\s\S]*?"title"\s*:\s*\{\s*"runs"\s*:\s*\[\s*\{\s*"text"\s*:\s*"((?:\\.|[^"\\])*)"/g;
+  let match;
+  while ((match = re.exec(text)) && videos.length < cap) {
+    const id = match[1];
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    const title = decodeYoutubeInlineString(match[2]);
+    videos.push({
+      youtube_video_id: id,
+      title,
+      description: "",
+      published_at: null,
+      thumbnail_url: `https://i.ytimg.com/vi/${id}/hqdefault.jpg`,
+      youtube_url: `https://www.youtube.com/watch?v=${id}`,
+      view_count: null,
+    });
+  }
+  return videos;
+}
+
+/**
+ * Playlist page scrape — no API key (YouTube playlist Atom feed often 404).
+ * @param {string} playlistId
+ * @param {{ maxItems?: number }} [opts]
+ */
+export async function fetchPlaylistVideosFromHtmlFallback(playlistId, opts = {}) {
+  const pid = String(playlistId || "").trim();
+  if (!pid) return { ok: false, error: "missing_playlist_id", videos: [], source: "playlist_html" };
+  const maxItems = Math.max(1, Number(opts.maxItems) || 50);
+  const pageUrl = `https://www.youtube.com/playlist?list=${encodeURIComponent(pid)}`;
+  try {
+    const res = await fetch(pageUrl, {
+      redirect: "follow",
+      next: { revalidate: 0 },
+      headers: {
+        "User-Agent": "Mozilla/5.0 (compatible; TheOutreachProject-Podcast/1.0)",
+        "Accept-Language": "en-US,en;q=0.9",
+      },
+    });
+    if (!res.ok) {
+      return { ok: false, error: `playlist_html_http_${res.status}`, videos: [], source: "playlist_html" };
+    }
+    const html = await res.text();
+    const videos = parsePlaylistPageHtmlVideos(html, maxItems);
+    if (!videos.length) {
+      return { ok: false, error: "playlist_html_empty", videos: [], source: "playlist_html" };
+    }
+    return { ok: true, videos, source: "playlist_html" };
+  } catch (e) {
+    return { ok: false, error: String(e?.message || e || "playlist_html_failed"), videos: [], source: "playlist_html" };
+  }
+}
+
+/**
  * Official playlist Atom feed — no API key (thumbnails + titles from feed).
+ * Falls back to playlist page HTML when the feed returns 404.
  * @param {string} playlistId
  * @param {{ maxItems?: number }} [opts]
  */
@@ -210,12 +288,20 @@ export async function fetchPlaylistVideosFromRssFallback(playlistId, opts = {}) 
   const feedUrl = `https://www.youtube.com/feeds/videos.xml?playlist_id=${encodeURIComponent(pid)}`;
   try {
     const res = await fetch(feedUrl, { redirect: "follow", next: { revalidate: 0 } });
-    if (!res.ok) return { ok: false, error: `playlist_rss_http_${res.status}`, videos: [], source: "playlist_rss" };
-    const xml = await res.text();
-    const rows = parseYoutubeFeed(xml).slice(0, maxItems);
-    if (!rows.length) return { ok: false, error: "playlist_rss_empty", videos: [], source: "playlist_rss" };
-    return { ok: true, videos: rows, source: "playlist_rss" };
-  } catch (e) {
-    return { ok: false, error: String(e?.message || e || "playlist_rss_failed"), videos: [], source: "playlist_rss" };
+    if (res.ok) {
+      const xml = await res.text();
+      const rows = parseYoutubeFeed(xml).slice(0, maxItems);
+      if (rows.length) return { ok: true, videos: rows, source: "playlist_rss" };
+    }
+  } catch {
+    /* try HTML fallback */
   }
+  const html = await fetchPlaylistVideosFromHtmlFallback(pid, { maxItems });
+  if (html.ok && html.videos.length) return html;
+  return {
+    ok: false,
+    error: html.error || "playlist_rss_unavailable",
+    videos: [],
+    source: "playlist_rss",
+  };
 }

@@ -664,7 +664,11 @@ function TopAppInner({ initialNav = "home" }) {
   const pageAtmosphere = useMemo(() => resolvePageAtmosphere(pathname, nav), [pathname, nav]);
   const mainScrollRef = useRef(null);
   const immersiveHeaderScroll = pageAtmosphere !== "podcast";
-  useImmersiveHeaderScroll({ rootRef: mainScrollRef, enabled: immersiveHeaderScroll });
+  useImmersiveHeaderScroll({
+    rootRef: mainScrollRef,
+    enabled: immersiveHeaderScroll,
+    gradientBoost: true,
+  });
 
   function onContactSubmit(e) {
     e.preventDefault();

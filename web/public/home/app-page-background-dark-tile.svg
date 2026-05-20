@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="485" height="3072" viewBox="0 0 485 3072" aria-hidden="true">
   <!-- One repeat unit = 3 portrait tiles: upright, upside-down, mirror-X (485×1024 each). -->
   <image
-    xlink:href="app-page-background-dark-topo.png"
+    xlink:href="app-page-background-dark.png"
     x="0"
     y="0"
     width="485"
@@ -9,7 +9,7 @@
     preserveAspectRatio="xMidYMid slice"
   />
   <image
-    xlink:href="app-page-background-dark-topo.png"
+    xlink:href="app-page-background-dark.png"
     x="0"
     y="1024"
     width="485"
@@ -19,7 +19,7 @@
   />
   <g transform="translate(485 2048) scale(-1 1)">
     <image
-      xlink:href="app-page-background-dark-topo.png"
+      xlink:href="app-page-background-dark.png"
       x="0"
       y="0"
       width="485"

@@ -235,6 +235,12 @@ export async function loadPublicPodcastLandingData(admin) {
       ...ep,
       episode_link_status: "live",
     }));
+    if (!episodes.length && dbPublicEpisodes.length) {
+      episodes = sortByPublishedDesc(dbPublicEpisodes)
+        .slice(0, PODCAST_LANDING_RECENT_EPISODE_COUNT)
+        .map((ep) => ({ ...ep, episode_link_status: "live" }));
+      source = `${feedSource}+supabase_only_fallback`;
+    }
     if (episodes.length < 5) degraded = true;
     const feedSource = String(pl.source || "youtube_api");
     if (admin && byVideoId.size) source = `${feedSource}+supabase+recent10`;

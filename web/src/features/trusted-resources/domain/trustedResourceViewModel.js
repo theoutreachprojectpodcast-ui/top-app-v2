@@ -153,7 +153,8 @@ export function buildTrustedResourceViewModel(row = {}) {
   const catalogId = String(merged.catalogId ?? merged.id ?? "").trim();
   const id = slug || catalogId || (einNorm.length === 9 ? einNorm : name);
 
-  const profilePath = einIdentityVerified ? `/nonprofit/${einNorm}` : "";
+  const detailPath = slug ? `/trusted/${slug}` : "";
+  const profilePath = detailPath || (einIdentityVerified ? `/nonprofit/${einNorm}` : "");
 
   const sourceOrganizationId = firstNonEmpty(
     merged.source_organization_id,
@@ -188,6 +189,7 @@ export function buildTrustedResourceViewModel(row = {}) {
     socialLinks,
     locationLabel: locationLabel || "United States",
     sortOrder,
+    detailPath,
     profilePath,
     einIdentityVerified,
   };

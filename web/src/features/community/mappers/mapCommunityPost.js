@@ -1,3 +1,8 @@
+import {
+  normalizeModeratorAuthorFields,
+  parsePostCta,
+} from "@/features/community/domain/communityModerator";
+
 const STATUS_LABELS = {
   draft: "Draft",
   pending_review: "Pending review",
@@ -10,6 +15,7 @@ const STATUS_LABELS = {
 
 export function mapCommunityPostRow(row) {
   if (!row) return null;
+  row = normalizeModeratorAuthorFields(row);
   const status = String(row.status || "pending_review").toLowerCase();
   return {
     id: String(row.id),
@@ -26,6 +32,7 @@ export function mapCommunityPostRow(row) {
     postType: String(row.post_type || row.postType || "share_story"),
     showAuthorName: row.show_author_name !== false,
     linkUrl: String(row.link_url || row.linkUrl || "").trim(),
+    cta: parsePostCta(row.link_url || row.linkUrl || ""),
     photoUrl: String(row.photo_url || row.photoUrl || "").trim(),
     status,
     statusLabel: STATUS_LABELS[status] || status,

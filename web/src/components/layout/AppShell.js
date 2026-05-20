@@ -46,7 +46,7 @@ export default function AppShell({
   rootStyle,
   pageAtmosphere: pageAtmosphereProp,
 }) {
-  const mainRef = useRef(null);
+  const shellRef = useRef(null);
   const pathname = usePathname();
   const missionStripOnHome = pathname === "/";
   const items = Array.isArray(navItems) && navItems.length ? navItems : NAV_ITEMS;
@@ -55,7 +55,12 @@ export default function AppShell({
   const podcastThemeShell =
     pageAtmosphere === "podcast" || String(shellClassName || "").includes("appShell--podcast");
   const immersiveHeaderScroll = useTopAppStructure && !podcastThemeShell;
-  useImmersiveHeaderScroll({ rootRef: mainRef, enabled: immersiveHeaderScroll });
+  const headerGradientBoost = usePrimaryTopbarChrome || useTopAppStructure;
+  useImmersiveHeaderScroll({
+    rootRef: shellRef,
+    enabled: immersiveHeaderScroll,
+    gradientBoost: headerGradientBoost,
+  });
   usePodcastDarkSchemeLock(podcastThemeShell);
 
   const session = useAuthSession();
@@ -76,7 +81,7 @@ export default function AppShell({
       : {};
   return (
     <RootTag
-      ref={useTopAppStructure ? mainRef : undefined}
+      ref={headerGradientBoost || useTopAppStructure ? shellRef : undefined}
       className={`${useTopAppStructure ? "topApp" : "appShell"} appShell--subpage ${useFooterDockChrome ? "appShell--withMobileNavDock " : ""}${shellClassName}${mainChromeClass}${authChromeClass}`.trim()}
       {...(podcastThemeShell ? { "data-podcast-theme-locked": "dark" } : {})}
       style={rootStyle}

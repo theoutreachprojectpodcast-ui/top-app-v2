@@ -7,6 +7,7 @@ import {
 } from "./episodeParser";
 import {
   fetchPlaylistItemsPage,
+  fetchPlaylistVideosFromHtmlFallback,
   fetchPlaylistVideosFromRssFallback,
   fetchVideosByIds,
   youtubeApiKeyConfigured,
@@ -96,28 +97,36 @@ function acceptOfficialPlaylistCandidates(rows, opts = {}) {
  * @param {string} playlistId
  * @param {{ excludeVideoIds?: Set<string>, forceIncludeVideoIds?: Set<string>, maxAccepted?: number }} opts
  */
-async function fetchAcceptedFromPlaylistRss(playlistId, opts) {
+function mapPlaylistFeedRowsToCandidates(rows) {
+  return (rows || []).map((r) => ({
+    youtube_video_id: r.youtube_video_id,
+    title: r.title,
+    description: r.description,
+    published_at: r.published_at,
+    thumbnail_url: r.thumbnail_url,
+    youtube_url: r.youtube_url,
+    duration_seconds: r.duration_seconds ?? null,
+    view_count: r.view_count ?? null,
+  }));
+}
+
+async function fetchAcceptedFromPlaylistFeed(playlistId, opts) {
   const maxAccepted = Math.max(10, Number(opts.maxAccepted) || 200);
+  const html = await fetchPlaylistVideosFromHtmlFallback(playlistId, { maxItems: maxAccepted + 20 });
+  if (html.ok && html.videos.length) {
+    const videos = acceptOfficialPlaylistCandidates(mapPlaylistFeedRowsToCandidates(html.videos), opts);
+    return { ok: true, videos, scannedPages: 0, source: html.source || "playlist_html" };
+  }
   const rss = await fetchPlaylistVideosFromRssFallback(playlistId, { maxItems: maxAccepted + 20 });
-  if (!rss.ok) return { ok: false, error: rss.error, videos: [], scannedPages: 0, source: "playlist_rss" };
-  const videos = acceptOfficialPlaylistCandidates(
-    (rss.videos || []).map((r) => ({
-      youtube_video_id: r.youtube_video_id,
-      title: r.title,
-      description: r.description,
-      published_at: r.published_at,
-      thumbnail_url: r.thumbnail_url,
-      youtube_url: r.youtube_url,
-      duration_seconds: null,
-      view_count: r.view_count ?? null,
-    })),
-    opts,
-  );
+  if (!rss.ok) {
+    return { ok: false, error: rss.error || html.error, videos: [], scannedPages: 0, source: "playlist_feed" };
+  }
+  const videos = acceptOfficialPlaylistCandidates(mapPlaylistFeedRowsToCandidates(rss.videos), opts);
   return {
     ok: true,
     videos,
     scannedPages: 0,
-    source: "playlist_rss",
+    source: rss.source || "playlist_rss",
   };
 }
 
@@ -136,7 +145,7 @@ export async function fetchOfficialPlaylistAcceptedEpisodes(opts = {}) {
   if (!playlistId) return { ok: false, error: "missing_playlist_id", videos: [], scannedPages: 0 };
 
   if (!youtubeApiKeyConfigured()) {
-    return fetchAcceptedFromPlaylistRss(playlistId, { excludeVideoIds, forceIncludeVideoIds, maxAccepted });
+    return fetchAcceptedFromPlaylistFeed(playlistId, { excludeVideoIds, forceIncludeVideoIds, maxAccepted });
   }
 
   const accepted = [];
@@ -176,14 +185,14 @@ export async function fetchOfficialPlaylistAcceptedEpisodes(opts = {}) {
       const detail = await fetchVideosByIds(ids);
       if (!detail.ok) {
         if (detail.error === "missing_youtube_api_key") {
-          return fetchAcceptedFromPlaylistRss(playlistId, { excludeVideoIds, forceIncludeVideoIds, maxAccepted });
+          return fetchAcceptedFromPlaylistFeed(playlistId, { excludeVideoIds, forceIncludeVideoIds, maxAccepted });
         }
-        const rssFallback = await fetchAcceptedFromPlaylistRss(playlistId, {
+        const feedFallback = await fetchAcceptedFromPlaylistFeed(playlistId, {
           excludeVideoIds,
           forceIncludeVideoIds,
           maxAccepted,
         });
-        if (rssFallback.ok && rssFallback.videos.length) return rssFallback;
+        if (feedFallback.ok && feedFallback.videos.length) return feedFallback;
         return { ok: false, error: detail.error, videos: sortByPublishedDesc(accepted), scannedPages };
       }
 
@@ -216,12 +225,12 @@ export async function fetchOfficialPlaylistAcceptedEpisodes(opts = {}) {
   }
 
   if (!accepted.length) {
-    const rssFallback = await fetchAcceptedFromPlaylistRss(playlistId, {
+    const feedFallback = await fetchAcceptedFromPlaylistFeed(playlistId, {
       excludeVideoIds,
       forceIncludeVideoIds,
       maxAccepted,
     });
-    if (rssFallback.ok && rssFallback.videos.length) return rssFallback;
+    if (feedFallback.ok && feedFallback.videos.length) return feedFallback;
   }
 
   return {

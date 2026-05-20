@@ -9,6 +9,10 @@ export const NTEE_CATEGORY_HEADER_IMAGE_URLS = Object.freeze(
   ),
 );
 
+/** Neutral community header for listings classified as General Nonprofit. */
+export const GENERAL_NONPROFIT_CATEGORY_HEADER_IMAGE_URL =
+  "/directory/category-headers/general.png?v=1";
+
 /**
  * @param {string} nteeCode — full NTEE code or major letter
  * @returns {string}
@@ -20,6 +24,21 @@ export function resolveNteeCategoryHeaderImageUrl(nteeCode) {
     .charAt(0);
   if (!letter || !NTEE_CATEGORY_HEADER_IMAGE_URLS[letter]) return "";
   return NTEE_CATEGORY_HEADER_IMAGE_URLS[letter];
+}
+
+/**
+ * Listing hero when enrichment has no org-specific header.
+ * General Nonprofit (`unknownGeneral`) always uses the dedicated generic art.
+ *
+ * @param {string} nteeCode
+ * @param {string} [categoryKey] — from `mapNonprofitCategory`
+ * @returns {string}
+ */
+export function resolveNonprofitListingCategoryHeaderImageUrl(nteeCode, categoryKey) {
+  if (String(categoryKey || "").trim() === "unknownGeneral") {
+    return GENERAL_NONPROFIT_CATEGORY_HEADER_IMAGE_URL;
+  }
+  return resolveNteeCategoryHeaderImageUrl(nteeCode);
 }
 
 /**

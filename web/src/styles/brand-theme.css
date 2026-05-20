@@ -314,7 +314,7 @@ body::before {
     linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 40%);
 }
 
-/* Main app: full-bleed topo PNG on `html` replaces this wash (see `top-app.css`). */
+/* Main app: scrolling topo PNG on `html` replaces this wash (see `top-app.css`). */
 html:has(main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])) body::before {
   display: none;
 }

@@ -156,7 +156,11 @@ export const TRUSTED_RESOURCE_CANONICAL_RECORDS = [
     registryHeaderImageUrl: "/trusted/back-country-heroes-hero.png?v=1",
     registryLogoUrl: "/trusted/back-country-heroes-org-logo.png",
     clearUnlistedSocials: true,
-    socialOverrides: {},
+    socialOverrides: {
+      /* Linked from backcountryheroes.org (Wix footer). */
+      facebookUrl: "https://www.facebook.com/profile.php?id=61567028387606",
+      instagramUrl: "https://www.instagram.com/backcountryheroes/",
+    },
   },
   {
     eins: ["883575938"],
@@ -196,10 +200,14 @@ export const TRUSTED_RESOURCE_CANONICAL_RECORDS = [
     locationLabel: "National",
     website: "https://www.herosjourneyheals.org/",
     nonprofit_type: "Healing and wellness support",
-    registryHeaderImageUrl: "/trusted/heros-journey-healing-foundation-hero.svg",
-    registryLogoUrl: "/trusted/heros-journey-healing-foundation-org-logo.png",
+    registryHeaderImageUrl: "/trusted/heros-journey-healing-foundation-hero.png?v=1",
+    registryLogoUrl: "/trusted/heros-journey-healing-foundation-org-logo.png?v=1",
     clearUnlistedSocials: true,
-    socialOverrides: {},
+    socialOverrides: {
+      /* herosjourneyheals.org (Wix) — Hero's Journey Healing Foundation, not herosjourneyfoundation.org. */
+      facebookUrl: "https://www.facebook.com/profile.php?id=61584080139744",
+      instagramUrl: "https://www.instagram.com/heros_journey_foundation/",
+    },
   },
   {
     eins: ["541411430", "0541411430"],
@@ -215,10 +223,14 @@ export const TRUSTED_RESOURCE_CANONICAL_RECORDS = [
     nonprofit_type: "Veterans & military families — scholarships, programs, and support",
     clearUnlistedSocials: true,
     socialOverrides: {
-      // Official site (freedomalliance.org) links to this handle in page chrome — not a guessed handle.
+      /* freedomalliance.org site chrome + FAQ social list. */
+      facebookUrl: "https://www.facebook.com/FreedomAlliance",
       instagramUrl: "https://www.instagram.com/freedom.alliance/",
+      youtubeUrl: "https://www.youtube.com/thefreedomalliance",
+      linkedinUrl: "https://www.linkedin.com/company/freedom-alliance/",
+      xUrl: "https://x.com/FreedomAlliance",
     },
-    registryHeaderImageUrl: "/trusted/freedom-alliance-hero.svg",
+    registryHeaderImageUrl: "/trusted/freedom-alliance-hero.png",
     registryLogoUrl: "/trusted/freedom-alliance-org-logo.png",
   },
   {
@@ -242,7 +254,12 @@ export const TRUSTED_RESOURCE_CANONICAL_RECORDS = [
     registryHeaderImageUrl: "/trusted/southern-outdoor-dreams-hero.png?v=1",
     registryLogoUrl: "/trusted/southern-outdoor-dreams-org-logo.png",
     clearUnlistedSocials: true,
-    socialOverrides: {},
+    socialOverrides: {
+      /* southernoutdoordreams.org (Wix footer). */
+      facebookUrl: "https://www.facebook.com/SouthernOutdoorDreams",
+      instagramUrl: "https://www.instagram.com/southernoutdoordreams/",
+      youtubeUrl: "https://www.youtube.com/channel/UCMSFzgnxpDj4DZW-R9RG7gQ",
+    },
   },
   {
     eins: ["474655361"],
@@ -295,6 +312,12 @@ export const TRUSTED_RESOURCE_CANONICAL_RECORDS = [
     nonprofit_type: "Veteran and first responder outdoor experiences",
     registryHeaderImageUrl: "/trusted/veterans-creed-outdoors-hero.svg",
     registryLogoUrl: "/trusted/veterans-creed-outdoors-org-logo.png",
+    clearUnlistedSocials: true,
+    socialOverrides: {
+      /* vcousa.org (Wix) national handles. */
+      facebookUrl: "https://www.facebook.com/VCOOutdoors",
+      instagramUrl: "https://www.instagram.com/veterans_creed_outdoor/",
+    },
   },
   {
     nameKeys: ["the warriors refuge", "warriors refuge", "warriorsrefuge", "warrior's refuge"],
@@ -309,7 +332,12 @@ export const TRUSTED_RESOURCE_CANONICAL_RECORDS = [
     registryHeaderImageUrl: "/trusted/warriors-refuge-hero.svg",
     registryLogoUrl: "/trusted/warriors-refuge-logo.png",
     clearUnlistedSocials: true,
-    socialOverrides: {},
+    socialOverrides: {
+      /* thewarriorsrefuge.us site footer / connect blocks. */
+      facebookUrl: "https://www.facebook.com/thewarriorsrefugetx/",
+      tiktokUrl: "https://www.tiktok.com/@thewarriorsrefuge",
+      xUrl: "https://x.com/twrefuge",
+    },
   },
   {
     nameKeys: ["hoof to heart", "hooftoheart", "hoof to heart veterans", "hooftoheartvets"],
@@ -324,7 +352,13 @@ export const TRUSTED_RESOURCE_CANONICAL_RECORDS = [
     registryHeaderImageUrl: "/trusted/hoof-to-heart-veterans-hero.svg",
     registryLogoUrl: "/trusted/hoof-to-heart-veterans-org-logo.png",
     clearUnlistedSocials: true,
-    socialOverrides: {},
+    socialOverrides: {
+      /* hooftoheartvets.com reviews/footer social row. */
+      facebookUrl: "https://www.facebook.com/HoofToHeart17",
+      instagramUrl: "https://www.instagram.com/hooftoheart17/",
+      tiktokUrl: "https://www.tiktok.com/@hoof.2.heart",
+      youtubeUrl: "https://www.youtube.com/@mf0803",
+    },
   },
   {
     nameKeys: ["mos veteran adventures", "mosveteranadventures", "m o s veteran adventures"],
@@ -339,7 +373,13 @@ export const TRUSTED_RESOURCE_CANONICAL_RECORDS = [
     registryHeaderImageUrl: "/trusted/mos-veteran-adventures-hero.svg",
     registryLogoUrl: "/trusted/mos-veteran-adventures-org-logo.png",
     clearUnlistedSocials: true,
-    socialOverrides: {},
+    socialOverrides: {
+      /* mosveteranadventures.com header/footer social icons. */
+      facebookUrl: "https://www.facebook.com/p/MOS-Adventure-61552308043201/",
+      instagramUrl: "https://www.instagram.com/m.o.s_veteran_adventures/",
+      tiktokUrl: "https://www.tiktok.com/@m.o.s.veteran.adv",
+      xUrl: "https://x.com/mosveteranadventures",
+    },
   },
   {
     nameKeys: ["the fallen outdoors", "thefallenoutdoors", "fallen outdoors"],
@@ -355,8 +395,11 @@ export const TRUSTED_RESOURCE_CANONICAL_RECORDS = [
     registryLogoUrl: "/trusted/the-fallen-outdoors-org-logo.png",
     clearUnlistedSocials: true,
     socialOverrides: {
-      /* Official TFO posts use this Facebook page slug (see facebook.com/thefallenoutdoors). */
+      /* thefallenoutdoors.org + national Flowpage (@tfonation). */
       facebookUrl: "https://www.facebook.com/thefallenoutdoors/",
+      instagramUrl: "https://www.instagram.com/tfonation/",
+      youtubeUrl: "https://www.youtube.com/@TheFallenOutdoors",
+      xUrl: "https://x.com/TFO_National",
     },
   },
   {
@@ -472,5 +515,9 @@ export function matchCanonicalTrustedResource(row = {}) {
 
   return null;
 }
+
+export const TRUSTED_RESOURCE_BY_SLUG = Object.freeze(
+  Object.fromEntries(TRUSTED_RESOURCE_CANONICAL_RECORDS.map((rec) => [rec.slug, rec])),
+);
 
 export { normEin as normalizeTrustedResourceEin, compactKey as compactTrustedResourceKey };

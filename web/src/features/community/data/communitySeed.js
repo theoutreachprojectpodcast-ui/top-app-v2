@@ -196,6 +196,7 @@ export const STORY_CATEGORIES = [
   ["thank_you", "Thank you / encouragement"],
   ["nonprofit_impact", "Nonprofit impact"],
   ["milestone", "Personal milestone"],
+  ["platform_guide", "Platform guide"],
 ];
 
 export const SUBMISSION_TYPES = [

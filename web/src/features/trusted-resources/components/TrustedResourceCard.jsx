@@ -20,7 +20,9 @@ export default function TrustedResourceCard({ resource }) {
     fullDescription,
     linkItems,
     locationLabel,
+    detailPath,
     profilePath,
+    trustedResourceSlug,
     einIdentityVerified,
   } = resource;
 
@@ -57,6 +59,7 @@ export default function TrustedResourceCard({ resource }) {
   ].join(" ");
 
   const safeHero = headerImage ? headerImage.replace(/'/g, "%27") : "";
+  const resourceHref = detailPath || (trustedResourceSlug ? `/trusted/${trustedResourceSlug}` : "");
 
   return (
     <article
@@ -97,7 +100,13 @@ export default function TrustedResourceCard({ resource }) {
           </div>
           <div className="trustedResourceCard__titleBlock">
             <h3 className="trustedResourceCard__title" id={titleId}>
-              {name}
+              {resourceHref ? (
+                <Link className="trustedResourceCard__titleLink" href={resourceHref}>
+                  {name}
+                </Link>
+              ) : (
+                name
+              )}
             </h3>
             <div className="trustedResourceCard__chipRow">
               <span
@@ -124,7 +133,12 @@ export default function TrustedResourceCard({ resource }) {
           {socialLinksForRow.length ? (
             <NonprofitSocialLinks className="trustedResourceCard__socialLinks" links={socialLinksForRow} />
           ) : null}
-          {profilePath && einIdentityVerified ? (
+          {resourceHref ? (
+            <Link className="trustedResourceCard__viewLink" href={resourceHref} data-torp-card-interactive>
+              View resource profile
+            </Link>
+          ) : null}
+          {profilePath && einIdentityVerified && profilePath !== resourceHref ? (
             <Link className="trustedResourceCard__profileLink" href={profilePath} data-torp-card-interactive>
               Directory profile
             </Link>

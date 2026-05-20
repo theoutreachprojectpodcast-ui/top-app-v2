@@ -7,12 +7,13 @@
   --header-fade-height: 56px;
   --home-hero-image: url("/home/home-hero-flag-mission.png");
   --home-atmosphere-image: url("/home/home-atmosphere-cinematic-scene.png");
-  --topapp-page-atmosphere-image: var(--topapp-page-atmosphere-image-light, url("/home/app-page-background-light.png?v=11"));
+  --topapp-page-atmosphere-image: var(--topapp-page-atmosphere-image-light, url("/home/app-page-background-light.png?v=13"));
   --home-sponsors-image: url("/home/home-sponsors-city.png");
   --home-trusted-image: url("/home/home-trusted-mountain.png");
   --home-community-image: url("/home/home-community-group.png");
   --home-podcasts-image: url("/home/home-podcast-mic.png");
-  --topapp-mobile-atmosphere-image: var(--topapp-page-atmosphere-image);
+  --topapp-mobile-atmosphere-image-light: url("/home/app-page-background-light-mobile.png?v=1");
+  --topapp-mobile-atmosphere-image-dark: url("/home/app-page-background-dark-mobile.png?v=1");
   min-height: 100vh;
   background: transparent;
   color: var(--color-text-primary);
@@ -33,27 +34,43 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) {
   overflow-x: clip;
 }
 /*
- * Full-viewport topo backgrounds on `html` (not `main::before`) — `main.topApp` uses overflow-x: clip,
- * which clips fixed descendants. Vars must live on `html` because they do not inherit from `main` upward.
- * Assets: `public/home/app-page-background-light.png` + `app-page-background-dark.png` (user-provided topo art).
+ * Topo backgrounds on `html` (scroll with page, not fixed to viewport) — `main.topApp` uses overflow-x: clip.
+ * Desktop (≥761px): landscape 1024×682 PNGs. Mobile (≤760px): portrait 485×1024 PNGs only.
  */
 html:has(main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])) {
-  --topapp-page-atmosphere-image-light: url("/home/app-page-background-light.png?v=11");
-  --topapp-page-atmosphere-image-dark: url("/home/app-page-background-dark.png?v=11");
+  --topapp-page-atmosphere-image-light: url("/home/app-page-background-light.png?v=13");
+  --topapp-page-atmosphere-image-dark: url("/home/app-page-background-dark.png?v=13");
+  --topapp-page-atmosphere-image-light-mobile: url("/home/app-page-background-light-mobile.png?v=1");
+  --topapp-page-atmosphere-image-dark-mobile: url("/home/app-page-background-dark-mobile.png?v=1");
   position: relative;
   min-height: 100%;
-  background-color: #e4efd8;
+  background-color: #e8f0e6;
   background-image: var(--topapp-page-atmosphere-image-light);
-  background-repeat: no-repeat;
-  background-position: center center;
-  background-size: cover;
-  background-attachment: fixed;
+  background-repeat: repeat-y;
+  background-position: top center;
+  background-size: 100% auto;
+  background-attachment: scroll;
+  image-rendering: auto;
+  -webkit-font-smoothing: antialiased;
 }
 html[data-color-scheme="dark"]:has(main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])),
 html.dark:has(main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])) {
-  background-color: #0f1612;
+  background-color: #0d1410;
   background-image: var(--topapp-page-atmosphere-image-dark);
 }
+
+@media (max-width: 760px) {
+  html:has(main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])) {
+    background-color: #e8f0e6;
+    background-image: var(--topapp-page-atmosphere-image-light-mobile);
+  }
+  html[data-color-scheme="dark"]:has(main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])),
+  html.dark:has(main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])) {
+    background-color: #0d1410;
+    background-image: var(--topapp-page-atmosphere-image-dark-mobile);
+  }
+}
+
 html:has(main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])) body {
   background-color: transparent;
   background-image: none;
@@ -64,12 +81,12 @@ html:has(main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"
 
 html:has(main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])) body::after {
   background-image: var(--texture-noise);
-  opacity: 0.035;
+  opacity: 0.022;
   mix-blend-mode: multiply;
 }
 html[data-color-scheme="dark"]:has(main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])) body::after,
 html.dark:has(main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])) body::after {
-  opacity: 0.05;
+  opacity: 0.028;
   mix-blend-mode: overlay;
 }
 main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])::before {
@@ -127,9 +144,17 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])::after
    --header-scroll-progress 0–1 + classes header-at-top | header-scrolled | header-solid (position).
    --header-white-veil-opacity 0–1 (JS): white gradient layer — transparent when scrolling up / at top; up to 100% when scrolled down (~prior 0.8 + 30%).
    -------------------------------------------------------------------------- */
+main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]),
+.appShell.header-content-behind {
+  --header-gradient-opacity-mult: 1;
+}
 main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) {
   --header-scroll-progress: 0;
   --header-white-veil-opacity: 0;
+  --header-veil-floor: 0;
+}
+main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]).header-content-behind {
+  --header-veil-floor: 0.28;
 }
 main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbar {
   isolation: isolate;
@@ -165,7 +190,9 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]).header
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbar {
     transition: none;
   }
-  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarOcclusion::before {
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarOcclusion::before,
+  .appShell.header-content-behind:not(.appShell--podcast):not(.topApp) > .topbarOcclusion::before,
+  .appShell--podcast .topbarOcclusion {
     transition: none;
   }
 }
@@ -229,7 +256,12 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topba
   background-size: 100% 100%;
   background-position: 0 0;
   background-repeat: no-repeat;
-  opacity: var(--header-white-veil-opacity, 0);
+  opacity: min(
+    1,
+    calc(
+      max(var(--header-white-veil-opacity, 0), var(--header-veil-floor, 0)) * var(--header-gradient-opacity-mult, 1)
+    )
+  );
   transition: opacity 0.28s cubic-bezier(0.22, 1, 0.36, 1);
 }
 :root[data-color-scheme="dark"] main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarOcclusion::before,
@@ -242,7 +274,37 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topba
     rgba(22, 24, 28, 0) 74%
   );
   filter: none;
-  opacity: var(--header-white-veil-opacity, 0);
+  opacity: min(
+    1,
+    calc(
+      max(var(--header-white-veil-opacity, 0), var(--header-veil-floor, 0)) * var(--header-gradient-opacity-mult, 1)
+    )
+  );
+}
+/* Site-chrome subpages (topbarOcclusion with default gradient stack, not main-app veil-only). */
+.appShell.header-content-behind:not(.appShell--podcast):not(.topApp) > .topbarOcclusion::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--topbar-gradient-fade, #ffffff) 52%, transparent) 0%,
+    color-mix(in srgb, var(--topbar-gradient-fade, #ffffff) 30%, transparent) 42%,
+    transparent 100%
+  );
+  opacity: min(1, calc((var(--header-gradient-opacity-mult, 1) - 1) * 1.05));
+  transition: opacity 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+:root[data-color-scheme="dark"] .appShell.header-content-behind:not(.appShell--podcast):not(.topApp) > .topbarOcclusion::before,
+.dark .appShell.header-content-behind:not(.appShell--podcast):not(.topApp) > .topbarOcclusion::before {
+  background: linear-gradient(
+    180deg,
+    rgba(22, 24, 28, 0.5) 0%,
+    rgba(22, 24, 28, 0.28) 42%,
+    transparent 100%
+  );
 }
 /* Podcast header uses its own stacked treatment — no duplicate flag layer. */
 .appShell--podcast .topbarOcclusion::before {
@@ -4147,6 +4209,20 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   line-height: 1.25;
   color: var(--color-text-primary);
 }
+.communityHeroText {
+  margin: 0 0 var(--ds-space-4, 16px);
+  max-width: 68ch;
+  font-size: var(--text-body);
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+}
+.communityFeedIntro {
+  margin: 0 0 var(--ds-space-4, 16px);
+  max-width: 68ch;
+  font-size: var(--text-body-sm);
+  line-height: 1.55;
+  color: var(--color-text-secondary);
+}
 
 /* ── Community admin / moderation (clear hierarchy, theme-native surfaces) ── */
 .communityAdminSection {
@@ -4301,8 +4377,8 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 }
 .communityFeed {
   display: grid;
-  gap: var(--ds-space-5, 20px);
-  margin-top: var(--ds-space-4, 16px);
+  gap: var(--ds-space-6, 24px);
+  margin-top: var(--ds-space-5, 20px);
 }
 
 .communitySubmitModalCard {
@@ -4313,11 +4389,62 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 .communityPostCard {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-card);
-  padding: var(--ds-space-5, 20px);
+  padding: var(--ds-space-6, 24px);
   background: linear-gradient(180deg, var(--color-surface-card) 0%, var(--color-surface-card-deep) 100%);
   box-shadow: var(--shadow-card);
   display: grid;
-  gap: var(--ds-space-3, 12px);
+  gap: var(--ds-space-4, 16px);
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+.communityPostCard:hover {
+  border-color: color-mix(in srgb, var(--color-accent) 22%, var(--color-border));
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--color-shadow) 88%, transparent);
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .communityPostCard:hover {
+    transform: translateY(-1px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .communityPostCard {
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  }
+}
+.communityPostCard--guide {
+  gap: var(--ds-space-4, 16px);
+  padding: var(--ds-space-6, 24px) var(--ds-space-6, 24px) var(--ds-space-5, 20px);
+  border-color: color-mix(in srgb, var(--color-accent) 18%, var(--color-border));
+  border-left: 3px solid color-mix(in srgb, var(--color-accent) 55%, var(--color-border));
+}
+.communityPostCard--moderator {
+  border-color: color-mix(in srgb, var(--color-accent) 20%, var(--color-border));
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--color-accent) 5%, var(--color-surface-card)) 0%,
+    var(--color-surface-card-deep) 100%
+  );
+}
+.communityPostCard--moderator .communityPostTitle {
+  letter-spacing: -0.02em;
+}
+.communityPostContent {
+  display: grid;
+  gap: var(--ds-space-4, 16px);
+}
+.communityPostAuthorBlock {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.communityPostModeratorByline {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--color-text-muted);
 }
 .communityPostTop {
   display: grid;
@@ -4325,13 +4452,11 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   gap: var(--ds-space-4, 16px);
   align-items: start;
 }
-.communityPostAvatar {
+.profileAvatarShell.communityPostAvatar {
   width: 52px !important;
   height: 52px !important;
-}
-.communityPostAvatar .profileAvatarShell {
-  width: 52px;
-  height: 52px;
+  min-width: 52px;
+  min-height: 52px;
 }
 .communityPostAuthorName {
   color: var(--color-text-primary);
@@ -4367,9 +4492,39 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 }
 .communityPostTime {
   display: block;
-  margin-top: 4px;
+  margin-top: 6px;
   font-size: var(--text-caption);
+  font-weight: 600;
+  letter-spacing: 0.02em;
   color: var(--color-text-muted);
+}
+.communityPostModeratorBadge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 4px 11px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--color-accent-hover) 92%, var(--color-text-primary) 8%);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 48%, var(--color-border));
+  background: color-mix(in srgb, var(--color-accent) 16%, var(--color-bg-card) 84%);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--color-shadow) 40%, transparent);
+}
+html[data-color-scheme="dark"] .communityPostModeratorBadge,
+html.dark .communityPostModeratorBadge {
+  color: color-mix(in srgb, var(--color-accent) 78%, #ffffff 22%);
+}
+.profileAvatarShell.communityPostAvatar--moderator {
+  background: #060908;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 35%, var(--color-border));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-bg-app) 88%, transparent);
+}
+.profileAvatarShell.communityPostAvatar--moderator .profileAvatarImg {
+  object-fit: cover;
+  object-position: center 30%;
+  padding: 0;
 }
 .communityPostTitle {
   margin: var(--ds-space-2, 8px) 0 0;
@@ -4411,24 +4566,105 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   border-radius: var(--radius-input);
   overflow: hidden;
   border: 1px solid var(--color-border);
-  max-height: 280px;
+  aspect-ratio: 16 / 9;
+  max-height: min(360px, 52vw);
   background: var(--color-surface-soft);
 }
 .communityPostMedia img {
   width: 100%;
   height: 100%;
-  max-height: 280px;
   object-fit: cover;
   object-position: center;
   display: block;
+}
+.communityPostBodyGuide {
+  display: grid;
+  gap: var(--ds-space-4, 16px);
+  max-width: 72ch;
+}
+.communityPostBodyGuideIntro {
+  margin: 0;
+  font-size: var(--text-body);
+  line-height: 1.6;
+  color: var(--color-text-primary);
+}
+.communityPostBodyGuideSteps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--ds-space-3, 12px);
+  counter-reset: guide-step;
+}
+.communityPostBodyGuideSteps li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--ds-space-3, 12px);
+  align-items: start;
+  padding: var(--ds-space-3, 12px) var(--ds-space-4, 16px);
+  border-radius: var(--radius-input);
+  border: 1px solid var(--color-border-subtle);
+  background: color-mix(in srgb, var(--color-bg-subtle) 72%, transparent);
+}
+html[data-color-scheme="dark"] .communityPostBodyGuideSteps li,
+html.dark .communityPostBodyGuideSteps li {
+  background: color-mix(in srgb, var(--color-bg-subtle) 55%, var(--color-surface-card) 45%);
+  border-color: color-mix(in srgb, var(--color-accent) 14%, var(--color-border-subtle));
+}
+.communityPostBodyGuideStepNum {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  white-space: nowrap;
+}
+.communityPostBodyGuideStepText {
+  font-size: var(--text-body-sm);
+  line-height: 1.55;
+  color: var(--color-text-secondary);
+}
+.communityPostBodyGuideWhy {
+  margin: 0;
+  padding: var(--ds-space-4, 16px);
+  border-radius: var(--radius-input);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 22%, var(--color-border-subtle));
+  background: color-mix(in srgb, var(--color-accent) 8%, var(--color-bg-subtle) 92%);
+}
+.communityPostBodyGuideWhyLabel {
+  margin: 0 0 6px;
+  font-size: var(--text-eyebrow);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-accent-hover);
+}
+.communityPostBodyGuideWhyText {
+  margin: 0;
+  font-size: var(--text-body-sm);
+  line-height: 1.55;
+  color: var(--color-text-secondary);
+}
+.communityPostCtaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-space-3, 12px);
+  padding-top: var(--ds-space-1, 4px);
+}
+.communityPostCta {
+  min-height: 44px;
+  padding-inline: 20px;
+  font-size: var(--text-body-sm);
+  font-weight: 700;
+  text-decoration: none;
 }
 .communityPostActions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--ds-space-3, 12px);
-  padding-top: var(--ds-space-2, 8px);
+  padding-top: var(--ds-space-4, 16px);
   border-top: 1px solid var(--color-border-subtle);
-  margin-top: 2px;
+  margin-top: var(--ds-space-1, 4px);
 }
 .communityActionBtn {
   display: inline-flex;
@@ -6216,15 +6452,21 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
     justify-content: center;
   }
   .communityPostCard {
-    padding: 14px;
+    padding: var(--ds-space-4, 16px);
+    gap: var(--ds-space-3, 12px);
+  }
+  .communityPostMedia {
+    max-height: min(280px, 56vw);
   }
   .communityPostTop {
     grid-template-columns: 1fr;
     gap: 10px;
   }
-  .communityPostAvatar {
+  .profileAvatarShell.communityPostAvatar {
     width: 46px !important;
     height: 46px !important;
+    min-width: 46px;
+    min-height: 46px;
   }
   .modalOverlay {
     place-items: start center;

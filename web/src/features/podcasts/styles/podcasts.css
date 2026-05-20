@@ -81,8 +81,19 @@
   padding-bottom: 0;
   --header-floating-offset: 12px;
   /* Action row at top (main-app layout); logo band sits below it. */
-  --podcast-topbar-stack-height: 56px;
-  --podcast-header-brand-band: clamp(240px, 52vw, 380px);
+  --podcast-topbar-stack-height: 52px;
+  --podcast-header-brand-band: clamp(148px, 26vw, 228px);
+  --podcast-header-chrome-height: calc(
+    env(safe-area-inset-top, 0px) + var(--header-floating-offset, 12px) + var(--podcast-topbar-stack-height) +
+      var(--podcast-header-brand-band)
+  );
+  /* Single rectangular header wash (only on `.topbarOcclusion`). */
+  --podcast-header-chrome-bg: linear-gradient(
+    180deg,
+    rgba(6, 10, 16, min(1, calc(0.97 * var(--header-gradient-opacity-mult, 1)))) 0%,
+    rgba(6, 10, 16, min(1, calc(0.9 * var(--header-gradient-opacity-mult, 1)))) 72%,
+    rgba(6, 10, 16, 0) 100%
+  );
 }
 
 /* Keep header chrome from flex-shrinking under the scroll column (CTAs can paint over the hero). */
@@ -95,10 +106,7 @@
   flex: 1 1 auto;
   min-height: 0;
   background: transparent;
-  padding-top: calc(
-    env(safe-area-inset-top, 0px) + var(--header-floating-offset, 12px) + var(--podcast-topbar-stack-height) +
-      var(--podcast-header-brand-band) + 12px
-  );
+  padding-top: calc(var(--podcast-header-chrome-height) + 6px);
 }
 /* Mission strip: home uses top placement under the bar; other routes use bottom placement (see `MissionPageTopStrip`). */
 .topApp.appShell--podcast .siteFooter.siteFooter--pageTop,
@@ -173,14 +181,18 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
   border-color: rgba(148, 171, 210, 0.24);
 }
 .appShell--podcast .topbarOcclusion {
-  background:
-    radial-gradient(ellipse 54% 44% at 50% 12%, rgba(255, 122, 67, 0.13), rgba(255, 122, 67, 0) 68%),
-    linear-gradient(
-      180deg,
-      rgba(6, 10, 16, 0.96) 0%,
-      rgba(6, 10, 16, 0.9) 62%,
-      rgba(6, 10, 16, 0) 100%
-    );
+  background: var(--podcast-header-chrome-bg);
+  border-radius: 0;
+  transition: background 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Header chrome = one rectangle only — no per-row gradient shapes. */
+.appShell--podcast .topbar,
+.topApp.appShell--podcast > header.topbar,
+.topApp.appShell--podcast > .headerBrandStack {
+  background: transparent !important;
+  border: 0;
+  box-shadow: none;
 }
 
 /* Kill global main-app white fade (::after from top-app.css) — it was bleeding bright white over the podcast hero. */
@@ -351,12 +363,8 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
 }
 
 .appShell--podcast .podcastBrandLogo {
-  /* +30% vs prior clamp(194px, 40.6vw, 294px); capped to reserved brand band. */
-  max-height: min(
-    clamp(252px, 52.8vw, 382px),
-    calc(var(--podcast-header-brand-band, 280px) - 18px)
-  ) !important;
-  max-width: min(720px, calc(100vw - 160px)) !important;
+  max-height: min(clamp(132px, 24vw, 208px), calc(var(--podcast-header-brand-band, 200px) - 12px)) !important;
+  max-width: min(560px, calc(100vw - 48px)) !important;
   width: auto;
 }
 .appShell--podcast .podcastBrandLogo {
@@ -395,28 +403,39 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
 }
 
 .topApp.appShell--podcast > .topbarOcclusion {
-  height: calc(
-    var(--header-floating-offset, 12px) + env(safe-area-inset-top, 0px) + var(--podcast-topbar-stack-height) +
-      var(--podcast-header-brand-band)
-  );
+  height: var(--podcast-header-chrome-height);
 }
 
 @media (max-width: 760px) {
   .topApp.appShell--podcast {
-    --podcast-topbar-stack-height: 52px;
-    --podcast-header-brand-band: clamp(220px, 54vw, 340px);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    --podcast-topbar-stack-height: 48px;
+    --podcast-header-brand-band: clamp(128px, 36vw, 200px);
   }
 
-  /* In-flow chrome: topbar → logo (DOM order); no second `top` offset under the mark. */
+  /* In-flow chrome: single rectangular gradient behind topbar + logo. */
+  .topApp.appShell--podcast > .topbarOcclusion {
+    display: block !important;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    z-index: 90;
+    height: var(--podcast-header-chrome-height);
+    min-height: 0;
+    overflow: hidden;
+    pointer-events: none;
+    background: var(--podcast-header-chrome-bg) !important;
+  }
+
   .topApp.appShell--podcast > header.topbar {
     position: relative;
     top: auto;
     z-index: 98;
     order: 1;
-    padding: calc(4px + env(safe-area-inset-top, 0px)) 0 8px;
-    background:
-      radial-gradient(ellipse 70% 40% at 50% 0%, rgba(255, 122, 67, 0.1), transparent 60%),
-      linear-gradient(180deg, rgba(6, 10, 16, 0.96) 0%, rgba(6, 10, 16, 0.55) 100%);
+    padding: calc(4px + env(safe-area-inset-top, 0px)) 0 4px;
   }
 
   .topApp.appShell--podcast > .headerBrandStack {
@@ -428,16 +447,13 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
     width: 100%;
     max-width: min(900px, calc(100vw - 24px));
     margin-inline: auto;
-    padding: 0 10px 4px;
-    background: linear-gradient(180deg, rgba(6, 10, 16, 0.72) 0%, rgba(6, 10, 16, 0.2) 100%);
-  }
-
-  .topApp.appShell--podcast > .topbarOcclusion {
-    display: none !important;
+    padding: 0 10px 6px;
   }
 
   .topApp.appShell--podcast .shell {
-    padding-top: 16px;
+    position: relative;
+    z-index: 1;
+    padding-top: 8px;
     order: 4;
   }
 }
@@ -468,17 +484,11 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
     left: 0;
     right: 0;
     top: 0;
-    overflow: visible;
+    overflow: hidden;
     min-height: 0;
     z-index: 94;
-    background:
-      radial-gradient(ellipse 54% 44% at 50% 12%, rgba(255, 122, 67, 0.13), rgba(255, 122, 67, 0) 68%),
-      linear-gradient(
-        180deg,
-        rgba(6, 10, 16, 0.96) 0%,
-        rgba(6, 10, 16, 0.9) 62%,
-        rgba(6, 10, 16, 0) 100%
-      ) !important;
+    height: var(--podcast-header-chrome-height);
+    background: var(--podcast-header-chrome-bg) !important;
   }
 }
 

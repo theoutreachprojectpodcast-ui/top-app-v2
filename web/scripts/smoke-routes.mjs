@@ -9,6 +9,7 @@ const requiredRouteFiles = [
   "src/app/settings/page.js",
   "src/app/community/page.js",
   "src/app/trusted/page.js",
+  "src/app/trusted/[slug]/page.js",
   "src/app/contact/page.js",
   "src/app/sponsors/page.js",
   "src/app/podcasts/page.js",

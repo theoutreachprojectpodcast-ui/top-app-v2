@@ -63,9 +63,9 @@ export default function TrustedPage() {
           Trusted Resources
         </h2>
         <p className="ds-page-intro__lead">
-          Curated organizations The Outreach Project can connect veterans, first responders, and families with. Each
-          listing uses Trusted Resource branding (hero art, logos, and links) and may still open the public directory
-          profile when an IRS EIN is available.
+          Curated organizations The Outreach Project can connect veterans, first responders, and families with. Open a
+          resource profile for mission, programs, and official links — or the nonprofit directory when an IRS EIN is
+          available.
         </p>
         <p className="trustedListingIntro">
           These cards are a dedicated Trusted Resource layout — not the general Directory grid. Curated fields (logo,
