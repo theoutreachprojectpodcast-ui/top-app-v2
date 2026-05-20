@@ -1,5 +1,6 @@
 "use client";
 
+import { createElement } from "react";
 import { ExternalLink } from "lucide-react";
 
 /**
@@ -8,8 +9,6 @@ import { ExternalLink } from "lucide-react";
 export default function TrustedResourceProgramCard({ card }) {
   const href = String(card?.url || "").trim();
   if (!href) return null;
-  const Icon = card.Icon;
-
   return (
     <a
       className="trustedDetailProgramCard"
@@ -18,7 +17,7 @@ export default function TrustedResourceProgramCard({ card }) {
       rel="noopener noreferrer"
     >
       <span className="trustedDetailProgramCard__icon" aria-hidden="true">
-        <Icon strokeWidth={2} />
+        {card.Icon ? createElement(card.Icon, { strokeWidth: 2 }) : null}
       </span>
       <span className="trustedDetailProgramCard__body">
         <span className="trustedDetailProgramCard__title">{card.title}</span>

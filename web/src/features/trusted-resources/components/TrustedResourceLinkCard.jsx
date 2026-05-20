@@ -1,5 +1,6 @@
 "use client";
 
+import { createElement } from "react";
 import { ExternalLink } from "lucide-react";
 import { getLinkIcon } from "@/features/trusted-resources/domain/trustedResourceOutboundLinks";
 
@@ -9,7 +10,6 @@ import { getLinkIcon } from "@/features/trusted-resources/domain/trustedResource
 export default function TrustedResourceLinkCard({ link }) {
   const href = String(link?.url || "").trim();
   if (!href) return null;
-  const Icon = getLinkIcon(link.type);
   const isMail = href.toLowerCase().startsWith("mailto:");
   const isTel = href.toLowerCase().startsWith("tel:");
   const external = link.external !== false && !isMail && !isTel;
@@ -21,7 +21,7 @@ export default function TrustedResourceLinkCard({ link }) {
       {...(external ? { target: "_blank", rel: "noopener noreferrer" } : { rel: "noopener noreferrer" })}
     >
       <span className="trustedDetailLinkCard__icon" aria-hidden="true">
-        <Icon strokeWidth={2} />
+        {createElement(getLinkIcon(link.type), { strokeWidth: 2 })}
       </span>
       <span className="trustedDetailLinkCard__text">
         <span className="trustedDetailLinkCard__label">{link.label}</span>
