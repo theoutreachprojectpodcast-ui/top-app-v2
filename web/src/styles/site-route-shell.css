@@ -168,6 +168,15 @@
     min-width: 0;
     gap: 12px;
   }
+
+  .trustedDetailRoute {
+    padding-left: var(--ds-space-3, 12px);
+    padding-right: var(--ds-space-3, 12px);
+  }
+
+  .trustedDetailHero__bannerWrap {
+    min-height: 128px;
+  }
 }
 
 /* Sponsors hub (`/sponsors`) — hero CTAs + channel chips stack cleanly */

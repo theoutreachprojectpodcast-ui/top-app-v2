@@ -7,13 +7,13 @@
   --header-fade-height: 56px;
   --home-hero-image: url("/home/home-hero-flag-mission.png");
   --home-atmosphere-image: url("/home/home-atmosphere-cinematic-scene.png");
-  --topapp-page-atmosphere-image: var(--topapp-page-atmosphere-image-light, url("/home/app-page-background-light.png?v=13"));
+  --topapp-page-atmosphere-image: var(--topapp-page-atmosphere-image-light, url("/home/app-page-background-light.png?v=14"));
   --home-sponsors-image: url("/home/home-sponsors-city.png");
   --home-trusted-image: url("/home/home-trusted-mountain.png");
   --home-community-image: url("/home/home-community-group.png");
   --home-podcasts-image: url("/home/home-podcast-mic.png");
-  --topapp-mobile-atmosphere-image-light: url("/home/app-page-background-light-mobile.png?v=1");
-  --topapp-mobile-atmosphere-image-dark: url("/home/app-page-background-dark-mobile.png?v=1");
+  --topapp-mobile-atmosphere-image-light: url("/home/app-page-background-light-mobile.png?v=2");
+  --topapp-mobile-atmosphere-image-dark: url("/home/app-page-background-dark.png?v=15");
   min-height: 100vh;
   background: transparent;
   color: var(--color-text-primary);
@@ -27,35 +27,36 @@ main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) {
   --header-fade-height: 40px;
 }
 
-/* Main canvas + stacking: full-bleed photo on `main::before` (full document height); read veils on `::after`; header chrome = gradient on `.topbarOcclusion::before` only. Podcast excluded. */
+/* Main canvas: full-bleed photo on `html` (single cover, not tiled); read veils on `main::after`; header chrome = gradient on `.topbarOcclusion::before` only. Podcast excluded. */
 main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) {
   position: relative;
   isolation: isolate;
   overflow-x: clip;
 }
 /*
- * Topo backgrounds on `html` (scroll with page, not fixed to viewport) — `main.topApp` uses overflow-x: clip.
- * Desktop (≥761px): landscape 1024×682 PNGs. Mobile (≤760px): portrait 485×1024 PNGs only.
+ * Single full-bleed page photo on `html` (not tiled). `main.topApp` uses overflow-x: clip so the layer lives here.
+ * Desktop (≥761px): landscape PNG. Mobile (≤760px): portrait PNG. One image per breakpoint — cover, no-repeat.
  */
 html:has(main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])) {
-  --topapp-page-atmosphere-image-light: url("/home/app-page-background-light.png?v=13");
-  --topapp-page-atmosphere-image-dark: url("/home/app-page-background-dark.png?v=13");
-  --topapp-page-atmosphere-image-light-mobile: url("/home/app-page-background-light-mobile.png?v=1");
-  --topapp-page-atmosphere-image-dark-mobile: url("/home/app-page-background-dark-mobile.png?v=1");
+  --topapp-page-atmosphere-image-light: url("/home/app-page-background-light.png?v=14");
+  --topapp-page-atmosphere-image-dark: url("/home/app-page-background-dark.png?v=15");
+  --topapp-page-atmosphere-image-light-mobile: url("/home/app-page-background-light-mobile.png?v=2");
+  --topapp-page-atmosphere-image-dark-mobile: url("/home/app-page-background-dark.png?v=15");
   position: relative;
   min-height: 100%;
   background-color: #e8f0e6;
   background-image: var(--topapp-page-atmosphere-image-light);
-  background-repeat: repeat-y;
-  background-position: top center;
-  background-size: 100% auto;
-  background-attachment: scroll;
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: cover;
+  background-attachment: fixed;
   image-rendering: auto;
   -webkit-font-smoothing: antialiased;
 }
 html[data-color-scheme="dark"]:has(main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])),
 html.dark:has(main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])) {
-  background-color: #0d1410;
+  /* Fallback matches topo art edge tone (see `/home/app-page-background-dark.png`) */
+  background-color: #121a14;
   background-image: var(--topapp-page-atmosphere-image-dark);
 }
 
@@ -63,10 +64,12 @@ html.dark:has(main.topApp:not(.appShell--podcast):not([data-page-atmosphere="pod
   html:has(main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])) {
     background-color: #e8f0e6;
     background-image: var(--topapp-page-atmosphere-image-light-mobile);
+    background-position: center top;
+    background-attachment: scroll;
   }
   html[data-color-scheme="dark"]:has(main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])),
   html.dark:has(main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])) {
-    background-color: #0d1410;
+    background-color: #121a14;
     background-image: var(--topapp-page-atmosphere-image-dark-mobile);
   }
 }
@@ -2094,6 +2097,12 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   padding: var(--ds-space-4, 16px);
   background: linear-gradient(180deg, var(--color-surface-card) 0%, var(--color-surface-card-deep) 100%);
   box-shadow: var(--shadow-card);
+}
+.resultCard--directoryListing {
+  cursor: default;
+}
+.resultCard--directoryListing .nonprofitOrgName {
+  cursor: default;
 }
 .resultCard--clickable {
   cursor: pointer;

@@ -3,12 +3,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Heart, MapPin } from "lucide-react";
+import { Heart, MapPin, ShieldCheck } from "lucide-react";
 import NonprofitIcon from "@/features/nonprofits/components/NonprofitIcon";
+import { formatEinDashed } from "@/features/nonprofits/lib/einUtils";
 import TrustedResourceLinkCard from "@/features/trusted-resources/components/TrustedResourceLinkCard";
 import TrustedResourceProgramCard from "@/features/trusted-resources/components/TrustedResourceProgramCard";
 import { partitionForSidebar } from "@/features/trusted-resources/domain/trustedResourceConnectLinks";
-import { getTrustedResourceBySlug } from "@/features/trusted-resources/api/trustedResourceCatalogApi";
+import { getTrustedResourceDetailForSlug } from "@/features/trusted-resources/api/trustedResourceCatalogApi";
 import { useProfileData } from "@/features/profile/ProfileDataProvider";
 import { workosSignInLink, workosSignUpHref } from "@/lib/auth/workosReturnTo";
 import { getSupabaseClient } from "@/lib/supabase/client";
@@ -29,17 +30,20 @@ function FavoriteButton({ active, busy, onClick, className = "" }) {
       aria-pressed={active}
     >
       <Heart className="trustedDetailFavBtn__icon" strokeWidth={2} fill={active ? "currentColor" : "none"} />
-      {active ? "Favorite resource" : "Add to favorites"}
+      {active ? "Saved" : "Add to favorites"}
     </button>
   );
 }
 
-export default function TrustedResourceDetailPage({ slug }) {
+/**
+ * @param {{ slug: string, initialResource?: object | null }} props
+ */
+export default function TrustedResourceDetailPage({ slug, initialResource = null }) {
   const pathname = usePathname();
   const supabase = useMemo(() => getSupabaseClient(), []);
   const { isAuthenticated, favoriteEntityKeys, toggleFavoriteEntityKey } = useProfileData();
-  const [resource, setResource] = useState(null);
-  const [status, setStatus] = useState("Loading trusted resource…");
+  const [resource, setResource] = useState(initialResource);
+  const [status, setStatus] = useState(initialResource ? "" : "Loading trusted resource…");
   const [favBusy, setFavBusy] = useState(false);
 
   const returnPath = `/trusted/${slug}`;
@@ -49,7 +53,8 @@ export default function TrustedResourceDetailPage({ slug }) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const row = await getTrustedResourceBySlug(supabase, slug);
+      if (!initialResource) setStatus("Loading trusted resource…");
+      const row = await getTrustedResourceDetailForSlug(supabase, slug);
       if (cancelled) return;
       setResource(row);
       setStatus(row ? "" : "Trusted resource not found.");
@@ -57,7 +62,7 @@ export default function TrustedResourceDetailPage({ slug }) {
     return () => {
       cancelled = true;
     };
-  }, [supabase, slug]);
+  }, [supabase, slug, initialResource]);
 
   const favoriteKey = resource?.trustedResourceSlug ? `trusted:${resource.trustedResourceSlug}` : "";
   const isFavorited = favoriteKey && favoriteEntityKeys.includes(favoriteKey);
@@ -90,20 +95,42 @@ export default function TrustedResourceDetailPage({ slug }) {
   );
   const overviewText = resource?.overview || resource?.mission || "";
   const hasOverview = Boolean(String(overviewText).trim());
+  const shortLead = String(resource?.shortDescription || "").trim();
+  const showShortLead =
+    shortLead &&
+    shortLead !== String(overviewText).trim() &&
+    shortLead.length < String(overviewText).length - 24;
+  const helpfulLinks = resource?.helpfulLinks || [];
   const showWebsiteFallback =
     !hasOverview && !resource?.whoTheyServe && !resource?.programCards?.length && resource?.websiteUrl;
+  const einLabel =
+    resource?.einIdentityVerified && resource?.directoryNonprofitId
+      ? formatEinDashed(resource.directoryNonprofitId)
+      : "";
 
   return (
-    <div className="trustedDetailPage">
+    <section className="card trustedDetailRoute" aria-label="Trusted resource profile">
+      <nav className="trustedDetailBreadcrumb" aria-label="Breadcrumb">
+        <Link href="/trusted">Trusted Resources</Link>
+        {resource ? (
+          <>
+            <span className="trustedDetailBreadcrumb__sep" aria-hidden="true">
+              /
+            </span>
+            <span className="trustedDetailBreadcrumb__current">{resource.name}</span>
+          </>
+        ) : null}
+      </nav>
+
       {!resource ? (
-        <div className="card trustedDetailCard">
+        <div className="trustedDetailPage trustedDetailPage--empty">
           <p className="trustedDetailStatus">{status}</p>
           <Link className="btnSoft" href="/trusted">
             ← Back to Trusted Resources
           </Link>
         </div>
       ) : (
-        <>
+        <div className="trustedDetailPage">
           <section className="trustedDetailHero" aria-label={`${resource.name} profile`}>
             <div className="trustedDetailHero__bannerWrap">
               {heroSrc ? (
@@ -135,7 +162,10 @@ export default function TrustedResourceDetailPage({ slug }) {
             <div className="trustedDetailHero__panel card">
               <div className="trustedDetailHero__panelInner">
                 <div className="trustedDetailHero__copy">
-                  <p className="trustedDetailHero__eyebrow">Trusted Resource</p>
+                  <p className="trustedDetailHero__eyebrow">
+                    <ShieldCheck className="trustedDetailHero__eyebrowIcon" aria-hidden strokeWidth={2} />
+                    Curated Trusted Resource
+                  </p>
                   <h1 className="trustedDetailHero__title">{resource.name}</h1>
                   <div className="trustedDetailHero__chips">
                     <span
@@ -181,12 +211,62 @@ export default function TrustedResourceDetailPage({ slug }) {
             </div>
           </section>
 
+          <div className="trustedDetailAtAGlance card" aria-label="At a glance">
+            <dl className="trustedDetailAtAGlance__grid">
+              <div className="trustedDetailAtAGlance__item">
+                <dt>Category</dt>
+                <dd>{cat?.label || "Trusted resource"}</dd>
+              </div>
+              {locationLabel ? (
+                <div className="trustedDetailAtAGlance__item">
+                  <dt>Service area</dt>
+                  <dd>{locationLabel}</dd>
+                </div>
+              ) : null}
+              {resource.websiteUrl ? (
+                <div className="trustedDetailAtAGlance__item trustedDetailAtAGlance__item--wide">
+                  <dt>Website</dt>
+                  <dd>
+                    <a href={resource.websiteUrl} target="_blank" rel="noopener noreferrer">
+                      {resource.websiteUrl.replace(/^https?:\/\//i, "").replace(/\/$/, "")}
+                    </a>
+                  </dd>
+                </div>
+              ) : null}
+              {einLabel ? (
+                <div className="trustedDetailAtAGlance__item">
+                  <dt>EIN</dt>
+                  <dd>{einLabel}</dd>
+                </div>
+              ) : null}
+            </dl>
+          </div>
+
           <div className="trustedDetailGrid">
             <div className="trustedDetailMain">
+              {showShortLead ? (
+                <section className="card trustedDetailCard">
+                  <h2 className="trustedDetailSectionTitle">Summary</h2>
+                  <p className="trustedDetailProse trustedDetailProse--lead">{shortLead}</p>
+                </section>
+              ) : null}
+
               {hasOverview ? (
                 <section className="card trustedDetailCard">
                   <h2 className="trustedDetailSectionTitle">Organization overview</h2>
                   <p className="trustedDetailProse trustedDetailProse--lead">{overviewText}</p>
+                  {resource.websiteUrl ? (
+                    <p className="trustedDetailInlineCta">
+                      <a
+                        className="btnSoft"
+                        href={resource.websiteUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Official website
+                      </a>
+                    </p>
+                  ) : null}
                 </section>
               ) : null}
 
@@ -199,12 +279,27 @@ export default function TrustedResourceDetailPage({ slug }) {
 
               {resource.services?.length ? (
                 <section className="card trustedDetailCard">
-                  <h2 className="trustedDetailSectionTitle">Programs & services</h2>
+                  <h2 className="trustedDetailSectionTitle">Programs &amp; services</h2>
                   <ul className="trustedDetailList">
                     {resource.services.map((item) => (
                       <li key={item}>{item}</li>
                     ))}
                   </ul>
+                </section>
+              ) : null}
+
+              {helpfulLinks.length ? (
+                <section className="card trustedDetailCard">
+                  <h2 className="trustedDetailSectionTitle">Key links</h2>
+                  <p className="trustedDetailSectionLead">
+                    Primary ways to get help, volunteer, donate, or learn more on the organization&apos;s official
+                    channels.
+                  </p>
+                  <div className="trustedDetailLinkGrid trustedDetailLinkGrid--key">
+                    {helpfulLinks.map((link) => (
+                      <TrustedResourceLinkCard key={`helpful-${link.type}-${link.url}`} link={link} />
+                    ))}
+                  </div>
                 </section>
               ) : null}
 
@@ -266,7 +361,7 @@ export default function TrustedResourceDetailPage({ slug }) {
               ) : null}
             </div>
 
-            <aside className="trustedDetailAside">
+            <aside className="trustedDetailAside" aria-label="Quick actions and facts">
               <div className="trustedDetailAsideSticky">
                 <section className="card trustedDetailCard trustedDetailAsideActions">
                   <h2 className="trustedDetailSectionTitle">Quick actions</h2>
@@ -291,6 +386,15 @@ export default function TrustedResourceDetailPage({ slug }) {
                         rel={primaryCta.external !== false ? "noopener noreferrer" : undefined}
                       >
                         {primaryCta.label}
+                      </a>
+                    ) : resource.websiteUrl ? (
+                      <a
+                        className="btnPrimary trustedDetailAsideCta"
+                        href={resource.websiteUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Visit website
                       </a>
                     ) : null}
                     {sidebarParts.quick.map((link) => (
@@ -330,10 +434,22 @@ export default function TrustedResourceDetailPage({ slug }) {
                         <dd>{locationLabel}</dd>
                       </>
                     ) : null}
+                    {cat?.label ? (
+                      <>
+                        <dt>Focus area</dt>
+                        <dd>{cat.label}</dd>
+                      </>
+                    ) : null}
                     {resource.isVerified ? (
                       <>
                         <dt>Listing</dt>
                         <dd>Curated Trusted Resource</dd>
+                      </>
+                    ) : null}
+                    {einLabel ? (
+                      <>
+                        <dt>EIN</dt>
+                        <dd>{einLabel}</dd>
                       </>
                     ) : null}
                     {resource.lastReviewedAt ? (
@@ -367,8 +483,8 @@ export default function TrustedResourceDetailPage({ slug }) {
               ← All Trusted Resources
             </Link>
           </p>
-        </>
+        </div>
       )}
-    </div>
+    </section>
   );
 }

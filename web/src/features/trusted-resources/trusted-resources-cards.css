@@ -51,6 +51,43 @@
   box-shadow: 0 12px 32px var(--color-shadow);
 }
 
+.trustedResourceCard--navigable {
+  cursor: pointer;
+}
+
+.trustedResourceCard--navigable:hover {
+  border-color: color-mix(in srgb, var(--color-accent-hover) 40%, var(--color-border-subtle));
+  box-shadow: 0 14px 36px color-mix(in srgb, var(--color-shadow) 85%, transparent);
+}
+
+.trustedResourceCard__hitLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+}
+
+.trustedResourceCard__hitLayer:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+  z-index: 3;
+}
+
+.trustedResourceCard--navigable .trustedResourceCard__media,
+.trustedResourceCard--navigable .trustedResourceCard__body {
+  position: relative;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.trustedResourceCard__titleText {
+  color: inherit;
+}
+
+.trustedResourceCard--navigable:hover .trustedResourceCard__titleText {
+  color: var(--color-accent);
+}
+
 .trustedResourceCard__media {
   position: relative;
   padding: 10px 10px 8px;
@@ -294,7 +331,16 @@
   color: var(--color-text-secondary);
 }
 
+.trustedResourceCard--navigable .trustedResourceCard__details {
+  position: relative;
+  z-index: 2;
+  pointer-events: auto;
+}
+
 .trustedResourceCard__footer {
+  position: relative;
+  z-index: 2;
+  pointer-events: auto;
   margin-top: auto;
   padding-top: 6px;
   display: flex;

@@ -63,10 +63,18 @@ export default function TrustedResourceCard({ resource }) {
 
   return (
     <article
-      className="trustedResourceCard"
+      className={`trustedResourceCard${resourceHref ? " trustedResourceCard--navigable" : ""}`}
       data-trusted-resource-id={id}
       aria-labelledby={titleId}
     >
+      {resourceHref ? (
+        <Link
+          className="trustedResourceCard__hitLayer"
+          href={resourceHref}
+          aria-label={`View profile for ${name}`}
+          tabIndex={-1}
+        />
+      ) : null}
       <div className="trustedResourceCard__media">
         <div className="trustedResourceCard__headerFrame">
           <div
@@ -100,13 +108,7 @@ export default function TrustedResourceCard({ resource }) {
           </div>
           <div className="trustedResourceCard__titleBlock">
             <h3 className="trustedResourceCard__title" id={titleId}>
-              {resourceHref ? (
-                <Link className="trustedResourceCard__titleLink" href={resourceHref}>
-                  {name}
-                </Link>
-              ) : (
-                name
-              )}
+              <span className="trustedResourceCard__titleText">{name}</span>
             </h3>
             <div className="trustedResourceCard__chipRow">
               <span

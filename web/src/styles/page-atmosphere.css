@@ -32,7 +32,7 @@ main.topApp:not(.appShell--podcast) .shell > .card:not(.cardHero):not(.action):n
     0 0 0 1px color-mix(in srgb, #ffffff 5%, transparent);
 }
 
-/* TopApp topo PNGs + light noise: see `top-app.css` (`html` scrolls with page). Do not override with gradient-only washes here. */
+/* TopApp full-bleed page photo + light noise: see `top-app.css` (`html`, single cover layer). Do not override with gradient-only washes here. */
 
 /* Optional: very slow atmospheric drift (disabled for reduced motion) */
 @keyframes pageAtmoWashDrift {

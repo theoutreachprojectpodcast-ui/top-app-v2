@@ -314,7 +314,7 @@ body::before {
     linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 40%);
 }
 
-/* Main app: scrolling topo PNG on `html` replaces this wash (see `top-app.css`). */
+/* Main app: full-bleed page photo on `html` replaces this wash (see `top-app.css`). */
 html:has(main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])) body::before {
   display: none;
 }
@@ -345,7 +345,7 @@ html[data-color-scheme="dark"]:has(.appShell--podcast) body::after {
   opacity: 0.1;
 }
 
-/* Main app topo: `top-app.css` — do not stack legacy SVG texture over page backgrounds */
+/* Main app page photo: `top-app.css` — do not stack legacy SVG texture over page backgrounds */
 html:has(main.topApp):not(:has(.appShell--podcast)) body::after {
   background-image: var(--texture-noise);
   opacity: 0.035;

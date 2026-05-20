@@ -16,6 +16,7 @@ export default function NonprofitCard({
   actionMode = "directory",
 }) {
   const favoriteKey = String(card.ein || card.id || "").trim();
+  const isDirectory = actionMode === "directory";
   const isTrustedResourcesCard = actionMode === "trustedResource";
   const listingPhoto = isTrustedResourcesCard
     ? String(card.heroImageUrl || "").trim()
@@ -25,12 +26,12 @@ export default function NonprofitCard({
     card.einNormalized?.length === 9 ? card.einNormalized : normalizeEinDigits(card.ein);
   const profilePath = einDigits.length === 9 ? `/nonprofit/${einDigits}` : "";
   const externalFallback = isTrustedResourcesCard ? card.primaryLink : "";
-  const useProfileLink = einDigits.length === 9 && card.einIdentityVerified !== false;
-  const activationTarget = profilePath || externalFallback;
-
-  const socialOnlyLinks = card.links.filter((l) => l.type !== "website");
+  const useProfileLink =
+    !isDirectory && einDigits.length === 9 && card.einIdentityVerified !== false;
+  const activationTarget = isDirectory ? "" : profilePath || externalFallback;
 
   function onCardActivate() {
+    if (isDirectory) return;
     if (profilePath) {
       if (typeof window !== "undefined") window.location.assign(profilePath);
       return;
@@ -39,7 +40,7 @@ export default function NonprofitCard({
   }
 
   function onCardClick(event) {
-    if (!activationTarget || useProfileLink) return;
+    if (isDirectory || !activationTarget || useProfileLink) return;
     const interactiveTarget = event.target?.closest?.(
       "a,button,input,select,textarea,label,[data-torp-card-interactive]"
     );
@@ -48,7 +49,7 @@ export default function NonprofitCard({
   }
 
   function onCardKeyDown(event) {
-    if (!activationTarget || useProfileLink) return;
+    if (isDirectory || !activationTarget || useProfileLink) return;
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
       onCardActivate();
@@ -152,32 +153,13 @@ export default function NonprofitCard({
           Unfavorite
         </button>
       )}
-      {actionMode === "directory"
-        ? card.links
-            .filter((l) => l.type === "website")
-            .map((l) => (
-              <a
-                key={l.url}
-                className="btnSoft"
-                data-torp-card-interactive
-                href={l.url}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Website
-              </a>
-            ))
-        : null}
-      {actionMode === "directory" && socialOnlyLinks.length > 0 ? (
-        <NonprofitSocialLinks links={socialOnlyLinks} />
-      ) : null}
       {actionMode !== "directory" ? <NonprofitSocialLinks links={card.links} /> : null}
     </div>
   );
 
   return (
     <article
-      className={`resultCard torpListingCard tier-${card.tier} category-${categoryKey} resultCard--listingHero ${activationTarget ? "resultCard--clickable" : ""} ${isTrustedResourcesCard ? "resultCard--trustedResource" : ""} ${useProfileLink ? "resultCard--profileLink" : ""}`}
+      className={`resultCard torpListingCard tier-${card.tier} category-${categoryKey} resultCard--listingHero ${!isDirectory && activationTarget ? "resultCard--clickable" : ""} ${isDirectory ? "resultCard--directoryListing" : ""} ${isTrustedResourcesCard ? "resultCard--trustedResource" : ""} ${useProfileLink ? "resultCard--profileLink" : ""}`}
       onClick={useProfileLink ? undefined : onCardClick}
       onKeyDown={useProfileLink ? undefined : onCardKeyDown}
       role={activationTarget && !useProfileLink ? "link" : undefined}
