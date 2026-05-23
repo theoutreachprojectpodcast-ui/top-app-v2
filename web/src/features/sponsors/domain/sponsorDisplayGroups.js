@@ -36,7 +36,6 @@ const SLUG_DEFAULT_GROUP = /** @type {Record<string, SponsorDisplayGroupKey>} */
   "gameday-mens-health": "mission_partner",
   "rope-solutions": "foundational",
   "the-veterans-veteran": "foundational",
-  "wars-end-merch": "foundational",
   "iron-soldiers-coffee-company": "impact",
   "rucking-realty-group": "impact",
   "vetnav-services": "impact",

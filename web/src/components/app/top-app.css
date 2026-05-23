@@ -5199,6 +5199,11 @@ html.dark .communityPostBodyGuideSteps li {
 .sponsorPremiumLogoShell--panel-light .sponsorPremiumWordmark {
   color: #141816;
 }
+/* Green Gorilla: wide white-on-black wordmark — tighter inset so the circle plate reads clearly */
+.sponsorPremiumCard[data-sponsor-slug="green-gorilla-land-management"] .sponsorPremiumLogoImg {
+  padding: 5px;
+  object-fit: contain;
+}
 .sponsorPremiumLogoImg {
   width: 100%;
   height: 100%;
@@ -6405,6 +6410,14 @@ html.dark .communityPostBodyGuideSteps li {
     width: 100%;
     justify-content: center;
     flex-wrap: wrap;
+  }
+  /* Theme toggle lives in `.topbarLeft` — keep it left-aligned in the mobile button bar. */
+  .topbarLeft .topbarActionsCluster,
+  .topbarLeft .topbarActionsCluster--start {
+    justify-content: flex-start;
+  }
+  main.topApp.topApp--auth-out[data-page-atmosphere="home"] .topbarLeft {
+    justify-content: flex-start;
   }
   .topbarRight .themeToggle {
     min-width: 40px;

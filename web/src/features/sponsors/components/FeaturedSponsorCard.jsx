@@ -188,6 +188,7 @@ export default function FeaturedSponsorCard({
   return (
     <article
       className={`torpListingCard sponsorPremiumCard sponsorPremiumCard--${warm}${tierClass}`}
+      data-sponsor-slug={String(sponsor.slug || sponsor.id || "").trim().toLowerCase() || undefined}
       style={accentStyle}
       role="button"
       tabIndex={0}

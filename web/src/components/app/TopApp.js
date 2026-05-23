@@ -543,14 +543,16 @@ function TopAppInner({ initialNav = "home" }) {
     if (!file) return;
     if (!String(file.type || "").startsWith("image/")) return;
     if (sessionKind === "workos" && uploadAvatarFile) {
+      setEditSaveError("");
       const result = await uploadAvatarFile(file);
       if (!result?.ok) {
-        setAuthError(result?.message || "Could not upload photo.");
+        setEditSaveError(result?.message || "Could not upload photo.");
         return;
       }
-      await refreshWorkOSProfile?.();
-      setEditDraft((d) => ({ ...d, avatarUrl: profile.avatarUrl }));
-      closeEditOverlay();
+      if (result.avatarUrl) {
+        setEditDraft((d) => ({ ...d, avatarUrl: result.avatarUrl }));
+      }
+      setEditSaveOk("Photo updated. Tap Save to keep your other profile changes.");
       return;
     }
     try {

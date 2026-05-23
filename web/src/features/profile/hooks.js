@@ -33,6 +33,7 @@ import {
   upsertProfileByUserId,
 } from "@/features/profile/api";
 import { mapNonprofitCardRow } from "@/features/nonprofits/mappers/nonprofitCardMapper";
+import { profileToApiPatch } from "@/lib/profile/profileApiPatch";
 
 function mapLegacyMembershipToTier(status) {
   const v = String(status || "").toLowerCase();
@@ -43,49 +44,15 @@ function mapLegacyMembershipToTier(status) {
   return "support";
 }
 
-function profileToApiPatch(p) {
-  const patch = {
-    firstName: p.firstName,
-    lastName: p.lastName,
-    displayName: p.displayName || `${p.firstName || ""} ${p.lastName || ""}`.trim(),
-    email: p.email,
-    bio: p.bio,
-    banner: p.banner,
-    theme: p.theme,
-    avatarUrl: p.avatarUrl,
-    phoneNumber: p.phoneNumber,
-    postalCode: p.postalCode,
-    preferredContactMethod: p.preferredContactMethod,
-    notificationPreferences: Array.isArray(p.notificationPreferences) ? p.notificationPreferences : undefined,
-    identitySegment: p.identitySegment,
-    jobTitle: p.jobTitle,
-    reasonForJoining: p.reasonForJoining,
-    supportNeeds: p.supportNeeds,
-    communities: p.communities,
-    contributionInterests:
-      p.contributionInterests && typeof p.contributionInterests === "object" ? p.contributionInterests : undefined,
-    preferredContributionContact: p.preferredContributionContact,
-    identityRole: p.identityRole,
-    missionStatement: p.missionStatement,
-    organizationAffiliation: p.organizationAffiliation,
-    serviceBackground: p.serviceBackground,
-    city: p.city,
-    state: p.state,
-    causes: p.causes,
-    skills: p.skills,
-    volunteerInterests: p.volunteerInterests,
-    supportInterests: p.supportInterests,
-    contributionSummary: p.contributionSummary,
-    sponsorOrgName: p.sponsorOrgName,
-    sponsorWebsite: p.sponsorWebsite,
-  };
-  const cs = String(p.colorScheme || "").trim().toLowerCase();
-  if (cs === "light" || cs === "dark") patch.colorScheme = cs;
-  if (p.accountIntent != null && String(p.accountIntent).trim()) {
-    patch.accountIntent = String(p.accountIntent).trim();
+function profileSaveErrorMessage(data, res) {
+  const code = String(data?.error || "").trim();
+  if (code === "server_storage_unavailable" || res?.status === 503) {
+    return "Profile save is temporarily unavailable (server storage). Try again shortly.";
   }
-  if (typeof p.onboardingSkipped === "boolean") patch.onboardingSkipped = p.onboardingSkipped;
-  return patch;
+  if (code === "completeness_sync_failed") {
+    return data?.message || "Profile saved partially; completeness sync failed. Try again.";
+  }
+  return data?.message || data?.error || "Profile could not be saved to the server.";
 }
 
 /**
@@ -436,7 +403,7 @@ export function useProfileDataState(supabase) {
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
-          const message = data.message || data.error || "Profile could not be saved to the server.";
+          const message = profileSaveErrorMessage(data, res);
           setProfileError(message);
           await refreshWorkOSProfile();
           return { ok: false, message };
@@ -732,15 +699,23 @@ export function useProfileDataState(supabase) {
     try {
       const res = await fetch("/api/me/avatar", { method: "POST", credentials: "include", body: fd });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) return { ok: false, message: data.message || data.error || "Upload failed." };
-      if (data.profile) {
-        setProfile(
-          profileFromApiDto(
-            mergeAccountEmailIntoProfileDto(data.profile, { email: workOSAccountEmail || undefined }),
-          ),
-        );
+      if (!res.ok) {
+        const code = String(data?.error || "").trim();
+        const message =
+          code === "server_storage_unavailable" || res.status === 503
+            ? "Photo upload is temporarily unavailable (server storage)."
+            : data.message || data.error || "Upload failed.";
+        return { ok: false, message };
       }
-      return { ok: true };
+      let avatarUrl = String(data.photoUrl || "").trim();
+      if (data.profile) {
+        const mapped = profileFromApiDto(
+          mergeAccountEmailIntoProfileDto(data.profile, { email: workOSAccountEmail || undefined }),
+        );
+        setProfile(mapped);
+        avatarUrl = mapped.avatarUrl || avatarUrl;
+      }
+      return { ok: true, avatarUrl };
     } catch {
       return { ok: false, message: "Upload failed." };
     }

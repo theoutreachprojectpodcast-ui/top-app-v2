@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { isQaDeploymentContext } from "@/lib/runtime/qaDeploymentContext";
 
 /**
  * Service-role client for trusted server routes only. Returns null if misconfigured.
@@ -16,6 +17,7 @@ export function profileTableName() {
   const explicit =
     process.env.PROFILE_TABLE || process.env.TOP_PROFILE_TABLE || process.env.NEXT_PUBLIC_PROFILE_TABLE;
   if (String(explicit || "").trim()) return String(explicit).trim();
-  if (String(process.env.VERCEL_ENV || "").toLowerCase() === "preview") return "top_qa_profiles";
+  const vercelEnv = String(process.env.VERCEL_ENV || "").toLowerCase();
+  if (isQaDeploymentContext() || vercelEnv === "preview") return "top_qa_profiles";
   return "torp_profiles";
 }

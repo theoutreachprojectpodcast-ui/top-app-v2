@@ -9,9 +9,13 @@ import { resolveSponsorListingLogoUrl } from "@/lib/sponsors/resolveSponsorListi
 
 const SPONSOR_TABLE = "sponsors_catalog";
 
+/** Omitted from `/sponsors` tier roster and static fallback seed (slug unchanged in DB for history). */
+const HIDDEN_SPONSOR_HUB_ROSTER_SLUGS = new Set(["wars-end-merch"]);
+
 /** Slugs hidden from /sponsors roster only (direct `/sponsors/[slug]` may still resolve when active in DB). */
-export function isHiddenFromSponsorHubRosterSlug(_slug) {
-  return false;
+export function isHiddenFromSponsorHubRosterSlug(slug) {
+  const key = String(slug || "").trim().toLowerCase();
+  return key ? HIDDEN_SPONSOR_HUB_ROSTER_SLUGS.has(key) : false;
 }
 
 /** @deprecated Use isHiddenFromSponsorHubRosterSlug — kept for any external imports. */

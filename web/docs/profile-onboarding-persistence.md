@@ -2,7 +2,7 @@
 
 ## Persistence behavior
 
-- On first authenticated callback, a `torp_profiles` row is created (profile shell).
+- On first authenticated callback, a profile row is created (profile shell): `torp_profiles` in production, `top_qa_profiles` on QA (`qa-the-outreach-project.vercel.app` and Preview). Run `web/supabase/top_qa_profiles_v07_onboarding_parity.sql` on the QA Supabase project if profile save returns column errors.
 - Profile edits (`/api/me/profile`) are written to Supabase immediately.
 - On next login/refresh, `/api/me` rehydrates profile from the same row.
 - Onboarding completion updates `onboarding_completed`, `onboarding_status`, and membership intent fields.

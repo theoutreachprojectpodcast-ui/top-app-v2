@@ -91,7 +91,19 @@ export async function PATCH(request) {
   if (typeof body.bio === "string") row.bio = body.bio.trim();
   if (typeof body.banner === "string") row.banner = body.banner.trim();
   if (typeof body.theme === "string") row.theme = body.theme.trim();
-  if (typeof body.avatarUrl === "string") row.profile_photo_url = body.avatarUrl.trim();
+  if (typeof body.avatarUrl === "string") {
+    const photo = body.avatarUrl.trim();
+    if (photo.startsWith("data:")) {
+      return Response.json(
+        {
+          error: "invalid_avatar_url",
+          message: "Upload your photo using the file picker; inline image data cannot be saved.",
+        },
+        { status: 400 },
+      );
+    }
+    if (photo) row.profile_photo_url = photo;
+  }
   if (typeof body.phoneNumber === "string") row.phone_number = body.phoneNumber.trim();
   if (typeof body.postalCode === "string") row.postal_code = body.postalCode.trim();
   if (typeof body.jobTitle === "string") row.job_title = body.jobTitle.trim();

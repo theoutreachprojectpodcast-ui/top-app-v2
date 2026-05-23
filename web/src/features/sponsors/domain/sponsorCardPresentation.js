@@ -11,7 +11,6 @@ import {
   ROPE_SOLUTIONS_LOGO_URL,
   THE_VETERANS_VETERAN_LOGO_URL,
   VET_NAV_SERVICES_LOGO_URL,
-  WARS_END_MERCH_LOGO_URL,
 } from "@/features/sponsors/data/featuredSponsors";
 
 const DEFAULT = {
@@ -72,15 +71,6 @@ const BY_SLUG = {
     logoPanelMode: "dark",
     logoFallbackUrls: [THE_VETERANS_VETERAN_LOGO_URL],
   },
-  "wars-end-merch": {
-    accentColor: "#f59e0b",
-    cardScrimGradient:
-      "linear-gradient(118deg, rgba(18, 12, 8, 0.96) 0%, rgba(28, 18, 10, 0.76) 46%, rgba(12, 8, 6, 0.55) 100%)",
-    veteranOwnedDefault: true,
-    locationChips: ["Texas"],
-    logoPanelMode: "dark",
-    logoFallbackUrls: [WARS_END_MERCH_LOGO_URL],
-  },
   "gameday-mens-health": {
     accentColor: "#f87171",
     cardScrimGradient:
@@ -106,7 +96,8 @@ const BY_SLUG = {
       "linear-gradient(118deg, rgba(8, 14, 10, 0.96) 0%, rgba(12, 20, 14, 0.78) 44%, rgba(8, 12, 10, 0.55) 100%)",
     veteranOwnedDefault: true,
     locationChips: ["Charleston, SC", "Lowcountry"],
-    logoPanelMode: "light",
+    /* Official mark is white stencil on black art — dark logo shell (not panel-light). */
+    logoPanelMode: "dark",
     logoFallbackUrls: [GREEN_GORILLA_LAND_MANAGEMENT_LOGO_URL],
   },
 };

@@ -22,15 +22,12 @@ export const IRON_SOLDIERS_COFFEE_LOGO_URL = "/sponsors/iron-soldiers-coffee-com
 /** The Veterans Veteran — official mark (black field, high-contrast wordmark). */
 export const THE_VETERANS_VETERAN_LOGO_URL = "/sponsors/the-veterans-veteran-logo.png";
 
-/** War's End — veteran-owned woodworking & flags shop (warsendmerch.com). */
-export const WARS_END_MERCH_LOGO_URL =
-  "https://images.squarespace-cdn.com/content/v1/6959573fd567e738e7c613f3/cfd220a6-7daf-4845-8d83-fdb8c2ffa128/ChatGPT+Image+Jan+7%2C+2026%2C+08_37_51+PM.png?format=2500w";
-
 /** Vet Nav Services — circular compass mark (black on white). */
 export const VET_NAV_SERVICES_LOGO_URL = "/sponsors/vetnav-services-logo.png";
 
 /** Green Gorilla Land Management — official wordmark (gglandmanagement.com). */
-export const GREEN_GORILLA_LAND_MANAGEMENT_LOGO_URL = "/sponsors/green-gorilla-land-management-logo.png";
+export const GREEN_GORILLA_LAND_MANAGEMENT_LOGO_URL =
+  "/sponsors/green-gorilla-land-management-logo.png?v=2";
 
 export const FEATURED_SPONSORS = [
   {
@@ -132,31 +129,6 @@ export const FEATURED_SPONSORS = [
     veteranOwned: true,
     featured: true,
     socialLinks: {},
-  },
-  {
-    id: "wars-end-merch",
-    name: "War's End",
-    sponsorType: "foundational_sponsor",
-    sponsorDisplayGroup: "foundational",
-    primaryDisplayTag: "Foundational Sponsor",
-    tag: "Handmade American flags & custom woodworking",
-    industry: "Custom woodworking & flags",
-    tierLabel: "Foundational sponsor",
-    subtitle:
-      "Veteran-owned Texas shop—hand-built American flags and custom woodwork honoring service, recovery, and resilience.",
-    longDescription:
-      "War's End is a veteran-owned custom woodworking business led by Joshua Melching after twenty years of military service. The shop hand-builds American flags and one-of-a-kind wood pieces with discipline and intention. A portion of proceeds supports veteran nonprofit partners, and the team donates flags to mission-aligned organizations including Freedom Alliance, War Heroes On Water, and Frontline Heroes Outdoors across Texas and beyond.",
-    ctaLabel: "Visit Website",
-    ctaUrl: "https://www.warsendmerch.com/",
-    logoUrl: WARS_END_MERCH_LOGO_URL,
-    warmVariant: "amber",
-    backgroundImageUrl: "/sponsors/featured-bg-wars-end-merch.png",
-    missionPartner: true,
-    veteranOwned: true,
-    featured: true,
-    socialLinks: {
-      instagram: "https://www.instagram.com/wars__end/",
-    },
   },
   {
     id: "rucking-realty-group",

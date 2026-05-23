@@ -32,6 +32,12 @@
     align-items: center;
   }
 
+  .topbarLeft .topbarActionsCluster--start {
+    justify-content: flex-start;
+    width: auto;
+    max-width: 100%;
+  }
+
   .siteMobileNavMore__trigger {
     display: inline-flex;
     align-items: center;
