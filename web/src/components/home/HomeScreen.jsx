@@ -1,6 +1,5 @@
 "use client";
 
-import HomeProfileProgressNotice from "@/components/app/HomeProfileProgressNotice";
 import HomeSponsorBannerPlacements from "@/components/app/HomeSponsorBannerPlacements";
 import MissionPageTopStrip from "@/components/layout/MissionPageTopStrip";
 import HomeAuthCards from "@/components/home/HomeAuthCards";
@@ -11,18 +10,7 @@ import "@/components/home/home-mobile.css";
 
 export default function HomeScreen({
   isAuthenticated,
-  isMember,
-  fullName,
-  email,
-  avatarUrl,
-  membershipLabel,
-  showHomeProfileHeroNotice,
-  profileCompletion,
   onActivateMembership,
-  onOpenProfile,
-  onOpenProfileEdit,
-  onOpenOnboarding,
-  onOpenMembership,
   onCreateAccount,
   onSignIn,
   onSponsors,
@@ -39,30 +27,12 @@ export default function HomeScreen({
       <div className="homeMobile">
         <HomeSponsorBannerPlacements />
 
-        <HomeMembershipBar
-          isAuthenticated={isAuthenticated}
-          isMember={isMember}
-          fullName={fullName}
-          email={email}
-          avatarUrl={avatarUrl}
-          membershipLabel={membershipLabel}
-          onActivateMembership={onActivateMembership}
-          onOpenProfile={onOpenProfile}
-        />
+        {!isAuthenticated ? (
+          <HomeMembershipBar onActivateMembership={onActivateMembership} />
+        ) : null}
 
         {!isAuthenticated ? (
           <HomeAuthCards onCreateAccount={onCreateAccount} onSignIn={onSignIn} />
-        ) : null}
-
-        {showHomeProfileHeroNotice ? (
-          <div className="homeMobile__profileNotice">
-            <HomeProfileProgressNotice
-              completion={profileCompletion}
-              onOpenProfile={onOpenProfileEdit || onOpenProfile}
-              onOpenOnboarding={onOpenOnboarding}
-              onOpenMembership={onOpenMembership}
-            />
-          </div>
         ) : null}
 
         <HomeFeatureCards

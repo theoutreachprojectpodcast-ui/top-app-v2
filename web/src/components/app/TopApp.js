@@ -189,17 +189,6 @@ function TopAppInner({ initialNav = "home" }) {
     });
   }, [isAuthenticated, profile, sessionKind, workOSAccountEmail]);
 
-  const showHomeProfileHeroNotice = useMemo(
-    () =>
-      Boolean(
-        profileCompletion &&
-          !loadingProfile &&
-          !profileCompletion.isComplete &&
-          profileCompletion.total >= 1,
-      ),
-    [profileCompletion, loadingProfile],
-  );
-
   const prevLoadingProfileForEditRef = useRef(loadingProfile);
 
   const editIncompleteKeys =
@@ -700,31 +689,7 @@ function TopAppInner({ initialNav = "home" }) {
           {nav === "home" && (
             <HomeScreen
               isAuthenticated={isAuthenticated}
-              isMember={isMember}
-              fullName={fullName}
-              email={profile.email}
-              avatarUrl={profile.avatarUrl}
-              membershipLabel={membership.label}
-              showHomeProfileHeroNotice={showHomeProfileHeroNotice}
-              profileCompletion={profileCompletion}
               onActivateMembership={openMembershipJourney}
-              onOpenProfile={() => {
-                if (!isMember) {
-                  openMembershipJourney();
-                  return;
-                }
-                if (pathname !== "/profile") router.push("/profile");
-                else setNav("profile");
-              }}
-              onOpenProfileEdit={() => {
-                const focus = String(profileCompletion?.nextStep?.editFocus || "").trim();
-                const qs = new URLSearchParams();
-                qs.set("edit", "1");
-                if (focus) qs.set("focus", focus);
-                router.push(`/profile?${qs.toString()}`);
-              }}
-              onOpenOnboarding={openOnboardingFlow}
-              onOpenMembership={openMembershipJourney}
               onCreateAccount={() => {
                 if (authBackend.workos) {
                   writeRememberDevicePref(rememberDevice);

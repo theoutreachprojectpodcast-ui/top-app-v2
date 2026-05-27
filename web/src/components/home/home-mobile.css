@@ -15,11 +15,6 @@
   box-sizing: border-box;
 }
 
-.homeMobile__profileNotice {
-  border-radius: var(--radius-card, 16px);
-  overflow: hidden;
-}
-
 /* —— Membership bar (full shell width on all breakpoints) —— */
 .homeMembershipBar {
   display: flex;
@@ -445,10 +440,38 @@
     margin-top: var(--ds-section-gap, 24px);
   }
 
+  /* Featured sponsors — reference layout: airy logo gap, left-aligned head, 3-up row. */
+  .homeSponsorSpotlights {
+    margin: 0 0 var(--ds-section-gap, 24px);
+  }
+
+  .homeSponsorSpotlights__head {
+    gap: 6px;
+    margin-bottom: var(--ds-space-4, 16px);
+  }
+
+  .homeSponsorSpotlights__eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.16em;
+  }
+
+  .homeSponsorSpotlights__title {
+    font-size: clamp(1.35rem, 2.1vw, 1.55rem);
+    line-height: 1.2;
+  }
+
+  .homeSponsorBannerRow {
+    gap: var(--ds-space-4, 16px);
+  }
+
+  .homeMembershipBar {
+    margin-top: 0;
+  }
+
   .homeFeatureList {
-    display: flex;
-    flex-direction: column;
-    gap: var(--ds-space-3, 12px);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--ds-space-4, 16px);
   }
 
   .homeFeatureList .card.action.welcomeActionCard--uniform {
@@ -456,11 +479,18 @@
     justify-content: center;
     text-align: center;
     gap: 8px;
+    min-height: 128px;
   }
 
   .homeFeatureList .welcomeActionText {
     align-items: center;
     text-align: center;
+  }
+}
+
+@media (min-width: 1101px) {
+  .homeFeatureList {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
@@ -478,7 +508,7 @@
 @media (max-width: 760px) {
   .homeMobile {
     --home-gap: clamp(7px, 2.1vw, 11px);
-    --home-header-content-breathe: clamp(9px, 2.12vw, 13px);
+    --home-header-content-breathe: clamp(6px, 1.4vw, 9px);
     --home-card-radius: clamp(14px, 3.5vw, 18px);
     --home-pad-x: clamp(16px, 4.5vw, 20px);
     gap: var(--home-gap);
@@ -518,20 +548,16 @@
     order: 3;
   }
 
-  .homeMobile__profileNotice {
+  .homeFeatureList {
     order: 4;
   }
 
-  .homeFeatureList {
+  .homeDirectoryPanel {
     order: 5;
   }
 
-  .homeDirectoryPanel {
-    order: 6;
-  }
-
   .homeMobile__missionStrip {
-    order: 7;
+    order: 6;
     margin-top: 0;
   }
 
@@ -578,8 +604,26 @@
     overflow: hidden;
   }
 
+  /* Avoid left-edge hairlines: bleed bg layers + drop diagonal accent stripe on narrow viewports. */
   .homeFeatureList .welcomeActionCard--uniform::before {
+    inset: -3px;
     transform: none;
+    border-radius: inherit;
+  }
+
+  .homeFeatureList .welcomeActionCard--uniform::after {
+    inset: -2px;
+    border-radius: inherit;
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, #03080c 16%, transparent) 0%,
+      color-mix(in srgb, #06111b 76%, transparent) 72%,
+      color-mix(in srgb, #03070d 86%, transparent) 100%
+    );
+  }
+
+  .homeFeatureList .card.action.welcomeActionCard--uniform {
+    box-shadow: 0 12px 24px color-mix(in srgb, #000000 22%, transparent);
   }
 
   .homeFeatureList .card.action.welcomeActionCard--uniform .iconWrap {
@@ -736,8 +780,8 @@
 
   /* Home shares mobile header grid in `mobile-shell.css`; tune logo + account controls here. */
   main.topApp[data-page-atmosphere="home"] {
-    --mobile-site-header-logo-h: clamp(290px, 75.5vw, 395px);
-    --mobile-site-header-logo-max-w: min(609px, calc(100vw - 28px));
+    --mobile-site-header-logo-h: clamp(367px, 95.5vw, 499px);
+    --mobile-site-header-logo-max-w: min(770px, calc(100vw - 28px));
     padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
   }
 
@@ -748,20 +792,22 @@
     height: var(--mobile-site-header-control-size, 44px);
   }
 
+  /* Home: keep sponsors below the wordmark — do not use desktop-style negative collapse on mobile. */
   main.topApp[data-page-atmosphere="home"] .appSiteHeader {
-    padding-bottom: clamp(3px, 1.03vw, 7px);
-    margin-bottom: clamp(-15px, -3.9vw, -9px);
+    margin-bottom: 0;
+    padding-bottom: clamp(6px, 1.5vw, 10px);
   }
 
-  main.topApp[data-page-atmosphere="home"] .headerBrandStack img.brandMarkImg--header:not(.podcastBrandLogo) {
-    margin-bottom: clamp(-47px, -13.1vw, -61px);
+  main.topApp[data-page-atmosphere="home"] .headerBrandStack img.brandMarkImg--header:not(.podcastBrandLogo),
+  main.topApp[data-page-atmosphere="home"] .headerBrandStack .brandMarkImg--header {
+    margin-bottom: clamp(-44px, -12.1vw, -57px);
   }
 
   main.topApp[data-page-atmosphere="home"] .shell.shell--home {
     gap: 0;
     padding-top: 0;
     padding-bottom: 13px;
-    margin-top: clamp(-9px, -2.34vw, -5px);
+    margin-top: 0;
   }
 
   main.topApp[data-page-atmosphere="home"] .homeMobile {
@@ -769,8 +815,8 @@
   }
 
   main.topApp[data-page-atmosphere="home"] .homeSponsorSpotlights {
-    margin-top: 0;
-    padding-top: var(--home-header-content-breathe, 10px);
+    margin-top: clamp(-8px, -2vw, -4px);
+    padding-top: var(--home-header-content-breathe, 6px);
   }
 
   main.topApp[data-page-atmosphere="home"] .homeSponsorSpotlights__head {

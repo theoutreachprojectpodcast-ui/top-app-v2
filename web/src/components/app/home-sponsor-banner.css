@@ -356,10 +356,19 @@
 }
 
 @media (min-width: 761px) {
+  .homeSponsorSpotlights__head {
+    margin-bottom: var(--ds-space-4, 16px);
+  }
+
+  .homeSponsorBannerRow {
+    gap: var(--ds-space-4, 16px);
+  }
+
   .homeSponsorBannerRow--switcher .homeSponsorBannerCarouselSlide {
     display: block;
     min-width: 0;
   }
+
   .homeSponsorBannerCarouselStatus {
     display: none;
   }
