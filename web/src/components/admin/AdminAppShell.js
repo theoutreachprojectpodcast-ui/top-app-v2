@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import AppHeaderBrand from "@/components/layout/AppHeaderBrand";
+import ColorSchemeToggle from "@/components/app/ColorSchemeToggle";
 import HeaderInner from "@/components/layout/HeaderInner";
 
 const LINKS = [
@@ -29,16 +30,18 @@ export default function AdminAppShell({ children, sessionEmail = "" }) {
   const pathname = usePathname() || "";
   return (
     <div className="appShell appShell--subpage appShell--siteChrome adminConsole">
-      <AppHeaderBrand brandAlt="The Outreach Project" />
-      <header className="subpageTopbar">
-        <HeaderInner className="topbarInner">
-          <div className="topbarZone topbarLeft">
-            <div className="topbarActionsCluster topbarActionsCluster--start">
-              <Link className="btnSoft sponsorBtn" href="/">
-                Exit admin
-              </Link>
+      <div className="appSiteHeader">
+        <AppHeaderBrand brandAlt="The Outreach Project" />
+        <header className="subpageTopbar">
+          <HeaderInner className="topbarInner">
+            <div className="topbarZone topbarLeft">
+              <div className="topbarActionsCluster topbarActionsCluster--start">
+                <ColorSchemeToggle />
+                <Link className="btnSoft sponsorBtn" href="/">
+                  Exit admin
+                </Link>
+              </div>
             </div>
-          </div>
           <div className="topbarZone topbarCenter" aria-hidden="true" />
           <div className="topbarZone topbarRight">
             <div className="topbarActionsCluster">
@@ -49,6 +52,7 @@ export default function AdminAppShell({ children, sessionEmail = "" }) {
           </div>
         </HeaderInner>
       </header>
+      </div>
 
       <nav className="adminConsoleNav" aria-label="Admin sections">
         {LINKS.map((item) => (

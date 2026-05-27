@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import ColorSchemeToggle from "@/components/app/ColorSchemeToggle";
 import { useAuthSession } from "@/components/auth/AuthSessionProvider";
 import { readNavAuthCache } from "@/lib/auth/navAuthCache";
 import IconWrap from "@/components/shared/IconWrap";
@@ -13,12 +12,12 @@ import { workosSignInLink, workosSignUpHref } from "@/lib/auth/workosReturnTo";
 const SPONSOR_ICON = "M4 6h16v12H4z M4 10h16";
 
 /**
- * @param {{ showThemeToggle?: boolean, section?: "lead" | "auth" | "all" }} props
- * - lead: theme toggle + Become a Sponsor (left header)
+ * @param {{ section?: "lead" | "auth" | "all" }} props
+ * - lead: Become a Sponsor (left header); theme toggle lives in `AppHeaderBrand`
  * - auth: profile / sign-in cluster (right header)
  * - all: single row (legacy)
  */
-export default function SubpageTopbarActions({ showThemeToggle = true, section = "all" }) {
+export default function SubpageTopbarActions({ section = "all" }) {
   const pathname = usePathname();
   /** Avoid useSearchParams here (static routes like /contact must not CSR-bailout without Suspense). */
   const rememberDevice = readRememberDevicePref();
@@ -84,12 +83,7 @@ export default function SubpageTopbarActions({ showThemeToggle = true, section =
     );
 
   if (section === "lead") {
-    return (
-      <>
-        {showThemeToggle ? <ColorSchemeToggle /> : null}
-        {sponsorLink}
-      </>
-    );
+    return sponsorLink;
   }
 
   if (section === "auth") {
@@ -98,7 +92,6 @@ export default function SubpageTopbarActions({ showThemeToggle = true, section =
 
   return (
     <>
-      {showThemeToggle ? <ColorSchemeToggle /> : null}
       {sponsorLink}
       {authBlock}
     </>

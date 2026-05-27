@@ -1,4 +1,4 @@
-import { requirePlatformAdminRouteContext } from "@/lib/admin/adminRouteContext";
+import { requirePlatformAdminRouteContext, requirePlatformAdminMutation } from "@/lib/admin/adminRouteContext";
 import { SPONSOR_REVIEW_STATUSES } from "@/features/sponsors/admin/reviewStatuses";
 
 const TABLE = "sponsor_applications";
@@ -16,7 +16,7 @@ export async function GET() {
 }
 
 export async function PATCH(request) {
-  const ctx = await requirePlatformAdminRouteContext();
+  const ctx = await requirePlatformAdminMutation(request, { rateKey: "admin-app-api-admin-sponsor-applications-patch" });
   if (!ctx.ok) return ctx.response;
 
   let body;
@@ -96,5 +96,13 @@ export async function PATCH(request) {
   }
 
   await ctx.admin.from(TABLE).update({ sponsor_slug: slug, sponsor_catalog_id: sponsorRow.id }).eq("id", id);
+  await writeAdminAuditLog(ctx.admin, request, {
+    actorWorkosUserId: String(ctx.user?.id || ""),
+    actorEmail: String(ctx.user?.email || ""),
+    action: "admin.sponsor-applications.PATCH",
+    resourceType: "admin_mutation",
+    resourceId: null,
+    metadata: { route: "sponsor-applications" },
+  });
   return Response.json({ ok: true, sponsor: sponsorRow });
 }

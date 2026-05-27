@@ -1,3 +1,4 @@
+import { guardMutation, guardFailureResponse } from "@/lib/security/secureRoute";
 import { authFailureJson, resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
@@ -9,6 +10,8 @@ import { createPlatformNotification, notifyStaffProfiles } from "@/server/notifi
 const TABLE = "community_posts";
 
 export async function PATCH(request, context) {
+  const __guard = guardMutation(request, { rateKey: "community-post-patch", limit: 30 });
+  if (!__guard.ok) return guardFailureResponse(__guard);
   const auth = await resolveWorkOSRouteUser();
   if (!auth.ok) return authFailureJson(auth);
   const user = auth.user;

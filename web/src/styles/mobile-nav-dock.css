@@ -201,6 +201,15 @@
 
   .footerDockBackdrop {
     height: calc(92px + env(safe-area-inset-bottom, 0px)) !important;
+    background: transparent !important;
+  }
+
+  .appShell--podcast .footerDockBackdrop {
+    background: linear-gradient(
+      180deg,
+      transparent,
+      color-mix(in srgb, var(--color-bg-secondary) 97%, transparent)
+    ) !important;
   }
 
   .footerNavInner {

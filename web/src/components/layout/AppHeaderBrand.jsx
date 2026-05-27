@@ -1,9 +1,24 @@
 "use client";
 
 import Link from "next/link";
+import { useSyncExternalStore } from "react";
 import BrandMark from "@/components/BrandMark";
 import { useColorScheme } from "@/components/app/ColorSchemeRoot";
 import { resolvePodcastBrandLogoSrc } from "@/lib/podcast/podcastBrandLogo";
+
+const MOBILE_HEADER_MQ = "(max-width: 760px)";
+
+function subscribeMobileHeader(onStoreChange) {
+  if (typeof window === "undefined") return () => {};
+  const mq = window.matchMedia(MOBILE_HEADER_MQ);
+  mq.addEventListener("change", onStoreChange);
+  return () => mq.removeEventListener("change", onStoreChange);
+}
+
+function getMobileHeaderSnapshot() {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia(MOBILE_HEADER_MQ).matches;
+}
 
 /**
  * OP / TOP header brand (required site chrome).
@@ -20,13 +35,25 @@ export default function AppHeaderBrand({
   brandClassName = "",
 }) {
   const { colorScheme } = useColorScheme();
+  const mobileHeader = useSyncExternalStore(subscribeMobileHeader, getMobileHeaderSnapshot, () => false);
   const isPodcastMark = String(brandClassName || "").includes("podcastBrandLogo");
   const resolvedSrc = isPodcastMark ? resolvePodcastBrandLogoSrc(colorScheme) : brandSrc || undefined;
+  /* Full wordmark on mobile — mark assets crop “PROJECT” when height-capped. */
+  const useMobileFullWordmark = mobileHeader && !isPodcastMark && !brandSrc;
 
   return (
-    <div className="headerBrandStack" data-torp-header-brand="1">
+    <div
+      className={`headerBrandStack${useMobileFullWordmark ? " headerBrandStack--mobileWordmark" : ""}`}
+      data-torp-header-brand="1"
+    >
       <Link href={homeHref} aria-label={ariaLabel}>
-        <BrandMark size="header" src={resolvedSrc} alt={brandAlt} className={brandClassName} />
+        <BrandMark
+          size="header"
+          variant="full"
+          src={resolvedSrc}
+          alt={brandAlt}
+          className={brandClassName}
+        />
       </Link>
     </div>
   );

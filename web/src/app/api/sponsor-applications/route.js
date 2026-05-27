@@ -1,4 +1,5 @@
 import { randomUUID } from "crypto";
+import { guardMutation, guardFailureResponse } from "@/lib/security/secureRoute";
 import { resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
 import Stripe from "stripe";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -81,6 +82,8 @@ function pickString(obj, key, fallback = "") {
  * Public POST — sponsor applicants may be logged out. Persists via service role.
  */
 export async function POST(request) {
+  const __guard = guardMutation(request, { rateKey: "public-sponsor-app", limit: 8 });
+  if (!__guard.ok) return guardFailureResponse(__guard);
   const admin = createSupabaseAdminClient();
   if (!admin) {
     return Response.json({ error: "server_storage_unavailable" }, { status: 503 });

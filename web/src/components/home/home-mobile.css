@@ -1,0 +1,823 @@
+/**
+ * Mobile-first home screen composition (reference-aligned).
+ * Desktop keeps normal shell width; only phones/tablet ≤760px get proportion overrides.
+ */
+
+/* Home explore cards (Sponsors, Trusted, Community, Podcasts): photo backgrounds via `.welcomeActionCard` in top-app.css. */
+
+.homeMobile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-space-3, 12px);
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.homeMobile__profileNotice {
+  border-radius: var(--radius-card, 16px);
+  overflow: hidden;
+}
+
+/* —— Membership bar (full shell width on all breakpoints) —— */
+.homeMembershipBar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 52px;
+  padding: 12px 14px;
+  border: 0;
+  border-radius: var(--radius-card, 16px);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: #f8fcfa;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-accent) 88%, #0a3d28 12%) 0%,
+    color-mix(in srgb, var(--color-accent-hover, var(--color-accent)) 72%, #052818 28%) 100%
+  );
+  box-shadow:
+    0 10px 24px color-mix(in srgb, var(--color-accent) 28%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #ffffff 22%, transparent);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: transform 140ms ease, box-shadow 160ms ease;
+}
+
+.homeMembershipBar:hover,
+.homeMembershipBar:focus-visible {
+  transform: translateY(-1px);
+  box-shadow:
+    0 14px 28px color-mix(in srgb, var(--color-accent) 32%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #ffffff 28%, transparent);
+}
+
+.homeMembershipBar__avatar {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, #ffffff 18%, transparent);
+  border: 1px solid color-mix(in srgb, #ffffff 35%, transparent);
+}
+
+.homeMembershipBar__avatar--placeholder {
+  color: #f8fcfa;
+}
+
+.homeMembershipBar__copy {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.homeMembershipBar__title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+}
+
+.homeMembershipBar__hint {
+  font-size: 0.82rem;
+  font-weight: 600;
+  opacity: 0.92;
+  line-height: 1.25;
+}
+
+.homeMembershipBar__chevron {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  opacity: 0.95;
+}
+
+/* —— Auth cards —— */
+.homeAuthCards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ds-space-3, 12px);
+}
+
+.homeAuthCard {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 12px 10px;
+  border-radius: var(--radius-card, 16px);
+  border: 1px solid color-mix(in srgb, var(--color-border-soft) 70%, #ffffff 30%);
+  background: color-mix(in srgb, var(--color-bg-card) 96%, #ffffff 4%);
+  color: var(--color-text-primary);
+  font: inherit;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  box-shadow: 0 8px 18px color-mix(in srgb, #000 8%, transparent);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.homeAuthCard__icon {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--color-accent-soft) 55%, transparent);
+  color: var(--color-accent);
+}
+
+.homeAuthCard__label {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  line-height: 1.15;
+}
+
+.homeAuthCard__chevron {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  color: var(--color-text-muted);
+}
+
+/* —— Directory panel (shared) —— */
+.homeDirectoryPanel__head {
+  margin-bottom: 8px;
+}
+
+.homeDirectoryPanel__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.homeDirectoryPanel__titleIcon {
+  width: 20px;
+  height: 20px;
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+
+/* Full collapsible category grid (web) vs compact chips (mobile) */
+.homeDirectoryCategoryFocus--full {
+  display: none;
+}
+
+.homeDirectoryCategoryFocus--compact {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 0 10px;
+}
+
+.homeDirectoryCategoryFocus__expandBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin: 0;
+  padding: 6px 0 2px;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--color-accent);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.homeDirectoryCategoryFocus__expandBtn:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.homeDirectoryCategoryFocus__expandChevron {
+  font-size: 11px;
+  line-height: 1;
+  transition: transform 160ms ease;
+}
+
+.homeDirectoryCategoryFocus__expandBtn[aria-expanded="true"] .homeDirectoryCategoryFocus__expandChevron {
+  transform: rotate(180deg);
+}
+
+.homeDirectoryCategoryFocus__allPanel {
+  padding-top: 8px;
+  border-top: 1px solid color-mix(in srgb, var(--color-border-soft) 88%, transparent);
+}
+
+.homeDirectoryCategoryFocus__allPanel .directoryCategoryPick {
+  margin: 0;
+  padding: 0 0 2px;
+  border: 0;
+  background: transparent;
+}
+
+.homeDirectoryCategoryFocus__allPanel .directoryCategoryPickGrid {
+  max-height: min(48vh, 320px);
+}
+
+.homeDirectoryQuick__label {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+@media (min-width: 761px) {
+  .homeDirectoryCategoryFocus--full {
+    display: block;
+    margin: 0 0 12px;
+  }
+
+  .homeDirectoryCategoryFocus--full .directoryCategoryPickDisclosure {
+    margin: 0;
+  }
+
+  /* Toggle already labels the section; avoid duplicate heading inside panel */
+  .homeDirectoryCategoryFocus--full .directoryCategoryPickLabel {
+    display: none;
+  }
+
+  #home-directory .homeDirectoryCategoryFocus--full .directoryCategoryPickGrid {
+    max-height: min(58vh, 520px);
+  }
+
+  .homeDirectoryCategoryFocus--compact {
+    display: none;
+  }
+}
+
+.homeDirectoryQuick__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.homeDirectoryQuick__card {
+  --home-cat-accent: var(--np-unknownGeneral, #9ea6b1);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 8px;
+  min-height: 100px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--home-cat-accent) 55%, var(--color-border-soft));
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--home-cat-accent) 44%, var(--color-bg-card)) 0%,
+    color-mix(in srgb, var(--home-cat-accent) 20%, var(--color-bg-card)) 52%,
+    color-mix(in srgb, var(--home-cat-accent) 8%, var(--color-bg-card)) 100%
+  );
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #ffffff 75%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--home-cat-accent) 14%, transparent);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition:
+    border-color 140ms ease,
+    box-shadow 160ms ease,
+    transform 140ms ease;
+}
+
+.homeDirectoryQuick__card--health {
+  --home-cat-accent: var(--np-healthWellness, #67b9a8);
+}
+
+.homeDirectoryQuick__card--outdoor {
+  --home-cat-accent: var(--np-recreationSports, #d8a85a);
+}
+
+.homeDirectoryQuick__card--veteran {
+  --home-cat-accent: var(--np-veteransMilitary, #6ea8cf);
+}
+
+.homeDirectoryQuick__card:hover {
+  border-color: color-mix(in srgb, var(--home-cat-accent) 68%, var(--color-border));
+}
+
+.homeDirectoryQuick__card.isActive {
+  border-color: color-mix(in srgb, var(--home-cat-accent) 82%, var(--color-accent));
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--home-cat-accent) 30%, transparent),
+    0 6px 16px color-mix(in srgb, var(--home-cat-accent) 22%, transparent);
+}
+
+.homeDirectoryQuick__icon {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--home-cat-accent) 24%, var(--color-bg-card));
+  color: color-mix(in srgb, var(--home-cat-accent) 92%, #1a2e28);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--home-cat-accent) 42%, transparent),
+    0 1px 3px color-mix(in srgb, var(--home-cat-accent) 16%, transparent);
+}
+
+.homeDirectoryQuick__icon svg {
+  stroke: currentColor;
+}
+
+:root[data-color-scheme="dark"] .homeDirectoryQuick__card,
+.dark .homeDirectoryQuick__card {
+  border-color: color-mix(in srgb, var(--home-cat-accent) 48%, var(--color-border-soft));
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--home-cat-accent) 34%, var(--color-bg-card)) 0%,
+    color-mix(in srgb, var(--home-cat-accent) 14%, var(--color-surface-card-deep)) 55%,
+    color-mix(in srgb, var(--home-cat-accent) 6%, var(--color-surface-card-deep)) 100%
+  );
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #ffffff 8%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--home-cat-accent) 18%, transparent);
+}
+
+:root[data-color-scheme="dark"] .homeDirectoryQuick__icon,
+.dark .homeDirectoryQuick__icon {
+  background: color-mix(in srgb, var(--home-cat-accent) 32%, var(--color-bg-subtle));
+  color: color-mix(in srgb, var(--home-cat-accent) 78%, #e8f4f0);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--home-cat-accent) 50%, transparent);
+}
+
+.homeDirectoryQuick__name {
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--color-text-primary);
+}
+
+.homeDirectoryQuick__name--short {
+  display: none;
+}
+
+@media (min-width: 761px) {
+  .homeDirectoryQuick__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .homeDirectoryQuick__card {
+    flex-direction: column;
+    align-items: flex-start;
+    min-height: 100px;
+    padding: 12px;
+    gap: 8px;
+  }
+
+  .homeDirectoryQuick__name--full {
+    display: block;
+  }
+
+  .homeDirectoryQuick__name--short {
+    display: none;
+  }
+}
+
+.homeDirectoryPanel__searchToggle {
+  width: 100%;
+  margin: 4px 0 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px dashed color-mix(in srgb, var(--color-accent) 35%, var(--color-border-soft));
+  background: color-mix(in srgb, var(--color-accent-soft) 25%, transparent);
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.homeDirectoryPanel__search {
+  display: block;
+}
+
+.homeDirectoryPanel__search:not(.isOpen) {
+  display: none;
+}
+
+.homeDirectoryPanel__meta {
+  margin: 8px 0 0;
+  font-size: var(--text-body-sm);
+  color: var(--color-text-secondary);
+}
+
+@media (min-width: 761px) {
+  .homeMobile {
+    gap: var(--ds-section-gap, 24px);
+  }
+
+  /* Guest auth: header topbar only on desktop — hide in-page Create account / Sign in cards. */
+  .homeAuthCards {
+    display: none;
+  }
+
+  .homeMobile__missionStrip {
+    margin-top: var(--ds-section-gap, 24px);
+  }
+
+  .homeFeatureList {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ds-space-3, 12px);
+  }
+
+  .homeFeatureList .card.action.welcomeActionCard--uniform {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 8px;
+  }
+
+  .homeFeatureList .welcomeActionText {
+    align-items: center;
+    text-align: center;
+  }
+}
+
+.homeMobile__missionStrip {
+  margin-top: var(--ds-space-3, 12px);
+}
+
+.homeMobile__missionStrip .siteFooter.siteFooter--inMainShell {
+  margin-top: 0;
+  margin-bottom: 0;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+@media (max-width: 760px) {
+  .homeMobile {
+    --home-gap: clamp(7px, 2.1vw, 11px);
+    --home-header-content-breathe: clamp(9px, 2.12vw, 13px);
+    --home-card-radius: clamp(14px, 3.5vw, 18px);
+    --home-pad-x: clamp(16px, 4.5vw, 20px);
+    gap: var(--home-gap);
+    padding: 0 0 clamp(7px, 1.6vw, 11px);
+    overflow-x: clip;
+  }
+
+  .homeMobile > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  main.topApp[data-page-atmosphere="home"] > .shell.shell--home {
+    --content-gutter: 0;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding-inline: max(var(--home-pad-x), env(safe-area-inset-left, 0px))
+      max(var(--home-pad-x), env(safe-area-inset-right, 0px));
+    overflow-x: clip;
+  }
+
+  /* Mobile stack: featured sponsors first, then membership → auth → features → directory. */
+  .homeSponsorSpotlights {
+    order: 1;
+    margin-bottom: 0;
+  }
+
+  .homeMembershipBar {
+    order: 2;
+    border-radius: var(--home-card-radius);
+    min-height: 44px;
+    padding: 10px 12px;
+  }
+
+  .homeAuthCards {
+    order: 3;
+  }
+
+  .homeMobile__profileNotice {
+    order: 4;
+  }
+
+  .homeFeatureList {
+    order: 5;
+  }
+
+  .homeDirectoryPanel {
+    order: 6;
+  }
+
+  .homeMobile__missionStrip {
+    order: 7;
+    margin-top: 0;
+  }
+
+  .homeMembershipBar__title {
+    font-size: clamp(0.95rem, 3.8vw, 1.05rem);
+  }
+
+  .homeMembershipBar__hint {
+    font-size: clamp(0.72rem, 3vw, 0.82rem);
+  }
+
+  .homeAuthCards {
+    gap: var(--home-gap);
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .homeAuthCard {
+    border-radius: var(--home-card-radius);
+    font-size: clamp(0.78rem, 3.2vw, 0.9rem);
+    min-height: 42px;
+    padding: 8px 10px;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  .homeFeatureList {
+    gap: var(--home-gap);
+  }
+
+  .homeFeatureList .card.action.welcomeActionCard--uniform {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-start;
+    text-align: left;
+    gap: 10px;
+    min-height: clamp(72px, 20vw, 88px);
+    border-radius: var(--home-card-radius);
+    padding: 10px 12px;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  .homeFeatureList .welcomeActionCard--uniform::before {
+    transform: none;
+  }
+
+  .homeFeatureList .card.action.welcomeActionCard--uniform .iconWrap {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    margin: 0;
+  }
+
+  .homeFeatureList .card.action.welcomeActionCard--uniform .iconStroke {
+    width: 28px;
+    height: 28px;
+  }
+
+  .homeFeatureList .welcomeActionText {
+    flex: 1;
+    min-width: 0;
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .homeFeatureList .welcomeActionLabel {
+    font-size: clamp(1rem, 4vw, 1.12rem);
+    text-align: left;
+  }
+
+  .homeFeatureList .welcomeActionHint {
+    font-size: clamp(0.72rem, 3vw, 0.82rem);
+    max-width: none;
+    text-align: left;
+  }
+
+  .homeDirectoryPanel {
+    padding: 10px 12px 12px !important;
+    border-radius: var(--home-card-radius) !important;
+    margin: 0;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: clip;
+  }
+
+  .homeDirectoryCategoryFocus--compact,
+  .homeDirectoryQuick,
+  .directoryCategoryPickDisclosure {
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .homeDirectoryQuick__grid {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  #home-directory .form,
+  #home-directory .row {
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  #home-directory input,
+  #home-directory select,
+  #home-directory .btnPrimary,
+  #home-directory .btnSoft,
+  .homeDirectoryPanel__searchToggle {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .homeDirectoryPanel__head {
+    margin-bottom: 4px;
+  }
+
+  .homeDirectoryPanel__title {
+    font-size: clamp(0.95rem, 3.8vw, 1.08rem);
+  }
+
+  /* Quick categories: compact chip row (full cards on web @761px+). */
+  .homeDirectoryQuick__label {
+    margin-bottom: 7px;
+  }
+
+  .homeDirectoryQuick__grid {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 8px;
+    margin-bottom: 6px;
+    padding-inline-end: 2px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+
+  .homeDirectoryQuick__grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .homeDirectoryQuick__card {
+    flex: 0 0 auto;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    min-height: 0;
+    padding: 8px 14px 8px 8px;
+    border-radius: 999px;
+    scroll-snap-align: start;
+    white-space: nowrap;
+    background: linear-gradient(
+      120deg,
+      color-mix(in srgb, var(--home-cat-accent) 50%, var(--color-bg-card)) 0%,
+      color-mix(in srgb, var(--home-cat-accent) 22%, var(--color-bg-card)) 100%
+    );
+    box-shadow:
+      0 1px 0 color-mix(in srgb, #ffffff 80%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--home-cat-accent) 16%, transparent);
+  }
+
+  .homeDirectoryQuick__card.isActive {
+    box-shadow:
+      0 0 0 2px color-mix(in srgb, var(--home-cat-accent) 35%, transparent),
+      0 4px 12px color-mix(in srgb, var(--home-cat-accent) 24%, transparent);
+  }
+
+  .homeDirectoryQuick__icon {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--home-cat-accent) 30%, var(--color-bg-card));
+  }
+
+  .homeDirectoryQuick__icon svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .homeDirectoryQuick__name--full {
+    display: none;
+  }
+
+  .homeDirectoryQuick__name--short {
+    display: inline;
+    font-size: 0.8rem;
+    font-weight: 700;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  /* Home shares mobile header grid in `mobile-shell.css`; tune logo + account controls here. */
+  main.topApp[data-page-atmosphere="home"] {
+    --mobile-site-header-logo-h: clamp(290px, 75.5vw, 395px);
+    --mobile-site-header-logo-max-w: min(609px, calc(100vw - 28px));
+    padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+  }
+
+  main.topApp[data-page-atmosphere="home"] .headerNotificationBellBtn,
+  main.topApp[data-page-atmosphere="home"] .headerAccountAvatar.profileAvatarShell,
+  main.topApp[data-page-atmosphere="home"] .headerAccountTrigger {
+    width: var(--mobile-site-header-control-size, 44px);
+    height: var(--mobile-site-header-control-size, 44px);
+  }
+
+  main.topApp[data-page-atmosphere="home"] .appSiteHeader {
+    padding-bottom: clamp(3px, 1.03vw, 7px);
+    margin-bottom: clamp(-15px, -3.9vw, -9px);
+  }
+
+  main.topApp[data-page-atmosphere="home"] .headerBrandStack img.brandMarkImg--header:not(.podcastBrandLogo) {
+    margin-bottom: clamp(-47px, -13.1vw, -61px);
+  }
+
+  main.topApp[data-page-atmosphere="home"] .shell.shell--home {
+    gap: 0;
+    padding-top: 0;
+    padding-bottom: 13px;
+    margin-top: clamp(-9px, -2.34vw, -5px);
+  }
+
+  main.topApp[data-page-atmosphere="home"] .homeMobile {
+    padding-top: 0;
+  }
+
+  main.topApp[data-page-atmosphere="home"] .homeSponsorSpotlights {
+    margin-top: 0;
+    padding-top: var(--home-header-content-breathe, 10px);
+  }
+
+  main.topApp[data-page-atmosphere="home"] .homeSponsorSpotlights__head {
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  main.topApp[data-page-atmosphere="home"] .footerDockBackdrop {
+    height: calc(72px + env(safe-area-inset-bottom, 0px));
+    background: transparent;
+  }
+
+  main.topApp[data-page-atmosphere="home"] {
+    --home-pad-x: clamp(16px, 4.5vw, 20px);
+  }
+
+  main.topApp[data-page-atmosphere="home"] .bottomNav.bottomNav--mobileDock {
+    margin-inline: var(--home-pad-x);
+    max-width: calc(100% - 2 * var(--home-pad-x));
+    border-radius: 20px;
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
+    box-shadow:
+      0 12px 32px color-mix(in srgb, #000 18%, transparent),
+      0 0 0 1px color-mix(in srgb, var(--color-border-soft) 80%, transparent);
+  }
+
+  /* Home light: don’t stack a heavy veil over the boosted mobile background. */
+  :root:not([data-color-scheme="dark"]) main.topApp[data-page-atmosphere="home"]::after,
+  html:not(.dark) main.topApp[data-page-atmosphere="home"]::after {
+    opacity: 0.2;
+  }
+
+  :root[data-color-scheme="dark"] main.topApp[data-page-atmosphere="home"]::after,
+  .dark main.topApp[data-page-atmosphere="home"]::after {
+    opacity: 0.65;
+  }
+
+  /* Guests use in-page auth cards — keep header corners for theme + menu only. */
+  main.topApp.topApp--auth-out[data-page-atmosphere="home"] .topbarRight .sponsorBtn,
+  main.topApp.topApp--auth-out[data-page-atmosphere="home"] .topbarRight a.btnSoft,
+  main.topApp.topApp--auth-out[data-page-atmosphere="home"] .topbarRight button.btnSoft {
+    display: none;
+  }
+}
+
+@media (max-width: 360px) {
+  .homeAuthCards {
+    grid-template-columns: 1fr;
+  }
+}

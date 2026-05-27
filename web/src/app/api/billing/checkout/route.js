@@ -1,3 +1,10 @@
+import {
+  guardMutation,
+  guardFailureResponse,
+  parseJsonBody,
+  validationFailureResponse,
+} from "@/lib/security/secureRoute";
+import { membershipCheckoutSchema } from "@/lib/security/schemas/billingSchemas";
 import { authFailureJson, resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
 import Stripe from "stripe";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -10,9 +17,9 @@ import {
   stripeSponsorSubscriptionConfigured,
 } from "@/lib/billing/stripeConfig";
 
-const PAID = new Set(["support", "member", "sponsor"]);
-
 export async function POST(request) {
+  const guard = guardMutation(request, { rateKey: "billing-checkout", limit: 20 });
+  if (!guard.ok) return guardFailureResponse(guard);
   const auth = await resolveWorkOSRouteUser();
   if (!auth.ok) return authFailureJson(auth);
   const user = auth.user;
@@ -33,17 +40,10 @@ export async function POST(request) {
     );
   }
 
-  let body;
-  try {
-    body = await request.json();
-  } catch {
-    return Response.json({ error: "invalid_json" }, { status: 400 });
-  }
-
-  const tier = String(body.tier || "").toLowerCase();
-  if (!PAID.has(tier)) {
-    return Response.json({ error: "invalid_tier" }, { status: 400 });
-  }
+  const parsed = await parseJsonBody(request, membershipCheckoutSchema);
+  if (!parsed.ok) return validationFailureResponse(parsed);
+  const body = parsed.data;
+  const tier = body.tier;
 
   if (tier === "sponsor") {
     if (!stripeSponsorSubscriptionConfigured()) {
@@ -69,7 +69,7 @@ export async function POST(request) {
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
   const base = requestOriginForStripeRedirects(request);
-  const returnPath = safeAppReturnPath(body.returnPath, "/profile");
+  const returnPath = safeAppReturnPath(body.returnPath || "", "/profile");
   const customerId = profileRow.stripe_customer_id ? String(profileRow.stripe_customer_id).trim() : null;
   const profileId = profileRow.id ? String(profileRow.id) : "";
 

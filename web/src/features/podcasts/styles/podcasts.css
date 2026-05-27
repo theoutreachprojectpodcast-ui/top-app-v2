@@ -97,9 +97,15 @@
 }
 
 /* Keep header chrome from flex-shrinking under the scroll column (CTAs can paint over the hero). */
-.topApp.appShell--podcast > .headerBrandStack,
-.topApp.appShell--podcast > header.topbar {
+.topApp.appShell--podcast .appSiteHeader,
+.topApp.appShell--podcast .appSiteHeader > .headerBrandStack,
+.topApp.appShell--podcast .appSiteHeader > header.topbar {
   flex-shrink: 0;
+}
+
+.topApp.appShell--podcast .appSiteHeader {
+  position: relative;
+  width: 100%;
 }
 
 .topApp.appShell--podcast .shell {
@@ -188,8 +194,8 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
 
 /* Header chrome = one rectangle only — no per-row gradient shapes. */
 .appShell--podcast .topbar,
-.topApp.appShell--podcast > header.topbar,
-.topApp.appShell--podcast > .headerBrandStack {
+.topApp.appShell--podcast .appSiteHeader > header.topbar,
+.topApp.appShell--podcast .appSiteHeader > .headerBrandStack {
   background: transparent !important;
   border: 0;
   box-shadow: none;
@@ -392,11 +398,11 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
 }
 
 /* Main-app order: action row at top, podcast mark below (see AppShell DOM). */
-.topApp.appShell--podcast > header.topbar {
+.topApp.appShell--podcast .appSiteHeader > header.topbar {
   top: calc(var(--header-floating-offset, 12px) + env(safe-area-inset-top, 0px));
 }
 
-.topApp.appShell--podcast > .headerBrandStack {
+.topApp.appShell--podcast .appSiteHeader > .headerBrandStack {
   top: calc(
     var(--header-floating-offset, 12px) + env(safe-area-inset-top, 0px) + var(--podcast-topbar-stack-height)
   );
@@ -412,7 +418,7 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
     flex-direction: column;
     position: relative;
     --podcast-topbar-stack-height: 48px;
-    --podcast-header-brand-band: clamp(128px, 36vw, 200px);
+    --podcast-header-brand-band: clamp(120px, 32vw, 180px);
   }
 
   /* In-flow chrome: single rectangular gradient behind topbar + logo. */
@@ -430,7 +436,14 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
     background: var(--podcast-header-chrome-bg) !important;
   }
 
-  .topApp.appShell--podcast > header.topbar {
+  .topApp.appShell--podcast .appSiteHeader {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    z-index: 98;
+  }
+
+  .topApp.appShell--podcast .appSiteHeader > header.topbar {
     position: relative;
     top: auto;
     z-index: 98;
@@ -438,7 +451,7 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
     padding: calc(4px + env(safe-area-inset-top, 0px)) 0 4px;
   }
 
-  .topApp.appShell--podcast > .headerBrandStack {
+  .topApp.appShell--podcast .appSiteHeader > .headerBrandStack {
     position: relative;
     left: auto;
     transform: none;
@@ -447,19 +460,20 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
     width: 100%;
     max-width: min(900px, calc(100vw - 24px));
     margin-inline: auto;
-    padding: 0 10px 6px;
+    padding: 0 10px 10px;
+    pointer-events: auto;
   }
 
   .topApp.appShell--podcast .shell {
     position: relative;
     z-index: 1;
-    padding-top: 8px;
+    padding-top: 12px;
     order: 4;
   }
 }
 
 @media (min-width: 761px) {
-  .topApp.appShell--podcast > .headerBrandStack {
+  .topApp.appShell--podcast .appSiteHeader > .headerBrandStack {
     position: fixed;
     left: 50%;
     transform: translateX(-50%);
@@ -467,11 +481,11 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
     pointer-events: none;
   }
 
-  .topApp.appShell--podcast > .headerBrandStack > a {
+  .topApp.appShell--podcast .appSiteHeader > .headerBrandStack > a {
     pointer-events: auto;
   }
 
-  .topApp.appShell--podcast > header.topbar {
+  .topApp.appShell--podcast .appSiteHeader > header.topbar {
     position: fixed;
     left: 0;
     right: 0;

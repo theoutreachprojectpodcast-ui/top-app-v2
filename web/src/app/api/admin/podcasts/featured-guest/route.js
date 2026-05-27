@@ -1,10 +1,10 @@
-import { requirePlatformAdminRouteContext } from "@/lib/admin/adminRouteContext";
+import { requirePlatformAdminRouteContext, requirePlatformAdminMutation } from "@/lib/admin/adminRouteContext";
 import { revalidateTag } from "next/cache";
 
 export const runtime = "nodejs";
 
 export async function PATCH(request) {
-  const ctx = await requirePlatformAdminRouteContext();
+  const ctx = await requirePlatformAdminMutation(request, { rateKey: "admin-app-api-admin-podcasts-featured-guest-patch" });
   if (!ctx.ok) return ctx.response;
   let body = {};
   try {
@@ -54,5 +54,13 @@ export async function PATCH(request) {
   } catch {
     // ignore
   }
+  await writeAdminAuditLog(ctx.admin, request, {
+    actorWorkosUserId: String(ctx.user?.id || ""),
+    actorEmail: String(ctx.user?.email || ""),
+    action: "admin.podcasts.featured-guest.PATCH",
+    resourceType: "admin_mutation",
+    resourceId: null,
+    metadata: { route: "podcasts/featured-guest" },
+  });
   return Response.json({ ok: true });
 }

@@ -1,4 +1,4 @@
-import { requirePlatformAdminRouteContext } from "@/lib/admin/adminRouteContext";
+import { requirePlatformAdminRouteContext, requirePlatformAdminMutation } from "@/lib/admin/adminRouteContext";
 import { isDefaultApprovedAdminEmail } from "@/lib/admin/adminPolicy";
 import { isWorkOSConfigured } from "@/lib/auth/workosConfigured";
 import { workosSignInLink } from "@/lib/auth/workosReturnTo";
@@ -11,7 +11,7 @@ function normalizeEmail(email) {
 }
 
 export async function POST(request) {
-  const ctx = await requirePlatformAdminRouteContext();
+  const ctx = await requirePlatformAdminMutation(request, { rateKey: "admin-app-api-admin-users-invite-post" });
   if (!ctx.ok) return ctx.response;
   if (!isWorkOSConfigured()) {
     return Response.json({ ok: false, error: "workos_not_configured" }, { status: 503 });

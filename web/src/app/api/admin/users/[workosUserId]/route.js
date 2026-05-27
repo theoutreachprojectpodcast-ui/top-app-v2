@@ -1,6 +1,7 @@
-import { requirePlatformAdminRouteContext } from "@/lib/admin/adminRouteContext";
+import { requirePlatformAdminMutation } from "@/lib/admin/adminRouteContext";
 import { isDefaultApprovedAdminEmail } from "@/lib/admin/adminPolicy";
 import { profileTableName } from "@/lib/supabase/admin";
+import { writeAdminAuditLog } from "@/lib/admin/adminAuditLog";
 
 export const runtime = "nodejs";
 
@@ -19,7 +20,7 @@ const USER_TYPES = new Set([
 const USER_STATUS = new Set(["active", "invited", "suspended"]);
 
 export async function PATCH(request, context) {
-  const ctx = await requirePlatformAdminRouteContext();
+  const ctx = await requirePlatformAdminMutation(request, { rateKey: "admin-users-patch", limit: 30 });
   if (!ctx.ok) return ctx.response;
 
   const params = await context.params;
@@ -135,6 +136,15 @@ export async function PATCH(request, context) {
   if (!data) {
     return Response.json({ ok: false, error: "profile_not_found" }, { status: 404 });
   }
+
+  await writeAdminAuditLog(ctx.admin, request, {
+    actorWorkosUserId: String(ctx.user?.id || ""),
+    actorEmail: String(ctx.user?.email || ""),
+    action: "admin.users.patch",
+    resourceType: "torp_profiles",
+    resourceId: String(data.id || workosUserId),
+    metadata: { targetWorkosUserId: workosUserId, changedFields: Object.keys(patch) },
+  });
 
   return Response.json({ ok: true, profile: data });
 }

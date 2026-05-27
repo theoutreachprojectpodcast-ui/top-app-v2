@@ -1,4 +1,5 @@
 import { authFailureJson, resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
+import { guardMutation, guardFailureResponse } from "@/lib/security/secureRoute";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
 import { isCommunityModeratorServer } from "@/lib/community/moderatorServer";
@@ -90,6 +91,8 @@ export async function GET(request) {
 }
 
 export async function PATCH(request) {
+  const __guard = guardMutation(request, { rateKey: "me-notifications", limit: 60 });
+  if (!__guard.ok) return guardFailureResponse(__guard);
   const auth = await resolveWorkOSRouteUser();
   if (!auth.ok) return authFailureJson(auth);
   const user = auth.user;

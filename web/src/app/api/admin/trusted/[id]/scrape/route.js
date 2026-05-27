@@ -1,11 +1,11 @@
-import { requirePlatformAdminRouteContext } from "@/lib/admin/adminRouteContext";
+import { requirePlatformAdminRouteContext, requirePlatformAdminMutation } from "@/lib/admin/adminRouteContext";
 import { scrapeTrustedResourceWebsite } from "@/lib/trusted/trustedResourceWebsiteScrape";
 
 export const runtime = "nodejs";
 
 /** POST — fetch public website metadata and persist on the trusted_resources row. */
-export async function POST(_request, context) {
-  const ctx = await requirePlatformAdminRouteContext();
+export async function POST(_request, context, request) {
+  const ctx = await requirePlatformAdminMutation(request, { rateKey: "admin-app-api-admin-trusted-[id]-scrape-post" });
   if (!ctx.ok) return ctx.response;
 
   const params = await context.params;
@@ -71,5 +71,13 @@ export async function POST(_request, context) {
     return Response.json({ ok: false, error: error.message }, { status: 500 });
   }
 
+  await writeAdminAuditLog(ctx.admin, request, {
+    actorWorkosUserId: String(ctx.user?.id || ""),
+    actorEmail: String(ctx.user?.email || ""),
+    action: "admin.trusted.id.scrape.POST",
+    resourceType: "admin_mutation",
+    resourceId: null,
+    metadata: { route: "trusted/[id]/scrape" },
+  });
   return Response.json({ ok: true, row: data, scraped: patch });
 }

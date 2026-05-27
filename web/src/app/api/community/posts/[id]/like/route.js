@@ -1,3 +1,4 @@
+import { guardMutation, guardFailureResponse } from "@/lib/security/secureRoute";
 import { authFailureJson, resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
@@ -6,6 +7,8 @@ const POSTS = "community_posts";
 const REACTIONS = "community_post_reactions";
 
 export async function POST(request, context) {
+  const __guard = guardMutation(request, { rateKey: "community-like", limit: 60 });
+  if (!__guard.ok) return guardFailureResponse(__guard);
   const auth = await resolveWorkOSRouteUser();
   if (!auth.ok) return authFailureJson(auth);
   const user = auth.user;

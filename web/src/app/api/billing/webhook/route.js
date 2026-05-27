@@ -1,3 +1,4 @@
+import { guardMutation, guardFailureResponse } from "@/lib/security/secureRoute";
 import Stripe from "stripe";
 import { createSupabaseAdminClient, profileTableName } from "@/lib/supabase/admin";
 import {
@@ -100,6 +101,8 @@ async function syncSubscription(admin, sub, customerId, { forceEnded = false } =
 }
 
 export async function POST(request) {
+  const __guard = guardMutation(request, { rateKey: "billing-webhook", limit: 200, skipOriginCheck: true });
+  if (!__guard.ok) return guardFailureResponse(__guard);
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
   const key = process.env.STRIPE_SECRET_KEY;
   if (!secret || !key) {

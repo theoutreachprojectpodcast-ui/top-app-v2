@@ -6,8 +6,9 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import HeaderInner from "@/components/layout/HeaderInner";
 import FooterInner from "@/components/layout/FooterInner";
 import Avatar from "@/components/shared/Avatar";
+import AppIcon from "@/components/shared/AppIcon";
 import AppHeaderBrand from "@/components/layout/AppHeaderBrand";
-import { Handshake, Mail, Mic, Search, UserRound, Users } from "lucide-react";
+import ColorSchemeToggle from "@/components/app/ColorSchemeToggle";
 import AccountInfoCard from "@/features/profile/components/AccountInfoCard";
 import ManageBillingButton from "@/features/profile/components/ManageBillingButton";
 import NonprofitCard from "@/features/nonprofits/components/NonprofitCard";
@@ -21,8 +22,7 @@ import ProfileQuickStats from "@/features/profile/components/ProfileQuickStats";
 import SavedOrganizationsList from "@/features/profile/components/SavedOrganizationsList";
 import SiteBottomNavGlyph from "@/components/navigation/SiteBottomNavGlyph";
 import SiteMobileNavMoreMenu from "@/components/navigation/SiteMobileNavMoreMenu";
-import HomeProfileProgressNotice from "@/components/app/HomeProfileProgressNotice";
-import HomeSponsorBannerPlacements from "@/components/app/HomeSponsorBannerPlacements";
+import HomeScreen from "@/components/home/HomeScreen";
 import { useAuthSession } from "@/components/auth/AuthSessionProvider";
 import ProfileCompletionPanel from "@/features/profile/components/ProfileCompletionPanel";
 import HeaderAccountMenu from "@/components/layout/HeaderAccountMenu";
@@ -30,14 +30,9 @@ import HeaderNotificationBell from "@/components/layout/HeaderNotificationBell";
 import { useDirectorySearch } from "@/hooks/useDirectorySearch";
 import { useProfileData } from "@/features/profile/ProfileDataProvider";
 import { useTrustedResources } from "@/hooks/useTrustedResources";
-import DirectoryCategoryHeader from "@/features/directory/components/DirectoryCategoryHeader";
-import DirectoryCategoryQuickPick from "@/features/directory/components/DirectoryCategoryQuickPick";
-import { isQaLikeDeployment } from "@/lib/runtime/qaEnv";
 import { showLocalDemoChrome } from "@/lib/runtime/demoUiVisibility";
 import { useImmersiveHeaderScroll } from "@/hooks/useImmersiveHeaderScroll";
 import MembershipAtAGlance from "@/features/membership/components/MembershipAtAGlance";
-import ColorSchemeToggle from "@/components/app/ColorSchemeToggle";
-import { SERVICE_OPTIONS, STATES } from "@/lib/constants";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { emptyProfileAvatarUrl } from "@/lib/avatarFallback";
 import { rowEin } from "@/lib/utils";
@@ -64,89 +59,6 @@ import AccountSettingsPage from "@/features/settings/components/AccountSettingsP
 import { FormCheckbox } from "@/components/forms/FormChoice";
 import { resolvePageAtmosphere } from "@/lib/design/pageAtmosphere";
 import MissionPageTopStrip from "@/components/layout/MissionPageTopStrip";
-
-const APP_ICON_SIZE = 14;
-/** Lucide glyph size for home welcome action cards (matches `.welcomeActionCard--uniform .iconStroke`). */
-const WELCOME_ACTION_ICON_SIZE = 42;
-
-function AppIconShell({ children }) {
-  return <span className="iconWrap" aria-hidden="true">{children}</span>;
-}
-
-/** Shield outline with centered cross (trusted resources). */
-function TrustedShieldCrossIcon() {
-  return (
-    <AppIconShell>
-      <svg
-        viewBox="0 0 24 24"
-        className="iconStroke"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-        focusable="false"
-      >
-        <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
-        <path d="M12 8v8M8 12h8" />
-      </svg>
-    </AppIconShell>
-  );
-}
-
-function AppIcon({ name, size = APP_ICON_SIZE }) {
-  const lucideProps = {
-    className: "iconStroke",
-    size,
-    strokeWidth: 2,
-    absoluteStrokeWidth: true,
-    "aria-hidden": true,
-    focusable: false,
-  };
-
-  switch (name) {
-    case "sponsors":
-      return (
-        <AppIconShell>
-          <Handshake {...lucideProps} />
-        </AppIconShell>
-      );
-    case "trusted":
-      return <TrustedShieldCrossIcon />;
-    case "community":
-      return (
-        <AppIconShell>
-          <Users {...lucideProps} />
-        </AppIconShell>
-      );
-    case "podcast":
-      return (
-        <AppIconShell>
-          <Mic {...lucideProps} />
-        </AppIconShell>
-      );
-    case "profile":
-      return (
-        <AppIconShell>
-          <UserRound {...lucideProps} />
-        </AppIconShell>
-      );
-    case "contact":
-      return (
-        <AppIconShell>
-          <Mail {...lucideProps} />
-        </AppIconShell>
-      );
-    case "search":
-    default:
-      return (
-        <AppIconShell>
-          <Search {...lucideProps} />
-        </AppIconShell>
-      );
-  }
-}
 
 function DemoAuthPasswordVisibilityIcon({ revealed }) {
   return (
@@ -329,7 +241,9 @@ function TopAppInner({ initialNav = "home" }) {
     else if (String(authDraft.email || "").trim()) writeLastUsedEmail(authDraft.email.trim());
   }
 
-  const { filters, setFilters, results, status, meta, page, canGoNext, runSearch, clearSearch } = useDirectorySearch(sb);
+  const { filters, setFilters, results, status, meta, page, canGoNext, runSearch, clearSearch } = useDirectorySearch(sb, {
+    preferredState: profile.state,
+  });
   const { trusted, trustedStatus, loadTrusted } = useTrustedResources(sb);
 
   /** Prefill contact form from profile / account email when fields are still empty. */
@@ -611,7 +525,6 @@ function TopAppInner({ initialNav = "home" }) {
     return fallbackSavedOrganizations.map((raw) => mapNonprofitCardRow(raw, "saved"));
   }, [savedOrganizations, isAuthenticated, favoriteEins, fallbackSavedOrganizations]);
   const isLoggedIn = isAuthenticated;
-  const sponsorsDockActive = Boolean(pathname?.startsWith("/sponsors"));
   const favoriteEinSet = useMemo(
     () => new Set((favoriteEins || []).map((e) => normalizeEinDigits(e)).filter((e) => e.length === 9)),
     [favoriteEins]
@@ -697,16 +610,17 @@ function TopAppInner({ initialNav = "home" }) {
       className={`topApp theme-${profile.theme}${immersiveHeaderScroll ? " header-at-top" : ""} ${isLoggedIn ? "topApp--auth-in" : "topApp--auth-out"} appShell--withMobileNavDock`}
       data-page-atmosphere={pageAtmosphere}
     >
-      <AppHeaderBrand />
-      <header className="topbar">
-        <HeaderInner className="topbarInner">
-          <div className="topbarZone topbarLeft">
-            <div className="topbarActionsCluster topbarActionsCluster--start">
-              <ColorSchemeToggle />
+      <div className="appSiteHeader">
+        <AppHeaderBrand />
+        <header className="topbar">
+          <HeaderInner className="topbarInner">
+            <div className="topbarZone topbarLeft">
+              <div className="topbarActionsCluster topbarActionsCluster--start">
+                {pageAtmosphere !== "podcast" ? <ColorSchemeToggle /> : null}
+              </div>
             </div>
-          </div>
-          <div className="topbarZone topbarCenter" aria-hidden="true" />
-          <div className="topbarZone topbarRight">
+            <div className="topbarZone topbarCenter" aria-hidden="true" />
+            <div className="topbarZone topbarRight">
             <div className="topbarActionsCluster">
               {isLoggedIn ? (
                 <>
@@ -778,135 +692,71 @@ function TopAppInner({ initialNav = "home" }) {
           </div>
         </HeaderInner>
       </header>
+      </div>
       <div className="topbarOcclusion" aria-hidden="true" />
 
       {(nav === "home" || nav === "community") && (
         <section className={nav === "home" ? "shell shell--home" : "shell"}>
-          {nav === "home" ? <MissionPageTopStrip placement="top" /> : null}
           {nav === "home" && (
-            <>
-              <HomeSponsorBannerPlacements />
-
-              {showHomeProfileHeroNotice ? (
-                <div className="homeHeroBackdrop">
-                  <div className="homeHeroBackdrop__image" aria-hidden="true" />
-                  <div className="homeHeroBackdrop__scrim" aria-hidden="true" />
-                  <div className="homeHeroBackdrop__content">
-                    <div className="homeHeroBackdrop__welcomeBundle">
-                      <HomeProfileProgressNotice
-                        completion={profileCompletion}
-                        onOpenProfile={() => {
-                          const focus = String(profileCompletion?.nextStep?.editFocus || "").trim();
-                          const qs = new URLSearchParams();
-                          qs.set("edit", "1");
-                          if (focus) qs.set("focus", focus);
-                          router.push(`/profile?${qs.toString()}`);
-                        }}
-                        onOpenOnboarding={openOnboardingFlow}
-                        onOpenMembership={openMembershipJourney}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ) : null}
-
-              <div className="welcomeActionLayout">
-                <div className="welcomeActionList">
-                  <button className="card action welcomeActionCard welcomeActionCard--uniform welcomeActionCard--sponsors" onClick={goToSponsorsHub} type="button">
-                    <AppIcon name="sponsors" size={WELCOME_ACTION_ICON_SIZE} />
-                    <span className="welcomeActionText">
-                      <span className="welcomeActionLabel">Sponsors</span>
-                      <span className="welcomeActionHint">Partner page — open packages from there</span>
-                    </span>
-                  </button>
-                  <button className="card action welcomeActionCard welcomeActionCard--uniform welcomeActionCard--trusted" onClick={() => { setNav("trusted"); loadTrusted(true); }} type="button">
-                    <AppIcon name="trusted" size={WELCOME_ACTION_ICON_SIZE} />
-                    <span className="welcomeActionText">
-                      <span className="welcomeActionLabel">Trusted Resources</span>
-                      <span className="welcomeActionHint">Real help. Real impact.</span>
-                    </span>
-                  </button>
-                  <button className="card action welcomeActionCard welcomeActionCard--uniform welcomeActionCard--community" onClick={openCommunity} type="button">
-                    <AppIcon name="community" size={WELCOME_ACTION_ICON_SIZE} />
-                    <span className="welcomeActionText">
-                      <span className="welcomeActionLabel">Community</span>
-                      <span className="welcomeActionHint">Connect. Share. Support each other.</span>
-                    </span>
-                  </button>
-                  <button className="card action welcomeActionCard welcomeActionCard--uniform welcomeActionCard--podcasts" onClick={() => { router.push("/podcasts"); }} type="button">
-                    <AppIcon name="podcast" size={WELCOME_ACTION_ICON_SIZE} />
-                    <span className="welcomeActionText">
-                      <span className="welcomeActionLabel">Podcasts</span>
-                      <span className="welcomeActionHint">Stories that inspire. Voices that matter.</span>
-                    </span>
-                  </button>
-                </div>
-              </div>
-
-              <div className="card" id="home-directory">
-                <h3><AppIcon name="search" />Nonprofit Directory</h3>
-                {!isQaLikeDeployment() ? (
-                  <DirectoryCategoryQuickPick
-                    value={filters.service}
-                    collapsible
-                    onChange={(letter) => setFilters((f) => ({ ...f, service: letter }))}
-                  />
-                ) : null}
-                {filters.service ? <DirectoryCategoryHeader letter={filters.service} /> : null}
-                <div className="form">
-                  <select value={filters.state} onChange={(e) => setFilters((f) => ({ ...f, state: e.target.value }))}>
-                    {STATES.map(([v, label]) => <option key={v} value={v}>{label}</option>)}
-                  </select>
-                  <input placeholder="City or Organization" value={filters.q} onChange={(e) => setFilters((f) => ({ ...f, q: e.target.value }))} />
-                  <select value={filters.service} onChange={(e) => setFilters((f) => ({ ...f, service: e.target.value }))} aria-label="Service category letter">
-                    {SERVICE_OPTIONS.map(([v, label]) => <option key={v || "all"} value={v}>{label}</option>)}
-                  </select>
-                  <select value={filters.audience} onChange={(e) => setFilters((f) => ({ ...f, audience: e.target.value }))}>
-                    <option value="all">All</option>
-                    <option value="veteran">Veterans</option>
-                    <option value="first_responder">First Responders</option>
-                  </select>
-                </div>
-                <div className="row">
-                  <button className="btnPrimary" onClick={() => runSearch(1)} type="button">Search</button>
-                  <button className="btnSoft" onClick={clearSearch} type="button">Clear</button>
-                </div>
-                <p>{status}</p>
-                <p>{meta}</p>
-                <div className="results">
-                  {!results.length && !status && (
-                    <div className="emptyState">
-                      <AppIcon name="search" />
-                      <div>
-                        <strong>Start by selecting a state</strong>
-                        <p>Use filters to quickly surface trusted support organizations.</p>
-                      </div>
-                    </div>
-                  )}
-                  {results.map((r) => {
-                    const card = mapNonprofitCardRow(r, "directory");
-                    const ein = card.ein;
-                    const einKey = normalizeEinDigits(ein);
-                    return (
-                      <NonprofitCard
-                        key={`${ein}-${card.name}`}
-                        card={card}
-                        actionMode="directory"
-                        favoritesEnabled={isAuthenticated}
-                        isFavorite={einKey.length === 9 && favoriteEinSet.has(einKey)}
-                        onToggleFavorite={toggleFavoriteEin}
-                        onRequestSignIn={!isAuthenticated ? openSignInOverlay : undefined}
-                      />
-                    );
-                  })}
-                </div>
-                <div className="row space directoryPager" role="navigation" aria-label="Directory pagination">
-                  <button className="btnSoft" disabled={page <= 1} onClick={() => runSearch(page - 1)} type="button">Prev</button>
-                  <span className="directoryPagerLabel">Page {page}</span>
-                  <button className="btnSoft" disabled={!canGoNext} onClick={() => runSearch(page + 1)} type="button">Next</button>
-                </div>
-              </div>
-            </>
+            <HomeScreen
+              isAuthenticated={isAuthenticated}
+              isMember={isMember}
+              fullName={fullName}
+              email={profile.email}
+              avatarUrl={profile.avatarUrl}
+              membershipLabel={membership.label}
+              showHomeProfileHeroNotice={showHomeProfileHeroNotice}
+              profileCompletion={profileCompletion}
+              onActivateMembership={openMembershipJourney}
+              onOpenProfile={() => {
+                if (!isMember) {
+                  openMembershipJourney();
+                  return;
+                }
+                if (pathname !== "/profile") router.push("/profile");
+                else setNav("profile");
+              }}
+              onOpenProfileEdit={() => {
+                const focus = String(profileCompletion?.nextStep?.editFocus || "").trim();
+                const qs = new URLSearchParams();
+                qs.set("edit", "1");
+                if (focus) qs.set("focus", focus);
+                router.push(`/profile?${qs.toString()}`);
+              }}
+              onOpenOnboarding={openOnboardingFlow}
+              onOpenMembership={openMembershipJourney}
+              onCreateAccount={() => {
+                if (authBackend.workos) {
+                  writeRememberDevicePref(rememberDevice);
+                  window.location.assign(workosSignUpHref("/onboarding", { rememberDevice }));
+                  return;
+                }
+                setAuthMode("signup");
+                setOverlay("signin");
+              }}
+              onSignIn={openSignInOverlay}
+              onSponsors={goToSponsorsHub}
+              onTrusted={() => {
+                setNav("trusted");
+                loadTrusted(true);
+              }}
+              onCommunity={openCommunity}
+              onPodcasts={() => router.push("/podcasts")}
+              directoryProps={{
+                filters,
+                setFilters,
+                results,
+                status,
+                meta,
+                page,
+                canGoNext,
+                runSearch,
+                clearSearch,
+              }}
+              favoriteEinSet={favoriteEinSet}
+              onToggleFavorite={toggleFavoriteEin}
+              onRequestSignIn={!isAuthenticated ? openSignInOverlay : undefined}
+            />
           )}
 
           {nav === "community" && (
@@ -1291,7 +1141,7 @@ function TopAppInner({ initialNav = "home" }) {
         <FooterInner className="footerNavInner">
           <nav className="bottomNav bottomNav--withIcons bottomNav--mobileDock" aria-label="Bottom navigation">
             <button
-              className={`navItem navItem--dockCol navItem--dockPrimary ${nav === "home" && !sponsorsDockActive ? "isActive" : ""}`}
+              className={`navItem navItem--dockCol navItem--dockPrimary ${nav === "home" ? "isActive" : ""}`}
               onClick={dockNavHome}
               type="button"
               title="Home"
@@ -1309,7 +1159,7 @@ function TopAppInner({ initialNav = "home" }) {
               title="Trusted Resources"
             >
               <SiteBottomNavGlyph navKey="trusted" className="navItemGlyph" />
-              <span className="navItemLabel">Trusted</span>
+              <span className="navItemLabel">Trusted Resources</span>
             </button>
             <button
               className={`navItem navItem--dockCol navItem--dockOverflow ${nav === "community" ? "isActive" : ""}`}
@@ -1319,15 +1169,6 @@ function TopAppInner({ initialNav = "home" }) {
             >
               <SiteBottomNavGlyph navKey="community" className="navItemGlyph" />
               <span className="navItemLabel">Community</span>
-            </button>
-            <button
-              className={`navItem navItem--dockCol navItem--dockOverflow ${sponsorsDockActive ? "isActive" : ""}`}
-              onClick={() => router.push("/sponsors")}
-              type="button"
-              title="Sponsors"
-            >
-              <SiteBottomNavGlyph navKey="sponsors" className="navItemGlyph" />
-              <span className="navItemLabel">Sponsors</span>
             </button>
             <button
               className={`navItem navItem--dockCol navItem--dockPrimary ${nav === "profile" ? "isActive" : ""}`}

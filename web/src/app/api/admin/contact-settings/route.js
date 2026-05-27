@@ -1,4 +1,4 @@
-import { requirePlatformAdminRouteContext } from "@/lib/admin/adminRouteContext";
+import { requirePlatformAdminRouteContext, requirePlatformAdminMutation } from "@/lib/admin/adminRouteContext";
 import { getAdminSetting, upsertAdminSetting } from "@/lib/admin/adminSettings";
 
 export const runtime = "nodejs";
@@ -24,7 +24,7 @@ export async function GET() {
 }
 
 export async function PATCH(request) {
-  const ctx = await requirePlatformAdminRouteContext();
+  const ctx = await requirePlatformAdminMutation(request, { rateKey: "admin-app-api-admin-contact-settings-patch" });
   if (!ctx.ok) return ctx.response;
   let body;
   try {

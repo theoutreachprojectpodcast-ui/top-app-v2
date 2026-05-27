@@ -1,4 +1,5 @@
-import { requirePlatformAdminRouteContext } from "@/lib/admin/adminRouteContext";
+import { requirePlatformAdminMutation } from "@/lib/admin/adminRouteContext";
+import { writeAdminAuditLog } from "@/lib/admin/adminAuditLog";
 
 export const runtime = "nodejs";
 
@@ -46,7 +47,7 @@ const KEYS = new Set([
 ]);
 
 export async function PATCH(request, context) {
-  const ctx = await requirePlatformAdminRouteContext();
+  const ctx = await requirePlatformAdminMutation(request, { rateKey: "admin-trusted-patch", limit: 45 });
   if (!ctx.ok) return ctx.response;
 
   const params = await context.params;
@@ -123,6 +124,15 @@ export async function PATCH(request, context) {
   if (!data) {
     return Response.json({ ok: false, error: "not_found" }, { status: 404 });
   }
+
+  await writeAdminAuditLog(ctx.admin, request, {
+    actorWorkosUserId: String(ctx.user?.id || ""),
+    actorEmail: String(ctx.user?.email || ""),
+    action: "admin.trusted.patch",
+    resourceType: "trusted_resources",
+    resourceId: String(data.id || id),
+    metadata: { changedFields: Object.keys(patch) },
+  });
 
   return Response.json({ ok: true, row: data });
 }

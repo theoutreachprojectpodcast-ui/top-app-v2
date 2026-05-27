@@ -16,6 +16,7 @@ import {
   shouldRedirectWwwToApex,
   shouldRewriteAdminSubdomainPath,
 } from "@/lib/runtime/deploymentHosts";
+import { applySecurityHeaders } from "@/lib/security/httpHeaders";
 
 /**
  * Next.js 16+ uses the `proxy` convention (replaces `middleware`) so AuthKit can attach
@@ -70,14 +71,15 @@ export default async function proxy(request) {
 
   if (shouldRedirectWwwToApex(host)) {
     const redir = redirectWwwToApex(request);
-    if (redir) return redir;
+    if (redir) return applySecurityHeaders(redir, request);
   }
 
   const rewritten = rewriteAdminSubdomainRequest(request, host);
   const incoming = rewritten || request;
 
   if (!workosProxy) {
-    return updateSession(incoming);
+    const res = await updateSession(incoming);
+    return applySecurityHeaders(res, incoming);
   }
 
   const idleMs = sessionIdleTimeoutMs();
@@ -100,7 +102,7 @@ export default async function proxy(request) {
     if (!rotated && Date.now() - lastMs > idleMs) {
       const url = new URL("/sign-out", incoming.url);
       url.searchParams.set("returnTo", "/");
-      return NextResponse.redirect(url);
+      return applySecurityHeaders(NextResponse.redirect(url), incoming);
     }
   }
 
@@ -114,7 +116,7 @@ export default async function proxy(request) {
     res.cookies.set(sessionFingerprintCookieName(), fpNow, opts);
   }
 
-  return res;
+  return applySecurityHeaders(res, incoming);
 }
 
 export const config = {

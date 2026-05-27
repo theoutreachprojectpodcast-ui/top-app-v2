@@ -12,16 +12,6 @@
   );
 }
 
-/* Bottom nav bar backdrop (fixed dock), not .siteFooter */
-:root[data-color-scheme="light"] .footerDockBackdrop {
-  background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.95));
-}
-
-/* Podcast: keep dock scrim from podcasts.css (overrides rule above). */
-:root[data-color-scheme="light"] .appShell--podcast .footerDockBackdrop {
-  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--color-bg-secondary) 97%, transparent));
-}
-
 :root[data-color-scheme="light"] .appShell--subpage:not(.appShell--podcast) > .bottomNav {
   background: transparent;
   box-shadow: none;

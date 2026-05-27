@@ -4,6 +4,7 @@ import { useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import AppHeaderBrand from "@/components/layout/AppHeaderBrand";
+import ColorSchemeToggle from "@/components/app/ColorSchemeToggle";
 import SiteBottomNavGlyph from "@/components/navigation/SiteBottomNavGlyph";
 import SiteMobileNavMoreMenu from "@/components/navigation/SiteMobileNavMoreMenu";
 import HeaderInner from "@/components/layout/HeaderInner";
@@ -88,50 +89,94 @@ export default function AppShell({
       {...(useTopAppStructure ? { "data-page-atmosphere": pageAtmosphere } : {})}
       {...podcastRouteAttrs}
     >
-      <header className={usePrimaryTopbarChrome ? "topbar" : "subpageTopbar"}>
-        <HeaderInner className="topbarInner">
-          <div className="topbarZone topbarLeft">
-            <div className="topbarActionsCluster topbarActionsCluster--start">
-              <SubpageTopbarActions
-                section="lead"
-                showThemeToggle={podcastThemeShell ? false : showThemeToggle}
-              />
-            </div>
-          </div>
-          <div className="topbarZone topbarCenter" aria-hidden="true" />
-          <div className="topbarZone topbarRight">
-            <div className="topbarActionsCluster">
-              <SubpageTopbarActions section="auth" />
-              {useFooterDockChrome ? (
-                <SiteMobileNavMoreMenu tone={podcastThemeShell ? "podcast" : "app"} align="end">
-                  <Link className="siteMobileNavMore__entry" href="/trusted">
-                    Trusted Resources
-                  </Link>
-                  <Link className="siteMobileNavMore__entry" href="/community">
-                    Community
-                  </Link>
-                  <Link className="siteMobileNavMore__entry" href="/sponsors">
-                    Sponsors
-                  </Link>
-                  {podcastThemeShell ? (
-                    <Link className="siteMobileNavMore__entry" href="/">
-                      Main app home
-                    </Link>
-                  ) : (
-                    <Link className="siteMobileNavMore__entry" href="/podcasts">
-                      Podcast
-                    </Link>
-                  )}
-                  <Link className="siteMobileNavMore__entry" href="/sponsors">
-                    Become a Sponsor
-                  </Link>
-                </SiteMobileNavMoreMenu>
-              ) : null}
-            </div>
-          </div>
-        </HeaderInner>
-      </header>
-      <AppHeaderBrand brandSrc={brandSrc || undefined} brandAlt={brandAlt} brandClassName={brandClassName} />
+      <div className={`appSiteHeader${podcastThemeShell ? " appSiteHeader--podcast" : ""}`}>
+        {podcastThemeShell ? (
+          <>
+            <header className={usePrimaryTopbarChrome ? "topbar" : "subpageTopbar"}>
+              <HeaderInner className="topbarInner">
+                <div className="topbarZone topbarLeft">
+                  <div className="topbarActionsCluster topbarActionsCluster--start">
+                    <SubpageTopbarActions section="lead" />
+                  </div>
+                </div>
+                <div className="topbarZone topbarCenter" aria-hidden="true" />
+                <div className="topbarZone topbarRight">
+                  <div className="topbarActionsCluster">
+                    <SubpageTopbarActions section="auth" />
+                    {useFooterDockChrome ? (
+                      <SiteMobileNavMoreMenu tone="podcast" align="end">
+                        <Link className="siteMobileNavMore__entry" href="/trusted">
+                          Trusted Resources
+                        </Link>
+                        <Link className="siteMobileNavMore__entry" href="/community">
+                          Community
+                        </Link>
+                        <Link className="siteMobileNavMore__entry" href="/sponsors">
+                          Sponsors
+                        </Link>
+                        <Link className="siteMobileNavMore__entry" href="/">
+                          Main app home
+                        </Link>
+                        <Link className="siteMobileNavMore__entry" href="/sponsors">
+                          Become a Sponsor
+                        </Link>
+                      </SiteMobileNavMoreMenu>
+                    ) : null}
+                  </div>
+                </div>
+              </HeaderInner>
+            </header>
+            <AppHeaderBrand
+              brandSrc={brandSrc || undefined}
+              brandAlt={brandAlt}
+              brandClassName={brandClassName}
+            />
+          </>
+        ) : (
+          <>
+            <AppHeaderBrand
+              brandSrc={brandSrc || undefined}
+              brandAlt={brandAlt}
+              brandClassName={brandClassName}
+            />
+            <header className={usePrimaryTopbarChrome ? "topbar" : "subpageTopbar"}>
+              <HeaderInner className="topbarInner">
+                <div className="topbarZone topbarLeft">
+                  <div className="topbarActionsCluster topbarActionsCluster--start">
+                    {!podcastThemeShell && showThemeToggle ? <ColorSchemeToggle /> : null}
+                    <SubpageTopbarActions section="lead" />
+                  </div>
+                </div>
+                <div className="topbarZone topbarCenter" aria-hidden="true" />
+                <div className="topbarZone topbarRight">
+                  <div className="topbarActionsCluster">
+                    <SubpageTopbarActions section="auth" />
+                    {useFooterDockChrome ? (
+                      <SiteMobileNavMoreMenu tone="app" align="end">
+                        <Link className="siteMobileNavMore__entry" href="/trusted">
+                          Trusted Resources
+                        </Link>
+                        <Link className="siteMobileNavMore__entry" href="/community">
+                          Community
+                        </Link>
+                        <Link className="siteMobileNavMore__entry" href="/sponsors">
+                          Sponsors
+                        </Link>
+                        <Link className="siteMobileNavMore__entry" href="/podcasts">
+                          Podcast
+                        </Link>
+                        <Link className="siteMobileNavMore__entry" href="/sponsors">
+                          Become a Sponsor
+                        </Link>
+                      </SiteMobileNavMoreMenu>
+                    ) : null}
+                  </div>
+                </div>
+              </HeaderInner>
+            </header>
+          </>
+        )}
+      </div>
       {usePrimaryTopbarChrome ? <div className="topbarOcclusion" aria-hidden="true" /> : null}
 
       {useTopAppStructure ? (

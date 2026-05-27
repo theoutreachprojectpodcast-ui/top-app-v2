@@ -2,6 +2,7 @@ import { resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
 import { isPlatformAdminServer } from "@/lib/admin/platformAdminServer";
+import { guardMutation, guardFailureResponse } from "@/lib/security/secureRoute";
 
 /**
  * @returns {Promise<
@@ -33,4 +34,18 @@ export async function requirePlatformAdminRouteContext() {
     return { ok: false, response: Response.json({ error: "forbidden" }, { status: 403 }) };
   }
   return { ok: true, user, admin, profileRow };
+}
+
+/**
+ * Admin mutation guard: same-origin + rate limit + platform admin session.
+ * @param {Request} request
+ * @param {{ rateKey?: string, limit?: number, windowMs?: number }} [options]
+ */
+export async function requirePlatformAdminMutation(request, options = {}) {
+  const { rateKey = "admin-mutation", limit = 80, windowMs = 60000 } = options;
+  const guard = guardMutation(request, { rateKey, limit, windowMs });
+  if (!guard.ok) {
+    return { ok: false, response: guardFailureResponse(guard) };
+  }
+  return requirePlatformAdminRouteContext();
 }

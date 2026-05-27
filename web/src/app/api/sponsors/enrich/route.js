@@ -1,3 +1,4 @@
+import { guardMutation, guardFailureResponse } from "@/lib/security/secureRoute";
 import { createClient } from "@supabase/supabase-js";
 import { withAuth } from "@workos-inc/authkit-nextjs";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -73,6 +74,8 @@ async function loadWebsiteSignals(websiteUrl) {
 }
 
 export async function POST(request) {
+  const __guard = guardMutation(request, { rateKey: "sponsors-enrich", limit: 15 });
+  if (!__guard.ok) return guardFailureResponse(__guard);
   if (!URL) return Response.json({ error: "Missing Supabase credentials." }, { status: 500 });
   if (!SERVICE_KEY) {
     return Response.json(

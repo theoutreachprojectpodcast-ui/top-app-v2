@@ -14,14 +14,30 @@ const roboto = Roboto({
 export const metadata = {
   title: "The Outreach Project",
   description: "Veteran and first responder resource network",
-  manifest: "/manifest.webmanifest?v=4",
+  applicationName: "The Outreach Project",
+  manifest: "/manifest.webmanifest?v=5",
+  appleWebApp: {
+    capable: true,
+    title: "TOP",
+    statusBarStyle: "default",
+  },
   icons: {
     icon: [
-      { url: "/favicon-32x32.png?v=4", sizes: "32x32", type: "image/png" },
-      { url: "/icon-192.png?v=4", sizes: "192x192", type: "image/png" },
-      { url: "/icon-512.png?v=4", sizes: "512x512", type: "image/png" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
     ],
-    apple: [{ url: "/apple-touch-icon.png?v=4", sizes: "180x180", type: "image/png" }],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+      { url: "/apple-touch-icon-precomposed.png", sizes: "180x180", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-title": "TOP",
+    "apple-mobile-web-app-status-bar-style": "default",
   },
 };
 

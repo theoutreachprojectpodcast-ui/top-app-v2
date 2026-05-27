@@ -10,7 +10,11 @@ const SCROLL_DIR_EPS = 0.75;
 const DOWN_GAIN = 0.012;
 const UP_GAIN = 0.018;
 /** Multiply header gradient opacity when page content scrolls under the header chrome. */
-const GRADIENT_BOOST_MULT = 1.5;
+const GRADIENT_BOOST_MULT_MOBILE = 1.5;
+const GRADIENT_BOOST_MULT_DESKTOP = 2.05 * 1.2;
+const DOWN_GAIN_DESKTOP = 0.022 * 1.2;
+const VEIL_SCROLL_MULT_DESKTOP = 1.2;
+const SCROLL_STEP_CAP_DESKTOP = 0.2;
 
 function clamp01(t) {
   if (t <= 0) return 0;
@@ -53,9 +57,10 @@ export function useImmersiveHeaderScroll({ rootRef, enabled = false, gradientBoo
 
     const applyBehind = (y) => {
       const behind = y > SCROLL_START;
+      const gradientMult = isMobile() ? GRADIENT_BOOST_MULT_MOBILE : GRADIENT_BOOST_MULT_DESKTOP;
       if (behind) {
         root.classList.add(BEHIND_CLASS);
-        root.style.setProperty("--header-gradient-opacity-mult", String(GRADIENT_BOOST_MULT));
+        root.style.setProperty("--header-gradient-opacity-mult", String(gradientMult));
       } else {
         root.classList.remove(BEHIND_CLASS);
         root.style.setProperty("--header-gradient-opacity-mult", "1");
@@ -72,8 +77,9 @@ export function useImmersiveHeaderScroll({ rootRef, enabled = false, gradientBoo
       const p = clamp01(y <= SCROLL_START ? 0 : y >= SCROLL_SOLID ? 1 : (y - SCROLL_START) / (SCROLL_SOLID - SCROLL_START));
       root.style.setProperty("--header-scroll-progress", String(p));
 
-      const down = isMobile() ? DOWN_GAIN * 1.25 : DOWN_GAIN;
+      const down = isMobile() ? DOWN_GAIN * 1.25 : DOWN_GAIN_DESKTOP;
       const up = isMobile() ? UP_GAIN * 1.35 : UP_GAIN;
+      const scrollStepCap = isMobile() ? 0.12 : SCROLL_STEP_CAP_DESKTOP;
 
       const isFirst = firstApplyRef.current;
       firstApplyRef.current = false;
@@ -89,12 +95,14 @@ export function useImmersiveHeaderScroll({ rootRef, enabled = false, gradientBoo
         if (dy < -SCROLL_DIR_EPS) {
           veil = clampVeil(veil + dy * up);
         } else if (dy > 0) {
-          veil = clampVeil(veil + Math.min(dy * down, 0.12));
+          veil = clampVeil(veil + Math.min(dy * down, scrollStepCap));
         }
       }
       lastYRef.current = y;
       veilRef.current = veil;
-      root.style.setProperty("--header-white-veil-opacity", veil.toFixed(4));
+      const veilOut = isMobile() ? veil : Math.min(1, veil * VEIL_SCROLL_MULT_DESKTOP);
+      root.style.setProperty("--header-white-veil-opacity", veilOut.toFixed(4));
+      root.style.setProperty("--header-veil-scroll-mult", isMobile() ? "1" : String(VEIL_SCROLL_MULT_DESKTOP));
 
       for (const c of HEADER_CLASSES) root.classList.remove(c);
       if (y < SCROLL_START) root.classList.add("header-at-top");
@@ -126,6 +134,7 @@ export function useImmersiveHeaderScroll({ rootRef, enabled = false, gradientBoo
       if (enabled) {
         root.style.removeProperty("--header-scroll-progress");
         root.style.removeProperty("--header-white-veil-opacity");
+        root.style.removeProperty("--header-veil-scroll-mult");
         for (const c of HEADER_CLASSES) root.classList.remove(c);
       }
     };

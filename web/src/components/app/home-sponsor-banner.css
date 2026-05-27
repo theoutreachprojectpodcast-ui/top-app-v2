@@ -6,7 +6,7 @@
 .homeSponsorSpotlights__head {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
   margin-bottom: var(--ds-space-3, 12px);
   text-align: left;
 }
@@ -256,8 +256,12 @@
   text-shadow: 0 1px 8px color-mix(in srgb, #000 45%, transparent);
 }
 @media (max-width: 760px) {
+  .homeSponsorSpotlights {
+    margin-bottom: 0;
+  }
+
   .homeSponsorSpotlights__head {
-    margin-bottom: 10px;
+    margin-bottom: 9px;
   }
   .homeSponsorBannerRow.homeSponsorBannerRow--switcher {
     display: block;

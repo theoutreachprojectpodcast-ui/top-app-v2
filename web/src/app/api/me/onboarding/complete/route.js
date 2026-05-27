@@ -1,4 +1,5 @@
 import { authFailureJson, resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
+import { guardMutation, guardFailureResponse } from "@/lib/security/secureRoute";
 import { createSupabaseAdminClient, profileTableName } from "@/lib/supabase/admin";
 import { getProfileRowByWorkOSId, profileRowToClientDto } from "@/lib/profile/serverProfile";
 import {
@@ -29,6 +30,8 @@ async function syncProfileCompletenessAfterOnboarding(admin, workosUserId, user)
 }
 
 export async function POST(request) {
+  const __guard = guardMutation(request, { rateKey: "me-onboarding", limit: 20 });
+  if (!__guard.ok) return guardFailureResponse(__guard);
   const auth = await resolveWorkOSRouteUser();
   if (!auth.ok) return authFailureJson(auth);
   const user = auth.user;

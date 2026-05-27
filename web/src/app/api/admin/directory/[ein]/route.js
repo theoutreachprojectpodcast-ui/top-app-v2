@@ -1,4 +1,4 @@
-import { requirePlatformAdminRouteContext } from "@/lib/admin/adminRouteContext";
+import { requirePlatformAdminRouteContext, requirePlatformAdminMutation } from "@/lib/admin/adminRouteContext";
 import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
 
 export const runtime = "nodejs";
@@ -51,7 +51,7 @@ export async function GET(request, context) {
 }
 
 export async function PATCH(request, context) {
-  const ctx = await requirePlatformAdminRouteContext();
+  const ctx = await requirePlatformAdminMutation(request, { rateKey: "admin-app-api-admin-directory-[ein]-patch" });
   if (!ctx.ok) return ctx.response;
 
   const params = await context.params;
@@ -87,5 +87,13 @@ export async function PATCH(request, context) {
     return Response.json({ ok: false, error: error.message }, { status: 500 });
   }
 
+  await writeAdminAuditLog(ctx.admin, request, {
+    actorWorkosUserId: String(ctx.user?.id || ""),
+    actorEmail: String(ctx.user?.email || ""),
+    action: "admin.directory.ein.PATCH",
+    resourceType: "admin_mutation",
+    resourceId: null,
+    metadata: { route: "directory/[ein]" },
+  });
   return Response.json({ ok: true, enrichment: data });
 }

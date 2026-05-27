@@ -1,3 +1,5 @@
+import { guardMutation, guardFailureResponse, parseJsonBody, validationFailureResponse } from "@/lib/security/secureRoute";
+import { adminMagicLinkSchema } from "@/lib/security/schemas/adminSchemas";
 import { createSupabaseAdminClient, profileTableName } from "@/lib/supabase/admin";
 import { isDefaultApprovedAdminEmail } from "@/lib/admin/adminPolicy";
 import { isWorkOSConfigured } from "@/lib/auth/workosConfigured";
@@ -10,19 +12,20 @@ function normalizeEmail(email) {
 }
 
 export async function POST(request) {
+  const guard = guardMutation(request, { rateKey: "admin-magic-link", limit: 8 });
+  if (!guard.ok) return guardFailureResponse(guard);
+
   if (!isWorkOSConfigured()) {
     return Response.json({ ok: false, error: "workos_not_configured" }, { status: 503 });
   }
 
-  let body = {};
-  try {
-    body = await request.json();
-  } catch {
-    return Response.json({ ok: false, error: "invalid_json" }, { status: 400 });
-  }
+  const parsed = await parseJsonBody(request, adminMagicLinkSchema);
+  if (!parsed.ok) return validationFailureResponse(parsed);
 
-  const email = normalizeEmail(body.email);
-  const returnTo = String(body.returnTo || "/admin").trim().startsWith("/") ? String(body.returnTo || "/admin").trim() : "/admin";
+  const email = normalizeEmail(parsed.data.email);
+  const returnTo = String(parsed.data.returnTo || "/admin").trim().startsWith("/")
+    ? String(parsed.data.returnTo || "/admin").trim()
+    : "/admin";
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return Response.json({ ok: false, error: "invalid_email" }, { status: 400 });
   }

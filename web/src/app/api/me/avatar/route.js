@@ -1,11 +1,13 @@
+import { guardMutation, guardFailureResponse } from "@/lib/security/secureRoute";
 import { authFailureJson, resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
 import { createSupabaseAdminClient, profileTableName } from "@/lib/supabase/admin";
 import { getProfileRowByWorkOSId, profileRowToClientDto } from "@/lib/profile/serverProfile";
-
-const MAX_BYTES = 5 * 1024 * 1024;
-const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
+import { safeUploadObjectPath, validateImageUpload } from "@/lib/security/uploadPolicy";
 
 export async function POST(request) {
+  const guard = guardMutation(request, { rateKey: "me-avatar", limit: 20 });
+  if (!guard.ok) return guardFailureResponse(guard);
+
   const auth = await resolveWorkOSRouteUser();
   if (!auth.ok) return authFailureJson(auth);
   const user = auth.user;
@@ -21,25 +23,14 @@ export async function POST(request) {
     return Response.json({ error: "invalid_form" }, { status: 400 });
   }
   const file = form.get("file");
-  if (!file || typeof file === "string") {
-    return Response.json({ error: "missing_file" }, { status: 400 });
+  const validated = await validateImageUpload(file);
+  if (!validated.ok) {
+    return Response.json({ error: validated.error }, { status: validated.status });
   }
 
-  const blob = /** @type {File} */ (file);
-  if (blob.size > MAX_BYTES) {
-    return Response.json({ error: "file_too_large" }, { status: 400 });
-  }
-  const type = blob.type || "application/octet-stream";
-  if (!ALLOWED.has(type)) {
-    return Response.json({ error: "unsupported_type" }, { status: 400 });
-  }
-
-  const ext = type === "image/jpeg" ? "jpg" : type.split("/")[1] || "bin";
-  const path = `${user.id}/${Date.now()}.${ext}`;
-  const buffer = Buffer.from(await blob.arrayBuffer());
-
-  const { error: upErr } = await admin.storage.from("profile-photos").upload(path, buffer, {
-    contentType: type,
+  const path = safeUploadObjectPath(user.id, validated.ext);
+  const { error: upErr } = await admin.storage.from("profile-photos").upload(path, validated.buffer, {
+    contentType: validated.mime,
     upsert: true,
   });
   if (upErr) {

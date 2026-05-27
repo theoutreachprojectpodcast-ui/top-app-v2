@@ -1,4 +1,5 @@
 import { authFailureJson, resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
+import { guardMutation, guardFailureResponse } from "@/lib/security/secureRoute";
 import { createSupabaseAdminClient, profileTableName } from "@/lib/supabase/admin";
 import { getProfileRowByWorkOSId, profileRowToClientDto } from "@/lib/profile/serverProfile";
 import { normalizePublicAccountIntent } from "@/lib/account/accountModel";
@@ -48,6 +49,8 @@ const IDENTITY_SEGMENTS = new Set([
 const NOTIFICATION_CHANNELS = new Set(["email", "sms", "push", "in_app", "phone"]);
 
 export async function PATCH(request) {
+  const __guard = guardMutation(request, { rateKey: "me-profile", limit: 40 });
+  if (!__guard.ok) return guardFailureResponse(__guard);
   const auth = await resolveWorkOSRouteUser();
   if (!auth.ok) return authFailureJson(auth);
   const user = auth.user;

@@ -1,28 +1,44 @@
 "use client";
 
 import { useId, useState } from "react";
+import { LayoutGrid } from "lucide-react";
 import { SERVICE_OPTIONS } from "@/lib/constants";
 import { resolveNteeCategoryHeaderImageUrl } from "@/features/directory/nteeCategoryHeaderImages";
 import { mapNonprofitCategory } from "@/features/nonprofits/mappers/categoryMapper";
+import NonprofitIcon from "@/features/nonprofits/components/NonprofitIcon";
 
-export default function DirectoryCategoryQuickPick({ value, onChange, collapsible = false }) {
+export default function DirectoryCategoryQuickPick({
+  value,
+  onChange,
+  collapsible = false,
+  visualStyle = "photo",
+  hideLabel = false,
+}) {
+  const usePhotoBackgrounds = visualStyle === "photo";
   const options = SERVICE_OPTIONS.filter(([k]) => k);
   const panelId = useId();
   const [panelOpen, setPanelOpen] = useState(false);
 
   const content = (
     <div className="directoryCategoryPick" aria-label="Filter by nonprofit category">
-      <p className="directoryCategoryPickLabel">Quick category focus</p>
+      {hideLabel ? null : <p className="directoryCategoryPickLabel">Quick category focus</p>}
       <div className="directoryCategoryPickGrid">
         <button
           type="button"
-          className={`directoryCategoryPickCard ${value === "" ? "isActive" : ""}`}
+          className={`directoryCategoryPickCard${usePhotoBackgrounds ? "" : " directoryCategoryPickCard--color"}${
+            value === "" ? " isActive" : ""
+          }`}
           onClick={() => onChange("")}
           style={{
             "--cat-tint": "rgba(158, 166, 177, 0.14)",
             "--cat-border": "var(--np-unknownGeneral)",
           }}
         >
+          {usePhotoBackgrounds ? null : (
+            <span className="directoryCategoryPickCard__icon" aria-hidden="true">
+              <LayoutGrid size={18} strokeWidth={2} />
+            </span>
+          )}
           <span className="directoryCategoryPickCardTitle">All areas</span>
           <span className="directoryCategoryPickCardHint">No letter filter</span>
         </button>
@@ -30,7 +46,7 @@ export default function DirectoryCategoryQuickPick({ value, onChange, collapsibl
           const cat = mapNonprofitCategory({ ntee_code: letter });
           const tint = cat.tint || "rgba(158, 166, 177, 0.12)";
           const border = `var(${cat.iconColorVar || "--np-unknownGeneral"})`;
-          const headerImage = resolveNteeCategoryHeaderImageUrl(letter);
+          const headerImage = usePhotoBackgrounds ? resolveNteeCategoryHeaderImageUrl(letter) : null;
           const cardStyle = {
             "--cat-tint": tint,
             "--cat-border": border,
@@ -45,11 +61,19 @@ export default function DirectoryCategoryQuickPick({ value, onChange, collapsibl
             <button
               key={letter}
               type="button"
-              className={`directoryCategoryPickCard category-${cat.key} ${value === letter ? "isActive" : ""}${headerImage ? " directoryCategoryPickCard--hasPhoto" : ""}`}
+              className={`directoryCategoryPickCard category-${cat.key} ${value === letter ? "isActive" : ""}${
+                headerImage ? " directoryCategoryPickCard--hasPhoto" : ""
+              }${usePhotoBackgrounds ? "" : " directoryCategoryPickCard--color"}`}
               onClick={() => onChange(letter)}
               style={cardStyle}
             >
-              <span className="directoryCategoryPickCardLetter">{letter}</span>
+              {usePhotoBackgrounds ? (
+                <span className="directoryCategoryPickCardLetter">{letter}</span>
+              ) : (
+                <span className="directoryCategoryPickCard__icon" aria-hidden="true">
+                  <NonprofitIcon category={cat} size={18} />
+                </span>
+              )}
               <span className="directoryCategoryPickCardTitle">{label}</span>
             </button>
           );

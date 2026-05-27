@@ -1,3 +1,4 @@
+import { guardMutation, guardFailureResponse } from "@/lib/security/secureRoute";
 import { authFailureJson, resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
 import Stripe from "stripe";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -5,6 +6,8 @@ import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
 import { stripePortalReturnUrl, stripeSecretConfigured } from "@/lib/billing/stripeConfig";
 
 export async function POST(request) {
+  const __guard = guardMutation(request, { rateKey: "billing-portal", limit: 20 });
+  if (!__guard.ok) return guardFailureResponse(__guard);
   if (!stripeSecretConfigured()) {
     return Response.json({ error: "billing_not_configured" }, { status: 503 });
   }
