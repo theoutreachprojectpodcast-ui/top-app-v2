@@ -14,6 +14,13 @@ export default function MissionPageTopStrip({ placement = "top" }) {
           <p className="footerNote">Mission-first resource navigation for veterans, first responders, and supporters.</p>
         </div>
         <p className="footerNote">Trust-driven support, built for clarity under pressure.</p>
+        <nav className="footerLegalNav" aria-label="Legal">
+          <a href="/privacy">Privacy</a>
+          <span aria-hidden="true"> · </span>
+          <a href="/terms">Terms</a>
+          <span aria-hidden="true"> · </span>
+          <a href="/contact">Contact</a>
+        </nav>
       </div>
     </footer>
   );

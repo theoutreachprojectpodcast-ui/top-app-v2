@@ -11,6 +11,8 @@ const MARKERS = [
   "qa-the-outreach-project.vercel.app",
   "the-outreach-project-app-git-qa",
   "-git-qa-the-outreach-project",
+  "qa.theoutreachproject.app",
+  "admin-qa.theoutreachproject.app",
 ];
 
 function collectUrlBlob() {

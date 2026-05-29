@@ -3,12 +3,13 @@
 import { Suspense, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { resolvePostAuthReturnTarget } from "@/lib/auth/workosSafeReturn";
 
 function AdminLoginForm() {
   const sp = useSearchParams();
   const returnTo = useMemo(() => {
     const raw = String(sp.get("returnTo") || "/admin").trim();
-    return raw.startsWith("/") ? raw : "/admin";
+    return resolvePostAuthReturnTarget(raw, "/admin");
   }, [sp]);
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);

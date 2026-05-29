@@ -3,7 +3,7 @@ import { adminMagicLinkSchema } from "@/lib/security/schemas/adminSchemas";
 import { createSupabaseAdminClient, profileTableName } from "@/lib/supabase/admin";
 import { isDefaultApprovedAdminEmail } from "@/lib/admin/adminPolicy";
 import { isWorkOSConfigured } from "@/lib/auth/workosConfigured";
-import { workosSignInLink } from "@/lib/auth/workosReturnTo";
+import { resolvePostAuthReturnTarget } from "@/lib/auth/workosSafeReturn";
 
 export const runtime = "nodejs";
 
@@ -23,9 +23,7 @@ export async function POST(request) {
   if (!parsed.ok) return validationFailureResponse(parsed);
 
   const email = normalizeEmail(parsed.data.email);
-  const returnTo = String(parsed.data.returnTo || "/admin").trim().startsWith("/")
-    ? String(parsed.data.returnTo || "/admin").trim()
-    : "/admin";
+  const returnTo = resolvePostAuthReturnTarget(String(parsed.data.returnTo || "/admin").trim(), "/admin");
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return Response.json({ ok: false, error: "invalid_email" }, { status: 400 });
   }
@@ -51,7 +49,11 @@ export async function POST(request) {
     return Response.json({ ok: true, message: "If approved, a sign-in link is available for this account." });
   }
 
-  const signInUrl = workosSignInLink(returnTo, { loginHint: email, rememberDevice: true });
+  const signInUrl = `/api/auth/workos/signin?${new URLSearchParams({
+    returnTo,
+    remember: "1",
+    loginHint: email,
+  }).toString()}`;
   return Response.json({
     ok: true,
     email,

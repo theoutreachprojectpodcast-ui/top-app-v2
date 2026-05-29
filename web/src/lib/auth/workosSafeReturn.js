@@ -1,5 +1,5 @@
 import { appBaseUrl } from "@/lib/billing/stripeConfig";
-import { adminHostnameFromEnv } from "@/lib/runtime/deploymentHosts";
+import { adminBaseUrl, adminHostnameFromEnv, hasDedicatedAdminHost } from "@/lib/runtime/deploymentHosts";
 
 /**
  * WorkOS `returnTo` after hosted auth: same-origin path, or absolute URL only when it targets
@@ -31,4 +31,19 @@ export function safeWorkOSReturnTarget(raw, fallback = "/") {
     // fall through
   }
   return f;
+}
+
+/**
+ * Post-auth destination for WorkOS sign-in (path on apex, or absolute admin URL when on a separate host).
+ * @param {string} raw
+ * @param {string} fallback
+ */
+export function resolvePostAuthReturnTarget(raw, fallback = "/") {
+  const path = safeWorkOSReturnTarget(raw, fallback);
+  if (path.startsWith("http")) return path;
+  if (!hasDedicatedAdminHost() || !path.startsWith("/admin")) {
+    return path;
+  }
+  const tail = path.slice("/admin".length);
+  return `${adminBaseUrl()}${tail}`;
 }

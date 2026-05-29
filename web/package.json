@@ -36,6 +36,7 @@
     "mobile:open:android": "cap open android",
     "mobile:open:ios": "cap open ios",
     "mobile:prep": "pnpm run build && cap sync",
+    "mobile:prep:prod": "node scripts/mobile-prep-production.mjs",
     "lint": "eslint",
     "enrich:logos": "node scripts/enrich-nonprofit-logos.js",
     "enrich:websites": "node scripts/discover-nonprofit-websites.js",

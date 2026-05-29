@@ -1,0 +1,42 @@
+# Vercel Production environment variables
+# Copy keys into Vercel → Settings → Environment Variables → Production
+# Do NOT commit filled-in secrets to git.
+
+# --- App URLs ---
+APP_BASE_URL=https://theoutreachproject.app
+NEXT_PUBLIC_APP_URL=https://theoutreachproject.app
+NEXT_PUBLIC_ADMIN_URL=https://admin.theoutreachproject.app
+
+# --- WorkOS (Production dashboard keys) ---
+WORKOS_API_KEY=sk_live_REPLACE
+WORKOS_CLIENT_ID=client_REPLACE
+WORKOS_COOKIE_PASSWORD=REPLACE_WITH_32_PLUS_CHAR_STABLE_SECRET
+WORKOS_COOKIE_DOMAIN=theoutreachproject.app
+NEXT_PUBLIC_WORKOS_REDIRECT_URI=https://theoutreachproject.app/callback
+# WORKOS_ORGANIZATION_ID=org_REPLACE
+
+# --- Supabase Production ---
+NEXT_PUBLIC_SUPABASE_URL=https://REPLACE.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=REPLACE
+SUPABASE_SERVICE_ROLE_KEY=REPLACE
+
+# --- Stripe Live ---
+STRIPE_SECRET_KEY=sk_live_REPLACE
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_REPLACE
+STRIPE_WEBHOOK_SECRET=whsec_REPLACE
+STRIPE_PRICE_SUPPORT_MONTHLY=price_REPLACE
+STRIPE_PRICE_PRO_MONTHLY=price_REPLACE
+# STRIPE_PRICE_SPONSOR_MONTHLY=price_REPLACE
+# STRIPE_PRICE_PODCAST_SPONSOR_COMMUNITY=price_REPLACE
+# STRIPE_PRICE_PODCAST_SPONSOR_IMPACT=price_REPLACE
+# STRIPE_PRICE_PODCAST_SPONSOR_FOUNDATIONAL=price_REPLACE
+
+# --- MVP switches ---
+NEXT_PUBLIC_ENABLE_DEMO_FLOWS=0
+
+# --- Platform admin (comma-separated; optional bootstrap) ---
+# PLATFORM_ADMIN_EMAILS=ops@example.com
+
+# --- Optional ---
+# YOUTUBE_API_KEY=
+# COMMUNITY_MODERATOR_EMAILS=

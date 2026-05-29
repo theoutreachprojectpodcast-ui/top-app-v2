@@ -61,6 +61,17 @@ Register **`https://theoutreachproject.app/callback`** as the redirect URI. Sign
 - Sign out on any host → session cleared everywhere on the registrable domain.
 - Non-admin cannot use admin host (redirect to apex `/`).
 
+## QA / Preview (admin-qa)
+
+Same single deployment pattern for QA:
+
+| Domain | Purpose |
+|--------|---------|
+| `qa.theoutreachproject.app` | Public QA |
+| `admin-qa.theoutreachproject.app` | Admin QA |
+
+Set `NEXT_PUBLIC_ADMIN_URL=https://admin-qa.theoutreachproject.app` on Preview and use `QA_PLATFORM_ADMIN_EMAILS` for tester allowlist. Full steps: **[admin-qa-production-setup.md](./admin-qa-production-setup.md)**.
+
 ## Troubleshooting: “This is not a valid redirect URI” (WorkOS)
 
 The error page lists the **exact** `redirect_uri` your deployment sent (for example `https://the-outreach-project-app.vercel.app/callback`) and the **WorkOS environment** (for example **VolenteLabs (Staging)**).

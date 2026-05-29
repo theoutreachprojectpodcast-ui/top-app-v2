@@ -31,6 +31,7 @@ import { useDirectorySearch } from "@/hooks/useDirectorySearch";
 import { useProfileData } from "@/features/profile/ProfileDataProvider";
 import { useTrustedResources } from "@/hooks/useTrustedResources";
 import { showLocalDemoChrome } from "@/lib/runtime/demoUiVisibility";
+import { adminConsoleHref } from "@/lib/runtime/deploymentHosts";
 import { useImmersiveHeaderScroll } from "@/hooks/useImmersiveHeaderScroll";
 import MembershipAtAGlance from "@/features/membership/components/MembershipAtAGlance";
 import { getSupabaseClient } from "@/lib/supabase/client";
@@ -1094,7 +1095,7 @@ function TopAppInner({ initialNav = "home" }) {
 
       {isAuthenticated && entitlements?.isPlatformAdmin ? (
         <div className="adminUtilityEntry">
-          <Link className="adminUtilityEntryLink" href="/admin">
+          <Link className="adminUtilityEntryLink" href={adminConsoleHref()}>
             Admin Console
           </Link>
         </div>

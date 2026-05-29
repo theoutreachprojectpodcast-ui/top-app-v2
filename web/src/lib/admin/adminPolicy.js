@@ -1,3 +1,5 @@
+import { isQaDeploymentContext } from "@/lib/runtime/qaDeploymentContext";
+
 const DEFAULT_APPROVED_ADMIN_EMAILS = Object.freeze([
   "andy@volentelabs.com",
   "andy@valentelabs.io",
@@ -9,14 +11,34 @@ function normalizeEmail(email) {
   return String(email || "").trim().toLowerCase();
 }
 
+function emailsFromEnv(key) {
+  return String(process.env[key] || "")
+    .split(",")
+    .map((part) => normalizeEmail(part))
+    .filter(Boolean);
+}
+
+function buildApprovedAdminEmailSet() {
+  const set = new Set(DEFAULT_APPROVED_ADMIN_EMAILS.map(normalizeEmail).filter(Boolean));
+  for (const email of emailsFromEnv("PLATFORM_ADMIN_EMAILS")) {
+    set.add(email);
+  }
+  if (isQaDeploymentContext()) {
+    for (const email of emailsFromEnv("QA_PLATFORM_ADMIN_EMAILS")) {
+      set.add(email);
+    }
+  }
+  return set;
+}
+
 export function approvedAdminEmailSet() {
-  return new Set(DEFAULT_APPROVED_ADMIN_EMAILS.map(normalizeEmail).filter(Boolean));
+  return buildApprovedAdminEmailSet();
 }
 
 export function isDefaultApprovedAdminEmail(email) {
   const em = normalizeEmail(email);
   if (!em) return false;
-  return approvedAdminEmailSet().has(em);
+  return buildApprovedAdminEmailSet().has(em);
 }
 
 /**
@@ -31,4 +53,3 @@ export function hasManualAdminGrant(profileRow = null) {
   const grantedBy = String(profileRow.admin_access_granted_by || "").trim();
   return enabled && grantedBy.length > 0;
 }
-

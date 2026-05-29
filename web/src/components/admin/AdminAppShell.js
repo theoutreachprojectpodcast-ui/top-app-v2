@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import AppHeaderBrand from "@/components/layout/AppHeaderBrand";
 import ColorSchemeToggle from "@/components/app/ColorSchemeToggle";
 import HeaderInner from "@/components/layout/HeaderInner";
+import { appPublicHref } from "@/lib/runtime/deploymentHosts";
 
 const LINKS = [
   { href: "/admin", label: "Overview", match: (p) => p === "/admin" },
@@ -37,7 +38,7 @@ export default function AdminAppShell({ children, sessionEmail = "" }) {
             <div className="topbarZone topbarLeft">
               <div className="topbarActionsCluster topbarActionsCluster--start">
                 <ColorSchemeToggle />
-                <Link className="btnSoft sponsorBtn" href="/">
+                <Link className="btnSoft sponsorBtn" href={appPublicHref("/")}>
                   Exit admin
                 </Link>
               </div>
@@ -45,7 +46,7 @@ export default function AdminAppShell({ children, sessionEmail = "" }) {
           <div className="topbarZone topbarCenter" aria-hidden="true" />
           <div className="topbarZone topbarRight">
             <div className="topbarActionsCluster">
-              <Link className="btnSoft sponsorBtn" href="/profile">
+              <Link className="btnSoft sponsorBtn" href={appPublicHref("/profile")}>
                 Profile
               </Link>
             </div>
