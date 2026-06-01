@@ -59,6 +59,8 @@ Also set WorkOS (Staging), Supabase QA, and Stripe test keys as today.
 QA_PLATFORM_ADMIN_EMAILS=you@example.com,teammate@example.com
 ```
 
+**Admin email magic-link (no WorkOS):** On Preview / QA hostnames (demo flows on), `/admin-login` signs in approved emails instantly — bootstrap list includes `andy@volentelabs.com`. Requires `WORKOS_COOKIE_PASSWORD` (32+ chars) and `WORKOS_COOKIE_DOMAIN=theoutreachproject.app` for `admin-qa` cookie sharing. Production uses the same flow when `ENABLE_ADMIN_EMAIL_LOGIN=1`.
+
 Redeploy after changing `NEXT_PUBLIC_*`.
 
 ### WorkOS (Staging)
@@ -74,10 +76,11 @@ Redeploy after changing `NEXT_PUBLIC_*`.
 ### QA smoke
 
 1. Open `https://admin-qa.theoutreachproject.app` → admin login.
-2. Sign in with approved email → lands on admin overview.
-3. From public QA, **Admin Console** link opens admin host.
-4. **Exit admin** returns to public QA (not a redirect loop).
-5. Non-admin user on admin host → redirected to public QA home.
+2. Sign in with an approved email (`andy@volentelabs.com`, `QA_PLATFORM_ADMIN_EMAILS`, or bootstrap list) — **Continue** on `/admin-login` (no WorkOS).
+3. Lands on admin overview.
+4. From public QA, **Admin Console** link opens admin host.
+5. **Exit admin** returns to public QA (not a redirect loop).
+6. Non-admin user on admin host → redirected to public QA home.
 
 ---
 
@@ -136,6 +139,7 @@ Admin: `http://localhost:3000/admin` or `http://localhost:3000/admin-login`.
 | Sign-in loop | Register exact callback URI in WorkOS; match `NEXT_PUBLIC_WORKOS_REDIRECT_URI` |
 | Session not shared apex ↔ admin | Set `WORKOS_COOKIE_DOMAIN=theoutreachproject.app` (registrable domain, no leading dot) |
 | “Not approved” on magic link | Add email to `QA_PLATFORM_ADMIN_EMAILS` or DB admin grant |
+| Admin login 503 / WorkOS redirect | Set `WORKOS_COOKIE_PASSWORD` (32+ chars) + `WORKOS_COOKIE_DOMAIN`; demo flows must be on for QA (Preview / QA hostname) |
 | Exit admin loops on admin host | Fixed via `appPublicHref()` — pull latest |
 
 ---

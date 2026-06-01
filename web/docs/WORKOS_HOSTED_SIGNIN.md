@@ -44,4 +44,6 @@ CLI tips: `web/docs/WORKOS_CLI.md` and `pnpm workos doctor`.
 
 ## QA (Vercel)
 
-Set `APP_BASE_URL` / `NEXT_PUBLIC_APP_URL` to the QA origin (see `web/.env.local.example`). **Demo** auth stays on for Preview and for stable QA hostnames (`qaDeploymentContext`). For `/admin` on QA without copying production `PLATFORM_ADMIN_EMAILS`, set server-only **`QA_PLATFORM_ADMIN_EMAILS`** (comma-separated). WorkOS still needs redirect URIs and org membership for those accounts.
+Set `APP_BASE_URL` / `NEXT_PUBLIC_APP_URL` to the QA origin (see `web/.env.local.example`). **Demo** auth stays on for Preview and for stable QA hostnames (`qaDeploymentContext`). For `/admin` on QA without copying production `PLATFORM_ADMIN_EMAILS`, set server-only **`QA_PLATFORM_ADMIN_EMAILS`** (comma-separated).
+
+**Admin without WorkOS:** When demo flows are on (QA/Preview) or `ENABLE_ADMIN_EMAIL_LOGIN=1` (Production), `/admin-login` uses approved-email magic link only (`andy@volentelabs.com` + `PLATFORM_ADMIN_EMAILS`). Requires `WORKOS_COOKIE_PASSWORD` (32+ chars) to seal the session cookie. Set `ENABLE_ADMIN_EMAIL_LOGIN=0` at go-live for WorkOS-only admin on Production.

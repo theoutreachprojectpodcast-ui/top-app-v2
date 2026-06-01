@@ -12,6 +12,7 @@ import {
   stripeWebhookConfigured,
 } from "@/lib/billing/stripeConfig";
 import { isDemoModeEnabled } from "@/lib/runtime/launchMode";
+import { isAdminEmailLoginEnabled, isAdminEmailLoginProductionEnabled } from "@/lib/auth/adminEmailLogin";
 
 export async function GET() {
   const workos = isWorkOSConfigured();
@@ -26,6 +27,9 @@ export async function GET() {
   return Response.json({
     /** Local demo email/password and related client-only demo paths (see `isDemoModeEnabled`). */
     demoFlowsEnabled: isDemoModeEnabled(),
+    /** `/admin` magic-link sign-in for approved emails (no WorkOS). QA: demo mode; Production: `ENABLE_ADMIN_EMAIL_LOGIN=1`. */
+    adminEmailLogin: isAdminEmailLoginEnabled(),
+    adminEmailLoginProduction: isAdminEmailLoginProductionEnabled(),
     workos,
     /** When false, lists what to set in `.env.local` to enable hosted AuthKit (no secret values). */
     workosMissingEnv: workos ? [] : workOSEnvironmentIssues(),

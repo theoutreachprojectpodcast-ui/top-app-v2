@@ -34,8 +34,13 @@ STRIPE_PRICE_PRO_MONTHLY=price_REPLACE
 # --- MVP switches ---
 NEXT_PUBLIC_ENABLE_DEMO_FLOWS=0
 
+# --- Admin sign-in (go-live toggle) ---
+# When 1: /admin uses approved-email magic link (andy@volentelabs.com + PLATFORM_ADMIN_EMAILS) — no WorkOS for admin.
+# When 0: /admin requires WorkOS (default for public launch).
+# ENABLE_ADMIN_EMAIL_LOGIN=0
+
 # --- Platform admin (comma-separated; optional bootstrap) ---
-# PLATFORM_ADMIN_EMAILS=ops@example.com
+# PLATFORM_ADMIN_EMAILS=andy@volentelabs.com,ops@example.com
 
 # --- Optional ---
 # YOUTUBE_API_KEY=

@@ -70,5 +70,6 @@ jobs:
           WORKOS_API_KEY: sk_test_dummy
           WORKOS_CLIENT_ID: client_dummy
           WORKOS_COOKIE_PASSWORD: this-is-a-dummy-cookie-password-at-least-32
+          WORKOS_COOKIE_DOMAIN: example.com
           NEXT_PUBLIC_WORKOS_REDIRECT_URI: https://example.com/callback
         run: pnpm build

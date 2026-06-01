@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { resolvePostAuthReturnTarget } from "@/lib/auth/workosSafeReturn";
@@ -15,6 +15,21 @@ function AdminLoginForm() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [adminEmailLogin, setAdminEmailLogin] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/auth/status", { credentials: "same-origin" })
+      .then((r) => r.json())
+      .then((data) => {
+        if (cancelled) return;
+        setAdminEmailLogin(!!data?.adminEmailLogin);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function onSendMagicLink(e) {
     e.preventDefault();
@@ -24,6 +39,7 @@ function AdminLoginForm() {
     try {
       const res = await fetch("/api/admin/magic-link", {
         method: "POST",
+        credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, returnTo }),
       });
@@ -32,10 +48,9 @@ function AdminLoginForm() {
         setError(data.error || "Could not start admin sign in.");
         return;
       }
-      setMessage(data.message || "Sign-in link prepared.");
-      if (data.signInUrl) {
-        window.location.assign(String(data.signInUrl));
-      }
+      setMessage(data.message || "Sign-in ready.");
+      const target = String(data.signInUrl || data.returnTo || returnTo).trim() || returnTo;
+      window.location.assign(target);
     } catch {
       setError("Could not start admin sign in.");
     } finally {
@@ -43,12 +58,16 @@ function AdminLoginForm() {
     }
   }
 
+  const lead = adminEmailLogin
+    ? "Enter your approved admin email. We verify the address and sign you in — no WorkOS."
+    : "Use your approved admin email to continue. We send you to secure hosted sign-in.";
+
   return (
     <div className="shell">
       <section className="card">
         <p className="introTagline">Admin</p>
         <h2>Admin Sign In</h2>
-        <p className="sponsorSectionLead">Use your approved admin email to continue. We send you to secure hosted sign-in.</p>
+        <p className="sponsorSectionLead">{lead}</p>
         <form className="form" onSubmit={onSendMagicLink}>
           <label className="fieldLabel" htmlFor="admin-login-email">
             Email
@@ -58,13 +77,13 @@ function AdminLoginForm() {
               autoComplete="email"
               value={email}
               onChange={(ev) => setEmail(ev.target.value)}
-              placeholder="admin@domain.com"
+              placeholder="andy@volentelabs.com"
               required
             />
           </label>
           <div className="row wrap">
             <button type="submit" className="btnPrimary" disabled={busy}>
-              Send Magic Link
+              {adminEmailLogin ? "Continue" : "Send Magic Link"}
             </button>
             <Link className="btnSoft" href="/">
               Back to app

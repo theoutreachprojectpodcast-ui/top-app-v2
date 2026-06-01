@@ -21,3 +21,4 @@ export const adminMagicLinkSchema = z.object({
   email,
   returnTo: z.string().trim().max(500).optional(),
 });
+

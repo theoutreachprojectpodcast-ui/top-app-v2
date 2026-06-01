@@ -4,6 +4,8 @@ import { createSupabaseAdminClient, profileTableName } from "@/lib/supabase/admi
 import { isDefaultApprovedAdminEmail } from "@/lib/admin/adminPolicy";
 import { isWorkOSConfigured } from "@/lib/auth/workosConfigured";
 import { resolvePostAuthReturnTarget } from "@/lib/auth/workosSafeReturn";
+import { isAdminEmailLoginEnabled } from "@/lib/auth/adminEmailLogin";
+import { applyAdminEmailSessionCookie, sealAdminEmailSession } from "@/lib/auth/adminEmailSession";
 
 export const runtime = "nodejs";
 
@@ -14,10 +16,6 @@ function normalizeEmail(email) {
 export async function POST(request) {
   const guard = guardMutation(request, { rateKey: "admin-magic-link", limit: 8 });
   if (!guard.ok) return guardFailureResponse(guard);
-
-  if (!isWorkOSConfigured()) {
-    return Response.json({ ok: false, error: "workos_not_configured" }, { status: 503 });
-  }
 
   const parsed = await parseJsonBody(request, adminMagicLinkSchema);
   if (!parsed.ok) return validationFailureResponse(parsed);
@@ -45,8 +43,26 @@ export async function POST(request) {
 
   const allowed = isDefaultApprovedAdminEmail(email) || (await dbAdminGranted());
   if (!allowed) {
-    // Avoid leaking admin roster details.
     return Response.json({ ok: true, message: "If approved, a sign-in link is available for this account." });
+  }
+
+  if (isAdminEmailLoginEnabled()) {
+    const sealed = await sealAdminEmailSession(email);
+    if (!sealed) {
+      return Response.json({ ok: false, error: "session_unavailable" }, { status: 503 });
+    }
+    const res = Response.json({
+      ok: true,
+      email,
+      signInUrl: returnTo,
+      message: "Admin sign-in ready.",
+    });
+    applyAdminEmailSessionCookie(res, sealed);
+    return res;
+  }
+
+  if (!isWorkOSConfigured()) {
+    return Response.json({ ok: false, error: "workos_not_configured" }, { status: 503 });
   }
 
   const signInUrl = `/api/auth/workos/signin?${new URLSearchParams({
@@ -61,4 +77,3 @@ export async function POST(request) {
     message: "Admin Sign In link ready.",
   });
 }
-

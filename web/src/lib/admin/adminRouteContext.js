@@ -1,8 +1,7 @@
-import { resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { createSupabaseAdminClient, profileTableName } from "@/lib/supabase/admin";
 import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
-import { isPlatformAdminServer } from "@/lib/admin/platformAdminServer";
 import { guardMutation, guardFailureResponse } from "@/lib/security/secureRoute";
+import { resolveAdminGateSession } from "@/lib/admin/resolveAdminGateSession";
 
 /**
  * @returns {Promise<
@@ -11,29 +10,31 @@ import { guardMutation, guardFailureResponse } from "@/lib/security/secureRoute"
  * >}
  */
 export async function requirePlatformAdminRouteContext() {
-  const auth = await resolveWorkOSRouteUser();
-  if (!auth.ok) {
-    return { ok: false, response: Response.json({ error: auth.error, message: auth.message }, { status: auth.status }) };
+  const gate = await resolveAdminGateSession();
+  if (!gate.ok) {
+    return {
+      ok: false,
+      response: Response.json(
+        { error: gate.error || "unauthorized", message: "Admin sign-in required." },
+        { status: gate.status || 401 },
+      ),
+    };
   }
-  const user = auth.user;
+
   const admin = createSupabaseAdminClient();
   if (!admin) {
     return { ok: false, response: Response.json({ error: "server_storage_unavailable" }, { status: 503 }) };
   }
-  const profileRow = await getProfileRowByWorkOSId(admin, user.id);
-  // Match `app/admin/layout.js`: console access is `isPlatformAdminServer` only.
-  // Bootstrap-approved emails may not yet have `platform_role` / `admin:access` on the profile row;
-  // requiring `canAccessAdmin` here caused 403 on admin APIs (e.g. QA status) while pages still loaded.
-  if (
-    !isPlatformAdminServer({
-      email: user.email,
-      workosUserId: user.id,
-      profileRow,
-    })
-  ) {
-    return { ok: false, response: Response.json({ error: "forbidden" }, { status: 403 }) };
+
+  let profileRow = null;
+  if (gate.mode === "email") {
+    const { data } = await admin.from(profileTableName()).select("*").eq("email", gate.email).maybeSingle();
+    profileRow = data;
+  } else {
+    profileRow = await getProfileRowByWorkOSId(admin, gate.user.id);
   }
-  return { ok: true, user, admin, profileRow };
+
+  return { ok: true, user: gate.user, admin, profileRow };
 }
 
 /**
