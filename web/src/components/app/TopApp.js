@@ -286,8 +286,8 @@ function TopAppInner({ initialNav = "home" }) {
       openedProfileEditFromQueryRef.current = false;
       return;
     }
-    if (openedProfileEditFromQueryRef.current) return;
     if (loadingProfile || !isAuthenticated) return;
+    if (openedProfileEditFromQueryRef.current) return;
     const section = String(searchParams.get("section") || "").trim().toLowerCase();
     const SECTION_TO_FOCUS = {
       main: "displayName",
@@ -1022,7 +1022,13 @@ function TopAppInner({ initialNav = "home" }) {
           sessionKind={sessionKind}
           authBackend={authBackend}
           persistProfile={persistProfile}
-          onOpenEditProfile={() => openEdit()}
+          onOpenEditProfile={() => {
+            if (pathname === "/profile") {
+              openEdit();
+              return;
+            }
+            router.push("/profile?edit=1");
+          }}
           setMembershipStatus={setMembershipStatus}
           openSignInForMembership={openSignInForMembership}
           favoriteEins={favoriteEins}
@@ -1195,7 +1201,7 @@ function TopAppInner({ initialNav = "home" }) {
       )}
 
       {overlay === "edit" && editDraft ? (
-        <div className="modalOverlay" onClick={closeEditOverlay}>
+        <div className="modalOverlay modalOverlay--profileEdit" onClick={closeEditOverlay}>
           <div
             className="modalCard modalCard--profileEdit"
             onClick={(e) => e.stopPropagation()}

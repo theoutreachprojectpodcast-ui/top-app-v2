@@ -46,6 +46,12 @@ function mapLegacyMembershipToTier(status) {
 
 function profileSaveErrorMessage(data, res) {
   const code = String(data?.error || "").trim();
+  if (code === "organization_not_allowed" || res?.status === 401) {
+    return (
+      data?.message ||
+      "Your sign-in session is not authorized for this app. Sign out and sign in again with an account in the WorkOS organization."
+    );
+  }
   if (code === "server_storage_unavailable" || res?.status === 503) {
     return "Profile save is temporarily unavailable (server storage). Try again shortly.";
   }
@@ -427,12 +433,20 @@ export function useProfileDataState(supabase) {
       }
     }
     setProfile(next);
-    if (!supabase) return { ok: true };
+    try {
+      saveJson(PROFILE_KEY, toLocalStorageProfile(next));
+    } catch {
+      /* quota / private mode */
+    }
+    /* QA / prod with WorkOS: demo session is device-local; cloud profile uses PATCH /api/me/profile. */
+    if (!supabase || authBackend.workos) {
+      return { ok: true };
+    }
     try {
       await upsertProfileByUserId(supabase, userId, next);
       return { ok: true };
     } catch {
-      const message = "Profile saved locally, but cloud sync failed.";
+      const message = "Profile saved on this device, but cloud sync failed.";
       setProfileError(message);
       return { ok: false, message };
     }
