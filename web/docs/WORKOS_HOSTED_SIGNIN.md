@@ -44,4 +44,6 @@ CLI tips: `web/docs/WORKOS_CLI.md` and `pnpm workos doctor`.
 
 ## QA (Vercel)
 
-Set `APP_BASE_URL` / `NEXT_PUBLIC_APP_URL` to the QA origin (see `web/.env.local.example`). **Demo** auth stays on for Preview and for stable QA hostnames (`qaDeploymentContext`). For `/admin` on QA without copying production `PLATFORM_ADMIN_EMAILS`, set server-only **`QA_PLATFORM_ADMIN_EMAILS`** (comma-separated). WorkOS still needs redirect URIs and org membership for those accounts.
+Set `APP_BASE_URL` / `NEXT_PUBLIC_APP_URL` to the QA origin (see `web/.env.local.example`). **Demo** auth stays on for Preview and for stable QA hostnames (`qaDeploymentContext`). For `/admin` on QA without copying production `PLATFORM_ADMIN_EMAILS`, set server-only **`QA_PLATFORM_ADMIN_EMAILS`** (comma-separated).
+
+**Admin sign-in:** Bootstrap emails in `adminPolicy.js` (`andy@volentelabs.com`, `jmelching1@gmail.com`, `hodge5403@gmail.com`, etc.) may use **WorkOS (SSO)** or email-only magic link on `/admin-login`. WorkOS sessions are accepted for `/admin` even when email login is enabled. Approved admins bypass strict `WORKOS_ORGANIZATION_ID` token checks so dashboard owners can sign in before org membership is complete. Add each admin as a **User** in your WorkOS organization for SSO providers (Google, etc.) to work reliably.

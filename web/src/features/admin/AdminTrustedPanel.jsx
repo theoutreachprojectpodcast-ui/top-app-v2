@@ -8,20 +8,63 @@ const EDIT_KEYS = [
   "logo_url",
   "header_image_url",
   "short_description",
+  "mission",
+  "long_description",
+  "who_they_serve",
+  "services",
+  "service_area",
+  "donation_url",
+  "volunteer_url",
+  "intake_url",
+  "events_url",
+  "resource_library_url",
+  "resource_links",
   "instagram_url",
   "facebook_url",
   "youtube_url",
   "x_url",
   "linkedin_url",
+  "tiktok_url",
+  "contact_email",
+  "contact_phone",
   "listing_status",
   "sort_order",
+  "last_reviewed_at",
+  "source_notes",
+  "detail_review_status",
+  "detail_field_sources",
+  "featured",
+  "admin_notes",
 ];
+
+const TEXTAREA_KEYS = new Set([
+  "short_description",
+  "mission",
+  "long_description",
+  "who_they_serve",
+  "services",
+  "resource_links",
+  "detail_field_sources",
+  "source_notes",
+  "admin_notes",
+]);
 
 function hydrateForm(row) {
   const next = {};
   for (const k of EDIT_KEYS) {
     if (k === "sort_order") next[k] = row[k] != null ? String(row[k]) : "0";
-    else next[k] = row[k] != null ? String(row[k]) : "";
+    else if (
+      (k === "resource_links" || k === "detail_field_sources") &&
+      row[k] != null &&
+      typeof row[k] === "object"
+    ) {
+      next[k] = JSON.stringify(row[k], null, 2);
+    } else if (k === "featured") {
+      next[k] = row[k] ? "true" : "false";
+    } else if (k === "last_reviewed_at" && row[k]) {
+      const d = new Date(row[k]);
+      next[k] = Number.isNaN(d.getTime()) ? "" : d.toISOString().slice(0, 10);
+    } else next[k] = row[k] != null ? String(row[k]) : "";
   }
   return next;
 }
@@ -32,6 +75,7 @@ export default function AdminTrustedPanel() {
   const [form, setForm] = useState({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [scraping, setScraping] = useState(false);
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
 
@@ -80,6 +124,24 @@ export default function AdminTrustedPanel() {
     try {
       const body = { ...form };
       if (body.sort_order != null) body.sort_order = parseInt(String(body.sort_order), 10) || 0;
+      if (body.resource_links) {
+        const raw = String(body.resource_links).trim();
+        if (!raw) body.resource_links = null;
+        else body.resource_links = JSON.parse(raw);
+      }
+      if (body.detail_field_sources) {
+        const raw = String(body.detail_field_sources).trim();
+        if (!raw) body.detail_field_sources = {};
+        else body.detail_field_sources = JSON.parse(raw);
+      }
+      if (body.featured != null) {
+        body.featured = String(body.featured).toLowerCase() === "true";
+      }
+      if (body.last_reviewed_at) {
+        body.last_reviewed_at = new Date(String(body.last_reviewed_at)).toISOString();
+      } else if (body.last_reviewed_at === "") {
+        body.last_reviewed_at = null;
+      }
       const res = await fetch(`/api/admin/trusted/${encodeURIComponent(selectedId)}`, {
         method: "PATCH",
         credentials: "include",
@@ -100,6 +162,30 @@ export default function AdminTrustedPanel() {
     }
   }
 
+  async function scrapeWebsite() {
+    if (!selectedId) return;
+    setScraping(true);
+    setError("");
+    setStatus("");
+    try {
+      const res = await fetch(`/api/admin/trusted/${encodeURIComponent(selectedId)}/scrape`, {
+        method: "POST",
+        credentials: "include",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error || "Scrape failed.");
+        return;
+      }
+      setStatus("Website metadata scraped (fills empty fields only).");
+      await load();
+    } catch {
+      setError("Scrape failed.");
+    } finally {
+      setScraping(false);
+    }
+  }
+
   return (
     <div className="adminPanel">
       <h2 style={{ marginTop: 0 }}>Trusted resources</h2>
@@ -108,6 +194,16 @@ export default function AdminTrustedPanel() {
         <button type="button" className="btnSoft" onClick={() => void load()} disabled={loading}>
           Refresh
         </button>
+        {selectedId ? (
+          <button
+            type="button"
+            className="btnSoft"
+            disabled={scraping || loading}
+            onClick={() => void scrapeWebsite()}
+          >
+            {scraping ? "Scraping…" : "Scrape website metadata"}
+          </button>
+        ) : null}
       </div>
       {error ? (
         <p role="alert" style={{ color: "var(--color-danger, #b42318)" }}>
@@ -144,10 +240,11 @@ export default function AdminTrustedPanel() {
               <label className="fieldLabel" htmlFor={`tr-${key}`}>
                 {key}
               </label>
-              {key === "short_description" ? (
+              {TEXTAREA_KEYS.has(key) ? (
                 <textarea
                   id={`tr-${key}`}
                   className="adminConsoleInput"
+                  rows={key === "resource_links" ? 6 : 4}
                   value={form[key] ?? ""}
                   onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
                 />

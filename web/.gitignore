@@ -1,6 +1,7 @@
 node_modules
 .next
 .env*.local
+.env.vercel*.pull
 
 # Generated from repo-root ../assets by scripts/sync-public-assets.mjs
 public/assets

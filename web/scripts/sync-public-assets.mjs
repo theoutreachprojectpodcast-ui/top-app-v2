@@ -18,6 +18,18 @@ try {
   await fs.mkdir(path.join(webRoot, "public"), { recursive: true });
   await fs.cp(src, dest, { recursive: true, force: true });
   console.log("[sync-public-assets] copied ../assets -> public/assets");
+
+  const iconNames = ["icon-512.png", "icon-192.png", "icon-1024.png", "apple-touch-icon.png", "favicon-32x32.png"];
+  for (const name of iconNames) {
+    const from = path.join(src, name);
+    try {
+      await fs.access(from);
+      await fs.copyFile(from, path.join(webRoot, "public", name));
+      console.log(`[sync-public-assets] copied assets/${name} -> public/${name}`);
+    } catch {
+      /* optional per-file */
+    }
+  }
 } catch (err) {
   const msg = err instanceof Error ? err.message : String(err);
   // Only STRICT_ASSET_SYNC fails the script — many dev shells set CI=true; that should not block `pnpm dev`.

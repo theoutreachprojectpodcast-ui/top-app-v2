@@ -43,7 +43,7 @@ export default function PodcastGuestProfilePage({ slug }) {
       usePrimaryTopbarChrome
       useFooterDockChrome
       useTopAppStructure
-      showThemeToggle={false}
+      pageAtmosphere="podcast"
     >
       <div className="podcastScope">
         <section className="podcastSection">

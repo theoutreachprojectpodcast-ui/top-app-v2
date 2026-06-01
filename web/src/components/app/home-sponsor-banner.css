@@ -1,0 +1,375 @@
+/* Home sponsor spotlight row — imported by HomeSponsorBannerPlacements.jsx (layout v2: logo left, details right). */
+
+.homeSponsorSpotlights {
+  margin: 0 0 var(--ds-space-4, 16px);
+}
+.homeSponsorSpotlights__head {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: var(--ds-space-3, 12px);
+  text-align: left;
+}
+.homeSponsorSpotlights__eyebrow {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+.homeSponsorSpotlights__title {
+  margin: 0;
+  font-size: clamp(1.15rem, 2.8vw, 1.35rem);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1.15;
+  color: var(--color-text-primary);
+}
+.homeSponsorBannerRow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--ds-space-3, 12px);
+}
+@media (max-width: 1100px) {
+  .homeSponsorBannerRow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.homeSponsorSpotlights a.homeSponsorBannerSlot {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 148px;
+  padding: 14px 14px 12px;
+  border-radius: var(--radius-card, 14px);
+  overflow: hidden;
+  text-decoration: none;
+  color: #f8fafc;
+  border: 1px solid color-mix(in srgb, #ffffff 22%, transparent);
+  box-shadow:
+    0 14px 28px color-mix(in srgb, #000 24%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, #ffffff 8%, transparent);
+  transition: transform 160ms ease, box-shadow 200ms ease, border-color 200ms ease;
+}
+.homeSponsorSpotlights a.homeSponsorBannerSlot:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, #ffffff 38%, transparent);
+  box-shadow:
+    0 18px 36px color-mix(in srgb, #000 32%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, #ffffff 12%, transparent);
+}
+.homeSponsorSpotlights a.homeSponsorBannerSlot:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+.homeSponsorBannerSlot__bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-color: #1a2330;
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  transform: scale(1.02);
+  pointer-events: none;
+}
+.homeSponsorBannerSlot__scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #03080c 0%, transparent) 0%,
+    color-mix(in srgb, #03080c 55%, transparent) 100%
+  );
+  pointer-events: none;
+}
+.homeSponsorBannerSlot--hasLogo:not(.homeSponsorBannerSlot--photo) {
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--color-surface-card) 92%, #ffffff 8%) 0%,
+    color-mix(in srgb, var(--color-surface-card-deep) 94%, #0b1420 6%) 100%
+  );
+  color: var(--color-text-primary);
+}
+:root[data-color-scheme="dark"] .homeSponsorBannerSlot--hasLogo:not(.homeSponsorBannerSlot--photo),
+.dark .homeSponsorBannerSlot--hasLogo:not(.homeSponsorBannerSlot--photo) {
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--color-surface-card) 88%, #0a0e14 12%) 0%,
+    color-mix(in srgb, var(--color-surface-card-deep) 96%, #000 4%) 100%
+  );
+}
+.homeSponsorBannerSlot--hasLogo:not(.homeSponsorBannerSlot--photo) .homeSponsorBannerSlot__title,
+.homeSponsorBannerSlot--hasLogo:not(.homeSponsorBannerSlot--photo) .homeSponsorBannerSlot__tagline,
+.homeSponsorBannerSlot--hasLogo:not(.homeSponsorBannerSlot--photo) .homeSponsorBannerSlot__cta {
+  color: var(--color-text-primary);
+  text-shadow: none;
+}
+.homeSponsorBannerSlot--hasLogo:not(.homeSponsorBannerSlot--photo) .homeSponsorBannerSlot__tagline {
+  color: var(--color-text-secondary);
+}
+.homeSponsorBannerSlot--hasLogo:not(.homeSponsorBannerSlot--photo) .homeSponsorBannerSlot__cta {
+  color: var(--color-accent);
+}
+/* Gameday horizontal wordmark (white JPEG) — inset mat so laurels/text breathe */
+.homeSponsorSpotlights a.homeSponsorBannerSlot--gameday {
+  min-height: 164px;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+.homeSponsorBannerSlot--gameday .homeSponsorBannerSlot__brandRow {
+  gap: 20px;
+}
+.homeSponsorBannerSlot--gameday .homeSponsorBannerSlot__logoCell {
+  box-sizing: border-box;
+  display: inline-flex;
+  flex: 0 1 auto;
+  width: fit-content;
+  max-width: min(100%, 240px);
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+  margin: 2px 0;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--color-border-strong) 22%, transparent),
+    0 6px 16px color-mix(in srgb, #000 8%, transparent);
+}
+.homeSponsorBannerSlot--gameday .homeSponsorBannerSlot__logoFloat {
+  display: block;
+  width: auto;
+  max-width: min(200px, 100%);
+  max-height: 48px;
+  min-height: 0;
+  height: auto;
+  object-fit: contain;
+  object-position: center center;
+}
+.homeSponsorSpotlights a.homeSponsorBannerSlot--photo {
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: stretch;
+  background-color: #1a2330;
+  min-height: 156px;
+}
+.homeSponsorBannerSlot__scrim--photo {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #03080c 0%, transparent) 0%,
+    color-mix(in srgb, #03080c 0%, transparent) 38%,
+    color-mix(in srgb, #03080c 45%, transparent) 72%,
+    color-mix(in srgb, #03080c 82%, transparent) 100%
+  );
+}
+.homeSponsorBannerSlot--photo .homeSponsorBannerSlot__bg {
+  transform: scale(1.03);
+}
+/* Logo left, org copy right */
+.homeSponsorBannerSlot__brandRow {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 14px;
+  width: 100%;
+  min-width: 0;
+  text-align: left;
+}
+.homeSponsorBannerSlot__logoCell {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  max-width: min(52%, 220px);
+  min-width: 0;
+}
+.homeSponsorBannerSlot__logoFloat {
+  display: block;
+  width: auto;
+  max-width: min(168px, 100%);
+  max-height: 72px;
+  min-height: 40px;
+  height: auto;
+  object-fit: contain;
+  object-position: left center;
+}
+.homeSponsorBannerSlot--hasLogo:not(.homeSponsorBannerSlot--photo) .homeSponsorBannerSlot__logoFloat {
+  max-width: min(220px, 100%);
+  max-height: 64px;
+}
+.homeSponsorBannerSlot--photo .homeSponsorBannerSlot__logoFloat {
+  max-width: min(156px, 100%);
+  max-height: 68px;
+  filter:
+    drop-shadow(0 2px 10px color-mix(in srgb, #000 55%, transparent))
+    drop-shadow(0 0 1px color-mix(in srgb, #000 40%, transparent));
+}
+.homeSponsorBannerSlot__detailsCell {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+.homeSponsorBannerSlot__eyebrow {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.88;
+}
+.homeSponsorBannerSlot__title {
+  margin: 0;
+  font-size: clamp(0.95rem, 2.2vw, 1.1rem);
+  font-weight: 800;
+  line-height: 1.2;
+  text-shadow: 0 2px 12px color-mix(in srgb, #000 55%, transparent);
+}
+.homeSponsorBannerSlot__tagline {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: color-mix(in srgb, #f8fafc 88%, transparent);
+  max-width: 32ch;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+.homeSponsorBannerSlot__cta {
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, #f8fafc 92%, var(--color-accent-soft) 8%);
+  text-shadow: 0 1px 8px color-mix(in srgb, #000 45%, transparent);
+}
+@media (max-width: 760px) {
+  .homeSponsorSpotlights {
+    margin-bottom: 0;
+  }
+
+  .homeSponsorSpotlights__head {
+    margin-bottom: 9px;
+  }
+  .homeSponsorBannerRow.homeSponsorBannerRow--switcher {
+    display: block;
+    position: relative;
+    min-height: 128px;
+    gap: 0;
+  }
+  .homeSponsorBannerCarouselSlide {
+    display: none;
+  }
+  .homeSponsorBannerCarouselSlide.isActive {
+    display: block;
+    animation: homeSponsorCarouselFadeIn 320ms ease;
+  }
+  @keyframes homeSponsorCarouselFadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .homeSponsorBannerCarouselSlide.isActive {
+      animation: none;
+    }
+  }
+  .homeSponsorBannerCarouselStatus {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  .homeSponsorSpotlights a.homeSponsorBannerSlot {
+    min-height: 120px;
+    padding: 12px 12px 10px;
+  }
+  .homeSponsorSpotlights a.homeSponsorBannerSlot--photo {
+    min-height: 128px;
+  }
+  .homeSponsorBannerSlot__brandRow {
+    gap: 12px;
+  }
+  .homeSponsorBannerSlot__logoCell {
+    max-width: min(44%, 140px);
+  }
+  .homeSponsorBannerSlot__logoFloat {
+    max-width: min(140px, 100%);
+    max-height: 56px;
+    min-height: 36px;
+  }
+  .homeSponsorBannerSlot--hasLogo:not(.homeSponsorBannerSlot--photo) .homeSponsorBannerSlot__logoFloat {
+    max-width: min(200px, 100%);
+    max-height: 52px;
+  }
+  .homeSponsorBannerSlot--photo .homeSponsorBannerSlot__logoFloat {
+    max-height: 52px;
+  }
+  .homeSponsorBannerSlot__eyebrow {
+    font-size: 9px;
+    letter-spacing: 0.1em;
+  }
+  .homeSponsorBannerSlot__title {
+    font-size: clamp(0.82rem, 3.4vw, 0.95rem);
+  }
+  .homeSponsorBannerSlot__tagline {
+    font-size: 10px;
+    line-height: 1.3;
+    -webkit-line-clamp: 2;
+  }
+  .homeSponsorBannerSlot__cta {
+    margin-top: 2px;
+    font-size: 9px;
+  }
+  .homeSponsorBannerSlot--gameday .homeSponsorBannerSlot__brandRow {
+    gap: 14px;
+  }
+  .homeSponsorBannerSlot--gameday .homeSponsorBannerSlot__logoCell {
+    padding: 12px;
+    border-radius: 10px;
+    max-width: min(100%, 200px);
+  }
+  .homeSponsorBannerSlot--gameday .homeSponsorBannerSlot__logoFloat {
+    max-width: min(176px, 100%);
+    max-height: 42px;
+  }
+}
+
+@media (min-width: 761px) {
+  .homeSponsorSpotlights__head {
+    margin-bottom: var(--ds-space-4, 16px);
+  }
+
+  .homeSponsorBannerRow {
+    gap: var(--ds-space-4, 16px);
+  }
+
+  .homeSponsorBannerRow--switcher .homeSponsorBannerCarouselSlide {
+    display: block;
+    min-width: 0;
+  }
+
+  .homeSponsorBannerCarouselStatus {
+    display: none;
+  }
+}

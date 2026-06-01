@@ -1,3 +1,4 @@
+import { guardMutation, guardFailureResponse } from "@/lib/security/secureRoute";
 import { authFailureJson, resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
 import Stripe from "stripe";
 import {
@@ -8,6 +9,8 @@ import {
 } from "@/lib/billing/stripeConfig";
 
 export async function POST(request) {
+  const __guard = guardMutation(request, { rateKey: "billing-podcast-checkout", limit: 12 });
+  if (!__guard.ok) return guardFailureResponse(__guard);
   if (!podcastSponsorCheckoutConfigured()) {
     return Response.json({ error: "podcast_billing_not_configured" }, { status: 503 });
   }

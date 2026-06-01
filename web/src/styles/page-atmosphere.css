@@ -1,0 +1,58 @@
+/* =============================================================================
+   TOP v0.6 — Page atmosphere: coordinated body layers + content depth
+   Driven by `data-page-atmosphere` on main.topApp (see pageAtmosphere.js).
+   Podcast shell keeps its own full-bleed treatment (.appShell--podcast).
+   ============================================================================= */
+
+/* --- Shared: content cards read against atmospheric backgrounds --- */
+main.topApp:not(.appShell--podcast) .shell > .card:not(.cardHero):not(.action):not(.welcomeActionCard):not(.homeProfileProgressNotice) {
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--color-surface-card) 92%, var(--color-bg-elevated) 8%) 0%,
+    color-mix(in srgb, var(--color-surface-card-deep) 94%, transparent) 100%
+  );
+  border-color: color-mix(in srgb, var(--color-border-subtle) 82%, var(--color-accent-soft) 18%);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #ffffff 55%, transparent),
+    0 14px 36px color-mix(in srgb, var(--color-text-primary) 9%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--color-text-primary) 4%, transparent);
+}
+
+:root[data-color-scheme="dark"] main.topApp:not(.appShell--podcast) .shell > .card:not(.cardHero):not(.action):not(.welcomeActionCard):not(.homeProfileProgressNotice),
+.dark main.topApp:not(.appShell--podcast) .shell > .card:not(.cardHero):not(.action):not(.welcomeActionCard):not(.homeProfileProgressNotice) {
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--color-surface-card) 88%, var(--color-bg-muted) 12%) 0%,
+    color-mix(in srgb, var(--color-surface-card-deep) 92%, transparent) 100%
+  );
+  border-color: color-mix(in srgb, var(--color-border-subtle) 75%, var(--color-accent-soft) 25%);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #ffffff 6%, transparent),
+    0 18px 44px color-mix(in srgb, #000 42%, transparent),
+    0 0 0 1px color-mix(in srgb, #ffffff 5%, transparent);
+}
+
+/* TopApp full-bleed page photo + light noise: see `top-app.css` (`html`, single cover layer). Do not override with gradient-only washes here. */
+
+/* Optional: very slow atmospheric drift (disabled for reduced motion) */
+@keyframes pageAtmoWashDrift {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.97;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html:has(main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])) {
+    animation: pageAtmoWashDrift 85s ease-in-out infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html:has(main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])) {
+    animation: none;
+  }
+}

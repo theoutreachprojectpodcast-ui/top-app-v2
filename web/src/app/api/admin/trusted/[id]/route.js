@@ -1,4 +1,5 @@
-import { requirePlatformAdminRouteContext } from "@/lib/admin/adminRouteContext";
+import { requirePlatformAdminMutation } from "@/lib/admin/adminRouteContext";
+import { writeAdminAuditLog } from "@/lib/admin/adminAuditLog";
 
 export const runtime = "nodejs";
 
@@ -26,10 +27,27 @@ const KEYS = new Set([
   "contact_phone",
   "admin_notes",
   "resource_type",
+  "mission",
+  "who_they_serve",
+  "services",
+  "service_area",
+  "donation_url",
+  "volunteer_url",
+  "intake_url",
+  "events_url",
+  "resource_library_url",
+  "resource_links",
+  "tiktok_url",
+  "last_reviewed_at",
+  "source_notes",
+  "long_description",
+  "detail_field_sources",
+  "detail_review_status",
+  "featured",
 ]);
 
 export async function PATCH(request, context) {
-  const ctx = await requirePlatformAdminRouteContext();
+  const ctx = await requirePlatformAdminMutation(request, { rateKey: "admin-trusted-patch", limit: 45 });
   if (!ctx.ok) return ctx.response;
 
   const params = await context.params;
@@ -54,6 +72,34 @@ export async function PATCH(request, context) {
       patch[k] = n;
     } else if (k === "is_active") {
       patch[k] = Boolean(v);
+    } else if (k === "featured") {
+      patch[k] = Boolean(v);
+    } else if (k === "detail_field_sources") {
+      if (v == null) patch[k] = {};
+      else if (typeof v === "object" && !Array.isArray(v)) patch[k] = v;
+      else if (typeof v === "string") {
+        try {
+          const parsed = JSON.parse(v);
+          if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) patch[k] = parsed;
+        } catch {
+          /* skip */
+        }
+      }
+    } else if (k === "resource_links") {
+      if (v == null) patch[k] = null;
+      else if (Array.isArray(v)) patch[k] = v;
+      else if (typeof v === "string") {
+        try {
+          const parsed = JSON.parse(v);
+          if (Array.isArray(parsed)) patch[k] = parsed;
+        } catch {
+          /* skip invalid json */
+        }
+      }
+    } else if (k === "last_reviewed_at") {
+      const t = v ? new Date(v) : null;
+      if (t && !Number.isNaN(t.getTime())) patch[k] = t.toISOString();
+      else if (v === null || v === "") patch[k] = null;
     } else if (typeof v === "string") {
       patch[k] = v.trim() || null;
     } else if (v === null) {
@@ -78,6 +124,15 @@ export async function PATCH(request, context) {
   if (!data) {
     return Response.json({ ok: false, error: "not_found" }, { status: 404 });
   }
+
+  await writeAdminAuditLog(ctx.admin, request, {
+    actorWorkosUserId: String(ctx.user?.id || ""),
+    actorEmail: String(ctx.user?.email || ""),
+    action: "admin.trusted.patch",
+    resourceType: "trusted_resources",
+    resourceId: String(data.id || id),
+    metadata: { changedFields: Object.keys(patch) },
+  });
 
   return Response.json({ ok: true, row: data });
 }

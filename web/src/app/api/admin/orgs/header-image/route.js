@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { requirePlatformAdminRouteContext } from "@/lib/admin/adminRouteContext";
+import { requirePlatformAdminRouteContext, requirePlatformAdminMutation } from "@/lib/admin/adminRouteContext";
 import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
 import {
   batchEnrichOrgHeaderImages,
@@ -62,7 +62,7 @@ export async function GET(request) {
 export async function POST(request) {
   if (!URL) return Response.json({ error: "Missing Supabase credentials." }, { status: 500 });
   if (!SERVICE_KEY) return missingServiceRoleResponse();
-  const ctx = await requirePlatformAdminRouteContext();
+  const ctx = await requirePlatformAdminMutation(request, { rateKey: "admin-app-api-admin-orgs-header-image-post" });
   if (!ctx.ok) return ctx.response;
 
   const body = await request.json().catch(() => ({}));
@@ -91,13 +91,21 @@ export async function POST(request) {
   });
 
   if (!out.ok) return Response.json(out, { status: out.error === "no_enrichment_row" ? 404 : 400 });
+  await writeAdminAuditLog(ctx.admin, request, {
+    actorWorkosUserId: String(ctx.user?.id || ""),
+    actorEmail: String(ctx.user?.email || ""),
+    action: "admin.orgs.header-image.POST",
+    resourceType: "admin_mutation",
+    resourceId: null,
+    metadata: { route: "orgs/header-image" },
+  });
   return Response.json({ ok: true, ...out });
 }
 
 export async function PATCH(request) {
   if (!URL) return Response.json({ error: "Missing Supabase credentials." }, { status: 500 });
   if (!SERVICE_KEY) return missingServiceRoleResponse();
-  const ctx = await requirePlatformAdminRouteContext();
+  const ctx = await requirePlatformAdminMutation(request, { rateKey: "admin-app-api-admin-orgs-header-image-patch" });
   if (!ctx.ok) return ctx.response;
 
   const body = await request.json().catch(() => ({}));

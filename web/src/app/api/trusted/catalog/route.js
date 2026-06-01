@@ -1,12 +1,34 @@
 import { createSupabaseReadClient } from "@/lib/supabase/readServiceClient";
 import { fetchTrustedResourcesFromSupabase } from "@/features/trusted-resources/api";
+import { buildTrustedResourceDetailViewModel } from "@/features/trusted-resources/domain/trustedResourceDetailViewModel";
+import { buildTrustedResourceViewModel } from "@/features/trusted-resources/domain/trustedResourceViewModel";
+import { TRUSTED_RESOURCE_BY_SLUG } from "@/features/trusted-resources/trustedResourcesRegistry";
 
 export const runtime = "nodejs";
 
-export async function GET() {
+export async function GET(request) {
   const supabase = createSupabaseReadClient();
+  const slug = String(new URL(request.url).searchParams.get("slug") || "")
+    .trim()
+    .toLowerCase();
+
   try {
     const rows = await fetchTrustedResourcesFromSupabase(supabase);
+
+    if (slug) {
+      if (!TRUSTED_RESOURCE_BY_SLUG[slug]) {
+        return Response.json({ ok: false, error: "not_found" }, { status: 404 });
+      }
+      const row =
+        rows.find((r) => String(r.trustedResourceSlug || "").trim().toLowerCase() === slug) || null;
+      if (!row) {
+        return Response.json({ ok: false, error: "not_found" }, { status: 404 });
+      }
+      const card = buildTrustedResourceViewModel(row);
+      const detail = buildTrustedResourceDetailViewModel(card, row);
+      return Response.json({ ok: true, row, detail });
+    }
+
     if (!supabase) {
       return Response.json({
         ok: true,

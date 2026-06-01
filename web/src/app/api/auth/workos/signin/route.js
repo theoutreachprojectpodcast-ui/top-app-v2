@@ -2,7 +2,7 @@ import { getSignInUrl } from "@workos-inc/authkit-nextjs";
 import { NextResponse } from "next/server";
 import { isWorkOSConfigured } from "@/lib/auth/workosConfigured";
 import { sanitizeWorkOSLoginHint } from "@/lib/auth/workosLoginHint";
-import { safeWorkOSReturnTarget } from "@/lib/auth/workosSafeReturn";
+import { resolvePostAuthReturnTarget } from "@/lib/auth/workosSafeReturn";
 import { workOSAuthKitAuthorizeOptions } from "@/lib/auth/workosOrganizationScope";
 
 export async function GET(request) {
@@ -13,7 +13,7 @@ export async function GET(request) {
     );
   }
   const raw = request.nextUrl.searchParams.get("returnTo") || "/";
-  const returnTo = safeWorkOSReturnTarget(raw, "/");
+  const returnTo = resolvePostAuthReturnTarget(raw, "/");
   const remember = request.nextUrl.searchParams.get("remember");
   /** When user declines “stay signed in”, ask IdP for a fresh login when supported (OIDC prompt=login). */
   const prompt = remember === "0" ? "login" : undefined;

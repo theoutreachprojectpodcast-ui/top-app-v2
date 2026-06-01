@@ -1,5 +1,6 @@
 "use client";
 
+import "@/features/community/community-feed.css";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import IconWrap from "@/components/shared/IconWrap";
@@ -76,12 +77,13 @@ export default function CommunityPage({
           <div className="communityHeroIcon" aria-hidden="true"><CommunityIcon /></div>
           <div className="communityHeroTitles">
             <p className="introTagline">Community</p>
-            <h2>Stories worth sharing—carefully reviewed</h2>
+            <h2>Stories, guides, and support—carefully reviewed</h2>
           </div>
         </div>
         <p className="communityHeroText">
-          A calm space for mission-aligned experiences: finding support, thanking organizations, and encouraging others.
-          Every story is reviewed before it appears in the public feed.
+          A calm space for mission-aligned experiences: moderator guides to help you get started, peer stories, and
+          encouragement for veterans, first responders, families, and partners. Every member submission is reviewed before
+          it appears in the public feed.
         </p>
         {!isAuthenticated ? (
           <div className="row wrap">
@@ -149,7 +151,7 @@ export default function CommunityPage({
 
       <section className="card communitySection">
         <div className="communitySectionHead">
-          <h3>Community stories</h3>
+          <h3>Community feed</h3>
           <div className="communityPillRow">
             <span className="communityApprovedPill">
               {feedTab === "latest" ? "Approved posts" : "Your submissions"}
@@ -179,6 +181,13 @@ export default function CommunityPage({
               My posts
             </button>
           </div>
+        ) : null}
+
+        {feedTab === "latest" ? (
+          <p className="communityFeedIntro">
+            Moderator guides from Josh and Hodge walk through accounts, trusted resources, the directory, podcasts,
+            sponsors, and community participation—each with practical steps and links.
+          </p>
         ) : null}
 
         {loading ? <p className="communityFeedStatus">Loading stories…</p> : null}

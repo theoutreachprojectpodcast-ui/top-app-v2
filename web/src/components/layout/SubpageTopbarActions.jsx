@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import ColorSchemeToggle from "@/components/app/ColorSchemeToggle";
 import { useAuthSession } from "@/components/auth/AuthSessionProvider";
 import { readNavAuthCache } from "@/lib/auth/navAuthCache";
 import IconWrap from "@/components/shared/IconWrap";
@@ -13,17 +12,26 @@ import { workosSignInLink, workosSignUpHref } from "@/lib/auth/workosReturnTo";
 const SPONSOR_ICON = "M4 6h16v12H4z M4 10h16";
 
 /**
- * @param {{ showThemeToggle?: boolean, section?: "lead" | "auth" | "all" }} props
- * - lead: theme toggle + Become a Sponsor (left header)
+ * @param {{ section?: "lead" | "auth" | "all" }} props
+ * - lead: Become a Sponsor (left header); theme toggle lives in `AppHeaderBrand`
  * - auth: profile / sign-in cluster (right header)
  * - all: single row (legacy)
  */
-export default function SubpageTopbarActions({ showThemeToggle = true, section = "all" }) {
+export default function SubpageTopbarActions({ section = "all" }) {
   const pathname = usePathname();
   /** Avoid useSearchParams here (static routes like /contact must not CSR-bailout without Suspense). */
   const rememberDevice = readRememberDevicePref();
-  const workosSignInHereHref = workosSignInLink(pathname, null, "/", { rememberDevice });
+  const signInReturnFallback = pathname?.startsWith("/podcasts") ? pathname : "/";
+  const workosSignInHereHref = workosSignInLink(pathname, null, signInReturnFallback, { rememberDevice });
   const workosOnboardingSignUpHref = workosSignUpHref("/onboarding", { rememberDevice });
+  const legacySignUpHref =
+    pathname && pathname !== "/"
+      ? `/?signin=1&signup=1&returnTo=${encodeURIComponent(pathname)}`
+      : "/?signin=1&signup=1";
+  const legacySignInHref =
+    pathname && pathname !== "/"
+      ? `/?signin=1&returnTo=${encodeURIComponent(pathname)}`
+      : "/?signin=1";
 
   const session = useAuthSession();
   const cache = typeof window !== "undefined" ? readNavAuthCache() : null;
@@ -49,7 +57,7 @@ export default function SubpageTopbarActions({ showThemeToggle = true, section =
       <span className="subpageAuthActionsPlaceholder" aria-hidden="true" />
     ) : authState.authenticated ? (
       <>
-        <HeaderNotificationBell variant="subpage" />
+        <HeaderNotificationBell variant="subpage" skipSessionGate />
         <Link className="btnSoft sponsorBtn" href="/profile">
           Profile
         </Link>
@@ -65,22 +73,17 @@ export default function SubpageTopbarActions({ showThemeToggle = true, section =
       </>
     ) : (
       <>
-        <Link className="btnSoft sponsorBtn" href="/?signin=1&signup=1">
+        <Link className="btnSoft sponsorBtn" href={legacySignUpHref}>
           Create account
         </Link>
-        <Link className="btnSoft sponsorBtn" href="/?signin=1">
+        <Link className="btnSoft sponsorBtn" href={legacySignInHref}>
           Sign in
         </Link>
       </>
     );
 
   if (section === "lead") {
-    return (
-      <>
-        {showThemeToggle ? <ColorSchemeToggle /> : null}
-        {sponsorLink}
-      </>
-    );
+    return sponsorLink;
   }
 
   if (section === "auth") {
@@ -89,7 +92,6 @@ export default function SubpageTopbarActions({ showThemeToggle = true, section =
 
   return (
     <>
-      {showThemeToggle ? <ColorSchemeToggle /> : null}
       {sponsorLink}
       {authBlock}
     </>

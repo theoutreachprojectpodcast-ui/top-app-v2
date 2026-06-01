@@ -6,10 +6,14 @@ import { runSponsorEnrichment, saveSponsorAdminRecord } from "@/features/sponsor
 
 const NEW_SPONSOR_DRAFT = {
   name: "",
+  display_name: "",
+  internal_alias: "",
+  primary_display_tag: "Foundational Sponsor",
   slug: "",
   logo_url: "",
   background_image_url: "",
   sponsor_type: "",
+  sponsor_display_group: "community",
   short_description: "",
   long_description: "",
   tagline: "",
@@ -22,6 +26,8 @@ const NEW_SPONSOR_DRAFT = {
   additional_links_json: "[]",
   featured: false,
   display_order: 0,
+  mission_partner: false,
+  veteran_owned: false,
 };
 
 export default function SponsorAdminEditorSection({ showAdmin = false, supabase, sponsors = [], onSaved }) {
@@ -158,11 +164,27 @@ export default function SponsorAdminEditorSection({ showAdmin = false, supabase,
           <details className="sponsorDetailCard" open>
             <summary>Basic Info</summary>
             <div className="sponsorAdminEditorGrid">
-              {["name", "slug", "sponsor_type", "featured", "display_order"].map((field) => (
+              {[
+                "name",
+                "display_name",
+                "internal_alias",
+                "primary_display_tag",
+                "slug",
+                "sponsor_type",
+                "sponsor_display_group",
+                "featured",
+                "mission_partner",
+                "veteran_owned",
+                "display_order",
+              ].map((field) => (
                 <label key={field} className="sponsorAdminField">
                   <span>{field}</span>
-                  {field === "featured" ? (
-                    <input type="checkbox" checked={!!draft.featured} onChange={(e) => setDraft((prev) => ({ ...prev, featured: e.target.checked }))} />
+                  {field === "featured" || field === "mission_partner" || field === "veteran_owned" ? (
+                    <input
+                      type="checkbox"
+                      checked={!!draft[field]}
+                      onChange={(e) => setDraft((prev) => ({ ...prev, [field]: e.target.checked }))}
+                    />
                   ) : (
                     <input value={String(draft[field] ?? "")} onChange={(e) => setDraft((prev) => ({ ...prev, [field]: e.target.value }))} />
                   )}

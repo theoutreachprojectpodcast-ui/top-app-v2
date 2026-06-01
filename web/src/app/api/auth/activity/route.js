@@ -8,6 +8,7 @@ import {
   workosSessionCookieName,
 } from "@/lib/auth/sessionIdle";
 import { sharedSessionCookieDomain } from "@/lib/runtime/deploymentHosts";
+import { guardMutation, guardFailureResponse } from "@/lib/security/secureRoute";
 
 export const runtime = "nodejs";
 
@@ -16,6 +17,8 @@ export const runtime = "nodejs";
  * Called occasionally from the client on pointer activity (throttled).
  */
 export async function POST(request) {
+  const guard = guardMutation(request, { rateKey: "auth-activity", limit: 120 });
+  if (!guard.ok) return guardFailureResponse(guard);
   if (sessionIdleTimeoutMs() <= 0) {
     return NextResponse.json({ ok: true, idle: "off" });
   }

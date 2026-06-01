@@ -1,0 +1,21 @@
+-- Grant platform admin on QA / staging after the user has signed in at least once.
+-- Replace the email before running. Safe to re-run (idempotent for same email).
+
+-- update public.torp_profiles
+-- set
+--   platform_role = 'admin',
+--   admin_access_enabled = true,
+--   admin_access_granted_by = 'qa-bootstrap',
+--   admin_access_granted_at = coalesce(admin_access_granted_at, now()),
+--   updated_at = now()
+-- where lower(trim(email)) = lower(trim('you@example.com'));
+
+-- Vercel Preview often uses top_qa_profiles (see PROFILE_TABLE / profileTableName()).
+-- update public.top_qa_profiles
+-- set
+--   platform_role = 'admin',
+--   admin_access_enabled = true,
+--   admin_access_granted_by = 'qa-bootstrap',
+--   admin_access_granted_at = coalesce(admin_access_granted_at, now()),
+--   updated_at = now()
+-- where lower(trim(email)) = lower(trim('you@example.com'));

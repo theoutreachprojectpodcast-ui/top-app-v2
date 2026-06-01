@@ -53,9 +53,24 @@ export function stripeMemberRecurringMissingEnvKeys() {
   return missing;
 }
 
+/**
+ * Webhook signing secret for the active deployment.
+ * Vercel: Preview/QA → `STRIPE_WEBHOOK_TEST_SECRET`; Production → `STRIPE_WEBHOOK_LIVE_SECRET`.
+ * Legacy `STRIPE_WEBHOOK_SECRET` is still accepted.
+ */
+export function stripeWebhookSecret() {
+  const vercelEnv = String(process.env.VERCEL_ENV || "").toLowerCase();
+  const legacy = process.env.STRIPE_WEBHOOK_SECRET?.trim() || "";
+  const test = process.env.STRIPE_WEBHOOK_TEST_SECRET?.trim() || "";
+  const live = process.env.STRIPE_WEBHOOK_LIVE_SECRET?.trim() || "";
+  if (vercelEnv === "production") return live || legacy;
+  if (vercelEnv === "preview" || vercelEnv === "development") return test || legacy;
+  return legacy || test || live;
+}
+
 /** True when webhooks can be verified and processed. */
 export function stripeWebhookConfigured() {
-  return stripeSecretConfigured() && !!process.env.STRIPE_WEBHOOK_SECRET?.trim();
+  return stripeSecretConfigured() && !!stripeWebhookSecret();
 }
 
 export function priceIdForTier(tier) {

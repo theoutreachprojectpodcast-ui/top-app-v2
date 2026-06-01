@@ -9,14 +9,24 @@ Example: `https://theoutreachproject.app/api/billing/webhook`
 
 1. Stripe Dashboard → **Developers** → **Webhooks** → **Add endpoint**.
 2. URL as above for the environment (use a **Stripe CLI** or separate endpoint for local testing).
-3. Select events the handler processes (at minimum subscription lifecycle events used in `web/src/app/api/billing/webhook/route.js` — e.g. `customer.subscription.*`, `invoice.payment_*` as applicable to your deployed version).
-4. Copy the **signing secret** into **`STRIPE_WEBHOOK_SECRET`** in Vercel.
+3. Select events the handler processes:
+   - `checkout.session.completed`
+   - `customer.subscription.created`
+   - `customer.subscription.updated`
+   - `customer.subscription.deleted`
+   - `invoice.paid`
+   - `invoice.payment_failed`
+   - `invoice.upcoming`
+   - `payment_method.attached`
+4. Copy the **signing secret** into **`STRIPE_WEBHOOK_SECRET`** in Vercel (Preview for QA, Production for live).
+
+**QA example:** `https://qa-the-outreach-project.vercel.app/api/billing/webhook` (Stripe **Test** mode).
 
 ## Behavior (summary)
 
 - Verifies **`Stripe-Signature`** with `STRIPE_WEBHOOK_SECRET`.
 - Resolves **`workos_user_id`** from subscription metadata and/or Stripe customer id mapped to `torp_profiles`.
-- Updates **`membership_tier`**, **`membership_status`**, **`stripe_subscription_id`**, **`membership_source: stripe`**, and **`platform_role`** on subscription state changes.
+- Updates **`membership_tier`**, **`membership_status`**, **`billing_status`**, **`renewal_date`**, **`sponsor_tier`**, **`payment_method_summary`** (masked), **`stripe_subscription_id`**, **`membership_source: stripe`**, and **`platform_role`** on subscription state changes.
 
 ## Local testing
 

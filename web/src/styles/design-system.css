@@ -187,10 +187,187 @@
   color: var(--color-text-secondary);
   max-width: 72ch;
 }
-.modalCard--profileEdit {
-  width: min(640px, 100%);
-  max-height: min(90vh, 880px);
+.modalCard--profileEdit.profileEditModal {
+  width: min(480px, calc(100vw - 24px));
+  max-height: min(88dvh, 720px);
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+.profileEditModal__head {
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--ds-space-4, 16px);
+  padding: var(--ds-space-5, 20px) var(--ds-space-5, 20px) var(--ds-space-3, 12px);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+.profileEditModal__head h3 {
+  margin: 0;
+  font-size: clamp(1.15rem, 2.2vw, 1.4rem);
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+.profileEditModal__intro {
+  margin: var(--ds-space-2, 8px) 0 0;
+  font-size: var(--text-body-sm);
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+  max-width: 58ch;
+}
+.profileEditModal__close {
+  flex-shrink: 0;
+}
+.profileEditModal__body {
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
+  padding: var(--ds-space-4, 16px) var(--ds-space-5, 20px);
+}
+.profileEditForm {
+  display: grid;
+  gap: var(--ds-space-4, 16px);
+}
+.profileEditModal__section {
+  display: grid;
+  gap: var(--ds-space-3, 12px);
+}
+.profileEditModal__sectionTitle {
+  margin: 0;
+  font-size: var(--text-eyebrow);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+.profileEditModal__banner {
+  margin: 0;
+  padding: var(--ds-space-2, 8px) var(--ds-space-5, 20px);
+  font-size: var(--text-body-sm);
+  color: var(--color-text-secondary);
+  background: color-mix(in srgb, var(--color-accent-soft) 35%, transparent);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+.profileEditModal__photoRow {
+  display: flex;
+  align-items: center;
+  gap: var(--ds-space-4, 16px);
+  padding: var(--ds-space-3, 12px);
+  border-radius: var(--radius-input);
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-surface-muted);
+}
+.profileEditModal__photoRow--attention {
+  border-color: color-mix(in srgb, var(--color-accent) 55%, var(--color-border-subtle));
+}
+.profileEditModal__photoCopy {
+  display: grid;
+  gap: var(--ds-space-2, 8px);
+  flex: 1;
+  min-width: 0;
+}
+.profileEditModal__photoBtn {
+  justify-self: start;
+  cursor: pointer;
+}
+.profileEditModal__nameRow,
+.profileEditModal__locationRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--ds-space-3, 12px);
+}
+.profileEditModal__labelRow {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+}
+.profileEditModal__required {
+  color: var(--color-accent);
+  font-weight: 700;
+}
+.profileEditModal__suggested {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-success, #0d7a4a);
+  margin-top: 2px;
+}
+.profileEditModal__field {
+  display: grid;
+  gap: var(--ds-space-2, 8px);
+}
+.profileEditModal__field--attention input,
+.profileEditModal__field--attention select,
+.profileEditModal__field--attention textarea {
+  border-color: color-mix(in srgb, var(--color-accent) 50%, var(--color-border-subtle));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 12%, transparent);
+}
+.profileEditModal__field input,
+.profileEditModal__field select,
+.profileEditModal__field textarea {
+  width: 100%;
+}
+.profileEditModal__more {
+  margin-top: var(--ds-space-2, 8px);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-input);
+  background: color-mix(in srgb, var(--color-surface-muted) 65%, transparent);
+}
+.profileEditModal__moreSummary {
+  padding: var(--ds-space-3, 12px) var(--ds-space-4, 16px);
+  font-size: var(--text-body-sm);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  list-style: none;
+}
+.profileEditModal__moreSummary::-webkit-details-marker {
+  display: none;
+}
+.profileEditModal__moreBody {
+  display: grid;
+  gap: var(--ds-space-3, 12px);
+  padding: 0 var(--ds-space-4, 16px) var(--ds-space-4, 16px);
+  border-top: 1px solid var(--color-border-subtle);
+}
+.profileEditModal__contribGroup {
+  grid-template-columns: 1fr;
+  gap: var(--ds-space-2, 8px);
+}
+@media (max-width: 520px) {
+  .profileEditModal__nameRow,
+  .profileEditModal__locationRow {
+    grid-template-columns: 1fr;
+  }
+}
+.profileEditModal__foot {
+  flex-shrink: 0;
+  display: grid;
+  gap: var(--ds-space-3, 12px);
+  padding: var(--ds-space-3, 12px) var(--ds-space-5, 20px) var(--ds-space-5, 20px);
+  border-top: 1px solid var(--color-border-subtle);
+  background: color-mix(in srgb, var(--color-surface-muted) 55%, var(--color-surface-card) 45%);
+}
+.profileEditModal__actions {
+  margin: 0;
+  justify-content: flex-end;
+}
+.profileEditModal__notifyGroup {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--ds-space-2, 8px);
+}
+@media (max-width: 760px) {
+  .profileEditModal__head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .profileEditModal__close {
+    align-self: flex-start;
+  }
 }
 .profileEditSaveError {
   margin: var(--ds-space-3, 12px) 0 0;

@@ -3,13 +3,27 @@
 ## Tiers
 
 - **`free`** — default; no recurring Stripe subscription required.
-- **`support`** / **`member`** / **`sponsor`** — paid paths; **`membership_status`** must be **`active`** (or **`trialing`** read as entitled at entitlement layer) for member-style capabilities.
+- **`support`** ($1.99/mo) / **`member`** (Pro, $5.99/mo) / **`sponsor`** — paid paths; billing state on `torp_profiles` is updated only from Stripe webhooks (never from the client).
+
+## Environment (QA vs production)
+
+Use **Stripe test mode** keys and test price IDs on QA/local (`sk_test_…`). Use **live** keys and live price IDs on production only. There is no in-app mode toggle — mode follows `STRIPE_SECRET_KEY`.
 
 ## Stripe flows
 
-- **Checkout:** `POST /api/billing/checkout` (member/support paths; metadata includes `workos_user_id` / tier).
-- **Customer portal:** `POST /api/billing/portal` returns Stripe billing portal URL.
-- **Webhooks:** `POST /api/billing/webhook` — verifies signature, updates `torp_profiles` on subscription create/update/delete. **Do not trust client-reported payment state.**
+- **Checkout:** `POST /api/billing/checkout` — `tier`: `support` | `member` | `sponsor`; optional `sponsorPackageId` from sponsor opportunities API.
+- **Summary:** `GET /api/billing/summary` — renewal, subscription status, masked default card.
+- **Invoices:** `GET /api/billing/invoices`
+- **Payment methods:** `GET|POST|PATCH|DELETE /api/billing/payment-methods` (add card via Checkout `setup` mode).
+- **Sponsor packages:** `GET /api/billing/sponsor-opportunities` — mission, podcast, and monthly sponsor packages from `sponsorTiers` / `podcastSponsorTiers` data (not hardcoded in UI).
+- **Customer portal:** `POST /api/billing/portal` — downgrades, cancel at period end, plan changes.
+- **Webhooks:** `POST /api/billing/webhook` — `checkout.session.completed`, `customer.subscription.*`, `invoice.paid` / `payment_failed`, `payment_method.attached`.
+
+## Profile UI
+
+- **Profile tab:** `MembershipBillingCenter` — upgrades, sponsor packages, payment methods, billing history.
+- **Home:** `HomeMembershipSection` — tier cards with sign-up or checkout CTAs.
+- **Admin:** `/admin/membership` — aggregate counts (no Stripe secrets).
 
 ## Entitlements (server)
 

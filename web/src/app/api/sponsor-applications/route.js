@@ -1,4 +1,5 @@
 import { randomUUID } from "crypto";
+import { guardMutation, guardFailureResponse } from "@/lib/security/secureRoute";
 import { resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
 import Stripe from "stripe";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -8,8 +9,69 @@ import {
   createPlatformNotification,
   notifyStaffProfiles,
 } from "@/server/notifications/notificationService";
+import { resolveApplicationNotifyRecipients } from "@/lib/platform/applicationNotifyRecipients";
+import { sendSponsorApplicationNotify } from "@/server/sponsors/sendSponsorApplicationNotify";
+
+export const runtime = "nodejs";
 
 const TABLE = "sponsor_applications";
+
+function formatUsd(amount) {
+  const n = Number(amount);
+  if (!Number.isFinite(n)) return "";
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
+}
+
+function sponsorApplicationEmailMeta(sponsorFamily, sponsorProgramType) {
+  if (sponsorProgramType === "podcast" || sponsorFamily === "podcast_sponsor") {
+    return {
+      subjectPrefix: "New Podcast Sponsor Application",
+      heading: "New podcast sponsor application",
+    };
+  }
+  if (sponsorFamily === "mission_partner") {
+    return {
+      subjectPrefix: "New Mission Partner Application",
+      heading: "New mission partner application",
+    };
+  }
+  return {
+    subjectPrefix: "New Sponsor Application",
+    heading: "New sponsor application",
+  };
+}
+
+function buildSponsorApplicationBodyText(row, applicationId, sponsorFamily, sponsorProgramType) {
+  const placements = Array.isArray(row.placements_requested) ? row.placements_requested.filter(Boolean) : [];
+  const envHint = String(process.env.NEXT_PUBLIC_VERCEL_ENV || process.env.NODE_ENV || "unknown").trim();
+  return [
+    `Application ID: ${applicationId || "(unknown)"}`,
+    `Environment: ${envHint}`,
+    `Submitted at: ${new Date().toISOString()}`,
+    `Program: ${sponsorProgramType || "main_app"} · ${sponsorFamily || "sponsor"}`,
+    "",
+    `Company: ${row.company_name || ""}`,
+    row.company_website ? `Website: ${row.company_website}` : "",
+    row.company_type ? `Company type: ${row.company_type}` : "",
+    row.city || row.state ? `Location: ${[row.city, row.state].filter(Boolean).join(", ")}` : "",
+    row.contact_role ? `Role: ${row.contact_role}` : "",
+    "",
+    `Tier: ${row.sponsor_tier_name || ""} (${formatUsd(row.sponsor_tier_amount)})`,
+    row.payment_status ? `Payment status: ${row.payment_status}` : "",
+    "",
+    row.company_description ? `Company description:\n${row.company_description}` : "",
+    row.sponsor_interest_notes ? `Interest notes:\n${row.sponsor_interest_notes}` : "",
+    row.audience_goals ? `Audience goals:\n${row.audience_goals}` : "",
+    row.highlights_requested ? `Highlights requested:\n${row.highlights_requested}` : "",
+    placements.length ? `Placements requested: ${placements.join(", ")}` : "",
+    row.activation_requests ? `Activation requests:\n${row.activation_requests}` : "",
+    row.assets_ready ? `Assets ready: ${row.assets_ready}` : "",
+    row.brand_links ? `Brand links:\n${row.brand_links}` : "",
+    row.additional_notes ? `Additional notes:\n${row.additional_notes}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
 
 function pickString(obj, key, fallback = "") {
   const v = obj?.[key];
@@ -20,6 +82,8 @@ function pickString(obj, key, fallback = "") {
  * Public POST — sponsor applicants may be logged out. Persists via service role.
  */
 export async function POST(request) {
+  const __guard = guardMutation(request, { rateKey: "public-sponsor-app", limit: 8 });
+  if (!__guard.ok) return guardFailureResponse(__guard);
   const admin = createSupabaseAdminClient();
   if (!admin) {
     return Response.json({ error: "server_storage_unavailable" }, { status: 503 });
@@ -167,9 +231,42 @@ export async function POST(request) {
     }
   }
 
+  let emailWarning = "";
+  if (id) {
+    try {
+      const recipients = resolveApplicationNotifyRecipients();
+      const emailMeta = sponsorApplicationEmailMeta(sponsor_family, sponsor_program_type);
+      const sent = await sendSponsorApplicationNotify({
+        to: recipients,
+        heading: emailMeta.heading,
+        subjectPrefix: emailMeta.subjectPrefix,
+        application: {
+          ...row,
+          sponsor_tier_amount_display: formatUsd(row.sponsor_tier_amount),
+          bodyText: buildSponsorApplicationBodyText(row, id, sponsor_family, sponsor_program_type),
+        },
+      });
+      if (!sent.ok) {
+        emailWarning = `Application saved, but email was not sent (${sent.error}).`;
+      } else if (process.env.NODE_ENV === "development") {
+        console.info("[sponsor-applications] notify sent", {
+          to: recipients,
+          id,
+          program: sponsor_program_type,
+        });
+      }
+    } catch (e) {
+      emailWarning = `Application saved, but notification step failed (${String(e?.message || e)}).`;
+    }
+    if (process.env.NODE_ENV === "development" && emailWarning) {
+      console.warn("[sponsor-applications]", emailWarning);
+    }
+  }
+
   return Response.json({
     ok: true,
     id,
     inviteQueued,
+    emailWarning: emailWarning || undefined,
   });
 }

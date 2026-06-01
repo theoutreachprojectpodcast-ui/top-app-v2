@@ -1,5 +1,8 @@
-import { requirePlatformAdminRouteContext } from "@/lib/admin/adminRouteContext";
+import { requirePlatformAdminRouteContext, requirePlatformAdminMutation } from "@/lib/admin/adminRouteContext";
 import { sendInvoiceEmail } from "@/server/admin/sendInvoiceEmail";
+import { parseJsonBody, validationFailureResponse } from "@/lib/security/secureRoute";
+import { adminInvoiceSchema } from "@/lib/security/schemas/adminSchemas";
+import { writeAdminAuditLog } from "@/lib/admin/adminAuditLog";
 
 export const runtime = "nodejs";
 const TABLE = "billing_records";
@@ -19,25 +22,21 @@ export async function GET() {
 }
 
 export async function POST(request) {
-  const ctx = await requirePlatformAdminRouteContext();
+  const ctx = await requirePlatformAdminMutation(request, { rateKey: "admin-app-api-admin-billing-post" });
   if (!ctx.ok) return ctx.response;
-  let body;
-  try {
-    body = await request.json();
-  } catch {
-    return Response.json({ ok: false, error: "invalid_json" }, { status: 400 });
-  }
+  const parsed = await parseJsonBody(request, adminInvoiceSchema);
+  if (!parsed.ok) return validationFailureResponse(parsed);
+  const body = parsed.data;
 
-  const workosUserId = String(body?.workosUserId || "").trim();
-  const recipientEmail = String(body?.recipientEmail || "").trim();
-  const recipientName = String(body?.recipientName || "").trim();
-  const reason = String(body?.reason || "").trim();
-  const paymentUrl = String(body?.paymentUrl || "").trim();
-  const notes = String(body?.notes || "").trim();
-  const amountCents = parseAmountCents(body?.amount);
-
-  if (!workosUserId || !recipientEmail || !reason || !paymentUrl || amountCents <= 0) {
-    return Response.json({ ok: false, error: "missing_required_fields" }, { status: 400 });
+  const workosUserId = body.workosUserId;
+  const recipientEmail = body.recipientEmail;
+  const recipientName = body.recipientName || "";
+  const reason = body.reason;
+  const paymentUrl = body.paymentUrl;
+  const notes = body.notes || "";
+  const amountCents = parseAmountCents(body.amount);
+  if (amountCents <= 0) {
+    return Response.json({ ok: false, error: "invalid_amount" }, { status: 400 });
   }
 
   const amountDisplay = `$${(amountCents / 100).toFixed(2)}`;
@@ -75,5 +74,13 @@ export async function POST(request) {
       { status: 503 },
     );
   }
+  await writeAdminAuditLog(ctx.admin, request, {
+    actorWorkosUserId: String(ctx.user?.id || ""),
+    actorEmail: String(ctx.user?.email || ""),
+    action: "admin.billing.POST",
+    resourceType: "admin_mutation",
+    resourceId: null,
+    metadata: { route: "billing" },
+  });
   return Response.json({ ok: true, row: data });
 }

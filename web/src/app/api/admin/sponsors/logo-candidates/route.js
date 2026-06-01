@@ -1,8 +1,8 @@
-import { requirePlatformAdminRouteContext } from "@/lib/admin/adminRouteContext";
+import { requirePlatformAdminRouteContext, requirePlatformAdminMutation } from "@/lib/admin/adminRouteContext";
 import { buildSponsorLogoCandidates } from "@/lib/sponsors/logoDiscoveryServer";
 
 export async function POST(request) {
-  const ctx = await requirePlatformAdminRouteContext();
+  const ctx = await requirePlatformAdminMutation(request, { rateKey: "admin-app-api-admin-sponsors-logo-candidates-post" });
   if (!ctx.ok) return ctx.response;
 
   let body;

@@ -33,6 +33,7 @@ import {
   upsertProfileByUserId,
 } from "@/features/profile/api";
 import { mapNonprofitCardRow } from "@/features/nonprofits/mappers/nonprofitCardMapper";
+import { profileToApiPatch } from "@/lib/profile/profileApiPatch";
 
 function mapLegacyMembershipToTier(status) {
   const v = String(status || "").toLowerCase();
@@ -43,36 +44,21 @@ function mapLegacyMembershipToTier(status) {
   return "support";
 }
 
-function profileToApiPatch(p) {
-  const patch = {
-    firstName: p.firstName,
-    lastName: p.lastName,
-    displayName: p.displayName || `${p.firstName || ""} ${p.lastName || ""}`.trim(),
-    email: p.email,
-    bio: p.bio,
-    banner: p.banner,
-    theme: p.theme,
-    avatarUrl: p.avatarUrl,
-    identityRole: p.identityRole,
-    missionStatement: p.missionStatement,
-    organizationAffiliation: p.organizationAffiliation,
-    serviceBackground: p.serviceBackground,
-    city: p.city,
-    state: p.state,
-    causes: p.causes,
-    skills: p.skills,
-    volunteerInterests: p.volunteerInterests,
-    supportInterests: p.supportInterests,
-    contributionSummary: p.contributionSummary,
-    sponsorOrgName: p.sponsorOrgName,
-    sponsorWebsite: p.sponsorWebsite,
-  };
-  const cs = String(p.colorScheme || "").trim().toLowerCase();
-  if (cs === "light" || cs === "dark") patch.colorScheme = cs;
-  if (p.accountIntent != null && String(p.accountIntent).trim()) {
-    patch.accountIntent = String(p.accountIntent).trim();
+function profileSaveErrorMessage(data, res) {
+  const code = String(data?.error || "").trim();
+  if (code === "organization_not_allowed" || res?.status === 401) {
+    return (
+      data?.message ||
+      "Your sign-in session is not authorized for this app. Sign out and sign in again with an account in the WorkOS organization."
+    );
   }
-  return patch;
+  if (code === "server_storage_unavailable" || res?.status === 503) {
+    return "Profile save is temporarily unavailable (server storage). Try again shortly.";
+  }
+  if (code === "completeness_sync_failed") {
+    return data?.message || "Profile saved partially; completeness sync failed. Try again.";
+  }
+  return data?.message || data?.error || "Profile could not be saved to the server.";
 }
 
 /**
@@ -84,6 +70,7 @@ export function useProfileDataState(supabase) {
   const hydratedRef = useRef(false);
   const syncingRef = useRef(false);
   const workosRef = useRef(false);
+  const sessionKindRef = useRef("none");
   const [userId, setUserId] = useState(() =>
     typeof window !== "undefined" ? getOrCreateDemoUserId() : "demo-user",
   );
@@ -97,6 +84,10 @@ export function useProfileDataState(supabase) {
   const [favoriteEntityKeys, setFavoriteEntityKeys] = useState([]);
   const [savedOrganizations, setSavedOrganizations] = useState([]);
   const [sessionKind, setSessionKind] = useState("none");
+
+  useEffect(() => {
+    sessionKindRef.current = sessionKind;
+  }, [sessionKind]);
   const [authBackend, setAuthBackend] = useState({
     workos: false,
     workosMissingEnv: [],
@@ -406,14 +397,15 @@ export function useProfileDataState(supabase) {
   }, [supabase, favoriteEins, isAuthenticated]);
 
   /**
-   * @returns {Promise<{ ok: true } | { ok: false, message: string }>}
+   * @returns {Promise<{ ok: true, profile?: Record<string, unknown>, localOnly?: boolean } | { ok: false, message: string }>}
    */
   async function persistProfile(next) {
     if (!isAuthenticated) {
       setProfile(next);
-      return { ok: true };
+      return { ok: true, profile: next };
     }
-    if (workosRef.current) {
+    if (workosRef.current || sessionKindRef.current === "workos") {
+      workosRef.current = true;
       try {
         const res = await fetch("/api/me/profile", {
           method: "PATCH",
@@ -423,22 +415,23 @@ export function useProfileDataState(supabase) {
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
-          const message = data.message || data.error || "Profile could not be saved to the server.";
+          const message = profileSaveErrorMessage(data, res);
           setProfileError(message);
           await refreshWorkOSProfile();
           return { ok: false, message };
         }
-        if (data.profile) {
-          setProfile(
-            profileFromApiDto(
-              mergeAccountEmailIntoProfileDto(data.profile, {
-                email: workOSAccountEmail || undefined,
-              }),
-            ),
-          );
+        let savedDto = data.profile;
+        if (savedDto) {
+          const merged = mergeAccountEmailIntoProfileDto(savedDto, {
+            email: workOSAccountEmail || undefined,
+          });
+          setProfile(profileFromApiDto(merged));
           setProfileError("");
-        } else await refreshWorkOSProfile();
-        return { ok: true };
+          savedDto = merged;
+        } else {
+          await refreshWorkOSProfile();
+        }
+        return { ok: true, profile: savedDto || undefined };
       } catch {
         const message = "Profile could not be saved to the server.";
         setProfileError(message);
@@ -447,12 +440,23 @@ export function useProfileDataState(supabase) {
       }
     }
     setProfile(next);
-    if (!supabase) return { ok: true };
+    try {
+      saveJson(PROFILE_KEY, toLocalStorageProfile(next));
+    } catch {
+      /* quota / private mode */
+    }
+    /* Demo session while WorkOS is configured: local only — cloud profile requires WorkOS sign-in. */
+    if (!supabase || authBackend.workos) {
+      const message =
+        "Saved on this device only. Sign in with your account (not demo) to update your cloud profile and completeness checklist.";
+      setProfileError(message);
+      return { ok: true, profile: next, localOnly: true, message };
+    }
     try {
       await upsertProfileByUserId(supabase, userId, next);
-      return { ok: true };
+      return { ok: true, profile: next };
     } catch {
-      const message = "Profile saved locally, but cloud sync failed.";
+      const message = "Profile saved on this device, but cloud sync failed.";
       setProfileError(message);
       return { ok: false, message };
     }
@@ -719,15 +723,23 @@ export function useProfileDataState(supabase) {
     try {
       const res = await fetch("/api/me/avatar", { method: "POST", credentials: "include", body: fd });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) return { ok: false, message: data.message || data.error || "Upload failed." };
-      if (data.profile) {
-        setProfile(
-          profileFromApiDto(
-            mergeAccountEmailIntoProfileDto(data.profile, { email: workOSAccountEmail || undefined }),
-          ),
-        );
+      if (!res.ok) {
+        const code = String(data?.error || "").trim();
+        const message =
+          code === "server_storage_unavailable" || res.status === 503
+            ? "Photo upload is temporarily unavailable (server storage)."
+            : data.message || data.error || "Upload failed.";
+        return { ok: false, message };
       }
-      return { ok: true };
+      let avatarUrl = String(data.photoUrl || "").trim();
+      if (data.profile) {
+        const mapped = profileFromApiDto(
+          mergeAccountEmailIntoProfileDto(data.profile, { email: workOSAccountEmail || undefined }),
+        );
+        setProfile(mapped);
+        avatarUrl = mapped.avatarUrl || avatarUrl;
+      }
+      return { ok: true, avatarUrl };
     } catch {
       return { ok: false, message: "Upload failed." };
     }

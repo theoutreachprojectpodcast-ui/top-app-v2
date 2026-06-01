@@ -1,3 +1,4 @@
+import { guardMutation, guardFailureResponse } from "@/lib/security/secureRoute";
 import { authFailureJson, resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
@@ -25,6 +26,8 @@ export async function GET() {
 }
 
 export async function PUT(request) {
+  const __guard = guardMutation(request, { rateKey: "me-saved-orgs", limit: 40 });
+  if (!__guard.ok) return guardFailureResponse(__guard);
   const auth = await resolveWorkOSRouteUser();
   if (!auth.ok) return authFailureJson(auth);
   const user = auth.user;

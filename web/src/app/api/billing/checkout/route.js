@@ -1,3 +1,10 @@
+import {
+  guardMutation,
+  guardFailureResponse,
+  parseJsonBody,
+  validationFailureResponse,
+} from "@/lib/security/secureRoute";
+import { membershipCheckoutSchema } from "@/lib/security/schemas/billingSchemas";
 import { authFailureJson, resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
 import Stripe from "stripe";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -9,10 +16,13 @@ import {
   stripeMemberRecurringConfigured,
   stripeSponsorSubscriptionConfigured,
 } from "@/lib/billing/stripeConfig";
-
-const PAID = new Set(["support", "member", "sponsor"]);
+import { getSponsorOpportunityById } from "@/lib/billing/sponsorOpportunities";
+import { isUpgrade, membershipTierRank } from "@/lib/billing/membershipTierOrder";
+import { tierFromProfileRow } from "@/lib/billing/stripeProfileSync";
 
 export async function POST(request) {
+  const guard = guardMutation(request, { rateKey: "billing-checkout", limit: 20 });
+  if (!guard.ok) return guardFailureResponse(guard);
   const auth = await resolveWorkOSRouteUser();
   if (!auth.ok) return authFailureJson(auth);
   const user = auth.user;
@@ -33,16 +43,29 @@ export async function POST(request) {
     );
   }
 
-  let body;
-  try {
-    body = await request.json();
-  } catch {
-    return Response.json({ error: "invalid_json" }, { status: 400 });
-  }
+  const parsed = await parseJsonBody(request, membershipCheckoutSchema);
+  if (!parsed.ok) return validationFailureResponse(parsed);
+  const body = parsed.data;
+  const tier = body.tier;
+  const sponsorPackageId = body.sponsorPackageId ? String(body.sponsorPackageId).trim() : "";
 
-  const tier = String(body.tier || "").toLowerCase();
-  if (!PAID.has(tier)) {
-    return Response.json({ error: "invalid_tier" }, { status: 400 });
+  const currentTier = tierFromProfileRow(profileRow);
+  if (!isUpgrade(currentTier, tier) && membershipTierRank(tier) <= membershipTierRank(currentTier)) {
+    if (profileRow.stripe_subscription_id && membershipTierRank(tier) < membershipTierRank(currentTier)) {
+      return Response.json(
+        {
+          error: "use_billing_portal",
+          message: "To downgrade or cancel, open Manage billing — access continues through the end of your billing period.",
+        },
+        { status: 400 },
+      );
+    }
+    if (membershipTierRank(tier) === membershipTierRank(currentTier) && profileRow.stripe_subscription_id) {
+      return Response.json(
+        { error: "already_subscribed", message: "You already have an active subscription for this tier." },
+        { status: 400 },
+      );
+    }
   }
 
   if (tier === "sponsor") {
@@ -69,14 +92,37 @@ export async function POST(request) {
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
   const base = requestOriginForStripeRedirects(request);
-  const returnPath = safeAppReturnPath(body.returnPath, "/profile");
+  const returnPath = safeAppReturnPath(body.returnPath || "", "/profile");
   const customerId = profileRow.stripe_customer_id ? String(profileRow.stripe_customer_id).trim() : null;
   const profileId = profileRow.id ? String(profileRow.id) : "";
+
+  const sponsorOpp = sponsorPackageId ? getSponsorOpportunityById(sponsorPackageId) : null;
+  if (tier === "sponsor" && sponsorPackageId && sponsorOpp?.checkoutKind === "one_time" && sponsorOpp.podcastTierId) {
+    return Response.json(
+      {
+        error: "use_podcast_checkout",
+        podcastTierId: sponsorOpp.podcastTierId,
+        message: "This sponsor package uses one-time podcast checkout.",
+      },
+      { status: 400 },
+    );
+  }
+  if (tier === "sponsor" && sponsorPackageId && sponsorOpp?.checkoutKind === "application") {
+    return Response.json(
+      {
+        error: "use_sponsor_application",
+        missionTierId: sponsorOpp.missionTierId || sponsorPackageId,
+        message: "This sponsor package uses the mission partner application flow.",
+      },
+      { status: 400 },
+    );
+  }
 
   const metadata = {
     workos_user_id: user.id,
     membership_tier: tier,
     checkout_kind: "membership_subscription",
+    ...(sponsorPackageId ? { sponsor_package_id: sponsorPackageId } : {}),
     ...(profileId ? { torp_profile_id: profileId } : {}),
   };
 

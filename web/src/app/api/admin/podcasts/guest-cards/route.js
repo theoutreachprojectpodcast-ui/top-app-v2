@@ -1,4 +1,4 @@
-import { requirePlatformAdminRouteContext } from "@/lib/admin/adminRouteContext";
+import { requirePlatformAdminRouteContext, requirePlatformAdminMutation } from "@/lib/admin/adminRouteContext";
 import { revalidateTag } from "next/cache";
 
 export const runtime = "nodejs";
@@ -33,7 +33,7 @@ export async function GET() {
 }
 
 export async function POST(request) {
-  const ctx = await requirePlatformAdminRouteContext();
+  const ctx = await requirePlatformAdminMutation(request, { rateKey: "admin-app-api-admin-podcasts-guest-cards-post" });
   if (!ctx.ok) return ctx.response;
 
   let body = {};
@@ -74,11 +74,19 @@ export async function POST(request) {
   const { data, error } = await ctx.admin.from(TABLE).insert(row).select("*").single();
   if (error) return Response.json({ ok: false, error: error.message }, { status: 500 });
   touchPodcastLanding();
+  await writeAdminAuditLog(ctx.admin, request, {
+    actorWorkosUserId: String(ctx.user?.id || ""),
+    actorEmail: String(ctx.user?.email || ""),
+    action: "admin.podcasts.guest-cards.POST",
+    resourceType: "admin_mutation",
+    resourceId: null,
+    metadata: { route: "podcasts/guest-cards" },
+  });
   return Response.json({ ok: true, row: data });
 }
 
 export async function PATCH(request) {
-  const ctx = await requirePlatformAdminRouteContext();
+  const ctx = await requirePlatformAdminMutation(request, { rateKey: "admin-app-api-admin-podcasts-guest-cards-patch" });
   if (!ctx.ok) return ctx.response;
 
   let body = {};
@@ -131,7 +139,7 @@ export async function PATCH(request) {
 }
 
 export async function DELETE(request) {
-  const ctx = await requirePlatformAdminRouteContext();
+  const ctx = await requirePlatformAdminMutation(request, { rateKey: "admin-app-api-admin-podcasts-guest-cards-delete" });
   if (!ctx.ok) return ctx.response;
   const url = new URL(request.url);
   const id = toStringValue(url.searchParams.get("id"), 120);

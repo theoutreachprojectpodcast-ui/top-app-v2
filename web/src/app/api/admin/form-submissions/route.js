@@ -1,4 +1,4 @@
-import { requirePlatformAdminRouteContext } from "@/lib/admin/adminRouteContext";
+import { requirePlatformAdminRouteContext, requirePlatformAdminMutation } from "@/lib/admin/adminRouteContext";
 
 export const runtime = "nodejs";
 const TABLE = "form_submissions";
@@ -16,7 +16,7 @@ export async function GET(request) {
 }
 
 export async function PATCH(request) {
-  const ctx = await requirePlatformAdminRouteContext();
+  const ctx = await requirePlatformAdminMutation(request, { rateKey: "admin-app-api-admin-form-submissions-patch" });
   if (!ctx.ok) return ctx.response;
   let body;
   try {
@@ -34,5 +34,13 @@ export async function PATCH(request) {
     .select("*")
     .single();
   if (error) return Response.json({ ok: false, error: error.message }, { status: 500 });
+  await writeAdminAuditLog(ctx.admin, request, {
+    actorWorkosUserId: String(ctx.user?.id || ""),
+    actorEmail: String(ctx.user?.email || ""),
+    action: "admin.form-submissions.PATCH",
+    resourceType: "admin_mutation",
+    resourceId: null,
+    metadata: { route: "form-submissions" },
+  });
   return Response.json({ ok: true, row: data });
 }

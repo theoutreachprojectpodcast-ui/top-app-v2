@@ -1,0 +1,109 @@
+.homeMembershipSection {
+  margin: 12px 0 8px;
+  padding: 16px 14px;
+  border-radius: var(--radius-lg, 16px);
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--color-bg-card) 96%, var(--color-bg-subtle) 4%) 0%,
+    color-mix(in srgb, var(--color-bg-subtle) 90%, var(--color-bg-card) 10%) 100%
+  );
+  border: 1px solid var(--color-border-subtle);
+  box-shadow: var(--shadow-card);
+}
+
+.homeMembershipSection__header {
+  margin-bottom: 12px;
+}
+
+.homeMembershipSection__title {
+  margin: 0 0 4px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-text-primary);
+}
+
+.homeMembershipSection__lead {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--color-text-secondary);
+}
+
+.homeMembershipSection__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (min-width: 720px) {
+  .homeMembershipSection__grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.homeMembershipSection__card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 10px;
+  border-radius: 12px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border-subtle);
+  box-shadow: 0 1px 0 var(--color-veil-06);
+  min-height: 100%;
+}
+
+.homeMembershipSection__cardTitle {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--color-text-primary);
+}
+
+.homeMembershipSection__price {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-accent);
+}
+
+.homeMembershipSection__desc {
+  margin: 0;
+  flex: 1;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: var(--color-text-muted);
+}
+
+.homeMembershipSection__cta {
+  width: 100%;
+  margin-top: auto;
+  font-size: 0.72rem;
+  padding: 8px 10px;
+}
+
+/* Home hero sits on dark topo — use elevated card surfaces so text stays legible. */
+:root[data-color-scheme="dark"] .homeMembershipSection,
+.dark .homeMembershipSection {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-bg-card) 94%, var(--color-bg-muted) 6%) 0%,
+    color-mix(in srgb, var(--color-bg-subtle) 78%, var(--color-bg-card) 22%) 100%
+  );
+  border-color: var(--color-border-subtle);
+  box-shadow: var(--shadow-card);
+}
+
+:root[data-color-scheme="dark"] .homeMembershipSection__card,
+.dark .homeMembershipSection__card {
+  background: color-mix(in srgb, var(--color-bg-card) 92%, var(--color-bg-elevated) 8%);
+  border-color: color-mix(in srgb, var(--color-border-subtle) 88%, transparent);
+  box-shadow: 0 1px 0 var(--color-veil-08);
+}
+
+:root[data-color-scheme="dark"] .homeMembershipSection__price,
+.dark .homeMembershipSection__price {
+  color: var(--color-accent);
+}

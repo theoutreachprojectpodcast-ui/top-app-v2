@@ -9,7 +9,11 @@ import { nteeToService } from "@/lib/utils";
 import { mapNonprofitLinks } from "@/features/nonprofits/mappers/nonprofitLinksMapper";
 import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
 import { resolveFindInfoHref } from "@/features/nonprofits/domain/nonprofitCardActions";
-import { resolveOrgListingHeaderImageUrl } from "@/lib/nonprofits/resolveOrgListingHeaderImageUrl";
+import { resolveNonprofitListingCategoryHeaderImageUrl } from "@/features/directory/nteeCategoryHeaderImages";
+import {
+  resolveOrgListingHeaderImageUrl,
+  resolveTrustedResourceListingHeroImageUrl,
+} from "@/lib/nonprofits/resolveOrgListingHeaderImageUrl";
 import { sanitizeDisplayableImageUrl } from "@/lib/media/safeImageUrl";
 
 function firstNonEmpty(...values) {
@@ -146,23 +150,13 @@ function resolveTrustedLocation(row = {}, profile = {}) {
   return { city: parsed.city, state: parsed.state, raw: rawLocation };
 }
 
-const TRUSTED_CATEGORY_HEADER_FALLBACKS = {
-  veteransMilitary: "/sponsors/featured-bg-rope-solutions.png",
-  firstRespondersSafety: "/sponsors/featured-bg-brain-treatment-center.png",
-  healthWellness: "/sponsors/featured-bg-brain-treatment-center.png",
-  education: "/sponsors/featured-bg-wars-end-merch.png",
-  humanServices: "/sponsors/featured-bg-rucking-realty.png",
-  communityDevelopment: "/sponsors/featured-bg-eduardo-pico-designs.png",
-  environmentAnimals: "/assets/backgrounds/bg_cinematic.png",
-  youthDevelopment: "/assets/backgrounds/bg_cinematic.png",
-  crisisEmergency: "/sponsors/featured-bg-brain-treatment-center.png",
-  advocacyPolicyRights: "/sponsors/featured-bg-eduardo-pico-designs.png",
-  unknownGeneral: "/assets/backgrounds/bg_topographic_brand.png",
-};
+/** Neutral Outreach-style strip when no org-specific header is available (not sponsor art). */
+const TRUSTED_LISTING_HERO_FALLBACK = "/home/home-main-topographic-complementary.svg";
 
-function resolveTrustedCategoryHeaderFallback(categoryKey) {
-  const key = String(categoryKey || "").trim();
-  return TRUSTED_CATEGORY_HEADER_FALLBACKS[key] || TRUSTED_CATEGORY_HEADER_FALLBACKS.unknownGeneral;
+function resolveTrustedCategoryHeaderFallback(categoryKey, nteeCode) {
+  const categoryHeader = resolveNonprofitListingCategoryHeaderImageUrl(nteeCode, categoryKey);
+  if (categoryHeader) return categoryHeader;
+  return TRUSTED_LISTING_HERO_FALLBACK;
 }
 
 export function mapNonprofitCardRow(row = {}, source = "directory") {
@@ -303,10 +297,14 @@ export function mapNonprofitCardRow(row = {}, source = "directory") {
     serviceArea: String(patchedRow.serviceArea ?? patchedRow.service_area ?? "").trim(),
     foundedYear: patchedRow.foundedYear ?? patchedRow.founded_year ?? null,
     heroImageUrl: (() => {
-      const resolved = resolveOrgListingHeaderImageUrl(patchedRow);
-      if (resolved) return resolved;
-      if (!applyTrustedPresentation) return resolved;
-      return resolveTrustedCategoryHeaderFallback(category.key);
+      if (applyTrustedPresentation) {
+        const trustedHero = resolveTrustedResourceListingHeroImageUrl(patchedRow);
+        if (trustedHero) return trustedHero;
+        return resolveTrustedCategoryHeaderFallback(category.key, nteeCode);
+      }
+      const orgHeader = resolveOrgListingHeaderImageUrl(patchedRow);
+      if (orgHeader) return orgHeader;
+      return resolveNonprofitListingCategoryHeaderImageUrl(nteeCode, category.key);
     })(),
     thumbnailUrl: sanitizeDisplayableImageUrl(String(patchedRow.thumbnailUrl ?? patchedRow.thumbnail_url ?? "").trim()),
     publicSlug: String(patchedRow.publicSlug ?? patchedRow.public_slug ?? "").trim(),
@@ -319,7 +317,15 @@ export function mapNonprofitCardRow(row = {}, source = "directory") {
     researchStatus: String(patchedRow.researchStatus ?? patchedRow.research_status ?? "").trim(),
     sourceSummary: String(patchedRow.sourceSummary ?? patchedRow.source_summary ?? "").trim(),
     webSearchSupplemented: !!(patchedRow.webSearchSupplemented ?? patchedRow.web_search_supplemented),
-    logoUrl: sanitizeDisplayableImageUrl(String(baseRow.logoUrl ?? baseRow.logo_url ?? "").trim()),
+    logoUrl: sanitizeDisplayableImageUrl(
+      String(
+        patchedRow.logoUrl ??
+          patchedRow.logo_url ??
+          profile.logo_url ??
+          orgRaw.logo_url ??
+          ""
+      ).trim(),
+    ),
     cityImageUrl: sanitizeDisplayableImageUrl(
       String(baseRow.cityImageUrl ?? baseRow.fallback_city_image_url ?? baseRow.city_image_url ?? "").trim(),
     ),

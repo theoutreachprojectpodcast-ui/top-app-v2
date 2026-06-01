@@ -1,9 +1,12 @@
+import { guardMutation, guardFailureResponse } from "@/lib/security/secureRoute";
 import { createSupabaseReadClient } from "@/lib/supabase/readServiceClient";
 import { fetchDirectorySearchWithSupabase } from "@/features/directory/api";
 
 export const runtime = "nodejs";
 
 export async function POST(request) {
+  const __guard = guardMutation(request, { rateKey: "directory-search", limit: 60 });
+  if (!__guard.ok) return guardFailureResponse(__guard);
   const supabase = createSupabaseReadClient();
   if (!supabase) {
     return Response.json(

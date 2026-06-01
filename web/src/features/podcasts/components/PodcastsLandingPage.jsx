@@ -5,10 +5,11 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import AppShell from "@/components/layout/AppShell";
 import { getSupabaseClient } from "@/lib/supabase/client";
-import { listSponsorsCatalog } from "@/features/sponsors/api/sponsorCatalogApi";
+import { listPodcastSponsorsCatalog } from "@/features/podcasts/api/podcastSponsorsCatalog";
 import {
   FALLBACK_EPISODES,
   fetchPodcastRecentBundle,
+  humanizePodcastBundleError,
   listPodcastEpisodeGuests,
 } from "@/features/podcasts/api/podcastApi";
 import PodcastHero from "@/features/podcasts/components/PodcastHero";
@@ -21,15 +22,21 @@ import PodcastCTASection from "@/features/podcasts/components/PodcastCTASection"
 import PodcastApplyGuestForm from "@/features/podcasts/components/PodcastApplyGuestForm";
 import "@/features/podcasts/styles/podcasts.css";
 
+import { PODCAST_LANDING_RECENT_EPISODE_COUNT } from "@/lib/podcast/podcastLandingCuratedEpisodes";
+
+const FULL_EPISODES_SECTION_COUNT = PODCAST_LANDING_RECENT_EPISODE_COUNT;
+const isDevBuild = typeof process !== "undefined" && process.env.NODE_ENV === "development";
+
 export default function PodcastsLandingPage({
   initialEpisodes = [],
   initialFeaturedGuests = [],
   initialBundleMeta = {},
 }) {
   const supabase = useMemo(() => getSupabaseClient(), []);
-  const [episodes, setEpisodes] = useState(
-    Array.isArray(initialEpisodes) && initialEpisodes.length ? initialEpisodes : FALLBACK_EPISODES
-  );
+  const [episodes, setEpisodes] = useState(() => {
+    if (Array.isArray(initialEpisodes) && initialEpisodes.length) return initialEpisodes;
+    return isDevBuild ? FALLBACK_EPISODES : [];
+  });
   const [featuredVoices, setFeaturedVoices] = useState(
     Array.isArray(initialFeaturedGuests) && initialFeaturedGuests.length ? initialFeaturedGuests : []
   );
@@ -39,6 +46,10 @@ export default function PodcastsLandingPage({
   const [episodeGuests, setEpisodeGuests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [bundleNote, setBundleNote] = useState("");
+  const [episodeFetchError, setEpisodeFetchError] = useState(() => {
+    if (Array.isArray(initialEpisodes) && initialEpisodes.length) return "";
+    return humanizePodcastBundleError(initialBundleMeta?.error);
+  });
   const [podcastSponsorBillingReady, setPodcastSponsorBillingReady] = useState(true);
   const [podcastSponsorBillingMissingEnv, setPodcastSponsorBillingMissingEnv] = useState([]);
 
@@ -60,20 +71,33 @@ export default function PodcastsLandingPage({
     (async () => {
       const bundle = await fetchPodcastRecentBundle();
       const [sp, eg, upcomingRes] = await Promise.all([
-        listSponsorsCatalog(supabase, { sponsorScope: "podcast" }),
+        listPodcastSponsorsCatalog(supabase),
         listPodcastEpisodeGuests(supabase),
         fetch("/api/podcasts/upcoming", { credentials: "include", cache: "no-store" }).then((r) => r.json().catch(() => ({}))),
       ]);
       if (cancelled) return;
-      if (Array.isArray(bundle?.episodes) && bundle.episodes.length) {
-        setEpisodes(bundle.episodes);
-      }
-      if (Array.isArray(bundle?.featuredGuests) && bundle.featuredGuests.length) {
-        setFeaturedVoices(bundle.featuredGuests);
+      const nextEpisodes = Array.isArray(bundle.episodes) ? bundle.episodes : [];
+      if (bundle.ok && nextEpisodes.length) {
+        setEpisodeFetchError("");
+        setEpisodes(nextEpisodes);
+        if (Array.isArray(bundle.featuredGuests) && bundle.featuredGuests.length) {
+          setFeaturedVoices(bundle.featuredGuests);
+        }
+      } else if (nextEpisodes.length) {
+        setEpisodeFetchError("");
+        setEpisodes(nextEpisodes);
+        if (Array.isArray(bundle.featuredGuests) && bundle.featuredGuests.length) {
+          setFeaturedVoices(bundle.featuredGuests);
+        }
+      } else {
+        setEpisodes((prev) => (Array.isArray(prev) && prev.length ? prev : nextEpisodes));
+        setEpisodeFetchError(
+          humanizePodcastBundleError(bundle.error) || "Episodes could not be refreshed.",
+        );
       }
       if (bundle?.degraded || initialBundleMeta?.degraded) {
         setBundleNote(
-          "Fewer than ten full episodes matched the official playlist filters, or YouTube data was unavailable. Check API keys, playlist ID, and admin include/exclude rules."
+          "Fewer than five episodes in the curated strip matched the official playlist, or YouTube data was unavailable. Check API keys, playlist ID, and admin include/exclude rules."
         );
       } else {
         setBundleNote("");
@@ -87,7 +111,9 @@ export default function PodcastsLandingPage({
           slug: String(r.id || ""),
           name: r.name || "Guest",
           title: [String(r.role_title || "").trim(), String(r.organization || "").trim()].filter(Boolean).join(" · ") || "Upcoming guest",
-          bio: String(r.short_description || "").trim() || "Scheduled conversation — details will be announced soon.",
+          bio:
+            [String(r.short_description || "").trim(), String(r.episode_topic || "").trim()].filter(Boolean).join(" — ") ||
+            "Scheduled conversation — details will be announced soon.",
           avatar_url: String(r.profile_image_url || "").trim(),
           upcoming: true,
         })),
@@ -136,7 +162,7 @@ export default function PodcastsLandingPage({
   }, []);
 
   const featured = episodes.find((item) => item.is_featured) || episodes[0] || null;
-  const lastTenFullEpisodes = episodes.slice(0, 10);
+  const lastTenFullEpisodes = episodes.slice(0, FULL_EPISODES_SECTION_COUNT);
   const guestsByEpisode = new Map();
   for (const link of episodeGuests) {
     const episodeId = String(link?.episode_id || "");
@@ -161,7 +187,7 @@ export default function PodcastsLandingPage({
       usePrimaryTopbarChrome
       useFooterDockChrome
       useTopAppStructure
-      showThemeToggle={false}
+      pageAtmosphere="podcast"
       rootStyle={podcastBandImageUrl ? { "--podcast-band-image": `url("${podcastBandImageUrl}")` } : undefined}
     >
       <div className="podcastScope">
@@ -185,10 +211,15 @@ export default function PodcastsLandingPage({
         <section className="podcastSection">
           <PodcastSectionHeader
             eyebrow="Episode library"
-            title="Last 10 full episodes"
-            subtitle="Official full-episodes playlist only. Shorts, clips, and trailers are filtered out."
+            title="Latest full episodes"
+            subtitle="The ten most recent episodes from our official YouTube full-episodes playlist, with thumbnails synced from YouTube."
           />
-          {loading ? <p className="podcastMuted">Loading episodes...</p> : null}
+          {episodeFetchError && !lastTenFullEpisodes.length ? (
+            <p className="podcastMuted" role="alert">
+              {episodeFetchError}
+            </p>
+          ) : null}
+          {loading ? <p className="podcastMuted">Loading episodes…</p> : null}
           <div className="podcastEpisodeGrid">
             {lastTenFullEpisodes.map((episode) => (
               <EpisodeCard
@@ -198,7 +229,13 @@ export default function PodcastsLandingPage({
               />
             ))}
           </div>
-          {!lastTenFullEpisodes.length ? <p className="podcastMuted">No validated episodes available yet.</p> : null}
+          {!loading && !lastTenFullEpisodes.length ? (
+            <p className="podcastMuted" role="status">
+              {episodeFetchError
+                ? "Episodes are temporarily unavailable. Please try again shortly."
+                : "No full episodes matched the official filters yet. If this persists, verify the YouTube playlist and API configuration."}
+            </p>
+          ) : null}
         </section>
 
         <section className="podcastSection">
@@ -210,8 +247,11 @@ export default function PodcastsLandingPage({
           </div>
           {!upcomingGuests.length ? (
             <div className="podcastLockCard">
-              <strong>Coming Soon</strong>
-              <p>Upcoming guests will appear here when they are published from the admin Podcasts panel.</p>
+              <strong>Upcoming guests coming soon</strong>
+              <p>
+                When the team schedules the next conversations, they will appear here. Nothing is wrong with your connection — we
+                simply do not have public upcoming rows yet.
+              </p>
             </div>
           ) : null}
         </section>

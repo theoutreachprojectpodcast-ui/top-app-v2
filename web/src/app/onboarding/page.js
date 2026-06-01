@@ -5,7 +5,8 @@ import { redirect } from "next/navigation";
 export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { getWorkOSUserFromCookies } from "@/lib/auth/workosSessionFromCookies";
-import { sessionMatchesExpectedWorkOSOrganization } from "@/lib/auth/workosOrganizationScope";
+import { isWorkOSConfigured } from "@/lib/auth/workosConfigured";
+import { sessionAuthorizedForWorkOS } from "@/lib/auth/workosOrganizationScope";
 import OnboardingFlow from "@/features/onboarding/components/OnboardingFlow";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import {
@@ -24,10 +25,18 @@ async function OnboardingServer({ searchParams }) {
   const sp = await searchParams;
   /* Do not use withAuth() in this RSC — Next 16 RSC requests often lack x-workos-middleware. */
   const auth = await getWorkOSUserFromCookies();
+  const workosReady = isWorkOSConfigured();
   if (!auth.user) {
+    if (!workosReady) {
+      // Demo/local auth path: avoid /onboarding -> /?signin=1 loop when user taps "Continue setup".
+      redirect("/profile?edit=1");
+    }
     redirect("/?signin=1");
   }
-  if (!sessionMatchesExpectedWorkOSOrganization(auth)) {
+  if (!sessionAuthorizedForWorkOS(auth, { email: auth.user?.email })) {
+    if (!workosReady) {
+      redirect("/profile?edit=1");
+    }
     redirect("/?signin=1");
   }
   const admin = createSupabaseAdminClient();

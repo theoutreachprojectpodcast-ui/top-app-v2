@@ -1,4 +1,5 @@
 import { requirePlatformAdminRouteContext } from "@/lib/admin/adminRouteContext";
+import { profileTableName } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 
@@ -18,7 +19,7 @@ export async function GET() {
     countRows(ctx.admin, "sponsors_catalog", [["sponsor_scope", "podcast"], ["is_active", true]]),
     countRows(ctx.admin, "trusted_resources", [["is_active", true]]),
     countRows(ctx.admin, "community_posts", [["status", "pending"]]),
-    countRows(ctx.admin, "torp_profiles"),
+    countRows(ctx.admin, profileTableName()),
     countRows(ctx.admin, "podcast_guest_applications"),
     countRows(ctx.admin, "sponsor_applications"),
     countRows(ctx.admin, "form_submissions", [["status", "new"]]),

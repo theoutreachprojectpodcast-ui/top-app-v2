@@ -7,13 +7,15 @@
     "node": ">=20.20.0"
   },
   "scripts": {
-    "prebuild": "node scripts/validate-production-env.mjs && node scripts/verify-trusted-resources-registry.mjs && node scripts/verify-entity-display-names.mjs && node scripts/verify-trusted-resources-titles.mjs && node scripts/sync-public-assets.mjs",
+    "prebuild": "node scripts/sync-public-assets.mjs && node scripts/sync-pwa-icons.mjs && node scripts/validate-production-env.mjs && node scripts/verify-trusted-resources-registry.mjs && node scripts/verify-entity-display-names.mjs && node scripts/verify-trusted-resources-titles.mjs",
     "verify:trusted-resources": "node scripts/verify-trusted-resources-registry.mjs",
     "smoke:routes": "node scripts/smoke-routes.mjs",
     "verify:workos-auth": "node scripts/verify-workos-auth.mjs",
+    "verify:stripe-env": "node scripts/verify-stripe-env.mjs",
     "smoke:qa:http": "node scripts/qa-http-smoke.mjs",
     "verify:entity-names": "node scripts/verify-entity-display-names.mjs",
     "verify:trusted-titles": "node scripts/verify-trusted-resources-titles.mjs",
+    "verify:youtube-podcast": "node scripts/verify-youtube-podcast-env.mjs",
     "verify:platform-names": "node scripts/verify-platform-organization-names.mjs",
     "verify:nonprofit-canonical-names": "node scripts/verify-nonprofit-canonical-names.mjs",
     "seed:sponsors": "node scripts/seed-sponsors-catalog.mjs",
@@ -23,8 +25,8 @@
     "sync:podcast-youtube": "node scripts/sync-podcast-youtube.mjs",
     "test:podcast-parser": "node scripts/test-episode-parser.mjs",
     "repair:trusted-display-names": "node scripts/repair-trusted-resource-display-names.mjs",
-    "dev": "node scripts/ensure-dev-port.mjs 3000 && node scripts/sync-public-assets.mjs && next dev --port 3000 --hostname localhost",
-    "dev:alt": "node scripts/ensure-dev-port.mjs 3001 && node scripts/sync-public-assets.mjs && next dev --port 3001 --hostname localhost",
+    "dev": "node scripts/ensure-dev-port.mjs 3000 && node scripts/sync-public-assets.mjs && node scripts/sync-pwa-icons.mjs && next dev --port 3000 --hostname localhost",
+    "dev:alt": "node scripts/ensure-dev-port.mjs 3001 && node scripts/sync-public-assets.mjs && node scripts/sync-pwa-icons.mjs && next dev --port 3001 --hostname localhost",
     "build": "next build",
     "start": "next start",
     "cap:sync": "cap sync",
@@ -35,6 +37,7 @@
     "mobile:open:android": "cap open android",
     "mobile:open:ios": "cap open ios",
     "mobile:prep": "pnpm run build && cap sync",
+    "mobile:prep:prod": "node scripts/mobile-prep-production.mjs",
     "lint": "eslint",
     "enrich:logos": "node scripts/enrich-nonprofit-logos.js",
     "enrich:websites": "node scripts/discover-nonprofit-websites.js",
@@ -43,6 +46,8 @@
     "workos": "pnpm dlx workos@latest",
     "workos:doctor": "pnpm dlx workos@latest doctor",
     "validate:env:prod": "node scripts/validate-production-env.mjs --strict",
+    "security:guards": "node scripts/security-guards-smoke.mjs",
+    "security:audit": "pnpm audit --audit-level=high || exit 0",
     "qa:recompute-quality": "node scripts/qa-recompute-quality.mjs",
     "qa:recompute-quality:all": "node scripts/qa-recompute-quality.mjs --all"
   },
@@ -62,7 +67,8 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "stripe": "^22.0.1",
-    "youtube-transcript": "^1.3.1"
+    "youtube-transcript": "^1.3.1",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

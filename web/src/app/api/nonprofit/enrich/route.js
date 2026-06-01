@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { guardMutation, guardFailureResponse } from "@/lib/security/secureRoute";
 import { createClient } from "@supabase/supabase-js";
 import { withAuth } from "@workos-inc/authkit-nextjs";
 import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
@@ -112,6 +113,8 @@ async function loadDirectoryOrg(supabase, ein9) {
  * Loads canonical directory row, runs website enrichment + verification, optionally upserts nonprofit_directory_enrichment.
  */
 export async function POST(request) {
+  const __guard = guardMutation(request, { rateKey: "nonprofit-enrich", limit: 15 });
+  if (!__guard.ok) return guardFailureResponse(__guard);
   const auth = await withAuth();
   if (!auth.user) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });

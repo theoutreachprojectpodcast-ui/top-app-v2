@@ -1,4 +1,5 @@
 import { profileTableName } from "@/lib/supabase/admin";
+import { normalizeContributionInterests } from "@/lib/profile/profileCompletenessModel";
 
 const TABLE = () => profileTableName();
 
@@ -25,6 +26,11 @@ export async function getProfileRowByStripeCustomerId(admin, stripeCustomerId) {
 export function profileRowToClientDto(row) {
   if (!row) return null;
   const meta = row.metadata && typeof row.metadata === "object" ? row.metadata : {};
+  const notifRaw = row.notification_preferences;
+  const notificationPreferences = Array.isArray(notifRaw)
+    ? notifRaw.map((x) => String(x || "").trim()).filter(Boolean)
+    : [];
+
   return {
     profileRecordId: row.id ?? null,
     email: row.email ?? "",
@@ -33,8 +39,37 @@ export function profileRowToClientDto(row) {
     lastName: row.last_name ?? "",
     bio: row.bio ?? "",
     avatarUrl: row.profile_photo_url ?? "",
+    phoneNumber: row.phone_number != null ? String(row.phone_number).trim() : "",
+    postalCode: row.postal_code != null ? String(row.postal_code).trim() : "",
+    preferredContactMethod:
+      row.preferred_contact_method != null ? String(row.preferred_contact_method).trim().toLowerCase() : "",
+    notificationPreferences,
+    identitySegment: row.identity_segment != null ? String(row.identity_segment).trim().toLowerCase() : "",
+    jobTitle: row.job_title != null ? String(row.job_title).trim() : "",
+    reasonForJoining: row.reason_for_joining != null ? String(row.reason_for_joining).trim() : "",
+    supportNeeds: row.support_needs != null ? String(row.support_needs).trim() : "",
+    communities: row.communities != null ? String(row.communities).trim() : "",
+    contributionInterests: normalizeContributionInterests(row.contribution_interests),
+    preferredContributionContact:
+      row.preferred_contribution_contact != null ? String(row.preferred_contribution_contact).trim() : "",
+    onboardingSkipped: !!row.onboarding_skipped,
+    profileCompletenessPercentage:
+      row.profile_completeness_percentage != null ? Number(row.profile_completeness_percentage) : null,
+    profileCompletenessMissingFields: Array.isArray(row.profile_completeness_missing_fields)
+      ? row.profile_completeness_missing_fields.map((x) => String(x || "").trim()).filter(Boolean)
+      : [],
+    profileLastUpdatedAt: row.profile_last_updated_at != null ? String(row.profile_last_updated_at) : "",
+    accountSetupCompletedAt: row.account_setup_completed_at != null ? String(row.account_setup_completed_at) : "",
     membershipTier: row.membership_tier ?? "free",
-    membershipBillingStatus: row.membership_status ?? "none",
+    membershipBillingStatus: row.billing_status ?? row.membership_status ?? "none",
+    renewalDate: row.renewal_date != null ? String(row.renewal_date) : "",
+    billingStatus: row.billing_status != null ? String(row.billing_status) : "",
+    sponsorTier: row.sponsor_tier != null ? String(row.sponsor_tier) : "",
+    paymentMethodSummary:
+      row.payment_method_summary && typeof row.payment_method_summary === "object"
+        ? row.payment_method_summary
+        : null,
+    subscriptionStatus: row.stripe_subscription_id ? "linked" : "none",
     onboardingCompleted: !!row.onboarding_completed,
     platformRole: String(row.platform_role || "user").trim() || "user",
     accountIntent: row.account_intent != null ? String(row.account_intent).trim() : "",
@@ -45,6 +80,7 @@ export function profileRowToClientDto(row) {
     stripeSubscriptionIdSet: Boolean(row.stripe_subscription_id),
     membershipSource: String(row.membership_source || "manual").trim() || "manual",
     ...spreadMetadata(meta),
+    userType: row.user_type != null ? String(row.user_type).trim().toLowerCase() : "member",
   };
 }
 

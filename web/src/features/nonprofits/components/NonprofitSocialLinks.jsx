@@ -1,4 +1,4 @@
-import { Globe, Instagram, Youtube, Linkedin, Facebook, Twitter, Video } from "lucide-react";
+import { Globe, Instagram, Youtube, Linkedin, Facebook, Twitter, Video, Mail } from "lucide-react";
 
 const ICONS = {
   website: Globe,
@@ -8,26 +8,29 @@ const ICONS = {
   linkedin: Linkedin,
   x: Twitter,
   tiktok: Video,
+  email: Mail,
 };
 
-export default function NonprofitSocialLinks({ links = [] }) {
+export default function NonprofitSocialLinks({ links = [], className = "" }) {
   if (!links.length) return null;
+  const wrapClass = ["nonprofitSocialLinks", className].filter(Boolean).join(" ");
   return (
-    <div className="nonprofitSocialLinks" aria-label="Organization links">
+    <div className={wrapClass} aria-label="Organization links">
       {links.map((link) => {
         const Icon = ICONS[link.type] || Globe;
+        const isMail = /^mailto:/i.test(String(link.url || ""));
         return (
           <a
             key={`${link.type}-${link.url}`}
             className="nonprofitSocialLink"
             data-torp-card-interactive
             href={link.url}
-            target="_blank"
-            rel="noopener noreferrer"
+            target={isMail ? undefined : "_blank"}
+            rel={isMail ? undefined : "noopener noreferrer"}
             aria-label={link.label}
             title={link.label}
           >
-            <Icon size={15} strokeWidth={2} />
+            <Icon size={15} strokeWidth={2} aria-hidden />
           </a>
         );
       })}

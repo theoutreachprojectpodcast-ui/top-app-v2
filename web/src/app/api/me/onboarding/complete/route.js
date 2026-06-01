@@ -1,4 +1,5 @@
 import { authFailureJson, resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
+import { guardMutation, guardFailureResponse } from "@/lib/security/secureRoute";
 import { createSupabaseAdminClient, profileTableName } from "@/lib/supabase/admin";
 import { getProfileRowByWorkOSId, profileRowToClientDto } from "@/lib/profile/serverProfile";
 import {
@@ -7,6 +8,10 @@ import {
   resolvePlatformRoleAfterTierChange,
 } from "@/lib/account/accountModel";
 import { postOnboardingDestination } from "@/lib/account/postOnboardingDestination";
+import {
+  buildProfileCompletenessDbPatch,
+  evaluateAccountProfileCompleteness,
+} from "@/lib/profile/profileCompletenessModel";
 
 const TIERS = new Set(["free", "support", "member", "sponsor"]);
 
@@ -16,7 +21,17 @@ function buildMeta(existing) {
     : {};
 }
 
+async function syncProfileCompletenessAfterOnboarding(admin, workosUserId, user) {
+  const next = await getProfileRowByWorkOSId(admin, workosUserId);
+  const dto = profileRowToClientDto(next);
+  const wu = { email: user.email ?? "", firstName: user.firstName ?? "", lastName: user.lastName ?? "" };
+  const { patch } = buildProfileCompletenessDbPatch(dto || {}, { workOSUser: wu }, next);
+  await admin.from(profileTableName()).update(patch).eq("workos_user_id", workosUserId);
+}
+
 export async function POST(request) {
+  const __guard = guardMutation(request, { rateKey: "me-onboarding", limit: 20 });
+  if (!__guard.ok) return guardFailureResponse(__guard);
   const auth = await resolveWorkOSRouteUser();
   if (!auth.ok) return authFailureJson(auth);
   const user = auth.user;
@@ -32,7 +47,21 @@ export async function POST(request) {
     /* optional body */
   }
 
+  const workOSUser = { email: user.email ?? "", firstName: user.firstName ?? "", lastName: user.lastName ?? "" };
   const existing = await getProfileRowByWorkOSId(admin, user.id);
+  const existingDto = profileRowToClientDto(existing) || {};
+  const requiredCheck = evaluateAccountProfileCompleteness(existingDto, { workOSUser });
+  if (!requiredCheck.requiredAllMet) {
+    return Response.json(
+      {
+        error: "profile_incomplete",
+        message: "Complete required profile fields before finishing onboarding.",
+        missing: requiredCheck.requiredMissing,
+      },
+      { status: 400 },
+    );
+  }
+
   const prevMeta = buildMeta(existing);
 
   const intentFromBody = normalizePublicAccountIntent(body.accountIntent);
@@ -86,7 +115,8 @@ export async function POST(request) {
     }
 
     const next = await getProfileRowByWorkOSId(admin, auth.user.id);
-    const dto = profileRowToClientDto(next);
+    await syncProfileCompletenessAfterOnboarding(admin, auth.user.id, auth.user);
+    const dto = profileRowToClientDto(await getProfileRowByWorkOSId(admin, auth.user.id));
     return Response.json({
       profile: dto,
       redirectPath: postOnboardingDestination({
@@ -175,6 +205,7 @@ export async function POST(request) {
     }
   }
 
+  await syncProfileCompletenessAfterOnboarding(admin, user.id, user);
   const next = await getProfileRowByWorkOSId(admin, user.id);
   const dto = profileRowToClientDto(next);
   return Response.json({

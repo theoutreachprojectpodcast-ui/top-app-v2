@@ -1,4 +1,4 @@
-import { requirePlatformAdminRouteContext } from "@/lib/admin/adminRouteContext";
+import { requirePlatformAdminRouteContext, requirePlatformAdminMutation } from "@/lib/admin/adminRouteContext";
 
 export const runtime = "nodejs";
 const TABLE = "page_images";
@@ -18,7 +18,7 @@ export async function GET() {
 }
 
 export async function POST(request) {
-  const ctx = await requirePlatformAdminRouteContext();
+  const ctx = await requirePlatformAdminMutation(request, { rateKey: "admin-app-api-admin-page-images-post" });
   if (!ctx.ok) return ctx.response;
   let body;
   try {
@@ -40,5 +40,13 @@ export async function POST(request) {
   }
   const { data, error } = await ctx.admin.from(TABLE).insert(payload).select("*").single();
   if (error) return Response.json({ ok: false, error: error.message }, { status: 500 });
+  await writeAdminAuditLog(ctx.admin, request, {
+    actorWorkosUserId: String(ctx.user?.id || ""),
+    actorEmail: String(ctx.user?.email || ""),
+    action: "admin.page-images.POST",
+    resourceType: "admin_mutation",
+    resourceId: null,
+    metadata: { route: "page-images" },
+  });
   return Response.json({ ok: true, row: data });
 }

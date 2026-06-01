@@ -7,6 +7,7 @@ import {
 } from "@/lib/supabase/trustedResourcesCatalog";
 import { attachDirectoryAndEnrichmentToTrustedRows } from "@/features/trusted-resources/trustedDirectoryJoin";
 import {
+  TRUSTED_RESOURCE_BY_SLUG,
   TRUSTED_RESOURCE_CANONICAL_RECORDS,
   canonicalHostname,
   normalizeTrustedResourceEin,
@@ -28,6 +29,20 @@ function rowIdentityKey(row = {}) {
   return `name:${String(row?.orgName || "").trim().toLowerCase()}`;
 }
 
+/** Build a catalog row from the canonical registry (no Supabase). Used for SSG/CI and offline fallback. */
+export function buildTrustedRowFromRegistrySlug(slug) {
+  const key = String(slug || "").trim().toLowerCase();
+  const record = TRUSTED_RESOURCE_BY_SLUG[key];
+  if (!record) return null;
+  const row = registryRecordToTrustedRow(record);
+  if (record.registryLogoUrl) row.logoUrl = String(record.registryLogoUrl).trim();
+  if (record.registryHeaderImageUrl) {
+    row.heroImageUrl = String(record.registryHeaderImageUrl).trim();
+    row.registryHeaderImageUrl = row.heroImageUrl;
+  }
+  return row;
+}
+
 function registryRecordToTrustedRow(record = {}) {
   const ein = normalizeTrustedResourceEin(record?.eins?.[0] || "");
   const website = String(record.website || "").trim();
@@ -37,6 +52,8 @@ function registryRecordToTrustedRow(record = {}) {
     orgName: String(record.displayName || "").trim(),
     display_name: String(record.displayName || "").trim(),
     catalog_display_name: String(record.displayName || "").trim(),
+    catalogId: "",
+    sort_order: 0,
     trustedResourceSlug: String(record.slug || "").trim(),
     website,
     logoUrl: "",
@@ -46,6 +63,7 @@ function registryRecordToTrustedRow(record = {}) {
     nteeCode: String(record.ntee_code || "").trim(),
     nonprofit_type: String(record.nonprofit_type || "").trim(),
     description: String(record.shortDescription || "").trim(),
+    full_description: "",
     trustedResourceDisplayLocation: String(record.locationLabel || "National").trim(),
     trustedResourceCategoryKey: String(record.trustedResourceCategoryKey || "").trim() || undefined,
     instagramUrl: String(social.instagramUrl || "").trim(),
@@ -53,6 +71,7 @@ function registryRecordToTrustedRow(record = {}) {
     youtubeUrl: String(social.youtubeUrl || "").trim(),
     xUrl: String(social.xUrl || "").trim(),
     linkedinUrl: String(social.linkedinUrl || "").trim(),
+    tiktokUrl: String(social.tiktokUrl || "").trim(),
     serves_veterans: true,
     serves_first_responders: false,
     isTrusted: true,

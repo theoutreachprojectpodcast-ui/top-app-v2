@@ -1,5 +1,9 @@
 /* Admin console — aligns with site shell; sub-navigation below top bar */
 
+.adminConsole {
+  min-width: 0;
+}
+
 .adminConsole .adminConsoleNav {
   width: min(var(--content-max-width), calc(100% - var(--content-gutter)));
   margin: 0 auto;
@@ -33,6 +37,7 @@
   width: min(var(--content-max-width), calc(100% - var(--content-gutter)));
   margin: 0 auto;
   padding-top: 16px;
+  min-width: 0;
 }
 
 .adminConsole .adminPanel {
@@ -41,6 +46,7 @@
   border-radius: var(--radius-lg, 12px);
   padding: var(--ds-space-4, 16px);
   margin-bottom: var(--ds-space-4, 16px);
+  min-width: 0;
 }
 
 .adminConsole .adminTableWrap {
@@ -106,7 +112,7 @@
 .adminConsole .adminFieldStack {
   display: grid;
   gap: 10px;
-  max-width: 720px;
+  max-width: min(720px, 100%);
 }
 
 .adminConsole .adminActionCell {

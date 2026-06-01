@@ -1,4 +1,5 @@
 import { decodeJwt } from "jose";
+import { isDefaultApprovedAdminEmail } from "@/lib/admin/adminPolicy";
 
 /**
  * WorkOS Organization ID for The Outreach Project (User Management → Organizations).
@@ -32,4 +33,19 @@ export function sessionMatchesExpectedWorkOSOrganization(session) {
     }
   }
   return orgId === expected;
+}
+
+/**
+ * Whether a WorkOS session may use member/admin APIs.
+ * Approved platform-admin emails may sign in when `org_id` is missing or mismatched
+ * (common for WorkOS dashboard owners who are not yet org members).
+ *
+ * @param {{ organizationId?: string, accessToken?: string, user?: { email?: string } } | null | undefined} session
+ * @param {{ email?: string }} [options]
+ */
+export function sessionAuthorizedForWorkOS(session, options = {}) {
+  if (sessionMatchesExpectedWorkOSOrganization(session)) return true;
+  const email = String(options.email || session?.user?.email || "").trim();
+  if (email && isDefaultApprovedAdminEmail(email)) return true;
+  return false;
 }

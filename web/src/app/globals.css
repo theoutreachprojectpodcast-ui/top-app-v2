@@ -2,7 +2,12 @@
 @import "../styles/theme-light-components.css";
 @import "../styles/design-system.css";
 @import "../components/app/top-app.css";
+@import "../components/app/home-sponsor-banner.css";
+@import "../styles/page-atmosphere.css";
 @import "../styles/torp-listing-cards.css";
+@import "../styles/mobile-shell.css";
+@import "../styles/mobile-design-system.css";
+@import "../styles/mobile-nav-dock.css";
 
 * {
   box-sizing: border-box;
@@ -24,7 +29,7 @@ a {
 
 .appShell {
   min-height: 100vh;
-  padding-bottom: 84px;
+  padding-bottom: var(--torp-bottom-nav-reserve, calc(96px + env(safe-area-inset-bottom, 0px)));
 }
 
 .topBar {
@@ -42,8 +47,10 @@ a {
   z-index: 20;
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--topbar-gradient-fade, #ffffff) 94%, transparent),
-    color-mix(in srgb, var(--topbar-gradient-fade, #ffffff) 88%, transparent)
+    color-mix(in srgb, var(--topbar-gradient-fade, #ffffff) 94%, transparent) 0%,
+    color-mix(in srgb, var(--topbar-gradient-fade, #ffffff) 72%, transparent) 38%,
+    color-mix(in srgb, var(--topbar-gradient-fade, #ffffff) 28%, transparent) 62%,
+    transparent 100%
   );
   border-bottom: 1px solid var(--color-border);
   padding: 14px 0 18px;
@@ -53,7 +60,7 @@ a {
 
 .appShell--subpage {
   min-height: 100vh;
-  padding-bottom: 84px;
+  padding-bottom: var(--torp-bottom-nav-reserve, calc(96px + env(safe-area-inset-bottom, 0px)));
 }
 
 .brandTitle {
@@ -69,9 +76,10 @@ a {
 }
 
 .content {
-  width: min(1100px, calc(100% - 40px));
+  width: min(1100px, calc(100% - var(--torp-page-gutter-x, clamp(16px, 5vw, 40px))));
   margin: 0 auto;
   padding: var(--ds-space-5, 20px) var(--ds-space-4, 16px);
+  box-sizing: border-box;
 }
 
 .content--subpage {
@@ -111,12 +119,13 @@ a {
   gap: var(--ds-space-2, 8px);
   background: color-mix(in srgb, var(--color-bg-secondary) 98%, transparent);
   border-top: 1px solid var(--color-border);
-  padding: 10px 24px 14px;
+  padding: 10px 24px calc(14px + env(safe-area-inset-bottom, 0px));
   justify-content: center;
   box-shadow: var(--shadow-bottom-nav);
+  box-sizing: border-box;
 }
 
-.appShell--subpage:not(.appShell--podcast) .navItem {
+.appShell--subpage:not(.appShell--podcast) .navItem:not(.navItem--dockCol) {
   text-align: center;
   font-size: 13px;
   font-weight: 600;
@@ -127,31 +136,42 @@ a {
   white-space: nowrap;
 }
 
-.appShell--subpage:not(.appShell--podcast) .navItem.isActive {
+.appShell--subpage:not(.appShell--podcast) .navItem.isActive:not(.navItem--dockCol) {
   color: var(--color-accent-hover);
   background: var(--color-accent-soft);
   border: 1px solid color-mix(in srgb, var(--color-accent) 28%, var(--color-border-subtle) 72%);
 }
 
 @media (max-width: 760px) {
+  .subpageTopbar {
+    position: relative;
+    top: auto;
+  }
+
   .appShell--subpage:not(.appShell--podcast) > .bottomNav {
     width: calc(100% - 24px);
-    justify-content: flex-start;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    justify-content: center;
+    overflow-x: visible;
     scrollbar-width: none;
-    padding-bottom: 2px;
+    padding: 10px 12px calc(12px + env(safe-area-inset-bottom, 0px));
+    flex-wrap: wrap;
+    row-gap: 6px;
+    column-gap: 6px;
   }
 
   .appShell--subpage:not(.appShell--podcast) > .bottomNav::-webkit-scrollbar {
     display: none;
   }
 
-  .appShell--subpage:not(.appShell--podcast) .navItem {
-    min-width: max-content;
-    flex: 0 0 auto;
+  .appShell--subpage:not(.appShell--podcast) .navItem:not(.navItem--dockCol) {
+    min-width: min(100%, 92px);
+    flex: 1 1 calc(33.333% - 6px);
+    max-width: 100%;
     font-size: 12px;
-    padding: 8px 10px;
-    white-space: nowrap;
+    padding: 8px 6px;
+    white-space: normal;
+    line-height: 1.2;
+    text-align: center;
+    word-break: break-word;
   }
 }

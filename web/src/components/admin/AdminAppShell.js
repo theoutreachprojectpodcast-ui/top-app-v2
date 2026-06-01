@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import BrandMark from "@/components/BrandMark";
+import AppHeaderBrand from "@/components/layout/AppHeaderBrand";
+import ColorSchemeToggle from "@/components/app/ColorSchemeToggle";
 import HeaderInner from "@/components/layout/HeaderInner";
+import { appPublicHref } from "@/lib/runtime/deploymentHosts";
 
 const LINKS = [
   { href: "/admin", label: "Overview", match: (p) => p === "/admin" },
@@ -16,6 +18,11 @@ const LINKS = [
   { href: "/admin/applications", label: "Applications", match: (p) => p.startsWith("/admin/applications") },
   { href: "/admin/images", label: "Images", match: (p) => p.startsWith("/admin/images") },
   { href: "/admin/contact", label: "Contact", match: (p) => p.startsWith("/admin/contact") },
+  { href: "/admin/content", label: "Page Content", match: (p) => p.startsWith("/admin/content") },
+  { href: "/admin/forms", label: "Forms", match: (p) => p.startsWith("/admin/forms") },
+  { href: "/admin/media-library", label: "Media Library", match: (p) => p.startsWith("/admin/media-library") },
+  { href: "/admin/settings", label: "Settings", match: (p) => p.startsWith("/admin/settings") },
+  { href: "/admin/analytics", label: "Analytics", match: (p) => p.startsWith("/admin/analytics") },
   { href: "/admin/billing", label: "Billing", match: (p) => p.startsWith("/admin/billing") },
   { href: "/admin/users", label: "Users", match: (p) => p.startsWith("/admin/users") },
 ];
@@ -24,28 +31,29 @@ export default function AdminAppShell({ children, sessionEmail = "" }) {
   const pathname = usePathname() || "";
   return (
     <div className="appShell appShell--subpage appShell--siteChrome adminConsole">
-      <div className="headerBrandStack">
-        <BrandMark size="header" alt="The Outreach Project" />
-      </div>
-      <header className="subpageTopbar">
-        <HeaderInner className="topbarInner">
-          <div className="topbarZone topbarLeft">
-            <div className="topbarActionsCluster topbarActionsCluster--start">
-              <Link className="btnSoft sponsorBtn" href="/">
-                Exit admin
-              </Link>
+      <div className="appSiteHeader">
+        <AppHeaderBrand brandAlt="The Outreach Project" />
+        <header className="subpageTopbar">
+          <HeaderInner className="topbarInner">
+            <div className="topbarZone topbarLeft">
+              <div className="topbarActionsCluster topbarActionsCluster--start">
+                <ColorSchemeToggle />
+                <Link className="btnSoft sponsorBtn" href={appPublicHref("/")}>
+                  Exit admin
+                </Link>
+              </div>
             </div>
-          </div>
           <div className="topbarZone topbarCenter" aria-hidden="true" />
           <div className="topbarZone topbarRight">
             <div className="topbarActionsCluster">
-              <Link className="btnSoft sponsorBtn" href="/profile">
+              <Link className="btnSoft sponsorBtn" href={appPublicHref("/profile")}>
                 Profile
               </Link>
             </div>
           </div>
         </HeaderInner>
       </header>
+      </div>
 
       <nav className="adminConsoleNav" aria-label="Admin sections">
         {LINKS.map((item) => (

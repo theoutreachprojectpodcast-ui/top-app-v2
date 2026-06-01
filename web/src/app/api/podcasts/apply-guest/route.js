@@ -1,8 +1,15 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import {
+  guardMutation,
+  guardFailureResponse,
+  parseJsonBody,
+  validationFailureResponse,
+} from "@/lib/security/secureRoute";
+import { guestApplicationSchema } from "@/lib/security/schemas/publicSchemas";
+import { resolveApplicationNotifyRecipients } from "@/lib/platform/applicationNotifyRecipients";
 import { sendPodcastGuestApplicationNotify } from "@/server/podcasts/sendPodcastGuestApplicationNotify";
 
 export const runtime = "nodejs";
-const DEFAULT_PODCAST_GUEST_RECIPIENT = "Hodge5403@gmail.com";
 
 function pickString(v, max = 8000) {
   const s = String(v ?? "").trim();
@@ -11,27 +18,24 @@ function pickString(v, max = 8000) {
 }
 
 export async function POST(request) {
-  let body = {};
-  try {
-    body = await request.json();
-  } catch {
-    return Response.json({ ok: false, error: "invalid_json" }, { status: 400 });
-  }
+  const guard = guardMutation(request, { rateKey: "public-guest-app", limit: 8 });
+  if (!guard.ok) return guardFailureResponse(guard);
 
-  const full_name = pickString(body.full_name, 240);
-  const email = pickString(body.email, 320);
+  const parsed = await parseJsonBody(request, guestApplicationSchema);
+  if (!parsed.ok) return validationFailureResponse(parsed);
+  const body = parsed.data;
+
+  const full_name = body.full_name;
+  const email = body.email;
   const organization = pickString(body.organization, 400);
   const website_url = pickString(body.website_url, 800);
-  const topic_pitch = pickString(body.topic_pitch, 4000);
+  const topic_pitch = body.topic_pitch;
   const why_now = pickString(body.why_now, 2000);
   const social_links = pickString(body.social_links, 2000);
   const phone = pickString(body.phone, 80);
   const role_title = pickString(body.role_title, 240);
   const message = pickString(body.message, 8000);
-
-  if (!full_name || !email || !topic_pitch) {
-    return Response.json({ ok: false, error: "missing_required_fields" }, { status: 400 });
-  }
+  const community_context = pickString(body.community_context, 4000);
 
   const admin = createSupabaseAdminClient();
   if (!admin) {
@@ -83,8 +87,11 @@ export async function POST(request) {
 
   let emailWarning = "";
   try {
-    const recipient = String(process.env.PODCAST_GUEST_APPLICATION_RECIPIENT || DEFAULT_PODCAST_GUEST_RECIPIENT).trim();
+    const recipients = resolveApplicationNotifyRecipients();
+    const envHint = String(process.env.NEXT_PUBLIC_VERCEL_ENV || process.env.NODE_ENV || "unknown").trim();
     const bodyText = [
+      `Application ID: ${insertedId || "(unknown)"}`,
+      `Environment: ${envHint}`,
       `Submitted at: ${new Date().toISOString()}`,
       `Status: submitted`,
       phone ? `Phone: ${phone}` : "",
@@ -97,21 +104,29 @@ export async function POST(request) {
       "",
       why_now ? `Why now:\n${why_now}` : "",
       social_links ? `Social / links:\n${social_links}` : "",
-      message ? `\nMessage:\n${message}` : "",
+      community_context ? `Veteran / first responder / community relevance:\n${community_context}` : "",
+      message ? `\nApplicant message:\n${message}` : "",
     ]
       .filter(Boolean)
       .join("\n");
 
     const sent = await sendPodcastGuestApplicationNotify({
-      to: recipient,
+      to: recipients,
       applicantName: full_name,
       applicantEmail: email,
       topic: topic_pitch.slice(0, 200),
       bodyText,
     });
     if (!sent.ok) emailWarning = `Saved, but email was not sent (${sent.error}).`;
+    else if (process.env.NODE_ENV === "development") {
+      console.info("[podcast-apply-guest] notify sent", { to: recipients, id: insertedId });
+    }
   } catch (e) {
     emailWarning = `Saved, but notification step failed (${String(e?.message || e)}).`;
+  }
+
+  if (process.env.NODE_ENV === "development" && emailWarning) {
+    console.warn("[podcast-apply-guest]", emailWarning);
   }
 
   return Response.json({ ok: true, id: insertedId, emailWarning });

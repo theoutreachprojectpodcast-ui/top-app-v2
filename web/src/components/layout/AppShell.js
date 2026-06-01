@@ -1,16 +1,31 @@
+"use client";
+
+import { useRef } from "react";
 import Link from "next/link";
-import BrandMark from "@/components/BrandMark";
+import { usePathname } from "next/navigation";
+import AppHeaderBrand from "@/components/layout/AppHeaderBrand";
+import ColorSchemeToggle from "@/components/app/ColorSchemeToggle";
+import SiteBottomNavGlyph from "@/components/navigation/SiteBottomNavGlyph";
+import SiteMobileNavMoreMenu from "@/components/navigation/SiteMobileNavMoreMenu";
 import HeaderInner from "@/components/layout/HeaderInner";
 import SubpageTopbarActions from "@/components/layout/SubpageTopbarActions";
 import FooterInner from "@/components/layout/FooterInner";
+import MissionPageTopStrip from "@/components/layout/MissionPageTopStrip";
+import { useAuthSession } from "@/components/auth/AuthSessionProvider";
+import { usePodcastDarkSchemeLock } from "@/hooks/usePodcastDarkSchemeLock";
+import { resolvePageAtmosphere } from "@/lib/design/pageAtmosphere";
+import { useImmersiveHeaderScroll } from "@/hooks/useImmersiveHeaderScroll";
+import { readNavAuthCache } from "@/lib/auth/navAuthCache";
+
+const PRIMARY_BOTTOM_NAV_KEYS = new Set(["home", "profile", "contact"]);
 
 const NAV_ITEMS = [
-  { href: "/", key: "home", label: "Home" },
-  { href: "/trusted", key: "trusted", label: "Trusted Resources" },
-  { href: "/community", key: "community", label: "Community" },
-  { href: "/sponsors", key: "sponsors", label: "Sponsors" },
-  { href: "/profile", key: "profile", label: "Profile" },
-  { href: "/contact", key: "contact", label: "Contact" },
+  { href: "/", key: "home", label: "Home", linkTitle: "Home" },
+  { href: "/trusted", key: "trusted", label: "Trusted", linkTitle: "Trusted Resources" },
+  { href: "/community", key: "community", label: "Community", linkTitle: "Community" },
+  { href: "/sponsors", key: "sponsors", label: "Sponsors", linkTitle: "Sponsors" },
+  { href: "/profile", key: "profile", label: "Profile", linkTitle: "Profile" },
+  { href: "/contact", key: "contact", label: "Contact", linkTitle: "Contact" },
 ];
 
 /**
@@ -30,81 +45,195 @@ export default function AppShell({
   showThemeToggle = true,
   navItems,
   rootStyle,
+  pageAtmosphere: pageAtmosphereProp,
 }) {
+  const shellRef = useRef(null);
+  const pathname = usePathname();
+  const missionStripOnHome = pathname === "/";
   const items = Array.isArray(navItems) && navItems.length ? navItems : NAV_ITEMS;
   const RootTag = useTopAppStructure ? "main" : "div";
+  const pageAtmosphere = pageAtmosphereProp ?? resolvePageAtmosphere(pathname, activeNav);
+  const podcastThemeShell =
+    pageAtmosphere === "podcast" || String(shellClassName || "").includes("appShell--podcast");
+  const immersiveHeaderScroll = useTopAppStructure && !podcastThemeShell;
+  const headerGradientBoost = usePrimaryTopbarChrome || useTopAppStructure;
+  useImmersiveHeaderScroll({
+    rootRef: shellRef,
+    enabled: immersiveHeaderScroll,
+    gradientBoost: headerGradientBoost,
+  });
+  usePodcastDarkSchemeLock(podcastThemeShell);
+
+  const session = useAuthSession();
+  const navAuthCache = typeof window !== "undefined" ? readNavAuthCache() : null;
+  const optimisticAuthed = session.loading && navAuthCache?.authenticated;
+  const isLoggedIn = session.authenticated || optimisticAuthed;
+
+  const mainChromeClass = immersiveHeaderScroll ? " header-at-top" : "";
+  const authChromeClass =
+    useTopAppStructure && podcastThemeShell ? (isLoggedIn ? " topApp--auth-in" : " topApp--auth-out") : "";
+  const podcastRouteAttrs =
+    useTopAppStructure && podcastThemeShell
+      ? {
+          "data-use-podcast-theme": "true",
+          "data-disable-global-background": "true",
+          "data-disable-main-page-header-blend": "true",
+        }
+      : {};
   return (
-    <RootTag className={`${useTopAppStructure ? "topApp" : "appShell"} appShell--subpage ${shellClassName}`.trim()} style={rootStyle}>
-      <div className="headerBrandStack">
-        <Link href="/" aria-label="Go to home">
-          <BrandMark size="header" src={brandSrc || undefined} alt={brandAlt} className={brandClassName} />
-        </Link>
+    <RootTag
+      ref={headerGradientBoost || useTopAppStructure ? shellRef : undefined}
+      className={`${useTopAppStructure ? "topApp" : "appShell"} appShell--subpage ${useFooterDockChrome ? "appShell--withMobileNavDock " : ""}${shellClassName}${mainChromeClass}${authChromeClass}`.trim()}
+      {...(podcastThemeShell ? { "data-podcast-theme-locked": "dark" } : {})}
+      style={rootStyle}
+      {...(useTopAppStructure ? { "data-page-atmosphere": pageAtmosphere } : {})}
+      {...podcastRouteAttrs}
+    >
+      <div className={`appSiteHeader${podcastThemeShell ? " appSiteHeader--podcast" : ""}`}>
+        {podcastThemeShell ? (
+          <>
+            <header className={usePrimaryTopbarChrome ? "topbar" : "subpageTopbar"}>
+              <HeaderInner className="topbarInner">
+                <div className="topbarZone topbarLeft">
+                  <div className="topbarActionsCluster topbarActionsCluster--start">
+                    <SubpageTopbarActions section="lead" />
+                  </div>
+                </div>
+                <div className="topbarZone topbarCenter" aria-hidden="true" />
+                <div className="topbarZone topbarRight">
+                  <div className="topbarActionsCluster">
+                    <SubpageTopbarActions section="auth" />
+                    {useFooterDockChrome ? (
+                      <SiteMobileNavMoreMenu tone="podcast" align="end">
+                        <Link className="siteMobileNavMore__entry" href="/trusted">
+                          Trusted Resources
+                        </Link>
+                        <Link className="siteMobileNavMore__entry" href="/community">
+                          Community
+                        </Link>
+                        <Link className="siteMobileNavMore__entry" href="/sponsors">
+                          Sponsors
+                        </Link>
+                        <Link className="siteMobileNavMore__entry" href="/">
+                          Main app home
+                        </Link>
+                        <Link className="siteMobileNavMore__entry" href="/sponsors">
+                          Become a Sponsor
+                        </Link>
+                      </SiteMobileNavMoreMenu>
+                    ) : null}
+                  </div>
+                </div>
+              </HeaderInner>
+            </header>
+            <AppHeaderBrand
+              brandSrc={brandSrc || undefined}
+              brandAlt={brandAlt}
+              brandClassName={brandClassName}
+            />
+          </>
+        ) : (
+          <>
+            <AppHeaderBrand
+              brandSrc={brandSrc || undefined}
+              brandAlt={brandAlt}
+              brandClassName={brandClassName}
+            />
+            <header className={usePrimaryTopbarChrome ? "topbar" : "subpageTopbar"}>
+              <HeaderInner className="topbarInner">
+                <div className="topbarZone topbarLeft">
+                  <div className="topbarActionsCluster topbarActionsCluster--start">
+                    {!podcastThemeShell && showThemeToggle ? <ColorSchemeToggle /> : null}
+                    <SubpageTopbarActions section="lead" />
+                  </div>
+                </div>
+                <div className="topbarZone topbarCenter" aria-hidden="true" />
+                <div className="topbarZone topbarRight">
+                  <div className="topbarActionsCluster">
+                    <SubpageTopbarActions section="auth" />
+                    {useFooterDockChrome ? (
+                      <SiteMobileNavMoreMenu tone="app" align="end">
+                        <Link className="siteMobileNavMore__entry" href="/trusted">
+                          Trusted Resources
+                        </Link>
+                        <Link className="siteMobileNavMore__entry" href="/community">
+                          Community
+                        </Link>
+                        <Link className="siteMobileNavMore__entry" href="/sponsors">
+                          Sponsors
+                        </Link>
+                        <Link className="siteMobileNavMore__entry" href="/podcasts">
+                          Podcast
+                        </Link>
+                        <Link className="siteMobileNavMore__entry" href="/sponsors">
+                          Become a Sponsor
+                        </Link>
+                      </SiteMobileNavMoreMenu>
+                    ) : null}
+                  </div>
+                </div>
+              </HeaderInner>
+            </header>
+          </>
+        )}
       </div>
-      <header className={usePrimaryTopbarChrome ? "topbar" : "subpageTopbar"}>
-        <HeaderInner className="topbarInner">
-          <div className="topbarZone topbarLeft">
-            <div className="topbarActionsCluster topbarActionsCluster--start">
-              <SubpageTopbarActions section="lead" showThemeToggle={showThemeToggle} />
-            </div>
-          </div>
-          <div className="topbarZone topbarCenter" aria-hidden="true" />
-          <div className="topbarZone topbarRight">
-            <div className="topbarActionsCluster">
-              <SubpageTopbarActions section="auth" />
-            </div>
-          </div>
-        </HeaderInner>
-      </header>
       {usePrimaryTopbarChrome ? <div className="topbarOcclusion" aria-hidden="true" /> : null}
 
       {useTopAppStructure ? (
-        <section className="shell">{children}</section>
+        <section className="shell">
+          {showSiteFooter && missionStripOnHome ? <MissionPageTopStrip placement="top" /> : null}
+          {children}
+          {showSiteFooter && !missionStripOnHome ? <MissionPageTopStrip placement="bottom" /> : null}
+        </section>
       ) : (
-        <main className="content content--subpage">{children}</main>
+        <main className="content content--subpage">
+          {showSiteFooter && missionStripOnHome ? <MissionPageTopStrip placement="top" /> : null}
+          {children}
+          {showSiteFooter && !missionStripOnHome ? <MissionPageTopStrip placement="bottom" /> : null}
+        </main>
       )}
-
-      {showSiteFooter ? (
-        <>
-          {/* Page footer: end of scrollable content (not the fixed bottom nav dock). */}
-          <footer className="siteFooter">
-            <FooterInner className="footerInner">
-              <div>
-                <div className="brandName">THE OUTREACH PROJECT</div>
-                <p className="footerNote">Mission-first resource navigation for veterans, first responders, and supporters.</p>
-              </div>
-              <p className="footerNote">Trust-driven support, built for clarity under pressure.</p>
-            </FooterInner>
-          </footer>
-        </>
-      ) : null}
 
       {/* Fixed bottom nav dock (not .siteFooter). */}
       {useFooterDockChrome ? <div className="footerDockBackdrop" aria-hidden="true" /> : null}
       {useFooterDockChrome ? (
         <div className="footerDock">
           <FooterInner className="footerNavInner">
-            <nav className="bottomNav" aria-label="Bottom navigation">
+            <nav
+              className={`bottomNav bottomNav--withIcons${useFooterDockChrome ? " bottomNav--mobileDock" : ""}`}
+              aria-label="Bottom navigation"
+            >
               {items.map((item) => (
                 <Link
                   key={item.key}
                   href={item.href}
-                  className={`navItem ${activeNav === item.key ? "isActive" : ""}`}
+                  title={item.linkTitle || item.label}
+                  className={`navItem navItem--dockCol ${
+                    PRIMARY_BOTTOM_NAV_KEYS.has(item.key) ? "navItem--dockPrimary" : "navItem--dockOverflow"
+                  } ${activeNav === item.key ? "isActive" : ""}`}
                 >
-                  {item.label}
+                  <SiteBottomNavGlyph navKey={item.key} className="navItemGlyph" />
+                  <span className="navItemLabel">{item.label}</span>
                 </Link>
               ))}
             </nav>
           </FooterInner>
         </div>
       ) : (
-        <nav className="bottomNav" aria-label="Bottom navigation">
+        <nav
+          className={`bottomNav bottomNav--withIcons${useFooterDockChrome ? " bottomNav--mobileDock" : ""}`}
+          aria-label="Bottom navigation"
+        >
           {items.map((item) => (
             <Link
               key={item.key}
               href={item.href}
-              className={`navItem ${activeNav === item.key ? "isActive" : ""}`}
+              title={item.linkTitle || item.label}
+              className={`navItem navItem--dockCol ${
+                PRIMARY_BOTTOM_NAV_KEYS.has(item.key) ? "navItem--dockPrimary" : "navItem--dockOverflow"
+              } ${activeNav === item.key ? "isActive" : ""}`}
             >
-              {item.label}
+              <SiteBottomNavGlyph navKey={item.key} className="navItemGlyph" />
+              <span className="navItemLabel">{item.label}</span>
             </Link>
           ))}
         </nav>

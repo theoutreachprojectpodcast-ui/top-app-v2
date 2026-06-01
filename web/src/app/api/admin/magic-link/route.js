@@ -1,0 +1,79 @@
+import { guardMutation, guardFailureResponse, parseJsonBody, validationFailureResponse } from "@/lib/security/secureRoute";
+import { adminMagicLinkSchema } from "@/lib/security/schemas/adminSchemas";
+import { createSupabaseAdminClient, profileTableName } from "@/lib/supabase/admin";
+import { isDefaultApprovedAdminEmail } from "@/lib/admin/adminPolicy";
+import { isWorkOSConfigured } from "@/lib/auth/workosConfigured";
+import { resolvePostAuthReturnTarget } from "@/lib/auth/workosSafeReturn";
+import { isAdminEmailLoginEnabled } from "@/lib/auth/adminEmailLogin";
+import { applyAdminEmailSessionCookie, sealAdminEmailSession } from "@/lib/auth/adminEmailSession";
+
+export const runtime = "nodejs";
+
+function normalizeEmail(email) {
+  return String(email || "").trim().toLowerCase();
+}
+
+export async function POST(request) {
+  const guard = guardMutation(request, { rateKey: "admin-magic-link", limit: 8 });
+  if (!guard.ok) return guardFailureResponse(guard);
+
+  const parsed = await parseJsonBody(request, adminMagicLinkSchema);
+  if (!parsed.ok) return validationFailureResponse(parsed);
+
+  const email = normalizeEmail(parsed.data.email);
+  const returnTo = resolvePostAuthReturnTarget(String(parsed.data.returnTo || "/admin").trim(), "/admin");
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return Response.json({ ok: false, error: "invalid_email" }, { status: 400 });
+  }
+
+  const admin = createSupabaseAdminClient();
+  const dbAdminGranted = async () => {
+    if (!admin) return false;
+    const { data } = await admin
+      .from(profileTableName())
+      .select("platform_role, admin_access_enabled")
+      .eq("email", email)
+      .maybeSingle();
+    return !!(
+      data &&
+      String(data.platform_role || "").toLowerCase() === "admin" &&
+      (data.admin_access_enabled == null || !!data.admin_access_enabled)
+    );
+  };
+
+  const allowed = isDefaultApprovedAdminEmail(email) || (await dbAdminGranted());
+  if (!allowed) {
+    return Response.json({ ok: true, message: "If approved, a sign-in link is available for this account." });
+  }
+
+  if (isAdminEmailLoginEnabled()) {
+    const sealed = await sealAdminEmailSession(email);
+    if (!sealed) {
+      return Response.json({ ok: false, error: "session_unavailable" }, { status: 503 });
+    }
+    const res = Response.json({
+      ok: true,
+      email,
+      signInUrl: returnTo,
+      message: "Admin sign-in ready.",
+    });
+    applyAdminEmailSessionCookie(res, sealed);
+    return res;
+  }
+
+  if (!isWorkOSConfigured()) {
+    return Response.json({ ok: false, error: "workos_not_configured" }, { status: 503 });
+  }
+
+  const signInUrl = `/api/auth/workos/signin?${new URLSearchParams({
+    returnTo,
+    remember: "1",
+    loginHint: email,
+  }).toString()}`;
+  return Response.json({
+    ok: true,
+    email,
+    signInUrl,
+    message: "Admin Sign In link ready.",
+  });
+}

@@ -1,18 +1,21 @@
 "use client";
 
 /**
- * Profile tab: completion bar + step list from real profile fields (same model as /api/me profileCompletion).
+ * Profile tab: completion from real persisted fields (see profileCompletenessModel).
+ * Hidden when required + recommended account fields are satisfied (membership may still be pending elsewhere).
  */
 export default function ProfileCompletionPanel({
   completion,
+  profile,
   onEditProfile,
   onEditProfileFocus,
   onOpenOnboarding,
   onOpenMembership,
 }) {
-  if (!completion || completion.total < 1) return null;
+  if (!completion || completion.hidePanel) return null;
 
-  const { completed, total, percentage, steps, nextStep, isComplete } = completion;
+  const { account, panelSteps, panelPercentage, panelCompleted, panelTotal, showEnhancementOnly } = completion;
+  const isAccountIncomplete = !account?.requiredAllMet;
 
   function activateStep(s) {
     if (s.done) return;
@@ -35,28 +38,34 @@ export default function ProfileCompletionPanel({
   return (
     <div className="card profileCompletionPanel">
       <div className="profileCompletionPanel__head">
-        <h3>Profile completeness</h3>
+        <h3>{showEnhancementOnly ? "Profile enhancement" : "Profile completeness"}</h3>
         <p className="profileCompletionPanel__summary">
-          {isComplete ? (
-            <>Your profile is complete — thank you for helping the community know you better.</>
+          {showEnhancementOnly ? (
+            <>
+              Required details are saved. Your profile is <strong>{panelPercentage}%</strong> complete — optional items help
+              the community support you better.
+            </>
           ) : (
             <>
-              Your profile is <strong>{percentage}%</strong> complete ({completed} of {total} steps).
+              Your profile is <strong>{panelPercentage}%</strong> complete ({panelCompleted} of {panelTotal} items).
             </>
           )}
         </p>
+        {profile?.onboardingSkipped && isAccountIncomplete ? (
+          <p className="profilePhotoUploadHint" style={{ marginTop: 8 }}>
+            You skipped the full setup wizard. Use <strong>Complete account setup</strong> to finish, or complete items below.
+          </p>
+        ) : null}
       </div>
-      <div className="profileCompletionBar" aria-hidden={isComplete}>
+      <div className="profileCompletionBar" aria-hidden={panelSteps.length === 0}>
         <div className="profileCompletionBar__track">
-          <div className="profileCompletionBar__fill" style={{ width: `${percentage}%` }} />
+          <div className="profileCompletionBar__fill" style={{ width: `${panelPercentage}%` }} />
         </div>
       </div>
       <ol className="profileCompletionTimeline">
-        {steps.map((s) => {
-          const isNext = !isComplete && nextStep?.id === s.id;
-          const actionable =
-            !s.done &&
-            (s.actionKind === "profile-edit" || s.actionKind === "onboarding" || s.actionKind === "membership");
+        {panelSteps.map((s, idx) => {
+          const isNext = idx === 0;
+          const actionable = !s.done && s.actionKind === "profile-edit";
           return (
             <li
               key={s.id}
@@ -74,39 +83,35 @@ export default function ProfileCompletionPanel({
                   <span className="profileCompletionTimeline__label">{s.label}</span>
                 )}
                 {!s.done && isNext ? (
-                  <span className="profileCompletionTimeline__nextCue">Suggested next step</span>
+                  <span className="profileCompletionTimeline__nextCue">
+                    {s.tier === "recommended" ? "Suggested enhancement" : "Next step"}
+                  </span>
                 ) : null}
               </div>
             </li>
           );
         })}
       </ol>
-      {!isComplete && nextStep ? (
-        <div className="row wrap profileCompletionPanel__actions">
-          {nextStep.actionKind === "onboarding" ? (
-            <button type="button" className="btnPrimary" onClick={() => onOpenOnboarding?.()}>
-              Continue account setup
-            </button>
-          ) : null}
-          {nextStep.actionKind === "membership" ? (
-            <button type="button" className="btnPrimary" onClick={() => onOpenMembership?.()}>
-              Membership &amp; billing
-            </button>
-          ) : null}
-          {nextStep.actionKind === "profile-edit" ? (
-            <button
-              type="button"
-              className="btnSoft"
-              onClick={() => {
-                if (nextStep.editFocus && onEditProfileFocus) onEditProfileFocus(nextStep.editFocus);
-                else onEditProfile?.();
-              }}
-            >
-              Edit profile
-            </button>
-          ) : null}
-        </div>
-      ) : null}
+      <div className="row wrap profileCompletionPanel__actions">
+        {isAccountIncomplete ? (
+          <button type="button" className="btnPrimary" onClick={() => onOpenOnboarding?.()}>
+            Complete account setup
+          </button>
+        ) : null}
+        {panelSteps[0]?.actionKind === "profile-edit" ? (
+          <button
+            type="button"
+            className="btnSoft"
+            onClick={() => {
+              const f = panelSteps[0]?.editFocus;
+              if (f && onEditProfileFocus) onEditProfileFocus(f);
+              else onEditProfile?.();
+            }}
+          >
+            Edit profile
+          </button>
+        ) : null}
+      </div>
     </div>
   );
 }

@@ -86,6 +86,23 @@ export {
   tierAllowsPodcastMemberContent,
 } from "@/lib/podcast/memberAccess";
 
+/** User-facing copy for server bundle errors (never show raw env codes when episodes loaded). */
+export function humanizePodcastBundleError(code = "") {
+  const c = String(code || "").trim();
+  if (!c) return "";
+  if (c === "missing_youtube_api_key") {
+    return "Episode list is temporarily limited. Add YOUTUBE_API_KEY in server env for full metadata, or retry shortly.";
+  }
+  if (c === "missing_playlist_id") {
+    return "The full-episodes playlist is not configured on the server.";
+  }
+  if (c.startsWith("playlist_rss_") || c === "rss_unavailable") {
+    return "Could not reach YouTube’s public playlist feed. Please try again shortly.";
+  }
+  if (c.startsWith("youtube_") || c.includes("YouTube")) return c;
+  return "Episodes could not be loaded right now. Please try again shortly.";
+}
+
 export async function fetchPodcastRecentBundle() {
   if (typeof window === "undefined") {
     return { ok: false, episodes: [], featuredGuests: [], degraded: false };
@@ -104,29 +121,36 @@ export async function fetchPodcastRecentBundle() {
       source: payload.source,
       error: payload.error,
     };
-  } catch {
-    return { ok: false, episodes: [], featuredGuests: [], degraded: true };
+  } catch (e) {
+    return { ok: false, episodes: [], featuredGuests: [], degraded: true, error: String(e?.message || e || "network_error") };
   }
 }
 
 export async function listPodcastEpisodes(supabase) {
   const bundle = await fetchPodcastRecentBundle();
   if (bundle.episodes?.length) return bundle.episodes.slice(0, 10);
-  if (!supabase) return FALLBACK_EPISODES;
+  const dev = typeof process !== "undefined" && process.env.NODE_ENV === "development";
+  if (!supabase) return dev ? FALLBACK_EPISODES : [];
   const { data, error } = await supabase.from(EPISODES_TABLE).select("*").order("published_at", { ascending: false }).limit(100);
-  if (error || !Array.isArray(data) || !data.length) return FALLBACK_EPISODES;
+  if (error || !Array.isArray(data) || !data.length) return dev ? FALLBACK_EPISODES : [];
   return data.slice(0, 10);
 }
 
 export function resolveEpisodeThumbnail(episode = {}) {
+  const videoId = String(episode.youtube_video_id || episode.video_id || "").trim();
   const provided = String(episode.thumbnail_url || "").trim();
+  if (provided && videoId) {
+    const thumbVid = provided.match(/ytimg\.com\/vi\/([^/]+)/i)?.[1];
+    if (thumbVid && thumbVid !== videoId) {
+      return `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`;
+    }
+  }
   if (provided) {
     if (/ytimg\.com\/vi\/.+\/hqdefault\.jpg/i.test(provided)) {
       return provided.replace(/hqdefault\.jpg/i, "maxresdefault.jpg");
     }
     return provided;
   }
-  const videoId = String(episode.youtube_video_id || episode.video_id || "").trim();
   if (videoId) return `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`;
   return "";
 }
@@ -138,6 +162,7 @@ export function resolveEpisodeThumbnailFallback(episode = {}) {
 }
 
 export function resolveEpisodeWatchUrl(episode = {}) {
+  if (String(episode.episode_link_status || "").trim() === "needs_link") return "";
   if (episode.youtube_url) return episode.youtube_url;
   if (episode.video_url) return episode.video_url;
   const videoId = String(episode.youtube_video_id || episode.video_id || "").trim();
@@ -246,6 +271,7 @@ export async function submitPodcastGuestApplication(supabase, payload) {
     phone: String(payload.phone || "").trim(),
     role_title: String(payload.role_title || "").trim(),
     message: String(payload.message || "").trim(),
+    community_context: String(payload.community_context || "").trim(),
   };
 
   if (typeof window !== "undefined") {
@@ -288,7 +314,10 @@ export async function submitPodcastGuestApplication(supabase, payload) {
     social_url: String(payload.social_url || payload.website_url || "").trim(),
     phone: body.phone || null,
     role_title: body.role_title || null,
-    message: body.message || null,
+    message:
+      [body.message, body.community_context ? `Veteran / first responder / community relevance:\n${body.community_context}` : ""]
+        .filter(Boolean)
+        .join("\n\n") || null,
   };
   if (!supabase) {
     pushLocalApplication(record);

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PAGE_SIZE } from "@/lib/constants";
 import { fetchDirectorySearch } from "@/features/directory/api";
-import { stateLabel } from "@/lib/utils";
+import { resolveStateFilterCode, stateLabel } from "@/lib/utils";
 
 const DIR_STORAGE = "torp-directory-session-v1";
 
@@ -40,10 +40,13 @@ function clearDirSession() {
 
 const defaultFilters = { state: "", q: "", service: "", audience: "all" };
 
-export function useDirectorySearch(supabase) {
+export function useDirectorySearch(supabase, { preferredState = "" } = {}) {
   const restoredRef = useRef(false);
+  const bootstrappedRef = useRef(false);
   const runSearchRef = useRef(null);
   const searchGenRef = useRef(0);
+  const preferredStateRef = useRef(preferredState);
+  preferredStateRef.current = preferredState;
 
   const [filters, setFilters] = useState({ ...defaultFilters });
   const [results, setResults] = useState([]);
@@ -127,13 +130,40 @@ export function useDirectorySearch(supabase) {
     restoredRef.current = true;
 
     const s = readDirSession();
-    if (!s?.filters?.state) return;
+    if (s?.filters?.state) {
+      setFilters(s.filters);
+      const nextPage = typeof s.page === "number" && s.page >= 1 ? s.page : 1;
+      setPage(nextPage);
+      void runSearchRef.current?.(nextPage, s.filters);
+      return;
+    }
 
-    setFilters(s.filters);
-    const nextPage = typeof s.page === "number" && s.page >= 1 ? s.page : 1;
-    setPage(nextPage);
-    void runSearchRef.current?.(nextPage, s.filters);
+    const stateCode = resolveStateFilterCode(preferredStateRef.current);
+    if (!stateCode || bootstrappedRef.current) return;
+    bootstrappedRef.current = true;
+
+    const f = { ...defaultFilters, state: stateCode };
+    setFilters(f);
+    void runSearchRef.current?.(1, f);
   }, [supabase]);
+
+  /** When profile state hydrates after mount, run an initial directory search (no category required). */
+  useEffect(() => {
+    if (!supabase || bootstrappedRef.current) return;
+    const stateCode = resolveStateFilterCode(preferredState);
+    if (!stateCode) return;
+
+    const s = readDirSession();
+    if (s?.filters?.state) {
+      bootstrappedRef.current = true;
+      return;
+    }
+
+    bootstrappedRef.current = true;
+    const f = { ...defaultFilters, state: stateCode };
+    setFilters(f);
+    void runSearchRef.current?.(1, f);
+  }, [supabase, preferredState]);
 
   const canGoNext = total === null ? results.length === PAGE_SIZE : page * PAGE_SIZE < total;
 

@@ -68,3 +68,16 @@ export function nteeToService(nteeCode) {
 export function stateLabel(code) {
   return STATES.find(([k]) => k === code)?.[1] || code;
 }
+
+/** Map profile / free-text state to a directory filter code (e.g. `CA`). */
+export function resolveStateFilterCode(raw) {
+  const s = String(raw || "").trim();
+  if (!s) return "";
+  const upper = s.toUpperCase();
+  for (const [code, label] of STATES) {
+    if (!code) continue;
+    if (code === upper) return code;
+    if (label.toLowerCase() === s.toLowerCase()) return code;
+  }
+  return "";
+}

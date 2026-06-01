@@ -39,7 +39,25 @@ export default function AdminHomePage() {
           <Link href="/admin/contact">Contact settings</Link> — recipient routing and submission review
         </li>
         <li>
+          <Link href="/admin/content">Page Content</Link> — manage editable page sections and copy
+        </li>
+        <li>
+          <Link href="/admin/forms">Forms</Link> — review intake forms and follow-up workflow
+        </li>
+        <li>
+          <Link href="/admin/media-library">Media Library</Link> — manage reusable visual assets
+        </li>
+        <li>
+          <Link href="/admin/settings">Settings</Link> — platform-level admin configuration
+        </li>
+        <li>
+          <Link href="/admin/analytics">Analytics</Link> — KPI/reporting placeholder until wired
+        </li>
+        <li>
           <Link href="/admin/billing">Invoice tools</Link> — send invoice emails and audit records
+        </li>
+        <li>
+          <Link href="/admin/membership">Membership</Link> — tier counts, subscriptions, and billing health (no card data)
         </li>
         <li>
           <Link href="/admin/users">Users</Link> — search accounts, roles, and onboarding status

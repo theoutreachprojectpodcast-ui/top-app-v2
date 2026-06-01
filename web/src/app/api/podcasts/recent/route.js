@@ -5,13 +5,14 @@ export const runtime = "nodejs";
 export async function GET() {
   try {
     const bundle = await getCachedPodcastLandingBundle();
+    const episodes = Array.isArray(bundle.episodes) ? bundle.episodes : [];
     return Response.json({
-      ok: true,
-      episodes: bundle.episodes || [],
+      ok: episodes.length > 0,
+      episodes,
       featuredGuests: bundle.featuredGuests || [],
       degraded: !!bundle.degraded,
       source: bundle.source || "unknown",
-      error: bundle.error || null,
+      error: episodes.length ? null : bundle.error || null,
     });
   } catch (e) {
     return Response.json(

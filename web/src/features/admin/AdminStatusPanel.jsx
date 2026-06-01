@@ -14,7 +14,9 @@ export default function AdminStatusPanel() {
       const res = await fetch("/api/admin/status", { credentials: "include", cache: "no-store" });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(body.error || "Could not load status.");
+        setError(
+          body.message || body.error || (res.status === 503 ? "Server storage is not configured." : "") || "Could not load status.",
+        );
         setStats({});
       } else {
         setStats(body.stats || {});

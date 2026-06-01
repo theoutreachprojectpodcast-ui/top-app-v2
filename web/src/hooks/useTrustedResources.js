@@ -1,3 +1,7 @@
+/**
+ * In-shell TopApp "Trusted" tab roster (paginated slice). Not used by `/sponsors` or `SponsorHub`.
+ * Route `/trusted` uses `fetchTrustedResources` in the page module — keep those code paths separate.
+ */
 "use client";
 
 import { useState } from "react";

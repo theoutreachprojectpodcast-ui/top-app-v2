@@ -1,9 +1,17 @@
-import { requirePlatformAdminRouteContext } from "@/lib/admin/adminRouteContext";
+import { requirePlatformAdminRouteContext, requirePlatformAdminMutation } from "@/lib/admin/adminRouteContext";
+import { writeAdminAuditLog } from "@/lib/admin/adminAuditLog";
 import { revalidateTag } from "next/cache";
 
 export const runtime = "nodejs";
 
 const TABLE = "podcast_upcoming_guests";
+
+const UPCOMING_STATUSES = new Set(["draft", "scheduled", "confirmed", "published", "hidden"]);
+
+function normalizeUpcomingStatus(raw) {
+  const s = String(raw || "draft").toLowerCase();
+  return UPCOMING_STATUSES.has(s) ? s : "draft";
+}
 
 function revalidatePodcastLanding() {
   try {
@@ -27,7 +35,7 @@ export async function GET() {
 }
 
 export async function POST(request) {
-  const ctx = await requirePlatformAdminRouteContext();
+  const ctx = await requirePlatformAdminMutation(request, { rateKey: "admin-app-api-admin-podcasts-upcoming-guests-post" });
   if (!ctx.ok) return ctx.response;
   let body = {};
   try {
@@ -44,18 +52,27 @@ export async function POST(request) {
     short_description: String(body.short_description || body.shortDescription || "").trim(),
     profile_image_url: String(body.profile_image_url || body.profileImageUrl || "").trim(),
     expected_episode_date: body.expected_episode_date || body.expectedEpisodeDate || null,
-    status: String(body.status || "draft").toLowerCase() === "published" ? "published" : "draft",
+    episode_topic: String(body.episode_topic || body.episodeTopic || "").trim(),
+    status: normalizeUpcomingStatus(body.status),
     sort_order: Number(body.sort_order ?? body.sortOrder ?? 0) || 0,
     updated_at: new Date().toISOString(),
   };
   const { data, error } = await ctx.admin.from(TABLE).insert(row).select("*").single();
   if (error) return Response.json({ ok: false, error: error.message }, { status: 500 });
   revalidatePodcastLanding();
+  await writeAdminAuditLog(ctx.admin, request, {
+    actorWorkosUserId: String(ctx.user?.id || ""),
+    actorEmail: String(ctx.user?.email || ""),
+    action: "admin.podcasts.upcoming-guests.POST",
+    resourceType: "admin_mutation",
+    resourceId: null,
+    metadata: { route: "podcasts/upcoming-guests" },
+  });
   return Response.json({ ok: true, row: data });
 }
 
 export async function PATCH(request) {
-  const ctx = await requirePlatformAdminRouteContext();
+  const ctx = await requirePlatformAdminMutation(request, { rateKey: "admin-app-api-admin-podcasts-upcoming-guests-patch" });
   if (!ctx.ok) return ctx.response;
   let body = {};
   try {
@@ -87,10 +104,9 @@ export async function PATCH(request) {
   if (body.profileImageUrl != null) patch.profile_image_url = String(body.profileImageUrl).trim();
   if (body.expected_episode_date !== undefined) patch.expected_episode_date = body.expected_episode_date || null;
   if (body.expectedEpisodeDate !== undefined) patch.expected_episode_date = body.expectedEpisodeDate || null;
-  if (body.status != null) {
-    const s = String(body.status).toLowerCase();
-    patch.status = s === "published" ? "published" : "draft";
-  }
+  if (body.episode_topic != null) patch.episode_topic = String(body.episode_topic).trim();
+  if (body.episodeTopic != null) patch.episode_topic = String(body.episodeTopic).trim();
+  if (body.status != null) patch.status = normalizeUpcomingStatus(body.status);
   if (body.sort_order != null || body.sortOrder != null) {
     patch.sort_order = Number(body.sort_order ?? body.sortOrder ?? 0) || 0;
   }
@@ -101,7 +117,7 @@ export async function PATCH(request) {
 }
 
 export async function DELETE(request) {
-  const ctx = await requirePlatformAdminRouteContext();
+  const ctx = await requirePlatformAdminMutation(request, { rateKey: "admin-app-api-admin-podcasts-upcoming-guests-delete" });
   if (!ctx.ok) return ctx.response;
   const url = new URL(request.url);
   const id = String(url.searchParams.get("id") || "").trim();

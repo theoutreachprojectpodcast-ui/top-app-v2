@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
@@ -6,32 +6,34 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import HeaderInner from "@/components/layout/HeaderInner";
 import FooterInner from "@/components/layout/FooterInner";
 import Avatar from "@/components/shared/Avatar";
-import BrandMark from "@/components/BrandMark";
-import IconWrap from "@/components/shared/IconWrap";
+import AppIcon from "@/components/shared/AppIcon";
+import AppHeaderBrand from "@/components/layout/AppHeaderBrand";
+import ColorSchemeToggle from "@/components/app/ColorSchemeToggle";
 import AccountInfoCard from "@/features/profile/components/AccountInfoCard";
 import ManageBillingButton from "@/features/profile/components/ManageBillingButton";
 import NonprofitCard from "@/features/nonprofits/components/NonprofitCard";
 import { mapNonprofitCardRow } from "@/features/nonprofits/mappers/nonprofitCardMapper";
 import TrustedResourceApplicationForm from "@/features/trusted-resources/application/TrustedResourceApplicationForm";
+import "@/features/trusted-resources/trusted-resources-cards.css";
 import CommunityPage from "@/features/community/components/CommunityPage";
 import ProfileHeader from "@/features/profile/components/ProfileHeader";
 import ProfileIdentitySection from "@/features/profile/components/ProfileIdentitySection";
 import ProfileQuickStats from "@/features/profile/components/ProfileQuickStats";
 import SavedOrganizationsList from "@/features/profile/components/SavedOrganizationsList";
-import HomeWelcomeSection from "@/components/app/HomeWelcomeSection";
-import HomeProfileProgressNotice from "@/components/app/HomeProfileProgressNotice";
-import { useAuthSession } from "@/components/auth/AuthSessionProvider";
+import SiteBottomNavGlyph from "@/components/navigation/SiteBottomNavGlyph";
+import SiteMobileNavMoreMenu from "@/components/navigation/SiteMobileNavMoreMenu";
+import HomeScreen from "@/components/home/HomeScreen";
 import ProfileCompletionPanel from "@/features/profile/components/ProfileCompletionPanel";
 import HeaderAccountMenu from "@/components/layout/HeaderAccountMenu";
 import HeaderNotificationBell from "@/components/layout/HeaderNotificationBell";
 import { useDirectorySearch } from "@/hooks/useDirectorySearch";
 import { useProfileData } from "@/features/profile/ProfileDataProvider";
 import { useTrustedResources } from "@/hooks/useTrustedResources";
-import DirectoryCategoryQuickPick from "@/features/directory/components/DirectoryCategoryQuickPick";
-import { isQaLikeDeployment } from "@/lib/runtime/qaEnv";
+import { showLocalDemoChrome } from "@/lib/runtime/demoUiVisibility";
+import { adminConsoleHref } from "@/lib/runtime/deploymentHosts";
+import { useImmersiveHeaderScroll } from "@/hooks/useImmersiveHeaderScroll";
 import MembershipAtAGlance from "@/features/membership/components/MembershipAtAGlance";
-import ColorSchemeToggle from "@/components/app/ColorSchemeToggle";
-import { SERVICE_OPTIONS, STATES } from "@/lib/constants";
+import MembershipBillingCenter from "@/features/membership/components/MembershipBillingCenter";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { emptyProfileAvatarUrl } from "@/lib/avatarFallback";
 import { rowEin } from "@/lib/utils";
@@ -46,25 +48,13 @@ import {
   writeRememberEmailPref,
 } from "@/lib/auth/lastUsedEmail";
 import { workosSignInLink, workosSignUpHref } from "@/lib/auth/workosReturnTo";
-import { computeProfileCompletion, getIncompleteEditFocusIds } from "@/lib/profile/profileCompletion";
-import { profileFromApiDto } from "@/features/profile/mappers";
-import { mergeEditDraftWithProfile } from "@/features/profile/lib/mergeEditDraftWithProfile";
+import { computeProfileCompletion } from "@/lib/profile/profileCompletion";
+import { markPendingProfileEdit } from "@/features/profile/lib/pendingProfileEdit";
+import { useProfileEdit } from "@/features/profile/ProfileEditProvider";
 import AccountSettingsPage from "@/features/settings/components/AccountSettingsPage";
 import { FormCheckbox } from "@/components/forms/FormChoice";
-
-function AppIcon({ name }) {
-  const icons = {
-    sponsors: "M4 6h16v12H4z M4 10h16",
-    trusted: "M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6z",
-    community: "M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6m8 0a3 3 0 1 1 0-6 3 3 0 0 1 0 6M3 19c0-2.8 2.8-4 5-4s5 1.2 5 4m3 0c0-2.4 2.3-3.5 5-3.5 2.1 0 5 1 5 3.5",
-    podcast:
-      "M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3zm7 8v2a7 7 0 0 1-14 0v-2M12 19v3",
-    search: "M11 4a7 7 0 1 1 0 14 7 7 0 0 1 0-14m9 16-4-4",
-    profile: "M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4m-7 8c.5-3.5 3.5-5.5 7-5.5s6.5 2 7 5.5",
-    contact: "M3 6h18v12H3z M3 7l9 7 9-7",
-  };
-  return <IconWrap path={icons[name] || icons.search} />;
-}
+import { resolvePageAtmosphere } from "@/lib/design/pageAtmosphere";
+import MissionPageTopStrip from "@/components/layout/MissionPageTopStrip";
 
 function DemoAuthPasswordVisibilityIcon({ revealed }) {
   return (
@@ -97,15 +87,12 @@ function TopAppInner({ initialNav = "home" }) {
   const sb = useMemo(() => getSupabaseClient(), []);
   const [nav, setNav] = useState(initialNav);
   const [overlay, setOverlay] = useState(null);
-  const [editDraft, setEditDraft] = useState(null);
-  const [editFieldFocus, setEditFieldFocus] = useState(null);
   const [authMode, setAuthMode] = useState("signin");
   const [authDraft, setAuthDraft] = useState({ firstName: "", lastName: "", email: "", password: "" });
   const [demoAuthPasswordVisible, setDemoAuthPasswordVisible] = useState(false);
   const [authError, setAuthError] = useState("");
   const [authStatus, setAuthStatus] = useState("");
   const [signupAvatarDataUrl, setSignupAvatarDataUrl] = useState("");
-  const [editSaveError, setEditSaveError] = useState("");
   const [contactDraft, setContactDraft] = useState({ firstName: "", lastName: "", email: "", phone: "", message: "" });
   const [contactStatus, setContactStatus] = useState("");
   const [contactError, setContactError] = useState("");
@@ -178,11 +165,10 @@ function TopAppInner({ initialNav = "home" }) {
     createAccount,
     signInWithCredentials,
     signOut,
-    uploadAvatarFile,
     refreshWorkOSProfile,
     entitlements,
   } = useProfileData();
-  const { refresh: refreshAuthSession } = useAuthSession();
+  const { openProfileEdit } = useProfileEdit();
 
   const profileCompletion = useMemo(() => {
     if (!isAuthenticated) return null;
@@ -194,14 +180,12 @@ function TopAppInner({ initialNav = "home" }) {
     });
   }, [isAuthenticated, profile, sessionKind, workOSAccountEmail]);
 
-  const prevLoadingProfileForEditRef = useRef(loadingProfile);
-
-  const editIncompleteKeys =
-    overlay === "edit" && editDraft ? getIncompleteEditFocusIds(editDraft) : new Set();
-
   useEffect(() => {
     const c = searchParams.get("checkout");
-    if ((c !== "success" && c !== "cancel") || sessionKind !== "workos") return;
+    const pm = searchParams.get("payment_method");
+    const billingRefresh =
+      (c === "success" || c === "cancel" || pm === "success" || pm === "cancel") && sessionKind === "workos";
+    if (!billingRefresh) return;
     let cancelled = false;
     (async () => {
       await refreshWorkOSProfile();
@@ -235,7 +219,9 @@ function TopAppInner({ initialNav = "home" }) {
     else if (String(authDraft.email || "").trim()) writeLastUsedEmail(authDraft.email.trim());
   }
 
-  const { filters, setFilters, results, status, meta, page, canGoNext, runSearch, clearSearch } = useDirectorySearch(sb);
+  const { filters, setFilters, results, status, meta, page, canGoNext, runSearch, clearSearch } = useDirectorySearch(sb, {
+    preferredState: profile.state,
+  });
   const { trusted, trustedStatus, loadTrusted } = useTrustedResources(sb);
 
   /** Prefill contact form from profile / account email when fields are still empty. */
@@ -249,118 +235,16 @@ function TopAppInner({ initialNav = "home" }) {
     }));
   }, [nav, isAuthenticated, profile.email, profile.firstName, profile.lastName]);
 
-  useEffect(() => {
-    if (sessionKind !== "workos" || !isAuthenticated) return;
-    if (profile?.onboardingCompleted) return;
-    const path = typeof window !== "undefined" ? window.location.pathname : "";
-    if (path.startsWith("/onboarding")) return;
-    if (path.startsWith("/settings")) return;
-    if (path.startsWith("/profile")) return;
-    if (path.startsWith("/podcasts")) return;
-    if (path.startsWith("/admin")) return;
-    if (path !== "/") return;
-    router.replace("/onboarding");
-  }, [sessionKind, isAuthenticated, profile?.onboardingCompleted, router]);
-
-  function openEdit(focusKey) {
-    setEditSaveError("");
-    setEditDraft(profileFromApiDto(profile));
-    setEditFieldFocus(focusKey != null && focusKey !== "" ? focusKey : null);
-    setOverlay("edit");
-  }
-
-  async function saveEditProfile() {
-    setEditSaveError("");
-    const result = await persistProfile({ ...profile, ...editDraft });
-    if (!result.ok) {
-      setEditSaveError(String(result.message || "").trim() || "Could not save your profile. Try again.");
+  function openOnboardingFlow() {
+    if (sessionKind === "workos") {
+      router.push("/onboarding");
       return;
     }
-    closeEditOverlay();
-    void refreshAuthSession({ soft: true });
+    // Demo/local auth does not have server-backed WorkOS onboarding APIs.
+    // Route to profile edit instead of bouncing through /onboarding -> signin.
+    markPendingProfileEdit({});
+    router.push("/profile?edit=1");
   }
-
-  /** Home hero “Finish profile” navigates with ?edit=1 — open overlay only after /api/me profile is loaded on this mount. */
-  const openedProfileEditFromQueryRef = useRef(false);
-  useEffect(() => {
-    if (pathname !== "/profile" || searchParams.get("edit") !== "1") {
-      openedProfileEditFromQueryRef.current = false;
-      return;
-    }
-    if (openedProfileEditFromQueryRef.current) return;
-    if (loadingProfile || !isAuthenticated) return;
-    const rawFocus = searchParams.get("focus") || "";
-    const focusKey =
-      rawFocus && /^[a-zA-Z][a-zA-Z0-9_-]*$/.test(rawFocus) ? rawFocus : undefined;
-    openedProfileEditFromQueryRef.current = true;
-    setEditSaveError("");
-    setEditDraft(profileFromApiDto(profile));
-    setEditFieldFocus(focusKey != null && focusKey !== "" ? focusKey : null);
-    setOverlay("edit");
-    router.replace("/profile", { scroll: false });
-  }, [pathname, searchParams, loadingProfile, isAuthenticated, profile, router]);
-
-  /** If Edit Profile opens before cloud profile finishes loading, replace empty draft with real row. */
-  useEffect(() => {
-    const prev = prevLoadingProfileForEditRef.current;
-    prevLoadingProfileForEditRef.current = loadingProfile;
-    if (overlay !== "edit" || loadingProfile) return;
-    if (prev === true && loadingProfile === false) {
-      setEditDraft(profileFromApiDto(profile));
-    }
-  }, [overlay, loadingProfile, profile]);
-
-  /** When `/api/me` hydrates after opening the modal, merge server fields without wiping typed values. */
-  const profileEditMergeKey = useMemo(
-    () =>
-      [
-        profile.profileRecordId,
-        profile.firstName,
-        profile.lastName,
-        profile.displayName,
-        profile.email,
-        profile.bio,
-        profile.banner,
-        profile.avatarUrl,
-        profile.sponsorOrgName,
-        profile.sponsorWebsite,
-        profile.missionStatement,
-        profile.identityRole,
-        profile.city,
-        profile.state,
-        profile.organizationAffiliation,
-        profile.serviceBackground,
-        profile.causes,
-        profile.skills,
-        profile.volunteerInterests,
-        profile.supportInterests,
-        profile.contributionSummary,
-        profile.accountIntent,
-      ].join("\u001f"),
-    [profile],
-  );
-
-  useEffect(() => {
-    if (overlay !== "edit" || !editDraft) return;
-    setEditDraft((d) => mergeEditDraftWithProfile(d, profile));
-  }, [overlay, profileEditMergeKey, profile]);
-
-  function closeEditOverlay() {
-    setEditSaveError("");
-    setEditFieldFocus(null);
-    setOverlay(null);
-  }
-
-  useEffect(() => {
-    if (overlay !== "edit" || !editFieldFocus) return;
-    const id = requestAnimationFrame(() => {
-      document.querySelector(`[data-profile-edit-focus="${editFieldFocus}"]`)?.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
-    });
-    return () => cancelAnimationFrame(id);
-  }, [overlay, editFieldFocus]);
 
   function dockNavHome() {
     if (pathname && pathname !== "/") router.push("/");
@@ -403,29 +287,6 @@ function TopAppInner({ initialNav = "home" }) {
     return canvas.toDataURL("image/jpeg", 0.84);
   }
 
-  async function onProfileImageSelected(file) {
-    if (!file) return;
-    if (!String(file.type || "").startsWith("image/")) return;
-    if (sessionKind === "workos" && uploadAvatarFile) {
-      const result = await uploadAvatarFile(file);
-      if (!result?.ok) {
-        setAuthError(result?.message || "Could not upload photo.");
-        return;
-      }
-      await refreshWorkOSProfile?.();
-      setEditDraft((d) => ({ ...d, avatarUrl: profile.avatarUrl }));
-      closeEditOverlay();
-      return;
-    }
-    try {
-      const dataUrl = await fileToCompressedDataUrl(file);
-      if (!dataUrl) return;
-      setEditDraft((d) => ({ ...d, avatarUrl: dataUrl }));
-    } catch {
-      // keep silent to avoid blocking edit flow
-    }
-  }
-
   async function onSignupAvatarSelected(file) {
     if (!file) return;
     if (!String(file.type || "").startsWith("image/")) return;
@@ -460,8 +321,43 @@ function TopAppInner({ initialNav = "home" }) {
     setOverlay("upgrade");
   }
 
-  function scrollToDirectory() {
-    document.getElementById("home-directory")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  async function startMembershipCheckoutFromHome(tier) {
+    if (!isAuthenticated) {
+      openMembershipJourney();
+      return;
+    }
+    if (sessionKind === "workos" && !profile?.onboardingCompleted) {
+      router.push("/onboarding");
+      return;
+    }
+    if (tier === "sponsor") {
+      router.push("/sponsors?packages=1");
+      return;
+    }
+    if (sessionKind !== "workos" || !authBackend?.stripe) {
+      setNav("profile");
+      return;
+    }
+    try {
+      const res = await fetch("/api/billing/checkout", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tier, returnPath: "/" }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (data.url) {
+        window.location.assign(data.url);
+        return;
+      }
+      if (data.error === "use_billing_portal") {
+        setNav("profile");
+        return;
+      }
+    } catch {
+      /* fall through */
+    }
+    setNav("profile");
   }
 
   function openCommunity() {
@@ -528,6 +424,15 @@ function TopAppInner({ initialNav = "home" }) {
     setOverlay("signin");
   }
 
+  const pageAtmosphere = useMemo(() => resolvePageAtmosphere(pathname, nav), [pathname, nav]);
+  const mainScrollRef = useRef(null);
+  const immersiveHeaderScroll = pageAtmosphere !== "podcast";
+  useImmersiveHeaderScroll({
+    rootRef: mainScrollRef,
+    enabled: immersiveHeaderScroll,
+    gradientBoost: true,
+  });
+
   function onContactSubmit(e) {
     e.preventDefault();
     setContactError("");
@@ -539,7 +444,7 @@ function TopAppInner({ initialNav = "home" }) {
         return;
       }
     }
-    const subject = encodeURIComponent(`Contact Request — ${contactDraft.firstName} ${contactDraft.lastName}`);
+    const subject = encodeURIComponent(`Contact Request â€” ${contactDraft.firstName} ${contactDraft.lastName}`);
     const body = encodeURIComponent(
       `Name: ${contactDraft.firstName} ${contactDraft.lastName}\nEmail: ${contactDraft.email}\nPhone: ${contactDraft.phone || "Not provided"}\n\nMessage:\n${contactDraft.message}`
     );
@@ -548,31 +453,31 @@ function TopAppInner({ initialNav = "home" }) {
   }
 
   return (
-    <main className={`topApp theme-${profile.theme}`}>
-      <div className="headerBrandStack">
-        <Link href="/" aria-label="Go to home">
-          <BrandMark size="header" />
-        </Link>
-      </div>
-      <header className="topbar">
-        <HeaderInner className="topbarInner">
-          <div className="topbarZone topbarLeft">
-            <div className="topbarActionsCluster topbarActionsCluster--start">
-              <ColorSchemeToggle />
-              <button className="btnSoft sponsorBtn" onClick={goToSponsorsHub} type="button">
-                <AppIcon name="sponsors" />
-                Become a Sponsor
-              </button>
+    <main
+      ref={mainScrollRef}
+      className={`topApp theme-${profile.theme}${immersiveHeaderScroll ? " header-at-top" : ""} ${isLoggedIn ? "topApp--auth-in" : "topApp--auth-out"} appShell--withMobileNavDock`}
+      data-page-atmosphere={pageAtmosphere}
+    >
+      <div className="appSiteHeader">
+        <AppHeaderBrand />
+        <header className="topbar">
+          <HeaderInner className="topbarInner">
+            <div className="topbarZone topbarLeft">
+              <div className="topbarActionsCluster topbarActionsCluster--start">
+                {pageAtmosphere !== "podcast" ? <ColorSchemeToggle /> : null}
+              </div>
             </div>
-          </div>
-          <div className="topbarZone topbarCenter" aria-hidden="true" />
-          <div className="topbarZone topbarRight">
+            <div className="topbarZone topbarCenter" aria-hidden="true" />
+            <div className="topbarZone topbarRight">
             <div className="topbarActionsCluster">
               {isLoggedIn ? (
                 <>
                   <HeaderNotificationBell skipSessionGate />
                   <HeaderAccountMenu
                     avatarSrc={profile.avatarUrl || emptyProfileAvatarUrl()}
+                    displayName={fullName}
+                    email={profile.email}
+                    membershipHint={isMember ? "Member" : "View plans"}
                     ariaLabel={`Account menu for ${fullName || profile.email || "signed-in user"}`}
                     onProfile={() => {
                       if (pathname !== "/profile") router.push("/profile");
@@ -610,160 +515,83 @@ function TopAppInner({ initialNav = "home" }) {
                   </button>
                 </>
               )}
+              <SiteMobileNavMoreMenu tone="app" align="end">
+                <button
+                  type="button"
+                  className="siteMobileNavMore__entry"
+                  onClick={() => {
+                    setNav("trusted");
+                    if (!trusted.length) loadTrusted(true);
+                  }}
+                >
+                  Trusted Resources
+                </button>
+                <button type="button" className="siteMobileNavMore__entry" onClick={openCommunity}>
+                  Community
+                </button>
+                <button type="button" className="siteMobileNavMore__entry" onClick={goToSponsorsHub}>
+                  Sponsors
+                </button>
+                <button type="button" className="siteMobileNavMore__entry" onClick={() => router.push("/podcasts")}>
+                  Podcast
+                </button>
+                <button type="button" className="siteMobileNavMore__entry" onClick={goToSponsorsHub}>
+                  Become a Sponsor
+                </button>
+              </SiteMobileNavMoreMenu>
             </div>
           </div>
         </HeaderInner>
       </header>
+      </div>
       <div className="topbarOcclusion" aria-hidden="true" />
 
       {(nav === "home" || nav === "community") && (
-        <section className="shell">
+        <section className={nav === "home" ? "shell shell--home" : "shell"}>
           {nav === "home" && (
-            <>
-              <div className="homeHeroBackdrop">
-                <div className="homeHeroBackdrop__image" aria-hidden="true" />
-                <div className="homeHeroBackdrop__scrim" aria-hidden="true" />
-                <div className="homeHeroBackdrop__content">
-                  {profileCompletion && !loadingProfile ? (
-                    <div className="homeHeroBackdrop__welcomeBundle">
-                      <HomeProfileProgressNotice
-                        completion={profileCompletion}
-                        onOpenProfile={() => {
-                          const focus = String(profileCompletion?.nextStep?.editFocus || "").trim();
-                          const qs = new URLSearchParams();
-                          qs.set("edit", "1");
-                          if (focus) qs.set("focus", focus);
-                          router.push(`/profile?${qs.toString()}`);
-                        }}
-                        onOpenOnboarding={() => router.push("/onboarding")}
-                        onOpenMembership={openMembershipJourney}
-                      />
-                      <div className="card cardHero homeHeroBackdrop__card">
-                        <HomeWelcomeSection
-                          isAuthenticated={isAuthenticated}
-                          isMember={isMember}
-                          onOpenTrusted={() => {
-                            setNav("trusted");
-                            loadTrusted(true);
-                          }}
-                          onOpenMembershipJourney={openMembershipJourney}
-                          onBrowseFree={scrollToDirectory}
-                          onOpenProfile={() => {
-                            if (pathname !== "/profile") router.push("/profile");
-                            else setNav("profile");
-                          }}
-                        />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="card cardHero homeHeroBackdrop__card">
-                      <HomeWelcomeSection
-                        isAuthenticated={isAuthenticated}
-                        isMember={isMember}
-                        onOpenTrusted={() => {
-                          setNav("trusted");
-                          loadTrusted(true);
-                        }}
-                        onOpenMembershipJourney={openMembershipJourney}
-                        onBrowseFree={scrollToDirectory}
-                        onOpenProfile={() => {
-                          if (pathname !== "/profile") router.push("/profile");
-                          else setNav("profile");
-                        }}
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="welcomeActionLayout">
-                <div className="welcomeActionList">
-                  <button className="card action welcomeActionCard welcomeActionCard--uniform welcomeActionCard--sponsors" onClick={goToSponsorsHub} type="button">
-                    <AppIcon name="sponsors" />
-                    <span className="welcomeActionLabel">Sponsors</span>
-                    <span className="welcomeActionHint">Partner page — open packages from there</span>
-                  </button>
-                  <button className="card action welcomeActionCard welcomeActionCard--uniform welcomeActionCard--trusted" onClick={() => { setNav("trusted"); loadTrusted(true); }} type="button">
-                    <AppIcon name="trusted" />
-                    <span className="welcomeActionLabel">Trusted Resources</span>
-                    <span className="welcomeActionHint">Real help. Real impact.</span>
-                  </button>
-                  <button className="card action welcomeActionCard welcomeActionCard--uniform welcomeActionCard--community" onClick={openCommunity} type="button">
-                    <AppIcon name="community" />
-                    <span className="welcomeActionLabel">Community</span>
-                    <span className="welcomeActionHint">Connect. Share. Support each other.</span>
-                  </button>
-                  <button className="card action welcomeActionCard welcomeActionCard--uniform welcomeActionCard--podcasts" onClick={() => { router.push("/podcasts"); }} type="button">
-                    <AppIcon name="podcast" />
-                    <span className="welcomeActionLabel">Podcasts</span>
-                    <span className="welcomeActionHint">Stories that inspire. Voices that matter.</span>
-                  </button>
-                </div>
-              </div>
-
-              <div className="card" id="home-directory">
-                <h3><AppIcon name="search" />Nonprofit Directory</h3>
-                {!isQaLikeDeployment() ? (
-                  <DirectoryCategoryQuickPick
-                    value={filters.service}
-                    collapsible
-                    onChange={(letter) => setFilters((f) => ({ ...f, service: letter }))}
-                  />
-                ) : null}
-                <div className="form">
-                  <select value={filters.state} onChange={(e) => setFilters((f) => ({ ...f, state: e.target.value }))}>
-                    {STATES.map(([v, label]) => <option key={v} value={v}>{label}</option>)}
-                  </select>
-                  <input placeholder="City or Organization" value={filters.q} onChange={(e) => setFilters((f) => ({ ...f, q: e.target.value }))} />
-                  <select value={filters.service} onChange={(e) => setFilters((f) => ({ ...f, service: e.target.value }))} aria-label="Service category letter">
-                    {SERVICE_OPTIONS.map(([v, label]) => <option key={v || "all"} value={v}>{label}</option>)}
-                  </select>
-                  <select value={filters.audience} onChange={(e) => setFilters((f) => ({ ...f, audience: e.target.value }))}>
-                    <option value="all">All</option>
-                    <option value="veteran">Veterans</option>
-                    <option value="first_responder">First Responders</option>
-                  </select>
-                </div>
-                <div className="row">
-                  <button className="btnPrimary" onClick={() => runSearch(1)} type="button">Search</button>
-                  <button className="btnSoft" onClick={clearSearch} type="button">Clear</button>
-                </div>
-                <p>{status}</p>
-                <p>{meta}</p>
-                <div className="results">
-                  {!results.length && !status && (
-                    <div className="emptyState">
-                      <AppIcon name="search" />
-                      <div>
-                        <strong>Start by selecting a state</strong>
-                        <p>Use filters to quickly surface trusted support organizations.</p>
-                      </div>
-                    </div>
-                  )}
-                  {results.map((r) => {
-                    const card = mapNonprofitCardRow(r, "directory");
-                    const ein = card.ein;
-                    const einKey = normalizeEinDigits(ein);
-                    return (
-                      <NonprofitCard
-                        key={`${ein}-${card.name}`}
-                        card={card}
-                        actionMode="directory"
-                        favoritesEnabled={isAuthenticated}
-                        isFavorite={einKey.length === 9 && favoriteEinSet.has(einKey)}
-                        onToggleFavorite={toggleFavoriteEin}
-                        onRequestSignIn={!isAuthenticated ? openSignInOverlay : undefined}
-                      />
-                    );
-                  })}
-                </div>
-                <div className="row space directoryPager" role="navigation" aria-label="Directory pagination">
-                  <button className="btnSoft" disabled={page <= 1} onClick={() => runSearch(page - 1)} type="button">Prev</button>
-                  <span className="directoryPagerLabel">Page {page}</span>
-                  <button className="btnSoft" disabled={!canGoNext} onClick={() => runSearch(page + 1)} type="button">Next</button>
-                </div>
-              </div>
-            </>
+            <HomeScreen
+              isAuthenticated={isAuthenticated}
+              onActivateMembership={openMembershipJourney}
+              onUpgradeTier={startMembershipCheckoutFromHome}
+              onJoinFree={() => {
+                if (!isAuthenticated) {
+                  openMembershipJourney();
+                  return;
+                }
+                setNav("profile");
+              }}
+              onCreateAccount={() => {
+                if (authBackend.workos) {
+                  writeRememberDevicePref(rememberDevice);
+                  window.location.assign(workosSignUpHref("/onboarding", { rememberDevice }));
+                  return;
+                }
+                setAuthMode("signup");
+                setOverlay("signin");
+              }}
+              onSignIn={openSignInOverlay}
+              onSponsors={goToSponsorsHub}
+              onTrusted={() => {
+                setNav("trusted");
+                loadTrusted(true);
+              }}
+              onCommunity={openCommunity}
+              onPodcasts={() => router.push("/podcasts")}
+              directoryProps={{
+                filters,
+                setFilters,
+                results,
+                status,
+                meta,
+                page,
+                canGoNext,
+                runSearch,
+                clearSearch,
+              }}
+              favoriteEinSet={favoriteEinSet}
+              onToggleFavorite={toggleFavoriteEin}
+              onRequestSignIn={!isAuthenticated ? openSignInOverlay : undefined}
+            />
           )}
 
           {nav === "community" && (
@@ -803,12 +631,13 @@ function TopAppInner({ initialNav = "home" }) {
               }}
             />
           )}
+          {nav === "community" ? <MissionPageTopStrip placement="bottom" /> : null}
         </section>
       )}
 
       {nav === "trusted" && (
         <section className="shell">
-          <div className="card">
+          <div className="card trustedRouteCard">
             <div className="ds-page-intro" style={{ borderBottom: "none", marginBottom: 0, paddingBottom: 0 }}>
               <h2>
                 <AppIcon name="trusted" />
@@ -823,8 +652,8 @@ function TopAppInner({ initialNav = "home" }) {
               <button className="btnSoft" onClick={() => loadTrusted(false)} type="button">Load More</button>
               <button className="btnSoft" onClick={() => setOverlay("applyTrustedResource")} type="button">Apply to Become a Trusted Resource</button>
             </div>
-            <p>{trustedStatus}</p>
-            <div className="results">
+            <p className="trustedRouteStatus">{trustedStatus}</p>
+            <div className="results results--trustedBranded">
               {!trusted.length && !trustedStatus && (
                 <div className="emptyState">
                   <AppIcon name="trusted" />
@@ -868,6 +697,7 @@ function TopAppInner({ initialNav = "home" }) {
               })}
             </div>
           </div>
+          <MissionPageTopStrip placement="bottom" />
         </section>
       )}
 
@@ -876,7 +706,7 @@ function TopAppInner({ initialNav = "home" }) {
           {loadingProfile && !isAuthenticated ? (
             <div className="card profileSessionRestoring">
               <p className="sponsorSectionLead" style={{ margin: 0 }}>
-                Loading your profile…
+                Loading your profileâ€¦
               </p>
             </div>
           ) : !isAuthenticated ? (
@@ -918,11 +748,15 @@ function TopAppInner({ initialNav = "home" }) {
                     Create an account
                   </button>
                   <button className="btnSoft" type="button" onClick={() => setNav("home")}>Back to home</button>
-                  <button className="btnSoft" type="button" onClick={resetDemo}>Reset Demo</button>
+                  {showLocalDemoChrome() ? (
+                    <button className="btnSoft" type="button" onClick={resetDemo}>Reset Demo</button>
+                  ) : null}
                 </div>
-                <p className="sponsorSectionLead profileDemoResetNote">
-                  Reset Demo clears local profile, saved organizations, and demo-only application data on this device. You do not need to be signed in.
-                </p>
+                {showLocalDemoChrome() ? (
+                  <p className="sponsorSectionLead profileDemoResetNote">
+                    Reset Demo clears local profile, saved organizations, and demo-only application data on this device. You do not need to be signed in.
+                  </p>
+                ) : null}
               </div>
               <MembershipAtAGlance
                 surface="profile"
@@ -951,31 +785,30 @@ function TopAppInner({ initialNav = "home" }) {
             membershipLabel={membership.label}
             isMember={isMember}
             icon={<AppIcon name="profile" />}
-            onEdit={openEdit}
+            onEdit={() => openProfileEdit()}
           />
-          <MembershipAtAGlance
-            surface="profile"
+          <MembershipBillingCenter
             isAuthenticated={isAuthenticated}
             currentTierKey={profile.membershipStatus}
-            onSelectTier={(id) => setMembershipStatus(id)}
             onRequestSignIn={openSignInForMembership}
             sessionKind={sessionKind}
             stripeMemberReady={!!authBackend?.stripe}
             stripeSponsorSubscriptionReady={!!authBackend?.stripeSponsorSubscription}
-            stripeMemberMissingEnv={authBackend?.stripeMemberRecurringMissingEnv || []}
             checkoutReturnPath="/profile"
             membershipBillingStatus={profile.membershipBillingStatus}
             stripeCustomerReady={!!profile.stripeCustomerIdSet}
+            onCheckoutNavigate={() => refreshWorkOSProfile()}
           />
           <ProfileCompletionPanel
             completion={profileCompletion}
-            onEditProfile={() => openEdit()}
-            onEditProfileFocus={(key) => openEdit(key)}
-            onOpenOnboarding={() => router.push("/onboarding")}
+            profile={profile}
+            onEditProfile={() => openProfileEdit()}
+            onEditProfileFocus={(key) => openProfileEdit(key)}
+            onOpenOnboarding={openOnboardingFlow}
             onOpenMembership={openMembershipJourney}
           />
 
-          <ProfileIdentitySection profile={profile} onEdit={openEdit} savedCount={favoriteEins.length} />
+          <ProfileIdentitySection profile={profile} onEdit={() => openProfileEdit()} savedCount={favoriteEins.length} />
 
           {loadingProfile && (
             <div className="card">
@@ -1033,12 +866,15 @@ function TopAppInner({ initialNav = "home" }) {
           />
           <div className="card">
             <div className="row wrap">
-              <button className="btnSoft" onClick={resetDemo} type="button">Reset Demo</button>
+              {showLocalDemoChrome() ? (
+                <button className="btnSoft" onClick={resetDemo} type="button">Reset Demo</button>
+              ) : null}
               <button className="btnSoft" onClick={signOut} type="button">Sign Out</button>
             </div>
           </div>
             </>
           )}
+          <MissionPageTopStrip placement="bottom" />
         </section>
       )}
 
@@ -1050,7 +886,7 @@ function TopAppInner({ initialNav = "home" }) {
           sessionKind={sessionKind}
           authBackend={authBackend}
           persistProfile={persistProfile}
-          onOpenEditProfile={() => openEdit()}
+          onOpenEditProfile={() => openProfileEdit()}
           setMembershipStatus={setMembershipStatus}
           openSignInForMembership={openSignInForMembership}
           favoriteEins={favoriteEins}
@@ -1066,6 +902,7 @@ function TopAppInner({ initialNav = "home" }) {
               Sign in
             </button>
           </div>
+          <MissionPageTopStrip placement="bottom" />
         </section>
       ) : null}
 
@@ -1119,30 +956,71 @@ function TopAppInner({ initialNav = "home" }) {
               </div>
             </form>
           </div>
+          <MissionPageTopStrip placement="bottom" />
         </section>
       )}
 
-      {/* Page footer: end of scrollable content (brand + copy). Not the fixed bottom nav. */}
-      <footer className="siteFooter">
-        <FooterInner className="footerInner">
-          <div>
-            <div className="brandName">THE OUTREACH PROJECT</div>
-            <p className="footerNote">Mission-first resource navigation for veterans, first responders, and supporters.</p>
-          </div>
-          <p className="footerNote">Trust-driven support, built for clarity under pressure.</p>
-        </FooterInner>
-      </footer>
+      {isAuthenticated && entitlements?.isPlatformAdmin ? (
+        <div className="adminUtilityEntry">
+          <Link className="adminUtilityEntryLink" href={adminConsoleHref()}>
+            Admin Console
+          </Link>
+        </div>
+      ) : null}
 
       {/* Fixed bottom navigation bar (dock). See top-app.css .footerDock / .footerDockBackdrop. */}
       <div className="footerDockBackdrop" aria-hidden="true" />
       <div className="footerDock">
         <FooterInner className="footerNavInner">
-          <nav className="bottomNav" aria-label="Bottom navigation">
-            <button className={`navItem ${nav === "home" ? "isActive" : ""}`} onClick={dockNavHome} type="button">Home</button>
-            <button className={`navItem ${nav === "trusted" ? "isActive" : ""}`} onClick={() => { setNav("trusted"); if (!trusted.length) loadTrusted(true); }} type="button">Trusted Resources</button>
-            <button className={`navItem ${nav === "community" ? "isActive" : ""}`} onClick={() => setNav("community")} type="button">Community</button>
-            <button className={`navItem ${nav === "profile" ? "isActive" : ""}`} onClick={dockNavProfile} type="button">Profile</button>
-            <button className={`navItem ${nav === "contact" ? "isActive" : ""}`} onClick={() => setNav("contact")} type="button">Contact</button>
+          <nav className="bottomNav bottomNav--withIcons bottomNav--mobileDock" aria-label="Bottom navigation">
+            <button
+              className={`navItem navItem--dockCol navItem--dockPrimary ${nav === "home" ? "isActive" : ""}`}
+              onClick={dockNavHome}
+              type="button"
+              title="Home"
+            >
+              <SiteBottomNavGlyph navKey="home" className="navItemGlyph" />
+              <span className="navItemLabel">Home</span>
+            </button>
+            <button
+              className={`navItem navItem--dockCol navItem--dockOverflow ${nav === "trusted" ? "isActive" : ""}`}
+              onClick={() => {
+                setNav("trusted");
+                if (!trusted.length) loadTrusted(true);
+              }}
+              type="button"
+              title="Trusted Resources"
+            >
+              <SiteBottomNavGlyph navKey="trusted" className="navItemGlyph" />
+              <span className="navItemLabel">Trusted Resources</span>
+            </button>
+            <button
+              className={`navItem navItem--dockCol navItem--dockOverflow ${nav === "community" ? "isActive" : ""}`}
+              onClick={() => setNav("community")}
+              type="button"
+              title="Community"
+            >
+              <SiteBottomNavGlyph navKey="community" className="navItemGlyph" />
+              <span className="navItemLabel">Community</span>
+            </button>
+            <button
+              className={`navItem navItem--dockCol navItem--dockPrimary ${nav === "profile" ? "isActive" : ""}`}
+              onClick={dockNavProfile}
+              type="button"
+              title="Profile"
+            >
+              <SiteBottomNavGlyph navKey="profile" className="navItemGlyph" />
+              <span className="navItemLabel">Profile</span>
+            </button>
+            <button
+              className={`navItem navItem--dockCol navItem--dockPrimary ${nav === "contact" ? "isActive" : ""}`}
+              onClick={() => setNav("contact")}
+              type="button"
+              title="Contact"
+            >
+              <SiteBottomNavGlyph navKey="contact" className="navItemGlyph" />
+              <span className="navItemLabel">Contact</span>
+            </button>
           </nav>
         </FooterInner>
       </div>
@@ -1163,7 +1041,7 @@ function TopAppInner({ initialNav = "home" }) {
                 <a className="btnPrimary" href="/onboarding">
                   Open membership onboarding
                 </a>
-              ) : (
+              ) : showLocalDemoChrome() ? (
                 <button
                   className="btnPrimary"
                   onClick={async () => {
@@ -1174,179 +1052,12 @@ function TopAppInner({ initialNav = "home" }) {
                 >
                   Become a Member (demo)
                 </button>
-              )}
+              ) : null}
             </div>
           </div>
         </div>
       )}
 
-      {overlay === "edit" && editDraft ? (
-        <div className="modalOverlay" onClick={closeEditOverlay}>
-          <div
-            className="modalCard modalCard--profileEdit"
-            onClick={(e) => e.stopPropagation()}
-            onKeyDown={(e) => {
-              if (e.key !== "Enter" || e.nativeEvent?.isComposing) return;
-              const t = e.target;
-              if (t && (t.tagName === "TEXTAREA" || (typeof t.closest === "function" && t.closest("textarea")))) return;
-              if (t && t.tagName === "INPUT" && String(t.type || "").toLowerCase() === "file") return;
-              e.preventDefault();
-              void saveEditProfile();
-            }}
-          >
-            <h3>Edit profile</h3>
-            <p className="ds-page-intro__lead" style={{ margin: 0 }}>
-              Core account fields sync when cloud is available. Incomplete items from your profile checklist are highlighted
-              in green. Deeper account controls live in{" "}
-              <button type="button" className="accountSettingsInlineLink" onClick={() => router.push("/settings")}>
-                Settings
-              </button>
-              .
-            </p>
-            <div
-              className={`profileEditChunk${editIncompleteKeys.has("avatar") ? " profileEditChunk--incomplete" : ""}`}
-              data-profile-edit-focus="avatar"
-            >
-              <Avatar src={editDraft.avatarUrl || emptyProfileAvatarUrl()} alt="Profile preview" />
-              <label className="profilePhotoUploadLabel">
-                <span className="profilePhotoUploadTitle">Profile photo</span>
-                <span className="profilePhotoUploadHint">Upload or replace the image shown on your profile and membership card.</span>
-                <input
-                  className="profileFileInput"
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => onProfileImageSelected(e.target.files?.[0])}
-                />
-              </label>
-            </div>
-            <div
-              className={`profileEditChunk${editIncompleteKeys.has("name") ? " profileEditChunk--incomplete" : ""}`}
-              data-profile-edit-focus="name"
-            >
-              <input
-                name="given-name"
-                autoComplete="given-name"
-                value={editDraft.firstName || ""}
-                onChange={(e) => setEditDraft((d) => ({ ...d, firstName: e.target.value }))}
-                placeholder="First name"
-              />
-              <input
-                name="family-name"
-                autoComplete="family-name"
-                value={editDraft.lastName || ""}
-                onChange={(e) => setEditDraft((d) => ({ ...d, lastName: e.target.value }))}
-                placeholder="Last name"
-              />
-            </div>
-            <div
-              className={`profileEditChunk${editIncompleteKeys.has("displayName") ? " profileEditChunk--incomplete" : ""}`}
-              data-profile-edit-focus="displayName"
-            >
-              <input
-                name="nickname"
-                autoComplete="nickname"
-                value={editDraft.displayName || ""}
-                onChange={(e) => setEditDraft((d) => ({ ...d, displayName: e.target.value }))}
-                placeholder="Display name"
-              />
-            </div>
-            <div
-              className={`profileEditChunk${editIncompleteKeys.has("email") ? " profileEditChunk--incomplete" : ""}`}
-              data-profile-edit-focus="email"
-            >
-              <input
-                name="email"
-                autoComplete="email"
-                value={editDraft.email}
-                onChange={(e) => setEditDraft((d) => ({ ...d, email: e.target.value }))}
-                placeholder="Email"
-                type="email"
-                title={
-                  sessionKind === "workos"
-                    ? "Saved to your profile. Change anytime in Settings or here; sign-in email may still be your WorkOS address until updated with your provider."
-                    : undefined
-                }
-              />
-            </div>
-            <div
-              className={`profileEditChunk${editIncompleteKeys.has("about") ? " profileEditChunk--incomplete" : ""}`}
-              data-profile-edit-focus="about"
-            >
-              <input
-                name="organization-title"
-                autoComplete="organization-title"
-                value={editDraft.banner || ""}
-                onChange={(e) => setEditDraft((d) => ({ ...d, banner: e.target.value }))}
-                placeholder="Short tagline (shown under your name)"
-              />
-              <textarea
-                rows={3}
-                value={editDraft.bio || ""}
-                onChange={(e) => setEditDraft((d) => ({ ...d, bio: e.target.value }))}
-                placeholder="Bio (optional longer description, 12+ characters counts toward profile completion)"
-              />
-            </div>
-            {String(editDraft.accountIntent || profile.accountIntent || "").toLowerCase() === "sponsor_user" ? (
-              <>
-                <div
-                  className={`profileEditChunk${editIncompleteKeys.has("sponsorOrg") ? " profileEditChunk--incomplete" : ""}`}
-                  data-profile-edit-focus="sponsorOrg"
-                >
-                  <p className="profileEditFieldsetHint">Sponsor organization</p>
-                  <input
-                    value={editDraft.sponsorOrgName || ""}
-                    onChange={(e) => setEditDraft((d) => ({ ...d, sponsorOrgName: e.target.value }))}
-                    placeholder="Organization name"
-                  />
-                </div>
-                <div
-                  className={`profileEditChunk${editIncompleteKeys.has("sponsorSite") ? " profileEditChunk--incomplete" : ""}`}
-                  data-profile-edit-focus="sponsorSite"
-                >
-                  <input
-                    value={editDraft.sponsorWebsite || ""}
-                    onChange={(e) => setEditDraft((d) => ({ ...d, sponsorWebsite: e.target.value }))}
-                    placeholder="Organization website URL"
-                  />
-                </div>
-              </>
-            ) : null}
-            <div
-              className={`profileEditChunk${editIncompleteKeys.has("identity") ? " profileEditChunk--incomplete" : ""}`}
-              data-profile-edit-focus="identity"
-            >
-              <fieldset className="profileEditFieldset">
-                <legend>Identity &amp; contribution</legend>
-                <p className="profileEditFieldsetHint">These fields power the Identity &amp; contribution card on your profile.</p>
-                <textarea rows={3} value={editDraft.missionStatement || ""} onChange={(e) => setEditDraft((d) => ({ ...d, missionStatement: e.target.value }))} placeholder="Mission or personal statement" />
-                <input value={editDraft.identityRole || ""} onChange={(e) => setEditDraft((d) => ({ ...d, identityRole: e.target.value }))} placeholder="Role (e.g. Veteran, First Responder, Nonprofit leader)" />
-                <div className="form">
-                  <input value={editDraft.city || ""} onChange={(e) => setEditDraft((d) => ({ ...d, city: e.target.value }))} placeholder="City" />
-                  <input value={editDraft.state || ""} onChange={(e) => setEditDraft((d) => ({ ...d, state: e.target.value }))} placeholder="State (e.g. TX)" />
-                </div>
-                <input value={editDraft.organizationAffiliation || ""} onChange={(e) => setEditDraft((d) => ({ ...d, organizationAffiliation: e.target.value }))} placeholder="Organization affiliation" />
-                <input value={editDraft.serviceBackground || ""} onChange={(e) => setEditDraft((d) => ({ ...d, serviceBackground: e.target.value }))} placeholder="Service background (branch, years, role)" />
-                <input value={editDraft.causes || ""} onChange={(e) => setEditDraft((d) => ({ ...d, causes: e.target.value }))} placeholder="Causes you care about (comma-separated)" />
-                <input value={editDraft.skills || ""} onChange={(e) => setEditDraft((d) => ({ ...d, skills: e.target.value }))} placeholder="Skills / ways you help (comma-separated)" />
-                <input value={editDraft.volunteerInterests || ""} onChange={(e) => setEditDraft((d) => ({ ...d, volunteerInterests: e.target.value }))} placeholder="Volunteer interests (comma-separated)" />
-                <input value={editDraft.supportInterests || ""} onChange={(e) => setEditDraft((d) => ({ ...d, supportInterests: e.target.value }))} placeholder="Support and outreach interests" />
-                <textarea rows={2} value={editDraft.contributionSummary || ""} onChange={(e) => setEditDraft((d) => ({ ...d, contributionSummary: e.target.value }))} placeholder="How you contribute on this platform" />
-              </fieldset>
-            </div>
-            {editSaveError ? (
-              <p className="profileEditSaveError" role="alert">
-                {editSaveError}
-              </p>
-            ) : null}
-            <div className="row">
-              <button className="btnSoft" onClick={closeEditOverlay} type="button">Cancel</button>
-              <button className="btnPrimary" onClick={() => void saveEditProfile()} type="button">
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
 
       {overlay === "signin" && (
         <div className="modalOverlay" onClick={() => setOverlay(null)}>
@@ -1368,7 +1079,7 @@ function TopAppInner({ initialNav = "home" }) {
                   Optional: add your email to prefill the hosted sign-in screen.
                 </p>
                 <p className="profilePhotoUploadHint" style={{ marginTop: 0 }}>
-                  On localhost, use the same WorkOS Client ID as production and register this origin’s callback in the WorkOS
+                  On localhost, use the same WorkOS Client ID as production and register this originâ€™s callback in the WorkOS
                   dashboard (e.g. <code>http://localhost:3000/callback</code> for <code>pnpm dev:alt</code>).
                 </p>
                 <div className="demoAuthModal__rememberGroup" role="group" aria-label="Sign-in preferences">
@@ -1424,7 +1135,7 @@ function TopAppInner({ initialNav = "home" }) {
                   </ul>
                 ) : !loadingProfile ? (
                   <p className="profilePhotoUploadHint" style={{ marginTop: 8 }}>
-                    If this box stays empty, open <code className="mono">GET /api/auth/status</code> — it lists{" "}
+                    If this box stays empty, open <code className="mono">GET /api/auth/status</code> â€” it lists{" "}
                     <code className="mono">workosMissingEnv</code> when AuthKit is not ready.
                   </p>
                 ) : null}
@@ -1583,8 +1294,8 @@ function TopAppInner({ initialNav = "home" }) {
 
 function TopAppFallback() {
   return (
-    <main className="topApp theme-clean">
-      <p style={{ padding: 24 }}>Loading…</p>
+    <main className="topApp theme-clean" data-page-atmosphere="home">
+      <p style={{ padding: 24 }}>Loadingâ€¦</p>
     </main>
   );
 }

@@ -22,7 +22,7 @@ export default async function PodcastsPageRoute() {
         initialBundleMeta={{
           degraded: !!bundle.degraded,
           source: bundle.source || "",
-          error: bundle.error || "",
+          error: bundle.episodes?.length ? "" : bundle.error || "",
         }}
       />
     </Suspense>

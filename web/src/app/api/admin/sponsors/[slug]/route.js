@@ -1,10 +1,15 @@
-import { requirePlatformAdminRouteContext } from "@/lib/admin/adminRouteContext";
+import { requirePlatformAdminRouteContext, requirePlatformAdminMutation } from "@/lib/admin/adminRouteContext";
+import { writeAdminAuditLog } from "@/lib/admin/adminAuditLog";
 
 export const runtime = "nodejs";
 
 const KEYS = new Set([
   "name",
+  "display_name",
+  "internal_alias",
+  "primary_display_tag",
   "sponsor_type",
+  "sponsor_display_group",
   "sponsor_category",
   "cta_label",
   "website_url",
@@ -25,6 +30,7 @@ const KEYS = new Set([
   "sponsor_scope",
   "sponsor_status",
   "mission_partner",
+  "veteran_owned",
   "podcast_sponsor",
   "supporting_sponsor",
   "is_active",
@@ -34,7 +40,7 @@ const KEYS = new Set([
 ]);
 
 export async function PATCH(request, context) {
-  const ctx = await requirePlatformAdminRouteContext();
+  const ctx = await requirePlatformAdminMutation(request, { rateKey: "admin-app-api-admin-sponsors-[slug]-patch" });
   if (!ctx.ok) return ctx.response;
 
   const params = await context.params;
@@ -53,7 +59,15 @@ export async function PATCH(request, context) {
   const patch = { updated_at: new Date().toISOString() };
   for (const [k, v] of Object.entries(body || {})) {
     if (!KEYS.has(k)) continue;
-    if (k === "featured" || k === "verified" || k === "mission_partner" || k === "podcast_sponsor" || k === "supporting_sponsor" || k === "is_active") {
+    if (
+      k === "featured" ||
+      k === "verified" ||
+      k === "mission_partner" ||
+      k === "veteran_owned" ||
+      k === "podcast_sponsor" ||
+      k === "supporting_sponsor" ||
+      k === "is_active"
+    ) {
       patch[k] = Boolean(v);
     } else if (k === "display_order") {
       const n = parseInt(String(v), 10);
@@ -98,5 +112,13 @@ export async function PATCH(request, context) {
     return Response.json({ ok: false, error: "not_found" }, { status: 404 });
   }
 
+  await writeAdminAuditLog(ctx.admin, request, {
+    actorWorkosUserId: String(ctx.user?.id || ""),
+    actorEmail: String(ctx.user?.email || ""),
+    action: "admin.sponsors.slug.PATCH",
+    resourceType: "admin_mutation",
+    resourceId: null,
+    metadata: { route: "sponsors/[slug]" },
+  });
   return Response.json({ ok: true, row: data });
 }

@@ -71,6 +71,10 @@ function applyCanonicalRecord(row, record) {
       next.linkedinUrl = o.linkedinUrl;
       next.linkedin_url = o.linkedinUrl;
     }
+    if (o.tiktokUrl) {
+      next.tiktokUrl = o.tiktokUrl;
+      next.tiktok_url = o.tiktokUrl;
+    }
   }
 
   if (record.clearUnlistedSocials && record.socialOverrides) {
@@ -95,6 +99,31 @@ function applyCanonicalRecord(row, record) {
       next.linkedinUrl = "";
       next.linkedin_url = "";
     }
+    if (!o.tiktokUrl) {
+      next.tiktokUrl = "";
+      next.tiktok_url = "";
+    }
+  }
+
+  const registryHeaderRaw = String(record.registryHeaderImageUrl || "").trim();
+  const registryLogo = String(record.registryLogoUrl || "").trim();
+  // One URL must not drive both surfaces: listing hero strip vs. small icon mark.
+  const sameCuratedAsset = registryHeaderRaw && registryLogo && registryHeaderRaw === registryLogo;
+  const registryHeader = sameCuratedAsset ? "" : registryHeaderRaw;
+
+  if (registryHeader) {
+    next.header_image_url = registryHeader;
+    next.headerImageUrl = registryHeader;
+    next.header_image_status = "approved";
+    next.header_image_review_status = "curated";
+    next.header_image_source_type = "trusted_registry";
+  }
+
+  if (registryLogo) {
+    next.logoUrl = registryLogo;
+    next.raw = next.raw && typeof next.raw === "object" ? { ...next.raw } : {};
+    const prevProfile = next.raw.profile && typeof next.raw.profile === "object" ? next.raw.profile : {};
+    next.raw.profile = { ...prevProfile, logo_url: registryLogo };
   }
 
   return next;

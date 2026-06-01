@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { requirePlatformAdminRouteContext } from "@/lib/admin/adminRouteContext";
+import { requirePlatformAdminRouteContext, requirePlatformAdminMutation } from "@/lib/admin/adminRouteContext";
 import {
   batchEnrichSponsorLogos,
   enrichSponsorLogoForSlug,
@@ -48,7 +48,7 @@ export async function GET(request) {
 export async function POST(request) {
   if (!URL) return Response.json({ error: "Missing Supabase credentials." }, { status: 500 });
   if (!SERVICE_KEY) return missingServiceRoleResponse();
-  const ctx = await requirePlatformAdminRouteContext();
+  const ctx = await requirePlatformAdminMutation(request, { rateKey: "admin-app-api-admin-sponsors-logo-enrichment-post" });
   if (!ctx.ok) return ctx.response;
 
   const body = await request.json().catch(() => ({}));
@@ -75,13 +75,21 @@ export async function POST(request) {
   }
 
   const { data: row } = await supabase.from(TABLE).select("*").eq("slug", slug).maybeSingle();
+  await writeAdminAuditLog(ctx.admin, request, {
+    actorWorkosUserId: String(ctx.user?.id || ""),
+    actorEmail: String(ctx.user?.email || ""),
+    action: "admin.sponsors.logo-enrichment.POST",
+    resourceType: "admin_mutation",
+    resourceId: null,
+    metadata: { route: "sponsors/logo-enrichment" },
+  });
   return Response.json({ ok: true, ...out, row: row || null });
 }
 
 export async function PATCH(request) {
   if (!URL) return Response.json({ error: "Missing Supabase credentials." }, { status: 500 });
   if (!SERVICE_KEY) return missingServiceRoleResponse();
-  const ctx = await requirePlatformAdminRouteContext();
+  const ctx = await requirePlatformAdminMutation(request, { rateKey: "admin-app-api-admin-sponsors-logo-enrichment-patch" });
   if (!ctx.ok) return ctx.response;
 
   const body = await request.json().catch(() => ({}));

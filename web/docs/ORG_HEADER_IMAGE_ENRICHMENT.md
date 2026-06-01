@@ -31,7 +31,7 @@
 
 ## Fallbacks
 
-- If enrichment rejects the image, moderators reject, or URLs are empty, cards fall back to **category gradient** heroes (no random stock URLs in the client).
+- If enrichment rejects the image, moderators reject, or URLs are empty, cards fall back to category header art: **General Nonprofit** listings use `/directory/category-headers/general.png`; other listings use NTEE major letter art in `/directory/category-headers/{letter}.png` (deterministic, same-origin).
 - Legacy `hero_image_url` / `thumbnail_url` still contribute when the new header pipeline does not supply a displayable URL.
 
 ## Storage bucket

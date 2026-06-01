@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 380" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="trh-veterans-creed-outdoors-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="hsl(235 44% 20%)"/>
+      <stop offset="52%" stop-color="hsl(283 40% 30%)"/>
+      <stop offset="100%" stop-color="hsl(75 36% 16%)"/>
+    </linearGradient>
+    <radialGradient id="trh-veterans-creed-outdoors-glow" cx="20%" cy="25%" r="0.95">
+      <stop offset="0%" stop-color="hsl(345 58% 52%)" stop-opacity="0.32"/>
+      <stop offset="100%" stop-color="transparent"/>
+    </radialGradient>
+    <linearGradient id="trh-veterans-creed-outdoors-veil" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="rgba(0,0,0,0.06)"/>
+      <stop offset="100%" stop-color="rgba(0,0,0,0.48)"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="380" fill="url(#trh-veterans-creed-outdoors-bg)"/>
+  <rect width="1200" height="380" fill="url(#trh-veterans-creed-outdoors-glow)"/>
+  <path d="M0 268 C220 228 380 308 600 258 C820 208 980 248 1200 218 L1200 380 L0 380 Z" fill="hsl(235 28% 10%)" opacity="0.22"/>
+  <rect width="1200" height="380" fill="url(#trh-veterans-creed-outdoors-veil)"/>
+</svg>

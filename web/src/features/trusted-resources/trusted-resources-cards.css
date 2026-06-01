@@ -1,0 +1,384 @@
+/* Trusted Resources branded listing — `/trusted` route + TopApp trusted tab (see TopApp.js import). */
+
+.trustedRouteCard .trustedListingIntro {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--color-border-subtle);
+  background: color-mix(in srgb, var(--color-bg-subtle) 88%, var(--color-accent) 6%);
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+:root[data-color-scheme="dark"] .trustedRouteCard .trustedListingIntro,
+.dark .trustedRouteCard .trustedListingIntro {
+  background: color-mix(in srgb, var(--color-bg-subtle) 92%, var(--color-accent) 8%);
+}
+
+.trustedRouteCard .results.results--trustedBranded {
+  display: grid;
+  /* Web: fixed 3 columns × N rows (`minmax(0,1fr)` keeps equal-width tracks in the shell). */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+  margin-top: 18px;
+  /* Stretch items in each row to the row height so every card in a row matches. */
+  align-items: stretch;
+}
+
+/* Allow grid tracks to shrink (directory-style cards default to min-width:auto). */
+.trustedRouteCard .results.results--trustedBranded > * {
+  min-width: 0;
+}
+
+@media (max-width: 719px) {
+  .trustedRouteCard .results.results--trustedBranded {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+}
+
+.trustedResourceCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-bg-card);
+  box-shadow: 0 12px 32px var(--color-shadow);
+}
+
+.trustedResourceCard--navigable {
+  cursor: pointer;
+}
+
+.trustedResourceCard--navigable:hover {
+  border-color: color-mix(in srgb, var(--color-accent-hover) 40%, var(--color-border-subtle));
+  box-shadow: 0 14px 36px color-mix(in srgb, var(--color-shadow) 85%, transparent);
+}
+
+.trustedResourceCard__hitLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+}
+
+.trustedResourceCard__hitLayer:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+  z-index: 3;
+}
+
+.trustedResourceCard--navigable .trustedResourceCard__media,
+.trustedResourceCard--navigable .trustedResourceCard__body {
+  position: relative;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.trustedResourceCard__titleText {
+  color: inherit;
+}
+
+.trustedResourceCard--navigable:hover .trustedResourceCard__titleText {
+  color: var(--color-accent);
+}
+
+.trustedResourceCard__media {
+  position: relative;
+  padding: 10px 10px 8px;
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+/* Landscape header art: inset frame reads as “banner / header slot”, not logo. */
+.trustedResourceCard__headerFrame {
+  position: relative;
+  min-height: 152px;
+  border-radius: var(--radius-card, 14px);
+  overflow: hidden;
+  border: 1px solid var(--color-border-strong);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #ffffff 24%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--color-text-primary) 6%, transparent);
+}
+
+:root[data-color-scheme="dark"] .trustedResourceCard__headerFrame,
+.dark .trustedResourceCard__headerFrame {
+  border-color: color-mix(in srgb, var(--color-border-strong) 88%, #ffffff 12%);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #ffffff 10%, transparent),
+    0 0 0 1px color-mix(in srgb, #000 40%, transparent);
+}
+
+.trustedResourceCard__hero {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: saturate(1.04) contrast(1.04);
+}
+
+.trustedResourceCard__hero--fallback {
+  background-size: cover;
+  background-position: center;
+  opacity: 0.88;
+}
+
+.trustedResourceCard__heroScrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(8, 12, 10, 0.12) 0%,
+    rgba(8, 12, 10, 0.5) 52%,
+    rgba(8, 12, 10, 0.78) 100%
+  );
+  pointer-events: none;
+}
+
+:root[data-color-scheme="dark"] .trustedResourceCard__heroScrim,
+.dark .trustedResourceCard__heroScrim {
+  background: linear-gradient(
+    180deg,
+    rgba(2, 6, 4, 0.35) 0%,
+    rgba(2, 6, 4, 0.62) 52%,
+    rgba(2, 6, 4, 0.88) 100%
+  );
+}
+
+.trustedResourceCard__heroRibbon {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  display: flex;
+  justify-content: flex-end;
+  pointer-events: none;
+}
+
+.trustedResourceCard__typeMark {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--color-text-primary);
+  border: 1px solid color-mix(in srgb, var(--color-border-strong) 55%, transparent);
+  background: color-mix(in srgb, var(--color-bg-elevated) 86%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.trustedResourceCard__body {
+  position: relative;
+  z-index: 2;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 0;
+  padding: 16px 14px 14px;
+  min-height: 0;
+}
+
+.trustedResourceCard__profileHead {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 12px 14px;
+  align-items: start;
+}
+
+/* Circular brand mark: distinct from wide header frame (no visible “logo” / “header” labels). */
+.trustedResourceCard__logoFrame {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  /* Dark plate so letterboxing never reads as white gaps inside the ring. */
+  background: #0a100e;
+  border: 2px solid var(--color-border-strong);
+  overflow: hidden;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #ffffff 45%, transparent),
+    0 10px 22px var(--color-shadow);
+  margin-top: -52px;
+  position: relative;
+  z-index: 3;
+}
+
+:root[data-color-scheme="dark"] .trustedResourceCard__logoFrame,
+.dark .trustedResourceCard__logoFrame {
+  border-color: color-mix(in srgb, var(--color-border-strong) 90%, #ffffff 10%);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #ffffff 8%, transparent),
+    0 10px 24px color-mix(in srgb, #000 45%, transparent);
+}
+
+.trustedResourceCard__logoImg {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  /* Slight overscan hides sub-pixel gaps at the circular clip edge. */
+  transform: scale(1.05);
+}
+
+.trustedResourceCard__logoFallback {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  background: color-mix(in srgb, var(--color-bg-muted) 72%, var(--color-bg-elevated) 28%);
+}
+
+.trustedResourceCard__titleBlock {
+  padding-top: 10px;
+  min-width: 0;
+}
+
+.trustedResourceCard__chipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.trustedResourceCard__categoryChip {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-veil-12);
+  background: color-mix(in srgb, var(--color-bg-elevated) 88%, var(--tr-chip-tint, rgba(110, 168, 207, 0.2)) 12%);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trustedResourceCard__title {
+  margin: 0;
+  font-size: clamp(1.08rem, 2.5vw, 1.28rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.18;
+  color: var(--color-text-primary);
+}
+
+.trustedResourceCard__location {
+  margin: 6px 0 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.trustedResourceCard__short {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  /* Reserve four lines so cards align even when copy is shorter than the clamp. */
+  min-height: calc(0.9375rem * 1.5 * 4);
+}
+
+.trustedResourceCard__details {
+  margin: 0;
+  border-radius: 10px;
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-bg-subtle);
+  padding: 0 10px 8px;
+}
+
+.trustedResourceCard__detailsSummary {
+  cursor: pointer;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--color-link);
+  padding: 8px 0;
+  list-style: none;
+}
+
+.trustedResourceCard__detailsSummary::-webkit-details-marker {
+  display: none;
+}
+
+.trustedResourceCard__full {
+  margin: 0 0 6px;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--color-text-secondary);
+}
+
+.trustedResourceCard--navigable .trustedResourceCard__details {
+  position: relative;
+  z-index: 2;
+  pointer-events: auto;
+}
+
+.trustedResourceCard__footer {
+  position: relative;
+  z-index: 2;
+  pointer-events: auto;
+  margin-top: auto;
+  padding-top: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.trustedResourceCard__socialLinks {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.trustedResourceCard__profileLink {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--color-link);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.trustedResourceCard__profileLink:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 520px) {
+  .trustedResourceCard__profileHead {
+    grid-template-columns: 84px minmax(0, 1fr);
+  }
+
+  .trustedResourceCard__logoFrame {
+    width: 84px;
+    height: 84px;
+    margin-top: -48px;
+  }
+
+  .trustedResourceCard__titleBlock {
+    padding-top: 8px;
+  }
+}

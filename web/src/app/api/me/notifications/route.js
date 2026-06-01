@@ -1,4 +1,5 @@
 import { authFailureJson, resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
+import { guardMutation, guardFailureResponse } from "@/lib/security/secureRoute";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
 import { isCommunityModeratorServer } from "@/lib/community/moderatorServer";
@@ -38,7 +39,8 @@ export async function GET(request) {
     if (!isStaffViewer) q = q.eq("audience_scope", "user");
     const { count, error } = await q;
     if (error) {
-      return Response.json({ unreadCount: 0, error: error.message }, { status: 500 });
+      console.warn("[torp] notifications summary query failed (degraded to zero):", error.message);
+      return Response.json({ unreadCount: 0 });
     }
     return Response.json({ unreadCount: typeof count === "number" ? count : 0 });
   }
@@ -61,7 +63,8 @@ export async function GET(request) {
 
   const { data: rows, error } = await q;
   if (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.warn("[torp] notifications list query failed (degraded to empty):", error.message);
+    return Response.json({ notifications: [], unreadCount: 0, nextCursor: null });
   }
 
   const list = rows || [];
@@ -75,16 +78,21 @@ export async function GET(request) {
     .eq("recipient_profile_id", profile.id)
     .eq("status", "unread");
   if (!isStaffViewer) unreadQ = unreadQ.eq("audience_scope", "user");
-  const { count: unreadCount } = await unreadQ;
+  const { count: unreadCount, error: unreadErr } = await unreadQ;
+  if (unreadErr) {
+    console.warn("[torp] notifications unread count failed:", unreadErr.message);
+  }
 
   return Response.json({
     notifications: slice,
-    unreadCount: typeof unreadCount === "number" ? unreadCount : 0,
+    unreadCount: !unreadErr && typeof unreadCount === "number" ? unreadCount : 0,
     nextCursor,
   });
 }
 
 export async function PATCH(request) {
+  const __guard = guardMutation(request, { rateKey: "me-notifications", limit: 60 });
+  if (!__guard.ok) return guardFailureResponse(__guard);
   const auth = await resolveWorkOSRouteUser();
   if (!auth.ok) return authFailureJson(auth);
   const user = auth.user;

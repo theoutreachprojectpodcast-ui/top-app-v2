@@ -71,8 +71,7 @@ where sponsor_scope = 'podcast'
     'wrecking-realty-group',
     'iron-soldiers-coffee-company',
     'eduardo-pico-designs',
-    'wars-end-merch',
-    'brain-treatment-center'
+    'wars-end-merch'
   );
 
 commit;

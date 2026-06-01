@@ -4,24 +4,38 @@ import FeaturedSponsorCard from "@/features/sponsors/components/FeaturedSponsorC
 
 export default function FeaturedSponsorsSection({
   sponsors = [],
+  sectionTitle = "Platform sponsors",
+  sectionLead = "Curated sponsor spotlights with custom brand visuals, designed to honor each partner identity while staying mission-aligned.",
   favoritesEnabled = false,
   favoriteKeySet = new Set(),
   onToggleFavorite,
   onRequestSignIn,
 }) {
+  const deduped = (() => {
+    const seen = new Set();
+    const out = [];
+    for (const s of sponsors) {
+      const k = String(s?.slug || s?.id || "")
+        .trim()
+        .toLowerCase();
+      if (!k || seen.has(k)) continue;
+      seen.add(k);
+      out.push(s);
+    }
+    return out;
+  })();
+
   return (
     <section className="card sponsorSection sponsorFeaturedSection">
       <div className="sponsorSectionHead">
-        <h3>Platform sponsors</h3>
+        <h3>{sectionTitle}</h3>
         <span className="sponsorFeaturedValuePill">App sponsor roster</span>
       </div>
-      <p className="sponsorSectionLead">
-        Curated sponsor spotlights with custom brand visuals, designed to honor each partner identity while staying mission-aligned.
-      </p>
+      <p className="sponsorSectionLead">{sectionLead}</p>
       <div className="sponsorFeaturedShowcase">
-        {sponsors.map((sponsor) => (
+        {deduped.map((sponsor) => (
           <FeaturedSponsorCard
-            key={sponsor.id}
+            key={sponsor.slug || sponsor.id}
             sponsor={sponsor}
             favoritesEnabled={favoritesEnabled}
             isFavorite={favoriteKeySet.has(`sponsor:${String(sponsor.slug || sponsor.id || "").trim().toLowerCase()}`)}

@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import NonprofitCard from "@/features/nonprofits/components/NonprofitCard";
-import { mapNonprofitCardRow } from "@/features/nonprofits/mappers/nonprofitCardMapper";
+import { useEffect, useMemo, useRef, useState } from "react";
+import TrustedResourceCard from "@/features/trusted-resources/components/TrustedResourceCard";
+import { buildTrustedResourceViewModel } from "@/features/trusted-resources/domain/trustedResourceViewModel";
 import { fetchTrustedResources } from "@/features/trusted-resources/api";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
@@ -11,20 +11,27 @@ const SHIELD = "M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6z";
 /**
  * Shell chrome (header, bottom nav, footer) comes from `trusted/layout.js` only.
  * Do not wrap with AppShell here — nested `<main class="topApp">` breaks layout and hides page content.
+ *
+ * Cards render from `buildTrustedResourceViewModel` + `TrustedResourceCard` (curated Trusted Resource type),
+ * not generic directory `NonprofitCard` rows.
  */
 export default function TrustedPage() {
   const supabase = useMemo(() => getSupabaseClient(), []);
   const [rows, setRows] = useState([]);
   const [status, setStatus] = useState("Loading trusted resources...");
+  const loadGeneration = useRef(0);
 
   async function loadTrusted() {
+    const gen = (loadGeneration.current += 1);
     setStatus("Loading trusted resources...");
     try {
       const data = await fetchTrustedResources(supabase);
+      if (gen !== loadGeneration.current) return;
       const next = Array.isArray(data) ? data : [];
       setRows(next);
       setStatus(next.length ? "" : "No trusted resources found.");
     } catch {
+      if (gen !== loadGeneration.current) return;
       setRows([]);
       setStatus("Unable to load trusted resources right now.");
     }
@@ -34,6 +41,15 @@ export default function TrustedPage() {
     loadTrusted();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supabase]);
+
+  const resources = useMemo(() => {
+    return rows
+      .map((row) => buildTrustedResourceViewModel(row))
+      .sort((a, b) => {
+        if (a.sortOrder !== b.sortOrder) return a.sortOrder - b.sortOrder;
+        return a.name.localeCompare(b.name);
+      });
+  }, [rows]);
 
   return (
     <section className="card trustedRouteCard">
@@ -47,7 +63,13 @@ export default function TrustedPage() {
           Trusted Resources
         </h2>
         <p className="ds-page-intro__lead">
-          Trusted organizations The Outreach Project can connect veterans, first responders, and families with.
+          Curated organizations The Outreach Project can connect veterans, first responders, and families with. Open a
+          resource profile for mission, programs, and official links — or the nonprofit directory when an IRS EIN is
+          available.
+        </p>
+        <p className="trustedListingIntro">
+          These cards are a dedicated Trusted Resource layout — not the general Directory grid. Curated fields (logo,
+          header image, category, copy, and links) override directory defaults when present.
         </p>
       </div>
       <div className="row">
@@ -56,11 +78,10 @@ export default function TrustedPage() {
         </button>
       </div>
       {status ? <p className="trustedRouteStatus">{status}</p> : null}
-      <div className="results">
-        {rows.map((row) => {
-          const card = mapNonprofitCardRow(row, "trusted");
-          return <NonprofitCard key={`trusted-route-${card.id || card.ein || card.name}`} card={card} actionMode="trustedResource" />;
-        })}
+      <div className="results results--trustedBranded">
+        {resources.map((resource) => (
+          <TrustedResourceCard key={`trusted-resource-${resource.id}`} resource={resource} />
+        ))}
       </div>
     </section>
   );

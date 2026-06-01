@@ -59,7 +59,7 @@ assert(
   `Website hostname hint should avoid Organization fallback, got "${webResolved}"`
 );
 
-const hint = titleHintFromWebsiteUrl("https://www.braintreatmentcenter.com/");
+const hint = titleHintFromWebsiteUrl("https://www.team-rubicon.org/");
 assert(hint.length > 2, `titleHintFromWebsiteUrl expected non-empty, got "${hint}"`);
 
 assert(
@@ -67,7 +67,7 @@ assert(
   "camel joined name should become spaced title case"
 );
 assert(
-  sanitizeOrganizationNameForDisplay("brain_treatment_center", { trustCanonical: false }) === "Brain Treatment Center",
+  sanitizeOrganizationNameForDisplay("team_rubicon", { trustCanonical: false }) === "Team Rubicon",
   "snake_case name should become spaced title case"
 );
 assert(

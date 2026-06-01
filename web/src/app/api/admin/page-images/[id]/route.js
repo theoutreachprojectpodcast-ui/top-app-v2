@@ -1,10 +1,10 @@
-import { requirePlatformAdminRouteContext } from "@/lib/admin/adminRouteContext";
+import { requirePlatformAdminRouteContext, requirePlatformAdminMutation } from "@/lib/admin/adminRouteContext";
 
 export const runtime = "nodejs";
 const TABLE = "page_images";
 
 export async function PATCH(request, { params }) {
-  const ctx = await requirePlatformAdminRouteContext();
+  const ctx = await requirePlatformAdminMutation(request, { rateKey: "admin-app-api-admin-page-images-[id]-patch" });
   if (!ctx.ok) return ctx.response;
   const id = String(params?.id || "").trim();
   if (!id) return Response.json({ ok: false, error: "missing_id" }, { status: 400 });
@@ -25,11 +25,19 @@ export async function PATCH(request, { params }) {
   patch.updated_at = new Date().toISOString();
   const { data, error } = await ctx.admin.from(TABLE).update(patch).eq("id", id).select("*").single();
   if (error) return Response.json({ ok: false, error: error.message }, { status: 500 });
+  await writeAdminAuditLog(ctx.admin, request, {
+    actorWorkosUserId: String(ctx.user?.id || ""),
+    actorEmail: String(ctx.user?.email || ""),
+    action: "admin.page-images.id.PATCH",
+    resourceType: "admin_mutation",
+    resourceId: null,
+    metadata: { route: "page-images/[id]" },
+  });
   return Response.json({ ok: true, row: data });
 }
 
-export async function DELETE(_request, { params }) {
-  const ctx = await requirePlatformAdminRouteContext();
+export async function DELETE(_request, { params }, request) {
+  const ctx = await requirePlatformAdminMutation(request, { rateKey: "admin-app-api-admin-page-images-[id]-delete" });
   if (!ctx.ok) return ctx.response;
   const id = String(params?.id || "").trim();
   if (!id) return Response.json({ ok: false, error: "missing_id" }, { status: 400 });

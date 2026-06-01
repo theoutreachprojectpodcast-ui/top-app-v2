@@ -1,21 +1,21 @@
-import {
-  podcastSponsorCheckoutConfigured,
-  podcastSponsorMissingPriceEnvKeys,
-  stripeMemberRecurringConfigured,
-  stripeMemberRecurringMissingEnvKeys,
-  stripeCheckoutConfigured,
-  stripeSponsorSubscriptionConfigured,
-  stripeWebhookConfigured,
-} from "@/lib/billing/stripeConfig";
+import { billingCapabilitiesPayload } from "@/lib/billing/billingCapabilitiesPayload";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function GET() {
-  return Response.json({
-    membershipCheckout: stripeMemberRecurringConfigured(),
-    membershipCheckoutMissingEnv: stripeMemberRecurringConfigured() ? [] : stripeMemberRecurringMissingEnvKeys(),
-    sponsorSubscriptionCheckout: stripeSponsorSubscriptionConfigured(),
-    fullMembershipOnboarding: stripeCheckoutConfigured(),
-    podcastSponsorCheckout: podcastSponsorCheckoutConfigured(),
-    podcastSponsorMissingEnv: podcastSponsorCheckoutConfigured() ? [] : podcastSponsorMissingPriceEnvKeys(),
-    stripeWebhook: stripeWebhookConfigured(),
-  });
+  try {
+    return Response.json(billingCapabilitiesPayload(), {
+      headers: {
+        "Cache-Control": "no-store",
+        "Content-Type": "application/json; charset=utf-8",
+      },
+    });
+  } catch (e) {
+    console.error("[torp] billing capabilities", e);
+    return Response.json(
+      { ok: false, error: "capabilities_failed", message: e?.message || "Unknown error" },
+      { status: 500 },
+    );
+  }
 }

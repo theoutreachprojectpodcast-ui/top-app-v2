@@ -34,8 +34,7 @@ set sponsor_scope = 'podcast'
 where slug in (
   'rucking-realty-group',
   'iron-soldiers-coffee-company',
-  'eduardo-pico-designs',
-  'brain-treatment-center'
+  'eduardo-pico-designs'
 );
 
 commit;
