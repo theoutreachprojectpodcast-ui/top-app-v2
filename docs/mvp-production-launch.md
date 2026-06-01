@@ -190,6 +190,8 @@ Test admin workflows on QA before flipping Production. See [admin-qa-production-
 
 Native iOS and Android shells live under **`web/`**. They do **not** bundle the Next.js build — the WebView loads your **live Production URL** (`CAP_SERVER_URL`). Ship **web Production first** (sections 1–7), then build and submit native wrappers.
 
+For how web + mobile relate to the **legacy App Store client** (direct Supabase vs Next `/api/*`), see [connecting-web-mobile-to-legacy-api.md](./connecting-web-mobile-to-legacy-api.md).
+
 **Identity (update before first store upload if branding changes):**
 
 | Field | Value |
@@ -428,6 +430,7 @@ First **Production** submission triggers **Google review** (often hours to a few
 
 - [admin-qa-production-setup.md](./admin-qa-production-setup.md) — QA admin host + production mirror
 - [../web/docs/CAPACITOR_MOBILE.md](../web/docs/CAPACITOR_MOBILE.md) — Capacitor architecture, scripts, dev URLs
+- [connecting-web-mobile-to-legacy-api.md](./connecting-web-mobile-to-legacy-api.md) — legacy mobile data layer vs Next BFF; Capacitor + web integration
 - [production-deployment.md](./production-deployment.md)
 - [deployment-domains.md](./deployment-domains.md)
 - [production-supabase-migration-order.md](./production-supabase-migration-order.md)

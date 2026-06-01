@@ -152,3 +152,8 @@ Changing only Next **source** (no static shell change) still requires **redeploy
 ## Node version note
 
 `@capacitor/cli` declares **Node ≥ 22**. If `cap` commands fail on Node 20, upgrade Node for mobile tooling only or align the repo `engines` field with your CI.
+
+## See also
+
+- [../../docs/connecting-web-mobile-to-legacy-api.md](../../docs/connecting-web-mobile-to-legacy-api.md) — how web + Capacitor connect to the legacy App Store Supabase client vs Next `/api/*`
+- [../../docs/mvp-production-launch.md](../../docs/mvp-production-launch.md) §9 — store submission checklist
