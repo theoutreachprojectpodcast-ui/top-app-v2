@@ -17,6 +17,7 @@ import {
   shouldRewriteAdminSubdomainPath,
 } from "@/lib/runtime/deploymentHosts";
 import { applySecurityHeaders } from "@/lib/security/httpHeaders";
+import { isPublicBillingApiRequest } from "@/lib/billing/publicBillingApiPaths";
 
 /**
  * Next.js 16+ uses the `proxy` convention (replaces `middleware`) so AuthKit can attach
@@ -76,6 +77,10 @@ export default async function proxy(request) {
 
   const rewritten = rewriteAdminSubdomainRequest(request, host);
   const incoming = rewritten || request;
+
+  if (isPublicBillingApiRequest(incoming.nextUrl.pathname, incoming.method)) {
+    return applySecurityHeaders(NextResponse.next({ request: incoming }), incoming);
+  }
 
   if (!workosProxy) {
     const res = await updateSession(incoming);

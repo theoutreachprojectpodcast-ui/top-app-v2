@@ -136,7 +136,8 @@ Code is on branch **`QA`** (`/api/billing/*`, profile Membership & billing cente
 
 - [x] Push `QA` branch (membership/billing commits).
 - [ ] Vercel **Preview** deploy for `QA` is **Ready**.
-- [ ] In browser (logged into Vercel protection if enabled): `https://qa-the-outreach-project.vercel.app/api/billing/capabilities` returns JSON (not 404).
+- [ ] In browser (logged into Vercel protection if enabled): `https://qa-the-outreach-project.vercel.app/api/billing/capabilities` returns JSON with `"ok": true` (not 404, not an HTML “Authentication Required” page).
+- [ ] If the URL shows Vercel’s login page, use **Vercel → Deployment Protection → bypass** for your team or test while signed into Vercel; membership flags are also on `GET /api/auth/status` when signed into the app.
 - [ ] Profile → **Membership & billing** section; Home → **Become a member** cards.
 
 ### Phase B — Supabase (QA project)

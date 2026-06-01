@@ -29,6 +29,8 @@ const requiredRouteFiles = [
   "src/app/api/sponsors/catalog/route.js",
   "src/app/api/podcasts/sponsors/catalog/route.js",
   "src/app/api/trusted/catalog/route.js",
+  "src/app/api/billing/capabilities/route.js",
+  "src/app/api/billing/sponsor-opportunities/route.js",
   "public/manifest.webmanifest",
   "public/apple-touch-icon.png",
   "public/icon-512.png",
