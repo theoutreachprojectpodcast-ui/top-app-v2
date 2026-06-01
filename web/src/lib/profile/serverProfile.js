@@ -61,7 +61,15 @@ export function profileRowToClientDto(row) {
     profileLastUpdatedAt: row.profile_last_updated_at != null ? String(row.profile_last_updated_at) : "",
     accountSetupCompletedAt: row.account_setup_completed_at != null ? String(row.account_setup_completed_at) : "",
     membershipTier: row.membership_tier ?? "free",
-    membershipBillingStatus: row.membership_status ?? "none",
+    membershipBillingStatus: row.billing_status ?? row.membership_status ?? "none",
+    renewalDate: row.renewal_date != null ? String(row.renewal_date) : "",
+    billingStatus: row.billing_status != null ? String(row.billing_status) : "",
+    sponsorTier: row.sponsor_tier != null ? String(row.sponsor_tier) : "",
+    paymentMethodSummary:
+      row.payment_method_summary && typeof row.payment_method_summary === "object"
+        ? row.payment_method_summary
+        : null,
+    subscriptionStatus: row.stripe_subscription_id ? "linked" : "none",
     onboardingCompleted: !!row.onboarding_completed,
     platformRole: String(row.platform_role || "user").trim() || "user",
     accountIntent: row.account_intent != null ? String(row.account_intent).trim() : "",

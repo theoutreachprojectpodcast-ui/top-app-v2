@@ -33,6 +33,7 @@ import { showLocalDemoChrome } from "@/lib/runtime/demoUiVisibility";
 import { adminConsoleHref } from "@/lib/runtime/deploymentHosts";
 import { useImmersiveHeaderScroll } from "@/hooks/useImmersiveHeaderScroll";
 import MembershipAtAGlance from "@/features/membership/components/MembershipAtAGlance";
+import MembershipBillingCenter from "@/features/membership/components/MembershipBillingCenter";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { emptyProfileAvatarUrl } from "@/lib/avatarFallback";
 import { rowEin } from "@/lib/utils";
@@ -181,7 +182,10 @@ function TopAppInner({ initialNav = "home" }) {
 
   useEffect(() => {
     const c = searchParams.get("checkout");
-    if ((c !== "success" && c !== "cancel") || sessionKind !== "workos") return;
+    const pm = searchParams.get("payment_method");
+    const billingRefresh =
+      (c === "success" || c === "cancel" || pm === "success" || pm === "cancel") && sessionKind === "workos";
+    if (!billingRefresh) return;
     let cancelled = false;
     (async () => {
       await refreshWorkOSProfile();
@@ -315,6 +319,45 @@ function TopAppInner({ initialNav = "home" }) {
       return;
     }
     setOverlay("upgrade");
+  }
+
+  async function startMembershipCheckoutFromHome(tier) {
+    if (!isAuthenticated) {
+      openMembershipJourney();
+      return;
+    }
+    if (sessionKind === "workos" && !profile?.onboardingCompleted) {
+      router.push("/onboarding");
+      return;
+    }
+    if (tier === "sponsor") {
+      router.push("/sponsors?packages=1");
+      return;
+    }
+    if (sessionKind !== "workos" || !authBackend?.stripe) {
+      setNav("profile");
+      return;
+    }
+    try {
+      const res = await fetch("/api/billing/checkout", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tier, returnPath: "/" }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (data.url) {
+        window.location.assign(data.url);
+        return;
+      }
+      if (data.error === "use_billing_portal") {
+        setNav("profile");
+        return;
+      }
+    } catch {
+      /* fall through */
+    }
+    setNav("profile");
   }
 
   function openCommunity() {
@@ -509,6 +552,14 @@ function TopAppInner({ initialNav = "home" }) {
             <HomeScreen
               isAuthenticated={isAuthenticated}
               onActivateMembership={openMembershipJourney}
+              onUpgradeTier={startMembershipCheckoutFromHome}
+              onJoinFree={() => {
+                if (!isAuthenticated) {
+                  openMembershipJourney();
+                  return;
+                }
+                setNav("profile");
+              }}
               onCreateAccount={() => {
                 if (authBackend.workos) {
                   writeRememberDevicePref(rememberDevice);
@@ -736,19 +787,17 @@ function TopAppInner({ initialNav = "home" }) {
             icon={<AppIcon name="profile" />}
             onEdit={() => openProfileEdit()}
           />
-          <MembershipAtAGlance
-            surface="profile"
+          <MembershipBillingCenter
             isAuthenticated={isAuthenticated}
             currentTierKey={profile.membershipStatus}
-            onSelectTier={(id) => setMembershipStatus(id)}
             onRequestSignIn={openSignInForMembership}
             sessionKind={sessionKind}
             stripeMemberReady={!!authBackend?.stripe}
             stripeSponsorSubscriptionReady={!!authBackend?.stripeSponsorSubscription}
-            stripeMemberMissingEnv={authBackend?.stripeMemberRecurringMissingEnv || []}
             checkoutReturnPath="/profile"
             membershipBillingStatus={profile.membershipBillingStatus}
             stripeCustomerReady={!!profile.stripeCustomerIdSet}
+            onCheckoutNavigate={() => refreshWorkOSProfile()}
           />
           <ProfileCompletionPanel
             completion={profileCompletion}

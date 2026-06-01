@@ -57,6 +57,9 @@ export default function AdminHomePage() {
           <Link href="/admin/billing">Invoice tools</Link> — send invoice emails and audit records
         </li>
         <li>
+          <Link href="/admin/membership">Membership</Link> — tier counts, subscriptions, and billing health (no card data)
+        </li>
+        <li>
           <Link href="/admin/users">Users</Link> — search accounts, roles, and onboarding status
         </li>
       </ul>

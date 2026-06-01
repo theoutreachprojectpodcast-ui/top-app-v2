@@ -1,0 +1,78 @@
+.homeMembershipSection {
+  margin: 12px 0 8px;
+  padding: 16px 14px;
+  border-radius: var(--radius-lg, 16px);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.95));
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.homeMembershipSection__header {
+  margin-bottom: 12px;
+}
+
+.homeMembershipSection__title {
+  margin: 0 0 4px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.homeMembershipSection__lead {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--text-muted, #64748b);
+}
+
+.homeMembershipSection__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (min-width: 720px) {
+  .homeMembershipSection__grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.homeMembershipSection__card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 10px;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.07);
+  min-height: 100%;
+}
+
+.homeMembershipSection__cardTitle {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.homeMembershipSection__price {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--brand-primary, #0f4c81);
+}
+
+.homeMembershipSection__desc {
+  margin: 0;
+  flex: 1;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: var(--text-muted, #64748b);
+}
+
+.homeMembershipSection__cta {
+  width: 100%;
+  margin-top: auto;
+  font-size: 0.72rem;
+  padding: 8px 10px;
+}

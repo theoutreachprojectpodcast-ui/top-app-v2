@@ -6,6 +6,7 @@ import HomeAuthCards from "@/components/home/HomeAuthCards";
 import HomeDirectoryPanel from "@/components/home/HomeDirectoryPanel";
 import HomeFeatureCards from "@/components/home/HomeFeatureCards";
 import HomeMembershipBar from "@/components/home/HomeMembershipBar";
+import HomeMembershipSection from "@/components/home/HomeMembershipSection";
 import "@/components/home/home-mobile.css";
 
 export default function HomeScreen({
@@ -17,6 +18,8 @@ export default function HomeScreen({
   onTrusted,
   onCommunity,
   onPodcasts,
+  onUpgradeTier,
+  onJoinFree,
   directoryProps,
   favoriteEinSet,
   onToggleFavorite,
@@ -30,6 +33,13 @@ export default function HomeScreen({
         {!isAuthenticated ? (
           <HomeMembershipBar onActivateMembership={onActivateMembership} />
         ) : null}
+
+        <HomeMembershipSection
+          isAuthenticated={isAuthenticated}
+          onRequestSignIn={onRequestSignIn || onSignIn}
+          onJoinFree={onJoinFree || onActivateMembership}
+          onUpgradeTier={onUpgradeTier}
+        />
 
         {!isAuthenticated ? (
           <HomeAuthCards onCreateAccount={onCreateAccount} onSignIn={onSignIn} />

@@ -226,6 +226,12 @@ export function profileFromApiDto(dto = {}) {
     stripeCustomerIdSet: !!dto.stripeCustomerIdSet,
     stripeSubscriptionIdSet: !!dto.stripeSubscriptionIdSet,
     membershipSource: String(dto.membershipSource || "manual").trim() || "manual",
+    renewalDate: String(dto.renewalDate || "").trim(),
+    billingStatus: String(dto.billingStatus || dto.membershipBillingStatus || "").trim(),
+    sponsorTier: String(dto.sponsorTier || "").trim(),
+    paymentMethodSummary:
+      dto.paymentMethodSummary && typeof dto.paymentMethodSummary === "object" ? dto.paymentMethodSummary : null,
+    subscriptionStatus: String(dto.subscriptionStatus || "").trim(),
     podcastSponsorLastTierId: String(dto.podcastSponsorLastTierId || "").trim(),
     podcastSponsorLastCheckoutAt: String(dto.podcastSponsorLastCheckoutAt || "").trim(),
     podcastSponsorLastSessionId: String(dto.podcastSponsorLastSessionId || "").trim(),

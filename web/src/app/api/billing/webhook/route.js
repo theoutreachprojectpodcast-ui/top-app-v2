@@ -6,29 +6,20 @@ import {
   getProfileRowByWorkOSId,
   mergeProfileMetadataByWorkOSId,
 } from "@/lib/profile/serverProfile";
-import { resolvePlatformRoleAfterTierChange } from "@/lib/account/accountModel";
 import { notifyMembershipFromStripeInvoice } from "@/server/notifications/notificationService";
+import {
+  syncPaymentMethodSummaryOnly,
+  syncProfileFromSubscription,
+} from "@/lib/billing/stripeProfileSync";
 import { headers } from "next/headers";
 
 export const runtime = "nodejs";
 
-function mapStripeSubStatus(status) {
-  const statusMap = {
-    active: "active",
-    trialing: "active",
-    past_due: "past_due",
-    canceled: "canceled",
-    unpaid: "past_due",
-    incomplete: "incomplete",
-    incomplete_expired: "canceled",
-    paused: "past_due",
-  };
-  return statusMap[status] || "pending";
-}
-
 /**
  * @param {import('@supabase/supabase-js').SupabaseClient} admin
  * @param {import('stripe').Stripe} stripe
+ * @param {import('stripe').Stripe.Subscription} sub
+ * @param {string} customerId
  */
 async function resolveWorkosUserId(admin, sub, customerId) {
   const meta = sub.metadata || {};
@@ -51,53 +42,6 @@ async function resolveWorkosUserId(admin, sub, customerId) {
   }
 
   return null;
-}
-
-/**
- * @param {import('@supabase/supabase-js').SupabaseClient} admin
- */
-async function syncSubscription(admin, sub, customerId, { forceEnded = false } = {}) {
-  const cust = customerId || (typeof sub.customer === "string" ? sub.customer : sub.customer?.id) || "";
-  const workosUserId = await resolveWorkosUserId(admin, sub, cust);
-  if (!workosUserId) {
-    console.warn("[torp] webhook: could not resolve profile for subscription", sub.id);
-    return;
-  }
-
-  const table = profileTableName();
-  const ended = forceEnded || sub.status === "canceled" || sub.status === "incomplete_expired";
-
-  if (ended) {
-    const existing = await getProfileRowByWorkOSId(admin, workosUserId);
-    const patch = {
-      membership_tier: "free",
-      membership_status: "canceled",
-      stripe_subscription_id: null,
-      membership_source: "manual",
-      platform_role: resolvePlatformRoleAfterTierChange(existing?.platform_role, "free"),
-      updated_at: new Date().toISOString(),
-    };
-    if (cust) patch.stripe_customer_id = cust;
-    await admin.from(table).update(patch).eq("workos_user_id", workosUserId);
-    return;
-  }
-
-  const tier = String(sub.metadata?.membership_tier || "member").toLowerCase();
-  const safeTier = ["support", "member", "sponsor"].includes(tier) ? tier : "member";
-  const billingStatus = mapStripeSubStatus(sub.status);
-
-  const existing = await getProfileRowByWorkOSId(admin, workosUserId);
-  const patch = {
-    stripe_customer_id: cust || undefined,
-    stripe_subscription_id: sub.id,
-    membership_tier: safeTier,
-    membership_status: billingStatus,
-    membership_source: "stripe",
-    platform_role: resolvePlatformRoleAfterTierChange(existing?.platform_role, safeTier),
-    updated_at: new Date().toISOString(),
-  };
-
-  await admin.from(table).update(patch).eq("workos_user_id", workosUserId);
 }
 
 export async function POST(request) {
@@ -143,6 +87,9 @@ export async function POST(request) {
             .from(profileTableName())
             .update({ stripe_customer_id: cust, updated_at: new Date().toISOString() })
             .eq("workos_user_id", workos);
+          if (session.mode === "setup") {
+            await syncPaymentMethodSummaryOnly(admin, stripe, String(workos), cust);
+          }
         } else if (cust && profileId) {
           await admin
             .from(profileTableName())
@@ -154,7 +101,12 @@ export async function POST(request) {
           typeof session.subscription === "string" ? session.subscription : session.subscription?.id;
         if (subId) {
           const sub = await stripe.subscriptions.retrieve(subId);
-          await syncSubscription(admin, sub, cust);
+          const workosUserId = await resolveWorkosUserId(admin, sub, cust);
+          if (workosUserId) {
+            await syncProfileFromSubscription(admin, stripe, workosUserId, sub, {
+              sponsorTierId: session.metadata?.sponsor_package_id || sub.metadata?.sponsor_package_id,
+            });
+          }
         }
 
         if (session.mode === "payment" && session.metadata?.checkout_kind === "podcast_sponsor") {
@@ -179,6 +131,13 @@ export async function POST(request) {
               podcastSponsorLastSessionId: session.id,
             });
             if (!merge.ok) console.warn("[torp] podcast profile metadata merge", merge.reason);
+            await admin
+              .from(profileTableName())
+              .update({
+                sponsor_tier: String(session.metadata?.podcast_tier_id || ""),
+                updated_at: new Date().toISOString(),
+              })
+              .eq("workos_user_id", String(w));
           }
         }
         break;
@@ -187,13 +146,21 @@ export async function POST(request) {
       case "customer.subscription.updated": {
         const sub = event.data.object;
         const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer?.id;
-        await syncSubscription(admin, sub, customerId);
+        const workosUserId = await resolveWorkosUserId(admin, sub, customerId);
+        if (workosUserId) {
+          await syncProfileFromSubscription(admin, stripe, workosUserId, sub, {
+            sponsorTierId: sub.metadata?.sponsor_package_id,
+          });
+        }
         break;
       }
       case "customer.subscription.deleted": {
         const sub = event.data.object;
         const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer?.id;
-        await syncSubscription(admin, sub, customerId, { forceEnded: true });
+        const workosUserId = await resolveWorkosUserId(admin, sub, customerId);
+        if (workosUserId) {
+          await syncProfileFromSubscription(admin, stripe, workosUserId, sub, { forceEnded: true });
+        }
         break;
       }
       case "invoice.paid":
@@ -207,7 +174,13 @@ export async function POST(request) {
 
         if (event.type !== "invoice.upcoming") {
           const sub = await stripe.subscriptions.retrieve(subId);
-          await syncSubscription(admin, sub, customerId);
+          const workosUserId =
+            profileForNotify?.workos_user_id || (await resolveWorkosUserId(admin, sub, customerId));
+          if (workosUserId) {
+            await syncProfileFromSubscription(admin, stripe, workosUserId, sub, {
+              sponsorTierId: sub.metadata?.sponsor_package_id,
+            });
+          }
         }
 
         if (profileForNotify?.id) {
@@ -216,6 +189,16 @@ export async function POST(request) {
           } catch (e) {
             console.warn("[torp] membership notification", e?.message || e);
           }
+        }
+        break;
+      }
+      case "payment_method.attached": {
+        const pm = event.data.object;
+        const customerId = typeof pm.customer === "string" ? pm.customer : pm.customer?.id;
+        if (!customerId) break;
+        const profile = await getProfileRowByStripeCustomerId(admin, customerId);
+        if (profile?.workos_user_id) {
+          await syncPaymentMethodSummaryOnly(admin, stripe, String(profile.workos_user_id), customerId);
         }
         break;
       }

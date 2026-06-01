@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import MissionPageTopStrip from "@/components/layout/MissionPageTopStrip";
-import MembershipAtAGlance from "@/features/membership/components/MembershipAtAGlance";
+import MembershipBillingCenter from "@/features/membership/components/MembershipBillingCenter";
 import ManageBillingButton from "@/features/profile/components/ManageBillingButton";
 import AccountInfoCard from "@/features/profile/components/AccountInfoCard";
 
@@ -197,16 +197,13 @@ export default function AccountSettingsPage({
       </div>
 
       <div id="account-membership">
-        <MembershipAtAGlance
-          surface="settings"
+        <MembershipBillingCenter
           isAuthenticated
           currentTierKey={profile.membershipStatus}
-          onSelectTier={(id) => setMembershipStatus(id)}
           onRequestSignIn={openSignInForMembership}
           sessionKind={sessionKind}
           stripeMemberReady={!!authBackend?.stripe}
           stripeSponsorSubscriptionReady={!!authBackend?.stripeSponsorSubscription}
-          stripeMemberMissingEnv={authBackend?.stripeMemberRecurringMissingEnv || []}
           checkoutReturnPath="/settings"
           membershipBillingStatus={profile.membershipBillingStatus}
           stripeCustomerReady={!!profile.stripeCustomerIdSet}
