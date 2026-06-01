@@ -50,7 +50,8 @@ export function computeProfileCompletion(profile, options = {}) {
  * @param {{ workOSUser?: { email?: string, firstName?: string, lastName?: string } | null }} [options]
  */
 export function getIncompleteEditFocusIds(profile, options = {}) {
-  const { account } = evaluateAccountProfileCompleteness(profile, options);
+  const account = evaluateAccountProfileCompleteness(profile, options);
+  if (!account?.requiredItems || !account?.recommendedItems) return new Set();
   return new Set(
     [...account.requiredItems, ...account.recommendedItems]
       .filter((s) => !s.done && s.editFocus)

@@ -109,6 +109,7 @@ export function ProfileEditProvider({ children }) {
     loadingProfile,
     sessionKind,
     uploadAvatarFile,
+    workOSAccountEmail,
   } = useProfileData();
 
   const [open, setOpen] = useState(false);
@@ -120,7 +121,19 @@ export function ProfileEditProvider({ children }) {
   const editDraftTouchedRef = useRef(new Set());
   const prevLoadingProfileForEditRef = useRef(loadingProfile);
 
-  const editIncompleteKeys = open && editDraft ? getIncompleteEditFocusIds(editDraft) : new Set();
+  const editIncompleteKeys =
+    open && editDraft
+      ? getIncompleteEditFocusIds(editDraft, {
+          workOSUser:
+            sessionKind === "workos"
+              ? {
+                  email: workOSAccountEmail || undefined,
+                  firstName: editDraft.firstName,
+                  lastName: editDraft.lastName,
+                }
+              : null,
+        })
+      : new Set();
 
   const profileEditMergeKey = useMemo(
     () =>
