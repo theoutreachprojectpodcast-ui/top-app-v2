@@ -45,10 +45,62 @@ function resolveProfileEditFocusKey(sectionRaw, focusRaw) {
   return focusKey || null;
 }
 
-function ProfileEditProviderInner({ children }) {
+/**
+ * `useSearchParams` must not wrap the context provider — Suspense fallback would render
+ * children without ProfileEditContext and crash any page calling `useProfileEdit()`.
+ */
+function ProfileEditDeepLinkListener({
+  isAuthenticated,
+  loadingProfile,
+  open,
+  openProfileEdit,
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const deepLinkHandledRef = useRef(false);
+
+  useEffect(() => {
+    const editFromQuery = searchParams.get("edit") === "1";
+    const pending = peekPendingProfileEdit();
+    if (editFromQuery) {
+      markPendingProfileEdit({
+        focus: searchParams.get("focus") || searchParams.get("field") || pending?.focus || "",
+        section: searchParams.get("section") || pending?.section || "",
+      });
+      markProfileEditOpen();
+    }
+
+    const wantsOpen = editFromQuery || pending || isProfileEditOpen();
+    if (!wantsOpen) {
+      deepLinkHandledRef.current = false;
+      return;
+    }
+    if (!isAuthenticated || loadingProfile) return;
+    if (open) {
+      if (editFromQuery && pathname === "/profile") {
+        router.replace("/profile", { scroll: false });
+      }
+      return;
+    }
+    if (deepLinkHandledRef.current && !editFromQuery) return;
+
+    const focusKey = resolveProfileEditFocusKey(
+      searchParams.get("section") || pending?.section,
+      searchParams.get("focus") || searchParams.get("field") || pending?.focus,
+    );
+    deepLinkHandledRef.current = true;
+    openProfileEdit(focusKey);
+    if (editFromQuery && pathname === "/profile") {
+      router.replace("/profile", { scroll: false });
+    }
+  }, [pathname, searchParams, loadingProfile, isAuthenticated, open, openProfileEdit, router]);
+
+  return null;
+}
+
+export function ProfileEditProvider({ children }) {
+  const router = useRouter();
   const { refresh: refreshAuthSession } = useAuthSession();
   const {
     profile,
@@ -67,7 +119,6 @@ function ProfileEditProviderInner({ children }) {
   const [editSaving, setEditSaving] = useState(false);
   const editDraftTouchedRef = useRef(new Set());
   const prevLoadingProfileForEditRef = useRef(loadingProfile);
-  const deepLinkHandledRef = useRef(false);
 
   const editIncompleteKeys = open && editDraft ? getIncompleteEditFocusIds(editDraft) : new Set();
 
@@ -134,7 +185,6 @@ function ProfileEditProviderInner({ children }) {
     setEditSaving(false);
     editDraftTouchedRef.current = new Set();
     clearProfileEditSessionHints();
-    deepLinkHandledRef.current = false;
     setEditFieldFocus(null);
     setOpen(false);
     setEditDraft(null);
@@ -157,52 +207,6 @@ function ProfileEditProviderInner({ children }) {
       closeProfileEdit();
     }, 900);
   }, [editSaving, editDraft, persistProfile, profile, refreshAuthSession, closeProfileEdit]);
-
-  /** Restore open modal after TopApp route remount (sessionStorage + optional ?edit=1). */
-  useEffect(() => {
-    const editFromQuery = searchParams.get("edit") === "1";
-    const pending = peekPendingProfileEdit();
-    if (editFromQuery) {
-      markPendingProfileEdit({
-        focus: searchParams.get("focus") || searchParams.get("field") || pending?.focus || "",
-        section: searchParams.get("section") || pending?.section || "",
-      });
-      markProfileEditOpen();
-    }
-
-    const wantsOpen = editFromQuery || pending || isProfileEditOpen();
-    if (!wantsOpen) {
-      deepLinkHandledRef.current = false;
-      return;
-    }
-    if (!isAuthenticated) return;
-    if (loadingProfile) return;
-    if (open) {
-      if (editFromQuery && pathname === "/profile") {
-        router.replace("/profile", { scroll: false });
-      }
-      return;
-    }
-    if (deepLinkHandledRef.current && !editFromQuery) return;
-
-    const focusKey = resolveProfileEditFocusKey(
-      searchParams.get("section") || pending?.section,
-      searchParams.get("focus") || searchParams.get("field") || pending?.focus,
-    );
-    deepLinkHandledRef.current = true;
-    openProfileEdit(focusKey);
-    if (editFromQuery && pathname === "/profile") {
-      router.replace("/profile", { scroll: false });
-    }
-  }, [
-    pathname,
-    searchParams,
-    loadingProfile,
-    isAuthenticated,
-    open,
-    openProfileEdit,
-    router,
-  ]);
 
   /** Open after profile load when Edit was requested while `loadingProfile` was true. */
   useEffect(() => {
@@ -290,15 +294,15 @@ function ProfileEditProviderInner({ children }) {
     <ProfileEditContext.Provider value={value}>
       {children}
       {modal}
+      <Suspense fallback={null}>
+        <ProfileEditDeepLinkListener
+          isAuthenticated={isAuthenticated}
+          loadingProfile={loadingProfile}
+          open={open}
+          openProfileEdit={openProfileEdit}
+        />
+      </Suspense>
     </ProfileEditContext.Provider>
-  );
-}
-
-export function ProfileEditProvider({ children }) {
-  return (
-    <Suspense fallback={children}>
-      <ProfileEditProviderInner>{children}</ProfileEditProviderInner>
-    </Suspense>
   );
 }
 
