@@ -225,7 +225,7 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])::after
    here — animated full-bleed backdrop often draws a transient vertical white seam at the viewport edge (esp. next to scrollbar).
    Podcast: `appShell--podcast` / `data-page-atmosphere="podcast"` — excluded (see podcasts.css).
    --header-scroll-progress 0–1 + classes header-at-top | header-scrolled | header-solid (position).
-   --header-white-veil-opacity 0–1 (JS): white gradient layer — transparent when scrolling up / at top; builds on scroll down. Shape when scrolled: 80% white at top → 20% at bottom edge.
+   --header-white-veil-opacity 0–1 (JS): white gradient layer — transparent when scrolling up / at top; builds on scroll down. When scrolled: 100% white at top, soft feather to transparent at bottom.
    -------------------------------------------------------------------------- */
 main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]),
 .appShell.header-content-behind {
@@ -404,12 +404,21 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topba
   );
   transition: opacity 0.28s cubic-bezier(0.22, 1, 0.36, 1);
 }
-/* Scroll-down veil: 80% white at top → 20% white at bottom (all breakpoints). */
+/* Scroll-down veil: 100% opaque at top, multi-stop fade to transparent (soft bottom edge). */
 main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]).header-scrolled .topbarOcclusion::before,
 main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]).header-solid .topbarOcclusion::before {
-  background-image: linear-gradient(180deg, rgb(255 255 255 / 0.8) 0%, rgb(255 255 255 / 0.2) 100%);
-  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 100%);
-  mask-image: linear-gradient(180deg, #000 0%, #000 100%);
+  background-image: linear-gradient(
+    180deg,
+    rgb(255 255 255 / 1) 0%,
+    rgb(255 255 255 / 0.94) 20%,
+    rgb(255 255 255 / 0.72) 42%,
+    rgb(255 255 255 / 0.38) 62%,
+    rgb(255 255 255 / 0.12) 80%,
+    rgb(255 255 255 / 0) 100%
+  );
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 36%, rgba(0, 0, 0, 0.5) 68%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0%, #000 36%, rgba(0, 0, 0, 0.5) 68%, transparent 100%);
+  opacity: 1;
 }
 :root[data-color-scheme="dark"]
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]).header-scrolled
@@ -423,9 +432,18 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]).header
 .dark
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]).header-solid
   .topbarOcclusion::before {
-  background-image: linear-gradient(180deg, rgba(22, 24, 28, 0.8) 0%, rgba(22, 24, 28, 0.2) 100%);
-  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 100%);
-  mask-image: linear-gradient(180deg, #000 0%, #000 100%);
+  background-image: linear-gradient(
+    180deg,
+    rgba(22, 24, 28, 1) 0%,
+    rgba(22, 24, 28, 0.92) 20%,
+    rgba(22, 24, 28, 0.68) 42%,
+    rgba(22, 24, 28, 0.34) 62%,
+    rgba(22, 24, 28, 0.1) 80%,
+    rgba(22, 24, 28, 0) 100%
+  );
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 36%, rgba(0, 0, 0, 0.5) 68%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0%, #000 36%, rgba(0, 0, 0, 0.5) 68%, transparent 100%);
+  opacity: 1;
 }
 :root[data-color-scheme="dark"] main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarOcclusion::before,
 .dark main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarOcclusion::before {
