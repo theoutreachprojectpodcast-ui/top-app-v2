@@ -1,11 +1,34 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Bookmark, CreditCard, LogOut, Settings, UserRound } from "lucide-react";
 import Avatar from "@/components/shared/Avatar";
+
+function MenuRow({ icon: Icon, label, hint, danger, onClick }) {
+  return (
+    <button
+      type="button"
+      className={`headerAccountMenuItem${danger ? " headerAccountMenuItem--danger" : ""}`}
+      role="menuitem"
+      onClick={onClick}
+    >
+      <span className={`headerAccountMenuIcon${danger ? " headerAccountMenuIcon--danger" : ""}`} aria-hidden="true">
+        <Icon className="headerAccountMenuIconSvg" size={18} strokeWidth={2} />
+      </span>
+      <span className="headerAccountMenuText">
+        <span className="headerAccountMenuLabel">{label}</span>
+        {hint ? <span className="headerAccountMenuHint">{hint}</span> : null}
+      </span>
+    </button>
+  );
+}
 
 export default function HeaderAccountMenu({
   avatarSrc,
   ariaLabel,
+  displayName = "",
+  email = "",
+  membershipHint = "",
   onProfile,
   onSettings,
   onMembership,
@@ -14,6 +37,8 @@ export default function HeaderAccountMenu({
 }) {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef(null);
+  const name = String(displayName || "").trim();
+  const emailLine = String(email || "").trim();
 
   useEffect(() => {
     if (!open) return;
@@ -31,11 +56,18 @@ export default function HeaderAccountMenu({
     };
   }, [open]);
 
+  function closeAnd(fn) {
+    return () => {
+      fn?.();
+      setOpen(false);
+    };
+  }
+
   return (
     <div className="headerAccountWrap" ref={wrapRef}>
       <button
         type="button"
-        className="headerAccountTrigger"
+        className={`headerAccountTrigger${open ? " headerAccountTrigger--open" : ""}`}
         aria-label={ariaLabel || "Account menu"}
         aria-expanded={open}
         aria-haspopup="true"
@@ -45,22 +77,26 @@ export default function HeaderAccountMenu({
       </button>
       {open ? (
         <div className="headerAccountDropdown" role="menu">
-          <button type="button" className="headerAccountMenuItem" role="menuitem" onClick={() => { onProfile?.(); setOpen(false); }}>
-            Profile
-          </button>
-          <button type="button" className="headerAccountMenuItem" role="menuitem" onClick={() => { onSettings?.(); setOpen(false); }}>
-            Settings
-          </button>
-          <button type="button" className="headerAccountMenuItem" role="menuitem" onClick={() => { onMembership?.(); setOpen(false); }}>
-            Membership / account
-          </button>
-          <button type="button" className="headerAccountMenuItem" role="menuitem" onClick={() => { onSavedItems?.(); setOpen(false); }}>
-            Saved organizations
-          </button>
+          <div className="headerAccountDropdownHeader">
+            <Avatar src={avatarSrc} alt="" className="headerAccountDropdownAvatar" sizes="44px" />
+            <div className="headerAccountDropdownMeta">
+              <p className="headerAccountDropdownName">{name || "Your account"}</p>
+              {emailLine ? <p className="headerAccountDropdownEmail">{emailLine}</p> : null}
+            </div>
+          </div>
+          <div className="headerAccountMenuGroup" role="group" aria-label="Account">
+            <MenuRow icon={UserRound} label="Profile" onClick={closeAnd(onProfile)} />
+            <MenuRow icon={Settings} label="Settings" onClick={closeAnd(onSettings)} />
+            <MenuRow
+              icon={CreditCard}
+              label="Membership / account"
+              hint={membershipHint || undefined}
+              onClick={closeAnd(onMembership)}
+            />
+            <MenuRow icon={Bookmark} label="Saved organizations" onClick={closeAnd(onSavedItems)} />
+          </div>
           <div className="headerAccountMenuRule" role="presentation" />
-          <button type="button" className="headerAccountMenuItem headerAccountMenuItem--danger" role="menuitem" onClick={() => { onSignOut?.(); setOpen(false); }}>
-            Sign out
-          </button>
+          <MenuRow icon={LogOut} label="Sign out" danger onClick={closeAnd(onSignOut)} />
         </div>
       ) : null}
     </div>

@@ -16,6 +16,7 @@ These were completed locally and pushed to **`QA`** — verify on your branch if
 | Mobile prep script | `pnpm --dir web run mobile:prep:prod` |
 | Capacitor sync | Native projects synced with `CAP_SERVER_URL=https://theoutreachproject.app` |
 | Supporting docs | [production-supabase-migration-order.md](./production-supabase-migration-order.md), [store-listing-copy.md](./store-listing-copy.md), [vercel-production-env.template](./vercel-production-env.template), [admin-qa-production-setup.md](./admin-qa-production-setup.md) |
+| Vercel `WORKOS_COOKIE_DOMAIN` | Set to `theoutreachproject.app` (Production) — shared WorkOS + admin email session cookies across apex, `www`, and `admin` |
 
 ---
 
@@ -121,7 +122,7 @@ Do this in the **WorkOS Production** environment (not Staging):
 - [ ] Copy `sk_live_…` and `client_…` into Vercel Production (must match §4).
 - [ ] Register redirect URI: **`https://theoutreachproject.app/callback`** (must match `NEXT_PUBLIC_WORKOS_REDIRECT_URI` exactly).
 - [ ] Add launch team emails to your **WorkOS Organization** (AuthKit sign-in requires org membership).
-- [ ] Confirm `WORKOS_COOKIE_DOMAIN=theoutreachproject.app` on Vercel so sessions work on apex + `www` + `admin` + mobile WebView.
+- [x] Confirm `WORKOS_COOKIE_DOMAIN=theoutreachproject.app` on Vercel so sessions work on apex + `www` + `admin` + mobile WebView.
 
 If sign-in fails with “not a valid redirect URI”, the URL in the error must appear in WorkOS **Production** → Redirects, and Vercel must be redeployed after any `NEXT_PUBLIC_*` change.
 
@@ -243,7 +244,7 @@ pnpm --dir web run cap:open:android  # Android Studio
 The app loads the same WorkOS AuthKit flow as the browser (see §5):
 
 - [ ] Redirect URI registered: `https://theoutreachproject.app/callback`
-- [ ] `WORKOS_COOKIE_DOMAIN=theoutreachproject.app` on Vercel Production
+- [x] `WORKOS_COOKIE_DOMAIN=theoutreachproject.app` on Vercel Production
 
 **Smoke on a real device** (not only emulator):
 

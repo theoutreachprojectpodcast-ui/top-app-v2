@@ -617,6 +617,9 @@ function TopAppInner({ initialNav = "home" }) {
                   <HeaderNotificationBell skipSessionGate />
                   <HeaderAccountMenu
                     avatarSrc={profile.avatarUrl || emptyProfileAvatarUrl()}
+                    displayName={fullName}
+                    email={profile.email}
+                    membershipHint={isMember ? "Member" : "View plans"}
                     ariaLabel={`Account menu for ${fullName || profile.email || "signed-in user"}`}
                     onProfile={() => {
                       if (pathname !== "/profile") router.push("/profile");
