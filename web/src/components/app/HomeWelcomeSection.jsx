@@ -42,7 +42,7 @@ export default function HomeWelcomeSection({
           <>
             <button className="btnPrimary" type="button" onClick={onOpenMembershipJourney}>
               <AppIcon name="profile" />
-              Join — account &amp; membership
+              Join — activate membership
             </button>
             <button className="btnSoft" type="button" onClick={onBrowseFree}>
               Browse nonprofits free

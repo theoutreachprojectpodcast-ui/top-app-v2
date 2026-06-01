@@ -19,13 +19,17 @@
 -- ---------------------------------------------------------------------------
 -- First platform admin (by email)
 -- Only promotes from user/moderator (or null) — does not overwrite member/sponsor/support/admin.
--- Re-runs are no-ops once andy@… is already admin.
+-- Re-runs are no-ops once the row is already admin.
+-- Canonical: andy@volentelabs.com — legacy typo andy@valentelabs.com still matched for existing rows.
 -- ---------------------------------------------------------------------------
 update public.torp_profiles
 set
   platform_role = 'admin',
   updated_at = now()
-where lower(trim(coalesce(email, ''))) = lower(trim('andy@valentelabs.com'))
+where lower(trim(coalesce(email, ''))) in (
+    lower(trim('andy@volentelabs.com')),
+    lower(trim('andy@valentelabs.com'))
+  )
   and (
     platform_role is null
     or platform_role in ('user', 'moderator')

@@ -43,7 +43,9 @@ export default function SponsorProfilePage({ slug }) {
   return (
     <main className="topApp sponsorProfileShell">
       <div className="headerBrandStack">
-        <BrandMark size="header" />
+        <Link href="/" aria-label="Go to home">
+          <BrandMark size="header" />
+        </Link>
       </div>
       <header className="topbar">
         <HeaderInner className="topbarInner nonprofitProfileTopbarInner">

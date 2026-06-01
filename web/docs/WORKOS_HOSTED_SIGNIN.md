@@ -4,12 +4,12 @@ The app uses **WorkOS AuthKit** for production sign-in: users are sent to WorkOS
 
 ## 1. WorkOS dashboard
 
-1. Open [WorkOS Dashboard](https://dashboard.workos.com) and select the right **environment** (top switcher):
-   - **Staging** — use for local dev and Vercel *Preview* / QA (`sk_test_…` keys).
-   - **Production** — use for the live site and Vercel *Production* (`sk_live_…` keys). Production deploys in this repo must not use Staging keys; the build validator enforces that on Vercel Production.
-2. Under **Redirects**, add a **Redirect URI** that matches **`NEXT_PUBLIC_WORKOS_REDIRECT_URI`** exactly (including `http` vs `https` and port).
-   - Default in `web/.env.local.example`: `http://localhost:3000/callback` for `pnpm dev` (port 3000).
-   - If you use `pnpm dev:alt` (port 3001), add `http://localhost:3001/callback` and set the env var to match.
+1. Open [WorkOS Dashboard](https://dashboard.workos.com) → your environment.
+2. Under **Redirects**, add a **Redirect URI** that matches the app callback vars exactly (including `http` vs `https` and port):
+   - `WORKOS_REDIRECT_URI`
+   - `NEXT_PUBLIC_WORKOS_REDIRECT_URI`
+   - Default in `web/.env.local.example`: `http://localhost:3000/callback` for `pnpm dev`.
+   - If you use `pnpm dev:alt` (port 3001), add `http://localhost:3001/callback` and set both vars accordingly.
 3. Configure **Sign-in** / **AuthKit** and any social connections (e.g. Google) you want on the hosted screen.
 4. Set a **Logout redirect** URI if you use sign-out (see AuthKit docs).
 
@@ -22,6 +22,8 @@ Copy `web/.env.local.example` and set at least:
 | `WORKOS_API_KEY` | Server secret from the dashboard |
 | `WORKOS_CLIENT_ID` | Client ID from the dashboard |
 | `WORKOS_COOKIE_PASSWORD` | **≥ 32 characters** (encrypts the session cookie). e.g. `openssl rand -base64 24` |
+| `WORKOS_COOKIE_DOMAIN` | Production shared domain (`theoutreachproject.app`) for cross-subdomain sessions |
+| `WORKOS_REDIRECT_URI` | Server callback URI (`.../callback`) |
 | `NEXT_PUBLIC_WORKOS_REDIRECT_URI` | Must match the dashboard Redirect URI and your dev port (`/callback`) |
 
 Optional tuning: `WORKOS_COOKIE_MAX_AGE`, `WORKOS_COOKIE_DOMAIN`, etc. — see `@workos-inc/authkit-nextjs` README.
@@ -39,3 +41,7 @@ Optional tuning: `WORKOS_COOKIE_MAX_AGE`, `WORKOS_COOKIE_DOMAIN`, etc. — see `
 - **Sign-in / sign-up** (`web/src/app/api/auth/workos/signin|signup/route.js`) call **`getSignInUrl` / `getSignUpUrl`** (hosted UI).
 
 CLI tips: `web/docs/WORKOS_CLI.md` and `pnpm workos doctor`.
+
+## QA (Vercel)
+
+Set `APP_BASE_URL` / `NEXT_PUBLIC_APP_URL` to the QA origin (see `web/.env.local.example`). **Demo** auth stays on for Preview and for stable QA hostnames (`qaDeploymentContext`). For `/admin` on QA without copying production `PLATFORM_ADMIN_EMAILS`, set server-only **`QA_PLATFORM_ADMIN_EMAILS`** (comma-separated). WorkOS still needs redirect URIs and org membership for those accounts.

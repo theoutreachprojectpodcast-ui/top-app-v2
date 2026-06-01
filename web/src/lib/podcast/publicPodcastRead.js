@@ -171,6 +171,7 @@ export async function loadPublicPodcastLandingData(admin) {
   let source = "youtube_playlist";
   let degraded = false;
   let error;
+  let dbPublicEpisodes = [];
 
   const excludeVideoIds = new Set();
   const forceIncludeVideoIds = new Set();
@@ -188,6 +189,7 @@ export async function loadPublicPodcastLandingData(admin) {
       byVideoId = new Map(
         epData.map((e) => [String(e.youtube_video_id || "").trim(), e]).filter(([id]) => id),
       );
+      dbPublicEpisodes = sortByPublishedDesc(epData.filter((row) => episodeRowIsPublicListed(row)));
       for (const row of epData) {
         const id = String(row.youtube_video_id || "").trim();
         if (!id) continue;
@@ -211,12 +213,23 @@ export async function loadPublicPodcastLandingData(admin) {
   if (!pl.ok) {
     degraded = true;
     error = pl.error;
-    source = "youtube_playlist_failed";
+    episodes = dbPublicEpisodes.slice(0, MIN_PUBLIC_EPISODES);
+    source = episodes.length ? "youtube_playlist_failed+supabase_fallback" : "youtube_playlist_failed";
   } else {
     const merged = (pl.videos || [])
       .map((r) => mergePlaylistRuntimeWithDb(r, byVideoId.get(String(r.youtube_video_id || "").trim())))
       .filter((ep) => episodeRowIsPublicListed(ep));
-    episodes = sortByPublishedDesc(merged).slice(0, MIN_PUBLIC_EPISODES);
+    const mergedSorted = sortByPublishedDesc(merged);
+    if (mergedSorted.length >= MIN_PUBLIC_EPISODES) {
+      episodes = mergedSorted.slice(0, MIN_PUBLIC_EPISODES);
+    } else {
+      const missing = MIN_PUBLIC_EPISODES - mergedSorted.length;
+      const mergedVideoIds = new Set(mergedSorted.map((ep) => String(ep?.youtube_video_id || "").trim()).filter(Boolean));
+      const dbTopups = dbPublicEpisodes
+        .filter((ep) => !mergedVideoIds.has(String(ep?.youtube_video_id || "").trim()))
+        .slice(0, missing);
+      episodes = sortByPublishedDesc([...mergedSorted, ...dbTopups]).slice(0, MIN_PUBLIC_EPISODES);
+    }
     if (episodes.length < MIN_PUBLIC_EPISODES) degraded = true;
     if (admin && byVideoId.size) source = "youtube_playlist+supabase";
   }

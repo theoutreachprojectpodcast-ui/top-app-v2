@@ -1,9 +1,6 @@
 import { YoutubeTranscript } from "youtube-transcript";
 
-/**
- * @param {string} videoId
- * @returns {Promise<string>}
- */
+/** @param {string} videoId */
 export async function fetchTranscriptPlainText(videoId) {
   const raw = String(videoId || "").trim();
   if (!raw) return "";

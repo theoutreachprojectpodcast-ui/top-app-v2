@@ -98,8 +98,10 @@ a {
   line-height: 1.5;
 }
 
-/* Podcast uses .footerDock + podcasts.css for the dock; skip legacy fixed subpage bar */
-.appShell--subpage:not(.appShell--podcast) .bottomNav {
+/* Podcast uses .footerDock + podcasts.css for the dock; skip legacy fixed subpage bar.
+   Use only a DIRECT child .bottomNav — docked chrome nests nav inside .footerDock; descendant
+   matching used to apply duplicate position:fixed and broke layout/content on /trusted, etc. */
+.appShell--subpage:not(.appShell--podcast) > .bottomNav {
   position: fixed;
   left: 50%;
   transform: translateX(-50%);
@@ -132,7 +134,7 @@ a {
 }
 
 @media (max-width: 760px) {
-  .appShell--subpage:not(.appShell--podcast) .bottomNav {
+  .appShell--subpage:not(.appShell--podcast) > .bottomNav {
     width: calc(100% - 24px);
     justify-content: flex-start;
     overflow-x: auto;
@@ -141,7 +143,7 @@ a {
     padding-bottom: 2px;
   }
 
-  .appShell--subpage:not(.appShell--podcast) .bottomNav::-webkit-scrollbar {
+  .appShell--subpage:not(.appShell--podcast) > .bottomNav::-webkit-scrollbar {
     display: none;
   }
 

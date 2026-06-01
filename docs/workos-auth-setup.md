@@ -10,9 +10,11 @@ This runbook covers full WorkOS authentication setup for local, QA, production, 
 - Redirect URIs must include all active origins:
   - `http://localhost:3000/callback`
   - `http://localhost:3001/callback` (if using `dev:alt`)
+  - `https://qa-the-outreach-project.vercel.app/callback` (stable QA)
   - `https://the-outreach-project-app-git-qa-the-outreach-project.vercel.app/callback` (QA)
   - `https://the-outreach-project-app.vercel.app/callback` (production)
 - Logout redirect URI:
+  - `https://qa-the-outreach-project.vercel.app/` (stable QA)
   - `https://the-outreach-project-app.vercel.app/`
 - Ensure the WorkOS App provides:
   - API key (`sk_*`)
@@ -67,6 +69,12 @@ Core code:
 - Public (logged out): public pages only.
 - Member/User: authenticated WorkOS user.
 - Admin: `platform_role=admin` or listed in `PLATFORM_ADMIN_EMAILS`.
+
+**Onboarding a new admin (e.g. `andy@volentelabs.com`):**
+
+1. **WorkOS (SSO):** In the WorkOS Dashboard → User Management → your **Organization**, invite or add the user so they can complete AuthKit sign-in. The app does not maintain a separate SSO allowlist in code.
+2. **App env:** Set `PLATFORM_ADMIN_EMAILS` to include their WorkOS sign-in email (comma-separated if several). This unlocks `/admin` even before the profile row has `platform_role`.
+3. **Database (recommended):** After first sign-in, set `torp_profiles.platform_role = 'admin'` for their row (see `web/supabase/admin_platform_rbac_v04.sql` for an idempotent email-based update). Optional: add the same email to `COMMUNITY_MODERATOR_EMAILS` for moderation/enrichment tool routes.
 
 Protected admin routes use:
 

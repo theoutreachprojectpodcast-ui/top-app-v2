@@ -1,4 +1,10 @@
-import { classifyPodcastUpload, sortByPublishedDesc } from "./episodeParser";
+import {
+  classifyPodcastUpload,
+  isBelowMinEpisodeDuration,
+  isShortsUrl,
+  sortByPublishedDesc,
+  titleContainsExcludedContentMarker,
+} from "./episodeParser";
 import { fetchPlaylistItemsPage, fetchVideosByIds } from "./youtubeUploadsServer";
 
 /** Official “full episodes” playlist (env override). */
@@ -8,16 +14,8 @@ export function officialFullEpisodesPlaylistId() {
 
 /**
  * Walk a single YouTube playlist (not channel uploads), classify items, skip admin-excluded ids,
- * optionally force-include playlist ids that are flagged in CMS, then return **all** accepted rows
- * sorted by `published_at` desc (caller merges DB + filters + takes top N).
- *
- * @param {{
- *   playlistId?: string,
- *   maxPages?: number,
- *   maxAccepted?: number,
- *   excludeVideoIds?: Set<string>,
- *   forceIncludeVideoIds?: Set<string>,
- * }} opts
+ * optionally force-include playlist ids that are flagged in CMS, then return accepted rows
+ * sorted by `published_at` desc.
  */
 export async function fetchOfficialPlaylistAcceptedEpisodes(opts = {}) {
   const maxPages = Math.max(1, Number(opts.maxPages) || 50);
@@ -81,26 +79,28 @@ export async function fetchOfficialPlaylistAcceptedEpisodes(opts = {}) {
         }
 
         const c = classifyPodcastUpload(row);
-        if (c.ok) {
-          accepted.push({
-            ...row,
-            pipeline_decision: "accepted",
-            episode_number: c.episodeNumber,
-          });
-          if (accepted.length >= maxAccepted) break;
-        }
+        const isFullEpisodeLike =
+          !isShortsUrl(row.youtube_url, id) &&
+          !titleContainsExcludedContentMarker(row.title, row.description) &&
+          !isBelowMinEpisodeDuration(row.duration_seconds);
+        if (!c.ok && !isFullEpisodeLike) continue;
+        accepted.push({
+          ...row,
+          episode_number: c.ok ? c.episodeNumber : null,
+          pipeline_decision: "accepted",
+          pipeline_reason: c.ok ? "matched_rules" : "playlist_full_episode_fallback",
+        });
+        if (accepted.length >= maxAccepted) break;
       }
     }
 
-    if (!page.nextPageToken || accepted.length >= maxAccepted) break;
+    if (!page.nextPageToken) break;
     token = page.nextPageToken;
   }
 
-  const sorted = sortByPublishedDesc(accepted);
   return {
     ok: true,
-    videos: sorted,
+    videos: sortByPublishedDesc(accepted),
     scannedPages,
-    totalAccepted: accepted.length,
   };
 }

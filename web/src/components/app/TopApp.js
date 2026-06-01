@@ -169,7 +169,9 @@ function TopAppInner({ initialNav = "home" }) {
     membership,
     isMember,
     favoriteEins,
+    favoriteEntityKeys,
     toggleFavoriteEin,
+    toggleFavoriteEntityKey,
     savedOrganizations,
     setMembershipStatus,
     resetDemo,
@@ -479,8 +481,17 @@ function TopAppInner({ initialNav = "home" }) {
     () => new Set((favoriteEins || []).map((e) => normalizeEinDigits(e)).filter((e) => e.length === 9)),
     [favoriteEins]
   );
+  const favoriteEntitySet = useMemo(
+    () => new Set((favoriteEntityKeys || []).map((k) => String(k || "").trim().toLowerCase()).filter(Boolean)),
+    [favoriteEntityKeys],
+  );
 
   function openSignInOverlay() {
+    if (authBackend.workos) {
+      writeRememberDevicePref(rememberDevice);
+      window.location.assign(workosSignInHereHref);
+      return;
+    }
     setAuthMode("signin");
     setOverlay("signin");
   }
@@ -508,6 +519,11 @@ function TopAppInner({ initialNav = "home" }) {
   }
 
   function openSignInForMembership() {
+    if (authBackend.workos) {
+      writeRememberDevicePref(rememberDevice);
+      window.location.assign(workosSignInHereHref);
+      return;
+    }
     setAuthMode("signin");
     setOverlay("signin");
   }
@@ -534,7 +550,9 @@ function TopAppInner({ initialNav = "home" }) {
   return (
     <main className={`topApp theme-${profile.theme}`}>
       <div className="headerBrandStack">
-        <BrandMark size="header" />
+        <Link href="/" aria-label="Go to home">
+          <BrandMark size="header" />
+        </Link>
       </div>
       <header className="topbar">
         <HeaderInner className="topbarInner">
@@ -659,23 +677,26 @@ function TopAppInner({ initialNav = "home" }) {
               </div>
 
               <div className="welcomeActionLayout">
-                <button className="card action welcomeSponsorsFeatured" onClick={goToSponsorsHub} type="button">
-                  <AppIcon name="sponsors" />
-                  <span className="welcomeActionLabel">Sponsors</span>
-                  <span className="welcomeActionHint">Sponsor hub — packages and tiers</span>
-                </button>
-                <div className="welcomeActionTriplet">
-                  <button className="card action welcomeTripletBtn" onClick={() => { setNav("trusted"); loadTrusted(true); }} type="button">
+                <div className="welcomeActionList">
+                  <button className="card action welcomeActionCard welcomeActionCard--uniform welcomeActionCard--sponsors" onClick={goToSponsorsHub} type="button">
+                    <AppIcon name="sponsors" />
+                    <span className="welcomeActionLabel">Sponsors</span>
+                    <span className="welcomeActionHint">Partner page — open packages from there</span>
+                  </button>
+                  <button className="card action welcomeActionCard welcomeActionCard--uniform welcomeActionCard--trusted" onClick={() => { setNav("trusted"); loadTrusted(true); }} type="button">
                     <AppIcon name="trusted" />
                     <span className="welcomeActionLabel">Trusted Resources</span>
+                    <span className="welcomeActionHint">Real help. Real impact.</span>
                   </button>
-                  <button className="card action welcomeTripletBtn" onClick={openCommunity} type="button">
+                  <button className="card action welcomeActionCard welcomeActionCard--uniform welcomeActionCard--community" onClick={openCommunity} type="button">
                     <AppIcon name="community" />
                     <span className="welcomeActionLabel">Community</span>
+                    <span className="welcomeActionHint">Connect. Share. Support each other.</span>
                   </button>
-                  <button className="card action welcomeTripletBtn" onClick={() => { router.push("/podcasts"); }} type="button">
+                  <button className="card action welcomeActionCard welcomeActionCard--uniform welcomeActionCard--podcasts" onClick={() => { router.push("/podcasts"); }} type="button">
                     <AppIcon name="podcast" />
                     <span className="welcomeActionLabel">Podcasts</span>
+                    <span className="welcomeActionHint">Stories that inspire. Voices that matter.</span>
                   </button>
                 </div>
               </div>
@@ -683,7 +704,11 @@ function TopAppInner({ initialNav = "home" }) {
               <div className="card" id="home-directory">
                 <h3><AppIcon name="search" />Nonprofit Directory</h3>
                 {!isQaLikeDeployment() ? (
-                  <DirectoryCategoryQuickPick value={filters.service} onChange={(letter) => setFilters((f) => ({ ...f, service: letter }))} />
+                  <DirectoryCategoryQuickPick
+                    value={filters.service}
+                    collapsible
+                    onChange={(letter) => setFilters((f) => ({ ...f, service: letter }))}
+                  />
                 ) : null}
                 <div className="form">
                   <select value={filters.state} onChange={(e) => setFilters((f) => ({ ...f, state: e.target.value }))}>
@@ -813,14 +838,30 @@ function TopAppInner({ initialNav = "home" }) {
                 const card = mapNonprofitCardRow(r, "trusted");
                 const ein = card.ein;
                 const einKey = normalizeEinDigits(ein);
+                const trustedKey = String(card.trustedResourceSlug || card.id || card.name || "")
+                  .trim()
+                  .toLowerCase()
+                  .replace(/[^a-z0-9]+/g, "-")
+                  .replace(/^-+|-+$/g, "");
+                const trustedFavoriteKey = trustedKey ? `trusted:${trustedKey}` : "";
+                const trustedIsFavorite =
+                  (einKey.length === 9 && favoriteEinSet.has(einKey)) ||
+                  (trustedFavoriteKey && favoriteEntitySet.has(trustedFavoriteKey));
                 return (
                   <NonprofitCard
                     key={`trusted-${ein}-${card.name}`}
                     card={card}
                     actionMode="trustedResource"
                     favoritesEnabled={isAuthenticated}
-                    isFavorite={einKey.length === 9 && favoriteEinSet.has(einKey)}
-                    onToggleFavorite={toggleFavoriteEin}
+                    isFavorite={trustedIsFavorite}
+                    onToggleFavorite={(key) => {
+                      const normalizedEin = normalizeEinDigits(key);
+                      if (normalizedEin.length === 9) {
+                        toggleFavoriteEin(normalizedEin);
+                        return;
+                      }
+                      if (trustedFavoriteKey) toggleFavoriteEntityKey(trustedFavoriteKey);
+                    }}
                     onRequestSignIn={!isAuthenticated ? openSignInOverlay : undefined}
                   />
                 );
@@ -846,8 +887,36 @@ function TopAppInner({ initialNav = "home" }) {
                   Sign in or create an account to manage your identity, membership, saved nonprofits, and preferences. Everything stays on this tab once you are signed in.
                 </p>
                 <div className="row wrap">
-                  <button className="btnPrimary" type="button" onClick={() => { setAuthMode("signin"); setOverlay("signin"); }}>Sign in</button>
-                  <button className="btnSoft" type="button" onClick={() => { setAuthMode("signup"); setOverlay("signin"); }}>Create an account</button>
+                  <button
+                    className="btnPrimary"
+                    type="button"
+                    onClick={() => {
+                      if (authBackend.workos) {
+                        writeRememberDevicePref(rememberDevice);
+                        window.location.assign(workosSignInHereHref);
+                        return;
+                      }
+                      setAuthMode("signin");
+                      setOverlay("signin");
+                    }}
+                  >
+                    Sign in
+                  </button>
+                  <button
+                    className="btnSoft"
+                    type="button"
+                    onClick={() => {
+                      if (authBackend.workos) {
+                        writeRememberDevicePref(rememberDevice);
+                        window.location.assign(workosSignUpHref("/onboarding", { rememberDevice }));
+                        return;
+                      }
+                      setAuthMode("signup");
+                      setOverlay("signin");
+                    }}
+                  >
+                    Create an account
+                  </button>
                   <button className="btnSoft" type="button" onClick={() => setNav("home")}>Back to home</button>
                   <button className="btnSoft" type="button" onClick={resetDemo}>Reset Demo</button>
                 </div>

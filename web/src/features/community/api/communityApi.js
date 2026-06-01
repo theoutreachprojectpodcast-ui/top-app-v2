@@ -277,7 +277,7 @@ export async function submitCommunityStory(supabase, payload, { useWorkOSApi = f
           title: payload.title,
           body: payload.body,
           nonprofit_name: payload.nonprofit_name,
-          nonprofit_ein: payload.nonprofit_ein,
+          nonprofit_ein: payload.nonprofit_ein ?? "",
           category: payload.category,
           post_type: payload.post_type,
           show_author_name: payload.show_author_name,
@@ -394,6 +394,38 @@ export function isModeratorUser({ userId = "", profile = {} } = {}) {
   const localDevFallback = process.env.NODE_ENV !== "production" && String(userId) === "demo-user";
 
   return byEnvUserId || byEnvEmail || localDevFallback;
+}
+
+/** Author updates their own post (`pending_review` or `approved`). Published posts return to the review queue. */
+export async function updateAuthorCommunityPost(postId, payload) {
+  const id = String(postId || "").trim();
+  if (!id) return { ok: false, message: "Missing post." };
+  try {
+    const res = await fetch(`/api/community/posts/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "author_edit",
+        title: payload.title,
+        body: payload.body,
+        nonprofit_name: payload.nonprofit_name,
+        nonprofit_ein: payload.nonprofit_ein,
+        category: payload.category,
+        post_type: payload.post_type,
+        show_author_name: payload.show_author_name,
+        link_url: payload.link_url,
+        photo_url: payload.photo_url,
+      }),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { ok: false, message: json.message || "Could not save changes." };
+    }
+    return { ok: true, message: json.message };
+  } catch {
+    return { ok: false, message: "Network error." };
+  }
 }
 
 export async function reviewSubmission(supabase, { postId, action, reviewerId, rejectionReason = "" }) {

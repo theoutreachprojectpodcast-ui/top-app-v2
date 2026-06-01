@@ -9,9 +9,7 @@ import { listSponsorsCatalog } from "@/features/sponsors/api/sponsorCatalogApi";
 import {
   FALLBACK_EPISODES,
   fetchPodcastRecentBundle,
-  resolvePodcastMemberContentAccess,
   listPodcastEpisodeGuests,
-  listPodcastMemberContent,
 } from "@/features/podcasts/api/podcastApi";
 import PodcastHero from "@/features/podcasts/components/PodcastHero";
 import EpisodeCard from "@/features/podcasts/components/EpisodeCard";
@@ -19,7 +17,6 @@ import GuestCard from "@/features/podcasts/components/GuestCard";
 import PodcastSponsorFlowModal from "@/features/podcasts/components/PodcastSponsorFlowModal";
 import PodcastSectionHeader from "@/features/podcasts/components/PodcastSectionHeader";
 import PodcastSponsorsSection from "@/features/podcasts/components/PodcastSponsorsSection";
-import MemberOnlyLockSection from "@/features/podcasts/components/MemberOnlyLockSection";
 import PodcastCTASection from "@/features/podcasts/components/PodcastCTASection";
 import PodcastApplyGuestForm from "@/features/podcasts/components/PodcastApplyGuestForm";
 import "@/features/podcasts/styles/podcasts.css";
@@ -30,7 +27,6 @@ export default function PodcastsLandingPage({
   initialBundleMeta = {},
 }) {
   const supabase = useMemo(() => getSupabaseClient(), []);
-  const [canAccessMembers, setCanAccessMembers] = useState(false);
   const [episodes, setEpisodes] = useState(
     Array.isArray(initialEpisodes) && initialEpisodes.length ? initialEpisodes : FALLBACK_EPISODES
   );
@@ -40,21 +36,11 @@ export default function PodcastsLandingPage({
   const [podcastSponsors, setPodcastSponsors] = useState([]);
   const [upcomingGuests, setUpcomingGuests] = useState([]);
   const [podcastBandImageUrl, setPodcastBandImageUrl] = useState("");
-  const [memberItems, setMemberItems] = useState([]);
   const [episodeGuests, setEpisodeGuests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [bundleNote, setBundleNote] = useState("");
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const access = await resolvePodcastMemberContentAccess();
-      if (!cancelled) setCanAccessMembers(access);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const [podcastSponsorBillingReady, setPodcastSponsorBillingReady] = useState(true);
+  const [podcastSponsorBillingMissingEnv, setPodcastSponsorBillingMissingEnv] = useState([]);
 
   const [applyOpen, setApplyOpen] = useState(false);
   const [sponsorFlowOpen, setSponsorFlowOpen] = useState(false);
@@ -73,9 +59,8 @@ export default function PodcastsLandingPage({
     let cancelled = false;
     (async () => {
       const bundle = await fetchPodcastRecentBundle();
-      const [sp, mc, eg, upcomingRes] = await Promise.all([
+      const [sp, eg, upcomingRes] = await Promise.all([
         listSponsorsCatalog(supabase, { sponsorScope: "podcast" }),
-        listPodcastMemberContent(supabase, { canViewMemberContent: canAccessMembers }),
         listPodcastEpisodeGuests(supabase),
         fetch("/api/podcasts/upcoming", { credentials: "include", cache: "no-store" }).then((r) => r.json().catch(() => ({}))),
       ]);
@@ -94,7 +79,6 @@ export default function PodcastsLandingPage({
         setBundleNote("");
       }
       setPodcastSponsors(Array.isArray(sp) ? sp : []);
-      setMemberItems(mc);
       setEpisodeGuests(eg);
       const ug = Array.isArray(upcomingRes?.guests) ? upcomingRes.guests : [];
       setUpcomingGuests(
@@ -113,7 +97,7 @@ export default function PodcastsLandingPage({
     return () => {
       cancelled = true;
     };
-  }, [canAccessMembers, supabase, initialBundleMeta?.degraded]);
+  }, [supabase, initialBundleMeta?.degraded]);
 
   useEffect(() => {
     let cancelled = false;
@@ -130,8 +114,28 @@ export default function PodcastsLandingPage({
     };
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/billing/capabilities", { credentials: "include", cache: "no-store" })
+      .then((res) => res.json().catch(() => ({})))
+      .then((body) => {
+        if (cancelled) return;
+        const ready = !!body?.podcastSponsorCheckout;
+        setPodcastSponsorBillingReady(ready);
+        setPodcastSponsorBillingMissingEnv(Array.isArray(body?.podcastSponsorMissingEnv) ? body.podcastSponsorMissingEnv : []);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setPodcastSponsorBillingReady(false);
+          setPodcastSponsorBillingMissingEnv([]);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const featured = episodes.find((item) => item.is_featured) || episodes[0] || null;
-  /** Ten newest full episodes from the official playlist (member-only rows still listed; card shows lock). */
   const lastTenFullEpisodes = episodes.slice(0, 10);
   const guestsByEpisode = new Map();
   for (const link of episodeGuests) {
@@ -182,7 +186,7 @@ export default function PodcastsLandingPage({
           <PodcastSectionHeader
             eyebrow="Episode library"
             title="Last 10 full episodes"
-            subtitle="Pulled from the official full-episodes YouTube playlist only (not the whole channel). Shorts, clips, and trailers are filtered out; order is newest first."
+            subtitle="Official full-episodes playlist only. Shorts, clips, and trailers are filtered out."
           />
           {loading ? <p className="podcastMuted">Loading episodes...</p> : null}
           <div className="podcastEpisodeGrid">
@@ -205,7 +209,10 @@ export default function PodcastsLandingPage({
             ))}
           </div>
           {!upcomingGuests.length ? (
-            <p className="podcastMuted">Upcoming guests will appear here when published in the admin Podcasts panel.</p>
+            <div className="podcastLockCard">
+              <strong>Coming Soon</strong>
+              <p>Upcoming guests will appear here when they are published from the admin Podcasts panel.</p>
+            </div>
           ) : null}
         </section>
 
@@ -231,9 +238,16 @@ export default function PodcastsLandingPage({
               Sponsor hub (main app)
             </Link>
           </div>
+          {!podcastSponsorBillingReady ? (
+            <p className="podcastMuted" role="status">
+              Podcast sponsor checkout is not fully configured for this environment.
+              {podcastSponsorBillingMissingEnv.length
+                ? ` Missing: ${podcastSponsorBillingMissingEnv.join(", ")}.`
+                : ""}
+            </p>
+          ) : null}
         </section>
         <PodcastSponsorsSection sponsors={podcastSponsors} />
-        <MemberOnlyLockSection canAccess={canAccessMembers} items={memberItems} />
         <PodcastCTASection onApply={() => setApplyOpen(true)} />
       </div>
       {applyOpen ? (

@@ -3,10 +3,10 @@
 import { SERVICE_OPTIONS } from "@/lib/constants";
 import { mapNonprofitCategory } from "@/features/nonprofits/mappers/categoryMapper";
 
-export default function DirectoryCategoryQuickPick({ value, onChange }) {
+export default function DirectoryCategoryQuickPick({ value, onChange, collapsible = false }) {
   const options = SERVICE_OPTIONS.filter(([k]) => k);
 
-  return (
+  const content = (
     <div className="directoryCategoryPick" aria-label="Filter by nonprofit category">
       <p className="directoryCategoryPickLabel">Quick category focus</p>
       <div className="directoryCategoryPickGrid">
@@ -44,5 +44,14 @@ export default function DirectoryCategoryQuickPick({ value, onChange }) {
         })}
       </div>
     </div>
+  );
+
+  if (!collapsible) return content;
+
+  return (
+    <details className="directoryCategoryPickDisclosure">
+      <summary>Quick Category Focus</summary>
+      {content}
+    </details>
   );
 }

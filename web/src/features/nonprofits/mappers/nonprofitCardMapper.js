@@ -146,6 +146,25 @@ function resolveTrustedLocation(row = {}, profile = {}) {
   return { city: parsed.city, state: parsed.state, raw: rawLocation };
 }
 
+const TRUSTED_CATEGORY_HEADER_FALLBACKS = {
+  veteransMilitary: "/sponsors/featured-bg-rope-solutions.png",
+  firstRespondersSafety: "/sponsors/featured-bg-brain-treatment-center.png",
+  healthWellness: "/sponsors/featured-bg-brain-treatment-center.png",
+  education: "/sponsors/featured-bg-wars-end-merch.png",
+  humanServices: "/sponsors/featured-bg-rucking-realty.png",
+  communityDevelopment: "/sponsors/featured-bg-eduardo-pico-designs.png",
+  environmentAnimals: "/assets/backgrounds/bg_cinematic.png",
+  youthDevelopment: "/assets/backgrounds/bg_cinematic.png",
+  crisisEmergency: "/sponsors/featured-bg-brain-treatment-center.png",
+  advocacyPolicyRights: "/sponsors/featured-bg-eduardo-pico-designs.png",
+  unknownGeneral: "/assets/backgrounds/bg_topographic_brand.png",
+};
+
+function resolveTrustedCategoryHeaderFallback(categoryKey) {
+  const key = String(categoryKey || "").trim();
+  return TRUSTED_CATEGORY_HEADER_FALLBACKS[key] || TRUSTED_CATEGORY_HEADER_FALLBACKS.unknownGeneral;
+}
+
 export function mapNonprofitCardRow(row = {}, source = "directory") {
   const applyTrustedPresentation = needsTrustedResourcesPresentation(row, source);
   const baseRow = applyTrustedPresentation ? mergeTrustedResourcesPresentation(row) : row;
@@ -283,7 +302,12 @@ export function mapNonprofitCardRow(row = {}, source = "directory") {
     missionStatement: String(patchedRow.missionStatement ?? patchedRow.mission_statement ?? "").trim(),
     serviceArea: String(patchedRow.serviceArea ?? patchedRow.service_area ?? "").trim(),
     foundedYear: patchedRow.foundedYear ?? patchedRow.founded_year ?? null,
-    heroImageUrl: resolveOrgListingHeaderImageUrl(patchedRow),
+    heroImageUrl: (() => {
+      const resolved = resolveOrgListingHeaderImageUrl(patchedRow);
+      if (resolved) return resolved;
+      if (!applyTrustedPresentation) return resolved;
+      return resolveTrustedCategoryHeaderFallback(category.key);
+    })(),
     thumbnailUrl: sanitizeDisplayableImageUrl(String(patchedRow.thumbnailUrl ?? patchedRow.thumbnail_url ?? "").trim()),
     publicSlug: String(patchedRow.publicSlug ?? patchedRow.public_slug ?? "").trim(),
     metadataSource: String(patchedRow.metadataSource ?? patchedRow.metadata_source ?? "").trim(),

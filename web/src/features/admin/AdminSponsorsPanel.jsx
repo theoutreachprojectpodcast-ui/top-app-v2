@@ -7,7 +7,10 @@ import SponsorLogoReviewPanel from "@/features/sponsors/admin/SponsorLogoReviewP
 const EDIT_KEYS = [
   "name",
   "sponsor_type",
+  "sponsor_category",
+  "cta_label",
   "website_url",
+  "social_links",
   "logo_url",
   "background_image_url",
   "short_description",
@@ -39,6 +42,8 @@ function hydrateForm(row) {
       next[k] = row[k] ? "true" : "false";
     } else if (k === "display_order") {
       next[k] = row[k] != null ? String(row[k]) : "0";
+    } else if (k === "social_links") {
+      next[k] = JSON.stringify(row[k] || {}, null, 2);
     } else {
       next[k] = row[k] != null ? String(row[k]) : "";
     }
@@ -105,6 +110,20 @@ export default function AdminSponsorsPanel() {
           body[k] = v === "true";
         } else if (k === "display_order") {
           body[k] = parseInt(String(v), 10) || 0;
+        } else if (k === "social_links") {
+          const raw = String(v || "").trim();
+          if (!raw) {
+            body[k] = null;
+          } else {
+            try {
+              const parsed = JSON.parse(raw);
+              body[k] = parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : null;
+            } catch {
+              setError("social_links must be valid JSON.");
+              setSaving(false);
+              return;
+            }
+          }
         } else {
           body[k] = v;
         }
@@ -173,7 +192,7 @@ export default function AdminSponsorsPanel() {
               <label className="fieldLabel" htmlFor={`sp-${key}`}>
                 {key}
               </label>
-              {key === "short_description" || key === "long_description" ? (
+              {key === "short_description" || key === "long_description" || key === "social_links" ? (
                 <textarea
                   id={`sp-${key}`}
                   className="adminConsoleInput"

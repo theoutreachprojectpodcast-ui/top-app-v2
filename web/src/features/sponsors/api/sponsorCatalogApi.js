@@ -8,21 +8,39 @@ import {
 
 const SPONSOR_TABLE = "sponsors_catalog";
 
+export function isExcludedFromAppSponsorsHubSlug(slug) {
+  return false;
+}
+
+export function filterAppSponsorRows(rows) {
+  return (Array.isArray(rows) ? rows : []).filter((r) => {
+    const scope = String(r?.sponsor_scope || "").trim().toLowerCase();
+    const type = String(r?.sponsor_type || "").trim().toLowerCase();
+    const active = r?.is_active == null ? true : !!r.is_active;
+    return (scope === "" || scope === "app") && type === "foundational_sponsor" && active;
+  });
+}
+
 function fallbackRows() {
-  return FEATURED_SPONSORS.map((item, idx) =>
+  const seed = FEATURED_SPONSORS;
+  return seed.map((item, idx) =>
     normalizeSponsorRecord({
       ...item,
       id: item.id,
       slug: item.id,
       name: item.name,
-      sponsor_type: item.industry,
+      sponsor_type: "foundational_sponsor",
+      sponsor_category: item.industry,
       website_url: item.ctaUrl,
       logo_url: item.logoUrl,
       background_image_url: item.backgroundImageUrl,
       short_description: item.tag,
-      long_description: item.tagline,
-      tagline: item.tagline,
+      long_description: item.longDescription || item.description || item.tagline,
+      tagline: item.subtitle || item.tagline,
       featured: true,
+      is_active: true,
+      sponsor_status: "active",
+      mission_partner: !!item.missionPartner,
       display_order: idx + 1,
       enrichment_status: "seed",
       verified: true,
@@ -72,11 +90,13 @@ export async function listSponsorsCatalogWithClient(supabase, opts = {}) {
   let q = supabase.from(SPONSOR_TABLE).select("*");
   if (sponsorScope === "podcast") {
     q = q
-      .eq("sponsor_scope", "podcast")
-      .eq("is_active", true)
-      .in("payment_status", ["paid", "paid_stripe", "complete"]);
+      .or("sponsor_scope.eq.podcast,sponsor_type.eq.podcast_sponsor")
+      .eq("is_active", true);
   } else {
-    q = q.or("sponsor_scope.is.null,sponsor_scope.eq.app");
+    q = q
+      .or("sponsor_scope.is.null,sponsor_scope.eq.app")
+      .eq("sponsor_type", "foundational_sponsor")
+      .eq("is_active", true);
   }
   const { data, error } = await q
     .order("display_order", { ascending: true, nullsFirst: false })
@@ -85,8 +105,14 @@ export async function listSponsorsCatalogWithClient(supabase, opts = {}) {
     return sponsorScope === "podcast" ? [] : fallbackRows();
   }
 
-  const rows = data.map((row) => normalizeSponsorRecord(row));
-  return mergeSponsorEnrichmentForRows(supabase, rows);
+  const scoped = sponsorScope === "app" ? filterAppSponsorRows(data) : data;
+  if (sponsorScope === "app" && !scoped.length) {
+    return fallbackRows();
+  }
+
+  const rows = scoped.map((row) => normalizeSponsorRecord(row));
+  const merged = await mergeSponsorEnrichmentForRows(supabase, rows);
+  return sponsorScope === "app" ? filterAppSponsorRows(merged) : merged;
 }
 
 async function fetchSponsorsCatalogFromApi(sponsorScope = "app") {
@@ -114,9 +140,13 @@ export async function listSponsorsCatalog(supabase, opts = {}) {
 export async function getSponsorBySlug(supabase, slug) {
   const key = String(slug || "").trim();
   if (!key) return null;
+  if (isExcludedFromAppSponsorsHubSlug(key)) return null;
   if (typeof window !== "undefined") {
     try {
-      const res = await fetch(`/api/sponsors/catalog?slug=${encodeURIComponent(key)}`, { cache: "no-store" });
+      const res = await fetch(`/api/sponsors/catalog?slug=${encodeURIComponent(key)}`, {
+        credentials: "include",
+        cache: "no-store",
+      });
       if (res.ok) {
         const data = await res.json();
         if (data?.ok && data.row) return getSponsorProfileViewModel(data.row);

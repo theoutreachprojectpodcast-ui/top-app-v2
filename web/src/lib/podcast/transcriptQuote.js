@@ -1,8 +1,5 @@
 /**
- * Pick a short, guest-flavored line from captions (not show notes).
- * @param {string} transcriptPlain
- * @param {string} guestNameHint
- * @param {number} [maxLen]
+ * Pick a short, guest-flavored line from captions.
  */
 export function extractGuestVoiceQuote(transcriptPlain, guestNameHint, maxLen = 160) {
   const raw = String(transcriptPlain || "")
@@ -36,9 +33,7 @@ export function extractGuestVoiceQuote(transcriptPlain, guestNameHint, maxLen = 
     const re = new RegExp(`\\b${escapeRegExp(safeHint)}\\b`, "i");
     pick = pool.find((s) => re.test(s)) || sentences.find((s) => re.test(s)) || "";
   }
-  if (!pick) {
-    pick = pool[0] || sentences[Math.min(2, sentences.length - 1)] || sentences[0];
-  }
+  if (!pick) pick = pool[0] || sentences[Math.min(2, sentences.length - 1)] || sentences[0];
 
   const one = String(pick || "").replace(/^[\s"'“”]+|[\s"'“”]+$/g, "").trim();
   if (!one) return "";

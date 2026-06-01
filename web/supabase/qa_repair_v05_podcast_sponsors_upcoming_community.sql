@@ -34,7 +34,7 @@ values
    'Podcast sponsor', 'Supporting The Outreach Project podcast.', true, 40, true, 'manual', true),
   ('eduardo-pico-designs', 'Eduardo Pico Designs', 'Podcast sponsor', 'podcast', '',
    'Podcast sponsor', 'Supporting The Outreach Project podcast.', true, 50, true, 'manual', true),
-  ('wars-end-merch', 'Wars End Merch', 'Podcast sponsor', 'podcast', '',
+  ('wars-end-merch', 'War''s End', 'Podcast sponsor', 'podcast', '',
    'Podcast sponsor', 'Supporting The Outreach Project podcast.', true, 60, true, 'manual', true),
   ('brain-treatment-center', 'Brain Treatment Center', 'Podcast sponsor', 'podcast', '',
    'Podcast sponsor', 'Supporting The Outreach Project podcast.', true, 70, true, 'manual', true)

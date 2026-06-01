@@ -1,5 +1,6 @@
 import { createSupabaseReadClient } from "@/lib/supabase/readServiceClient";
 import {
+  filterAppSponsorRows,
   listSponsorsCatalogWithClient,
   mergeSponsorEnrichmentForRows,
 } from "@/features/sponsors/api/sponsorCatalogApi";
@@ -19,15 +20,16 @@ export async function GET(request) {
   const scope = String(request.nextUrl.searchParams.get("scope") || "app").toLowerCase();
   const slug = request.nextUrl.searchParams.get("slug");
   if (slug?.trim()) {
+    const slugKey = slug.trim();
     const slugScope = scope === "podcast" ? "podcast" : "app";
-    let q = supabase.from("sponsors_catalog").select("*").eq("slug", slug.trim());
+    let q = supabase.from("sponsors_catalog").select("*").eq("slug", slugKey);
     if (slugScope === "podcast") {
-      q = q
-        .eq("sponsor_scope", "podcast")
-        .eq("is_active", true)
-        .in("payment_status", ["paid", "paid_stripe", "complete"]);
+      q = q.eq("sponsor_scope", "podcast").eq("is_active", true);
     } else {
-      q = q.or("sponsor_scope.is.null,sponsor_scope.eq.app");
+      q = q
+        .or("sponsor_scope.is.null,sponsor_scope.eq.app")
+        .eq("sponsor_type", "foundational_sponsor")
+        .eq("is_active", true);
     }
     const { data, error } = await q.maybeSingle();
     if (error) return Response.json({ ok: false, error: error.message }, { status: 500 });
@@ -37,5 +39,6 @@ export async function GET(request) {
   }
 
   const rows = await listSponsorsCatalogWithClient(supabase, { sponsorScope: scope });
-  return Response.json({ ok: true, rows });
+  const out = scope === "app" ? filterAppSponsorRows(rows) : rows;
+  return Response.json({ ok: true, rows: out });
 }

@@ -17,8 +17,16 @@ export function workOSEnvironmentIssues() {
   if (cookiePassword.length < 32) {
     issues.push("WORKOS_COOKIE_PASSWORD (min 32 characters)");
   }
-  if (!String(process.env.NEXT_PUBLIC_WORKOS_REDIRECT_URI || "").trim()) {
-    issues.push("NEXT_PUBLIC_WORKOS_REDIRECT_URI");
+  const appUrl = String(process.env.NEXT_PUBLIC_APP_URL || process.env.APP_BASE_URL || "").trim().toLowerCase();
+  const isProdLikeHost = appUrl.startsWith("https://") && !appUrl.includes("localhost");
+  const cookieDomain = String(process.env.WORKOS_COOKIE_DOMAIN || "").trim();
+  if (isProdLikeHost && !cookieDomain) {
+    issues.push("WORKOS_COOKIE_DOMAIN (set to theoutreachproject.app in production)");
+  }
+  const privateRedirect = String(process.env.WORKOS_REDIRECT_URI || "").trim();
+  const publicRedirect = String(process.env.NEXT_PUBLIC_WORKOS_REDIRECT_URI || "").trim();
+  if (!privateRedirect && !publicRedirect) {
+    issues.push("WORKOS_REDIRECT_URI or NEXT_PUBLIC_WORKOS_REDIRECT_URI");
   }
   return issues;
 }

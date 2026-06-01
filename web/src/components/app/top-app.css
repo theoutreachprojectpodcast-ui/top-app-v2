@@ -5,6 +5,11 @@
   --header-floating-offset: 24px;
   --header-floating-height: 300px;
   --header-fade-height: 56px;
+  --home-hero-image: url("/home/home-trusted-mountain.png");
+  --home-sponsors-image: url("/home/home-sponsors-city.png");
+  --home-trusted-image: url("/home/home-trusted-mountain.png");
+  --home-community-image: url("/home/home-community-group.png");
+  --home-podcasts-image: url("/home/home-podcast-mic.png");
   min-height: 100vh;
   background: transparent;
   color: var(--color-text-primary);
@@ -31,11 +36,11 @@
   z-index: 94;
   pointer-events: none;
   background:
-    radial-gradient(ellipse 52% 42% at 50% 14%, var(--topbar-occlusion-spot), transparent 70%),
+    radial-gradient(ellipse 64% 52% at 50% 10%, var(--topbar-occlusion-spot), transparent 72%),
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--topbar-gradient-fade, #ffffff) 96%, transparent) 0%,
-      color-mix(in srgb, var(--topbar-gradient-fade, #ffffff) 88%, transparent) 68%,
+      color-mix(in srgb, var(--topbar-gradient-fade, #ffffff) 98%, transparent) 0%,
+      color-mix(in srgb, var(--topbar-gradient-fade, #ffffff) 90%, transparent) 62%,
       transparent 100%
     );
 }
@@ -370,6 +375,10 @@
   box-sizing: border-box;
   pointer-events: none;
 }
+.headerBrandStack > a {
+  pointer-events: auto;
+  display: inline-flex;
+}
 .headerBrandTitle {
   margin: 0;
   font-family: var(--font-heading), var(--font-body), sans-serif;
@@ -482,6 +491,8 @@ img.brandMarkImg--header {
   position: relative;
   border-radius: var(--radius-card);
   overflow: hidden;
+  min-height: clamp(320px, 45vw, 460px);
+  box-shadow: 0 22px 50px color-mix(in srgb, #000 30%, transparent);
 }
 .homeHeroBackdrop__image {
   position: absolute;
@@ -489,7 +500,9 @@ img.brandMarkImg--header {
   background-color: var(--color-bg-muted);
   background-image: var(--home-hero-image, url("/brand/home-hero-placeholder.svg"));
   background-size: cover;
-  background-position: center 28%;
+  background-position: center 36%;
+  transform: scale(1.02);
+  filter: saturate(1.08) contrast(1.06);
 }
 .homeHeroBackdrop__scrim {
   position: absolute;
@@ -497,8 +510,9 @@ img.brandMarkImg--header {
   pointer-events: none;
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--color-bg-primary) 18%, transparent) 0%,
-    color-mix(in srgb, var(--color-bg-primary) 72%, transparent) 100%
+    color-mix(in srgb, #030609 80%, transparent) 0%,
+    color-mix(in srgb, #030609 32%, transparent) 34%,
+    color-mix(in srgb, #030609 78%, transparent) 100%
   );
 }
 :root[data-color-scheme="light"] .homeHeroBackdrop__scrim {
@@ -515,6 +529,7 @@ img.brandMarkImg--header {
   display: flex;
   flex-direction: column;
   gap: 0;
+  padding: clamp(14px, 2vw, 20px);
 }
 /* When profile progress + welcome card stack: one opaque shell so flex gap is not transparent over the dark hero scrim; match .card surfaces (not --color-bg-app) */
 .homeHeroBackdrop__welcomeBundle {
@@ -541,8 +556,9 @@ img.brandMarkImg--header {
     color-mix(in srgb, var(--color-surface-card-deep) 74%, transparent) 100%
   );
   border-color: var(--color-border-strong);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
+  box-shadow: 0 16px 34px color-mix(in srgb, #000 28%, transparent);
+  -webkit-backdrop-filter: blur(12px) saturate(1.1);
+  backdrop-filter: blur(12px) saturate(1.1);
 }
 
 /* Profile completion — home hero (subtle green, above welcome card) */
@@ -857,6 +873,14 @@ img.brandMarkImg--header {
 }
 .homeWelcomeActions {
   margin-top: 2px;
+}
+.homeWelcomeActions .btnPrimary {
+  background: linear-gradient(145deg, color-mix(in srgb, var(--color-accent) 78%, #1f5d34) 0%, color-mix(in srgb, var(--color-accent-hover) 72%, #163d24) 100%);
+  border-color: color-mix(in srgb, var(--color-accent-soft) 58%, var(--color-accent) 42%);
+  box-shadow: 0 10px 24px color-mix(in srgb, #000 28%, transparent), inset 0 1px 0 color-mix(in srgb, #ffffff 20%, transparent);
+}
+.homeWelcomeActions .btnPrimary:hover {
+  transform: translateY(-1px);
 }
 /* Profile tab: single vertical rhythm; avoid stacking margin + grid gap */
 .profileTabShell {
@@ -1214,23 +1238,10 @@ img.brandMarkImg--header {
   gap: var(--ds-space-4, 16px);
   margin-bottom: var(--ds-space-4, 16px);
 }
-.welcomeSponsorsFeatured {
-  width: 100%;
-  min-height: 72px;
-  padding: var(--ds-space-5, 20px) var(--ds-space-5, 20px);
-  border-radius: var(--radius-card, 16px);
-  border: 1px solid var(--color-border-strong);
-  background:
-    linear-gradient(135deg, var(--color-bg-subtle), var(--color-bg-card-hover)),
-    var(--color-surface-raised);
-  box-shadow: inset 0 0 0 1px var(--color-border-subtle);
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
-}
-.welcomeSponsorsFeatured .iconWrap {
-  width: 28px;
-  height: 28px;
+.welcomeActionList {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--ds-space-3, 12px);
 }
 .welcomeActionLabel {
   font-size: clamp(1.05rem, 2.4vw, 1.25rem);
@@ -1239,31 +1250,142 @@ img.brandMarkImg--header {
 }
 .welcomeActionHint {
   font-size: var(--text-body-sm);
-  font-weight: 600;
-  color: var(--color-text-secondary);
+  font-weight: 650;
+  color: color-mix(in srgb, #ffffff 90%, transparent);
   max-width: 52ch;
 }
-.welcomeActionTriplet {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--ds-space-3, 12px);
+.welcomeActionCard {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  color: #f4f8fb;
+  border-color: color-mix(in srgb, #ffffff 24%, transparent);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, #ffffff 8%, transparent),
+    0 18px 28px color-mix(in srgb, #000000 28%, transparent);
+  transition: transform 140ms ease, box-shadow 180ms ease, border-color 180ms ease;
 }
-.welcomeTripletBtn {
-  min-height: 88px;
+.welcomeActionCard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background-image: var(--welcome-card-image);
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  transform: scale(1.03);
+}
+.welcomeActionCard::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, #03080c 16%, transparent) 0%,
+      color-mix(in srgb, #06111b 76%, transparent) 72%,
+      color-mix(in srgb, #03070d 86%, transparent) 100%
+    ),
+    linear-gradient(120deg, color-mix(in srgb, var(--color-accent) 26%, transparent) 0%, transparent 36%);
+}
+.welcomeActionCard > * {
+  position: relative;
+  z-index: 1;
+}
+.welcomeActionCard .iconWrap {
+  background: color-mix(in srgb, #02060a 56%, transparent);
+  border: 1px solid color-mix(in srgb, #ffffff 42%, transparent);
+  box-shadow: 0 6px 14px color-mix(in srgb, #000000 36%, transparent);
+}
+.welcomeActionCard .iconStroke {
+  stroke: #f8fcff;
+}
+.welcomeActionCard:hover,
+.welcomeActionCard:focus-visible {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--color-accent-soft) 45%, #ffffff 55%);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, #ffffff 14%, transparent),
+    0 24px 30px color-mix(in srgb, #000000 34%, transparent);
+}
+.welcomeActionCard--sponsors {
+  --welcome-card-image: var(--home-sponsors-image);
+}
+.welcomeActionCard--trusted {
+  --welcome-card-image: var(--home-trusted-image);
+}
+.welcomeActionCard--community {
+  --welcome-card-image: var(--home-community-image);
+}
+.welcomeActionCard--podcasts {
+  --welcome-card-image: var(--home-podcasts-image);
+}
+.welcomeActionCard .welcomeActionLabel {
+  color: #f9fcff;
+  text-shadow: 0 2px 12px color-mix(in srgb, #000 46%, transparent);
+}
+.welcomeActionCard--uniform {
+  width: 100%;
+  min-height: 128px;
+  border-radius: var(--radius-card, 16px);
+  padding: var(--ds-space-4, 16px);
   flex-direction: column;
   align-items: flex-start;
-  justify-content: center;
+  justify-content: flex-end;
+  gap: 4px;
+}
+#home-directory.card {
+  background:
+    linear-gradient(
+      170deg,
+      color-mix(in srgb, #ffffff 90%, var(--color-surface-card) 10%) 0%,
+      color-mix(in srgb, #eef4ef 84%, var(--color-surface-card) 16%) 46%,
+      color-mix(in srgb, #f8fbf8 78%, var(--color-surface-card-deep) 22%) 100%
+    );
+  border-color: color-mix(in srgb, var(--color-accent-soft) 24%, var(--color-border-subtle) 76%);
+  box-shadow:
+    0 18px 30px color-mix(in srgb, #000 10%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, #ffffff 42%, transparent);
+}
+#home-directory h3 {
+  display: inline-flex;
+  align-items: center;
   gap: 8px;
-  padding: var(--ds-space-4, 16px);
 }
 
 /* Directory search — category quick pick */
-.directoryCategoryPick {
-  margin: var(--ds-space-4, 16px) 0;
-  padding: var(--ds-space-4, 16px);
+.directoryCategoryPickDisclosure {
+  border: 1px solid color-mix(in srgb, var(--color-accent) 22%, var(--color-border-soft));
   border-radius: 14px;
-  border: 1px solid var(--color-border-soft);
-  background: color-mix(in srgb, var(--color-surface-soft) 88%, transparent);
+  background: linear-gradient(170deg, color-mix(in srgb, #ffffff 84%, var(--color-bg-card) 16%) 0%, color-mix(in srgb, var(--color-bg-card) 88%, transparent) 100%);
+  margin: 14px 0 10px;
+  overflow: hidden;
+}
+.directoryCategoryPickDisclosure > summary {
+  cursor: pointer;
+  list-style: none;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  padding: 12px 14px;
+  background: color-mix(in srgb, var(--color-accent-soft) 38%, transparent);
+}
+.directoryCategoryPickDisclosure > summary::-webkit-details-marker {
+  display: none;
+}
+.directoryCategoryPickDisclosure[open] > summary {
+  border-bottom: 1px solid var(--color-border-soft);
+}
+.directoryCategoryPick {
+  margin: 0;
+  padding: var(--ds-space-4, 16px);
+  border-radius: 0;
+  border: 0;
+  background: transparent;
 }
 .directoryCategoryPickLabel {
   margin: 0 0 10px;
@@ -1277,25 +1399,26 @@ img.brandMarkImg--header {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
   gap: 8px;
-  max-height: 240px;
+  max-height: 220px;
   overflow-y: auto;
   padding-bottom: 2px;
 }
 .directoryCategoryPickCard {
   text-align: left;
   border-radius: 12px;
-  border: 1px solid color-mix(in srgb, var(--cat-border, var(--np-unknownGeneral)) 38%, var(--color-border));
+  border: 1px solid color-mix(in srgb, var(--cat-border, var(--np-unknownGeneral)) 42%, var(--color-border));
   background:
     linear-gradient(
       165deg,
       var(--cat-tint, rgba(158, 166, 177, 0.12)),
       var(--color-bg-card)
     );
-  color: var(--color-text-primary);
+  color: color-mix(in srgb, var(--color-text-primary) 94%, #102015 6%);
   padding: 10px 10px 9px;
   cursor: pointer;
   font: inherit;
   transition: border-color 160ms ease, box-shadow 160ms ease, transform 120ms ease;
+  box-shadow: 0 4px 10px color-mix(in srgb, #000 10%, transparent);
 }
 .directoryCategoryPickCard:hover {
   border-color: color-mix(in srgb, var(--cat-border, var(--color-accent)) 55%, var(--color-border));
@@ -2018,8 +2141,8 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   bottom: 0;
   height: calc(64px + env(safe-area-inset-bottom));
   z-index: 98;
-  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--color-bg-secondary) 97%, transparent));
-  border-top: 1px solid var(--color-border);
+  background: transparent;
+  border-top: 0;
   pointer-events: none;
 }
 .footerDock {
@@ -2030,7 +2153,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   z-index: 99;
   background: transparent;
   border-top: 0;
-  backdrop-filter: blur(10px);
+  backdrop-filter: none;
   overflow: visible;
 }
 .footerNavInner {
@@ -2042,19 +2165,25 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  width: min(760px, 100%);
-  max-width: 100%;
+  gap: 10px;
+  width: fit-content;
+  max-width: min(760px, 100%);
   margin: 0 auto;
-  background: transparent;
-  border: 0;
-  padding: 0;
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--color-bg-card) 94%, #ffffff 6%) 0%,
+    color-mix(in srgb, var(--color-bg-card-hover) 90%, #ffffff 10%) 100%
+  );
+  border: 1px solid color-mix(in srgb, var(--color-border-soft) 78%, transparent);
+  border-radius: calc(var(--radius-pill) + 8px);
+  padding: 6px 8px;
+  box-shadow: 0 8px 18px color-mix(in srgb, #000 14%, transparent);
 }
 .navItem {
   background: transparent;
   color: var(--color-text-secondary);
-  border: 1px solid var(--color-border-subtle);
-  min-height: 42px;
+  border: 1px solid transparent;
+  min-height: 44px;
   min-width: 108px;
   border-radius: var(--radius-pill);
   padding: 9px 18px;
@@ -2070,13 +2199,45 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms ease;
 }
 .navItem.isActive {
-  background: var(--color-accent-soft);
-  color: var(--color-accent-hover);
+  background: linear-gradient(155deg, color-mix(in srgb, var(--color-accent-soft) 68%, #ebf9ef 32%), color-mix(in srgb, var(--color-accent) 26%, #daf0df 74%));
+  color: color-mix(in srgb, var(--color-accent-hover) 80%, #12311f 20%);
   border-color: color-mix(in srgb, var(--color-accent) 35%, var(--color-border-subtle) 65%);
   font-weight: 650;
   letter-spacing: 0.01em;
   text-shadow: none;
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 18%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 18%, transparent), 0 4px 14px color-mix(in srgb, var(--color-accent) 18%, transparent);
+}
+
+:root[data-color-scheme="dark"] .bottomNav {
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, #1a1f2a 92%, #0f1218 8%) 0%,
+    color-mix(in srgb, #252c39 88%, #11151d 12%) 100%
+  );
+  border-color: color-mix(in srgb, #cdd5e2 14%, transparent);
+  box-shadow: 0 10px 24px color-mix(in srgb, #000 34%, transparent);
+}
+
+:root[data-color-scheme="dark"] .navItem {
+  color: color-mix(in srgb, #e7edf9 82%, #b2bfd5 18%);
+}
+
+:root[data-color-scheme="dark"] .navItem:hover,
+:root[data-color-scheme="dark"] .navItem:focus-visible {
+  background: color-mix(in srgb, #ffffff 10%, transparent);
+  border-color: color-mix(in srgb, #dce4f4 20%, transparent);
+  color: #f3f7ff;
+}
+
+:root[data-color-scheme="dark"] .navItem.isActive {
+  background: linear-gradient(
+    155deg,
+    color-mix(in srgb, #b8f0c4 86%, #74d68a 14%) 0%,
+    color-mix(in srgb, #8ae3a1 84%, #4cbf73 16%) 100%
+  );
+  color: #103322;
+  border-color: color-mix(in srgb, #8bdca0 70%, #3b8c56 30%);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, #ffffff 24%, transparent), 0 6px 14px color-mix(in srgb, #74d68a 28%, transparent);
 }
 /* End-of-scroll page footer (brand + notes), above bottom padding for the fixed nav dock. */
 .siteFooter {
@@ -3487,6 +3648,14 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   color: var(--color-accent-hover);
   margin-bottom: 4px;
 }
+.communityPostAuthorEditRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.communityPostEditBtn {
+  align-self: flex-start;
+}
 .communityPostMedia {
   border-radius: var(--radius-input);
   overflow: hidden;
@@ -3813,7 +3982,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   position: relative;
   border-radius: 18px;
   overflow: hidden;
-  min-height: 236px;
+  min-height: 268px;
   border: 1px solid var(--color-border-soft);
   cursor: pointer;
 }
@@ -3827,7 +3996,8 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 .sponsorPremiumCardScrim {
   position: absolute;
   inset: 0;
-  background: linear-gradient(125deg, rgba(7, 10, 14, 0.96) 0%, rgba(7, 10, 14, 0.66) 48%, rgba(7, 10, 14, 0.9) 100%);
+  /* Stronger legibility on the left copy column; keep the right side of the photo a bit more visible. */
+  background: linear-gradient(108deg, rgba(7, 10, 14, 0.96) 0%, rgba(7, 10, 14, 0.62) 44%, rgba(7, 10, 14, 0.42) 100%);
 }
 .sponsorPremiumCard--gold .sponsorPremiumCardScrim {
   background: linear-gradient(125deg, rgba(12, 10, 8, 0.93) 0%, rgba(18, 14, 10, 0.55) 50%, rgba(14, 11, 8, 0.88) 100%),
@@ -3862,8 +4032,8 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   z-index: 1;
   padding: var(--ds-space-5, 22px);
   display: grid;
-  gap: 14px;
-  min-height: 220px;
+  gap: 16px;
+  min-height: 248px;
   align-content: space-between;
 }
 .sponsorPremiumCardTop {
@@ -3893,16 +4063,46 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 }
 .sponsorPremiumBrand {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+@media (min-width: 768px) {
+  .sponsorPremiumBrand {
+    grid-template-columns: minmax(240px, 38%) minmax(0, 1fr);
+    column-gap: 28px;
+    row-gap: 4px;
+  }
+}
+.sponsorPremiumBrandIdentity {
+  display: flex;
   gap: 14px;
-  align-items: center;
+  align-items: flex-start;
+  min-width: 0;
+}
+.sponsorPremiumTitleBlock {
+  flex: 1;
+  min-width: 0;
+}
+.sponsorPremiumBrandBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+}
+@media (min-width: 768px) {
+  .sponsorPremiumBrandBody {
+    min-height: 100%;
+  }
 }
 .sponsorPremiumLogoShell {
   width: 58px;
   height: 58px;
   border-radius: 999px;
   background: rgba(8, 12, 16, 0.88);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.35),
+    0 10px 28px rgba(0, 0, 0, 0.45);
   display: grid;
   place-items: center;
   overflow: hidden;
@@ -3984,9 +4184,20 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 .sponsorPremiumTagline {
   margin: 0;
   font-size: var(--text-body-sm);
-  line-height: 1.5;
+  line-height: 1.55;
   color: rgba(233, 240, 247, 0.9);
-  max-width: 58ch;
+  max-width: none;
+}
+.sponsorPremiumBrandBody .sponsorPremiumTagline {
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+@media (min-width: 768px) {
+  .sponsorPremiumBrandBody .sponsorPremiumTagline {
+    -webkit-line-clamp: 6;
+  }
 }
 .sponsorPremiumFooter {
   display: flex;
@@ -3994,7 +4205,27 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   align-items: center;
   justify-content: flex-start;
   gap: 10px;
-  margin-top: 8px;
+  margin-top: 12px;
+}
+@media (min-width: 768px) {
+  .sponsorPremiumFooter {
+    margin-top: auto;
+    padding-top: 14px;
+    justify-content: space-between;
+    width: 100%;
+  }
+  .sponsorPremiumBrandBody .sponsorPremiumSocial {
+    margin-left: auto;
+    justify-content: flex-end;
+  }
+}
+.sponsorPremiumVisitBtn {
+  flex: 0 0 auto;
+  padding: 8px 14px;
+  font-size: var(--text-body-sm);
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: var(--radius-input, 10px);
 }
 .sponsorPremiumSocial {
   display: flex;
@@ -4391,8 +4622,17 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   margin: 0;
 }
 @media (max-width: 760px) {
-  .welcomeActionTriplet {
-    grid-template-columns: 1fr;
+  .homeHeroBackdrop {
+    min-height: clamp(240px, 56vw, 340px);
+  }
+  .homeHeroBackdrop__content {
+    padding: 12px;
+  }
+  .homeHeroBackdrop__card.cardHero {
+    padding: 16px 14px;
+  }
+  .welcomeActionCard--uniform {
+    min-height: 104px;
   }
   .moderationQueuePreviewRow,
   .moderationQueuePreviewRow--head {
@@ -4512,17 +4752,22 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
     column-gap: 8px;
   }
   .footerDockBackdrop { height: calc(60px + env(safe-area-inset-bottom)); }
-  .footerNavInner { padding: 8px 0 calc(8px + env(safe-area-inset-bottom)); }
-  .bottomNav {
-    gap: 6px;
-    width: 100%;
+  .footerNavInner {
+    padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
     justify-content: flex-start;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    padding-bottom: 2px;
   }
-  .bottomNav::-webkit-scrollbar { display: none; }
+  .footerNavInner::-webkit-scrollbar { display: none; }
+  .bottomNav {
+    gap: 6px;
+    width: max-content;
+    max-width: none;
+    justify-content: flex-start;
+    overflow: visible;
+    padding: 4px 6px;
+  }
   .navItem {
     min-width: max-content;
     flex: 0 0 auto;

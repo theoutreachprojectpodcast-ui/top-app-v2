@@ -26,11 +26,13 @@
   z-index: 2;
   margin-top: 0;
   border-top: 1px solid var(--color-border-subtle);
-  background: linear-gradient(
-    180deg,
-    transparent,
-    color-mix(in srgb, var(--color-bg-secondary) 72%, transparent)
-  );
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-accent-soft) 38%, transparent) 0%,
+      color-mix(in srgb, var(--color-bg-secondary) 88%, transparent) 58%,
+      color-mix(in srgb, var(--color-bg-tertiary) 92%, transparent) 100%
+    );
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
 }
@@ -43,6 +45,23 @@
 .appShell--siteChrome .footerDock,
 .appShell--sponsors .footerDock {
   z-index: 91;
+}
+
+/* Docked bottom nav: fill the bar so pills use horizontal space (footerDock already spans full width). */
+.appShell--siteChrome .footerDock .bottomNav,
+.appShell--sponsors .footerDock .bottomNav {
+  width: min(1100px, calc(100% - 24px));
+  justify-content: space-evenly;
+}
+
+@media (max-width: 760px) {
+  .appShell--siteChrome .footerDock .bottomNav,
+  .appShell--sponsors .footerDock .bottomNav {
+    justify-content: flex-start;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
 }
 
 .appShell--siteChrome .sponsorFeaturedCard,

@@ -36,6 +36,7 @@ export default function CommunityPage({
   onRequestSignIn,
 }) {
   const [submitOpen, setSubmitOpen] = useState(false);
+  const [editPost, setEditPost] = useState(null);
   const [selectedMemberId, setSelectedMemberId] = useState("");
   const [feedTab, setFeedTab] = useState("latest");
 
@@ -110,7 +111,14 @@ export default function CommunityPage({
         ) : (
           <div className="row wrap">
             {isMember ? (
-              <button type="button" className="btnPrimary" onClick={() => setSubmitOpen(true)}>
+              <button
+                type="button"
+                className="btnPrimary"
+                onClick={() => {
+                  setEditPost(null);
+                  setSubmitOpen(true);
+                }}
+              >
                 Share your story
               </button>
             ) : (
@@ -195,6 +203,14 @@ export default function CommunityPage({
               post={p}
               showModerationStatus={feedTab === "mine"}
               onOpenAuthor={(key) => setSelectedMemberId(String(key || "").trim())}
+              onRequestAuthorEdit={
+                feedTab === "mine" && useWorkOSApi && isMember
+                  ? (postToEdit) => {
+                      setSubmitOpen(false);
+                      setEditPost(postToEdit);
+                    }
+                  : undefined
+              }
               onToggleLike={
                 isAuthenticated && (sessionKind === "workos" || typeof onToggleLike === "function")
                   ? onToggleLike
@@ -205,12 +221,28 @@ export default function CommunityPage({
         </div>
       </section>
 
-      {submitOpen && isAuthenticated ? (
-        <div className="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="community-submit-title" onClick={() => setSubmitOpen(false)}>
+      {(submitOpen || editPost) && isAuthenticated ? (
+        <div
+          className="modalOverlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="community-submit-title"
+          onClick={() => {
+            setSubmitOpen(false);
+            setEditPost(null);
+          }}
+        >
           <div className="modalCard communitySubmitModalCard" onClick={(e) => e.stopPropagation()}>
             <div className="sponsorApplyModalHead">
-              <h3 id="community-submit-title">Share your story</h3>
-              <button type="button" className="btnSoft sponsorModalClose" onClick={() => setSubmitOpen(false)}>
+              <h3 id="community-submit-title">{editPost ? "Edit your story" : "Share your story"}</h3>
+              <button
+                type="button"
+                className="btnSoft sponsorModalClose"
+                onClick={() => {
+                  setSubmitOpen(false);
+                  setEditPost(null);
+                }}
+              >
                 Close
               </button>
             </div>
@@ -220,9 +252,15 @@ export default function CommunityPage({
               authorName={authorName}
               authorAvatarUrl={profile.avatarUrl || emptyProfileAvatarUrl()}
               useWorkOSApi={useWorkOSApi}
-              onClose={() => setSubmitOpen(false)}
+              editPost={editPost}
+              onClose={() => {
+                setSubmitOpen(false);
+                setEditPost(null);
+              }}
               onSubmitted={() => {
                 refresh();
+                setEditPost(null);
+                setSubmitOpen(false);
               }}
             />
           </div>

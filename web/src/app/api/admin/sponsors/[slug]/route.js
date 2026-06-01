@@ -5,7 +5,10 @@ export const runtime = "nodejs";
 const KEYS = new Set([
   "name",
   "sponsor_type",
+  "sponsor_category",
+  "cta_label",
   "website_url",
+  "social_links",
   "logo_url",
   "background_image_url",
   "short_description",
@@ -55,6 +58,21 @@ export async function PATCH(request, context) {
     } else if (k === "display_order") {
       const n = parseInt(String(v), 10);
       if (Number.isFinite(n)) patch[k] = n;
+    } else if (k === "social_links") {
+      if (v && typeof v === "object" && !Array.isArray(v)) {
+        patch[k] = v;
+      } else if (typeof v === "string") {
+        const raw = v.trim();
+        if (!raw) patch[k] = null;
+        else {
+          try {
+            const parsed = JSON.parse(raw);
+            patch[k] = parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : null;
+          } catch {
+            return Response.json({ ok: false, error: "invalid_social_links_json" }, { status: 400 });
+          }
+        }
+      }
     } else if (typeof v === "string") {
       patch[k] = v.trim() || null;
     } else if (v === null) {

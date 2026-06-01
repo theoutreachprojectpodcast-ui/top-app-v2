@@ -17,7 +17,7 @@
 --   add column if not exists cover_image_public_url text,
 --   add column if not exists share_count bigint default 0;
 
--- Proven ally applications: CRM + payment correlation
+-- Trusted Resource applications: CRM + payment correlation
 -- alter table public.trusted_resource_applications
 --   add column if not exists crm_lead_id text,
 --   add column if not exists payment_intent_id text,
