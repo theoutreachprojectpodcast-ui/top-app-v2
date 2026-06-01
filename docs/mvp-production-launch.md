@@ -128,6 +128,53 @@ If sign-in fails with “not a valid redirect URI”, the URL in the error must 
 
 ---
 
+## 5b. Membership & billing (QA first, then Production)
+
+Code is on branch **`QA`** (`/api/billing/*`, profile Membership & billing center, `/admin/membership`). Complete **QA** before live Stripe.
+
+### Phase A — Code on QA (done when Vercel shows latest `QA` deploy)
+
+- [x] Push `QA` branch (membership/billing commits).
+- [ ] Vercel **Preview** deploy for `QA` is **Ready**.
+- [ ] In browser (logged into Vercel protection if enabled): `https://qa-the-outreach-project.vercel.app/api/billing/capabilities` returns JSON (not 404).
+- [ ] Profile → **Membership & billing** section; Home → **Become a member** cards.
+
+### Phase B — Supabase (QA project)
+
+Run in **Supabase SQL editor** for the database QA uses (often same project as prod with `top_qa_profiles` on Preview):
+
+1. `web/supabase/torp_profiles_membership_billing_v04.sql` on **`torp_profiles`**
+2. `web/supabase/top_qa_profiles_membership_billing_v04.sql` if Preview uses **`top_qa_profiles`** (`PROFILE_TABLE` / `VERCEL_ENV=preview`)
+
+Confirm columns exist: `renewal_date`, `billing_status`, `sponsor_tier`, `payment_method_summary`.
+
+### Phase C — Stripe **Test** mode + Vercel Preview env
+
+1. Stripe Dashboard → **Test mode** → Products: Support **$1.99/mo**, Pro **$5.99/mo** (copy `price_…` IDs).
+2. Vercel → **Preview** (branch `QA`) env vars: `STRIPE_SECRET_KEY=sk_test_…`, `STRIPE_PRICE_SUPPORT_MONTHLY`, `STRIPE_PRICE_PRO_MONTHLY`, optional `STRIPE_PRICE_SPONSOR_MONTHLY`, `STRIPE_WEBHOOK_SECRET`, `APP_BASE_URL` / `NEXT_PUBLIC_APP_URL` = QA host.
+3. Stripe → Webhooks (Test): `https://qa-the-outreach-project.vercel.app/api/billing/webhook` with events listed in §6 (include `payment_method.attached`).
+4. **Redeploy** QA after env changes.
+5. Customer Portal (Test): allow cancel at period end, update payment methods.
+
+### Phase D — QA smoke test
+
+| Step | Pass? |
+|------|-------|
+| Sign in (WorkOS) | |
+| Upgrade Support or Pro (card `4242 4242 4242 4242`) | |
+| Profile shows tier + renewal; webhook deliveries **200** in Stripe | |
+| Manage billing portal; cancel at period end | |
+| Add payment method; billing history shows invoice | |
+| `/admin/membership` counts update | |
+
+Details: [membership-billing.md](./membership-billing.md), [stripe-webhooks.md](./stripe-webhooks.md).
+
+### Phase E — Production (after QA passes)
+
+Repeat Phase B on **production** Supabase, Phase C with **Live** keys/prices/webhook on **Production** env, then §6–§7 below.
+
+---
+
 ## 6. Stripe webhook (live)
 
 - [ ] Stripe Dashboard → **Live** mode → Webhooks → endpoint: `https://theoutreachproject.app/api/billing/webhook`
@@ -139,6 +186,7 @@ If sign-in fails with “not a valid redirect URI”, the URL in the error must 
   - `invoice.paid`
   - `invoice.payment_failed`
   - `invoice.upcoming`
+  - `payment_method.attached`
 - [ ] Copy **live** webhook secret into Vercel `STRIPE_WEBHOOK_SECRET`.
 - [ ] Set live price IDs in Vercel Production (`STRIPE_PRICE_SUPPORT_MONTHLY`, `STRIPE_PRICE_PRO_MONTHLY`, etc.).
 - [ ] Redeploy Production.

@@ -3,8 +3,8 @@
   --content-gutter: 48px;
   --footer-nav-max-width: 760px;
   --header-floating-offset: 24px;
-  --header-floating-height: 360px;
-  --header-fade-height: 56px;
+  --header-floating-height: 432px;
+  --header-fade-height: 68px;
   --home-hero-image: url("/home/home-hero-flag-mission.png");
   --home-atmosphere-image: url("/home/home-atmosphere-cinematic-scene.png");
   --topapp-page-atmosphere-image: var(--topapp-page-atmosphere-image-light, url("/home/app-page-background-light.png?v=14"));
@@ -24,8 +24,8 @@
 @media (min-width: 761px) {
   main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) {
     --header-floating-offset: 12px;
-    --header-floating-height: clamp(248px, 36vw, 328px);
-    --header-fade-height: 28px;
+    --header-floating-height: clamp(298px, 43.2vw, 394px);
+    --header-fade-height: 34px;
   }
 
   main.topApp[data-page-atmosphere="home"] .shell.shell--home {
@@ -254,10 +254,10 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]).header
     background-image: linear-gradient(
       180deg,
       rgb(255 255 255 / 0.79) 0%,
-      rgb(255 255 255 / 0.53) 18%,
-      rgb(255 255 255 / 0.29) 36%,
-      rgb(255 255 255 / 0.12) 52%,
-      rgb(255 255 255 / 0) 70%,
+      rgb(255 255 255 / 0.53) 22%,
+      rgb(255 255 255 / 0.29) 43%,
+      rgb(255 255 255 / 0.12) 62%,
+      rgb(255 255 255 / 0) 84%,
       rgb(255 255 255 / 0) 100%
     );
   }
@@ -267,10 +267,10 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]).header
     background-image: linear-gradient(
       180deg,
       rgba(22, 24, 28, 0.89) 0%,
-      rgba(22, 24, 28, 0.55) 20%,
-      rgba(22, 24, 28, 0.26) 38%,
-      rgba(22, 24, 28, 0.1) 54%,
-      rgba(22, 24, 28, 0) 72%,
+      rgba(22, 24, 28, 0.55) 24%,
+      rgba(22, 24, 28, 0.26) 46%,
+      rgba(22, 24, 28, 0.1) 65%,
+      rgba(22, 24, 28, 0) 86%,
       rgba(22, 24, 28, 0) 100%
     );
   }
@@ -345,9 +345,9 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]).header
     linear-gradient(
       180deg,
       color-mix(in srgb, var(--topbar-gradient-fade, #ffffff) 82%, transparent) 0%,
-      color-mix(in srgb, var(--topbar-gradient-fade, #ffffff) 58%, transparent) 30%,
-      color-mix(in srgb, var(--topbar-gradient-fade, #ffffff) 36%, transparent) 56%,
-      color-mix(in srgb, var(--topbar-gradient-fade, #ffffff) 14%, transparent) 78%,
+      color-mix(in srgb, var(--topbar-gradient-fade, #ffffff) 58%, transparent) 36%,
+      color-mix(in srgb, var(--topbar-gradient-fade, #ffffff) 36%, transparent) 67%,
+      color-mix(in srgb, var(--topbar-gradient-fade, #ffffff) 14%, transparent) 94%,
       rgba(255, 255, 255, 0) 100%
     ),
     linear-gradient(
@@ -380,18 +380,18 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topba
   background-image: linear-gradient(
     180deg,
     rgb(255 255 255 / 0.66) 0%,
-    rgb(255 255 255 / 0.44) 18%,
-    rgb(255 255 255 / 0.24) 36%,
-    rgb(255 255 255 / 0.1) 52%,
-    rgb(255 255 255 / 0) 70%,
+    rgb(255 255 255 / 0.44) 22%,
+    rgb(255 255 255 / 0.24) 43%,
+    rgb(255 255 255 / 0.1) 62%,
+    rgb(255 255 255 / 0) 84%,
     rgb(255 255 255 / 0) 100%
   );
   background-color: transparent;
   background-size: 100% 100%;
   background-position: 0 0;
   background-repeat: no-repeat;
-  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 54%, rgba(0, 0, 0, 0.45) 76%, transparent 100%);
-  mask-image: linear-gradient(180deg, #000 0%, #000 54%, rgba(0, 0, 0, 0.45) 76%, transparent 100%);
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 65%, rgba(0, 0, 0, 0.45) 91%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0%, #000 65%, rgba(0, 0, 0, 0.45) 91%, transparent 100%);
   -webkit-mask-size: 100% 100%;
   mask-size: 100% 100%;
   -webkit-mask-repeat: no-repeat;
@@ -410,14 +410,14 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]).header
   background-image: linear-gradient(
     180deg,
     rgb(255 255 255 / 1) 0%,
-    rgb(255 255 255 / 0.94) 20%,
-    rgb(255 255 255 / 0.72) 42%,
-    rgb(255 255 255 / 0.38) 62%,
-    rgb(255 255 255 / 0.12) 80%,
+    rgb(255 255 255 / 0.94) 24%,
+    rgb(255 255 255 / 0.72) 50%,
+    rgb(255 255 255 / 0.38) 74%,
+    rgb(255 255 255 / 0.12) 96%,
     rgb(255 255 255 / 0) 100%
   );
-  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 36%, rgba(0, 0, 0, 0.5) 68%, transparent 100%);
-  mask-image: linear-gradient(180deg, #000 0%, #000 36%, rgba(0, 0, 0, 0.5) 68%, transparent 100%);
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 43%, rgba(0, 0, 0, 0.5) 82%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0%, #000 43%, rgba(0, 0, 0, 0.5) 82%, transparent 100%);
   opacity: 1;
 }
 :root[data-color-scheme="dark"]
@@ -435,14 +435,14 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]).header
   background-image: linear-gradient(
     180deg,
     rgba(22, 24, 28, 1) 0%,
-    rgba(22, 24, 28, 0.92) 20%,
-    rgba(22, 24, 28, 0.68) 42%,
-    rgba(22, 24, 28, 0.34) 62%,
-    rgba(22, 24, 28, 0.1) 80%,
+    rgba(22, 24, 28, 0.92) 24%,
+    rgba(22, 24, 28, 0.68) 50%,
+    rgba(22, 24, 28, 0.34) 74%,
+    rgba(22, 24, 28, 0.1) 96%,
     rgba(22, 24, 28, 0) 100%
   );
-  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 36%, rgba(0, 0, 0, 0.5) 68%, transparent 100%);
-  mask-image: linear-gradient(180deg, #000 0%, #000 36%, rgba(0, 0, 0, 0.5) 68%, transparent 100%);
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 43%, rgba(0, 0, 0, 0.5) 82%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0%, #000 43%, rgba(0, 0, 0, 0.5) 82%, transparent 100%);
   opacity: 1;
 }
 :root[data-color-scheme="dark"] main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarOcclusion::before,
@@ -450,14 +450,14 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]).header
   background-image: linear-gradient(
     180deg,
     rgba(22, 24, 28, 0.74) 0%,
-    rgba(22, 24, 28, 0.46) 20%,
-    rgba(22, 24, 28, 0.22) 38%,
-    rgba(22, 24, 28, 0.08) 54%,
-    rgba(22, 24, 28, 0) 72%,
+    rgba(22, 24, 28, 0.46) 24%,
+    rgba(22, 24, 28, 0.22) 46%,
+    rgba(22, 24, 28, 0.08) 65%,
+    rgba(22, 24, 28, 0) 86%,
     rgba(22, 24, 28, 0) 100%
   );
-  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 54%, rgba(0, 0, 0, 0.45) 76%, transparent 100%);
-  mask-image: linear-gradient(180deg, #000 0%, #000 54%, rgba(0, 0, 0, 0.45) 76%, transparent 100%);
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 65%, rgba(0, 0, 0, 0.45) 91%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0%, #000 65%, rgba(0, 0, 0, 0.45) 91%, transparent 100%);
   -webkit-mask-size: 100% 100%;
   mask-size: 100% 100%;
   -webkit-mask-repeat: no-repeat;
@@ -480,8 +480,8 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]).header
   background: linear-gradient(
     180deg,
     color-mix(in srgb, var(--topbar-gradient-fade, #ffffff) 58%, transparent) 0%,
-    color-mix(in srgb, var(--topbar-gradient-fade, #ffffff) 34%, transparent) 40%,
-    color-mix(in srgb, var(--topbar-gradient-fade, #ffffff) 12%, transparent) 62%,
+    color-mix(in srgb, var(--topbar-gradient-fade, #ffffff) 34%, transparent) 48%,
+    color-mix(in srgb, var(--topbar-gradient-fade, #ffffff) 12%, transparent) 74%,
     transparent 100%
   );
   opacity: min(1, calc((var(--header-gradient-opacity-mult, 1) - 1) * 1.05));
@@ -492,7 +492,7 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]).header
   background: linear-gradient(
     180deg,
     rgba(22, 24, 28, 0.5) 0%,
-    rgba(22, 24, 28, 0.28) 42%,
+    rgba(22, 24, 28, 0.28) 50%,
     transparent 100%
   );
 }
@@ -508,9 +508,9 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]).header
   pointer-events: none;
   background: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0) 52%,
-    rgba(255, 255, 255, 0.22) 70%,
-    rgba(255, 255, 255, 0.58) 84%,
+    rgba(255, 255, 255, 0) 62%,
+    rgba(255, 255, 255, 0.22) 84%,
+    rgba(255, 255, 255, 0.58) 98%,
     rgba(255, 255, 255, 0.88) 100%
   );
 }
@@ -518,9 +518,9 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]).header
 .dark .topbarOcclusion::after {
   background: linear-gradient(
     180deg,
-    rgb(from var(--color-bg-app) r g b / 0) 50%,
-    rgb(from var(--color-bg-app) r g b / 0.28) 68%,
-    rgb(from var(--color-bg-app) r g b / 0.62) 82%,
+    rgb(from var(--color-bg-app) r g b / 0) 60%,
+    rgb(from var(--color-bg-app) r g b / 0.28) 82%,
+    rgb(from var(--color-bg-app) r g b / 0.62) 98%,
     rgb(from var(--color-bg-app) r g b / 0.88) 100%
   );
 }

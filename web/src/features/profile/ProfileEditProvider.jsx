@@ -24,7 +24,7 @@ import {
   markProfileEditOpen,
   peekPendingProfileEdit,
 } from "@/features/profile/lib/pendingProfileEdit";
-import { getIncompleteEditFocusIds } from "@/lib/profile/profileCompletion";
+import { getIncompleteRequiredEditFocusIds } from "@/lib/profile/profileCompletion";
 
 const ProfileEditContext = createContext(null);
 
@@ -123,7 +123,7 @@ export function ProfileEditProvider({ children }) {
 
   const editIncompleteKeys =
     open && editDraft
-      ? getIncompleteEditFocusIds(editDraft, {
+      ? getIncompleteRequiredEditFocusIds(editDraft, {
           workOSUser:
             sessionKind === "workos"
               ? {
@@ -286,7 +286,9 @@ export function ProfileEditProvider({ children }) {
             editDraft={editDraft}
             profile={profile}
             sessionKind={sessionKind}
+            workOSAccountEmail={workOSAccountEmail}
             editIncompleteKeys={editIncompleteKeys}
+            editFieldFocus={editFieldFocus}
             editSaveError={editSaveError}
             editSaveOk={editSaveOk}
             editSaving={editSaving}

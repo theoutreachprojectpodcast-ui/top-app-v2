@@ -188,8 +188,8 @@
   max-width: 72ch;
 }
 .modalCard--profileEdit.profileEditModal {
-  width: min(720px, calc(100vw - 24px));
-  max-height: min(92dvh, 920px);
+  width: min(480px, calc(100vw - 24px));
+  max-height: min(88dvh, 720px);
   padding: 0;
   gap: 0;
   overflow: hidden;
@@ -244,32 +244,98 @@
   text-transform: uppercase;
   color: var(--color-text-muted);
 }
-.profileEditModal__chunk {
-  display: grid;
-  gap: var(--ds-space-3, 12px);
+.profileEditModal__banner {
+  margin: 0;
+  padding: var(--ds-space-2, 8px) var(--ds-space-5, 20px);
+  font-size: var(--text-body-sm);
+  color: var(--color-text-secondary);
+  background: color-mix(in srgb, var(--color-accent-soft) 35%, transparent);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+.profileEditModal__photoRow {
+  display: flex;
+  align-items: center;
+  gap: var(--ds-space-4, 16px);
   padding: var(--ds-space-3, 12px);
   border-radius: var(--radius-input);
-  border: 1px solid transparent;
-  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-surface-muted);
 }
-.profileEditModal__chunk--incomplete {
-  border-color: color-mix(in srgb, var(--color-success) 42%, var(--color-border-subtle));
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-success) 18%, transparent);
-  background: color-mix(in srgb, var(--color-success) 5%, var(--color-surface-card));
+.profileEditModal__photoRow--attention {
+  border-color: color-mix(in srgb, var(--color-accent) 55%, var(--color-border-subtle));
+}
+.profileEditModal__photoCopy {
+  display: grid;
+  gap: var(--ds-space-2, 8px);
+  flex: 1;
+  min-width: 0;
+}
+.profileEditModal__photoBtn {
+  justify-self: start;
+  cursor: pointer;
+}
+.profileEditModal__nameRow,
+.profileEditModal__locationRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--ds-space-3, 12px);
+}
+.profileEditModal__labelRow {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+}
+.profileEditModal__required {
+  color: var(--color-accent);
+  font-weight: 700;
 }
 .profileEditModal__field {
   display: grid;
   gap: var(--ds-space-2, 8px);
+}
+.profileEditModal__field--attention input,
+.profileEditModal__field--attention select,
+.profileEditModal__field--attention textarea {
+  border-color: color-mix(in srgb, var(--color-accent) 50%, var(--color-border-subtle));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 12%, transparent);
 }
 .profileEditModal__field input,
 .profileEditModal__field select,
 .profileEditModal__field textarea {
   width: 100%;
 }
-.profileEditModal .profilePhotoUploadLabel {
-  margin: 0;
-  background: var(--color-surface-muted);
-  border-color: color-mix(in srgb, var(--color-accent) 28%, var(--color-border-subtle));
+.profileEditModal__more {
+  margin-top: var(--ds-space-2, 8px);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-input);
+  background: color-mix(in srgb, var(--color-surface-muted) 65%, transparent);
+}
+.profileEditModal__moreSummary {
+  padding: var(--ds-space-3, 12px) var(--ds-space-4, 16px);
+  font-size: var(--text-body-sm);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  list-style: none;
+}
+.profileEditModal__moreSummary::-webkit-details-marker {
+  display: none;
+}
+.profileEditModal__moreBody {
+  display: grid;
+  gap: var(--ds-space-3, 12px);
+  padding: 0 var(--ds-space-4, 16px) var(--ds-space-4, 16px);
+  border-top: 1px solid var(--color-border-subtle);
+}
+.profileEditModal__contribGroup {
+  grid-template-columns: 1fr;
+  gap: var(--ds-space-2, 8px);
+}
+@media (max-width: 520px) {
+  .profileEditModal__nameRow,
+  .profileEditModal__locationRow {
+    grid-template-columns: 1fr;
+  }
 }
 .profileEditModal__foot {
   flex-shrink: 0;
@@ -284,7 +350,8 @@
   justify-content: flex-end;
 }
 .profileEditModal__notifyGroup {
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--ds-space-2, 8px);
 }
 @media (max-width: 760px) {
   .profileEditModal__head {

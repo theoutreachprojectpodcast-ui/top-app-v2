@@ -58,3 +58,12 @@ export function getIncompleteEditFocusIds(profile, options = {}) {
       .map((s) => s.editFocus),
   );
 }
+
+/** Incomplete **required** fields only — used for edit modal hints (not optional/recommended). */
+export function getIncompleteRequiredEditFocusIds(profile, options = {}) {
+  const account = evaluateAccountProfileCompleteness(profile, options);
+  if (!account?.requiredItems) return new Set();
+  return new Set(
+    account.requiredItems.filter((s) => !s.done && s.editFocus).map((s) => s.editFocus),
+  );
+}
