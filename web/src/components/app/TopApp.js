@@ -1,7 +1,6 @@
-"use client";
+﻿"use client";
 
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import HeaderInner from "@/components/layout/HeaderInner";
@@ -24,7 +23,6 @@ import SavedOrganizationsList from "@/features/profile/components/SavedOrganizat
 import SiteBottomNavGlyph from "@/components/navigation/SiteBottomNavGlyph";
 import SiteMobileNavMoreMenu from "@/components/navigation/SiteMobileNavMoreMenu";
 import HomeScreen from "@/components/home/HomeScreen";
-import { useAuthSession } from "@/components/auth/AuthSessionProvider";
 import ProfileCompletionPanel from "@/features/profile/components/ProfileCompletionPanel";
 import HeaderAccountMenu from "@/components/layout/HeaderAccountMenu";
 import HeaderNotificationBell from "@/components/layout/HeaderNotificationBell";
@@ -49,19 +47,9 @@ import {
   writeRememberEmailPref,
 } from "@/lib/auth/lastUsedEmail";
 import { workosSignInLink, workosSignUpHref } from "@/lib/auth/workosReturnTo";
-import { computeProfileCompletion, getIncompleteEditFocusIds } from "@/lib/profile/profileCompletion";
-import {
-  CONTRIBUTION_INTEREST_KEYS,
-  IDENTITY_SEGMENT_OPTIONS,
-  PREFERRED_CONTACT_OPTIONS,
-} from "@/lib/profile/profileCompletenessModel";
-import { profileFromApiDto } from "@/features/profile/mappers";
-import { mergeEditDraftWithProfile } from "@/features/profile/lib/mergeEditDraftWithProfile";
-import {
-  clearPendingProfileEdit,
-  markPendingProfileEdit,
-  peekPendingProfileEdit,
-} from "@/features/profile/lib/pendingProfileEdit";
+import { computeProfileCompletion } from "@/lib/profile/profileCompletion";
+import { markPendingProfileEdit } from "@/features/profile/lib/pendingProfileEdit";
+import { useProfileEdit } from "@/features/profile/ProfileEditProvider";
 import AccountSettingsPage from "@/features/settings/components/AccountSettingsPage";
 import { FormCheckbox } from "@/components/forms/FormChoice";
 import { resolvePageAtmosphere } from "@/lib/design/pageAtmosphere";
@@ -98,18 +86,12 @@ function TopAppInner({ initialNav = "home" }) {
   const sb = useMemo(() => getSupabaseClient(), []);
   const [nav, setNav] = useState(initialNav);
   const [overlay, setOverlay] = useState(null);
-  const [editDraft, setEditDraft] = useState(null);
-  const [editFieldFocus, setEditFieldFocus] = useState(null);
   const [authMode, setAuthMode] = useState("signin");
   const [authDraft, setAuthDraft] = useState({ firstName: "", lastName: "", email: "", password: "" });
   const [demoAuthPasswordVisible, setDemoAuthPasswordVisible] = useState(false);
   const [authError, setAuthError] = useState("");
   const [authStatus, setAuthStatus] = useState("");
   const [signupAvatarDataUrl, setSignupAvatarDataUrl] = useState("");
-  const [editSaveError, setEditSaveError] = useState("");
-  const [editSaveOk, setEditSaveOk] = useState("");
-  const [editSaving, setEditSaving] = useState(false);
-  const editDraftTouchedRef = useRef(new Set());
   const [contactDraft, setContactDraft] = useState({ firstName: "", lastName: "", email: "", phone: "", message: "" });
   const [contactStatus, setContactStatus] = useState("");
   const [contactError, setContactError] = useState("");
@@ -182,11 +164,10 @@ function TopAppInner({ initialNav = "home" }) {
     createAccount,
     signInWithCredentials,
     signOut,
-    uploadAvatarFile,
     refreshWorkOSProfile,
     entitlements,
   } = useProfileData();
-  const { refresh: refreshAuthSession } = useAuthSession();
+  const { openProfileEdit } = useProfileEdit();
 
   const profileCompletion = useMemo(() => {
     if (!isAuthenticated) return null;
@@ -197,11 +178,6 @@ function TopAppInner({ initialNav = "home" }) {
           : null,
     });
   }, [isAuthenticated, profile, sessionKind, workOSAccountEmail]);
-
-  const prevLoadingProfileForEditRef = useRef(loadingProfile);
-
-  const editIncompleteKeys =
-    overlay === "edit" && editDraft ? getIncompleteEditFocusIds(editDraft) : new Set();
 
   useEffect(() => {
     const c = searchParams.get("checkout");
@@ -266,186 +242,6 @@ function TopAppInner({ initialNav = "home" }) {
     router.push("/profile?edit=1");
   }
 
-  function resolveProfileEditFocusKey(sectionRaw, focusRaw) {
-    const section = String(sectionRaw || "").trim().toLowerCase();
-    const SECTION_TO_FOCUS = {
-      main: "displayName",
-      identity: "identitySegment",
-      contribution: "contribution",
-      interests: "interests",
-      preferences: "preferences",
-    };
-    const rawFocus = String(focusRaw || "").trim();
-    const fromSection = section && SECTION_TO_FOCUS[section] ? SECTION_TO_FOCUS[section] : "";
-    const focusKey =
-      (fromSection && /^[a-zA-Z][a-zA-Z0-9_-]*$/.test(fromSection) ? fromSection : "") ||
-      (rawFocus && /^[a-zA-Z][a-zA-Z0-9_-]*$/.test(rawFocus) ? rawFocus : "");
-    return focusKey || null;
-  }
-
-  function openEdit(focusKey) {
-    setEditSaveError("");
-    setEditSaveOk("");
-    editDraftTouchedRef.current = new Set();
-    setEditDraft(profileFromApiDto(profile));
-    setEditFieldFocus(focusKey != null && focusKey !== "" ? focusKey : null);
-    setOverlay("edit");
-  }
-
-  async function saveEditProfile() {
-    if (editSaving || !editDraft) return;
-    setEditSaving(true);
-    setEditSaveError("");
-    setEditSaveOk("");
-    const result = await persistProfile({ ...profile, ...editDraft });
-    setEditSaving(false);
-    if (!result.ok) {
-      setEditSaveError(String(result.message || "").trim() || "Could not save your profile. Try again.");
-      return;
-    }
-    setEditSaveOk("Profile saved.");
-    void refreshAuthSession({ soft: true });
-    window.setTimeout(() => {
-      closeEditOverlay();
-    }, 900);
-  }
-
-  /** Deep link `?edit=1` + sessionStorage survives Suspense remount when query is stripped early. */
-  const openedProfileEditFromQueryRef = useRef(false);
-  useEffect(() => {
-    if (pathname !== "/profile") {
-      openedProfileEditFromQueryRef.current = false;
-      return;
-    }
-
-    const editFromQuery = searchParams.get("edit") === "1";
-    const pending = peekPendingProfileEdit();
-    if (editFromQuery) {
-      markPendingProfileEdit({
-        focus: searchParams.get("focus") || searchParams.get("field") || pending?.focus || "",
-        section: searchParams.get("section") || pending?.section || "",
-      });
-    }
-
-    if (!editFromQuery && !pending) {
-      openedProfileEditFromQueryRef.current = false;
-      return;
-    }
-    if (loadingProfile || !isAuthenticated) return;
-    if (openedProfileEditFromQueryRef.current) return;
-
-    const focusKey = resolveProfileEditFocusKey(
-      searchParams.get("section") || pending?.section,
-      searchParams.get("focus") || searchParams.get("field") || pending?.focus,
-    );
-    openedProfileEditFromQueryRef.current = true;
-    clearPendingProfileEdit();
-    setEditSaveError("");
-    editDraftTouchedRef.current = new Set();
-    setEditDraft(profileFromApiDto(profile));
-    setEditFieldFocus(focusKey);
-    setOverlay("edit");
-    if (editFromQuery) router.replace("/profile", { scroll: false });
-  }, [pathname, searchParams, loadingProfile, isAuthenticated, profile, router]);
-
-  /** If Edit Profile opens before cloud profile finishes loading, replace empty draft with real row. */
-  useEffect(() => {
-    const prev = prevLoadingProfileForEditRef.current;
-    prevLoadingProfileForEditRef.current = loadingProfile;
-    if (overlay !== "edit" || loadingProfile) return;
-    if (prev === true && loadingProfile === false) {
-      setEditDraft(profileFromApiDto(profile));
-    }
-  }, [overlay, loadingProfile, profile]);
-
-  /** When `/api/me` hydrates after opening the modal, merge server fields without wiping typed values. */
-  const profileEditMergeKey = useMemo(
-    () =>
-      [
-        profile.profileRecordId,
-        profile.firstName,
-        profile.lastName,
-        profile.displayName,
-        profile.email,
-        profile.bio,
-        profile.banner,
-        profile.avatarUrl,
-        profile.sponsorOrgName,
-        profile.sponsorWebsite,
-        profile.missionStatement,
-        profile.identityRole,
-        profile.city,
-        profile.state,
-        profile.organizationAffiliation,
-        profile.serviceBackground,
-        profile.causes,
-        profile.skills,
-        profile.volunteerInterests,
-        profile.supportInterests,
-        profile.contributionSummary,
-        profile.accountIntent,
-        profile.phoneNumber,
-        profile.postalCode,
-        profile.preferredContactMethod,
-        profile.notificationPreferences?.join(","),
-        profile.identitySegment,
-        profile.jobTitle,
-        profile.reasonForJoining,
-        profile.supportNeeds,
-        profile.communities,
-        profile.preferredContributionContact,
-        JSON.stringify(profile.contributionInterests || {}),
-        profile.onboardingSkipped,
-      ].join("\u001f"),
-    [profile],
-  );
-
-  useEffect(() => {
-    if (overlay !== "edit" || !editDraft) return;
-    setEditDraft((d) => mergeEditDraftWithProfile(d, profile, editDraftTouchedRef.current));
-  }, [overlay, profileEditMergeKey, profile]);
-
-  function closeEditOverlay() {
-    setEditSaveError("");
-    setEditSaveOk("");
-    setEditSaving(false);
-    editDraftTouchedRef.current = new Set();
-    clearPendingProfileEdit();
-    setEditFieldFocus(null);
-    setOverlay(null);
-  }
-
-  function toggleEditNotificationPref(id) {
-    editDraftTouchedRef.current.add("__any__");
-    setEditDraft((d) => {
-      const arr = Array.isArray(d.notificationPreferences) ? [...d.notificationPreferences] : [];
-      const s = new Set(arr.map((x) => String(x || "").toLowerCase()));
-      const k = String(id || "").toLowerCase();
-      if (s.has(k)) s.delete(k);
-      else s.add(k);
-      return { ...d, notificationPreferences: [...s] };
-    });
-  }
-
-  function toggleEditContributionInterest(key) {
-    editDraftTouchedRef.current.add("__any__");
-    setEditDraft((d) => {
-      const prev = d.contributionInterests && typeof d.contributionInterests === "object" ? d.contributionInterests : {};
-      return { ...d, contributionInterests: { ...prev, [key]: !prev[key] } };
-    });
-  }
-
-  useEffect(() => {
-    if (overlay !== "edit" || !editFieldFocus) return;
-    const id = requestAnimationFrame(() => {
-      document.querySelector(`[data-profile-edit-focus="${editFieldFocus}"]`)?.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
-    });
-    return () => cancelAnimationFrame(id);
-  }, [overlay, editFieldFocus]);
-
   function dockNavHome() {
     if (pathname && pathname !== "/") router.push("/");
     else setNav("home");
@@ -485,33 +281,6 @@ function TopAppInner({ initialNav = "home" }) {
     const ctx = canvas.getContext("2d");
     ctx.drawImage(image, 0, 0, targetW, targetH);
     return canvas.toDataURL("image/jpeg", 0.84);
-  }
-
-  async function onProfileImageSelected(file) {
-    if (!file) return;
-    if (!String(file.type || "").startsWith("image/")) return;
-    editDraftTouchedRef.current.add("__any__");
-    if (sessionKind === "workos" && uploadAvatarFile) {
-      setEditSaveError("");
-      const result = await uploadAvatarFile(file);
-      if (!result?.ok) {
-        setEditSaveError(result?.message || "Could not upload photo.");
-        return;
-      }
-      if (result.avatarUrl) {
-        setEditDraft((d) => ({ ...d, avatarUrl: result.avatarUrl }));
-      }
-      setEditSaveOk("Photo updated. Tap Save to keep your other profile changes.");
-      return;
-    }
-    try {
-      const dataUrl = await fileToCompressedDataUrl(file);
-      if (!dataUrl) return;
-      editDraftTouchedRef.current.add("__any__");
-      setEditDraft((d) => ({ ...d, avatarUrl: dataUrl }));
-    } catch {
-      // keep silent to avoid blocking edit flow
-    }
   }
 
   async function onSignupAvatarSelected(file) {
@@ -632,7 +401,7 @@ function TopAppInner({ initialNav = "home" }) {
         return;
       }
     }
-    const subject = encodeURIComponent(`Contact Request — ${contactDraft.firstName} ${contactDraft.lastName}`);
+    const subject = encodeURIComponent(`Contact Request â€” ${contactDraft.firstName} ${contactDraft.lastName}`);
     const body = encodeURIComponent(
       `Name: ${contactDraft.firstName} ${contactDraft.lastName}\nEmail: ${contactDraft.email}\nPhone: ${contactDraft.phone || "Not provided"}\n\nMessage:\n${contactDraft.message}`
     );
@@ -886,7 +655,7 @@ function TopAppInner({ initialNav = "home" }) {
           {loadingProfile && !isAuthenticated ? (
             <div className="card profileSessionRestoring">
               <p className="sponsorSectionLead" style={{ margin: 0 }}>
-                Loading your profile…
+                Loading your profileâ€¦
               </p>
             </div>
           ) : !isAuthenticated ? (
@@ -965,7 +734,7 @@ function TopAppInner({ initialNav = "home" }) {
             membershipLabel={membership.label}
             isMember={isMember}
             icon={<AppIcon name="profile" />}
-            onEdit={openEdit}
+            onEdit={() => openProfileEdit()}
           />
           <MembershipAtAGlance
             surface="profile"
@@ -984,13 +753,13 @@ function TopAppInner({ initialNav = "home" }) {
           <ProfileCompletionPanel
             completion={profileCompletion}
             profile={profile}
-            onEditProfile={() => openEdit()}
-            onEditProfileFocus={(key) => openEdit(key)}
+            onEditProfile={() => openProfileEdit()}
+            onEditProfileFocus={(key) => openProfileEdit(key)}
             onOpenOnboarding={openOnboardingFlow}
             onOpenMembership={openMembershipJourney}
           />
 
-          <ProfileIdentitySection profile={profile} onEdit={openEdit} savedCount={favoriteEins.length} />
+          <ProfileIdentitySection profile={profile} onEdit={() => openProfileEdit()} savedCount={favoriteEins.length} />
 
           {loadingProfile && (
             <div className="card">
@@ -1068,14 +837,7 @@ function TopAppInner({ initialNav = "home" }) {
           sessionKind={sessionKind}
           authBackend={authBackend}
           persistProfile={persistProfile}
-          onOpenEditProfile={() => {
-            if (pathname === "/profile") {
-              openEdit();
-              return;
-            }
-            markPendingProfileEdit({});
-            router.push("/profile?edit=1");
-          }}
+          onOpenEditProfile={() => openProfileEdit()}
           setMembershipStatus={setMembershipStatus}
           openSignInForMembership={openSignInForMembership}
           favoriteEins={favoriteEins}
@@ -1247,410 +1009,6 @@ function TopAppInner({ initialNav = "home" }) {
         </div>
       )}
 
-      {overlay === "edit" && editDraft && typeof document !== "undefined"
-        ? createPortal(
-        <div className="modalOverlay modalOverlay--profileEdit" onClick={closeEditOverlay}>
-          <div
-            className="modalCard modalCard--profileEdit"
-            onClick={(e) => e.stopPropagation()}
-            onChangeCapture={() => {
-              editDraftTouchedRef.current.add("__any__");
-            }}
-            onKeyDown={(e) => {
-              if (e.key !== "Enter" || e.nativeEvent?.isComposing) return;
-              const t = e.target;
-              if (t && (t.tagName === "TEXTAREA" || (typeof t.closest === "function" && t.closest("textarea")))) return;
-              if (t && t.tagName === "INPUT" && String(t.type || "").toLowerCase() === "file") return;
-              e.preventDefault();
-              void saveEditProfile();
-            }}
-          >
-            <h3>Edit profile</h3>
-            <p className="ds-page-intro__lead" style={{ margin: 0 }}>
-              Sections mirror onboarding. Incomplete checklist items show a green outline. Billing lives in{" "}
-              <button type="button" className="accountSettingsInlineLink" onClick={() => router.push("/settings")}>
-                Settings
-              </button>
-              .
-            </p>
-            <h4 className="introTagline" style={{ marginTop: 16 }}>
-              Main account information
-            </h4>
-            <div
-              className={`profileEditChunk${editIncompleteKeys.has("avatar") ? " profileEditChunk--incomplete" : ""}`}
-              data-profile-edit-focus="avatar"
-            >
-              <Avatar src={editDraft.avatarUrl || emptyProfileAvatarUrl()} alt="Profile preview" />
-              <label className="profilePhotoUploadLabel">
-                <span className="profilePhotoUploadTitle">Profile photo</span>
-                <span className="profilePhotoUploadHint">Upload or replace the image shown on your profile and membership card.</span>
-                <input
-                  className="profileFileInput"
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => onProfileImageSelected(e.target.files?.[0])}
-                />
-              </label>
-            </div>
-            <div
-              className={`profileEditChunk${editIncompleteKeys.has("name") ? " profileEditChunk--incomplete" : ""}`}
-              data-profile-edit-focus="name"
-            >
-              <input
-                name="given-name"
-                autoComplete="given-name"
-                value={editDraft.firstName || ""}
-                onChange={(e) => setEditDraft((d) => ({ ...d, firstName: e.target.value }))}
-                placeholder="First name"
-              />
-              <input
-                name="family-name"
-                autoComplete="family-name"
-                value={editDraft.lastName || ""}
-                onChange={(e) => setEditDraft((d) => ({ ...d, lastName: e.target.value }))}
-                placeholder="Last name"
-              />
-            </div>
-            <div
-              className={`profileEditChunk${editIncompleteKeys.has("displayName") ? " profileEditChunk--incomplete" : ""}`}
-              data-profile-edit-focus="displayName"
-            >
-              <input
-                name="nickname"
-                autoComplete="nickname"
-                value={editDraft.displayName || ""}
-                onChange={(e) => setEditDraft((d) => ({ ...d, displayName: e.target.value }))}
-                placeholder="Display name"
-              />
-            </div>
-            <div
-              className={`profileEditChunk${editIncompleteKeys.has("email") ? " profileEditChunk--incomplete" : ""}`}
-              data-profile-edit-focus="email"
-            >
-              <input
-                name="email"
-                autoComplete="email"
-                value={editDraft.email}
-                onChange={(e) => setEditDraft((d) => ({ ...d, email: e.target.value }))}
-                placeholder="Email"
-                type="email"
-                title={
-                  sessionKind === "workos"
-                    ? "Saved to your profile. Change anytime in Settings or here; sign-in email may still be your WorkOS address until updated with your provider."
-                    : undefined
-                }
-              />
-            </div>
-            <div
-              className={`profileEditChunk${editIncompleteKeys.has("phone") ? " profileEditChunk--incomplete" : ""}`}
-              data-profile-edit-focus="phone"
-            >
-              <input
-                type="tel"
-                autoComplete="tel"
-                value={editDraft.phoneNumber || ""}
-                onChange={(e) => setEditDraft((d) => ({ ...d, phoneNumber: e.target.value }))}
-                placeholder="Phone number"
-              />
-            </div>
-            <div
-              className={`profileEditChunk${editIncompleteKeys.has("location") ? " profileEditChunk--incomplete" : ""}`}
-              data-profile-edit-focus="location"
-            >
-              <div className="form">
-                <input
-                  value={editDraft.city || ""}
-                  onChange={(e) => setEditDraft((d) => ({ ...d, city: e.target.value }))}
-                  placeholder="City"
-                  autoComplete="address-level2"
-                />
-                <input
-                  value={editDraft.state || ""}
-                  onChange={(e) => setEditDraft((d) => ({ ...d, state: e.target.value }))}
-                  placeholder="State / region"
-                  autoComplete="address-level1"
-                />
-              </div>
-              <input
-                value={editDraft.postalCode || ""}
-                onChange={(e) => setEditDraft((d) => ({ ...d, postalCode: e.target.value }))}
-                placeholder="ZIP / postal code"
-                autoComplete="postal-code"
-              />
-            </div>
-            <div
-              className={`profileEditChunk${editIncompleteKeys.has("about") ? " profileEditChunk--incomplete" : ""}`}
-              data-profile-edit-focus="about"
-            >
-              <input
-                name="organization-title"
-                autoComplete="organization-title"
-                value={editDraft.banner || ""}
-                onChange={(e) => setEditDraft((d) => ({ ...d, banner: e.target.value }))}
-                placeholder="Short tagline (shown under your name)"
-              />
-              <textarea
-                rows={3}
-                value={editDraft.bio || ""}
-                onChange={(e) => setEditDraft((d) => ({ ...d, bio: e.target.value }))}
-                placeholder="Bio"
-              />
-            </div>
-            <h4 className="introTagline" style={{ marginTop: 16 }}>
-              Identity
-            </h4>
-            <div
-              className={`profileEditChunk${editIncompleteKeys.has("identitySegment") ? " profileEditChunk--incomplete" : ""}`}
-              data-profile-edit-focus="identitySegment"
-            >
-              <label className="fieldLabel" htmlFor="torp-edit-id-seg">
-                How you identify with this community
-                <select
-                  id="torp-edit-id-seg"
-                  value={editDraft.identitySegment || ""}
-                  onChange={(e) => setEditDraft((d) => ({ ...d, identitySegment: e.target.value }))}
-                >
-                  <option value="">Select…</option>
-                  {IDENTITY_SEGMENT_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-            <div
-              className={`profileEditChunk${editIncompleteKeys.has("organizationName") ? " profileEditChunk--incomplete" : ""}`}
-              data-profile-edit-focus="organizationName"
-            >
-              <input
-                value={editDraft.organizationAffiliation || ""}
-                onChange={(e) => setEditDraft((d) => ({ ...d, organizationAffiliation: e.target.value }))}
-                placeholder="Organization name / affiliation"
-              />
-            </div>
-            <div
-              className={`profileEditChunk${editIncompleteKeys.has("jobTitle") ? " profileEditChunk--incomplete" : ""}`}
-              data-profile-edit-focus="jobTitle"
-            >
-              <input
-                value={editDraft.jobTitle || ""}
-                onChange={(e) => setEditDraft((d) => ({ ...d, jobTitle: e.target.value }))}
-                placeholder="Role / title"
-              />
-            </div>
-            <div
-              className={`profileEditChunk${editIncompleteKeys.has("serviceBackground") ? " profileEditChunk--incomplete" : ""}`}
-              data-profile-edit-focus="serviceBackground"
-            >
-              <input
-                value={editDraft.serviceBackground || ""}
-                onChange={(e) => setEditDraft((d) => ({ ...d, serviceBackground: e.target.value }))}
-                placeholder="Branch or service affiliation"
-              />
-            </div>
-            <div
-              className={`profileEditChunk${editIncompleteKeys.has("reasonForJoining") ? " profileEditChunk--incomplete" : ""}`}
-              data-profile-edit-focus="reasonForJoining"
-            >
-              <textarea
-                rows={3}
-                value={editDraft.reasonForJoining || ""}
-                onChange={(e) => setEditDraft((d) => ({ ...d, reasonForJoining: e.target.value }))}
-                placeholder="Reason for joining The Outreach Project"
-              />
-            </div>
-            <div
-              className={`profileEditChunk${editIncompleteKeys.has("interests") ? " profileEditChunk--incomplete" : ""}`}
-              data-profile-edit-focus="interests"
-            >
-              <textarea
-                rows={2}
-                value={editDraft.causes || ""}
-                onChange={(e) => setEditDraft((d) => ({ ...d, causes: e.target.value }))}
-                placeholder="Interests / categories you care about"
-              />
-            </div>
-            <div
-              className={`profileEditChunk${editIncompleteKeys.has("supportNeeds") ? " profileEditChunk--incomplete" : ""}`}
-              data-profile-edit-focus="supportNeeds"
-            >
-              <textarea
-                rows={2}
-                value={editDraft.supportNeeds || ""}
-                onChange={(e) => setEditDraft((d) => ({ ...d, supportNeeds: e.target.value }))}
-                placeholder="Support needs"
-              />
-            </div>
-            <div
-              className={`profileEditChunk${editIncompleteKeys.has("communities") ? " profileEditChunk--incomplete" : ""}`}
-              data-profile-edit-focus="communities"
-            >
-              <textarea
-                rows={2}
-                value={editDraft.communities || ""}
-                onChange={(e) => setEditDraft((d) => ({ ...d, communities: e.target.value }))}
-                placeholder="Communities you identify with on the platform"
-              />
-            </div>
-            <div className="profileEditChunk" data-profile-edit-focus="identity">
-              <fieldset className="profileEditFieldset">
-                <legend>Additional identity (optional)</legend>
-                <textarea
-                  rows={2}
-                  value={editDraft.missionStatement || ""}
-                  onChange={(e) => setEditDraft((d) => ({ ...d, missionStatement: e.target.value }))}
-                  placeholder="Mission or personal statement"
-                />
-                <input
-                  value={editDraft.identityRole || ""}
-                  onChange={(e) => setEditDraft((d) => ({ ...d, identityRole: e.target.value }))}
-                  placeholder="Legacy role label (optional)"
-                />
-              </fieldset>
-            </div>
-            <h4 className="introTagline" style={{ marginTop: 16 }}>
-              Contribution
-            </h4>
-            <div
-              className={`profileEditChunk${editIncompleteKeys.has("contribution") ? " profileEditChunk--incomplete" : ""}`}
-              data-profile-edit-focus="contribution"
-            >
-              <fieldset className="profileEditFieldset">
-                <legend>Ways you want to contribute</legend>
-                <div className="communityPillRow" style={{ flexDirection: "column", alignItems: "stretch", gap: 10 }}>
-                  {CONTRIBUTION_INTEREST_KEYS.map(([key, label]) => (
-                    <label key={key} style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                      <input
-                        type="checkbox"
-                        checked={!!editDraft.contributionInterests?.[key]}
-                        onChange={() => toggleEditContributionInterest(key)}
-                      />
-                      {label}
-                    </label>
-                  ))}
-                </div>
-                <textarea
-                  rows={2}
-                  value={editDraft.skills || ""}
-                  onChange={(e) => setEditDraft((d) => ({ ...d, skills: e.target.value }))}
-                  placeholder="Skills or services you can offer"
-                />
-                <textarea
-                  rows={2}
-                  value={editDraft.volunteerInterests || ""}
-                  onChange={(e) => setEditDraft((d) => ({ ...d, volunteerInterests: e.target.value }))}
-                  placeholder="Volunteer interests"
-                />
-                <textarea
-                  rows={2}
-                  value={editDraft.contributionSummary || ""}
-                  onChange={(e) => setEditDraft((d) => ({ ...d, contributionSummary: e.target.value }))}
-                  placeholder="How you want to contribute (summary)"
-                />
-                <input
-                  value={editDraft.preferredContributionContact || ""}
-                  onChange={(e) => setEditDraft((d) => ({ ...d, preferredContributionContact: e.target.value }))}
-                  placeholder="Preferred contact for opportunities"
-                />
-                <input
-                  value={editDraft.supportInterests || ""}
-                  onChange={(e) => setEditDraft((d) => ({ ...d, supportInterests: e.target.value }))}
-                  placeholder="Support and outreach interests"
-                />
-              </fieldset>
-            </div>
-            {String(editDraft.accountIntent || profile.accountIntent || "").toLowerCase() === "sponsor_user" ? (
-              <>
-                <div
-                  className={`profileEditChunk${editIncompleteKeys.has("sponsorOrg") ? " profileEditChunk--incomplete" : ""}`}
-                  data-profile-edit-focus="sponsorOrg"
-                >
-                  <p className="profileEditFieldsetHint">Sponsor organization</p>
-                  <input
-                    value={editDraft.sponsorOrgName || ""}
-                    onChange={(e) => setEditDraft((d) => ({ ...d, sponsorOrgName: e.target.value }))}
-                    placeholder="Organization name"
-                  />
-                </div>
-                <div
-                  className={`profileEditChunk${editIncompleteKeys.has("sponsorSite") ? " profileEditChunk--incomplete" : ""}`}
-                  data-profile-edit-focus="sponsorSite"
-                >
-                  <input
-                    value={editDraft.sponsorWebsite || ""}
-                    onChange={(e) => setEditDraft((d) => ({ ...d, sponsorWebsite: e.target.value }))}
-                    placeholder="Organization website URL"
-                  />
-                </div>
-              </>
-            ) : null}
-            <h4 className="introTagline" style={{ marginTop: 16 }}>
-              Preferences
-            </h4>
-            <div
-              className={`profileEditChunk${editIncompleteKeys.has("preferences") ? " profileEditChunk--incomplete" : ""}`}
-              data-profile-edit-focus="preferences"
-            >
-              <label className="fieldLabel" htmlFor="torp-edit-contact-pref">
-                Preferred contact method
-                <select
-                  id="torp-edit-contact-pref"
-                  value={editDraft.preferredContactMethod || ""}
-                  onChange={(e) => setEditDraft((d) => ({ ...d, preferredContactMethod: e.target.value }))}
-                >
-                  <option value="">Select…</option>
-                  {PREFERRED_CONTACT_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <fieldset className="profileEditFieldset">
-                <legend>Notification preferences</legend>
-                <div className="communityPillRow" style={{ flexWrap: "wrap" }}>
-                  {["email", "sms", "push", "in_app"].map((nid) => (
-                    <label key={nid} style={{ display: "inline-flex", gap: 8, marginRight: 12 }}>
-                      <input
-                        type="checkbox"
-                        checked={!!editDraft.notificationPreferences?.includes(nid)}
-                        onChange={() => toggleEditNotificationPref(nid)}
-                      />
-                      {nid.replace("_", " ")}
-                    </label>
-                  ))}
-                </div>
-              </fieldset>
-            </div>
-            {editSaveOk ? (
-              <p className="applyStatus" role="status">
-                {editSaveOk}
-              </p>
-            ) : null}
-            {editSaveError ? (
-              <p className="profileEditSaveError" role="alert">
-                {editSaveError}
-              </p>
-            ) : null}
-            <div className="row">
-              <button className="btnSoft" onClick={closeEditOverlay} type="button" disabled={editSaving}>
-                Cancel
-              </button>
-              <button
-                className="btnPrimary"
-                onClick={() => void saveEditProfile()}
-                type="button"
-                disabled={editSaving}
-              >
-                {editSaving ? "Saving…" : "Save"}
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body,
-      )
-        : null}
 
       {overlay === "signin" && (
         <div className="modalOverlay" onClick={() => setOverlay(null)}>
@@ -1672,7 +1030,7 @@ function TopAppInner({ initialNav = "home" }) {
                   Optional: add your email to prefill the hosted sign-in screen.
                 </p>
                 <p className="profilePhotoUploadHint" style={{ marginTop: 0 }}>
-                  On localhost, use the same WorkOS Client ID as production and register this origin’s callback in the WorkOS
+                  On localhost, use the same WorkOS Client ID as production and register this originâ€™s callback in the WorkOS
                   dashboard (e.g. <code>http://localhost:3000/callback</code> for <code>pnpm dev:alt</code>).
                 </p>
                 <div className="demoAuthModal__rememberGroup" role="group" aria-label="Sign-in preferences">
@@ -1728,7 +1086,7 @@ function TopAppInner({ initialNav = "home" }) {
                   </ul>
                 ) : !loadingProfile ? (
                   <p className="profilePhotoUploadHint" style={{ marginTop: 8 }}>
-                    If this box stays empty, open <code className="mono">GET /api/auth/status</code> — it lists{" "}
+                    If this box stays empty, open <code className="mono">GET /api/auth/status</code> â€” it lists{" "}
                     <code className="mono">workosMissingEnv</code> when AuthKit is not ready.
                   </p>
                 ) : null}
@@ -1888,7 +1246,7 @@ function TopAppInner({ initialNav = "home" }) {
 function TopAppFallback() {
   return (
     <main className="topApp theme-clean" data-page-atmosphere="home">
-      <p style={{ padding: 24 }}>Loading…</p>
+      <p style={{ padding: 24 }}>Loadingâ€¦</p>
     </main>
   );
 }

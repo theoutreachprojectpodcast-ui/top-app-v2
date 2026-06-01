@@ -3,6 +3,7 @@ import { Roboto } from "next/font/google";
 import ColorSchemeRoot from "@/components/app/ColorSchemeRoot";
 import AuthSessionProvider from "@/components/auth/AuthSessionProvider";
 import { ProfileDataProvider } from "@/features/profile/ProfileDataProvider";
+import { ProfileEditProvider } from "@/features/profile/ProfileEditProvider";
 
 const roboto = Roboto({
   subsets: ["latin"],
@@ -47,7 +48,9 @@ export default function RootLayout({ children }) {
       <body suppressHydrationWarning>
         <ColorSchemeRoot>
           <AuthSessionProvider>
-            <ProfileDataProvider>{children}</ProfileDataProvider>
+            <ProfileDataProvider>
+              <ProfileEditProvider>{children}</ProfileEditProvider>
+            </ProfileDataProvider>
           </AuthSessionProvider>
         </ColorSchemeRoot>
       </body>

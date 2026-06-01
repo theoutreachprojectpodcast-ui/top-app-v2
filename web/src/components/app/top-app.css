@@ -3316,7 +3316,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   box-sizing: border-box;
 }
 .modalOverlay--profileEdit {
-  z-index: 200;
+  z-index: 500;
 }
 .missionSponsorModalOverlay {
   z-index: 110;
