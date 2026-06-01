@@ -40,30 +40,30 @@ values
   'Josh & Hodge',
   '/community/outreach-project-moderator.png',
   'Getting started with The Outreach Project',
-  'Welcome to a mission-built platform for veterans, first responders, families, supporters, and nonprofit partners.
+  'New here? Follow these four steps to set up your account, find credible help, and start participating in the community.
 
-Step 1 — Create your account and sign in securely.
-Step 2 — Complete your profile so resources and community features personalize to you.
-Step 3 — Explore Trusted Resources and the nonprofit directory.
-Step 4 — Join Community conversations and follow podcast and sponsor updates.
+Step 1 — Create your account: choose Create account, sign in with WorkOS using the email you want on your profile, then confirm you land back on the site signed in.
+Step 2 — Finish your profile: open Profile, add your name, location, and causes you care about so recommendations and community features match your situation.
+Step 3 — Explore Trusted Resources and the nonprofit directory: use Trusted Resources for vetted programs, then use directory search when you know a location or service type.
+Step 4 — Engage: read Community stories, listen on the Podcast page, and at the Member tier submit your own story after moderator review.
 
-Why this matters: The Outreach Project helps you discover trusted organizations, build community, and access meaningful resources—without wading through random search results.',
+Why this matters: You get one trusted front door—curated resources, searchable nonprofits, peer stories, and podcast context—instead of scattered tabs and outdated lists.',
   'platform_guide',
   'platform_guide',
   true,
-  'cta:/api/auth/workos/signup?returnTo=/community|Complete your profile',
-  'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&w=1200&h=675&fit=crop&q=80',
+  'cta:/api/auth/workos/signup?returnTo=/community|Create your account',
+  '/home/home-community-group.png',
   'approved',
   'community',
   48,
   0,
-  'founder-onboarding-v08',
+  'founder-onboarding-v09',
   now(),
   now(),
   false,
   false,
   now(),
-  '2026-05-19T16:52:25.420Z'::timestamptz
+  '2026-06-01T12:39:38.406Z'::timestamptz
 ),
 (
   'd2000000-0000-4000-8000-000000000002',
@@ -71,31 +71,31 @@ Why this matters: The Outreach Project helps you discover trusted organizations,
   'company-top-app',
   'Josh',
   '/community/outreach-project-moderator.png',
-  'How to create your account',
-  'Your account unlocks the directory, saved organizations, community participation, and member-only tools.
+  'Step 1 — Create or sign in to your account',
+  'Your account ties together saved organizations, community participation, likes, and membership tools.
 
-Step 1 — From the Community page or home screen, choose Create account.
-Step 2 — Sign in with WorkOS using the email you want tied to your profile.
-Step 3 — Confirm you land back on The Outreach Project—your session should stay signed in on trusted devices when you choose remember device.
-Step 4 — Visit Profile to confirm your name and basics loaded correctly.
+Step 1 — From Community or Home, select Create account (or Sign in if you already have one).
+Step 2 — Complete WorkOS hosted sign-in with the email you want on your TOP profile.
+Step 3 — After redirect, open Profile once to confirm your name loaded.
+Step 4 — On a trusted device, choose remember device so you stay signed in during normal use.
 
-Why this matters: A verified account keeps your saves, likes, and story submissions tied to you—so support pathways stay consistent when you return.',
+Why this matters: A verified account keeps your activity and support pathways consistent when you return—especially across directory saves and story submissions.',
   'platform_guide',
   'platform_guide',
   true,
   'cta:/api/auth/workos/signup?returnTo=/community|Create your account',
-  'https://images.unsplash.com/photo-1516321318523-f6f85c09ae39?auto=format&w=1200&h=675&fit=crop&q=80',
+  '/home/home-header-flag-horizontal.png',
   'approved',
   'community',
   31,
   0,
-  'founder-onboarding-v08',
+  'founder-onboarding-v09',
   now(),
   now(),
   false,
   false,
   now(),
-  '2026-05-19T10:52:25.420Z'::timestamptz
+  '2026-06-01T06:39:38.406Z'::timestamptz
 ),
 (
   'd2000000-0000-4000-8000-000000000003',
@@ -103,31 +103,31 @@ Why this matters: A verified account keeps your saves, likes, and story submissi
   'company-top-app',
   'Hodge',
   '/community/outreach-project-moderator.png',
-  'How to complete your profile',
-  'A complete profile helps the platform surface relevant resources and helps moderators route support when you reach out.
+  'Step 2 — Finish your profile',
+  'Profiles are how the platform personalizes resources and how the community recognizes you when you share publicly.
 
-Step 1 — Open Profile from the bottom navigation or menu.
-Step 2 — Add your display name, location, and mission focus areas.
-Step 3 — Share causes, skills, or volunteer interests if you want peers to understand how you serve.
-Step 4 — Upload a profile photo if you would like—member stories show your name when you choose to share publicly.
+Step 1 — Open Profile from the main navigation.
+Step 2 — Add display name, location, and mission focus areas.
+Step 3 — Optional: causes, skills, or volunteer interests so connections are relevant.
+Step 4 — Upload a photo if you want your story posts to show your name with a face.
 
-Why this matters: Profiles are not vanity—they help trusted referrals, community connections, and membership features work the way you expect.',
+Why this matters: This is not vanity data—it powers saved-org follow-up, community trust, and membership features you will use later.',
   'platform_guide',
-  'platform_guide',
+  'platform_guide_image',
   true,
-  'cta:/profile|Complete your profile',
-  'https://images.unsplash.com/photo-1573497019940-1c28c88b38df?auto=format&w=1200&h=675&fit=crop&q=80',
+  'cta:/profile?edit=1|Open profile editor',
+  '/home/home-atmosphere-mountain-service.png',
   'approved',
   'community',
   27,
   0,
-  'founder-onboarding-v08',
+  'founder-onboarding-v09',
   now(),
   now(),
   false,
   false,
   now(),
-  '2026-05-19T04:52:25.420Z'::timestamptz
+  '2026-06-01T00:39:38.406Z'::timestamptz
 ),
 (
   'd2000000-0000-4000-8000-000000000004',
@@ -135,31 +135,31 @@ Why this matters: Profiles are not vanity—they help trusted referrals, communi
   'company-top-app',
   'Josh',
   '/community/outreach-project-moderator.png',
-  'How to use the Trusted Resources page',
-  'Trusted Resources is our curated lane for organizations and programs we have reviewed for mission alignment, clarity, and veteran and first-responder relevance.
+  'Step 3 — Use Trusted Resources',
+  'Trusted Resources is the curated lane for veteran- and first-responder-relevant programs we have reviewed for clarity and fit.
 
-Step 1 — Open Trusted Resources from home or the navigation menu.
-Step 2 — Read each card’s summary, service area, and verification cues.
-Step 3 — Open a resource profile for mission details, programs, and official outbound links.
-Step 4 — Save or share organizations you want your family or team to revisit.
+Step 1 — Open Trusted Resources from Home or the main menu.
+Step 2 — Scan summaries, service areas, and verification cues on each card.
+Step 3 — Open a profile for programs, outbound links, and how to engage.
+Step 4 — Save organizations you want your family or team to revisit from Profile.
 
-Why this matters: When someone is in crisis or transition, credibility matters. Trusted Resources reduces guesswork so you can act with confidence.',
+Why this matters: When someone is in crisis or transition, guesswork costs time. Trusted Resources reduces that risk.',
   'platform_guide',
-  'platform_guide',
+  'platform_guide_resource',
   true,
-  'cta:/trusted|Explore Trusted Resources',
-  'https://images.unsplash.com/photo-1559027615-cd0da4c7e7e3?auto=format&w=1200&h=675&fit=crop&q=80',
+  'cta:/trusted|Browse Trusted Resources',
+  '/trusted/back-country-heroes-hero.png',
   'approved',
   'community',
   35,
   0,
-  'founder-onboarding-v08',
+  'founder-onboarding-v09',
   now(),
   now(),
   false,
   false,
   now(),
-  '2026-05-18T22:52:25.420Z'::timestamptz
+  '2026-05-31T18:39:38.406Z'::timestamptz
 ),
 (
   'd2000000-0000-4000-8000-000000000005',
@@ -167,31 +167,31 @@ Why this matters: When someone is in crisis or transition, credibility matters. 
   'company-top-app',
   'Hodge',
   '/community/outreach-project-moderator.png',
-  'How to navigate the nonprofit directory',
-  'The directory is a broader search surface across nonprofit records—ideal when you know a cause, location, or NTEE service area.
+  'Step 4 — Search the nonprofit directory',
+  'The directory is broader than Trusted Resources—use it when you are comparing options by state, cause, or NTEE category.
 
-Step 1 — From home, scroll to the directory or use search filters for state and service category.
-Step 2 — Open a listing to review mission copy, location, and external links.
-Step 3 — Use Quick category focus to narrow by NTEE letter when you know the type of help you need.
-Step 4 — Save promising organizations to your profile for later follow-up.
+Step 1 — From Home, scroll to directory search or jump via the directory anchor link.
+Step 2 — Filter by state and service category; use Quick category focus for NTEE letters.
+Step 3 — Open listings to compare missions side by side before you call or apply.
+Step 4 — Save promising organizations to your profile for follow-up.
 
-Why this matters: Discovery should feel practical—not overwhelming. Filters and clear cards help you compare options before you reach out.',
+Why this matters: Discovery should feel practical. Filters and consistent cards help you act—not scroll endlessly.',
   'platform_guide',
-  'platform_guide',
+  'platform_guide_carousel',
   true,
-  'cta:/#home-directory|Browse the directory',
-  'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&w=1200&h=675&fit=crop&q=80',
+  'cta:/#home-directory|Open directory search',
+  '/directory/category-headers/v.png',
   'approved',
   'community',
   22,
   0,
-  'founder-onboarding-v08',
+  'founder-onboarding-v09',
   now(),
   now(),
   false,
   false,
   now(),
-  '2026-05-18T16:52:25.420Z'::timestamptz
+  '2026-05-31T12:39:38.406Z'::timestamptz
 ),
 (
   'd2000000-0000-4000-8000-000000000006',
@@ -199,31 +199,31 @@ Why this matters: Discovery should feel practical—not overwhelming. Filters an
   'company-top-app',
   'Josh',
   '/community/outreach-project-moderator.png',
-  'How to use the podcast page',
-  'The Outreach Project podcast amplifies stories, partners, and practical conversations for our community.
+  'Hear the mission on the podcast',
+  'The Outreach Project podcast adds human context—stories, partners, and practical conversations—before you reach out to an organization.
 
-Step 1 — Visit the Podcast page from home or the menu.
-Step 2 — Browse recent episodes and featured conversations.
-Step 3 — Follow links to listen on your preferred platform.
+Step 1 — Open the Podcast page from Home or the menu.
+Step 2 — Start with the latest episode or browse the library.
+Step 3 — Follow outbound listen links to your preferred platform.
 Step 4 — Explore podcast sponsors when you want to support mission-aligned partners.
 
-Why this matters: Audio builds trust at human speed—especially for peers who want context before they call an organization or apply for a program.',
+Why this matters: Audio builds trust at human speed, especially for peers who want context before they call a program or apply.',
   'platform_guide',
-  'platform_guide',
+  'platform_guide_podcast',
   true,
   'cta:/podcasts|Listen & explore episodes',
-  'https://images.unsplash.com/photo-1478737277774-8aa3ee54c771?auto=format&w=1200&h=675&fit=crop&q=80',
+  '/home/home-podcast-mic.png',
   'approved',
   'community',
   19,
   0,
-  'founder-onboarding-v08',
+  'founder-onboarding-v09',
   now(),
   now(),
   false,
   false,
   now(),
-  '2026-05-18T10:52:25.420Z'::timestamptz
+  '2026-05-31T06:39:38.406Z'::timestamptz
 ),
 (
   'd2000000-0000-4000-8000-000000000007',
@@ -231,31 +231,31 @@ Why this matters: Audio builds trust at human speed—especially for peers who w
   'company-top-app',
   'Hodge',
   '/community/outreach-project-moderator.png',
-  'How to support through sponsorship & membership',
-  'Sponsors and members keep the platform sustainable so we can keep directory and community tools accessible.
+  'Become a member or explore sponsorship',
+  'Members and sponsors keep directory and community tools sustainable while keeping curated trust lanes separate from paid placement.
 
-Step 1 — Review Sponsors to see foundational partners and mission-aligned companies.
-Step 2 — Use sponsor cards for direct links and follow-up where offered.
-Step 3 — Visit Profile → membership when you are ready to support at the member tier.
-Step 4 — Companies interested in partnership should use the sponsor application flow so our team can respond cleanly.
+Step 1 — Review Sponsors to see foundational partners and how they support the mission.
+Step 2 — Open Profile → Membership & billing when you are ready for the Member tier (story submission and deeper participation).
+Step 3 — Use sponsor application flows for companies—our team routes partnership inquiries cleanly.
+Step 4 — Read sponsor disclosures on listings so you always know what is editorial vs. partnership.
 
-Why this matters: Transparent support models protect the community from pay-to-play listings—sponsors are disclosed, and curated trust lanes stay separate.',
+Why this matters: Transparent support protects the community from pay-to-play listings and keeps Trusted Resources credible.',
   'platform_guide',
   'platform_guide',
   true,
-  'cta:/sponsors|View sponsors & partners',
-  'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&w=1200&h=675&fit=crop&q=80',
+  'cta:/sponsors|View sponsors & membership',
+  '/home/home-sponsors-city.png',
   'approved',
   'community',
   24,
   0,
-  'founder-onboarding-v08',
+  'founder-onboarding-v09',
   now(),
   now(),
   false,
   false,
   now(),
-  '2026-05-18T04:52:25.420Z'::timestamptz
+  '2026-05-31T00:39:38.406Z'::timestamptz
 ),
 (
   'd2000000-0000-4000-8000-000000000008',
@@ -263,31 +263,31 @@ Why this matters: Transparent support models protect the community from pay-to-p
   'company-top-app',
   'Josh & Hodge',
   '/community/outreach-project-moderator.png',
-  'How the Community page works',
-  'Community is where members share what actually helped—stories, gratitude, and practical referrals—after moderator review.
+  'How to engage with Community',
+  'Community is where members share what actually worked—after moderator review keeps the feed respectful and specific.
 
-Step 1 — Read approved posts in Latest to learn from peers and moderator guides.
-Step 2 — Sign in to like posts and save encouragement to your profile.
-Step 3 — At the Member tier, submit your own story for review.
-Step 4 — Include what happened, which resource helped, and one next step someone else could take today.
+Step 1 — Read Latest for guides (like this one) and approved member stories.
+Step 2 — Sign in to like posts and save encouragement to your session.
+Step 3 — At Member tier, submit a story with what happened, which resource helped, and a concrete next step.
+Step 4 — Skip vague marketing—specific, respectful posts help the next person act today.
 
-Why this matters: Peer transparency helps others act—but only when posts stay specific, respectful, and safe. Moderation keeps the feed credible.',
+Why this matters: Peer transparency only works when posts stay safe and actionable. Moderation is what makes that possible.',
   'platform_guide',
-  'platform_guide',
+  'platform_guide_carousel',
   true,
-  'cta:/community|Visit Community',
-  'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&w=1200&h=675&fit=crop&q=80',
+  'cta:/community|Browse Community',
+  '/home/home-community-group.png',
   'approved',
   'community',
   41,
   0,
-  'founder-onboarding-v08',
+  'founder-onboarding-v09',
   now(),
   now(),
   false,
   false,
   now(),
-  '2026-05-17T22:52:25.420Z'::timestamptz
+  '2026-05-30T18:39:38.406Z'::timestamptz
 ),
 (
   'd2000000-0000-4000-8000-00000000000c',
@@ -295,31 +295,31 @@ Why this matters: Peer transparency helps others act—but only when posts stay 
   'company-top-app',
   'Josh',
   '/community/outreach-project-moderator.png',
-  'What you gain from The Outreach Project ecosystem',
-  'Joining connects you to curated resources, peer stories, nonprofit discovery, and mission-aligned partners in one place.
+  'What you get from The Outreach Project',
+  'Joining connects curated resources, searchable nonprofits, community stories, and podcast context.
 
-Step 1 — Trusted Resources and directory search reduce time spent guessing which organizations are credible.
-Step 2 — Community and podcast content add human context to listings and programs.
-Step 3 — Sponsor transparency shows who helps sustain the platform without blurring editorial trust.
+Step 1 — Trusted Resources plus directory search cut time spent guessing which organizations are credible.
+Step 2 — Community and podcast content add human context to listings.
+Step 3 — Sponsor transparency shows who sustains the platform without blurring editorial trust.
 Step 4 — Membership unlocks deeper participation when you are ready to share your own story.
 
-Why this matters: Veterans, first responders, and families deserve a single, trustworthy front door—not a dozen disconnected tabs and outdated lists.',
+Why this matters: Veterans, first responders, and families deserve a single trustworthy front door—not a dozen disconnected tabs.',
   'platform_guide',
-  'platform_guide',
+  'platform_guide_image',
   true,
   'cta:/|Explore the platform',
-  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&w=1200&h=675&fit=crop&q=80',
+  '/home/home-page-background-outreach-hero-2560.png',
   'approved',
   'community',
   29,
   0,
-  'founder-onboarding-v08',
+  'founder-onboarding-v09',
   now(),
   now(),
   false,
   false,
   now(),
-  '2026-05-17T16:52:25.420Z'::timestamptz
+  '2026-05-30T12:39:38.407Z'::timestamptz
 ),
 (
   'd2000000-0000-4000-8000-00000000000a',
@@ -327,31 +327,31 @@ Why this matters: Veterans, first responders, and families deserve a single, tru
   'company-top-app',
   'Hodge',
   '/community/outreach-project-moderator.png',
-  'How nonprofits & organizations can participate',
-  'If your organization serves veterans, first responders, or aligned families, we want your work discoverable and accurately represented.
+  'For nonprofits and partner organizations',
+  'If you serve veterans, first responders, or aligned families, we want your work discoverable and accurately represented.
 
-Step 1 — Ensure your public listing reflects your EIN, mission, and service area.
-Step 2 — Request trusted review if you meet our curation standards for the Trusted Resources lane.
-Step 3 — Share podcast or sponsor inquiries through the official application paths.
-Step 4 — Encourage satisfied clients to submit community stories—with respect for privacy and program rules.
+Step 1 — Confirm your public listing shows correct EIN, mission, and service area.
+Step 2 — Request trusted review if you meet curation standards for the Trusted Resources lane.
+Step 3 — Use official podcast or sponsor application paths for media and partnership inquiries.
+Step 4 — Encourage clients to share community stories only with consent and program rules respected.
 
-Why this matters: Participation is partnership, not pay-to-rank. We prioritize clarity, consent, and mission fit so the community can trust what they see.',
+Why this matters: Participation is partnership, not pay-to-rank. Clarity and mission fit keep the community’s trust high.',
   'platform_guide',
   'platform_guide',
   true,
   'cta:/contact|Contact our team',
-  'https://images.unsplash.com/photo-1469574853967-2e58ec69b93e?auto=format&w=1200&h=675&fit=crop&q=80',
+  '/trusted/hero-to-the-line-hero.png',
   'approved',
   'community',
   17,
   0,
-  'founder-onboarding-v08',
+  'founder-onboarding-v09',
   now(),
   now(),
   false,
   false,
   now(),
-  '2026-05-17T16:52:25.420Z'::timestamptz
+  '2026-05-30T08:39:38.407Z'::timestamptz
 ),
 (
   'd2000000-0000-4000-8000-00000000000b',
@@ -359,31 +359,31 @@ Why this matters: Participation is partnership, not pay-to-rank. We prioritize c
   'company-top-app',
   'Josh & Hodge',
   '/community/outreach-project-moderator.png',
-  'Community guidelines & platform mission',
+  'Community guidelines',
   'The Outreach Project exists to make trusted support easier to find—and to celebrate organizations doing the work.
 
 Step 1 — Be respectful and specific. No harassment, hate, or fundraising spam.
 Step 2 — Share lived experience and verified resources—avoid medical or legal claims we cannot substantiate.
 Step 3 — Protect privacy: do not post someone else’s personal details without consent.
-Step 4 — Moderators may edit visibility, request revisions, or decline posts that risk harm or misinformation.
+Step 4 — Moderators may request edits or decline posts that risk harm or misinformation.
 
-Why this matters: A mission-driven community only works when members feel safe showing up. These guidelines protect the people who need this space most.',
+Why this matters: A mission-driven community only works when members feel safe showing up. These rules protect the people who need this space most.',
   'platform_guide',
   'platform_guide',
   true,
   'cta:/community|Read the Community feed',
-  'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&w=1200&h=675&fit=crop&q=80',
+  '/home/home-header-mountain-patriotic.png',
   'approved',
   'community',
   52,
   0,
-  'founder-onboarding-v08',
+  'founder-onboarding-v09',
   now(),
   now(),
   false,
   false,
   now(),
-  '2026-05-17T08:52:25.420Z'::timestamptz
+  '2026-05-30T04:39:38.407Z'::timestamptz
 )
 on conflict (id) do update set
   author_id = excluded.author_id,

@@ -2,6 +2,10 @@ import {
   normalizeModeratorAuthorFields,
   parsePostCta,
 } from "@/features/community/domain/communityModerator";
+import {
+  parseCommunityFeedMedia,
+  resolveCommunityPostLayout,
+} from "@/features/community/domain/communityPostLayout";
 
 const STATUS_LABELS = {
   draft: "Draft",
@@ -17,6 +21,9 @@ export function mapCommunityPostRow(row) {
   if (!row) return null;
   row = normalizeModeratorAuthorFields(row);
   const status = String(row.status || "pending_review").toLowerCase();
+  const postType = String(row.post_type || row.postType || "share_story");
+  const feedMedia = parseCommunityFeedMedia(row);
+  const layout = resolveCommunityPostLayout(postType, row.feed_layout || row.feedLayout);
   return {
     id: String(row.id),
     createdAt: row.created_at || row.createdAt,
@@ -29,7 +36,13 @@ export function mapCommunityPostRow(row) {
     nonprofitEin: row.nonprofit_ein != null ? String(row.nonprofit_ein) : null,
     nonprofitName: String(row.nonprofit_name || row.nonprofitName || "").trim(),
     category: String(row.category || "success_story"),
-    postType: String(row.post_type || row.postType || "share_story"),
+    postType,
+    layout,
+    carouselSlides: Array.isArray(feedMedia.slides) ? feedMedia.slides : [],
+    resourceHighlight:
+      feedMedia.resource && typeof feedMedia.resource === "object" ? feedMedia.resource : null,
+    mediaCaption: String(feedMedia.caption || "").trim(),
+    imageAlt: String(feedMedia.imageAlt || row.title || "").trim(),
     showAuthorName: row.show_author_name !== false,
     linkUrl: String(row.link_url || row.linkUrl || "").trim(),
     cta: parsePostCta(row.link_url || row.linkUrl || ""),

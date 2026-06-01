@@ -119,7 +119,13 @@ export function ProfileEditProvider({ children }) {
   const [editSaveOk, setEditSaveOk] = useState("");
   const [editSaving, setEditSaving] = useState(false);
   const editDraftTouchedRef = useRef(new Set());
+  const editDraftRef = useRef(null);
+  const skipProfileMergeRef = useRef(false);
   const prevLoadingProfileForEditRef = useRef(loadingProfile);
+
+  useEffect(() => {
+    editDraftRef.current = editDraft;
+  }, [editDraft]);
 
   const editIncompleteKeys =
     open && editDraft
@@ -204,22 +210,39 @@ export function ProfileEditProvider({ children }) {
   }, []);
 
   const saveProfileEdit = useCallback(async () => {
-    if (editSaving || !editDraft) return;
+    if (editSaving) return;
+    const draft = editDraftRef.current;
+    if (!draft) return;
     setEditSaving(true);
     setEditSaveError("");
     setEditSaveOk("");
-    const result = await persistProfile({ ...profile, ...editDraft });
+    skipProfileMergeRef.current = true;
+    const result = await persistProfile({ ...profile, ...draft });
     setEditSaving(false);
     if (!result.ok) {
+      skipProfileMergeRef.current = false;
       setEditSaveError(String(result.message || "").trim() || "Could not save your profile. Try again.");
       return;
+    }
+    if (result.localOnly) {
+      skipProfileMergeRef.current = false;
+      setEditSaveError(
+        String(result.message || "").trim() ||
+          "Saved on this device only. Sign in with your account to update your cloud profile.",
+      );
+      return;
+    }
+    editDraftTouchedRef.current = new Set();
+    if (result.profile) {
+      setEditDraft(profileFromApiDto(result.profile));
     }
     setEditSaveOk("Profile saved.");
     void refreshAuthSession({ soft: true });
     window.setTimeout(() => {
+      skipProfileMergeRef.current = false;
       closeProfileEdit();
     }, 900);
-  }, [editSaving, editDraft, persistProfile, profile, refreshAuthSession, closeProfileEdit]);
+  }, [editSaving, persistProfile, profile, refreshAuthSession, closeProfileEdit]);
 
   /** Open after profile load when Edit was requested while `loadingProfile` was true. */
   useEffect(() => {
@@ -239,13 +262,14 @@ export function ProfileEditProvider({ children }) {
     const prev = prevLoadingProfileForEditRef.current;
     prevLoadingProfileForEditRef.current = loadingProfile;
     if (!open || loadingProfile) return;
-    if (prev === true && loadingProfile === false) {
+    if (prev === true && loadingProfile === false && !editDraftTouchedRef.current.has("__any__")) {
       setEditDraft(profileFromApiDto(profile));
     }
   }, [open, loadingProfile, profile]);
 
   useEffect(() => {
-    if (!open || !editDraft) return;
+    if (!open || !editDraft || skipProfileMergeRef.current) return;
+    if (editDraftTouchedRef.current.has("__any__")) return;
     setEditDraft((d) => mergeEditDraftWithProfile(d, profile, editDraftTouchedRef.current));
   }, [open, profileEditMergeKey, profile]);
 
@@ -296,7 +320,14 @@ export function ProfileEditProvider({ children }) {
             onSave={() => void saveProfileEdit()}
             onSettings={() => router.push("/settings")}
             onDraftChange={setEditDraft}
-            onMarkTouched={() => editDraftTouchedRef.current.add("__any__")}
+            onMarkTouched={(patch) => {
+              editDraftTouchedRef.current.add("__any__");
+              if (patch && typeof patch === "object") {
+                for (const key of Object.keys(patch)) {
+                  editDraftTouchedRef.current.add(key);
+                }
+              }
+            }}
             uploadAvatarFile={uploadAvatarFile}
             onSaveError={setEditSaveError}
             onSaveOk={setEditSaveOk}

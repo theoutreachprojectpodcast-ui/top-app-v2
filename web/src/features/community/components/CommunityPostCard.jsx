@@ -6,6 +6,10 @@ import Avatar from "@/components/shared/Avatar";
 import { avatarFallbackUrl } from "@/lib/avatarFallback";
 import CommunitySocialActions from "@/features/community/components/CommunitySocialActions";
 import CommunityPostBody from "@/features/community/components/CommunityPostBody";
+import CommunityPostMedia from "@/features/community/components/CommunityPostMedia";
+import CommunityPostCarousel from "@/features/community/components/CommunityPostCarousel";
+import CommunityPostPodcastBlock from "@/features/community/components/CommunityPostPodcastBlock";
+import CommunityPostResourceBlock from "@/features/community/components/CommunityPostResourceBlock";
 import { sharePostDemo } from "@/features/community/api/communityApi";
 import {
   isOutreachModeratorPost,
@@ -31,24 +35,33 @@ const POST_TYPE_LABEL = {
   recommend_resource: "Resource recommendation",
   community_update: "Community update",
   platform_guide: "Guide",
+  platform_guide_carousel: "Guide",
+  platform_guide_image: "Guide",
+  platform_guide_podcast: "Guide",
+  platform_guide_resource: "Guide",
 };
 
-function PostCta({ cta }) {
-  if (!cta?.href || !cta?.label) return null;
+function PostCta({ cta: ctaProp }) {
+  if (!ctaProp?.href || !ctaProp?.label) return null;
   const className = "btnPrimary communityPostCta";
-  const href = cta.href;
+  const href = ctaProp.href;
   if (/^https?:\/\//i.test(href) || href.startsWith("/api/")) {
     return (
       <a className={className} href={href}>
-        {cta.label}
+        {ctaProp.label}
       </a>
     );
   }
   return (
     <Link className={className} href={href}>
-      {cta.label}
+      {ctaProp.label}
     </Link>
   );
+}
+
+function isGuidePost(post) {
+  const pt = String(post.postType || "");
+  return pt === "platform_guide" || pt.startsWith("platform_guide_") || post.category === "platform_guide";
 }
 
 export default function CommunityPostCard({
@@ -60,7 +73,8 @@ export default function CommunityPostCard({
 }) {
   const [shareBusy, setShareBusy] = useState(false);
   const isModerator = isOutreachModeratorPost(post);
-  const isGuide = post.postType === "platform_guide" || post.category === "platform_guide";
+  const isGuide = isGuidePost(post);
+  const layout = post.layout || "step";
   const displayName = post.showAuthorName ? post.authorName : "Community member";
   const avatarSrc = isModerator
     ? OUTREACH_MODERATOR_AVATAR_URL
@@ -73,6 +87,13 @@ export default function CommunityPostCard({
     showModerationStatus &&
     (post.status === "pending_review" || post.status === "approved");
 
+  const showHeroImage =
+    post.photoUrl &&
+    layout !== "carousel" &&
+    layout !== "podcast" &&
+    layout !== "resource" &&
+    layout !== "image";
+
   async function onShare() {
     setShareBusy(true);
     try {
@@ -84,7 +105,7 @@ export default function CommunityPostCard({
 
   return (
     <article
-      className={`communityPostCard${isGuide ? " communityPostCard--guide" : ""}${isModerator ? " communityPostCard--moderator" : ""}`}
+      className={`communityPostCard${isGuide ? " communityPostCard--guide" : ""}${isModerator ? " communityPostCard--moderator" : ""} communityPostCard--layout-${layout}`}
     >
       <div className="communityPostTop">
         <Avatar
@@ -127,18 +148,27 @@ export default function CommunityPostCard({
         </div>
       </div>
       <div className="communityPostContent">
-        <CommunityPostBody body={post.body} isGuide={isGuide} />
-        {post.photoUrl ? (
-          <div className="communityPostMedia">
-            <img
+        {layout === "carousel" && post.carouselSlides?.length ? (
+          <CommunityPostCarousel slides={post.carouselSlides} ariaLabel={post.title || "Guide slides"} />
+        ) : null}
+        {layout === "podcast" ? <CommunityPostPodcastBlock title={post.title} /> : null}
+        {layout === "resource" && post.resourceHighlight ? (
+          <CommunityPostResourceBlock resource={post.resourceHighlight} />
+        ) : null}
+        {layout === "image" && post.photoUrl ? (
+          <>
+            <CommunityPostMedia
               src={post.photoUrl}
-              alt=""
-              loading="lazy"
-              decoding="async"
-              width={1200}
-              height={675}
+              alt={post.imageAlt || post.title || "Guide image"}
+              className="communityPostMedia--feature"
+              priority
             />
-          </div>
+            {post.mediaCaption ? <p className="communityPostMediaCaption">{post.mediaCaption}</p> : null}
+          </>
+        ) : null}
+        <CommunityPostBody body={post.body} isGuide={isGuide} />
+        {showHeroImage ? (
+          <CommunityPostMedia src={post.photoUrl} alt={post.imageAlt || post.title || "Post cover"} />
         ) : null}
         {cta ? (
           <div className="communityPostCtaRow">

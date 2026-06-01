@@ -1,6 +1,7 @@
 import { handleAuth } from "@workos-inc/authkit-nextjs";
+import { isDefaultApprovedAdminEmail } from "@/lib/admin/adminPolicy";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { upsertProfileFromWorkOSUser } from "@/lib/profile/serverProfile";
+import { patchProfileByWorkOSId, upsertProfileFromWorkOSUser } from "@/lib/profile/serverProfile";
 import { requestOriginForStripeRedirects } from "@/lib/billing/stripeConfig";
 import { notifyStaffProfiles } from "@/server/notifications/notificationService";
 
@@ -9,6 +10,14 @@ async function onWorkOSSuccess({ user }) {
     const admin = createSupabaseAdminClient();
     if (!admin) return;
     const out = await upsertProfileFromWorkOSUser(admin, user);
+    const email = String(user?.email || "").trim();
+    if (out?.ok && email && isDefaultApprovedAdminEmail(email)) {
+      await patchProfileByWorkOSId(admin, user.id, {
+        platform_role: "admin",
+        admin_access_enabled: true,
+        admin_access_granted_by: "workos-bootstrap",
+      });
+    }
     if (out?.ok && out.isNew) {
       await notifyStaffProfiles(admin, {
         type: "new_user_signup",

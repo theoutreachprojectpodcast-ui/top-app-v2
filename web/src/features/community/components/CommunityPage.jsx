@@ -1,5 +1,6 @@
 "use client";
 
+import "@/features/community/community-feed.css";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import IconWrap from "@/components/shared/IconWrap";

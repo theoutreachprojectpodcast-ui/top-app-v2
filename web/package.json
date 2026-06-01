@@ -11,6 +11,7 @@
     "verify:trusted-resources": "node scripts/verify-trusted-resources-registry.mjs",
     "smoke:routes": "node scripts/smoke-routes.mjs",
     "verify:workos-auth": "node scripts/verify-workos-auth.mjs",
+    "verify:stripe-env": "node scripts/verify-stripe-env.mjs",
     "smoke:qa:http": "node scripts/qa-http-smoke.mjs",
     "verify:entity-names": "node scripts/verify-entity-display-names.mjs",
     "verify:trusted-titles": "node scripts/verify-trusted-resources-titles.mjs",

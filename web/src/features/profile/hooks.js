@@ -397,12 +397,12 @@ export function useProfileDataState(supabase) {
   }, [supabase, favoriteEins, isAuthenticated]);
 
   /**
-   * @returns {Promise<{ ok: true } | { ok: false, message: string }>}
+   * @returns {Promise<{ ok: true, profile?: Record<string, unknown>, localOnly?: boolean } | { ok: false, message: string }>}
    */
   async function persistProfile(next) {
     if (!isAuthenticated) {
       setProfile(next);
-      return { ok: true };
+      return { ok: true, profile: next };
     }
     if (workosRef.current || sessionKindRef.current === "workos") {
       workosRef.current = true;
@@ -420,17 +420,18 @@ export function useProfileDataState(supabase) {
           await refreshWorkOSProfile();
           return { ok: false, message };
         }
-        if (data.profile) {
-          setProfile(
-            profileFromApiDto(
-              mergeAccountEmailIntoProfileDto(data.profile, {
-                email: workOSAccountEmail || undefined,
-              }),
-            ),
-          );
+        let savedDto = data.profile;
+        if (savedDto) {
+          const merged = mergeAccountEmailIntoProfileDto(savedDto, {
+            email: workOSAccountEmail || undefined,
+          });
+          setProfile(profileFromApiDto(merged));
           setProfileError("");
-        } else await refreshWorkOSProfile();
-        return { ok: true };
+          savedDto = merged;
+        } else {
+          await refreshWorkOSProfile();
+        }
+        return { ok: true, profile: savedDto || undefined };
       } catch {
         const message = "Profile could not be saved to the server.";
         setProfileError(message);
@@ -444,13 +445,16 @@ export function useProfileDataState(supabase) {
     } catch {
       /* quota / private mode */
     }
-    /* QA / prod with WorkOS: demo session is device-local; cloud profile uses PATCH /api/me/profile. */
+    /* Demo session while WorkOS is configured: local only — cloud profile requires WorkOS sign-in. */
     if (!supabase || authBackend.workos) {
-      return { ok: true };
+      const message =
+        "Saved on this device only. Sign in with your account (not demo) to update your cloud profile and completeness checklist.";
+      setProfileError(message);
+      return { ok: true, profile: next, localOnly: true, message };
     }
     try {
       await upsertProfileByUserId(supabase, userId, next);
-      return { ok: true };
+      return { ok: true, profile: next };
     } catch {
       const message = "Profile saved on this device, but cloud sync failed.";
       setProfileError(message);

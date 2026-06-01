@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { getWorkOSUserFromCookies } from "@/lib/auth/workosSessionFromCookies";
 import { isWorkOSConfigured } from "@/lib/auth/workosConfigured";
-import { sessionMatchesExpectedWorkOSOrganization } from "@/lib/auth/workosOrganizationScope";
+import { sessionAuthorizedForWorkOS } from "@/lib/auth/workosOrganizationScope";
 import OnboardingFlow from "@/features/onboarding/components/OnboardingFlow";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import {
@@ -33,7 +33,7 @@ async function OnboardingServer({ searchParams }) {
     }
     redirect("/?signin=1");
   }
-  if (!sessionMatchesExpectedWorkOSOrganization(auth)) {
+  if (!sessionAuthorizedForWorkOS(auth, { email: auth.user?.email })) {
     if (!workosReady) {
       redirect("/profile?edit=1");
     }

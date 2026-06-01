@@ -1,0 +1,319 @@
+/**
+ * Community feed — layout variants and light-mode polish.
+ * Imported from CommunityPage only; does not affect other routes.
+ */
+
+/* —— Light mode: clean cards (no muddy gray stacks) —— */
+html[data-color-scheme="light"] .communityPostCard,
+:root:not([data-color-scheme="dark"]):not(.dark) .communityPostCard {
+  background: var(--color-bg-card);
+  border-color: var(--color-border);
+  box-shadow: var(--shadow-card);
+}
+
+html[data-color-scheme="light"] .communityPostCard--moderator,
+:root:not([data-color-scheme="dark"]):not(.dark) .communityPostCard--moderator {
+  background: var(--color-bg-card);
+  border-color: color-mix(in srgb, var(--color-accent) 22%, var(--color-border));
+  border-left-width: 3px;
+  border-left-color: color-mix(in srgb, var(--color-accent) 50%, var(--color-border));
+}
+
+html[data-color-scheme="light"] .communityPostCard--guide,
+:root:not([data-color-scheme="dark"]):not(.dark) .communityPostCard--guide {
+  background: var(--color-bg-card);
+}
+
+html[data-color-scheme="light"] .communityPostBodyGuideSteps li,
+:root:not([data-color-scheme="dark"]):not(.dark) .communityPostBodyGuideSteps li {
+  background: var(--color-bg-card);
+  border-color: var(--color-border-subtle);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--color-shadow) 6%, transparent);
+}
+
+html[data-color-scheme="light"] .communityPostBodyGuideWhy,
+:root:not([data-color-scheme="dark"]):not(.dark) .communityPostBodyGuideWhy {
+  background: color-mix(in srgb, var(--color-accent) 6%, var(--color-bg-card));
+  border-color: color-mix(in srgb, var(--color-accent) 18%, var(--color-border-subtle));
+}
+
+html[data-color-scheme="light"] .communityPostMedia,
+:root:not([data-color-scheme="dark"]):not(.dark) .communityPostMedia {
+  background: var(--color-bg-subtle);
+  border-color: var(--color-border-subtle);
+}
+
+/* —— Spacing & hierarchy —— */
+.communityFeed {
+  display: grid;
+  gap: var(--ds-space-5, 20px);
+}
+
+.communityPostCard--layout-carousel .communityPostContent,
+.communityPostCard--layout-podcast .communityPostContent,
+.communityPostCard--layout-resource .communityPostContent,
+.communityPostCard--layout-image .communityPostContent {
+  gap: var(--ds-space-5, 20px);
+}
+
+.communityPostMediaCaption {
+  margin: calc(-1 * var(--ds-space-2, 8px)) 0 0;
+  font-size: var(--text-body-sm);
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+.communityPostMedia--feature {
+  max-height: min(400px, 56vw);
+}
+
+/* —— Carousel —— */
+.communityPostCarousel {
+  position: relative;
+  display: grid;
+  gap: var(--ds-space-3, 12px);
+}
+
+.communityPostMedia--carousel {
+  max-height: min(380px, 54vw);
+}
+
+.communityPostCarouselCaption {
+  margin: 0;
+  font-size: var(--text-body-sm);
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+.communityPostCarouselControls {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 8px;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.communityPostCarouselBtn {
+  pointer-events: auto;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-bg-card) 92%, transparent);
+  color: var(--color-text-primary);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: var(--shadow-card);
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.communityPostCarouselBtn:hover,
+.communityPostCarouselBtn:focus-visible {
+  outline: none;
+  border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-border));
+  background: var(--color-bg-card);
+}
+
+.communityPostCarouselDots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.communityPostCarouselDot {
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-card);
+  cursor: pointer;
+}
+
+.communityPostCarouselDot.isActive {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.communityPostCarouselDot:focus-visible {
+  outline: 2px solid var(--color-accent-interactive);
+  outline-offset: 2px;
+}
+
+/* —— Podcast block —— */
+.communityPostPodcast {
+  display: grid;
+  gap: var(--ds-space-4, 16px);
+  padding: var(--ds-space-4, 16px);
+  border-radius: var(--radius-input);
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-bg-card);
+}
+
+@media (min-width: 640px) {
+  .communityPostPodcast {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.4fr);
+    align-items: center;
+  }
+}
+
+.communityPostPodcast--loading,
+.communityPostPodcast--placeholder {
+  grid-template-columns: 1fr;
+}
+
+.communityPostMedia--podcast {
+  max-height: 220px;
+}
+
+.communityPostPodcastCopy {
+  display: grid;
+  gap: var(--ds-space-2, 8px);
+  min-width: 0;
+}
+
+.communityPostPodcastEyebrow {
+  margin: 0;
+  font-size: var(--text-eyebrow);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-accent-hover);
+}
+
+.communityPostPodcastTitle {
+  margin: 0;
+  font-size: var(--text-body);
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--color-text-primary);
+}
+
+.communityPostPodcastDesc {
+  margin: 0;
+  font-size: var(--text-body-sm);
+  line-height: 1.55;
+  color: var(--color-text-secondary);
+}
+
+.communityPostPodcastStatus {
+  margin: 0;
+  font-size: var(--text-body-sm);
+  color: var(--color-text-muted);
+}
+
+.communityPostPodcastActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-space-3, 12px);
+  margin-top: var(--ds-space-2, 8px);
+}
+
+/* —— Resource highlight —— */
+.communityPostResource {
+  display: grid;
+  gap: var(--ds-space-4, 16px);
+  padding: var(--ds-space-4, 16px);
+  border-radius: var(--radius-input);
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-bg-card);
+  text-decoration: none;
+  color: inherit;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.communityPostResource:hover,
+.communityPostResource:focus-visible {
+  outline: none;
+  border-color: color-mix(in srgb, var(--color-accent) 35%, var(--color-border));
+  box-shadow: var(--shadow-card);
+}
+
+@media (min-width: 640px) {
+  .communityPostResource {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+    align-items: center;
+  }
+}
+
+.communityPostMedia--resource {
+  max-height: 200px;
+}
+
+.communityPostResourceCopy {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.communityPostResourceCategory {
+  font-size: var(--text-eyebrow);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+.communityPostResourceName {
+  margin: 0;
+  font-size: var(--text-body);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.communityPostResourceDesc {
+  margin: 0;
+  font-size: var(--text-body-sm);
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+.communityPostResourceLink {
+  font-size: var(--text-body-sm);
+  font-weight: 700;
+  color: var(--color-accent);
+}
+
+html[data-color-scheme="light"] .communityPostPodcast,
+html[data-color-scheme="light"] .communityPostResource,
+:root:not([data-color-scheme="dark"]):not(.dark) .communityPostPodcast,
+:root:not([data-color-scheme="dark"]):not(.dark) .communityPostResource {
+  background: var(--color-bg-card);
+  border-color: var(--color-border-subtle);
+}
+
+/* —— Mobile —— */
+@media (max-width: 639px) {
+  .communityPostCard {
+    padding: var(--ds-space-5, 20px);
+  }
+
+  .communityPostCarouselBtn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .communityPostTitle {
+    font-size: 1.125rem;
+  }
+
+  .communityPostCta {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .communityPostPodcastActions .communityPostCta {
+    flex: 1 1 auto;
+  }
+}

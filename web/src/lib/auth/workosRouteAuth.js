@@ -1,7 +1,7 @@
 import { withAuth } from "@workos-inc/authkit-nextjs";
 import { getWorkOSUserFromCookies } from "@/lib/auth/workosSessionFromCookies";
 import { isWorkOSConfigured } from "@/lib/auth/workosConfigured";
-import { sessionMatchesExpectedWorkOSOrganization } from "@/lib/auth/workosOrganizationScope";
+import { sessionAuthorizedForWorkOS } from "@/lib/auth/workosOrganizationScope";
 
 const ORG_DENIED = Object.freeze({
   ok: false,
@@ -23,10 +23,10 @@ function classifyRouteSession(session) {
     session
   );
   if (
-    !sessionMatchesExpectedWorkOSOrganization({
-      organizationId: s.organizationId,
-      accessToken: s.accessToken,
-    })
+    !sessionAuthorizedForWorkOS(
+      { organizationId: s.organizationId, accessToken: s.accessToken, user: s.user },
+      { email: s.user?.email },
+    )
   ) {
     return { kind: "org_blocked" };
   }

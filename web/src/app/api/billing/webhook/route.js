@@ -11,6 +11,7 @@ import {
   syncPaymentMethodSummaryOnly,
   syncProfileFromSubscription,
 } from "@/lib/billing/stripeProfileSync";
+import { stripeWebhookSecret } from "@/lib/billing/stripeConfig";
 import { headers } from "next/headers";
 
 export const runtime = "nodejs";
@@ -47,7 +48,7 @@ async function resolveWorkosUserId(admin, sub, customerId) {
 export async function POST(request) {
   const __guard = guardMutation(request, { rateKey: "billing-webhook", limit: 200, skipOriginCheck: true });
   if (!__guard.ok) return guardFailureResponse(__guard);
-  const secret = process.env.STRIPE_WEBHOOK_SECRET;
+  const secret = stripeWebhookSecret();
   const key = process.env.STRIPE_SECRET_KEY;
   if (!secret || !key) {
     return Response.json({ error: "webhook_not_configured" }, { status: 503 });

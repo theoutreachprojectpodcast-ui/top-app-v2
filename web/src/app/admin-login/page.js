@@ -16,6 +16,7 @@ function AdminLoginForm() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [adminEmailLogin, setAdminEmailLogin] = useState(false);
+  const [workosReady, setWorkosReady] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -24,12 +25,20 @@ function AdminLoginForm() {
       .then((data) => {
         if (cancelled) return;
         setAdminEmailLogin(!!data?.adminEmailLogin);
+        setWorkosReady(!!data?.workos);
       })
       .catch(() => {});
     return () => {
       cancelled = true;
     };
   }, []);
+
+  const workosAdminSignInHref = useMemo(() => {
+    const params = new URLSearchParams({ returnTo, remember: "1" });
+    const hint = String(email || "").trim();
+    if (hint) params.set("loginHint", hint);
+    return `/api/auth/workos/signin?${params.toString()}`;
+  }, [email, returnTo]);
 
   async function onSendMagicLink(e) {
     e.preventDefault();
@@ -59,8 +68,8 @@ function AdminLoginForm() {
   }
 
   const lead = adminEmailLogin
-    ? "Enter your approved admin email. We verify the address and sign you in — no WorkOS."
-    : "Use your approved admin email to continue. We send you to secure hosted sign-in.";
+    ? "Approved admins can use WorkOS (SSO) or email-only sign-in below."
+    : "Use your approved admin email — we send you to WorkOS hosted sign-in (email or SSO).";
 
   return (
     <div className="shell">
@@ -83,8 +92,13 @@ function AdminLoginForm() {
           </label>
           <div className="row wrap">
             <button type="submit" className="btnPrimary" disabled={busy}>
-              {adminEmailLogin ? "Continue" : "Send Magic Link"}
+              {adminEmailLogin ? "Continue with email" : "Send Magic Link"}
             </button>
+            {workosReady ? (
+              <a className="btnSoft" href={workosAdminSignInHref}>
+                Sign in with WorkOS (SSO)
+              </a>
+            ) : null}
             <Link className="btnSoft" href="/">
               Back to app
             </Link>

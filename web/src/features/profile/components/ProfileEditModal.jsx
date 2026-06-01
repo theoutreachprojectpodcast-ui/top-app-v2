@@ -44,9 +44,19 @@ async function fileToCompressedDataUrl(file) {
 
 const SERVICE_SEGMENTS = new Set(["veteran", "first_responder"]);
 const ORG_SEGMENTS = new Set(["organization_representative", "sponsor", "resource_partner"]);
-const MORE_FOCUS_KEYS = new Set(["phone", "about", "interests", "contribution", "jobTitle", "sponsorOrg", "sponsorSite"]);
+const MORE_FOCUS_KEYS = new Set([
+  "phone",
+  "about",
+  "interests",
+  "contribution",
+  "jobTitle",
+  "sponsorOrg",
+  "sponsorSite",
+  "supportNeeds",
+  "communities",
+]);
 
-function Field({ id, label, optional, hint, requiredMark, children }) {
+function Field({ id, label, optional, hint, requiredMark, suggested, children }) {
   return (
     <label className="fieldLabel profileEditModal__field" htmlFor={id}>
       <span className="profileEditModal__labelRow">
@@ -54,6 +64,7 @@ function Field({ id, label, optional, hint, requiredMark, children }) {
         {requiredMark ? <span className="profileEditModal__required" aria-hidden="true">*</span> : null}
         {optional ? <span className="fieldOptional"> (optional)</span> : null}
       </span>
+      {suggested ? <span className="profileEditModal__suggested">Suggested enhancement</span> : null}
       {hint ? <span className="profilePhotoUploadHint">{hint}</span> : null}
       {children}
     </label>
@@ -106,6 +117,13 @@ export default function ProfileEditModal({
 
   const requiredLeft = accountCompletion?.requiredItems?.filter((s) => !s.done).length ?? 0;
 
+  const suggestedFocusKeys = useMemo(() => {
+    if (!accountCompletion?.recommendedItems) return new Set();
+    return new Set(
+      accountCompletion.recommendedItems.filter((s) => !s.done && s.editFocus).map((s) => String(s.editFocus)),
+    );
+  }, [accountCompletion]);
+
   const segment = String(editDraft?.identitySegment || "").toLowerCase();
   const showService = SERVICE_SEGMENTS.has(segment);
   const showOrg = ORG_SEGMENTS.has(segment);
@@ -116,7 +134,7 @@ export default function ProfileEditModal({
   }, [editFieldFocus]);
 
   function patchDraft(patch) {
-    onMarkTouched();
+    onMarkTouched?.(patch);
     onDraftChange((d) => {
       const next = { ...d, ...patch };
       const fn = String(next.firstName || "").trim();
@@ -130,7 +148,7 @@ export default function ProfileEditModal({
   }
 
   function toggleNotificationPref(id) {
-    onMarkTouched();
+    onMarkTouched?.({ notificationPreferences: true });
     onDraftChange((d) => {
       const arr = Array.isArray(d.notificationPreferences) ? [...d.notificationPreferences] : [];
       const s = new Set(arr.map((x) => String(x || "").toLowerCase()));
@@ -142,7 +160,7 @@ export default function ProfileEditModal({
   }
 
   function toggleContributionInterest(key) {
-    onMarkTouched();
+    onMarkTouched?.({ contributionInterests: true });
     onDraftChange((d) => {
       const prev = d.contributionInterests && typeof d.contributionInterests === "object" ? d.contributionInterests : {};
       return { ...d, contributionInterests: { ...prev, [key]: !prev[key] } };
@@ -152,7 +170,7 @@ export default function ProfileEditModal({
   async function onProfileImageSelected(file) {
     if (!file) return;
     if (!String(file.type || "").startsWith("image/")) return;
-    onMarkTouched();
+    onMarkTouched?.({ avatarUrl: true });
     if (sessionKind === "workos" && uploadAvatarFile) {
       onSaveError?.("");
       const result = await uploadAvatarFile(file);
@@ -370,6 +388,40 @@ export default function ProfileEditModal({
                   value={editDraft.reasonForJoining || ""}
                   onChange={(e) => patchDraft({ reasonForJoining: e.target.value })}
                   placeholder="A sentence or two is plenty."
+                />
+              </Field>
+            </div>
+
+            <div className={fieldClass("supportNeeds")} data-profile-edit-focus="supportNeeds">
+              <Field
+                id="torp-edit-support"
+                label="Support needs"
+                optional
+                suggested={suggestedFocusKeys.has("supportNeeds")}
+              >
+                <textarea
+                  id="torp-edit-support"
+                  rows={2}
+                  value={editDraft.supportNeeds || ""}
+                  onChange={(e) => patchDraft({ supportNeeds: e.target.value })}
+                  placeholder="What kind of support are you looking for?"
+                />
+              </Field>
+            </div>
+
+            <div className={fieldClass("communities")} data-profile-edit-focus="communities">
+              <Field
+                id="torp-edit-communities"
+                label="Communities you identify with"
+                optional
+                suggested={suggestedFocusKeys.has("communities")}
+              >
+                <textarea
+                  id="torp-edit-communities"
+                  rows={2}
+                  value={editDraft.communities || ""}
+                  onChange={(e) => patchDraft({ communities: e.target.value })}
+                  placeholder="e.g. veteran, first responder, family"
                 />
               </Field>
             </div>

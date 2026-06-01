@@ -7,9 +7,9 @@ import {
   OUTREACH_MODERATOR_AVATAR_URL,
 } from "../domain/communityModerator.js";
 
-/** @param {string} path Unsplash photo id (no domain) */
-function coverPhoto(path) {
-  return `https://images.unsplash.com/${path}?auto=format&w=1200&h=675&fit=crop&q=80`;
+/** Same-origin cover art (reliable in QA without external CDNs). */
+function coverImage(path) {
+  return String(path || "/home/home-trusted-mountain.png").trim();
 }
 
 function guideBody({ intro, steps, why }) {
@@ -40,13 +40,8 @@ export const FOUNDER_ONBOARDING_POST_IDS = {
   guidelinesMission: "d2000000-0000-4000-8000-00000000000b",
 };
 
-/** Index 0 = newest (top of feed). Eleven pinned guides (welcome + 10 topics). */
 const HOURS_AGO = [8, 14, 20, 26, 32, 38, 44, 50, 56, 60, 64];
 
-/**
- * @param {number} hoursAgo
- * @returns {string}
- */
 function createdAtHoursAgo(hoursAgo) {
   return new Date(Date.now() - hoursAgo * 60 * 60 * 1000).toISOString();
 }
@@ -57,218 +52,265 @@ const GUIDE_DEFS = [
     author_name: "Josh & Hodge",
     hoursAgo: HOURS_AGO[0],
     like_count: 48,
-    title: "Getting started with The Outreach Project",
-    category: "platform_guide",
+    layout: "step",
     post_type: "platform_guide",
-    photo_url: coverPhoto("photo-1529156069898-49953e39b3ac"),
-    link_url: cta("/api/auth/workos/signup?returnTo=/community", "Complete your profile"),
+    title: "Getting started with The Outreach Project",
+    photo_url: coverImage("/home/home-community-group.png"),
+    link_url: cta("/api/auth/workos/signup?returnTo=/community", "Create your account"),
     intro:
-      "Welcome to a mission-built platform for veterans, first responders, families, supporters, and nonprofit partners.",
+      "New here? Follow these four steps to set up your account, find credible help, and start participating in the community.",
     steps: [
-      "Create your account and sign in securely.",
-      "Complete your profile so resources and community features personalize to you.",
-      "Explore Trusted Resources and the nonprofit directory.",
-      "Join Community conversations and follow podcast and sponsor updates.",
+      "Create your account: choose Create account, sign in with WorkOS using the email you want on your profile, then confirm you land back on the site signed in.",
+      "Finish your profile: open Profile, add your name, location, and causes you care about so recommendations and community features match your situation.",
+      "Explore Trusted Resources and the nonprofit directory: use Trusted Resources for vetted programs, then use directory search when you know a location or service type.",
+      "Engage: read Community stories, listen on the Podcast page, and at the Member tier submit your own story after moderator review.",
     ],
     why:
-      "The Outreach Project helps you discover trusted organizations, build community, and access meaningful resources—without wading through random search results.",
+      "You get one trusted front door—curated resources, searchable nonprofits, peer stories, and podcast context—instead of scattered tabs and outdated lists.",
   },
   {
     id: FOUNDER_ONBOARDING_POST_IDS.createAccount,
     author_name: "Josh",
     hoursAgo: HOURS_AGO[1],
     like_count: 31,
-    title: "How to create your account",
-    category: "platform_guide",
+    layout: "step",
     post_type: "platform_guide",
-    photo_url: coverPhoto("photo-1516321318523-f6f85c09ae39"),
+    title: "Step 1 — Create or sign in to your account",
+    photo_url: coverImage("/home/home-header-flag-horizontal.png"),
     link_url: cta("/api/auth/workos/signup?returnTo=/community", "Create your account"),
-    intro: "Your account unlocks the directory, saved organizations, community participation, and member-only tools.",
+    intro:
+      "Your account ties together saved organizations, community participation, likes, and membership tools.",
     steps: [
-      "From the Community page or home screen, choose Create account.",
-      "Sign in with WorkOS using the email you want tied to your profile.",
-      "Confirm you land back on The Outreach Project—your session should stay signed in on trusted devices when you choose remember device.",
-      "Visit Profile to confirm your name and basics loaded correctly.",
+      "From Community or Home, select Create account (or Sign in if you already have one).",
+      "Complete WorkOS hosted sign-in with the email you want on your TOP profile.",
+      "After redirect, open Profile once to confirm your name loaded.",
+      "On a trusted device, choose remember device so you stay signed in during normal use.",
     ],
     why:
-      "A verified account keeps your saves, likes, and story submissions tied to you—so support pathways stay consistent when you return.",
+      "A verified account keeps your activity and support pathways consistent when you return—especially across directory saves and story submissions.",
   },
   {
     id: FOUNDER_ONBOARDING_POST_IDS.completeProfile,
     author_name: "Hodge",
     hoursAgo: HOURS_AGO[2],
     like_count: 27,
-    title: "How to complete your profile",
-    category: "platform_guide",
-    post_type: "platform_guide",
-    photo_url: coverPhoto("photo-1573497019940-1c28c88b38df"),
-    link_url: cta("/profile", "Complete your profile"),
-    intro: "A complete profile helps the platform surface relevant resources and helps moderators route support when you reach out.",
+    layout: "image",
+    post_type: "platform_guide_image",
+    title: "Step 2 — Finish your profile",
+    photo_url: coverImage("/home/home-atmosphere-mountain-service.png"),
+    imageAlt: "Member completing a profile in the outreach community",
+    mediaCaption: "A complete profile helps peers and moderators understand how you serve—and unlocks clearer recommendations.",
+    link_url: cta("/profile?edit=1", "Open profile editor"),
+    intro: "Profiles are how the platform personalizes resources and how the community recognizes you when you share publicly.",
     steps: [
-      "Open Profile from the bottom navigation or menu.",
-      "Add your display name, location, and mission focus areas.",
-      "Share causes, skills, or volunteer interests if you want peers to understand how you serve.",
-      "Upload a profile photo if you would like—member stories show your name when you choose to share publicly.",
+      "Open Profile from the main navigation.",
+      "Add display name, location, and mission focus areas.",
+      "Optional: causes, skills, or volunteer interests so connections are relevant.",
+      "Upload a photo if you want your story posts to show your name with a face.",
     ],
     why:
-      "Profiles are not vanity—they help trusted referrals, community connections, and membership features work the way you expect.",
+      "This is not vanity data—it powers saved-org follow-up, community trust, and membership features you will use later.",
   },
   {
     id: FOUNDER_ONBOARDING_POST_IDS.trustedResources,
     author_name: "Josh",
     hoursAgo: HOURS_AGO[3],
     like_count: 35,
-    title: "How to use the Trusted Resources page",
-    category: "platform_guide",
-    post_type: "platform_guide",
-    photo_url: coverPhoto("photo-1559027615-cd0da4c7e7e3"),
-    link_url: cta("/trusted", "Explore Trusted Resources"),
+    layout: "resource",
+    post_type: "platform_guide_resource",
+    title: "Step 3 — Use Trusted Resources",
+    photo_url: coverImage("/trusted/back-country-heroes-hero.png"),
+    link_url: cta("/trusted", "Browse Trusted Resources"),
+    resource: {
+      name: "Trusted Resources",
+      category: "Curated programs",
+      description:
+        "Mission-reviewed organizations with clear service areas—start here when credibility matters most.",
+      image: "/trusted/back-country-heroes-hero.png",
+      logo: "/trusted/back-country-heroes-org-logo.png",
+      href: "/trusted",
+    },
     intro:
-      "Trusted Resources is our curated lane for organizations and programs we have reviewed for mission alignment, clarity, and veteran and first-responder relevance.",
+      "Trusted Resources is the curated lane for veteran- and first-responder-relevant programs we have reviewed for clarity and fit.",
     steps: [
-      "Open Trusted Resources from home or the navigation menu.",
-      "Read each card’s summary, service area, and verification cues.",
-      "Open a resource profile for mission details, programs, and official outbound links.",
-      "Save or share organizations you want your family or team to revisit.",
+      "Open Trusted Resources from Home or the main menu.",
+      "Scan summaries, service areas, and verification cues on each card.",
+      "Open a profile for programs, outbound links, and how to engage.",
+      "Save organizations you want your family or team to revisit from Profile.",
     ],
     why:
-      "When someone is in crisis or transition, credibility matters. Trusted Resources reduces guesswork so you can act with confidence.",
+      "When someone is in crisis or transition, guesswork costs time. Trusted Resources reduces that risk.",
   },
   {
     id: FOUNDER_ONBOARDING_POST_IDS.nonprofitDirectory,
     author_name: "Hodge",
     hoursAgo: HOURS_AGO[4],
     like_count: 22,
-    title: "How to navigate the nonprofit directory",
-    category: "platform_guide",
-    post_type: "platform_guide",
-    photo_url: coverPhoto("photo-1454165804606-c3d57bc86b40"),
-    link_url: cta("/#home-directory", "Browse the directory"),
+    layout: "carousel",
+    post_type: "platform_guide_carousel",
+    title: "Step 4 — Search the nonprofit directory",
+    photo_url: coverImage("/directory/category-headers/v.png"),
+    link_url: cta("/#home-directory", "Open directory search"),
+    carouselSlides: [
+      {
+        image: "/directory/category-headers/v.png",
+        caption: "Filter by veterans & military service categories when you know the type of help you need.",
+        alt: "Veterans nonprofit category",
+      },
+      {
+        image: "/directory/category-headers/h.png",
+        caption: "Health and wellness listings for clinical, peer, and family support programs.",
+        alt: "Health nonprofit category",
+      },
+      {
+        image: "/home/home-header-patriotic-panorama.png",
+        caption: "Open any listing for mission copy, location, and official outbound links.",
+        alt: "Nonprofit directory overview",
+      },
+    ],
     intro:
-      "The directory is a broader search surface across nonprofit records—ideal when you know a cause, location, or NTEE service area.",
+      "The directory is broader than Trusted Resources—use it when you are comparing options by state, cause, or NTEE category.",
     steps: [
-      "From home, scroll to the directory or use search filters for state and service category.",
-      "Open a listing to review mission copy, location, and external links.",
-      "Use Quick category focus to narrow by NTEE letter when you know the type of help you need.",
-      "Save promising organizations to your profile for later follow-up.",
+      "From Home, scroll to directory search or jump via the directory anchor link.",
+      "Filter by state and service category; use Quick category focus for NTEE letters.",
+      "Open listings to compare missions side by side before you call or apply.",
+      "Save promising organizations to your profile for follow-up.",
     ],
     why:
-      "Discovery should feel practical—not overwhelming. Filters and clear cards help you compare options before you reach out.",
+      "Discovery should feel practical. Filters and consistent cards help you act—not scroll endlessly.",
   },
   {
     id: FOUNDER_ONBOARDING_POST_IDS.podcastPage,
     author_name: "Josh",
     hoursAgo: HOURS_AGO[5],
     like_count: 19,
-    title: "How to use the podcast page",
-    category: "platform_guide",
-    post_type: "platform_guide",
-    photo_url: coverPhoto("photo-1478737277774-8aa3ee54c771"),
+    layout: "podcast",
+    post_type: "platform_guide_podcast",
+    title: "Hear the mission on the podcast",
+    photo_url: coverImage("/home/home-podcast-mic.png"),
     link_url: cta("/podcasts", "Listen & explore episodes"),
     intro:
-      "The Outreach Project podcast amplifies stories, partners, and practical conversations for our community.",
+      "The Outreach Project podcast adds human context—stories, partners, and practical conversations—before you reach out to an organization.",
     steps: [
-      "Visit the Podcast page from home or the menu.",
-      "Browse recent episodes and featured conversations.",
-      "Follow links to listen on your preferred platform.",
+      "Open the Podcast page from Home or the menu.",
+      "Start with the latest episode or browse the library.",
+      "Follow outbound listen links to your preferred platform.",
       "Explore podcast sponsors when you want to support mission-aligned partners.",
     ],
     why:
-      "Audio builds trust at human speed—especially for peers who want context before they call an organization or apply for a program.",
+      "Audio builds trust at human speed, especially for peers who want context before they call a program or apply.",
   },
   {
     id: FOUNDER_ONBOARDING_POST_IDS.sponsorsMembership,
     author_name: "Hodge",
     hoursAgo: HOURS_AGO[6],
     like_count: 24,
-    title: "How to support through sponsorship & membership",
-    category: "platform_guide",
+    layout: "step",
     post_type: "platform_guide",
-    photo_url: coverPhoto("photo-1522071820081-009f0129c71c"),
-    link_url: cta("/sponsors", "View sponsors & partners"),
+    title: "Become a member or explore sponsorship",
+    photo_url: coverImage("/home/home-sponsors-city.png"),
+    link_url: cta("/sponsors", "View sponsors & membership"),
     intro:
-      "Sponsors and members keep the platform sustainable so we can keep directory and community tools accessible.",
+      "Members and sponsors keep directory and community tools sustainable while keeping curated trust lanes separate from paid placement.",
     steps: [
-      "Review Sponsors to see foundational partners and mission-aligned companies.",
-      "Use sponsor cards for direct links and follow-up where offered.",
-      "Visit Profile → membership when you are ready to support at the member tier.",
-      "Companies interested in partnership should use the sponsor application flow so our team can respond cleanly.",
+      "Review Sponsors to see foundational partners and how they support the mission.",
+      "Open Profile → Membership & billing when you are ready for the Member tier (story submission and deeper participation).",
+      "Use sponsor application flows for companies—our team routes partnership inquiries cleanly.",
+      "Read sponsor disclosures on listings so you always know what is editorial vs. partnership.",
     ],
     why:
-      "Transparent support models protect the community from pay-to-play listings—sponsors are disclosed, and curated trust lanes stay separate.",
+      "Transparent support protects the community from pay-to-play listings and keeps Trusted Resources credible.",
   },
   {
     id: FOUNDER_ONBOARDING_POST_IDS.communityGuide,
     author_name: "Josh & Hodge",
     hoursAgo: HOURS_AGO[7],
     like_count: 41,
-    title: "How the Community page works",
-    category: "platform_guide",
-    post_type: "platform_guide",
-    photo_url: coverPhoto("photo-1523240795612-9a054b0db644"),
-    link_url: cta("/community", "Visit Community"),
+    layout: "carousel",
+    post_type: "platform_guide_carousel",
+    title: "How to engage with Community",
+    photo_url: coverImage("/home/home-community-group.png"),
+    link_url: cta("/community", "Browse Community"),
+    carouselSlides: [
+      {
+        image: "/home/home-community-group.png",
+        caption: "Read moderator guides and peer stories in Latest.",
+        alt: "Community members connecting",
+      },
+      {
+        image: "/home/home-trusted-mountain.png",
+        caption: "Like posts when signed in to show encouragement.",
+        alt: "Trusted resources landscape",
+      },
+      {
+        image: "/home/home-hero-flag-mission.png",
+        caption: "At Member tier, submit your story: what helped, which resource, and one next step for others.",
+        alt: "Mission-focused community",
+      },
+    ],
     intro:
-      "Community is where members share what actually helped—stories, gratitude, and practical referrals—after moderator review.",
+      "Community is where members share what actually worked—after moderator review keeps the feed respectful and specific.",
     steps: [
-      "Read approved posts in Latest to learn from peers and moderator guides.",
-      "Sign in to like posts and save encouragement to your profile.",
-      "At the Member tier, submit your own story for review.",
-      "Include what happened, which resource helped, and one next step someone else could take today.",
+      "Read Latest for guides (like this one) and approved member stories.",
+      "Sign in to like posts and save encouragement to your session.",
+      "At Member tier, submit a story with what happened, which resource helped, and a concrete next step.",
+      "Skip vague marketing—specific, respectful posts help the next person act today.",
     ],
     why:
-      "Peer transparency helps others act—but only when posts stay specific, respectful, and safe. Moderation keeps the feed credible.",
+      "Peer transparency only works when posts stay safe and actionable. Moderation is what makes that possible.",
   },
   {
     id: FOUNDER_ONBOARDING_POST_IDS.ecosystemBenefits,
     author_name: "Josh",
     hoursAgo: HOURS_AGO[8],
     like_count: 29,
-    title: "What you gain from The Outreach Project ecosystem",
-    category: "platform_guide",
-    post_type: "platform_guide",
-    photo_url: coverPhoto("photo-1507003211169-0a1dd7228f2d"),
+    layout: "image",
+    post_type: "platform_guide_image",
+    title: "What you get from The Outreach Project",
+    photo_url: coverImage("/home/home-page-background-outreach-hero-2560.png"),
+    imageAlt: "The Outreach Project platform ecosystem",
+    mediaCaption: "One place for trusted discovery, peer stories, audio context, and transparent sponsorship.",
     link_url: cta("/", "Explore the platform"),
-    intro:
-      "Joining connects you to curated resources, peer stories, nonprofit discovery, and mission-aligned partners in one place.",
+    intro: "Joining connects curated resources, searchable nonprofits, community stories, and podcast context.",
     steps: [
-      "Trusted Resources and directory search reduce time spent guessing which organizations are credible.",
-      "Community and podcast content add human context to listings and programs.",
-      "Sponsor transparency shows who helps sustain the platform without blurring editorial trust.",
+      "Trusted Resources plus directory search cut time spent guessing which organizations are credible.",
+      "Community and podcast content add human context to listings.",
+      "Sponsor transparency shows who sustains the platform without blurring editorial trust.",
       "Membership unlocks deeper participation when you are ready to share your own story.",
     ],
     why:
-      "Veterans, first responders, and families deserve a single, trustworthy front door—not a dozen disconnected tabs and outdated lists.",
+      "Veterans, first responders, and families deserve a single trustworthy front door—not a dozen disconnected tabs.",
   },
   {
     id: FOUNDER_ONBOARDING_POST_IDS.nonprofitPartners,
     author_name: "Hodge",
-    hoursAgo: HOURS_AGO[8],
+    hoursAgo: HOURS_AGO[9],
     like_count: 17,
-    title: "How nonprofits & organizations can participate",
-    category: "platform_guide",
+    layout: "step",
     post_type: "platform_guide",
-    photo_url: coverPhoto("photo-1469574853967-2e58ec69b93e"),
+    title: "For nonprofits and partner organizations",
+    photo_url: coverImage("/trusted/hero-to-the-line-hero.png"),
     link_url: cta("/contact", "Contact our team"),
     intro:
-      "If your organization serves veterans, first responders, or aligned families, we want your work discoverable and accurately represented.",
+      "If you serve veterans, first responders, or aligned families, we want your work discoverable and accurately represented.",
     steps: [
-      "Ensure your public listing reflects your EIN, mission, and service area.",
-      "Request trusted review if you meet our curation standards for the Trusted Resources lane.",
-      "Share podcast or sponsor inquiries through the official application paths.",
-      "Encourage satisfied clients to submit community stories—with respect for privacy and program rules.",
+      "Confirm your public listing shows correct EIN, mission, and service area.",
+      "Request trusted review if you meet curation standards for the Trusted Resources lane.",
+      "Use official podcast or sponsor application paths for media and partnership inquiries.",
+      "Encourage clients to share community stories only with consent and program rules respected.",
     ],
     why:
-      "Participation is partnership, not pay-to-rank. We prioritize clarity, consent, and mission fit so the community can trust what they see.",
+      "Participation is partnership, not pay-to-rank. Clarity and mission fit keep the community’s trust high.",
   },
   {
     id: FOUNDER_ONBOARDING_POST_IDS.guidelinesMission,
     author_name: "Josh & Hodge",
     hoursAgo: HOURS_AGO[10],
     like_count: 52,
-    title: "Community guidelines & platform mission",
-    category: "platform_guide",
+    layout: "step",
     post_type: "platform_guide",
-    photo_url: coverPhoto("photo-1522202176988-66273c2fd55f"),
+    title: "Community guidelines",
+    photo_url: coverImage("/home/home-header-mountain-patriotic.png"),
     link_url: cta("/community", "Read the Community feed"),
     intro:
       "The Outreach Project exists to make trusted support easier to find—and to celebrate organizations doing the work.",
@@ -276,12 +318,21 @@ const GUIDE_DEFS = [
       "Be respectful and specific. No harassment, hate, or fundraising spam.",
       "Share lived experience and verified resources—avoid medical or legal claims we cannot substantiate.",
       "Protect privacy: do not post someone else’s personal details without consent.",
-      "Moderators may edit visibility, request revisions, or decline posts that risk harm or misinformation.",
+      "Moderators may request edits or decline posts that risk harm or misinformation.",
     ],
     why:
-      "A mission-driven community only works when members feel safe showing up. These guidelines protect the people who need this space most.",
+      "A mission-driven community only works when members feel safe showing up. These rules protect the people who need this space most.",
   },
 ];
+
+function feedMediaJson(def) {
+  return JSON.stringify({
+    caption: def.mediaCaption || "",
+    imageAlt: def.imageAlt || def.title || "",
+    slides: def.carouselSlides || [],
+    resource: def.resource || null,
+  });
+}
 
 /**
  * @returns {import("@/features/community/mappers/mapCommunityPost").CommunityPostRow[]}
@@ -298,8 +349,10 @@ export function buildFounderOnboardingPostRows() {
     body: guideBody({ intro: def.intro, steps: def.steps, why: def.why }),
     nonprofit_ein: null,
     nonprofit_name: "",
-    category: def.category,
+    category: "platform_guide",
     post_type: def.post_type,
+    feed_layout: def.layout,
+    feed_media_json: feedMediaJson(def),
     show_author_name: true,
     link_url: def.link_url,
     photo_url: def.photo_url,
@@ -307,7 +360,7 @@ export function buildFounderOnboardingPostRows() {
     visibility: "community",
     like_count: def.like_count,
     share_count: 0,
-    reviewed_by: "founder-onboarding-v08",
+    reviewed_by: "founder-onboarding-v09",
     reviewed_at: createdAtHoursAgo(def.hoursAgo - 1),
     published_at: createdAtHoursAgo(def.hoursAgo - 1),
     is_edited: false,
@@ -315,5 +368,4 @@ export function buildFounderOnboardingPostRows() {
   }));
 }
 
-/** Pre-mapped feed rows for client merge + localStorage fallback. */
 export const FOUNDER_ONBOARDING_POSTS = buildFounderOnboardingPostRows();

@@ -289,6 +289,13 @@
   color: var(--color-accent);
   font-weight: 700;
 }
+.profileEditModal__suggested {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-success, #0d7a4a);
+  margin-top: 2px;
+}
 .profileEditModal__field {
   display: grid;
   gap: var(--ds-space-2, 8px);

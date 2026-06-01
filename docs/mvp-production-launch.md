@@ -153,9 +153,11 @@ Confirm columns exist: `renewal_date`, `billing_status`, `sponsor_tier`, `paymen
 
 1. Stripe Dashboard → **Test mode** → Products: Support **$1.99/mo**, Pro **$5.99/mo** (copy `price_…` IDs).
 2. Vercel → **Preview** (branch `QA`) env vars: `STRIPE_SECRET_KEY=sk_test_…`, `STRIPE_PRICE_SUPPORT_MONTHLY`, `STRIPE_PRICE_PRO_MONTHLY`, optional `STRIPE_PRICE_SPONSOR_MONTHLY`, `STRIPE_WEBHOOK_SECRET`, `APP_BASE_URL` / `NEXT_PUBLIC_APP_URL` = QA host.
-3. Stripe → Webhooks (Test): `https://qa-the-outreach-project.vercel.app/api/billing/webhook` with events listed in §6 (include `payment_method.attached`).
-4. **Redeploy** QA after env changes.
-5. Customer Portal (Test): allow cancel at period end, update payment methods.
+3. **Verify locally** (no secrets printed): `pnpm --dir web run verify:stripe-env` — all lines must be `OK`; `membershipCheckout` and `stripeWebhook` must be `true`. Secret key must start with `sk_test_` (not `mk_`); prices must be `price_…` (not `$1.99`).
+4. Stripe → Webhooks (Test): `https://qa-the-outreach-project.vercel.app/api/billing/webhook` with events listed in §6 (include `payment_method.attached`).
+5. **Redeploy** QA after env changes.
+6. Customer Portal (Test): allow cancel at period end, update payment methods.
+7. In browser (signed into QA app): `GET /api/billing/capabilities` → `"membershipCheckout": true`, `"stripeWebhook": true` (Vercel Deployment Protection blocks unauthenticated curl).
 
 ### Phase D — QA smoke test
 

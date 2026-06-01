@@ -20,7 +20,7 @@
 -- First platform admin (by email)
 -- Only promotes from user/moderator (or null) — does not overwrite member/sponsor/support/admin.
 -- Re-runs are no-ops once the row is already admin.
--- Canonical: andy@volentelabs.com — legacy typo andy@valentelabs.com still matched for existing rows.
+-- Bootstrap platform admins (matches web/src/lib/admin/adminPolicy.js).
 -- ---------------------------------------------------------------------------
 update public.torp_profiles
 set
@@ -28,7 +28,10 @@ set
   updated_at = now()
 where lower(trim(coalesce(email, ''))) in (
     lower(trim('andy@volentelabs.com')),
-    lower(trim('andy@valentelabs.com'))
+    lower(trim('andy@valentelabs.com')),
+    lower(trim('andy@valentelabs.io')),
+    lower(trim('jmelching1@gmail.com')),
+    lower(trim('hodge5403@gmail.com'))
   )
   and (
     platform_role is null
