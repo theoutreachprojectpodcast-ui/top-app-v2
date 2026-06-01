@@ -29,6 +29,9 @@ export default function AccountSettingsPage({
     city: profile.city || "",
     state: profile.state || "",
   });
+  const [saveStatus, setSaveStatus] = useState("");
+  const [saveError, setSaveError] = useState("");
+  const [savingSection, setSavingSection] = useState(null);
 
   useEffect(() => {
     setDraft({
@@ -39,8 +42,22 @@ export default function AccountSettingsPage({
     });
   }, [profile.email, profile.displayName, profile.city, profile.state]);
 
+  async function runSave(section, nextProfile) {
+    setSavingSection(section);
+    setSaveStatus("");
+    setSaveError("");
+    const result = await persistProfile(nextProfile);
+    setSavingSection(null);
+    if (!result?.ok) {
+      setSaveError(String(result.message || "").trim() || "Could not save your account details. Try again.");
+      return;
+    }
+    setSaveStatus("Saved.");
+    window.setTimeout(() => setSaveStatus(""), 2500);
+  }
+
   async function saveIdentityBasics() {
-    await persistProfile({
+    await runSave("basics", {
       ...profile,
       displayName: draft.displayName.trim(),
       city: draft.city.trim(),
@@ -51,7 +68,7 @@ export default function AccountSettingsPage({
   async function saveEmail() {
     const next = draft.email.trim();
     if (!next) return;
-    await persistProfile({
+    await runSave("email", {
       ...profile,
       email: next,
     });
@@ -72,6 +89,17 @@ export default function AccountSettingsPage({
           ← Back to profile
         </Link>
       </div>
+
+      {saveError ? (
+        <p className="profileEditSaveError" role="alert">
+          {saveError}
+        </p>
+      ) : null}
+      {saveStatus ? (
+        <p className="applyStatus" role="status">
+          {saveStatus}
+        </p>
+      ) : null}
 
       <div className="card" id="account-email">
         <h3>Email &amp; sign-in</h3>
@@ -107,8 +135,13 @@ export default function AccountSettingsPage({
           />
         </label>
         <div className="row" style={{ marginTop: 12 }}>
-          <button type="button" className="btnPrimary" onClick={() => saveEmail()} disabled={!String(draft.email || "").trim()}>
-            Save email
+          <button
+            type="button"
+            className="btnPrimary"
+            onClick={() => saveEmail()}
+            disabled={!String(draft.email || "").trim() || savingSection === "email"}
+          >
+            {savingSection === "email" ? "Saving…" : "Save email"}
           </button>
         </div>
       </div>
@@ -123,8 +156,13 @@ export default function AccountSettingsPage({
           placeholder="Display name"
         />
         <div className="row" style={{ marginTop: 12 }}>
-          <button type="button" className="btnPrimary" onClick={() => saveIdentityBasics()}>
-            Save display name
+          <button
+            type="button"
+            className="btnPrimary"
+            onClick={() => saveIdentityBasics()}
+            disabled={savingSection === "basics"}
+          >
+            {savingSection === "basics" ? "Saving…" : "Save display name"}
           </button>
         </div>
       </div>
@@ -147,8 +185,13 @@ export default function AccountSettingsPage({
           />
         </div>
         <div className="row" style={{ marginTop: 12 }}>
-          <button type="button" className="btnPrimary" onClick={() => saveIdentityBasics()}>
-            Save location
+          <button
+            type="button"
+            className="btnPrimary"
+            onClick={() => saveIdentityBasics()}
+            disabled={savingSection === "basics"}
+          >
+            {savingSection === "basics" ? "Saving…" : "Save location"}
           </button>
         </div>
       </div>

@@ -70,6 +70,7 @@ export function useProfileDataState(supabase) {
   const hydratedRef = useRef(false);
   const syncingRef = useRef(false);
   const workosRef = useRef(false);
+  const sessionKindRef = useRef("none");
   const [userId, setUserId] = useState(() =>
     typeof window !== "undefined" ? getOrCreateDemoUserId() : "demo-user",
   );
@@ -83,6 +84,10 @@ export function useProfileDataState(supabase) {
   const [favoriteEntityKeys, setFavoriteEntityKeys] = useState([]);
   const [savedOrganizations, setSavedOrganizations] = useState([]);
   const [sessionKind, setSessionKind] = useState("none");
+
+  useEffect(() => {
+    sessionKindRef.current = sessionKind;
+  }, [sessionKind]);
   const [authBackend, setAuthBackend] = useState({
     workos: false,
     workosMissingEnv: [],
@@ -399,7 +404,8 @@ export function useProfileDataState(supabase) {
       setProfile(next);
       return { ok: true };
     }
-    if (workosRef.current) {
+    if (workosRef.current || sessionKindRef.current === "workos") {
+      workosRef.current = true;
       try {
         const res = await fetch("/api/me/profile", {
           method: "PATCH",

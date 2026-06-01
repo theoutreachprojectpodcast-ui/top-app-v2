@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import HeaderInner from "@/components/layout/HeaderInner";
@@ -56,6 +57,11 @@ import {
 } from "@/lib/profile/profileCompletenessModel";
 import { profileFromApiDto } from "@/features/profile/mappers";
 import { mergeEditDraftWithProfile } from "@/features/profile/lib/mergeEditDraftWithProfile";
+import {
+  clearPendingProfileEdit,
+  markPendingProfileEdit,
+  peekPendingProfileEdit,
+} from "@/features/profile/lib/pendingProfileEdit";
 import AccountSettingsPage from "@/features/settings/components/AccountSettingsPage";
 import { FormCheckbox } from "@/components/forms/FormChoice";
 import { resolvePageAtmosphere } from "@/lib/design/pageAtmosphere";
@@ -102,6 +108,8 @@ function TopAppInner({ initialNav = "home" }) {
   const [signupAvatarDataUrl, setSignupAvatarDataUrl] = useState("");
   const [editSaveError, setEditSaveError] = useState("");
   const [editSaveOk, setEditSaveOk] = useState("");
+  const [editSaving, setEditSaving] = useState(false);
+  const editDraftTouchedRef = useRef(new Set());
   const [contactDraft, setContactDraft] = useState({ firstName: "", lastName: "", email: "", phone: "", message: "" });
   const [contactStatus, setContactStatus] = useState("");
   const [contactError, setContactError] = useState("");
@@ -254,20 +262,43 @@ function TopAppInner({ initialNav = "home" }) {
     }
     // Demo/local auth does not have server-backed WorkOS onboarding APIs.
     // Route to profile edit instead of bouncing through /onboarding -> signin.
+    markPendingProfileEdit({});
     router.push("/profile?edit=1");
+  }
+
+  function resolveProfileEditFocusKey(sectionRaw, focusRaw) {
+    const section = String(sectionRaw || "").trim().toLowerCase();
+    const SECTION_TO_FOCUS = {
+      main: "displayName",
+      identity: "identitySegment",
+      contribution: "contribution",
+      interests: "interests",
+      preferences: "preferences",
+    };
+    const rawFocus = String(focusRaw || "").trim();
+    const fromSection = section && SECTION_TO_FOCUS[section] ? SECTION_TO_FOCUS[section] : "";
+    const focusKey =
+      (fromSection && /^[a-zA-Z][a-zA-Z0-9_-]*$/.test(fromSection) ? fromSection : "") ||
+      (rawFocus && /^[a-zA-Z][a-zA-Z0-9_-]*$/.test(rawFocus) ? rawFocus : "");
+    return focusKey || null;
   }
 
   function openEdit(focusKey) {
     setEditSaveError("");
+    setEditSaveOk("");
+    editDraftTouchedRef.current = new Set();
     setEditDraft(profileFromApiDto(profile));
     setEditFieldFocus(focusKey != null && focusKey !== "" ? focusKey : null);
     setOverlay("edit");
   }
 
   async function saveEditProfile() {
+    if (editSaving || !editDraft) return;
+    setEditSaving(true);
     setEditSaveError("");
     setEditSaveOk("");
     const result = await persistProfile({ ...profile, ...editDraft });
+    setEditSaving(false);
     if (!result.ok) {
       setEditSaveError(String(result.message || "").trim() || "Could not save your profile. Try again.");
       return;
@@ -279,34 +310,42 @@ function TopAppInner({ initialNav = "home" }) {
     }, 900);
   }
 
-  /** Home hero “Finish profile” navigates with ?edit=1 — open overlay only after /api/me profile is loaded on this mount. */
+  /** Deep link `?edit=1` + sessionStorage survives Suspense remount when query is stripped early. */
   const openedProfileEditFromQueryRef = useRef(false);
   useEffect(() => {
-    if (pathname !== "/profile" || searchParams.get("edit") !== "1") {
+    if (pathname !== "/profile") {
+      openedProfileEditFromQueryRef.current = false;
+      return;
+    }
+
+    const editFromQuery = searchParams.get("edit") === "1";
+    const pending = peekPendingProfileEdit();
+    if (editFromQuery) {
+      markPendingProfileEdit({
+        focus: searchParams.get("focus") || searchParams.get("field") || pending?.focus || "",
+        section: searchParams.get("section") || pending?.section || "",
+      });
+    }
+
+    if (!editFromQuery && !pending) {
       openedProfileEditFromQueryRef.current = false;
       return;
     }
     if (loadingProfile || !isAuthenticated) return;
     if (openedProfileEditFromQueryRef.current) return;
-    const section = String(searchParams.get("section") || "").trim().toLowerCase();
-    const SECTION_TO_FOCUS = {
-      main: "displayName",
-      identity: "identitySegment",
-      contribution: "contribution",
-      interests: "interests",
-      preferences: "preferences",
-    };
-    const rawFocus = String(searchParams.get("focus") || searchParams.get("field") || "").trim();
-    const fromSection = section && SECTION_TO_FOCUS[section] ? SECTION_TO_FOCUS[section] : "";
-    const focusKey =
-      (fromSection && /^[a-zA-Z][a-zA-Z0-9_-]*$/.test(fromSection) ? fromSection : "") ||
-      (rawFocus && /^[a-zA-Z][a-zA-Z0-9_-]*$/.test(rawFocus) ? rawFocus : "");
+
+    const focusKey = resolveProfileEditFocusKey(
+      searchParams.get("section") || pending?.section,
+      searchParams.get("focus") || searchParams.get("field") || pending?.focus,
+    );
     openedProfileEditFromQueryRef.current = true;
+    clearPendingProfileEdit();
     setEditSaveError("");
+    editDraftTouchedRef.current = new Set();
     setEditDraft(profileFromApiDto(profile));
-    setEditFieldFocus(focusKey != null && focusKey !== "" ? focusKey : null);
+    setEditFieldFocus(focusKey);
     setOverlay("edit");
-    router.replace("/profile", { scroll: false });
+    if (editFromQuery) router.replace("/profile", { scroll: false });
   }, [pathname, searchParams, loadingProfile, isAuthenticated, profile, router]);
 
   /** If Edit Profile opens before cloud profile finishes loading, replace empty draft with real row. */
@@ -363,17 +402,21 @@ function TopAppInner({ initialNav = "home" }) {
 
   useEffect(() => {
     if (overlay !== "edit" || !editDraft) return;
-    setEditDraft((d) => mergeEditDraftWithProfile(d, profile));
+    setEditDraft((d) => mergeEditDraftWithProfile(d, profile, editDraftTouchedRef.current));
   }, [overlay, profileEditMergeKey, profile]);
 
   function closeEditOverlay() {
     setEditSaveError("");
     setEditSaveOk("");
+    setEditSaving(false);
+    editDraftTouchedRef.current = new Set();
+    clearPendingProfileEdit();
     setEditFieldFocus(null);
     setOverlay(null);
   }
 
   function toggleEditNotificationPref(id) {
+    editDraftTouchedRef.current.add("__any__");
     setEditDraft((d) => {
       const arr = Array.isArray(d.notificationPreferences) ? [...d.notificationPreferences] : [];
       const s = new Set(arr.map((x) => String(x || "").toLowerCase()));
@@ -385,6 +428,7 @@ function TopAppInner({ initialNav = "home" }) {
   }
 
   function toggleEditContributionInterest(key) {
+    editDraftTouchedRef.current.add("__any__");
     setEditDraft((d) => {
       const prev = d.contributionInterests && typeof d.contributionInterests === "object" ? d.contributionInterests : {};
       return { ...d, contributionInterests: { ...prev, [key]: !prev[key] } };
@@ -446,6 +490,7 @@ function TopAppInner({ initialNav = "home" }) {
   async function onProfileImageSelected(file) {
     if (!file) return;
     if (!String(file.type || "").startsWith("image/")) return;
+    editDraftTouchedRef.current.add("__any__");
     if (sessionKind === "workos" && uploadAvatarFile) {
       setEditSaveError("");
       const result = await uploadAvatarFile(file);
@@ -462,6 +507,7 @@ function TopAppInner({ initialNav = "home" }) {
     try {
       const dataUrl = await fileToCompressedDataUrl(file);
       if (!dataUrl) return;
+      editDraftTouchedRef.current.add("__any__");
       setEditDraft((d) => ({ ...d, avatarUrl: dataUrl }));
     } catch {
       // keep silent to avoid blocking edit flow
@@ -1027,6 +1073,7 @@ function TopAppInner({ initialNav = "home" }) {
               openEdit();
               return;
             }
+            markPendingProfileEdit({});
             router.push("/profile?edit=1");
           }}
           setMembershipStatus={setMembershipStatus}
@@ -1200,11 +1247,15 @@ function TopAppInner({ initialNav = "home" }) {
         </div>
       )}
 
-      {overlay === "edit" && editDraft ? (
+      {overlay === "edit" && editDraft && typeof document !== "undefined"
+        ? createPortal(
         <div className="modalOverlay modalOverlay--profileEdit" onClick={closeEditOverlay}>
           <div
             className="modalCard modalCard--profileEdit"
             onClick={(e) => e.stopPropagation()}
+            onChangeCapture={() => {
+              editDraftTouchedRef.current.add("__any__");
+            }}
             onKeyDown={(e) => {
               if (e.key !== "Enter" || e.nativeEvent?.isComposing) return;
               const t = e.target;
@@ -1583,14 +1634,23 @@ function TopAppInner({ initialNav = "home" }) {
               </p>
             ) : null}
             <div className="row">
-              <button className="btnSoft" onClick={closeEditOverlay} type="button">Cancel</button>
-              <button className="btnPrimary" onClick={() => void saveEditProfile()} type="button">
-                Save
+              <button className="btnSoft" onClick={closeEditOverlay} type="button" disabled={editSaving}>
+                Cancel
+              </button>
+              <button
+                className="btnPrimary"
+                onClick={() => void saveEditProfile()}
+                type="button"
+                disabled={editSaving}
+              >
+                {editSaving ? "Saving…" : "Save"}
               </button>
             </div>
           </div>
-        </div>
-      ) : null}
+        </div>,
+        document.body,
+      )
+        : null}
 
       {overlay === "signin" && (
         <div className="modalOverlay" onClick={() => setOverlay(null)}>
