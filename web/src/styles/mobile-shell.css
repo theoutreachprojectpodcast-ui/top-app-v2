@@ -255,7 +255,15 @@ html {
     --header-floating-height: 0px;
     --header-fade-height: 0px;
     --podcast-header-brand-band: var(--mobile-podcast-header-logo-h);
+    --mobile-podcast-header-controls-row: calc(
+      var(--mobile-site-header-control-pad-top) + var(--mobile-site-header-control-size) + 10px
+    );
     display: block;
+  }
+
+  main.topApp.appShell--podcast.topApp--auth-out .topbarInner,
+  main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarInner {
+    display: contents;
   }
 
   main.topApp.appShell--podcast > .topbarOcclusion,
@@ -315,7 +323,7 @@ html {
     width: auto !important;
     min-width: 0;
     max-width: 100% !important;
-    padding: 0 !important;
+    padding: var(--mobile-podcast-header-controls-row) 0 0 !important;
     margin: 0 !important;
     overflow: visible;
     pointer-events: none;
@@ -412,6 +420,19 @@ html {
   main.topApp[data-page-atmosphere="podcast"] .topbarLeft .topbarActionsCluster,
   main.topApp[data-page-atmosphere="podcast"] .topbarLeft .topbarActionsCluster--start {
     justify-content: flex-start;
+  }
+
+  main.topApp.appShell--podcast .topbarRight .topbarActionsCluster,
+  main.topApp[data-page-atmosphere="podcast"] .topbarRight .topbarActionsCluster {
+    justify-content: flex-end;
+    max-width: calc(100vw - (2 * var(--mobile-site-header-control-size)) - (2 * var(--mobile-site-header-pad-x)) - 16px);
+  }
+
+  main.topApp.appShell--podcast .topbarRight .btnSoft.sponsorBtn,
+  main.topApp[data-page-atmosphere="podcast"] .topbarRight .btnSoft.sponsorBtn {
+    min-width: 0;
+    padding-inline: 10px;
+    font-size: 12px;
   }
 
   main.topApp.appShell--podcast .headerAccountTrigger,

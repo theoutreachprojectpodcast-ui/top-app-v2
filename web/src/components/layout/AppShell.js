@@ -95,13 +95,14 @@ export default function AppShell({
               <HeaderInner className="topbarInner">
                 <div className="topbarZone topbarLeft">
                   <div className="topbarActionsCluster topbarActionsCluster--start">
+                    <SubpageTopbarActions section="authNotifications" />
                     <SubpageTopbarActions section="lead" />
                   </div>
                 </div>
                 <div className="topbarZone topbarCenter" aria-hidden="true" />
                 <div className="topbarZone topbarRight">
                   <div className="topbarActionsCluster">
-                    <SubpageTopbarActions section="auth" />
+                    <SubpageTopbarActions section="authMenu" />
                     {useFooterDockChrome ? (
                       <SiteMobileNavMoreMenu tone="podcast" align="end">
                         <Link className="siteMobileNavMore__entry" href="/trusted">
