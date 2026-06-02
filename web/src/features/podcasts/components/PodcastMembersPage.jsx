@@ -1,12 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import AppShell from "@/components/layout/AppShell";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { resolvePodcastMemberContentAccess, listPodcastMemberContent } from "@/features/podcasts/api/podcastApi";
 import { readRememberDevicePref } from "@/lib/auth/lastUsedEmail";
 import { workosSignInLink } from "@/lib/auth/workosReturnTo";
-import "@/features/podcasts/styles/podcasts.css";
 
 export default function PodcastMembersPage() {
   const supabase = useMemo(() => getSupabaseClient(), []);
@@ -25,36 +23,28 @@ export default function PodcastMembersPage() {
     };
   }, [supabase]);
 
-  const podcastLogoSrc =
-    (typeof process !== "undefined" && process.env.NEXT_PUBLIC_PODCAST_BRAND_LOGO_PATH) ||
-    "/podcast-logo-transparent.png";
   const podcastMembersSignInHref = workosSignInLink("/podcasts/members", null, "/podcasts/members", {
     rememberDevice: readRememberDevicePref(),
   });
 
   return (
-    <AppShell
-      activeNav="profile"
-      shellClassName="appShell--podcast"
-      brandSrc={podcastLogoSrc}
-      brandAlt="The Outreach Project Podcast"
-      brandClassName="podcastBrandLogo"
-      showSiteFooter
-      usePrimaryTopbarChrome
-      useFooterDockChrome
-      useTopAppStructure
-      pageAtmosphere="podcast"
-    >
-      <div className="podcastScope">
-        <section className="podcastSection">
-          <h2 className="podcastSectionTitle">Members-Only Content</h2>
-          <p className="podcastSectionSubtitle">
-            {allowed
-              ? "Unlocked for your account — same Pro tier as community story submissions."
-              : "Sign in with your Outreach Project account. Pro membership unlocks this library."}
-          </p>
-          {!allowed ? (
-            <p className="podcastSectionSubtitle" style={{ marginTop: 8 }}>
+    <div className="podcastScope">
+      <section className="card cardHero podcastPageHero podcastPageHero--compact">
+        <div className="communityHeroTop podcastPageHero__top">
+          <div className="communityHeroTitles">
+            <p className="introTagline">Podcast</p>
+            <h2>Members-only content</h2>
+          </div>
+        </div>
+        <p className="communityHeroText podcastPageHero__lead">
+          {allowed
+            ? "Unlocked for your account — same Pro tier as community story submissions."
+            : "Sign in with your Outreach Project account. Pro membership unlocks this library."}
+        </p>
+      </section>
+      <section className="podcastSection">
+        {!allowed ? (
+            <p className="podcastMuted" style={{ marginTop: 0 }}>
               <a className="podcastSponsorPill" href={podcastMembersSignInHref}>
                 Sign in
               </a>{" "}
@@ -71,8 +61,7 @@ export default function PodcastMembersPage() {
               </article>
             ))}
           </div>
-        </section>
-      </div>
-    </AppShell>
+      </section>
+    </div>
   );
 }

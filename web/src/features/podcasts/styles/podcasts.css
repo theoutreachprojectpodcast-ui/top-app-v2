@@ -421,6 +421,32 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
     --podcast-header-brand-band: clamp(120px, 32vw, 180px);
   }
 
+  .topApp.appShell--podcastRoute {
+    --podcast-header-brand-band: 0px;
+    --podcast-header-chrome-height: calc(
+      env(safe-area-inset-top, 0px) + var(--header-floating-offset, 12px) + var(--podcast-topbar-stack-height) + 10px
+    );
+  }
+
+  .topApp.appShell--podcastRoute .shell {
+    width: min(var(--content-max-width), calc(100% - var(--content-gutter)));
+    padding-top: var(--ds-space-3, 12px);
+    padding-inline: max(var(--content-gutter), env(safe-area-inset-left, 0px))
+      max(var(--content-gutter), env(safe-area-inset-right, 0px));
+    overflow-x: clip;
+  }
+
+  .topApp.appShell--podcastRoute .podcastScope {
+    overflow-x: clip;
+  }
+
+  .podcastPageHero__actions .btnPrimary,
+  .podcastPageHero__actions .btnSoft {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+  }
+
   /* In-flow chrome: single rectangular gradient behind topbar + logo. */
   .topApp.appShell--podcast > .topbarOcclusion {
     display: block !important;
@@ -467,8 +493,14 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
   .topApp.appShell--podcast .shell {
     position: relative;
     z-index: 1;
-    padding-top: 12px;
+    padding-top: var(--ds-space-3, 12px);
     order: 4;
+  }
+}
+
+@media (max-width: 719px) {
+  main.topApp.appShell--podcast.appShell--withMobileNavDock {
+    padding-bottom: calc(118px + env(safe-area-inset-bottom, 0px)) !important;
   }
 }
 
@@ -506,6 +538,18 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
   }
 }
 
+/* One AppShell per route (`app/podcasts/layout.js`) — avoid nested shells on subpages. */
+.topApp.appShell--podcastRoute .shell {
+  width: min(var(--content-max-width), calc(100% - var(--content-gutter)));
+  margin-inline: auto;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.topApp.appShell--podcastRoute .podcastScope {
+  gap: var(--ds-section-gap, 20px);
+}
+
 .podcastScope {
   --pod-bg: #070b12;
   --pod-surface: #0f1726;
@@ -518,6 +562,48 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
   gap: 16px;
   color: var(--pod-text);
   min-width: 0;
+}
+
+/* Page hero — same pattern as Community `card cardHero` */
+.podcastScope .podcastPageHero.card.cardHero {
+  display: grid;
+  gap: var(--ds-space-4, 16px);
+  padding: var(--ds-space-5, 20px) var(--ds-space-6, 24px);
+}
+
+.podcastPageHero .introTagline {
+  margin: 0;
+  color: var(--pod-accent);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 800;
+}
+
+.podcastPageHero .communityHeroTitles h2 {
+  color: var(--pod-text);
+}
+
+.podcastPageHero__lead,
+.podcastPageHero .communityHeroText {
+  color: var(--pod-muted);
+}
+
+.podcastPageHero__featuredLabel {
+  color: var(--pod-accent-2);
+  font-weight: 600;
+}
+
+.podcastPageHero__actions {
+  margin: 0;
+}
+
+.podcastPageHero--compact {
+  gap: var(--ds-space-3, 12px);
+}
+
+.podcastPageHero__icon .iconStroke {
+  stroke: var(--pod-accent-2);
 }
 
 .podcastScope > * {
@@ -553,8 +639,7 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
 }
 
 .podcastScope .panel,
-.podcastScope .card,
-.podcastScope .podcastHeroCard,
+.podcastScope .card:not(.podcastPageHero),
 .podcastScope .podcastSection,
 .podcastScope .podcastApplySection,
 .podcastScope .podcastSponsorStrip,

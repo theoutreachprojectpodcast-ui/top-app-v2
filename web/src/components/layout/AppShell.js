@@ -70,8 +70,7 @@ export default function AppShell({
   const isLoggedIn = session.authenticated || optimisticAuthed;
 
   const mainChromeClass = immersiveHeaderScroll ? " header-at-top" : "";
-  const authChromeClass =
-    useTopAppStructure && podcastThemeShell ? (isLoggedIn ? " topApp--auth-in" : " topApp--auth-out") : "";
+  const authChromeClass = useTopAppStructure ? (isLoggedIn ? " topApp--auth-in" : " topApp--auth-out") : "";
   const podcastRouteAttrs =
     useTopAppStructure && podcastThemeShell
       ? {

@@ -2,10 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import AppShell from "@/components/layout/AppShell";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { FALLBACK_EPISODES, FALLBACK_GUESTS, getPodcastGuestProfile, listPodcastEpisodesByGuest, resolveEpisodeWatchUrl } from "@/features/podcasts/api/podcastApi";
-import "@/features/podcasts/styles/podcasts.css";
 
 export default function PodcastGuestProfilePage({ slug }) {
   const supabase = useMemo(() => getSupabaseClient(), []);
@@ -28,24 +26,8 @@ export default function PodcastGuestProfilePage({ slug }) {
     };
   }, [slugStr, supabase]);
 
-  const podcastLogoSrc =
-    (typeof process !== "undefined" && process.env.NEXT_PUBLIC_PODCAST_BRAND_LOGO_PATH) ||
-    "/podcast-logo-transparent.png";
-
   return (
-    <AppShell
-      activeNav="home"
-      shellClassName="appShell--podcast"
-      brandSrc={podcastLogoSrc}
-      brandAlt="The Outreach Project Podcast"
-      brandClassName="podcastBrandLogo"
-      showSiteFooter
-      usePrimaryTopbarChrome
-      useFooterDockChrome
-      useTopAppStructure
-      pageAtmosphere="podcast"
-    >
-      <div className="podcastScope">
+    <div className="podcastScope">
         <section className="podcastSection">
           <Link className="btnSoft" href="/podcasts/guests">Back to Guests</Link>
           <article className="podcastGuestProfile">
@@ -84,7 +66,6 @@ export default function PodcastGuestProfilePage({ slug }) {
             )) : <p className="podcastMuted">Episode links are being prepared.</p>}
           </div>
         </section>
-      </div>
-    </AppShell>
+    </div>
   );
 }

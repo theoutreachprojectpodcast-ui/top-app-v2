@@ -1,11 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuthSession } from "@/components/auth/AuthSessionProvider";
 import { readNavAuthCache } from "@/lib/auth/navAuthCache";
 import IconWrap from "@/components/shared/IconWrap";
 import HeaderNotificationBell from "@/components/layout/HeaderNotificationBell";
+import HeaderAccountMenu from "@/components/layout/HeaderAccountMenu";
+import { useProfileData } from "@/features/profile/ProfileDataProvider";
+import { emptyProfileAvatarUrl } from "@/lib/avatarFallback";
 import { readRememberDevicePref } from "@/lib/auth/lastUsedEmail";
 import { workosSignInLink, workosSignUpHref } from "@/lib/auth/workosReturnTo";
 
@@ -19,6 +22,8 @@ const SPONSOR_ICON = "M4 6h16v12H4z M4 10h16";
  */
 export default function SubpageTopbarActions({ section = "all" }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { profile, loadingProfile, fullName, isMember, signOut, isAuthenticated } = useProfileData();
   /** Avoid useSearchParams here (static routes like /contact must not CSR-bailout without Suspense). */
   const rememberDevice = readRememberDevicePref();
   const signInReturnFallback = pathname?.startsWith("/podcasts") ? pathname : "/";
@@ -52,15 +57,28 @@ export default function SubpageTopbarActions({ section = "all" }) {
     </Link>
   );
 
+  const authed = authState.authenticated || isAuthenticated;
+  const authLoading =
+    authState.loading || (authed && loadingProfile);
+
   const authBlock =
-    authState.loading ? (
+    authLoading ? (
       <span className="subpageAuthActionsPlaceholder" aria-hidden="true" />
-    ) : authState.authenticated ? (
+    ) : authed ? (
       <>
-        <HeaderNotificationBell variant="subpage" skipSessionGate />
-        <Link className="btnSoft sponsorBtn" href="/profile">
-          Profile
-        </Link>
+        <HeaderNotificationBell skipSessionGate />
+        <HeaderAccountMenu
+          avatarSrc={profile?.avatarUrl || emptyProfileAvatarUrl()}
+          displayName={fullName}
+          email={profile?.email}
+          membershipHint={isMember ? "Member" : "View plans"}
+          ariaLabel={`Account menu for ${fullName || profile?.email || "signed-in user"}`}
+          onProfile={() => router.push("/profile")}
+          onSettings={() => router.push("/settings")}
+          onMembership={() => router.push("/profile")}
+          onSavedItems={() => router.push("/profile")}
+          onSignOut={signOut}
+        />
       </>
     ) : authState.workos ? (
       <>

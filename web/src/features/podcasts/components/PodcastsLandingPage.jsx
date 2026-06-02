@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import AppShell from "@/components/layout/AppShell";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { listPodcastSponsorsCatalog } from "@/features/podcasts/api/podcastSponsorsCatalog";
 import {
@@ -20,8 +19,6 @@ import PodcastSectionHeader from "@/features/podcasts/components/PodcastSectionH
 import PodcastSponsorsSection from "@/features/podcasts/components/PodcastSponsorsSection";
 import PodcastCTASection from "@/features/podcasts/components/PodcastCTASection";
 import PodcastApplyGuestForm from "@/features/podcasts/components/PodcastApplyGuestForm";
-import "@/features/podcasts/styles/podcasts.css";
-
 import { PODCAST_LANDING_RECENT_EPISODE_COUNT } from "@/lib/podcast/podcastLandingCuratedEpisodes";
 
 const FULL_EPISODES_SECTION_COUNT = PODCAST_LANDING_RECENT_EPISODE_COUNT;
@@ -126,6 +123,16 @@ export default function PodcastsLandingPage({
   }, [supabase, initialBundleMeta?.degraded]);
 
   useEffect(() => {
+    const root = document.querySelector("main.topApp.appShell--podcastRoute");
+    if (!root) return;
+    if (podcastBandImageUrl) {
+      root.style.setProperty("--podcast-band-image", `url("${podcastBandImageUrl}")`);
+    } else {
+      root.style.removeProperty("--podcast-band-image");
+    }
+  }, [podcastBandImageUrl]);
+
+  useEffect(() => {
     let cancelled = false;
     fetch("/api/page-images?pageKey=podcasts&sectionKey=hero-band", { cache: "no-store" })
       .then((res) => res.json())
@@ -172,25 +179,8 @@ export default function PodcastsLandingPage({
     guestsByEpisode.get(episodeId).push(guest);
   }
 
-  const podcastLogoSrc =
-    (typeof process !== "undefined" && process.env.NEXT_PUBLIC_PODCAST_BRAND_LOGO_PATH) ||
-    "/podcast-logo-transparent.png";
-
   return (
-    <AppShell
-      activeNav="home"
-      shellClassName="appShell--podcast"
-      brandSrc={podcastLogoSrc}
-      brandAlt="The Outreach Project Podcast"
-      brandClassName="podcastBrandLogo"
-      showSiteFooter
-      usePrimaryTopbarChrome
-      useFooterDockChrome
-      useTopAppStructure
-      pageAtmosphere="podcast"
-      rootStyle={podcastBandImageUrl ? { "--podcast-band-image": `url("${podcastBandImageUrl}")` } : undefined}
-    >
-      <div className="podcastScope">
+    <div className="podcastScope">
         <PodcastHero featured={featured} onApply={() => setApplyOpen(true)} />
 
         <section className="podcastSection">
@@ -332,6 +322,6 @@ export default function PodcastsLandingPage({
           sessionId: searchParams.get("session_id") || "",
         }}
       />
-    </AppShell>
+    </div>
   );
 }
