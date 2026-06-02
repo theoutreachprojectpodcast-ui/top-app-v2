@@ -123,7 +123,7 @@ export default function PodcastsLandingPage({
   }, [supabase, initialBundleMeta?.degraded]);
 
   useEffect(() => {
-    const root = document.querySelector("main.topApp.appShell--podcastRoute");
+    const root = document.querySelector("main.topApp.appShell--podcast");
     if (!root) return;
     if (podcastBandImageUrl) {
       root.style.setProperty("--podcast-band-image", `url("${podcastBandImageUrl}")`);
