@@ -7,9 +7,9 @@ export default function ProfileSummaryPanel({
   greetingName,
   isMember,
   membershipLabel,
+  membershipTierKey,
   membershipHint,
   savedCount,
-  icon,
 }) {
   return (
     <div className="welcomePanel welcomePanel--homeSummary">
@@ -17,7 +17,7 @@ export default function ProfileSummaryPanel({
       <div className="welcomeCopy">
         <p className="introTagline">Welcome back</p>
         <h2>{greetingName}</h2>
-        <MembershipBadge isMember={isMember} icon={icon} label={membershipLabel} />
+        <MembershipBadge tierKey={membershipTierKey} label={membershipLabel} isMember={isMember} />
         <p>{membershipHint}</p>
         <p>{savedCount} saved {savedCount === 1 ? "organization" : "organizations"}</p>
       </div>

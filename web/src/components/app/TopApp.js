@@ -34,6 +34,11 @@ import { adminConsoleHref } from "@/lib/runtime/deploymentHosts";
 import { useImmersiveHeaderScroll } from "@/hooks/useImmersiveHeaderScroll";
 import MembershipAtAGlance from "@/features/membership/components/MembershipAtAGlance";
 import MembershipBillingCenter from "@/features/membership/components/MembershipBillingCenter";
+import {
+  PRO_MEMBERSHIP_PRICE_LABEL,
+  SUPPORT_MEMBERSHIP_DISPLAY_NAME,
+  SUPPORT_MEMBERSHIP_PRICE_LABEL,
+} from "@/features/membership/membershipTiers";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { emptyProfileAvatarUrl } from "@/lib/avatarFallback";
 import { rowEin } from "@/lib/utils";
@@ -783,8 +788,8 @@ function TopAppInner({ initialNav = "home" }) {
             missionStatement={profile.missionStatement}
             identityRole={profile.identityRole}
             membershipLabel={membership.label}
+            membershipTierKey={profile.membershipStatus}
             isMember={isMember}
-            icon={<AppIcon name="profile" />}
             onEdit={() => openProfileEdit()}
           />
           <MembershipBillingCenter
@@ -1030,7 +1035,7 @@ function TopAppInner({ initialNav = "home" }) {
           <div className="modalCard" onClick={(e) => e.stopPropagation()}>
             <h3>Membership &amp; billing</h3>
             <p>
-              Support Membership ($1.99/mo) and Pro Membership ($5.99/mo) unlock saved organizations, profile sync, and community
+              {SUPPORT_MEMBERSHIP_DISPLAY_NAME} ({SUPPORT_MEMBERSHIP_PRICE_LABEL}) and Pro Membership ({PRO_MEMBERSHIP_PRICE_LABEL}) unlock saved organizations, profile sync, and community
               participation. Use the Membership card above for Stripe checkout, or open onboarding for the full setup flow.
             </p>
             <div className="row wrap">
