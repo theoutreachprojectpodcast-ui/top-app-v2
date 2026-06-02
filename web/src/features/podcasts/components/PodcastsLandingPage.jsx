@@ -180,6 +180,7 @@ export default function PodcastsLandingPage({
   }
 
   return (
+    <>
     <div className="podcastScope">
         <PodcastHero featured={featured} onApply={() => setApplyOpen(true)} />
 
@@ -322,6 +323,6 @@ export default function PodcastsLandingPage({
           sessionId: searchParams.get("session_id") || "",
         }}
       />
-    </div>
+    </>
   );
 }
