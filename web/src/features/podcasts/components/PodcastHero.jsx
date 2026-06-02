@@ -1,21 +1,46 @@
-import PodcastSectionHeader from "@/features/podcasts/components/PodcastSectionHeader";
+"use client";
 
+import IconWrap from "@/components/shared/IconWrap";
+
+function PodcastMicIcon() {
+  const path =
+    "M12 14a3 3 0 0 0 3-3V5a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3zm7-3a7 7 0 0 1-14 0M12 18v3M8 21h8";
+  return <IconWrap path={path} />;
+}
+
+/**
+ * Page hero — same structure as Community / main app `cardHero` sections.
+ */
 export default function PodcastHero({ featured, onApply }) {
+  const watchHref = featured?.youtube_url || "https://www.youtube.com/@TheOutreachProjectHq";
+
   return (
-    <section className="podcastHeroCard">
-      <PodcastSectionHeader
-        eyebrow="The Outreach Project Podcast"
-        title="Stories of service, resilience, and impact"
-        subtitle="Media-forward conversations from veterans, first responders, nonprofit leaders, and mission-driven partners."
-      />
-      <div className="podcastHeroMeta">
-        <p><strong>Featured:</strong> {featured?.title || "Latest episode from channel"}</p>
-        <div className="row wrap">
-          <a className="btnPrimary" href={featured?.youtube_url || "https://www.youtube.com/@TheOutreachProjectHq"} target="_blank" rel="noopener noreferrer">
-            Watch on YouTube
-          </a>
-          <button className="btnSoft" type="button" onClick={onApply}>Apply to Be a Guest</button>
+    <section className="card cardHero podcastPageHero">
+      <div className="communityHeroTop podcastPageHero__top">
+        <div className="communityHeroIcon podcastPageHero__icon" aria-hidden="true">
+          <PodcastMicIcon />
         </div>
+        <div className="communityHeroTitles">
+          <p className="introTagline">Podcast</p>
+          <h2>Stories of service, resilience, and impact</h2>
+        </div>
+      </div>
+      <p className="communityHeroText podcastPageHero__lead">
+        Media-forward conversations from veterans, first responders, nonprofit leaders, and mission-driven partners.
+        {featured?.title ? (
+          <>
+            {" "}
+            <span className="podcastPageHero__featuredLabel">Featured:</span> {featured.title}
+          </>
+        ) : null}
+      </p>
+      <div className="row wrap podcastPageHero__actions">
+        <a className="btnPrimary" href={watchHref} target="_blank" rel="noopener noreferrer">
+          Watch on YouTube
+        </a>
+        <button className="btnSoft" type="button" onClick={onApply}>
+          Apply to be a guest
+        </button>
       </div>
     </section>
   );
