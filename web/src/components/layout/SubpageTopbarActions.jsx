@@ -15,9 +15,11 @@ import { workosSignInLink, workosSignUpHref } from "@/lib/auth/workosReturnTo";
 const SPONSOR_ICON = "M4 6h16v12H4z M4 10h16";
 
 /**
- * @param {{ section?: "lead" | "auth" | "all" }} props
+ * @param {{ section?: "lead" | "auth" | "authNotifications" | "authMenu" | "all" }} props
  * - lead: Become a Sponsor (left header); theme toggle lives in `AppHeaderBrand`
- * - auth: profile / sign-in cluster (right header)
+ * - auth: notification bell + account / sign-in (right header)
+ * - authNotifications: bell only (podcast mobile left corner)
+ * - authMenu: account menu or sign-in CTAs without bell
  * - all: single row (legacy)
  */
 export default function SubpageTopbarActions({ section = "all" }) {
@@ -100,8 +102,55 @@ export default function SubpageTopbarActions({ section = "all" }) {
       </>
     );
 
+  const authNotificationsBlock =
+    authLoading ? null : authed ? <HeaderNotificationBell skipSessionGate /> : null;
+
+  const authMenuBlock =
+    authLoading ? (
+      <span className="subpageAuthActionsPlaceholder" aria-hidden="true" />
+    ) : authed ? (
+      <HeaderAccountMenu
+        avatarSrc={profile?.avatarUrl || emptyProfileAvatarUrl()}
+        displayName={fullName}
+        email={profile?.email}
+        membershipHint={isMember ? "Member" : "View plans"}
+        ariaLabel={`Account menu for ${fullName || profile?.email || "signed-in user"}`}
+        onProfile={() => router.push("/profile")}
+        onSettings={() => router.push("/settings")}
+        onMembership={() => router.push("/profile")}
+        onSavedItems={() => router.push("/profile")}
+        onSignOut={signOut}
+      />
+    ) : authState.workos ? (
+      <>
+        <Link className="btnSoft sponsorBtn" href={workosOnboardingSignUpHref}>
+          Create account
+        </Link>
+        <Link className="btnSoft sponsorBtn" href={workosSignInHereHref}>
+          Sign in
+        </Link>
+      </>
+    ) : (
+      <>
+        <Link className="btnSoft sponsorBtn" href={legacySignUpHref}>
+          Create account
+        </Link>
+        <Link className="btnSoft sponsorBtn" href={legacySignInHref}>
+          Sign in
+        </Link>
+      </>
+    );
+
   if (section === "lead") {
     return sponsorLink;
+  }
+
+  if (section === "authNotifications") {
+    return authNotificationsBlock;
+  }
+
+  if (section === "authMenu") {
+    return authMenuBlock;
   }
 
   if (section === "auth") {
