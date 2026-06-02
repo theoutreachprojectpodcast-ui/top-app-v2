@@ -107,7 +107,7 @@ export default function ProfileEditModal({
             },
           }
         : {},
-    [sessionKind, workOSAccountEmail, editDraft?.firstName, editDraft?.lastName],
+    [sessionKind, workOSAccountEmail, editDraft],
   );
 
   const accountCompletion = useMemo(
