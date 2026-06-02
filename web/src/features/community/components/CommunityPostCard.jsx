@@ -16,6 +16,7 @@ import {
   OUTREACH_MODERATOR_AVATAR_URL,
   parsePostCta,
 } from "@/features/community/domain/communityModerator";
+import { resolveCommunityPostLayout } from "@/features/community/domain/communityPostLayout";
 
 const CATEGORY_LABEL = {
   success_story: "Success story",
@@ -64,6 +65,12 @@ function isGuidePost(post) {
   return pt === "platform_guide" || pt.startsWith("platform_guide_") || post.category === "platform_guide";
 }
 
+/** Feed shows intro blurb (+ layout media blocks), never numbered step lists. */
+function guideDisplayForPost(post) {
+  if (!isGuidePost(post)) return "off";
+  return "brief";
+}
+
 export default function CommunityPostCard({
   post,
   onToggleLike,
@@ -74,7 +81,7 @@ export default function CommunityPostCard({
   const [shareBusy, setShareBusy] = useState(false);
   const isModerator = isOutreachModeratorPost(post);
   const isGuide = isGuidePost(post);
-  const layout = post.layout || "step";
+  const layout = resolveCommunityPostLayout(post.postType, post.layout);
   const displayName = post.showAuthorName ? post.authorName : "Community member";
   const avatarSrc = isModerator
     ? OUTREACH_MODERATOR_AVATAR_URL
@@ -166,7 +173,7 @@ export default function CommunityPostCard({
             {post.mediaCaption ? <p className="communityPostMediaCaption">{post.mediaCaption}</p> : null}
           </>
         ) : null}
-        <CommunityPostBody body={post.body} isGuide={isGuide} />
+        <CommunityPostBody body={post.body} guideDisplay={guideDisplayForPost(post)} />
         {showHeroImage ? (
           <CommunityPostMedia src={post.photoUrl} alt={post.imageAlt || post.title || "Post cover"} />
         ) : null}

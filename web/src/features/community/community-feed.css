@@ -24,6 +24,12 @@ html[data-color-scheme="light"] .communityPostCard--guide,
   background: var(--color-bg-card);
 }
 
+.communityPostBodyGuide--brief .communityPostBody--briefWhy {
+  margin-top: 0.5rem;
+  color: var(--color-text-secondary);
+  font-size: 0.92rem;
+}
+
 html[data-color-scheme="light"] .communityPostBodyGuideSteps li,
 :root:not([data-color-scheme="dark"]):not(.dark) .communityPostBodyGuideSteps li {
   background: var(--color-bg-card);
@@ -43,10 +49,41 @@ html[data-color-scheme="light"] .communityPostMedia,
   border-color: var(--color-border-subtle);
 }
 
+/* Brand logo cover art (welcome / moderator posts) — black plate in light + dark UI */
+.communityPostMedia--onBlack {
+  background: #000;
+  border-color: color-mix(in srgb, var(--color-border) 35%, #000);
+}
+
+.communityPostMedia--onBlack img {
+  object-fit: contain;
+  object-position: center;
+}
+
+html[data-color-scheme="light"] .communityPostMedia--onBlack,
+:root:not([data-color-scheme="dark"]):not(.dark) .communityPostMedia--onBlack {
+  background: #000;
+  border-color: color-mix(in srgb, var(--color-border-subtle) 50%, #000);
+}
+
 /* —— Spacing & hierarchy —— */
 .communityFeed {
   display: grid;
   gap: var(--ds-space-5, 20px);
+}
+
+html[data-color-scheme="light"] .communityPostActions .btnSoft.communityActionBtn,
+:root:not([data-color-scheme="dark"]):not(.dark) .communityPostActions .btnSoft.communityActionBtn {
+  background: var(--color-bg-card);
+  border-color: var(--color-border-subtle);
+  color: var(--color-text-primary);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--color-shadow) 5%, transparent);
+}
+
+html[data-color-scheme="light"] .communityPostActions .communityActionBtn--like.isActive,
+:root:not([data-color-scheme="dark"]):not(.dark) .communityPostActions .communityActionBtn--like.isActive {
+  background: color-mix(in srgb, var(--color-accent) 10%, var(--color-bg-card));
+  border-color: color-mix(in srgb, var(--color-accent) 32%, var(--color-border-subtle));
 }
 
 .communityPostCard--layout-carousel .communityPostContent,
@@ -146,6 +183,20 @@ html[data-color-scheme="light"] .communityPostMedia,
 .communityPostCarouselDot:focus-visible {
   outline: 2px solid var(--color-accent-interactive);
   outline-offset: 2px;
+}
+
+.communityPostBody--brief {
+  margin: 0;
+  font-size: var(--text-body-sm);
+  line-height: 1.55;
+  color: var(--color-text-secondary);
+}
+
+.communityPostCard--layout-carousel .communityPostBody--brief,
+.communityPostCard--layout-image .communityPostBody--brief,
+.communityPostCard--layout-podcast .communityPostBody--brief,
+.communityPostCard--layout-resource .communityPostBody--brief {
+  margin-top: var(--ds-space-1, 4px);
 }
 
 /* —— Podcast block —— */
@@ -292,28 +343,219 @@ html[data-color-scheme="light"] .communityPostResource,
   border-color: var(--color-border-subtle);
 }
 
-/* —— Mobile —— */
-@media (max-width: 639px) {
-  .communityPostCard {
-    padding: var(--ds-space-5, 20px);
+/* —— Mobile (align with app shell @760px) —— */
+@media (max-width: 760px) {
+  .communityPage {
+    gap: var(--ds-space-5, 20px);
   }
 
-  .communityPostCarouselBtn {
-    width: 40px;
-    height: 40px;
+  .communityHeroTop {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    column-gap: var(--ds-space-3, 12px);
+  }
+
+  .communityHeroTitles h2 {
+    font-size: clamp(1.35rem, 5.2vw, 1.65rem);
+    line-height: 1.28;
+  }
+
+  .communityHeroText,
+  .communityFeedIntro {
+    font-size: var(--text-body-sm);
+    line-height: 1.55;
+  }
+
+  .communitySectionHead {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--ds-space-3, 12px);
+  }
+
+  .communityPillRow {
+    width: 100%;
+  }
+
+  .communityPostCard {
+    padding: var(--ds-space-4, 16px);
+    gap: var(--ds-space-4, 16px);
+    min-width: 0;
+  }
+
+  /* Keep avatar beside meta (top-app.css stacks to one column — restore side-by-side). */
+  .communityPostTop {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    gap: var(--ds-space-3, 12px);
+  }
+
+  .communityPostMeta {
+    min-width: 0;
+  }
+
+  .communityPostAuthorRow {
+    gap: 6px;
+  }
+
+  .communityPostModeratorBadge,
+  .communityPostBadge,
+  .communityPostTypeBadge,
+  .communityPostStatusBadge {
+    max-width: 100%;
+    white-space: normal;
+    text-align: left;
+    line-height: 1.25;
   }
 
   .communityPostTitle {
-    font-size: 1.125rem;
+    font-size: clamp(1.05rem, 4.2vw, 1.2rem);
+    line-height: 1.32;
+    overflow-wrap: anywhere;
   }
 
-  .communityPostCta {
+  .communityPostBody,
+  .communityPostBodyGuideIntro,
+  .communityPostBodyGuideStepText,
+  .communityPostBodyGuideWhyText {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .communityPostBodyGuideSteps li {
+    grid-template-columns: 1fr;
+    gap: var(--ds-space-2, 8px);
+    padding: var(--ds-space-3, 12px);
+  }
+
+  .communityPostBodyGuideStepNum {
+    white-space: normal;
+  }
+
+  .communityPostMedia,
+  .communityPostMedia--carousel,
+  .communityPostMedia--feature,
+  .communityPostMedia--podcast,
+  .communityPostMedia--resource {
+    max-height: min(240px, 58vw);
+  }
+
+  .communityPostCarousel {
+    gap: var(--ds-space-3, 12px);
+  }
+
+  /* Carousel: controls below image (easier taps, no overlap). */
+  .communityPostCarouselControls {
+    position: static;
+    transform: none;
+    display: flex;
+    justify-content: center;
+    gap: var(--ds-space-4, 16px);
+    padding: var(--ds-space-1, 4px) 0 0;
+    pointer-events: auto;
+  }
+
+  .communityPostCarouselBtn {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    min-height: 48px;
+    font-size: 22px;
+    touch-action: manipulation;
+  }
+
+  .communityPostCarouselDot {
+    width: 12px;
+    height: 12px;
+    min-width: 12px;
+    min-height: 12px;
+    touch-action: manipulation;
+  }
+
+  .communityPostPodcast,
+  .communityPostResource {
+    grid-template-columns: 1fr;
+    padding: var(--ds-space-3, 12px);
+    gap: var(--ds-space-3, 12px);
+  }
+
+  .communityPostPodcastCopy,
+  .communityPostResourceCopy {
+    min-width: 0;
+  }
+
+  .communityPostPodcastTitle,
+  .communityPostResourceName {
+    font-size: var(--text-body-sm);
+    overflow-wrap: anywhere;
+  }
+
+  .communityPostPodcastActions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .communityPostPodcastActions .btnSoft {
     width: 100%;
+    min-height: 44px;
+    justify-content: center;
+  }
+
+  .communityPostCtaRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .communityPostCta,
+  .communityPostCtaRow .btnPrimary,
+  .communityPostCtaRow .btnSoft,
+  .communityPostCtaRow a.btnPrimary {
+    width: 100%;
+    min-height: 44px;
     justify-content: center;
     text-align: center;
+    box-sizing: border-box;
   }
 
-  .communityPostPodcastActions .communityPostCta {
-    flex: 1 1 auto;
+  .communityPostActions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--ds-space-2, 8px);
+  }
+
+  .communityPostActions .communityActionBtn {
+    width: 100%;
+    min-height: 48px;
+    justify-content: center;
+  }
+
+  .communityTrustDisclosureSummary {
+    padding: var(--ds-space-3, 12px) var(--ds-space-4, 16px);
+  }
+
+  .communityTrustList {
+    padding-inline: var(--ds-space-4, 16px) var(--ds-space-4, 16px);
+    padding-bottom: var(--ds-space-4, 16px);
+  }
+}
+
+@media (max-width: 430px) {
+  .communityHeroTop {
+    grid-template-columns: 1fr;
+    text-align: left;
+  }
+
+  .communityHeroIcon {
+    display: none;
+  }
+
+  .communityFeedTabs {
+    grid-template-columns: 1fr;
+  }
+
+  .profileAvatarShell.communityPostAvatar {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px;
+    min-height: 44px;
   }
 }

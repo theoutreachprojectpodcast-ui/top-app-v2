@@ -1,7 +1,7 @@
 /** @typedef {'step' | 'carousel' | 'image' | 'podcast' | 'resource'} CommunityPostLayout */
 
 const LAYOUT_BY_POST_TYPE = {
-  platform_guide: "step",
+  platform_guide: "image",
   platform_guide_carousel: "carousel",
   platform_guide_image: "image",
   platform_guide_podcast: "podcast",
@@ -11,14 +11,27 @@ const LAYOUT_BY_POST_TYPE = {
 /**
  * @param {string} postType
  * @param {string} [feedLayout]
+ * @param {ReturnType<typeof parseCommunityFeedMedia>} [feedMedia]
  * @returns {CommunityPostLayout}
  */
-export function resolveCommunityPostLayout(postType, feedLayout) {
+export function resolveCommunityPostLayout(postType, feedLayout, feedMedia) {
   const explicit = String(feedLayout || "").trim().toLowerCase();
-  if (explicit && ["step", "carousel", "image", "podcast", "resource"].includes(explicit)) {
+  if (explicit === "step") return "image";
+  if (explicit && ["carousel", "image", "podcast", "resource"].includes(explicit)) {
     return /** @type {CommunityPostLayout} */ (explicit);
   }
-  return /** @type {CommunityPostLayout} */ (LAYOUT_BY_POST_TYPE[String(postType || "").trim()] || "step");
+  const pt = String(postType || "").trim();
+  if (LAYOUT_BY_POST_TYPE[pt]) {
+    return /** @type {CommunityPostLayout} */ (LAYOUT_BY_POST_TYPE[pt]);
+  }
+  const media = feedMedia && typeof feedMedia === "object" ? feedMedia : {};
+  if (Array.isArray(media.slides) && media.slides.length) return "carousel";
+  if (media.resource && typeof media.resource === "object") return "resource";
+  if (pt.includes("podcast")) return "podcast";
+  if (pt.includes("image")) return "image";
+  if (pt.includes("carousel")) return "carousel";
+  if (pt.includes("resource")) return "resource";
+  return "image";
 }
 
 /**

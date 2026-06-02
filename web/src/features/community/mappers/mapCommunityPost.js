@@ -23,7 +23,7 @@ export function mapCommunityPostRow(row) {
   const status = String(row.status || "pending_review").toLowerCase();
   const postType = String(row.post_type || row.postType || "share_story");
   const feedMedia = parseCommunityFeedMedia(row);
-  const layout = resolveCommunityPostLayout(postType, row.feed_layout || row.feedLayout);
+  const layout = resolveCommunityPostLayout(postType, row.feed_layout || row.feedLayout, feedMedia);
   return {
     id: String(row.id),
     createdAt: row.created_at || row.createdAt,
