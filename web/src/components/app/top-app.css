@@ -1767,26 +1767,25 @@ span.headerBrandMarkFallback {
   color: var(--color-text-secondary);
 }
 .membershipBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 8px;
-  margin-bottom: 6px;
-  border-radius: 999px;
-  padding: 6px 10px;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  border: 1px solid var(--color-border);
+  gap: var(--ds-space-2, 8px);
+  margin-top: 0;
+  margin-bottom: 0;
+  padding: 5px 12px 5px 6px;
 }
-.membershipBadge.isMember {
-  background: var(--color-bg-card-hover);
-  border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-border) 55%);
-  color: var(--color-accent-hover);
+.membershipBadge__art {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
 }
-.membershipBadge.isSupporter {
-  background: var(--color-surface-muted);
-  color: var(--color-text-secondary);
+.membershipBadge__art .membershipTierArtSvg {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+.membershipBadge__label {
+  line-height: 1.25;
 }
 .welcomeActions {
   display: flex;
@@ -4947,6 +4946,9 @@ html.dark .communityPostModeratorBadge {
   object-position: center;
   display: block;
 }
+.communityPostMedia--onBlack img {
+  object-fit: contain;
+}
 .communityPostBodyGuide {
   display: grid;
   gap: var(--ds-space-4, 16px);
@@ -5036,53 +5038,42 @@ html.dark .communityPostBodyGuideSteps li {
   border-top: 1px solid var(--color-border-subtle);
   margin-top: var(--ds-space-1, 4px);
 }
-.communityActionBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 44px;
-  padding: 8px 16px;
+/* Extends .btnSoft — pill chips for post reactions */
+.communityActionBtn.btnSoft {
   border-radius: var(--radius-pill);
-  border: 1px solid var(--color-border);
-  background: var(--color-surface-muted);
-  color: var(--color-text-primary);
-  font-size: var(--text-caption);
-  font-weight: 700;
-  cursor: pointer;
-  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+  min-height: 40px;
+  padding: 8px 14px;
+  font-size: var(--text-body-sm);
+  font-weight: 600;
+  justify-content: center;
 }
-.communityActionBtn:hover:not(:disabled) {
-  border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-border));
-  box-shadow: 0 0 0 1px var(--color-accent-soft);
-}
-.communityActionBtn:focus-visible {
-  outline: 2px solid var(--color-accent-interactive);
-  outline-offset: 2px;
-}
-.communityActionBtn:disabled {
-  opacity: 0.55;
+.communityActionBtn.btnSoft:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
 }
 .communityActionBtn--like.isActive {
-  border-color: color-mix(in srgb, var(--color-accent-hover) 55%, var(--color-border));
   background: var(--color-accent-soft);
-  color: var(--color-accent);
-}
-.communityActionBtn--share .communityActionIcon {
+  border-color: color-mix(in srgb, var(--color-accent) 38%, var(--color-border-subtle));
   color: var(--color-accent);
 }
 .communityActionIcon {
   display: inline-flex;
-  color: var(--color-accent);
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
   flex-shrink: 0;
+}
+.communityActionBtn--like.isActive .communityActionIcon {
+  color: var(--color-accent);
 }
 .communityActionCount {
   font-variant-numeric: tabular-nums;
+  font-size: var(--text-caption);
+  font-weight: 600;
   color: var(--color-text-muted);
-  font-weight: 700;
 }
 .communityActionBtn--like.isActive .communityActionCount {
-  color: var(--color-accent);
+  color: color-mix(in srgb, var(--color-accent) 82%, var(--color-text-muted));
 }
 .communityTrustDisclosure {
   padding: 0;

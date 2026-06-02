@@ -9,8 +9,8 @@ export default function ProfileHeader({
   missionStatement,
   identityRole,
   membershipLabel,
+  membershipTierKey,
   isMember,
-  icon,
   onEdit,
 }) {
   const cleanBio = String(bio || "").trim();
@@ -25,7 +25,7 @@ export default function ProfileHeader({
           <div className="welcomeCopy">
             <p className="introTagline">{roleLine || "Welcome"}</p>
             <h2>{fullName || "Supporter"}</h2>
-            <MembershipBadge isMember={isMember} icon={icon} label={membershipLabel} />
+            <MembershipBadge tierKey={membershipTierKey} label={membershipLabel} isMember={isMember} />
             <p className="profileHeaderEmail">
               {email || "Add your email in Settings or Edit profile to complete your account setup."}
             </p>
