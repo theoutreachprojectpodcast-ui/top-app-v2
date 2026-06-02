@@ -368,10 +368,12 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
   }
 }
 
-.appShell--podcast .podcastBrandLogo {
-  max-height: min(clamp(132px, 24vw, 208px), calc(var(--podcast-header-brand-band, 200px) - 12px)) !important;
-  max-width: min(560px, calc(100vw - 48px)) !important;
-  width: auto;
+@media (min-width: 761px) {
+  .appShell--podcast .podcastBrandLogo {
+    max-height: min(clamp(132px, 24vw, 208px), calc(var(--podcast-header-brand-band, 200px) - 12px)) !important;
+    max-width: min(560px, calc(100vw - 48px)) !important;
+    width: auto;
+  }
 }
 .appShell--podcast .podcastBrandLogo {
   filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.45));
@@ -421,21 +423,6 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
     --podcast-header-brand-band: clamp(120px, 32vw, 180px);
   }
 
-  .topApp.appShell--podcastRoute {
-    --podcast-header-brand-band: 0px;
-    --podcast-header-chrome-height: calc(
-      env(safe-area-inset-top, 0px) + var(--header-floating-offset, 12px) + var(--podcast-topbar-stack-height) + 10px
-    );
-  }
-
-  .topApp.appShell--podcastRoute .shell {
-    width: min(var(--content-max-width), calc(100% - var(--content-gutter)));
-    padding-top: var(--ds-space-3, 12px);
-    padding-inline: max(var(--content-gutter), env(safe-area-inset-left, 0px))
-      max(var(--content-gutter), env(safe-area-inset-right, 0px));
-    overflow-x: clip;
-  }
-
   .topApp.appShell--podcastRoute .podcastScope {
     overflow-x: clip;
   }
@@ -447,55 +434,7 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
     justify-content: center;
   }
 
-  /* In-flow chrome: single rectangular gradient behind topbar + logo. */
-  .topApp.appShell--podcast > .topbarOcclusion {
-    display: block !important;
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    z-index: 90;
-    height: var(--podcast-header-chrome-height);
-    min-height: 0;
-    overflow: hidden;
-    pointer-events: none;
-    background: var(--podcast-header-chrome-bg) !important;
-  }
-
-  .topApp.appShell--podcast .appSiteHeader {
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    z-index: 98;
-  }
-
-  .topApp.appShell--podcast .appSiteHeader > header.topbar {
-    position: relative;
-    top: auto;
-    z-index: 98;
-    order: 1;
-    padding: calc(4px + env(safe-area-inset-top, 0px)) 0 4px;
-  }
-
-  .topApp.appShell--podcast .appSiteHeader > .headerBrandStack {
-    position: relative;
-    left: auto;
-    transform: none;
-    order: 2;
-    z-index: 97;
-    width: 100%;
-    max-width: min(900px, calc(100vw - 24px));
-    margin-inline: auto;
-    padding: 0 10px 10px;
-    pointer-events: auto;
-  }
-
-  .topApp.appShell--podcast .shell {
-    position: relative;
-    z-index: 1;
-    padding-top: var(--ds-space-3, 12px);
-    order: 4;
-  }
+  /* Mobile podcast header layout: `mobile-shell.css` (same pattern as home). */
 }
 
 @media (max-width: 719px) {
