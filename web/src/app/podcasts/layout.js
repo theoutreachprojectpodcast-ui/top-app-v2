@@ -1,18 +1,23 @@
 import AppShell from "@/components/layout/AppShell";
-import "@/styles/site-route-shell.css";
 import "@/features/podcasts/styles/podcasts.css";
 
-/** Same site chrome as home/trusted: main logo, theme toggle, notification + account menu. */
+/** Podcast dark shell + logo; topbar auth matches main app via `SubpageTopbarActions`. */
 export default function PodcastsLayout({ children }) {
   return (
     <AppShell
       activeNav="home"
-      shellClassName="appShell--siteChrome appShell--podcastRoute"
+      shellClassName="appShell--podcast appShell--podcastRoute"
+      brandSrc={
+        (typeof process !== "undefined" && process.env.NEXT_PUBLIC_PODCAST_BRAND_LOGO_PATH) ||
+        "/podcast-logo-transparent.png"
+      }
+      brandAlt="The Outreach Project Podcast"
+      brandClassName="podcastBrandLogo"
       showSiteFooter
       usePrimaryTopbarChrome
       useFooterDockChrome
       useTopAppStructure
-      pageAtmosphere="home"
+      pageAtmosphere="podcast"
     >
       {children}
     </AppShell>
