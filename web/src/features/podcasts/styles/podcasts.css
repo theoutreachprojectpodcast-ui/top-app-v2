@@ -208,10 +208,20 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
   background: none !important;
 }
 
-.appShell--podcast .bottomNav {
-  background: transparent;
-  border: 0;
+/* Pill dock container — match main app `.bottomNav` chrome (see `top-app.css` + `home-mobile.css`). */
+.appShell--podcast .footerDock .bottomNav.bottomNav--withIcons {
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--color-surface-card, #0f1726) 94%, #ffffff 6%) 0%,
+    color-mix(in srgb, var(--color-surface-card-deep, #111d30) 90%, #0b0d12 10%) 100%
+  );
+  border: 1px solid color-mix(in srgb, rgba(148, 171, 210, 0.32) 78%, transparent);
+  border-radius: calc(var(--radius-pill, 999px) + 8px);
+  box-shadow:
+    0 10px 24px color-mix(in srgb, #000 34%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #ffffff 7%, transparent);
 }
+
 .appShell--podcast .navItem--dockCol .navItemGlyph {
   color: #e7efff;
   opacity: 0.95;
@@ -1583,6 +1593,17 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
 }
 
 @media (max-width: 760px) {
+  .appShell--podcast .footerDock .bottomNav.bottomNav--withIcons.bottomNav--mobileDock {
+    margin-inline: max(var(--content-gutter, 16px), 11px);
+    width: calc(100% - 2 * max(var(--content-gutter, 16px), 11px));
+    max-width: calc(100% - 2 * max(var(--content-gutter, 16px), 11px));
+    border-radius: 20px;
+    padding: 8px 10px;
+    box-shadow:
+      0 12px 32px color-mix(in srgb, #000 28%, transparent),
+      0 0 0 1px color-mix(in srgb, rgba(148, 171, 210, 0.35) 80%, transparent);
+  }
+
   /* One chrome row: menu + theme (left) | auth CTAs (right) — avoids tall stacked bar overlapping the hero. */
   .appShell--podcast .topbarInner {
     grid-template-columns: minmax(0, 1fr) auto;
