@@ -125,6 +125,8 @@ export function shouldRewriteAdminSubdomainPath(pathname) {
   if (p === "/callback" || p.startsWith("/callback?")) return false;
   if (p === "/invite" || p.startsWith("/invite?")) return false;
   if (p === "/login" || p.startsWith("/login?")) return false;
+  if (p === "/sign-in" || p.startsWith("/sign-in?")) return false;
+  if (p === "/sign-up" || p.startsWith("/sign-up?")) return false;
   if (p === "/sign-out" || p.startsWith("/sign-out?")) return false;
   if (p.startsWith("/admin")) return false;
   if (/\.[a-z0-9]{2,5}$/i.test(p.split("/").pop() || "")) return false;
