@@ -829,6 +829,8 @@ function TopAppInner({ initialNav = "home" }) {
             membershipBillingStatus={profile.membershipBillingStatus}
             stripeCustomerReady={!!profile.stripeCustomerIdSet}
             onCheckoutNavigate={() => refreshWorkOSProfile()}
+            collapsible
+            defaultExpanded={false}
           />
           {showMembershipOnProfile ? (
             <HomeMembershipSection
