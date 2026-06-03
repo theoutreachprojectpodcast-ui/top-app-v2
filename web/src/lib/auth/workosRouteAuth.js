@@ -16,9 +16,9 @@ const ORG_DENIED = Object.freeze({
 
 /**
  * @param {unknown} session
- * @returns {{ kind: "ok", user: import('@workos-inc/node').User } | { kind: "no_user" } | { kind: "org_blocked" }}
+ * @returns {Promise<{ kind: "ok", user: import('@workos-inc/node').User } | { kind: "no_user" } | { kind: "org_blocked" }>}
  */
-function classifyRouteSession(session) {
+async function classifyRouteSession(session) {
   if (!session || typeof session !== "object" || !("user" in session) || !session.user) {
     return { kind: "no_user" };
   }
@@ -26,14 +26,24 @@ function classifyRouteSession(session) {
     session
   );
   if (
-    !sessionAuthorizedForWorkOS(
+    sessionAuthorizedForWorkOS(
       { organizationId: s.organizationId, accessToken: s.accessToken, user: s.user },
       { email: s.user?.email },
     )
   ) {
-    return { kind: "org_blocked" };
+    return { kind: "ok", user: s.user };
   }
-  return { kind: "ok", user: s.user };
+
+  const admin = createSupabaseAdminClient();
+  if (admin && s.user?.id) {
+    const row = await getProfileRowByWorkOSId(admin, s.user.id);
+    if (row) {
+      await ensureWorkOSOrganizationMembership(s.user.id);
+      return { kind: "ok", user: s.user };
+    }
+  }
+
+  return { kind: "org_blocked" };
 }
 
 /**
