@@ -17,10 +17,19 @@ import { isPlatformAdminServer } from "@/lib/admin/platformAdminServer";
 async function resolveWorkOSAdminSession() {
   const workosAuth = await getWorkOSUserFromCookies();
   if (!workosAuth.user) return null;
-  if (!sessionAuthorizedForWorkOS(workosAuth, { email: workosAuth.user.email })) return null;
 
   const admin = createSupabaseAdminClient();
   const profileRow = admin ? await getProfileRowByWorkOSId(admin, workosAuth.user.id) : null;
+  if (
+    !sessionAuthorizedForWorkOS(workosAuth, {
+      email: workosAuth.user.email,
+      profileRow,
+      workosUserId: workosAuth.user.id,
+    })
+  ) {
+    return null;
+  }
+
   if (
     !isPlatformAdminServer({
       email: workosAuth.user.email,

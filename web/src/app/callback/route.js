@@ -1,7 +1,8 @@
 import { handleAuth } from "@workos-inc/authkit-nextjs";
 import { isDefaultApprovedAdminEmail } from "@/lib/admin/adminPolicy";
+import { isPlatformAdminServer } from "@/lib/admin/platformAdminServer";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { patchProfileByWorkOSId, upsertProfileFromWorkOSUser } from "@/lib/profile/serverProfile";
+import { patchProfileByWorkOSId, upsertProfileFromWorkOSUser, getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
 import { requestOriginForStripeRedirects } from "@/lib/billing/stripeConfig";
 import { notifyStaffProfiles } from "@/server/notifications/notificationService";
 import { ensureWorkOSOrganizationMembership } from "@/lib/auth/workosEnsureOrgMembership";
@@ -13,11 +14,19 @@ async function onWorkOSSuccess({ user }) {
     const out = await upsertProfileFromWorkOSUser(admin, user);
     await ensureWorkOSOrganizationMembership(user.id);
     const email = String(user?.email || "").trim();
-    if (out?.ok && email && isDefaultApprovedAdminEmail(email)) {
+    const row = await getProfileRowByWorkOSId(admin, user.id);
+    const isAdmin =
+      (email && isDefaultApprovedAdminEmail(email)) ||
+      isPlatformAdminServer({ email, workosUserId: user.id, profileRow: row });
+    if (out?.ok && isAdmin) {
+      const tier = String(row?.membership_tier || "free").toLowerCase();
       await patchProfileByWorkOSId(admin, user.id, {
         platform_role: "admin",
         admin_access_enabled: true,
-        admin_access_granted_by: "workos-bootstrap",
+        admin_access_granted_by: String(row?.admin_access_granted_by || "").trim() || "workos-bootstrap",
+        ...(tier === "free" || !tier
+          ? { membership_tier: "member", membership_status: "active", onboarding_completed: true }
+          : {}),
       });
     }
     if (out?.ok && out.isNew) {

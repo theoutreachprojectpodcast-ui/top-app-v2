@@ -33,17 +33,23 @@ async function OnboardingServer({ searchParams }) {
     }
     redirect("/?signin=1");
   }
-  if (!sessionAuthorizedForWorkOS(auth, { email: auth.user?.email })) {
+  const admin = createSupabaseAdminClient();
+  const row = admin ? await getProfileRowByWorkOSId(admin, auth.user.id) : null;
+  if (
+    !sessionAuthorizedForWorkOS(auth, {
+      email: auth.user?.email,
+      profileRow: row,
+      workosUserId: auth.user.id,
+    })
+  ) {
     if (!workosReady) {
       redirect("/profile?edit=1");
     }
     redirect("/?signin=1");
   }
-  const admin = createSupabaseAdminClient();
   if (admin) {
     await syncProfileEmailWithWorkOSUser(admin, auth.user);
   }
-  const row = admin ? await getProfileRowByWorkOSId(admin, auth.user.id) : null;
   const sessionEmail = String(auth.user.email || "").trim();
   let dto = profileRowToClientDto(row);
   if (dto && sessionEmail && !String(dto.email || "").trim()) {
