@@ -1,5 +1,6 @@
 import { decodeJwt } from "jose";
 import { isDefaultApprovedAdminEmail } from "@/lib/admin/adminPolicy";
+import { isPlatformAdminServer } from "@/lib/admin/platformAdminServer";
 
 /**
  * WorkOS Organization ID for The Outreach Project (User Management → Organizations).
@@ -9,11 +10,39 @@ export function expectedWorkOSOrganizationId() {
   return String(process.env.WORKOS_ORGANIZATION_ID || "").trim();
 }
 
+/** Admin console return targets skip org pinning on hosted sign-in (invite + bootstrap flows). */
+export function isAdminReturnPath(returnTo) {
+  const raw = String(returnTo || "").trim();
+  const path = raw.startsWith("/") ? raw.split("?")[0] : `/${raw.split("?")[0]}`;
+  return path === "/admin" || path.startsWith("/admin/");
+}
+
+/**
+ * Platform admins and moderators are full members for session gates and entitlements.
+ * @param {Record<string, unknown> | null | undefined} profileRow
+ * @param {string} [email]
+ * @param {string} [workosUserId]
+ */
+export function profileRowAuthorizesWorkOSSession(profileRow, email = "", workosUserId = "") {
+  if (!profileRow || typeof profileRow !== "object") return false;
+  if (
+    isPlatformAdminServer({
+      email: String(email || profileRow.email || ""),
+      workosUserId: String(workosUserId || profileRow.workos_user_id || ""),
+      profileRow,
+    })
+  ) {
+    return true;
+  }
+  const role = String(profileRow.platform_role || "").toLowerCase();
+  return role === "admin" || role === "moderator";
+}
+
 /**
  * Options for `getSignInUrl` / `getSignUpUrl`.
  * Skips `organizationId` for sign-up and bootstrap admin sign-in (WorkOS rejects non-members at the hosted UI).
  *
- * @param {{ loginHint?: string, bootstrap?: boolean, signUp?: boolean }} [options]
+ * @param {{ loginHint?: string, bootstrap?: boolean, signUp?: boolean, adminReturn?: boolean }} [options]
  * @returns {Record<string, string> | {}}
  */
 export function workOSAuthKitAuthorizeOptions(options = {}) {
@@ -21,6 +50,8 @@ export function workOSAuthKitAuthorizeOptions(options = {}) {
   if (!organizationId) return {};
 
   if (options.signUp || options.bootstrap) return {};
+
+  if (options.adminReturn) return {};
 
   const hint = String(options.loginHint || "").trim().toLowerCase();
   if (hint && isDefaultApprovedAdminEmail(hint)) return {};
@@ -71,5 +102,7 @@ export function sessionAuthorizedForWorkOS(session, options = {}) {
   if (sessionMatchesExpectedWorkOSOrganization(session)) return true;
   const email = String(options.email || session?.user?.email || "").trim();
   if (email && isDefaultApprovedAdminEmail(email)) return true;
+  const workosUserId = String(session?.user?.id || options.workosUserId || "").trim();
+  if (profileRowAuthorizesWorkOSSession(options.profileRow, email, workosUserId)) return true;
   return false;
 }

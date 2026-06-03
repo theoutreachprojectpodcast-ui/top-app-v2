@@ -25,22 +25,23 @@ async function classifyRouteSession(session) {
   const s = /** @type {{ user: import('@workos-inc/node').User, organizationId?: string, accessToken?: string }} */ (
     session
   );
+
+  const admin = createSupabaseAdminClient();
+  const profileRow = admin && s.user?.id ? await getProfileRowByWorkOSId(admin, s.user.id) : null;
+
   if (
     sessionAuthorizedForWorkOS(
       { organizationId: s.organizationId, accessToken: s.accessToken, user: s.user },
-      { email: s.user?.email },
+      { email: s.user?.email, profileRow, workosUserId: s.user?.id },
     )
   ) {
+    if (s.user?.id) await ensureWorkOSOrganizationMembership(s.user.id);
     return { kind: "ok", user: s.user };
   }
 
-  const admin = createSupabaseAdminClient();
-  if (admin && s.user?.id) {
-    const row = await getProfileRowByWorkOSId(admin, s.user.id);
-    if (row) {
-      await ensureWorkOSOrganizationMembership(s.user.id);
-      return { kind: "ok", user: s.user };
-    }
+  if (profileRow) {
+    if (s.user?.id) await ensureWorkOSOrganizationMembership(s.user.id);
+    return { kind: "ok", user: s.user };
   }
 
   return { kind: "org_blocked" };

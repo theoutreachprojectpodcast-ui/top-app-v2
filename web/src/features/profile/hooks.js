@@ -765,9 +765,21 @@ export function useProfileDataState(supabase) {
   const greetingName = fullName || profile.displayName || "Supporter";
   const membership = useMemo(() => getMembershipMeta(profile.membershipStatus), [profile.membershipStatus]);
   const isMember = useMemo(() => {
-    if (sessionKind === "workos") return !!entitlements.communityStorySubmit;
+    if (sessionKind === "workos") {
+      return !!(
+        entitlements.communityStorySubmit ||
+        entitlements.isPrivilegedStaff ||
+        entitlements.isPlatformAdmin
+      );
+    }
     return membership.isMember;
-  }, [sessionKind, entitlements.communityStorySubmit, membership.isMember]);
+  }, [
+    sessionKind,
+    entitlements.communityStorySubmit,
+    entitlements.isPrivilegedStaff,
+    entitlements.isPlatformAdmin,
+    membership.isMember,
+  ]);
 
   return {
     userId,
