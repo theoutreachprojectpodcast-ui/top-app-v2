@@ -30,6 +30,7 @@ export default function HomeScreen({
   onToggleFavorite,
   onRequestSignIn,
   onGoToProfile,
+  showMembershipSection = true,
 }) {
   return (
     <>
@@ -40,18 +41,20 @@ export default function HomeScreen({
           <HomeMembershipBar onActivateMembership={onActivateMembership} />
         ) : null}
 
-        <HomeMembershipSection
-          isAuthenticated={isAuthenticated}
-          loadingAccount={loadingAccount}
-          currentTierKey={currentTierKey}
-          accountEmail={accountEmail}
-          membershipLabel={membershipLabel}
-          membershipBillingStatus={membershipBillingStatus}
-          onRequestSignIn={onRequestSignIn || onSignIn}
-          onJoinFree={onJoinFree || onActivateMembership}
-          onUpgradeTier={onUpgradeTier}
-          onGoToProfile={onGoToProfile}
-        />
+        {showMembershipSection ? (
+          <HomeMembershipSection
+            isAuthenticated={isAuthenticated}
+            loadingAccount={loadingAccount}
+            currentTierKey={currentTierKey}
+            accountEmail={accountEmail}
+            membershipLabel={membershipLabel}
+            membershipBillingStatus={membershipBillingStatus}
+            onRequestSignIn={onRequestSignIn || onSignIn}
+            onJoinFree={onJoinFree || onActivateMembership}
+            onUpgradeTier={onUpgradeTier}
+            onGoToProfile={onGoToProfile}
+          />
+        ) : null}
 
         {!isAuthenticated ? (
           <HomeAuthCards onCreateAccount={onCreateAccount} onSignIn={onSignIn} />

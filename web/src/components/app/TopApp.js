@@ -39,7 +39,12 @@ import {
   SUPPORT_MEMBERSHIP_DISPLAY_NAME,
   SUPPORT_MEMBERSHIP_PRICE_LABEL,
 } from "@/features/membership/membershipTiers";
-import { membershipAccountMenuHint } from "@/features/membership/membershipAccountDisplay";
+import {
+  membershipAccountMenuHint,
+  shouldShowMembershipPickerOnHome,
+  shouldShowMembershipPickerOnProfile,
+} from "@/features/membership/membershipAccountDisplay";
+import HomeMembershipSection from "@/components/home/HomeMembershipSection";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { emptyProfileAvatarUrl } from "@/lib/avatarFallback";
 import { rowEin } from "@/lib/utils";
@@ -185,6 +190,15 @@ function TopAppInner({ initialNav = "home" }) {
           : null,
     });
   }, [isAuthenticated, profile, sessionKind, workOSAccountEmail]);
+
+  const showMembershipOnHome = useMemo(
+    () => shouldShowMembershipPickerOnHome({ isAuthenticated, profile }),
+    [isAuthenticated, profile],
+  );
+  const showMembershipOnProfile = useMemo(
+    () => shouldShowMembershipPickerOnProfile({ isAuthenticated, profile }),
+    [isAuthenticated, profile],
+  );
 
   useEffect(() => {
     const c = searchParams.get("checkout");
@@ -607,6 +621,7 @@ function TopAppInner({ initialNav = "home" }) {
               favoriteEinSet={favoriteEinSet}
               onToggleFavorite={toggleFavoriteEin}
               onRequestSignIn={!isAuthenticated ? openSignInOverlay : undefined}
+              showMembershipSection={showMembershipOnHome}
             />
           )}
 
@@ -815,6 +830,19 @@ function TopAppInner({ initialNav = "home" }) {
             stripeCustomerReady={!!profile.stripeCustomerIdSet}
             onCheckoutNavigate={() => refreshWorkOSProfile()}
           />
+          {showMembershipOnProfile ? (
+            <HomeMembershipSection
+              isAuthenticated={isAuthenticated}
+              loadingAccount={loadingProfile}
+              currentTierKey={profile.membershipStatus}
+              accountEmail={profile.email || workOSAccountEmail}
+              membershipLabel={membership.label}
+              membershipBillingStatus={profile.membershipBillingStatus}
+              onRequestSignIn={openSignInForMembership}
+              onJoinFree={() => setNav("profile")}
+              onUpgradeTier={startMembershipCheckoutFromHome}
+            />
+          ) : null}
           <ProfileCompletionPanel
             completion={profileCompletion}
             profile={profile}
@@ -859,7 +887,7 @@ function TopAppInner({ initialNav = "home" }) {
               ) : null
             }
           />
-          {!isMember ? (
+          {!isMember && !showMembershipOnProfile ? (
             <div className="card">
               <h3>Upgrade to Pro</h3>
               <p className="sponsorSectionLead">{membership.hint}</p>

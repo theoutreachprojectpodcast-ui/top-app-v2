@@ -46,4 +46,12 @@ CLI tips: `web/docs/WORKOS_CLI.md` and `pnpm workos doctor`.
 
 Set `APP_BASE_URL` / `NEXT_PUBLIC_APP_URL` to the QA origin (see `web/.env.local.example`). **Demo** auth stays on for Preview and for stable QA hostnames (`qaDeploymentContext`). For `/admin` on QA without copying production `PLATFORM_ADMIN_EMAILS`, set server-only **`QA_PLATFORM_ADMIN_EMAILS`** (comma-separated).
 
-**Admin sign-in:** Bootstrap emails in `adminPolicy.js` (`andy@volentelabs.com`, `jmelching1@gmail.com`, `hodge5403@gmail.com`, etc.) may use **WorkOS (SSO)** or email-only magic link on `/admin-login`. WorkOS sessions are accepted for `/admin` even when email login is enabled. Approved admins bypass strict `WORKOS_ORGANIZATION_ID` token checks so dashboard owners can sign in before org membership is complete. Add each admin as a **User** in your WorkOS organization for SSO providers (Google, etc.) to work reliably.
+**Admin sign-in:** Bootstrap emails in `adminPolicy.js` (`andy@volentelabs.com`, `jmelching1@gmail.com`, `hodge5403@gmail.com`, etc.) may use **WorkOS (SSO)** or email-only magic link on `/admin-login`. The **Sign in with WorkOS (SSO)** button uses `bootstrap=1` so AuthKit is **not** pinned to `WORKOS_ORGANIZATION_ID` (WorkOS otherwise shows *“This account is not authorized to sign in”* for users who are not org members yet). After callback, the app still accepts those sessions via `sessionAuthorizedForWorkOS` and promotes them to `platform_role: admin`.
+
+**If you still see “not authorized” on the WorkOS screen:**
+
+1. Use **`/admin-login`** → **Sign in with WorkOS (SSO)** (not the public home sign-in), or sign in with an approved admin email so `loginHint` skips org pinning.
+2. In WorkOS Dashboard → **User Management** → your organization → **Users** → **Invite user** and add each admin email (`andy@volentelabs.com`, etc.).
+3. Under **Authentication** / org security, ensure at least one method admins can use is enabled (e.g. **Email + password**, **Magic Auth**, or **Google**) — not **SSO only** unless that user exists in your IdP.
+4. **Create account** (`/api/auth/workos/signup`) does **not** pin `WORKOS_ORGANIZATION_ID` (new users are not org members yet). After `/callback`, the app adds them to the org via the WorkOS API when `WORKOS_ORGANIZATION_ID` is set.
+5. For member **sign-in**, users should be in the org when `WORKOS_ORGANIZATION_ID` is set; keep that env var aligned with the org id in the dashboard.

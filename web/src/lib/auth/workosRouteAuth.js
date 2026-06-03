@@ -2,6 +2,9 @@ import { withAuth } from "@workos-inc/authkit-nextjs";
 import { getWorkOSUserFromCookies } from "@/lib/auth/workosSessionFromCookies";
 import { isWorkOSConfigured } from "@/lib/auth/workosConfigured";
 import { sessionAuthorizedForWorkOS } from "@/lib/auth/workosOrganizationScope";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
+import { ensureWorkOSOrganizationMembership } from "@/lib/auth/workosEnsureOrgMembership";
 
 const ORG_DENIED = Object.freeze({
   ok: false,
@@ -49,13 +52,13 @@ export async function resolveWorkOSRouteUser() {
     };
   }
 
-  const cookieHit = classifyRouteSession(await getWorkOSUserFromCookies());
+  const cookieHit = await classifyRouteSession(await getWorkOSUserFromCookies());
   if (cookieHit.kind === "ok") return { ok: true, user: cookieHit.user };
   if (cookieHit.kind === "org_blocked") return { ...ORG_DENIED };
 
   try {
     const auth = await withAuth();
-    const w = classifyRouteSession(auth);
+    const w = await classifyRouteSession(auth);
     if (w.kind === "ok") return { ok: true, user: w.user };
     if (w.kind === "org_blocked") return { ...ORG_DENIED };
   } catch {

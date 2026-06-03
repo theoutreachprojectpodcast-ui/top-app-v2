@@ -17,6 +17,11 @@ export async function GET(request) {
   const remember = request.nextUrl.searchParams.get("remember");
   const prompt = remember === "0" ? "login" : undefined;
   const loginHint = sanitizeWorkOSLoginHint(request.nextUrl.searchParams.get("loginHint"));
-  const url = await getSignUpUrl({ returnTo, loginHint, prompt, ...workOSAuthKitAuthorizeOptions() });
+  const url = await getSignUpUrl({
+    returnTo,
+    loginHint,
+    prompt,
+    ...workOSAuthKitAuthorizeOptions({ signUp: true }),
+  });
   return NextResponse.redirect(url);
 }
