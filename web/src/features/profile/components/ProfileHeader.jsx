@@ -19,21 +19,19 @@ export default function ProfileHeader({
   const roleLine = String(identityRole || "").trim();
   return (
     <div className="card cardHero profileWelcomeCard">
-      <div className="row space">
-        <div className="welcomePanel">
-          <Avatar src={avatarSrc} alt="Profile avatar" />
-          <div className="welcomeCopy">
-            <p className="introTagline">{roleLine || "Welcome"}</p>
-            <h2>{fullName || "Supporter"}</h2>
-            <MembershipBadge tierKey={membershipTierKey} label={membershipLabel} isMember={isMember} />
-            <p className="profileHeaderEmail">
-              {email || "Add your email in Settings or Edit profile to complete your account setup."}
-            </p>
-            {cleanMission ? <p className="profileHeaderMission">{cleanMission}</p> : null}
-            {showBio ? <p className="profileHeaderTagline">{cleanBio}</p> : null}
-            <div className="profileHeaderActions">
-              <button className="btnSoft" onClick={onEdit} type="button">Edit Profile</button>
-            </div>
+      <div className="welcomePanel">
+        <Avatar src={avatarSrc} alt="Profile avatar" />
+        <div className="welcomeCopy">
+          <p className="introTagline">{roleLine || "Welcome"}</p>
+          <h2>{fullName || "Supporter"}</h2>
+          <MembershipBadge tierKey={membershipTierKey} label={membershipLabel} isMember={isMember} />
+          <p className="profileHeaderEmail">
+            {email || "Add your email in Settings or Edit profile to complete your account setup."}
+          </p>
+          {cleanMission ? <p className="profileHeaderMission">{cleanMission}</p> : null}
+          {showBio ? <p className="profileHeaderTagline">{cleanBio}</p> : null}
+          <div className="profileHeaderActions">
+            <button className="btnSoft" onClick={onEdit} type="button">Edit Profile</button>
           </div>
         </div>
       </div>

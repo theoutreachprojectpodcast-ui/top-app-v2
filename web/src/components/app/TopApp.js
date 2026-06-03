@@ -39,6 +39,7 @@ import {
   SUPPORT_MEMBERSHIP_DISPLAY_NAME,
   SUPPORT_MEMBERSHIP_PRICE_LABEL,
 } from "@/features/membership/membershipTiers";
+import { membershipAccountMenuHint } from "@/features/membership/membershipAccountDisplay";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { emptyProfileAvatarUrl } from "@/lib/avatarFallback";
 import { rowEin } from "@/lib/utils";
@@ -481,16 +482,20 @@ function TopAppInner({ initialNav = "home" }) {
                   <HeaderAccountMenu
                     avatarSrc={profile.avatarUrl || emptyProfileAvatarUrl()}
                     displayName={fullName}
-                    email={profile.email}
-                    membershipHint={isMember ? "Member" : "View plans"}
-                    ariaLabel={`Account menu for ${fullName || profile.email || "signed-in user"}`}
+                    email={profile.email || workOSAccountEmail}
+                    membershipHint={membershipAccountMenuHint({
+                      isAuthenticated: isLoggedIn,
+                      tierKey: profile.membershipStatus,
+                      billingStatus: profile.membershipBillingStatus,
+                    })}
+                    ariaLabel={`Account menu for ${fullName || profile.email || workOSAccountEmail || "signed-in user"}`}
                     onProfile={() => {
                       if (pathname !== "/profile") router.push("/profile");
                       else setNav("profile");
                     }}
                     onSettings={() => router.push("/settings")}
                     onMembership={() => {
-                      if (!isMember) setOverlay("upgrade");
+                      if (pathname !== "/profile") router.push("/profile");
                       else setNav("profile");
                     }}
                     onSavedItems={() => setNav("profile")}
@@ -556,6 +561,12 @@ function TopAppInner({ initialNav = "home" }) {
           {nav === "home" && (
             <HomeScreen
               isAuthenticated={isAuthenticated}
+              loadingAccount={loadingProfile && isAuthenticated}
+              currentTierKey={profile.membershipStatus}
+              accountEmail={profile.email || workOSAccountEmail}
+              membershipLabel={membership.label}
+              membershipBillingStatus={profile.membershipBillingStatus}
+              onGoToProfile={() => router.push("/profile")}
               onActivateMembership={openMembershipJourney}
               onUpgradeTier={startMembershipCheckoutFromHome}
               onJoinFree={() => {
@@ -783,7 +794,7 @@ function TopAppInner({ initialNav = "home" }) {
           <ProfileHeader
             avatarSrc={profile.avatarUrl || emptyProfileAvatarUrl()}
             fullName={fullName || "Supporter"}
-            email={profile.email}
+            email={profile.email || workOSAccountEmail}
             bio={profile.banner}
             missionStatement={profile.missionStatement}
             identityRole={profile.identityRole}
@@ -831,6 +842,7 @@ function TopAppInner({ initialNav = "home" }) {
             firstName={profile.firstName}
             lastName={profile.lastName}
             email={profile.email}
+            sessionEmail={workOSAccountEmail}
             displayName={profile.displayName}
             membershipTier={membership.label}
             membershipBillingStatus={profile.membershipBillingStatus}
