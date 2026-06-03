@@ -5291,7 +5291,30 @@ html.dark .communityPostBodyGuideSteps li {
   display: flex;
   gap: 12px;
   align-items: flex-start;
+  flex: 1;
+  min-width: 0;
+  margin-bottom: 0;
+}
+.membershipBillingCenter__headRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
   margin-bottom: 12px;
+}
+.membershipBillingCenter--collapsed .membershipBillingCenter__headRow {
+  margin-bottom: 0;
+}
+.membershipBillingCenter__headRow > .membershipBillingCenter__title {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+}
+.membershipBillingCenter__toggle {
+  flex-shrink: 0;
+}
+.membershipBillingCenter__body {
+  margin-top: 0;
 }
 .membershipBillingCenter__title {
   margin: 0 0 4px;

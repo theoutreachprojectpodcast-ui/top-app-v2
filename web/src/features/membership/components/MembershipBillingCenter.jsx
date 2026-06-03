@@ -52,6 +52,10 @@ export default function MembershipBillingCenter({
   checkoutReturnPath = "/profile",
   onRequestSignIn,
   onCheckoutNavigate,
+  /** When true, show expand/collapse control (profile page). */
+  collapsible = false,
+  /** Initial panel state when `collapsible` (profile defaults to collapsed). */
+  defaultExpanded = true,
 }) {
   const [summary, setSummary] = useState(null);
   const [invoices, setInvoices] = useState([]);
@@ -60,10 +64,19 @@ export default function MembershipBillingCenter({
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [expanded, setExpanded] = useState(defaultExpanded);
 
   const tierKey = normalizeMembershipTierKey(currentTierKey);
   const current = getMembershipTierDefinition(tierKey);
   const isWorkos = sessionKind === "workos";
+
+  useEffect(() => {
+    if (!collapsible || typeof window === "undefined") return;
+    const hash = window.location.hash.replace(/^#/, "");
+    if (hash === "membership-billing" || hash === "account-membership") {
+      setExpanded(true);
+    }
+  }, [collapsible]);
 
   const load = useCallback(async () => {
     if (!isAuthenticated || !isWorkos) return;
@@ -208,46 +221,88 @@ export default function MembershipBillingCenter({
     }
   }
 
+  const billingLabel = String(membershipBillingStatus || summary?.billingStatus || "none").replace(/_/g, " ");
+  const showBody = !collapsible || expanded;
+  const sectionClassName = `card membershipBillingCenter${collapsible && !expanded ? " membershipBillingCenter--collapsed" : ""}`;
+
+  const collapseToggle = collapsible ? (
+    <button
+      type="button"
+      className="btnSoft membershipBillingCenter__toggle"
+      onClick={() => setExpanded((v) => !v)}
+      aria-expanded={expanded}
+      aria-controls="membership-billing-body"
+    >
+      {expanded ? "Collapse" : "Expand"}
+    </button>
+  ) : null;
+
   if (!isAuthenticated) {
     return (
-      <section className="card membershipBillingCenter">
-        <h3 className="membershipBillingCenter__title">Membership &amp; billing</h3>
-        <p className="sponsorSectionLead">Sign in to manage membership, payment methods, and billing history.</p>
-        <button type="button" className="btnPrimary" onClick={() => onRequestSignIn?.()}>
-          Sign in
-        </button>
+      <section className={sectionClassName} id="membership-billing">
+        <div className="membershipBillingCenter__headRow">
+          <h3 className="membershipBillingCenter__title">Membership &amp; billing</h3>
+          {collapseToggle}
+        </div>
+        {showBody ? (
+          <>
+            <p className="sponsorSectionLead">Sign in to manage membership, payment methods, and billing history.</p>
+            <button type="button" className="btnPrimary" onClick={() => onRequestSignIn?.()}>
+              Sign in
+            </button>
+          </>
+        ) : null}
       </section>
     );
   }
 
   if (!isWorkos) {
     return (
-      <section className="card membershipBillingCenter">
-        <h3 className="membershipBillingCenter__title">Membership &amp; billing</h3>
-        <p className="sponsorSectionLead">
-          Current plan: <strong>{current.label}</strong> (demo). Sign in with a full account for Stripe billing.
-        </p>
+      <section className={sectionClassName} id="membership-billing">
+        <div className="membershipBillingCenter__headRow">
+          <div className="membershipBillingCenter__head">
+            <span className="membershipAtAGlanceArt membershipAtAGlanceArt--profile" aria-hidden="true">
+              <MembershipTierArt tierId={tierKey} />
+            </span>
+            <div>
+              <h3 className="membershipBillingCenter__title">Membership &amp; billing</h3>
+              <p className="membershipAtAGlanceSub membershipAtAGlanceSub--profile">
+                <strong>{current.label}</strong> (demo)
+              </p>
+            </div>
+          </div>
+          {collapseToggle}
+        </div>
+        {showBody ? (
+          <p className="sponsorSectionLead">
+            Sign in with a full account for Stripe billing.
+          </p>
+        ) : null}
       </section>
     );
   }
 
-  const billingLabel = String(membershipBillingStatus || summary?.billingStatus || "none").replace(/_/g, " ");
   const showDowngradeHint = membershipTierRank(tierKey) > 0 && stripeCustomerReady;
 
   return (
-    <section className="card membershipBillingCenter" id="membership-billing">
-      <div className="membershipBillingCenter__head">
-        <span className="membershipAtAGlanceArt membershipAtAGlanceArt--profile" aria-hidden="true">
-          <MembershipTierArt tierId={tierKey} />
-        </span>
-        <div>
-          <h3 className="membershipBillingCenter__title">Membership &amp; billing</h3>
-          <p className="membershipAtAGlanceSub membershipAtAGlanceSub--profile">
-            <strong>{current.label}</strong> · Billing: {billingLabel}
-          </p>
+    <section className={sectionClassName} id="membership-billing">
+      <div className="membershipBillingCenter__headRow">
+        <div className="membershipBillingCenter__head">
+          <span className="membershipAtAGlanceArt membershipAtAGlanceArt--profile" aria-hidden="true">
+            <MembershipTierArt tierId={tierKey} />
+          </span>
+          <div>
+            <h3 className="membershipBillingCenter__title">Membership &amp; billing</h3>
+            <p className="membershipAtAGlanceSub membershipAtAGlanceSub--profile">
+              <strong>{current.label}</strong> · Billing: {billingLabel}
+            </p>
+          </div>
         </div>
+        {collapseToggle}
       </div>
 
+      {showBody ? (
+        <div id="membership-billing-body" className="membershipBillingCenter__body">
       <dl className="membershipBillingCenter__stats">
         <div>
           <dt>Renewal</dt>
@@ -451,6 +506,8 @@ export default function MembershipBillingCenter({
           Settings
         </Link>
       </div>
+        </div>
+      ) : null}
     </section>
   );
 }
