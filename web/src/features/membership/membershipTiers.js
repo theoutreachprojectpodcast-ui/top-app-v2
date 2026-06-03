@@ -4,7 +4,9 @@
  */
 
 /** Display pricing (recurring Stripe products must match in the Stripe Dashboard). */
-export const SUPPORT_MEMBERSHIP_PRICE_LABEL = "$1.99/mo";
+/** Stripe product name: "Support with $1" → env `STRIPE_PRICE_SUPPORT_MONTHLY` (recurring $1.00/mo). */
+export const SUPPORT_MEMBERSHIP_DISPLAY_NAME = "Support with $1";
+export const SUPPORT_MEMBERSHIP_PRICE_LABEL = "$1/mo";
 export const PRO_MEMBERSHIP_PRICE_LABEL = "$5.99/mo";
 
 export const MEMBERSHIP_TIER_KEYS = {
@@ -32,7 +34,7 @@ export const MEMBERSHIP_TIER_DEFINITIONS = [
   },
   {
     id: MEMBERSHIP_TIER_KEYS.SUPPORT,
-    label: "Support Membership",
+    label: SUPPORT_MEMBERSHIP_DISPLAY_NAME,
     shortLabel: "Support",
     priceLabel: SUPPORT_MEMBERSHIP_PRICE_LABEL,
     benefits: [
