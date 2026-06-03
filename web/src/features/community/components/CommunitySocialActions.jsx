@@ -13,7 +13,7 @@ export default function CommunitySocialActions({
     <div className="communityPostActions" role="group" aria-label="Post reactions">
       <button
         type="button"
-        className={`communityActionBtn communityActionBtn--like ${liked ? "isActive" : ""}`}
+        className={`btnSoft communityActionBtn communityActionBtn--like${liked ? " isActive" : ""}`}
         onClick={async () => {
           if (typeof onToggleLike !== "function") return;
           await Promise.resolve(onToggleLike(postId, baseLikeCount));
@@ -32,7 +32,7 @@ export default function CommunitySocialActions({
       </button>
       <button
         type="button"
-        className="communityActionBtn communityActionBtn--share"
+        className="btnSoft communityActionBtn communityActionBtn--share"
         onClick={onShare}
         disabled={shareBusy}
       >
