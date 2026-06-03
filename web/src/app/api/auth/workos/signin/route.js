@@ -4,6 +4,10 @@ import { isWorkOSConfigured } from "@/lib/auth/workosConfigured";
 import { sanitizeWorkOSLoginHint } from "@/lib/auth/workosLoginHint";
 import { resolvePostAuthReturnTarget } from "@/lib/auth/workosSafeReturn";
 import {
+  getWorkOSAuthKitRedirectUrl,
+  readWorkOSInvitationToken,
+} from "@/lib/auth/workosAuthorizationRedirect";
+import {
   isAdminReturnPath,
   isBootstrapAdminWorkOSSignIn,
   workOSAuthKitAuthorizeOptions,
@@ -23,11 +27,35 @@ export async function GET(request) {
   const prompt = remember === "0" ? "login" : undefined;
   const loginHint = sanitizeWorkOSLoginHint(request.nextUrl.searchParams.get("loginHint"));
   const bootstrap = isBootstrapAdminWorkOSSignIn(request.nextUrl.searchParams) || isAdminReturnPath(returnTo);
+  const invitationToken = readWorkOSInvitationToken(request.nextUrl.searchParams);
+  const orgOptions = workOSAuthKitAuthorizeOptions({
+    loginHint,
+    bootstrap,
+    adminReturn: isAdminReturnPath(returnTo),
+    invitation: Boolean(invitationToken),
+  });
+
+  if (invitationToken) {
+    try {
+      const url = await getWorkOSAuthKitRedirectUrl({
+        returnPathname: returnTo,
+        screenHint: "sign-in",
+        loginHint,
+        prompt,
+        invitationToken,
+        organizationId: orgOptions.organizationId,
+      });
+      return NextResponse.redirect(url);
+    } catch {
+      return NextResponse.json({ error: "workos_not_configured" }, { status: 503 });
+    }
+  }
+
   const url = await getSignInUrl({
     returnTo,
     loginHint,
     prompt,
-    ...workOSAuthKitAuthorizeOptions({ loginHint, bootstrap, adminReturn: isAdminReturnPath(returnTo) }),
+    ...orgOptions,
   });
   return NextResponse.redirect(url);
 }

@@ -42,7 +42,7 @@ export function profileRowAuthorizesWorkOSSession(profileRow, email = "", workos
  * Options for `getSignInUrl` / `getSignUpUrl`.
  * Skips `organizationId` for sign-up and bootstrap admin sign-in (WorkOS rejects non-members at the hosted UI).
  *
- * @param {{ loginHint?: string, bootstrap?: boolean, signUp?: boolean, adminReturn?: boolean }} [options]
+ * @param {{ loginHint?: string, bootstrap?: boolean, signUp?: boolean, adminReturn?: boolean, invitation?: boolean }} [options]
  * @returns {Record<string, string> | {}}
  */
 export function workOSAuthKitAuthorizeOptions(options = {}) {
@@ -52,6 +52,8 @@ export function workOSAuthKitAuthorizeOptions(options = {}) {
   if (options.signUp || options.bootstrap) return {};
 
   if (options.adminReturn) return {};
+
+  if (options.invitation) return {};
 
   const hint = String(options.loginHint || "").trim().toLowerCase();
   if (hint && isDefaultApprovedAdminEmail(hint)) return {};
