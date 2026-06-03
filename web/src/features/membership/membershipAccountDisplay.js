@@ -14,6 +14,26 @@ export function formatMembershipBillingStatus(raw) {
   return s.replace(/_/g, " ");
 }
 
+/**
+ * True after the account finished onboarding (initial tier / intent choice).
+ * Until then, the tier picker stays on home; afterward it lives on profile.
+ */
+export function hasChosenInitialMembership(profile) {
+  if (!profile || typeof profile !== "object") return false;
+  return !!profile.onboardingCompleted;
+}
+
+/** @param {{ isAuthenticated: boolean, profile?: object | null }} args */
+export function shouldShowMembershipPickerOnHome({ isAuthenticated, profile }) {
+  if (!isAuthenticated) return true;
+  return !hasChosenInitialMembership(profile);
+}
+
+/** @param {{ isAuthenticated: boolean, profile?: object | null }} args */
+export function shouldShowMembershipPickerOnProfile({ isAuthenticated, profile }) {
+  return isAuthenticated && hasChosenInitialMembership(profile);
+}
+
 /** Short line under “Membership / account” in the header menu. */
 export function membershipAccountMenuHint({ isAuthenticated, tierKey, billingStatus }) {
   if (!isAuthenticated) return "Sign in to view your plan";

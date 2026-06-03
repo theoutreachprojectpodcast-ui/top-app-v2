@@ -3,7 +3,10 @@ import { NextResponse } from "next/server";
 import { isWorkOSConfigured } from "@/lib/auth/workosConfigured";
 import { sanitizeWorkOSLoginHint } from "@/lib/auth/workosLoginHint";
 import { resolvePostAuthReturnTarget } from "@/lib/auth/workosSafeReturn";
-import { workOSAuthKitAuthorizeOptions } from "@/lib/auth/workosOrganizationScope";
+import {
+  isBootstrapAdminWorkOSSignIn,
+  workOSAuthKitAuthorizeOptions,
+} from "@/lib/auth/workosOrganizationScope";
 
 export async function GET(request) {
   if (!isWorkOSConfigured()) {
@@ -18,6 +21,12 @@ export async function GET(request) {
   /** When user declines “stay signed in”, ask IdP for a fresh login when supported (OIDC prompt=login). */
   const prompt = remember === "0" ? "login" : undefined;
   const loginHint = sanitizeWorkOSLoginHint(request.nextUrl.searchParams.get("loginHint"));
-  const url = await getSignInUrl({ returnTo, loginHint, prompt, ...workOSAuthKitAuthorizeOptions() });
+  const bootstrap = isBootstrapAdminWorkOSSignIn(request.nextUrl.searchParams);
+  const url = await getSignInUrl({
+    returnTo,
+    loginHint,
+    prompt,
+    ...workOSAuthKitAuthorizeOptions({ loginHint, bootstrap }),
+  });
   return NextResponse.redirect(url);
 }

@@ -66,7 +66,11 @@ export default function HomeMembershipSection({
     : "Support the mission with a free account or a recurring membership.";
 
   return (
-    <section className="homeMembershipSection" aria-labelledby="home-membership-heading">
+    <section
+      className="homeMembershipSection"
+      id={isAuthenticated ? "profile-membership-plans" : undefined}
+      aria-labelledby="home-membership-heading"
+    >
       <div className="homeMembershipSection__header">
         <h2 id="home-membership-heading" className="homeMembershipSection__title">
           {title}

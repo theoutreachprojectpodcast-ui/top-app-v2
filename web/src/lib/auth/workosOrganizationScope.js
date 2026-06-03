@@ -9,10 +9,34 @@ export function expectedWorkOSOrganizationId() {
   return String(process.env.WORKOS_ORGANIZATION_ID || "").trim();
 }
 
-/** @returns {Record<string, string> | {}} */
-export function workOSAuthKitAuthorizeOptions() {
+/**
+ * Options for `getSignInUrl` / `getSignUpUrl`.
+ * Skips `organizationId` for sign-up and bootstrap admin sign-in (WorkOS rejects non-members at the hosted UI).
+ *
+ * @param {{ loginHint?: string, bootstrap?: boolean, signUp?: boolean }} [options]
+ * @returns {Record<string, string> | {}}
+ */
+export function workOSAuthKitAuthorizeOptions(options = {}) {
   const organizationId = expectedWorkOSOrganizationId();
-  return organizationId ? { organizationId } : {};
+  if (!organizationId) return {};
+
+  if (options.signUp || options.bootstrap) return {};
+
+  const hint = String(options.loginHint || "").trim().toLowerCase();
+  if (hint && isDefaultApprovedAdminEmail(hint)) return {};
+
+  return { organizationId };
+}
+
+/**
+ * Bootstrap sign-in is only for platform admin entry (returnTo under `/admin`).
+ * @param {URLSearchParams} searchParams
+ */
+export function isBootstrapAdminWorkOSSignIn(searchParams) {
+  if (searchParams.get("bootstrap") !== "1") return false;
+  const raw = String(searchParams.get("returnTo") || "/admin").trim();
+  const path = raw.startsWith("/") ? raw : "/admin";
+  return path === "/admin" || path.startsWith("/admin/");
 }
 
 /**

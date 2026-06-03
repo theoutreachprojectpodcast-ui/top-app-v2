@@ -4,12 +4,14 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { patchProfileByWorkOSId, upsertProfileFromWorkOSUser } from "@/lib/profile/serverProfile";
 import { requestOriginForStripeRedirects } from "@/lib/billing/stripeConfig";
 import { notifyStaffProfiles } from "@/server/notifications/notificationService";
+import { ensureWorkOSOrganizationMembership } from "@/lib/auth/workosEnsureOrgMembership";
 
 async function onWorkOSSuccess({ user }) {
   try {
     const admin = createSupabaseAdminClient();
     if (!admin) return;
     const out = await upsertProfileFromWorkOSUser(admin, user);
+    await ensureWorkOSOrganizationMembership(user.id);
     const email = String(user?.email || "").trim();
     if (out?.ok && email && isDefaultApprovedAdminEmail(email)) {
       await patchProfileByWorkOSId(admin, user.id, {
