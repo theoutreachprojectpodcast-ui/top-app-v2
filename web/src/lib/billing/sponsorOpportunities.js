@@ -9,7 +9,11 @@ import {
   podcastSponsorPriceIdForTier,
   stripeSponsorSubscriptionConfigured,
 } from "@/lib/billing/stripeConfig";
-import { PRO_MEMBERSHIP_PRICE_LABEL, SUPPORT_MEMBERSHIP_PRICE_LABEL } from "@/features/membership/membershipTiers";
+import {
+  PRO_MEMBERSHIP_PRICE_LABEL,
+  SUPPORT_MEMBERSHIP_DISPLAY_NAME,
+  SUPPORT_MEMBERSHIP_PRICE_LABEL,
+} from "@/features/membership/membershipTiers";
 
 /** @typedef {'free' | 'subscription' | 'one_time' | 'application'} SponsorCheckoutKind */
 
@@ -106,7 +110,7 @@ export function listMembershipPlansForHome() {
     {
       tierKey: "support",
       checkoutTier: "support",
-      label: "Support Member",
+      label: SUPPORT_MEMBERSHIP_DISPLAY_NAME,
       priceLabel: SUPPORT_MEMBERSHIP_PRICE_LABEL,
       description: "Save favorites and keep your profile in sync across devices.",
       cta: "Become a Support Member",

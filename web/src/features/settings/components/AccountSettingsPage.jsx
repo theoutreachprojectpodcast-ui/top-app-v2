@@ -214,6 +214,7 @@ export default function AccountSettingsPage({
         firstName={profile.firstName}
         lastName={profile.lastName}
         email={profile.email}
+        sessionEmail={workOSAccountEmail}
         displayName={profile.displayName}
         membershipTier={membership.label}
         membershipBillingStatus={profile.membershipBillingStatus}

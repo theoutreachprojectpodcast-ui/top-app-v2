@@ -8,6 +8,7 @@ import IconWrap from "@/components/shared/IconWrap";
 import HeaderNotificationBell from "@/components/layout/HeaderNotificationBell";
 import HeaderAccountMenu from "@/components/layout/HeaderAccountMenu";
 import { useProfileData } from "@/features/profile/ProfileDataProvider";
+import { membershipAccountMenuHint } from "@/features/membership/membershipAccountDisplay";
 import { emptyProfileAvatarUrl } from "@/lib/avatarFallback";
 import { readRememberDevicePref } from "@/lib/auth/lastUsedEmail";
 import { workosSignInLink, workosSignUpHref } from "@/lib/auth/workosReturnTo";
@@ -25,7 +26,7 @@ const SPONSOR_ICON = "M4 6h16v12H4z M4 10h16";
 export default function SubpageTopbarActions({ section = "all" }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { profile, loadingProfile, fullName, isMember, signOut, isAuthenticated } = useProfileData();
+  const { profile, loadingProfile, fullName, signOut, isAuthenticated, workOSAccountEmail } = useProfileData();
   /** Avoid useSearchParams here (static routes like /contact must not CSR-bailout without Suspense). */
   const rememberDevice = readRememberDevicePref();
   const signInReturnFallback = pathname?.startsWith("/podcasts") ? pathname : "/";
@@ -62,6 +63,12 @@ export default function SubpageTopbarActions({ section = "all" }) {
   const authed = authState.authenticated || isAuthenticated;
   const authLoading =
     authState.loading || (authed && loadingProfile);
+  const accountMenuHint = membershipAccountMenuHint({
+    isAuthenticated: authed,
+    tierKey: profile?.membershipStatus,
+    billingStatus: profile?.membershipBillingStatus,
+  });
+  const accountEmail = profile?.email || workOSAccountEmail || "";
 
   const authBlock =
     authLoading ? (
@@ -72,9 +79,9 @@ export default function SubpageTopbarActions({ section = "all" }) {
         <HeaderAccountMenu
           avatarSrc={profile?.avatarUrl || emptyProfileAvatarUrl()}
           displayName={fullName}
-          email={profile?.email}
-          membershipHint={isMember ? "Member" : "View plans"}
-          ariaLabel={`Account menu for ${fullName || profile?.email || "signed-in user"}`}
+          email={accountEmail}
+          membershipHint={accountMenuHint}
+          ariaLabel={`Account menu for ${fullName || accountEmail || "signed-in user"}`}
           onProfile={() => router.push("/profile")}
           onSettings={() => router.push("/settings")}
           onMembership={() => router.push("/profile")}
@@ -112,9 +119,9 @@ export default function SubpageTopbarActions({ section = "all" }) {
       <HeaderAccountMenu
         avatarSrc={profile?.avatarUrl || emptyProfileAvatarUrl()}
         displayName={fullName}
-        email={profile?.email}
-        membershipHint={isMember ? "Member" : "View plans"}
-        ariaLabel={`Account menu for ${fullName || profile?.email || "signed-in user"}`}
+        email={accountEmail}
+        membershipHint={accountMenuHint}
+        ariaLabel={`Account menu for ${fullName || accountEmail || "signed-in user"}`}
         onProfile={() => router.push("/profile")}
         onSettings={() => router.push("/settings")}
         onMembership={() => router.push("/profile")}

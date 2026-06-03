@@ -30,13 +30,66 @@
   color: var(--color-text-secondary);
 }
 
+.homeMembershipSection__account {
+  display: grid;
+  gap: var(--ds-space-2, 8px);
+  margin-bottom: var(--ds-space-3, 12px);
+  padding: var(--ds-space-3, 12px);
+  border-radius: var(--radius-input, 12px);
+  background: color-mix(in srgb, var(--color-accent-soft) 35%, var(--color-bg-card) 65%);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 22%, var(--color-border-subtle));
+}
+
+.homeMembershipSection__accountLine {
+  margin: 0;
+  font-size: var(--text-body-sm, 0.88rem);
+  line-height: 1.45;
+  color: var(--color-text-primary);
+}
+
+.homeMembershipSection__accountBilling {
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.homeMembershipSection__manageLink {
+  justify-self: start;
+  margin-top: var(--ds-space-1, 4px);
+}
+
+.homeMembershipSection__maxTier {
+  margin: 0;
+  font-size: var(--text-body-sm, 0.88rem);
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+.homeMembershipSection__card--current {
+  border-color: color-mix(in srgb, var(--color-accent) 42%, var(--color-border-subtle));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 18%, transparent);
+}
+
+.homeMembershipSection__currentBadge {
+  align-self: start;
+  display: inline-flex;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-caption, 0.72rem);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  background: var(--color-accent-soft);
+  color: var(--color-accent-hover);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 30%, var(--color-border));
+}
+
 .homeMembershipSection__grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
-@media (min-width: 720px) {
+@media (min-width: 761px) {
   .homeMembershipSection__grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
@@ -82,6 +135,58 @@
   margin-top: auto;
   font-size: 0.72rem;
   padding: 8px 10px;
+  min-height: 44px;
+  touch-action: manipulation;
+}
+
+@media (max-width: 760px) {
+  .homeMembershipSection {
+    margin: var(--ds-space-3, 12px) 0;
+    padding: var(--ds-space-4, 16px) var(--ds-space-3, 12px);
+    border-radius: var(--radius-card, 16px);
+  }
+
+  .homeMembershipSection__title {
+    font-size: clamp(1.05rem, 4.5vw, 1.15rem);
+    line-height: 1.3;
+  }
+
+  .homeMembershipSection__lead {
+    font-size: clamp(0.82rem, 3.4vw, 0.9rem);
+    line-height: 1.5;
+  }
+
+  .homeMembershipSection__grid {
+    grid-template-columns: 1fr;
+    gap: var(--ds-space-3, 12px);
+  }
+
+  .homeMembershipSection__card {
+    padding: var(--ds-space-4, 16px) var(--ds-space-3, 12px);
+    gap: var(--ds-space-2, 8px);
+    min-width: 0;
+  }
+
+  .homeMembershipSection__cardTitle {
+    font-size: clamp(0.88rem, 3.6vw, 0.95rem);
+  }
+
+  .homeMembershipSection__desc {
+    font-size: clamp(0.78rem, 3.2vw, 0.84rem);
+    line-height: 1.45;
+  }
+
+  .homeMembershipSection__cta {
+    font-size: clamp(0.8rem, 3.2vw, 0.88rem);
+    padding: 10px 12px;
+    min-height: 44px;
+  }
+}
+
+@media (min-width: 480px) and (max-width: 760px) {
+  .homeMembershipSection__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 /* Home hero sits on dark topo — use elevated card surfaces so text stays legible. */

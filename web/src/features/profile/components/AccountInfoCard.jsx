@@ -1,3 +1,5 @@
+import { formatMembershipBillingStatus } from "@/features/membership/membershipAccountDisplay";
+
 function sourceLabel(source) {
   if (source === "cloud") return "Cloud (WorkOS + Supabase)";
   if (source === "supabase") return "Supabase (demo sync)";
@@ -14,7 +16,8 @@ function formatMembershipSource(src) {
 export default function AccountInfoCard({
   firstName,
   lastName,
-  email,
+  email = "",
+  sessionEmail = "",
   profileSource = "local",
   membershipTier = "",
   membershipBillingStatus = "",
@@ -25,6 +28,8 @@ export default function AccountInfoCard({
   manageBillingSlot = null,
 }) {
   const name = [firstName, lastName].filter(Boolean).join(" ").trim() || displayName;
+  const emailLine = String(email || "").trim() || String(sessionEmail || "").trim();
+  const billingLine = formatMembershipBillingStatus(membershipBillingStatus);
   const sponsorLine =
     podcastSponsorLastTierId || podcastSponsorLastCheckoutAt
       ? `Last podcast sponsor checkout${podcastSponsorLastTierId ? ` (${podcastSponsorLastTierId})` : ""}${
@@ -33,7 +38,7 @@ export default function AccountInfoCard({
       : "";
 
   return (
-    <div className="card">
+    <div className="card accountInfoCard">
       <h3>Account</h3>
       <p>
         <strong>Name</strong>
@@ -43,7 +48,7 @@ export default function AccountInfoCard({
       <p>
         <strong>Email</strong>
         <br />
-        {email || "—"}
+        {emailLine || "—"}
       </p>
       <p>
         <strong>Membership</strong>
@@ -53,7 +58,7 @@ export default function AccountInfoCard({
       <p>
         <strong>Billing status</strong>
         <br />
-        {membershipBillingStatus ? String(membershipBillingStatus) : "—"}
+        {billingLine}
       </p>
       <p>
         <strong>Membership source</strong>
@@ -72,7 +77,7 @@ export default function AccountInfoCard({
         <br />
         {sourceLabel(profileSource)}
       </p>
-      {manageBillingSlot ? <div style={{ marginTop: 12 }}>{manageBillingSlot}</div> : null}
+      {manageBillingSlot ? <div className="accountInfoCard__billing">{manageBillingSlot}</div> : null}
     </div>
   );
 }

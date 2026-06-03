@@ -1494,7 +1494,11 @@ span.headerBrandMarkFallback {
 }
 /* Profile tab: single vertical rhythm; avoid stacking margin + grid gap */
 .profileTabShell {
+  display: grid;
   gap: var(--ds-space-5, 20px);
+}
+.profileTabShell > .card {
+  margin: 0;
 }
 .profileSignedOutCard {
   display: grid;
@@ -1514,6 +1518,7 @@ span.headerBrandMarkFallback {
 .profileWelcomeCard .welcomePanel {
   align-items: flex-start;
   gap: clamp(16px, 3vw, 24px);
+  margin: 0;
 }
 .profileWelcomeCard .welcomeCopy {
   display: grid;
