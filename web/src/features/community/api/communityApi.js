@@ -1,6 +1,6 @@
 import { mapCommunityPostRow } from "@/features/community/mappers/mapCommunityPost";
 import { COMMUNITY_MEMBER_FAVORITE_ROWS_SEED, COMMUNITY_MEMBERS_SEED } from "@/features/community/data/communitySeed";
-import { buildFounderOnboardingPostRows } from "@/features/community/data/founderOnboardingPosts";
+import { mergeFounderOnboardingPosts } from "@/lib/community/mergeFounderOnboardingPosts";
 import { queryTrustedOrgsByEin } from "@/lib/supabase/queries";
 import {
   buildCommunityShareUrl,
@@ -169,36 +169,26 @@ export function rejectPendingLocal(pendingId, reason = "") {
   return { ok: true, reason };
 }
 
-const FOUNDER_ONBOARDING_MAPPED = buildFounderOnboardingPostRows()
-  .map(mapCommunityPostRow)
-  .filter(Boolean);
-/** Keeps canonical founder onboarding posts in sync with app bundle (overrides stale DB copy by id). */
-export function mergeFounderOnboardingPosts(posts) {
-  const byId = new Map();
-  for (const row of posts || []) {
-    if (!row?.id) continue;
-    byId.set(row.id, row);
-  }
-  for (const founder of FOUNDER_ONBOARDING_MAPPED) {
-    byId.set(founder.id, founder);
-  }
-  return Array.from(byId.values()).sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-  );
-}
+export { mergeFounderOnboardingPosts } from "@/lib/community/mergeFounderOnboardingPosts";
 
 /**
  * Public feed: approved posts from API (and RLS direct read when available), plus local demo approvals only when offline.
+ * Canonical moderator starter stories are always merged in (bundle overrides stale DB rows by id).
  */
 export async function fetchPublicCommunityFeed(supabase) {
+  let posts = [];
   const remote = await fetchApprovedFeedFromApi();
   if (remote.length) {
-    return mergeFounderOnboardingPosts(remote);
+    posts = remote;
+  } else {
+    const viaClient = await fetchApprovedFeedFromSupabase(supabase);
+    if (viaClient.length) {
+      posts = viaClient;
+    } else {
+      posts = loadLocalApprovedPosts().filter((p) => p && p.status === "approved");
+    }
   }
-  const viaClient = await fetchApprovedFeedFromSupabase(supabase);
-  if (viaClient.length) return mergeFounderOnboardingPosts(viaClient);
-  const localApproved = loadLocalApprovedPosts().filter((p) => p && p.status === "approved");
-  return mergeFounderOnboardingPosts(localApproved);
+  return mergeFounderOnboardingPosts(posts);
 }
 
 export async function fetchApprovedPostsByMember(supabase, memberId) {

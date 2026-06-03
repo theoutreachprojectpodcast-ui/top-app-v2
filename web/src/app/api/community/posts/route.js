@@ -10,6 +10,7 @@ import {
   notifyStaffProfiles,
 } from "@/server/notifications/notificationService";
 import { shouldHideDemoCommunitySeeds } from "@/lib/runtime/qaEnv";
+import { mergeFounderOnboardingPostRows } from "@/lib/community/mergeFounderOnboardingPosts";
 
 const REACTIONS = "community_post_reactions";
 
@@ -21,7 +22,10 @@ export async function GET(request) {
   const scope = url.searchParams.get("scope") || "public";
 
   if (!admin) {
-    return Response.json({ posts: [], warning: "storage_unavailable" });
+    return Response.json({
+      posts: scope === "public" ? mergeFounderOnboardingPostRows([]) : [],
+      warning: "storage_unavailable",
+    });
   }
 
   if (scope === "public") {
@@ -61,7 +65,12 @@ export async function GET(request) {
       viewer_has_liked: likedIds.has(row.id),
     }));
 
-    return Response.json({ posts: enriched });
+    const posts = mergeFounderOnboardingPostRows(enriched).map((row) => ({
+      ...row,
+      viewer_has_liked: likedIds.has(row.id),
+    }));
+
+    return Response.json({ posts });
   }
 
   const auth = await resolveWorkOSRouteUser();
