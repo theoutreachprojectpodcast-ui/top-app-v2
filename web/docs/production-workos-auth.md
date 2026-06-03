@@ -41,11 +41,11 @@ Logout URLs:
 
 ## Routing in app
 
-- Start sign-in: `/api/auth/workos/signin` and alias `/auth/sign-in`, `/login`
-- Start sign-up: `/api/auth/workos/signup` and alias `/auth/sign-up`
-- Accept invitation: `/invite?invitation_token=…` (configure in WorkOS Redirects → User invitation URL)
-- Callback: `/callback`
-- Logout: `/sign-out` and alias `/auth/logout`
+- **Sign-in endpoint (WorkOS dashboard):** `https://theoutreachproject.app/sign-in` — also `/login`, `/auth/sign-in`, `/api/auth/workos/signin`
+- **Sign-up:** `/sign-up`, `/auth/sign-up`, `/api/auth/workos/signup`
+- **Accept invitation:** `/invite?invitation_token=…` (configure in WorkOS Redirects → User invitation URL)
+- **Callback:** `/callback`
+- **Logout:** `/sign-out` and alias `/auth/logout`
 
 ## Validation checklist
 

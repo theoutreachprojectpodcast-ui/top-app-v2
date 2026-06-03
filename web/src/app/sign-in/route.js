@@ -1,6 +1,6 @@
 import { workOSSignInResponse } from "@/lib/auth/workosSignInHandler";
 
-/** Alias for WorkOS sign-in endpoint (`/login` per AuthKit quickstart). */
+/** WorkOS Redirects → Sign-in endpoint (https://theoutreachproject.app/sign-in). */
 export async function GET(request) {
   return workOSSignInResponse(request);
 }

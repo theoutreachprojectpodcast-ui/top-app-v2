@@ -20,7 +20,7 @@ export async function GET(request) {
 
   const invitationToken = readWorkOSInvitationToken(request.nextUrl.searchParams);
   if (!invitationToken) {
-    return NextResponse.redirect(new URL("/auth/sign-in", request.url));
+    return NextResponse.redirect(new URL("/sign-in", request.url));
   }
 
   const returnTo = safeWorkOSReturnTarget(
