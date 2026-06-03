@@ -41,8 +41,9 @@ Logout URLs:
 
 ## Routing in app
 
-- Start sign-in: `/api/auth/workos/signin` and alias `/auth/sign-in`
+- Start sign-in: `/api/auth/workos/signin` and alias `/auth/sign-in`, `/login`
 - Start sign-up: `/api/auth/workos/signup` and alias `/auth/sign-up`
+- Accept invitation: `/invite?invitation_token=…` (configure in WorkOS Redirects → User invitation URL)
 - Callback: `/callback`
 - Logout: `/sign-out` and alias `/auth/logout`
 

@@ -39,6 +39,7 @@ Optional tuning: `WORKOS_COOKIE_MAX_AGE`, `WORKOS_COOKIE_DOMAIN`, etc. — see `
 - **Proxy** (`web/src/proxy.js`, Next.js 16+ convention) runs **`authkitProxy()`** when configuration is complete (session refresh and `x-workos-middleware` for `withAuth()` in RSC).
 - **Callback** (`web/src/app/callback/route.js`) runs **`handleAuth`** and syncs the user into Supabase.
 - **Sign-in / sign-up** (`web/src/app/api/auth/workos/signin|signup/route.js`) call **`getSignInUrl` / `getSignUpUrl`** (hosted UI).
+- **Invitations** (`web/src/app/invite/route.js`) — WorkOS invitation emails land on `/invite?invitation_token=…`. Set **Redirects → User invitation URL** in the WorkOS dashboard to `https://theoutreachproject.app/invite` (apex). Aliases: `/login` → sign-in, `/auth/sign-in`, `/auth/sign-up`.
 
 CLI tips: `web/docs/WORKOS_CLI.md` and `pnpm workos doctor`.
 

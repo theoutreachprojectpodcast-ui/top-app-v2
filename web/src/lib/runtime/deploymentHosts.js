@@ -114,14 +114,17 @@ export function isAdminHostname(host) {
 }
 
 /**
- * On admin host, rewrite bare paths to /admin… (API, Next internals, sign-out stay untouched).
+ * On admin host, rewrite bare paths to /admin… (API, Next internals, auth entrypoints stay untouched).
  * @param {string} pathname request.nextUrl.pathname
  */
 export function shouldRewriteAdminSubdomainPath(pathname) {
   const p = pathname || "/";
   if (p.startsWith("/api")) return false;
   if (p.startsWith("/_next")) return false;
+  if (p.startsWith("/auth")) return false;
   if (p === "/callback" || p.startsWith("/callback?")) return false;
+  if (p === "/invite" || p.startsWith("/invite?")) return false;
+  if (p === "/login" || p.startsWith("/login?")) return false;
   if (p === "/sign-out" || p.startsWith("/sign-out?")) return false;
   if (p.startsWith("/admin")) return false;
   if (/\.[a-z0-9]{2,5}$/i.test(p.split("/").pop() || "")) return false;
