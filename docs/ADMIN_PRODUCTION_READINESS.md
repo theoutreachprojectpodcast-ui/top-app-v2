@@ -175,6 +175,8 @@ Env for Supabase (all environments):
 | `ENABLE_ADMIN_EMAIL_LOGIN` | Dev/QA magic-link admin login (off in production) |
 | `NEXT_PUBLIC_ENABLE_DEMO_FLOWS` | Must be `false` in production |
 | `WORKOS_COOKIE_DOMAIN` | Cross-subdomain session (public + admin host) |
+| `WORKOS_ORGANIZATION_ID` | Launch org; users are added via API after sign-in/sign-up (do not pin org on hosted sign-in) |
+| `WORKOS_PIN_ORG_ON_SIGNIN` | Leave **unset** (or `0`). Set `1` only if every user is pre-invited in WorkOS |
 | `NEXT_PUBLIC_ADMIN_HOST` | Optional override for admin console URL |
 
 See also `docs/mvp-production-launch.md` and `docs/production-supabase-migration-order.md`.

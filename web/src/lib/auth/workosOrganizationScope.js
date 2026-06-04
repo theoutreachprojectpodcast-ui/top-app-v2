@@ -39,8 +39,17 @@ export function profileRowAuthorizesWorkOSSession(profileRow, email = "", workos
 }
 
 /**
+ * Pin `organizationId` on hosted AuthKit URLs only when explicitly enabled.
+ * Default off: WorkOS shows "Couldn't sign in… contact your organization admin" for users
+ * not already in the org. Membership is added after callback via `ensureWorkOSOrganizationMembership`.
+ */
+export function shouldPinWorkOSOrganizationOnHostedAuth() {
+  return String(process.env.WORKOS_PIN_ORG_ON_SIGNIN || "").trim() === "1";
+}
+
+/**
  * Options for `getSignInUrl` / `getSignUpUrl`.
- * Skips `organizationId` for sign-up and bootstrap admin sign-in (WorkOS rejects non-members at the hosted UI).
+ * Skips `organizationId` on sign-up and sign-in unless `WORKOS_PIN_ORG_ON_SIGNIN=1`.
  *
  * @param {{ loginHint?: string, bootstrap?: boolean, signUp?: boolean, adminReturn?: boolean, invitation?: boolean }} [options]
  * @returns {Record<string, string> | {}}
@@ -57,6 +66,8 @@ export function workOSAuthKitAuthorizeOptions(options = {}) {
 
   const hint = String(options.loginHint || "").trim().toLowerCase();
   if (hint && isDefaultApprovedAdminEmail(hint)) return {};
+
+  if (!shouldPinWorkOSOrganizationOnHostedAuth()) return {};
 
   return { organizationId };
 }
