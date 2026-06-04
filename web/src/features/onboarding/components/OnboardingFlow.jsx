@@ -3,9 +3,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Avatar from "@/components/shared/Avatar";
+import { FormCheckbox } from "@/components/forms/FormChoice";
 import { emptyProfileAvatarUrl } from "@/lib/avatarFallback";
 import {
   PRO_MEMBERSHIP_PRICE_LABEL,
+  SUPPORT_MEMBERSHIP_DISPLAY_NAME,
   SUPPORT_MEMBERSHIP_PRICE_LABEL,
 } from "@/features/membership/membershipTiers";
 import { defaultMembershipTierForIntent, normalizePublicAccountIntent } from "@/lib/account/accountModel";
@@ -49,10 +51,10 @@ const PLANS = [
   },
   {
     id: "support",
-    title: "Support Membership",
+    title: SUPPORT_MEMBERSHIP_DISPLAY_NAME,
     price: SUPPORT_MEMBERSHIP_PRICE_LABEL.replace("/mo", ""),
     cadence: "/month",
-    blurb: "Back the mission with a light monthly subscription. Saves and profile stay in sync.",
+    blurb: "Back the mission with a $1/month subscription. Saves and profile stay in sync.",
   },
   {
     id: "member",
@@ -692,16 +694,15 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
             </label>
             <fieldset className="profileEditFieldset">
               <legend>Notification preferences (optional)</legend>
-              <div className="communityPillRow" style={{ flexWrap: "wrap" }}>
+              <div className="dsChoiceGroup profileEditModal__notifyGroup onboardingForm__notifyGroup">
                 {NOTIFICATION_CHOICES.map((n) => (
-                  <label key={n.id} className="demoAuthModal__rememberGroup" style={{ display: "inline-flex", gap: 8 }}>
-                    <input
-                      type="checkbox"
-                      checked={draft.notificationPreferences?.includes(n.id)}
-                      onChange={() => toggleNotification(n.id)}
-                    />
+                  <FormCheckbox
+                    key={n.id}
+                    checked={!!draft.notificationPreferences?.includes(n.id)}
+                    onChange={() => toggleNotification(n.id)}
+                  >
                     {n.label}
-                  </label>
+                  </FormCheckbox>
                 ))}
               </div>
             </fieldset>
@@ -832,19 +833,18 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
             <h3 className="introTagline" style={{ marginBottom: 10 }}>
               Contribution (optional)
             </h3>
-            <p className="profilePhotoUploadHint">Select any that apply. You can refine these later in Profile.</p>
             <fieldset className="profileEditFieldset">
               <legend>Ways you want to contribute</legend>
-              <div className="communityPillRow" style={{ flexDirection: "column", alignItems: "stretch", gap: 10 }}>
+              <p className="profileEditFieldsetHint">Select any that apply. You can refine these later in Profile.</p>
+              <div className="dsChoiceGroup profileEditModal__contribGroup onboardingForm__contribGroup">
                 {CONTRIBUTION_INTEREST_KEYS.map(([key, label]) => (
-                  <label key={key} style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                    <input
-                      type="checkbox"
-                      checked={!!draft.contributionInterests?.[key]}
-                      onChange={() => toggleContribution(key)}
-                    />
+                  <FormCheckbox
+                    key={key}
+                    checked={!!draft.contributionInterests?.[key]}
+                    onChange={() => toggleContribution(key)}
+                  >
                     {label}
-                  </label>
+                  </FormCheckbox>
                 ))}
               </div>
             </fieldset>
@@ -952,7 +952,7 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
                     <p className="sponsorSectionLead" style={{ marginTop: 0 }}>
                       Subscribe in Stripe or submit a partnership application. Either option keeps your account on the sponsor path.
                     </p>
-                    <div className="communityPillRow" style={{ marginBottom: 12 }}>
+                    <div className="row wrap onboardingForm__sponsorPath">
                       <button
                         type="button"
                         className={sponsorSubPath === "subscription" ? "btnPrimary" : "btnSoft"}
@@ -970,13 +970,17 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
                     </div>
                     {sponsorSubPath === "application" ? (
                       <>
-                        <textarea
-                          rows={4}
-                          autoComplete="off"
-                          value={draft.sponsorApplicationNotes}
-                          onChange={(e) => setDraft((d) => ({ ...d, sponsorApplicationNotes: e.target.value }))}
-                          placeholder="Anything else we should know for your partnership inquiry? (optional)"
-                        />
+                        <label className="fieldLabel" htmlFor="torp-sponsor-app-notes">
+                          Partnership notes (optional)
+                          <textarea
+                            id="torp-sponsor-app-notes"
+                            rows={4}
+                            autoComplete="off"
+                            value={draft.sponsorApplicationNotes}
+                            onChange={(e) => setDraft((d) => ({ ...d, sponsorApplicationNotes: e.target.value }))}
+                            placeholder="Anything else we should know for your partnership inquiry?"
+                          />
+                        </label>
                         <div className="row wrap">
                           <button
                             className="btnPrimary"

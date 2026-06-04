@@ -24,13 +24,15 @@ import { buildFounderOnboardingPostRows } from "../src/features/community/data/f
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 function mapFounderRowsForLocalSeed(rows) {
-  return rows.map((row) => ({
-    ...row,
-    id: String(row.id).replace(/^d2000000/, "b2000000"),
-    reviewed_by: "local-seed",
-    reviewed_at: row.reviewed_at || nowIso(-1),
-    published_at: row.published_at || row.created_at,
-  }));
+  return rows.map((row) => {
+    const { feed_layout, feed_media_json, ...dbRow } = row;
+    return {
+      ...dbRow,
+      reviewed_by: "local-seed",
+      reviewed_at: row.reviewed_at || nowIso(-1),
+      published_at: row.published_at || row.created_at,
+    };
+  });
 }
 
 const SEED_TAG = "torp_local_data_seed_v1";

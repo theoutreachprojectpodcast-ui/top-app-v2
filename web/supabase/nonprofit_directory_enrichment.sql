@@ -1,6 +1,12 @@
 -- Extended nonprofit directory metadata (one row per organization, keyed by normalized 9-digit EIN).
 -- Canonical listing data stays in nonprofits_search_app_v1 / upstream tables; this table is additive enrichment only.
 -- Social URLs are stored here with per-platform verification flags — the app only renders icons when verified = true.
+-- Safe to run multiple times.
+--
+-- Non-destructive by design (for Supabase SQL editor):
+--   No DROP POLICY / DROP TABLE. Policies are created only if missing (see pg_policies checks).
+-- If you ever need to change a policy definition in place, drop the policy manually in the
+-- dashboard (or a one-off script), then re-run this file.
 
 create table if not exists public.nonprofit_directory_enrichment (
   ein text primary key check (ein ~ '^[0-9]{9}$'),
@@ -76,10 +82,23 @@ create index if not exists nonprofit_directory_enrichment_slug_idx
 
 alter table public.nonprofit_directory_enrichment enable row level security;
 
-drop policy if exists nonprofit_directory_enrichment_select_public on public.nonprofit_directory_enrichment;
-create policy nonprofit_directory_enrichment_select_public
-  on public.nonprofit_directory_enrichment
-  for select
-  using (true);
-
+-- Idempotent RLS: create only when missing (avoids DROP POLICY).
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_catalog.pg_policy pol
+    join pg_catalog.pg_class cls on cls.oid = pol.polrelid
+    join pg_catalog.pg_namespace nsp on nsp.oid = cls.relnamespace
+    where nsp.nspname = 'public'
+      and cls.relname = 'nonprofit_directory_enrichment'
+      and pol.polname = 'nonprofit_directory_enrichment_select_public'
+  ) then
+    create policy nonprofit_directory_enrichment_select_public
+      on public.nonprofit_directory_enrichment
+      for select
+      using (true);
+  end if;
+end
+$$;
 -- Writes are intended for service role / SQL editor / trusted ingestion jobs — no anon insert/update policy.

@@ -1,9 +1,11 @@
 -- =============================================================================
 -- tORP — Admin enrichment: runbook + diagnostics (Supabase SQL editor)
 -- =============================================================================
--- Use the postgres role or service role in the SQL editor. These statements are
--- read-only except where a block is explicitly marked OPTIONAL / MUTATING.
+-- Non-destructive: read-only metrics only. Creates/replaces a diagnostic helper
+-- function (no DROP POLICY / DROP TABLE / DROP FUNCTION / row deletes).
+-- Safe to re-run; re-running refreshes the function definition if this file changes.
 --
+-- Use the postgres role or service role in the SQL editor.
 -- --- Schema you typically apply once per environment (idempotent files) ------
 --   sponsors_catalog.sql
 --   sponsors_catalog_logo_review.sql
@@ -33,7 +35,7 @@
 -- -----------------------------------------------------------------------------
 -- 1) One-screen summary (single result set)
 -- -----------------------------------------------------------------------------
--- Creates and drops a short-lived helper function (needs CREATE on schema public).
+-- Defines public._torp_admin_enrichment_metrics() (CREATE OR REPLACE; left in place for reuse).
 -- nonprofit_directory_enrichment and trusted_resources metrics are skipped until those
 -- tables exist (information_schema check). sponsors_catalog must exist.
 
@@ -119,7 +121,7 @@ select m.metric, m.value
 from public._torp_admin_enrichment_metrics() as m
 order by m.metric;
 
-drop function public._torp_admin_enrichment_metrics();
+-- Re-run anytime: select * from public._torp_admin_enrichment_metrics() order by 1;
 
 -- -----------------------------------------------------------------------------
 -- 2) Detail samples (uncomment to inspect specific rows; limit keeps output small)

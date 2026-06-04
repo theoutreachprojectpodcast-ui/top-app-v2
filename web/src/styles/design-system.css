@@ -361,12 +361,82 @@
   gap: var(--ds-space-2, 8px);
 }
 @media (max-width: 760px) {
-  .profileEditModal__head {
-    flex-direction: column;
-    align-items: stretch;
+  .modalCard--profileEdit.profileEditModal {
+    width: min(100%, calc(100vw - 16px));
+    max-height: calc(100dvh - 16px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    border-radius: var(--radius-card);
   }
+
+  .profileEditModal__head {
+    flex-direction: row;
+    align-items: flex-start;
+    padding: var(--ds-space-4, 16px);
+    padding-top: max(var(--ds-space-4, 16px), env(safe-area-inset-top, 0px));
+  }
+
+  .profileEditModal__head h3 {
+    font-size: clamp(1.1rem, 4.5vw, 1.25rem);
+    padding-right: var(--ds-space-2, 8px);
+  }
+
+  .profileEditModal__intro {
+    font-size: var(--text-caption);
+  }
+
   .profileEditModal__close {
     align-self: flex-start;
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .profileEditModal__body {
+    padding: var(--ds-space-3, 12px) var(--ds-space-4, 16px);
+  }
+
+  .profileEditModal__photoRow {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+
+  .profileEditModal__photoBtn {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+  }
+
+  .profileEditModal__nameRow,
+  .profileEditModal__locationRow {
+    grid-template-columns: 1fr;
+  }
+
+  .profileEditModal__notifyGroup {
+    grid-template-columns: 1fr;
+    gap: var(--ds-space-2, 8px);
+  }
+
+  .profileEditModal__foot {
+    padding: var(--ds-space-3, 12px) var(--ds-space-4, 16px)
+      max(var(--ds-space-4, 16px), env(safe-area-inset-bottom, 0px));
+  }
+
+  .profileEditModal__actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: var(--ds-space-2, 8px);
+  }
+
+  .profileEditModal__actions .btnPrimary,
+  .profileEditModal__actions .btnSoft {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 430px) {
+  .profileEditModal__suggested {
+    line-height: 1.35;
   }
 }
 .profileEditSaveError {

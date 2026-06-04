@@ -3,7 +3,7 @@
 ## Tiers
 
 - **`free`** — default; no recurring Stripe subscription required.
-- **`support`** ($1.99/mo) / **`member`** (Pro, $5.99/mo) / **`sponsor`** — paid paths; billing state on `torp_profiles` is updated only from Stripe webhooks (never from the client).
+- **`support`** (Support with $1, $1/mo) / **`member`** (Pro, $5.99/mo) / **`sponsor`** — paid paths; billing state on `torp_profiles` is updated only from Stripe webhooks (never from the client).
 
 ## Environment (QA vs production)
 

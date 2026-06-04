@@ -4,7 +4,7 @@ Concise implementation notes for the stacked pass (member recurring billing, spo
 
 ## 1. Support and Pro pricing
 
-- **Support Membership:** $1.99/month — env `STRIPE_PRICE_SUPPORT_MONTHLY`.
+- **Support with $1:** $1/month — env `STRIPE_PRICE_SUPPORT_MONTHLY`.
 - **Pro Membership:** $5.99/month — env `STRIPE_PRICE_PRO_MONTHLY` (fallback: `STRIPE_PRICE_MEMBER_MONTHLY`).
 - UI labels live in `web/src/features/membership/membershipTiers.js` and profile/onboarding copy; no price IDs in components.
 

@@ -20,19 +20,24 @@
   padding-bottom: calc(186px + env(safe-area-inset-bottom, 0px));
 }
 
-/* Home desktop: shell inset tracks wordmark height — avoid excess gap before Mission partners. */
+/* Home desktop: tighter shell inset so Mission partners sits closer to the wordmark. */
 @media (min-width: 761px) {
   main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) {
-    --header-floating-offset: 12px;
-    --header-floating-height: clamp(298px, 43.2vw, 394px);
-    --header-fade-height: 34px;
+    --header-floating-offset: 8px;
+    --header-floating-height: clamp(200px, 28vw, 272px);
+    --header-fade-height: 20px;
   }
 
   main.topApp[data-page-atmosphere="home"] .shell.shell--home {
-    gap: var(--ds-section-gap, 24px);
+    gap: var(--ds-space-3, 12px);
     padding-top: calc(
-      var(--header-floating-offset) + var(--header-floating-height) + var(--header-fade-height) + 8px
+      var(--header-floating-offset) + var(--header-floating-height) + var(--header-fade-height) + 4px
     );
+  }
+
+  main.topApp[data-page-atmosphere="home"] img.brandMarkImg--header:not(.podcastBrandLogo) {
+    max-height: clamp(200px, 28vw, 272px);
+    max-width: min(720px, 88vw);
   }
 }
 
@@ -3322,6 +3327,26 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   grid-template-columns: 1fr;
   align-items: start;
 }
+.onboardingForm > * {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+.onboardingForm__contribGroup {
+  grid-template-columns: 1fr;
+  gap: var(--ds-space-2, 8px);
+}
+.onboardingForm__notifyGroup {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ds-space-2, 8px);
+}
+@media (min-width: 520px) {
+  .onboardingForm__notifyGroup {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.onboardingForm__sponsorPath {
+  margin-bottom: var(--ds-space-3, 12px);
+}
 
 .modalOverlay {
   position: fixed;
@@ -6475,9 +6500,17 @@ html.dark .communityPostBodyGuideSteps li {
     pointer-events: none;
   }
 
-  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) {
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]):not([data-page-atmosphere="home"]) {
     --mobile-site-header-logo-h: clamp(367px, 95.5vw, 499px);
     --mobile-site-header-logo-max-w: min(770px, calc(100vw - 28px));
+    --mobile-site-header-control-size: 44px;
+    --mobile-site-header-control-pad-top: calc(4px + env(safe-area-inset-top, 0px));
+    --mobile-site-header-pad-x: 11px;
+  }
+
+  main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) {
+    --mobile-site-header-logo-h: clamp(172px, 45vw, 228px);
+    --mobile-site-header-logo-max-w: min(520px, calc(100vw - 28px));
     --mobile-site-header-control-size: 44px;
     --mobile-site-header-control-pad-top: calc(4px + env(safe-area-inset-top, 0px));
     --mobile-site-header-pad-x: 11px;

@@ -23,6 +23,7 @@ import SavedOrganizationsList from "@/features/profile/components/SavedOrganizat
 import SiteBottomNavGlyph from "@/components/navigation/SiteBottomNavGlyph";
 import SiteMobileNavMoreMenu from "@/components/navigation/SiteMobileNavMoreMenu";
 import HomeScreen from "@/components/home/HomeScreen";
+import { SUPPORT_EMAIL } from "@/lib/runtime/brandContact";
 import ProfileCompletionPanel from "@/features/profile/components/ProfileCompletionPanel";
 import HeaderAccountMenu from "@/components/layout/HeaderAccountMenu";
 import HeaderNotificationBell from "@/components/layout/HeaderNotificationBell";
@@ -468,7 +469,7 @@ function TopAppInner({ initialNav = "home" }) {
     const body = encodeURIComponent(
       `Name: ${contactDraft.firstName} ${contactDraft.lastName}\nEmail: ${contactDraft.email}\nPhone: ${contactDraft.phone || "Not provided"}\n\nMessage:\n${contactDraft.message}`
     );
-    window.location.href = `mailto:hello@theoutreach-project.com?subject=${subject}&body=${body}`;
+    window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${subject}&body=${body}`;
     setContactStatus("Your email draft is ready to send.");
   }
 
@@ -959,7 +960,9 @@ function TopAppInner({ initialNav = "home" }) {
             <h3><AppIcon name="contact" />Contact Us</h3>
             <p>If you are in immediate danger, call your local emergency number.</p>
             <p>In the U.S., call or text 988 for the Suicide & Crisis Lifeline.</p>
-            <a className="btnPrimary" href="mailto:hello@theoutreach-project.com?subject=Need%20Help%20Finding%20Support">Email The Team</a>
+            <a className="btnPrimary" href="/contact">
+              Email The Team
+            </a>
           </div>
           <div className="card">
             <h3>Send us a message</h3>

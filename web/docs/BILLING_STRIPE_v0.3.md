@@ -23,7 +23,7 @@ Copy `web/.env.local.example` to `web/.env.local` and set:
 | `STRIPE_SECRET_KEY` | Checkout, webhooks, portal | `sk_test_…` or `sk_live_…` — **server only** |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Future Elements / client hints | Optional today; not exposed to sensitive logic |
 | `STRIPE_WEBHOOK_SECRET` | Webhook signature verification | `whsec_…` from Stripe Dashboard or Stripe CLI |
-| `STRIPE_PRICE_SUPPORT_MONTHLY` | Support ($1.99/mo) checkout | Price ID `price_…` |
+| `STRIPE_PRICE_SUPPORT_MONTHLY` | Support with $1 ($1/mo) checkout | Price ID `price_…` (recurring monthly) |
 | `STRIPE_PRICE_PRO_MONTHLY` | Pro ($5.99/mo) checkout | **Preferred** Pro price ID |
 | `STRIPE_PRICE_MEMBER_MONTHLY` | Pro (legacy) | Used only if `STRIPE_PRICE_PRO_MONTHLY` is unset |
 | `STRIPE_PRICE_SPONSOR_MONTHLY` | Optional **Sponsor Membership** subscription tier | Recurring; onboarding / profile when configured |
@@ -86,7 +86,7 @@ Podcast paid checkouts update the **same** `torp_profiles` row (WorkOS identity)
 
 ## Stripe Dashboard setup
 
-1. **Products** — create Support ($1.99/mo), Pro ($5.99/mo), optional Sponsor Membership recurring; podcast one-time products for three tiers.
+1. **Products** — Support with $1 ($1/mo recurring), Pro ($5.99/mo), optional Sponsor Membership recurring; podcast one-time products for three tiers.
 2. **Prices** — copy each **Price ID** into the matching `STRIPE_PRICE_*` env var.
 3. **Webhooks** — endpoint `https://<your-host>/api/billing/webhook`, events listed above.
 4. **Customer portal** — enable in Stripe Dashboard (Billing → Customer portal).

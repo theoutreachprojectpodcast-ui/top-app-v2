@@ -66,6 +66,9 @@ const checks = [
   checkKey("STRIPE_PRICE_MEMBER_MONTHLY", { required: false, prefixes: ["price_"] }),
   checkKey("NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY", { required: false, prefixes: ["pk_test_", "pk_live_"] }),
   checkKey("STRIPE_PRICE_SPONSOR_MONTHLY", { required: false, prefixes: ["price_"] }),
+  checkKey("STRIPE_PRICE_PODCAST_SPONSOR_COMMUNITY", { required: false, prefixes: ["price_"] }),
+  checkKey("STRIPE_PRICE_PODCAST_SPONSOR_IMPACT", { required: false, prefixes: ["price_"] }),
+  checkKey("STRIPE_PRICE_PODCAST_SPONSOR_FOUNDATIONAL", { required: false, prefixes: ["price_"] }),
   checkKey("APP_BASE_URL", { required: false }),
   checkKey("NEXT_PUBLIC_APP_URL", { required: false }),
 ];
@@ -101,9 +104,21 @@ const webhookSecret =
   String(process.env.STRIPE_WEBHOOK_LIVE_SECRET || "").trim();
 const stripeWebhook = !!secret && !!webhookSecret;
 
+const podcastPrices = [
+  "STRIPE_PRICE_PODCAST_SPONSOR_COMMUNITY",
+  "STRIPE_PRICE_PODCAST_SPONSOR_IMPACT",
+  "STRIPE_PRICE_PODCAST_SPONSOR_FOUNDATIONAL",
+].every((k) => !!String(process.env[k] || "").trim());
+const podcastCheckout = !!secret && podcastPrices;
+
 console.log("\n[verify:stripe-env] App flags (same as /api/billing/capabilities):");
 console.log(`  membershipCheckout: ${membershipCheckout}`);
+console.log(`  sponsorSubscriptionCheckout: ${!!String(process.env.STRIPE_PRICE_SPONSOR_MONTHLY || "").trim() && !!secret}`);
+console.log(`  podcastSponsorCheckout: ${podcastCheckout}`);
 console.log(`  stripeWebhook: ${stripeWebhook}`);
+console.log(
+  "\n[verify:stripe-env] Mission partner one-time products (Supporting/Growth/Strategic) are apply-only in the app today — Stripe products are for invoicing/manual use until checkout is wired.",
+);
 
 if (!webhookSecret) {
   console.error(

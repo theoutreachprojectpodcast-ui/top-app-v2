@@ -1,5 +1,12 @@
 -- Trusted Resources catalog (public listing + application pipeline).
 -- Favorites are per-user in the app; they are not stored here.
+-- Safe to run multiple times.
+--
+-- Non-destructive by design (for Supabase SQL editor):
+--   No DROP POLICY / DROP TABLE. Policies are created only if missing (see pg_policies checks).
+-- If you ever need to change a policy definition in place, drop the policy manually in the
+-- dashboard (or a one-off script), then re-run this file.
+
 create table if not exists public.trusted_resources (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
@@ -40,21 +47,60 @@ create index if not exists idx_trusted_resources_listing on public.trusted_resou
 
 alter table public.trusted_resources enable row level security;
 
-drop policy if exists trusted_resources_select_active on public.trusted_resources;
-drop policy if exists trusted_resources_insert_pending on public.trusted_resources;
-drop policy if exists trusted_resources_update_pending on public.trusted_resources;
+-- Idempotent RLS: create only when missing (avoids DROP POLICY).
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_catalog.pg_policy pol
+    join pg_catalog.pg_class cls on cls.oid = pol.polrelid
+    join pg_catalog.pg_namespace nsp on nsp.oid = cls.relnamespace
+    where nsp.nspname = 'public'
+      and cls.relname = 'trusted_resources'
+      and pol.polname = 'trusted_resources_select_active'
+  ) then
+    create policy trusted_resources_select_active on public.trusted_resources
+      for select to anon, authenticated
+      using (listing_status = 'active');
+  end if;
+end
+$$;
 
-create policy trusted_resources_select_active on public.trusted_resources
-  for select to anon, authenticated
-  using (listing_status = 'active');
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_catalog.pg_policy pol
+    join pg_catalog.pg_class cls on cls.oid = pol.polrelid
+    join pg_catalog.pg_namespace nsp on nsp.oid = cls.relnamespace
+    where nsp.nspname = 'public'
+      and cls.relname = 'trusted_resources'
+      and pol.polname = 'trusted_resources_insert_pending'
+  ) then
+    create policy trusted_resources_insert_pending on public.trusted_resources
+      for insert to anon, authenticated
+      with check (listing_status = 'pending');
+  end if;
+end
+$$;
 
-create policy trusted_resources_insert_pending on public.trusted_resources
-  for insert to anon, authenticated
-  with check (listing_status = 'pending');
-
-create policy trusted_resources_update_pending on public.trusted_resources
-  for update to anon, authenticated
-  using (listing_status = 'pending')
-  with check (listing_status = 'pending');
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_catalog.pg_policy pol
+    join pg_catalog.pg_class cls on cls.oid = pol.polrelid
+    join pg_catalog.pg_namespace nsp on nsp.oid = cls.relnamespace
+    where nsp.nspname = 'public'
+      and cls.relname = 'trusted_resources'
+      and pol.polname = 'trusted_resources_update_pending'
+  ) then
+    create policy trusted_resources_update_pending on public.trusted_resources
+      for update to anon, authenticated
+      using (listing_status = 'pending')
+      with check (listing_status = 'pending');
+  end if;
+end
+$$;
 
 -- Promote/archive via service role or SQL editor (bypasses RLS).

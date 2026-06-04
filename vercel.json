@@ -9,5 +9,17 @@
       "destination": "https://theoutreachproject.app/:path*",
       "permanent": true
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "admin.theoutreachproject.app" }],
+      "destination": "/admin"
+    },
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "admin-qa.theoutreachproject.app" }],
+      "destination": "/admin"
+    }
   ]
 }

@@ -2,7 +2,7 @@
  * Stripe configuration — env vars only, no hardcoded keys or price IDs.
  * Server routes should import from here; never expose STRIPE_SECRET_KEY to the client.
  *
- * Member recurring: STRIPE_PRICE_SUPPORT_MONTHLY + STRIPE_PRICE_PRO_MONTHLY (preferred)
+ * Member recurring: STRIPE_PRICE_SUPPORT_MONTHLY (Stripe product “Support with $1”, $1/mo) + STRIPE_PRICE_PRO_MONTHLY (preferred)
  *   or legacy STRIPE_PRICE_MEMBER_MONTHLY for Pro.
  * Optional sponsor subscription: STRIPE_PRICE_SPONSOR_MONTHLY (onboarding “Sponsor Membership” tier).
  */

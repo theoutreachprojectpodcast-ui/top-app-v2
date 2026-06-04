@@ -440,14 +440,14 @@
     margin-top: var(--ds-section-gap, 24px);
   }
 
-  /* Featured sponsors — reference layout: airy logo gap, left-aligned head, 3-up row. */
+  /* Featured sponsors — left-aligned head, 3-up row. */
   .homeSponsorSpotlights {
-    margin: 0 0 var(--ds-section-gap, 24px);
+    margin: 0 0 var(--ds-space-3, 12px);
   }
 
   .homeSponsorSpotlights__head {
-    gap: 6px;
-    margin-bottom: var(--ds-space-4, 16px);
+    gap: 4px;
+    margin-bottom: var(--ds-space-2, 8px);
   }
 
   .homeSponsorSpotlights__eyebrow {
@@ -544,20 +544,28 @@
     padding: 10px 12px;
   }
 
-  .homeAuthCards {
+  .homeMembershipSection {
     order: 3;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
   }
 
-  .homeFeatureList {
+  .homeAuthCards {
     order: 4;
   }
 
-  .homeDirectoryPanel {
+  .homeFeatureList {
     order: 5;
   }
 
-  .homeMobile__missionStrip {
+  .homeDirectoryPanel {
     order: 6;
+  }
+
+  .homeMobile__missionStrip {
+    order: 7;
     margin-top: 0;
   }
 
@@ -778,10 +786,10 @@
     white-space: nowrap;
   }
 
-  /* Home shares mobile header grid in `mobile-shell.css`; tune logo + account controls here. */
+  /* Home: smaller wordmark band — full asset was ~500px tall and left a large dead zone above sponsors. */
   main.topApp[data-page-atmosphere="home"] {
-    --mobile-site-header-logo-h: clamp(367px, 95.5vw, 499px);
-    --mobile-site-header-logo-max-w: min(770px, calc(100vw - 28px));
+    --mobile-site-header-logo-h: clamp(172px, 45vw, 228px);
+    --mobile-site-header-logo-max-w: min(520px, calc(100vw - 28px));
     padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
   }
 
@@ -800,7 +808,7 @@
 
   main.topApp[data-page-atmosphere="home"] .headerBrandStack img.brandMarkImg--header:not(.podcastBrandLogo),
   main.topApp[data-page-atmosphere="home"] .headerBrandStack .brandMarkImg--header {
-    margin-bottom: clamp(-44px, -12.1vw, -57px);
+    margin-bottom: clamp(-88px, -22vw, -108px);
   }
 
   main.topApp[data-page-atmosphere="home"] .shell.shell--home {
@@ -815,13 +823,13 @@
   }
 
   main.topApp[data-page-atmosphere="home"] .homeSponsorSpotlights {
-    margin-top: clamp(-8px, -2vw, -4px);
-    padding-top: var(--home-header-content-breathe, 6px);
+    margin-top: 0;
+    padding-top: 0;
   }
 
   main.topApp[data-page-atmosphere="home"] .homeSponsorSpotlights__head {
-    gap: 6px;
-    margin-bottom: 8px;
+    gap: 4px;
+    margin-bottom: 6px;
   }
 
   main.topApp[data-page-atmosphere="home"] .footerDockBackdrop {

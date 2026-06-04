@@ -34,7 +34,7 @@ function AdminLoginForm() {
   }, []);
 
   const workosAdminSignInHref = useMemo(() => {
-    const params = new URLSearchParams({ returnTo, remember: "1" });
+    const params = new URLSearchParams({ returnTo, remember: "1", bootstrap: "1" });
     const hint = String(email || "").trim();
     if (hint) params.set("loginHint", hint);
     return `/api/auth/workos/signin?${params.toString()}`;

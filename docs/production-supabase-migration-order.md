@@ -4,6 +4,45 @@ Run in the **Production** Supabase project SQL editor (or CLI). Skip files prefi
 
 Apply in order. If a migration was already applied, Postgres will error on duplicate objects — note which step failed and continue from the next file.
 
+**Also run (not numbered in table):** `torp_profiles_membership_billing_v04.sql` after #5 or #6 — required for Membership & billing on profile.
+
+## Troubleshooting
+
+| Step | File | Common error | Fix |
+|------|------|--------------|-----|
+| 1 | `torp_v03_profiles.sql` | (none if greenfield) | Creates `torp_profiles` + `membership_source` |
+| 2 | `torp_account_access_model_v03.sql` | `relation "torp_profiles" does not exist` | Run **#1** first |
+| 2 | `torp_account_access_model_v03.sql` | `check constraint` violation on `platform_role` | Backfill invalid rows, then re-run (see below) |
+| 3 | `torp_profiles_membership_source.sql` | `torp_profiles missing` / relation does not exist | Run **#1** first |
+| 3 | `torp_profiles_membership_source.sql` | (no error — success) | **Skip** if #1 already ran; column already exists |
+| 34 | `admin_backend_v06_access_control.sql` | `column "admin_access_enabled" does not exist` | You are on an old file order — run **#34** before admin `UPDATE` |
+| Admin grant | manual `UPDATE` | `admin_access_enabled` missing | Run **#34** `admin_backend_v06_access_control.sql` first |
+
+**Check before #3:**
+
+```sql
+select exists (
+  select 1 from information_schema.tables
+  where table_schema = 'public' and table_name = 'torp_profiles'
+) as torp_profiles_exists;
+
+select exists (
+  select 1 from information_schema.columns
+  where table_schema = 'public' and table_name = 'torp_profiles' and column_name = 'membership_source'
+) as membership_source_exists;
+```
+
+If `torp_profiles_exists` is false → run #1. If `membership_source_exists` is true → #3 is already done; continue to #4.
+
+**Backfill before #2** (only if `platform_role` check constraint fails):
+
+```sql
+update public.torp_profiles
+set platform_role = 'user'
+where platform_role is null
+   or platform_role not in ('user', 'support', 'member', 'sponsor', 'moderator', 'admin');
+```
+
 ## Core (required for MVP)
 
 | # | File | Purpose |
@@ -14,6 +53,7 @@ Apply in order. If a migration was already applied, Postgres will error on dupli
 | 4 | `torp_profiles_stripe_customer_idx.sql` | Stripe customer index |
 | 5 | `torp_profiles_last_login_v06.sql` | Last login tracking |
 | 6 | `profile_onboarding_v06_questionnaire.sql` | Onboarding fields |
+| 6.5 | `torp_profiles_membership_billing_v04.sql` | Billing columns on profile (Stripe UI) |
 | 7 | `community.sql` | Community posts |
 | 8 | `community_v03_data_model.sql` | Community v3 extensions |
 | 9 | `top_app_saved_org_eins.sql` | Saved organizations |

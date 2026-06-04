@@ -15,7 +15,7 @@ This note describes how **account intent**, **platform roles**, **billing (Strip
 | Completion | `POST /api/me/onboarding/complete` | Durable `onboarding_completed`; returns `redirectPath`. After checkout, if webhook already set `active`, client **auto-calls** complete once. |
 | Resume | `metadata.onboardingCurrentStep` (`0`–`2`) + `onboarding_status` | Persisted on each step; server DTO reload picks step back up. |
 | Gating | `/api/me` entitlements + community POST guard | Pro member-only tools require **active** Pro subscription (not UI-only). |
-| Pricing display | `membershipTiers.js` labels **$1.99/mo** Support, **$5.99/mo** Pro | **Stripe Dashboard** prices must match those amounts; env points to the correct `price_…` IDs. |
+| Pricing display | `membershipTiers.js` labels **Support with $1** ($1/mo), **$5.99/mo** Pro | **Stripe Dashboard** prices must match; env `STRIPE_PRICE_SUPPORT_MONTHLY` → Support with $1 recurring price ID. |
 
 **What blocks “live” billing:** missing `STRIPE_*` env, webhook secret, or Supabase service role — APIs return **503/403** with messages; the app shell still loads.
 
@@ -59,7 +59,7 @@ Each WorkOS user maps to **one** row keyed by `workos_user_id` (unique). Session
 ## Paid onboarding and Stripe
 
 - Checkout: `POST /api/billing/checkout` (metadata includes `workos_user_id`, `membership_tier`).
-- **Price mapping (env):** `STRIPE_PRICE_SUPPORT_MONTHLY` → Support (**$1.99/mo** in product copy), `STRIPE_PRICE_PRO_MONTHLY` (or legacy `STRIPE_PRICE_MEMBER_MONTHLY`) → Pro (**$5.99/mo**), `STRIPE_PRICE_SPONSOR_MONTHLY` → sponsor subscription tier.
+- **Price mapping (env):** `STRIPE_PRICE_SUPPORT_MONTHLY` → **Support with $1** ($1/mo), `STRIPE_PRICE_PRO_MONTHLY` (or legacy `STRIPE_PRICE_MEMBER_MONTHLY`) → Pro (**$5.99/mo**), `STRIPE_PRICE_SPONSOR_MONTHLY` → sponsor subscription tier.
 - Success URL: `{origin}{returnPath}?checkout=success&session_id={CHECKOUT_SESSION_ID}`; cancel: `?checkout=cancel`. **Origin** comes from the **request Host** when the API runs, so localhost:3000 and localhost:3001 both work.
 - Lifecycle: `POST /api/billing/webhook` updates `membership_*`, `stripe_*`, and **non-staff** `platform_role` from subscription metadata.
 - Customer Portal: `POST /api/billing/portal` uses the same request-based return URL fallback when `STRIPE_CUSTOMER_PORTAL_RETURN_URL` is unset.
@@ -92,7 +92,7 @@ where lower(email) = lower('you@example.com');
 |-----|---------|
 | `STRIPE_SECRET_KEY` | Create Checkout + verify webhooks |
 | `STRIPE_WEBHOOK_SECRET` | Verify `POST /api/billing/webhook` |
-| `STRIPE_PRICE_SUPPORT_MONTHLY` | Support subscription ($1.99/mo product in Stripe) |
+| `STRIPE_PRICE_SUPPORT_MONTHLY` | Support with $1 ($1/mo recurring in Stripe) |
 | `STRIPE_PRICE_PRO_MONTHLY` or `STRIPE_PRICE_MEMBER_MONTHLY` | Pro subscription ($5.99/mo product) |
 | `STRIPE_PRICE_SPONSOR_MONTHLY` | Optional sponsor subscription tier |
 | `SUPABASE_SERVICE_ROLE_KEY` | Profile + webhook writes to `torp_profiles` |
