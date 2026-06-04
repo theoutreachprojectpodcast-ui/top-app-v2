@@ -59,6 +59,8 @@ export default function AdminSponsorsPanel() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
+  const [createName, setCreateName] = useState("");
+  const [creating, setCreating] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -148,10 +150,96 @@ export default function AdminSponsorsPanel() {
     }
   }
 
+  async function saveWithBody(extra) {
+    if (!slug) return;
+    setSaving(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/admin/sponsors/${encodeURIComponent(slug)}`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(extra),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error || "Save failed.");
+        return;
+      }
+      setStatus("Saved.");
+      await load();
+    } catch {
+      setError("Save failed.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function createSponsor() {
+    const name = createName.trim();
+    if (!name) return;
+    setCreating(true);
+    setError("");
+    setStatus("");
+    try {
+      const res = await fetch("/api/admin/sponsors", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          mission_partner: true,
+          featured: false,
+          sponsor_display_group: "mission_partner",
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error || "Create failed.");
+        return;
+      }
+      setCreateName("");
+      setStatus(`Created ${data.row?.slug || "sponsor"}.`);
+      await load();
+      if (data.row?.slug) setSlug(data.row.slug);
+    } catch {
+      setError("Create failed.");
+    } finally {
+      setCreating(false);
+    }
+  }
+
+  async function bumpOrder(delta) {
+    if (!slug) return;
+    const row = rows.find((r) => r.slug === slug);
+    if (!row) return;
+    const next = (parseInt(String(row.display_order), 10) || 0) + delta;
+    setForm((f) => ({ ...f, display_order: String(next) }));
+    await saveWithBody({ display_order: next });
+  }
+
   return (
     <div className="adminPanel">
       <h2 style={{ marginTop: 0 }}>Sponsors</h2>
-      <p className="adminMuted">Edits `sponsors_catalog`.</p>
+      <p className="adminMuted">
+        Single source of truth: <code>sponsors_catalog</code>. Homepage carousel uses rows with{" "}
+        <strong>mission_partner</strong> + <strong>featured</strong> + active status.
+      </p>
+      <div className="adminFieldStack" style={{ marginBottom: 16 }}>
+        <h3 style={{ margin: "0 0 8px", fontSize: "1rem" }}>Add sponsor</h3>
+        <div className="adminToolbar">
+          <input
+            className="adminConsoleInput"
+            placeholder="Sponsor name"
+            value={createName}
+            onChange={(e) => setCreateName(e.target.value)}
+            style={{ flex: 1, minWidth: 200 }}
+          />
+          <button type="button" className="btnPrimary" disabled={creating || !createName.trim()} onClick={() => void createSponsor()}>
+            Add sponsor
+          </button>
+        </div>
+      </div>
       <div className="adminToolbar">
         <button type="button" className="btnSoft" onClick={() => void load()} disabled={loading}>
           Refresh
@@ -219,9 +307,17 @@ export default function AdminSponsorsPanel() {
               )}
             </div>
           ))}
-          <button type="button" className="btnPrimary" disabled={saving} onClick={() => void save()}>
-            Save
-          </button>
+          <div className="adminToolbar">
+            <button type="button" className="btnSoft" disabled={saving} onClick={() => void bumpOrder(-1)}>
+              Order −
+            </button>
+            <button type="button" className="btnSoft" disabled={saving} onClick={() => void bumpOrder(1)}>
+              Order +
+            </button>
+            <button type="button" className="btnPrimary" disabled={saving} onClick={() => void save()}>
+              Save
+            </button>
+          </div>
         </div>
       ) : null}
       <hr className="adminRule" style={{ margin: "16px 0" }} />

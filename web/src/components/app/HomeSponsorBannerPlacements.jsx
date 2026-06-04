@@ -2,18 +2,12 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { FEATURED_SPONSORS } from "@/features/sponsors/data/featuredSponsors";
 import "./home-sponsor-banner.css";
 
 const MOBILE_CAROUSEL_MQ = "(max-width: 760px)";
-const CAROUSEL_INTERVAL_MS = 3000;
-
-function pickFeatured(id) {
-  return FEATURED_SPONSORS.find((s) => s.id === id) || null;
-}
 
 function sponsorEyebrow(sponsor) {
-  return String(sponsor.primaryDisplayTag || sponsor.tag || "Sponsor").trim();
+  return String(sponsor.primaryDisplayTag || sponsor.tag || "Mission Partner").trim();
 }
 
 function sponsorTagline(sponsor) {
@@ -28,13 +22,13 @@ function SponsorHomePlacement({ sponsor }) {
   const hasPhoto = !!photo;
   const eyebrow = sponsorEyebrow(sponsor);
   const tagline = sponsorTagline(sponsor);
-
-  const isGameday = sponsor.id === "gameday-mens-health";
+  const slug = String(sponsor.slug || sponsor.id || "").trim();
+  const isGameday = slug === "gameday-mens-health";
 
   return (
     <Link
       className={`homeSponsorBannerSlot${hasPhoto ? " homeSponsorBannerSlot--photo" : ""}${hasLogo ? " homeSponsorBannerSlot--hasLogo" : ""}${isGameday ? " homeSponsorBannerSlot--gameday" : ""}`}
-      href={`/sponsors/${sponsor.id}`}
+      href={`/sponsors/${slug}`}
     >
       {hasPhoto ? (
         <span className="homeSponsorBannerSlot__bg" style={{ backgroundImage: `url(${photo})` }} aria-hidden />
@@ -60,19 +54,43 @@ function SponsorHomePlacement({ sponsor }) {
   );
 }
 
-/** Home spotlight sponsor slugs (order preserved in the row / carousel). */
-const HOME_SPONSOR_SPOTLIGHT_IDS = ["gameday-mens-health", "rope-solutions", "apex-global-outdoors"];
-
 /**
- * Home sponsor spotlight row: featured partners only.
- * Logo left (transparent PNG, no plate), partner details right. Photo tiles use full-bleed backgrounds.
+ * Home Mission Partners spotlight — loads from `sponsors_catalog` via `/api/sponsors/homepage-featured`.
+ * Only rows with mission_partner + featured + active appear. Seed fallback when DB empty.
  */
 export default function HomeSponsorBannerPlacements() {
-  const spotlightSponsors = HOME_SPONSOR_SPOTLIGHT_IDS.map(pickFeatured).filter(Boolean);
+  const [spotlightSponsors, setSpotlightSponsors] = useState([]);
+  const [carouselIntervalMs, setCarouselIntervalMs] = useState(3000);
+  const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const touchDepthRef = useRef(0);
   const count = spotlightSponsors.length;
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      try {
+        const res = await fetch("/api/sponsors/homepage-featured", { cache: "no-store" });
+        const data = await res.json().catch(() => ({}));
+        if (cancelled) return;
+        if (res.ok && Array.isArray(data.sponsors)) {
+          setSpotlightSponsors(data.sponsors);
+          if (data.settings?.carouselIntervalMs) {
+            setCarouselIntervalMs(data.settings.carouselIntervalMs);
+          }
+        }
+      } catch {
+        if (!cancelled) setSpotlightSponsors([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const pauseCarousel = useCallback(() => {
     setPaused(true);
@@ -106,15 +124,19 @@ export default function HomeSponsorBannerPlacements() {
 
     if (!mobileMq.matches || reducedMotionMq.matches) return undefined;
 
-    const id = window.setInterval(tick, CAROUSEL_INTERVAL_MS);
+    const id = window.setInterval(tick, carouselIntervalMs);
     return () => window.clearInterval(id);
-  }, [paused, count]);
+  }, [paused, count, carouselIntervalMs]);
 
   useEffect(() => {
     if (activeIndex >= count && count > 0) {
       setActiveIndex(0);
     }
   }, [activeIndex, count]);
+
+  if (!loading && count === 0) {
+    return null;
+  }
 
   return (
     <section
@@ -126,32 +148,35 @@ export default function HomeSponsorBannerPlacements() {
         <p className="homeSponsorSpotlights__eyebrow">Mission partners</p>
         <h2 className="homeSponsorSpotlights__title">Featured sponsors</h2>
       </header>
-      <div
-        className="homeSponsorBannerRow homeSponsorBannerRow--switcher"
-        role="region"
-        aria-roledescription="carousel"
-        aria-label="Featured sponsor partners"
-        onPointerDown={pauseCarousel}
-        onPointerUp={resumeCarousel}
-        onPointerCancel={resumeCarousel}
-        onTouchStart={onTouchStart}
-        onTouchEnd={onTouchEnd}
-        onTouchCancel={onTouchEnd}
-        onFocusCapture={pauseCarousel}
-        onBlurCapture={(e) => {
-          if (!e.currentTarget.contains(e.relatedTarget)) resumeCarousel();
-        }}
-      >
-        {spotlightSponsors.map((sponsor, index) => (
-          <div
-            key={sponsor.id}
-            className={`homeSponsorBannerCarouselSlide${index === activeIndex ? " isActive" : ""}`}
-            aria-hidden={index !== activeIndex ? true : undefined}
-          >
-            <SponsorHomePlacement sponsor={sponsor} />
-          </div>
-        ))}
-      </div>
+      {loading ? <p className="adminMuted" style={{ margin: 0 }}>Loading partners…</p> : null}
+      {!loading && count > 0 ? (
+        <div
+          className="homeSponsorBannerRow homeSponsorBannerRow--switcher"
+          role="region"
+          aria-roledescription="carousel"
+          aria-label="Featured sponsor partners"
+          onPointerDown={pauseCarousel}
+          onPointerUp={resumeCarousel}
+          onPointerCancel={resumeCarousel}
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+          onTouchCancel={onTouchEnd}
+          onFocusCapture={pauseCarousel}
+          onBlurCapture={(e) => {
+            if (!e.currentTarget.contains(e.relatedTarget)) resumeCarousel();
+          }}
+        >
+          {spotlightSponsors.map((sponsor, index) => (
+            <div
+              key={sponsor.id || sponsor.slug}
+              className={`homeSponsorBannerCarouselSlide${index === activeIndex ? " isActive" : ""}`}
+              aria-hidden={index !== activeIndex ? true : undefined}
+            >
+              <SponsorHomePlacement sponsor={sponsor} />
+            </div>
+          ))}
+        </div>
+      ) : null}
       {count > 1 ? (
         <p className="homeSponsorBannerCarouselStatus" aria-live="polite">
           Showing sponsor {activeIndex + 1} of {count}

@@ -13,6 +13,7 @@ Apply in order. If a migration was already applied, Postgres will error on dupli
 | 1 | `torp_v03_profiles.sql` | (none if greenfield) | Creates `torp_profiles` + `membership_source` |
 | 2 | `torp_account_access_model_v03.sql` | `relation "torp_profiles" does not exist` | Run **#1** first |
 | 2 | `torp_account_access_model_v03.sql` | `check constraint` violation on `platform_role` | Backfill invalid rows, then re-run (see below) |
+| 3 | `torp_profiles_membership_source.sql` | PowerShell: `Missing statement body in do loop` / `Missing '(' after 'if'` | **Not Postgres** — you ran SQL in a shell. Use **Supabase → SQL Editor** only |
 | 3 | `torp_profiles_membership_source.sql` | `torp_profiles missing` / relation does not exist | Run **#1** first |
 | 3 | `torp_profiles_membership_source.sql` | (no error — success) | **Skip** if #1 already ran; column already exists |
 | 34 | `admin_backend_v06_access_control.sql` | `column "admin_access_enabled" does not exist` | You are on an old file order — run **#34** before admin `UPDATE` |

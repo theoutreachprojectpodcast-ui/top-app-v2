@@ -2,6 +2,10 @@
 -- Migration #3 in docs/production-supabase-migration-order.md
 -- Non-destructive: only ADD COLUMN IF NOT EXISTS + COMMENT (no DROP/TRUNCATE).
 --
+-- HOW TO RUN (required):
+--   Supabase Dashboard → SQL Editor → New query → paste this entire file → Run.
+--   Do NOT paste into PowerShell, cmd, or bash — you will get parser errors on `do $$`.
+--
 -- Prerequisite: public.torp_profiles must exist.
 --   ERROR: relation "public.torp_profiles" does not exist
 --   → Run web/supabase/torp_v03_profiles.sql (#1) first.

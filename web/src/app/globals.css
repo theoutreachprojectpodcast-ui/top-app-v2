@@ -8,6 +8,7 @@
 @import "../styles/mobile-shell.css";
 @import "../styles/mobile-design-system.css";
 @import "../styles/mobile-nav-dock.css";
+@import "../styles/capacitor-native.css";
 
 * {
   box-sizing: border-box;

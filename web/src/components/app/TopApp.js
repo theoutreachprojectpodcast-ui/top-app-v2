@@ -26,6 +26,7 @@ import HomeScreen from "@/components/home/HomeScreen";
 import { SUPPORT_EMAIL } from "@/lib/runtime/brandContact";
 import ProfileCompletionPanel from "@/features/profile/components/ProfileCompletionPanel";
 import HeaderAccountMenu from "@/components/layout/HeaderAccountMenu";
+import AdminConsoleLink from "@/components/admin/AdminConsoleLink";
 import HeaderNotificationBell from "@/components/layout/HeaderNotificationBell";
 import { useDirectorySearch } from "@/hooks/useDirectorySearch";
 import { useProfileData } from "@/features/profile/ProfileDataProvider";
@@ -493,6 +494,7 @@ function TopAppInner({ initialNav = "home" }) {
             <div className="topbarActionsCluster">
               {isLoggedIn ? (
                 <>
+                  <AdminConsoleLink />
                   <HeaderNotificationBell skipSessionGate />
                   <HeaderAccountMenu
                     avatarSrc={profile.avatarUrl || emptyProfileAvatarUrl()}

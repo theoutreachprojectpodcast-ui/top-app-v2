@@ -13,22 +13,22 @@ import {
   workOSAuthKitAuthorizeOptions,
 } from "@/lib/auth/workosOrganizationScope";
 
-function readReturnTo(searchParams, fallback = "/") {
+function readReturnTo(searchParams) {
   const raw =
     searchParams.get("returnTo") ||
     searchParams.get("return_pathname") ||
     searchParams.get("returnPathname") ||
-    "";
-  return resolvePostAuthReturnTarget(raw || fallback, fallback);
+    "/";
+  return resolvePostAuthReturnTarget(raw, "/");
 }
 
 /**
- * WorkOS AuthKit sign-in entry — used by `/sign-in`, `/login`, and `/api/auth/workos/signin`.
- * Configure **Redirects → Sign-in endpoint** in WorkOS to `https://theoutreachproject.app/sign-in`.
+ * WorkOS AuthKit sign-in entry — used by `/login`, `/sign-in`, and API aliases.
+ * Redirects to hosted AuthKit (does not chain through intermediate routes).
  *
- * @param {Request} request
+ * @param {import("next/server").NextRequest} request
  */
-export async function workOSSignInResponse(request) {
+export async function respondWorkOSSignIn(request) {
   if (!isWorkOSConfigured()) {
     return NextResponse.json(
       { error: "authentication_not_configured", message: "WorkOS AuthKit is not configured yet." },
@@ -36,8 +36,8 @@ export async function workOSSignInResponse(request) {
     );
   }
 
-  const searchParams = request.nextUrl.searchParams;
-  const returnTo = readReturnTo(searchParams, "/");
+  const { searchParams } = request.nextUrl;
+  const returnTo = readReturnTo(searchParams);
   const remember = searchParams.get("remember");
   const prompt = remember === "0" ? "login" : undefined;
   const loginHint = sanitizeWorkOSLoginHint(searchParams.get("loginHint"));
@@ -66,19 +66,11 @@ export async function workOSSignInResponse(request) {
     }
   }
 
-  try {
-    const url = await getSignInUrl({
-      returnTo,
-      loginHint,
-      prompt,
-      ...orgOptions,
-    });
-    return NextResponse.redirect(url);
-  } catch (e) {
-    console.error("[torp] WorkOS getSignInUrl failed:", e);
-    return NextResponse.json(
-      { error: "workos_signin_failed", message: "Could not start sign-in. Check WorkOS env and redirect URIs." },
-      { status: 503 },
-    );
-  }
+  const url = await getSignInUrl({
+    returnTo,
+    loginHint,
+    prompt,
+    ...orgOptions,
+  });
+  return NextResponse.redirect(url);
 }

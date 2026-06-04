@@ -7,6 +7,7 @@ import { readNavAuthCache } from "@/lib/auth/navAuthCache";
 import IconWrap from "@/components/shared/IconWrap";
 import HeaderNotificationBell from "@/components/layout/HeaderNotificationBell";
 import HeaderAccountMenu from "@/components/layout/HeaderAccountMenu";
+import AdminConsoleLink from "@/components/admin/AdminConsoleLink";
 import { useProfileData } from "@/features/profile/ProfileDataProvider";
 import { membershipAccountMenuHint } from "@/features/membership/membershipAccountDisplay";
 import { emptyProfileAvatarUrl } from "@/lib/avatarFallback";
@@ -75,6 +76,7 @@ export default function SubpageTopbarActions({ section = "all" }) {
       <span className="subpageAuthActionsPlaceholder" aria-hidden="true" />
     ) : authed ? (
       <>
+        <AdminConsoleLink />
         <HeaderNotificationBell skipSessionGate />
         <HeaderAccountMenu
           avatarSrc={profile?.avatarUrl || emptyProfileAvatarUrl()}

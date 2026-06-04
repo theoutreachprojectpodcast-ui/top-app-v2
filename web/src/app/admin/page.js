@@ -7,10 +7,18 @@ export default function AdminHomePage() {
         Platform admin
       </h1>
       <p className="adminMuted" style={{ lineHeight: 1.55 }}>
-        Manage directory enrichment, trusted resources, sponsors, community moderation, and user records. All actions are
-        persisted via secured APIs (service role + admin gate).
+        Manage homepage sponsors, sponsors directory, community posts, trusted resources, and user records. All actions
+        persist via secured admin APIs (WorkOS session + platform admin gate + Supabase service role).
+      </p>
+      <p style={{ marginTop: 16 }}>
+        <Link className="btnPrimary" href="/admin/content">
+          Open content hub
+        </Link>
       </p>
       <ul style={{ margin: "16px 0 0", paddingLeft: "1.1rem", lineHeight: 1.7 }}>
+        <li>
+          <Link href="/admin/content">Content hub</Link> — homepage carousel settings, sponsors, community, trusted, images
+        </li>
         <li>
           <Link href="/admin/status">QA status</Link> — live readiness counters for admin-managed entities
         </li>

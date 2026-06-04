@@ -1,9 +1,35 @@
+import Link from "next/link";
+import AdminHomepagePanel from "@/features/admin/AdminHomepagePanel";
+
 export default function AdminContentPage() {
   return (
     <div className="adminPanel">
-      <h2 style={{ marginTop: 0 }}>Page Content</h2>
-      <p className="adminMuted">Content management placeholder for v0.6. Wire publish/edit workflows here.</p>
+      <h1 style={{ marginTop: 0, fontSize: "1.5rem", fontWeight: 700 }}>
+        Content management
+      </h1>
+      <p className="adminMuted" style={{ lineHeight: 1.55 }}>
+        Manage public-facing homepage sponsors, the sponsors directory, and community posts. Changes persist to Supabase
+        via secured admin APIs.
+      </p>
+      <div className="adminContentHubGrid">
+        <Link className="adminContentHubCard" href="/admin/sponsors">
+          <strong>Sponsors</strong>
+          <span className="adminMuted">Catalog, categories, homepage featured flags, logos</span>
+        </Link>
+        <Link className="adminContentHubCard" href="/admin/community">
+          <strong>Community</strong>
+          <span className="adminMuted">Moderation queue + staff posts</span>
+        </Link>
+        <Link className="adminContentHubCard" href="/admin/trusted">
+          <strong>Trusted resources</strong>
+          <span className="adminMuted">Trusted partner listings</span>
+        </Link>
+        <Link className="adminContentHubCard" href="/admin/images">
+          <strong>Page images</strong>
+          <span className="adminMuted">Section backgrounds and assets</span>
+        </Link>
+      </div>
+      <AdminHomepagePanel />
     </div>
   );
 }
-

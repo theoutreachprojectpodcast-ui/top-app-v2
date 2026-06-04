@@ -88,8 +88,8 @@ html {
   }
 
   main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) {
-    --mobile-site-header-logo-h: clamp(172px, 45vw, 228px);
-    --mobile-site-header-logo-max-w: min(520px, calc(100vw - 28px));
+    --mobile-site-header-logo-h: clamp(301px, 78.75vw, 399px);
+    --mobile-site-header-logo-max-w: min(910px, calc(100vw - 28px));
     --mobile-site-header-control-size: 44px;
     --mobile-site-header-control-pad-top: calc(4px + env(safe-area-inset-top, 0px));
     --mobile-site-header-pad-x: 11px;

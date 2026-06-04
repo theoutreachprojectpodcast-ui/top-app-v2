@@ -1,9 +1,17 @@
 import "./globals.css";
 import { Roboto } from "next/font/google";
 import ColorSchemeRoot from "@/components/app/ColorSchemeRoot";
+import CapacitorNativeShell from "@/components/capacitor/CapacitorNativeShell";
 import AuthSessionProvider from "@/components/auth/AuthSessionProvider";
 import { ProfileDataProvider } from "@/features/profile/ProfileDataProvider";
 import { ProfileEditProvider } from "@/features/profile/ProfileEditProvider";
+
+/** Mobile WebView + PWA safe areas (notches, home indicator). */
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
 
 const roboto = Roboto({
   subsets: ["latin"],
@@ -46,6 +54,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={roboto.variable} suppressHydrationWarning data-color-scheme="light">
       <body suppressHydrationWarning>
+        <CapacitorNativeShell />
         <ColorSchemeRoot>
           <AuthSessionProvider>
             <ProfileDataProvider>

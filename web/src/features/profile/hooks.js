@@ -544,7 +544,11 @@ export function useProfileDataState(supabase) {
   async function resetDemo() {
     if (workosRef.current && typeof window !== "undefined") {
       clearNavAuthCache();
-      window.location.assign("/sign-out?returnTo=/");
+      const publicBase = String(process.env.NEXT_PUBLIC_APP_URL || "").trim().replace(/\/$/, "");
+      const returnTo = encodeURIComponent("/");
+      window.location.assign(
+        publicBase ? `${publicBase}/sign-out?returnTo=${returnTo}` : `/sign-out?returnTo=${returnTo}`,
+      );
       return;
     }
     if (!demoModeEnabled) return;
@@ -696,7 +700,12 @@ export function useProfileDataState(supabase) {
     if (workosRef.current && typeof window !== "undefined") {
       clearNavAuthCache();
       setWorkOSAccountEmail("");
-      window.location.assign("/sign-out?returnTo=/");
+      const publicBase = String(process.env.NEXT_PUBLIC_APP_URL || "").trim().replace(/\/$/, "");
+      const returnTo = encodeURIComponent("/");
+      const signOutUrl = publicBase
+        ? `${publicBase}/sign-out?returnTo=${returnTo}`
+        : `/sign-out?returnTo=${returnTo}`;
+      window.location.assign(signOutUrl);
       return;
     }
     clearNavAuthCache();

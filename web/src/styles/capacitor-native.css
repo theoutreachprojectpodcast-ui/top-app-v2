@@ -1,0 +1,32 @@
+/**
+ * Capacitor WebView-only adjustments (`data-capacitor-native` on `<html>`).
+ * Does not apply to Safari/Chrome mobile browsers.
+ */
+
+html[data-capacitor-native] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html[data-capacitor-native] body {
+  overscroll-behavior-y: none;
+}
+
+/* Reinforce safe areas when remote Next app loads without viewport-fit in HTML */
+html[data-capacitor-native] .footerDock,
+html[data-capacitor-native] .footerDockBackdrop {
+  padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
+}
+
+html[data-capacitor-native] .modalOverlay--profileEdit,
+html[data-capacitor-native] .modalOverlay {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Slightly larger touch targets for native WebView */
+html[data-capacitor-native] .bottomNav a,
+html[data-capacitor-native] .footerDock a,
+html[data-capacitor-native] .headerAccountTrigger,
+html[data-capacitor-native] .btn,
+html[data-capacitor-native] .btnSoft {
+  min-height: 44px;
+}

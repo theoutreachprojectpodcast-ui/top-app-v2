@@ -2,11 +2,28 @@
 
 One path from **QA → live** at `https://theoutreachproject.app`. Work sections **1–10** in order. Skip anything not needed for first real users.
 
+**Last status update:** 2026-06-04 — Production deploy `93fd4ac` on `main`. Automated HTTP smoke against `https://theoutreachproject.app` passed; browser/auth/billing steps still need your sign-off.
+
+### Progress at a glance
+
+| Step | Section | Status |
+|------|---------|--------|
+| 1 | Ship the code | **Done** — `main` deployed; CI green |
+| 2 | Database | **Mostly done** — core migrations applied; confirm #3/#6.5, RLS, seed, admin grant |
+| 3 | Domains & Vercel | **Done** — apex, `www`→apex, `admin` host |
+| 4 | Production env vars | **Partial** — billing API healthy; full Vercel audit recommended |
+| 5 | WorkOS Production | **In progress** — cookie domain set; callback + browser sign-in unverified |
+| 6 | Stripe webhook (live) | **Partial** — `stripeWebhook` + `membershipCheckout` true on prod API |
+| 7 | Deploy & smoke test | **In progress** — CLI routes OK; device + auth + live checkout pending |
+| 8 | QA admin (optional) | **Not started** |
+| 9 | Mobile stores | **Not started** (web-first) |
+| 10 | Go live | **Not started** |
+
 ---
 
 ## Already done in repo (no action needed)
 
-These were completed locally and pushed to **`QA`** — verify on your branch if you diverged:
+Shipped on **`main`** (and previously on **`QA`**) — verify on your branch if you diverged:
 
 | Item | Notes |
 |------|--------|
@@ -39,10 +56,10 @@ These were completed locally and pushed to **`QA`** — verify on your branch if
 
 ## 1. Ship the code
 
-- [ ] QA branch green in GitHub Actions (lint, build, security smoke).
-- [ ] Merge **QA → `main`** (or deploy QA if that is your production branch).
-- [ ] Confirm Vercel **Production** deploys from the correct branch.
-- [ ] Confirm Vercel **Production deploy succeeded** after merge.
+- [x] QA branch green in GitHub Actions (lint, build, security smoke).
+- [x] Merge **QA → `main`** (or deploy QA if that is your production branch).
+- [x] Confirm Vercel **Production** deploys from the correct branch (`main`).
+- [x] Confirm Vercel **Production deploy succeeded** after merge (`93fd4ac`, 2026-06-04).
 
 **Local sanity (from repo root):**
 
@@ -58,9 +75,10 @@ pnpm --dir web run security:guards
 
 ## 2. Database (Supabase Production)
 
-- [ ] Use the **Production** Supabase project (not QA/dev).
-- [ ] Apply migrations **in order**: [production-supabase-migration-order.md](./production-supabase-migration-order.md).
-  - Minimum for MVP: profiles, community, sponsors/trusted, podcasts, billing-related profile columns, admin access, **`admin_audit_logs_v01.sql`** if admin is live.
+- [x] Use the **Production** Supabase project (not QA/dev).
+- [x] Apply core migrations **in order**: [production-supabase-migration-order.md](./production-supabase-migration-order.md) (profiles, community, sponsors/trusted, podcasts, admin stack — reported complete).
+- [ ] **#3** `torp_profiles_membership_source.sql` — run in **Supabase SQL Editor only** (not PowerShell); skip if `membership_source` already exists from #1.
+- [ ] **#6.5** `torp_profiles_membership_billing_v04.sql` — billing columns on profile (`renewal_date`, `billing_status`, etc.).
 - [ ] Verify **RLS** is enabled on user-facing tables (profiles, community, favorites, etc.).
 - [ ] Seed or verify **sponsor catalog** and **featured home sponsors** exist in Production.
   - If empty: `pnpm --dir web run seed:sponsors` (with Production Supabase keys in env), or run sponsor SQL manually.
@@ -79,12 +97,14 @@ select count(*) from public.sponsors_catalog;
 
 ### Production domains
 
-- [ ] In Vercel → Domains, add:
+- [x] In Vercel → Domains, add:
   - `theoutreachproject.app` (**primary**)
   - `www.theoutreachproject.app`
   - `admin.theoutreachproject.app`
-- [ ] DNS: apex **A** + **CNAME** for `www` and `admin` → Vercel (see [deployment-domains.md](./deployment-domains.md)).
-- [ ] After deploy: `www` **301s** to apex; `admin` loads `/admin`.
+- [x] DNS: apex **A** + **CNAME** for `www` and `admin` → Vercel (see [deployment-domains.md](./deployment-domains.md)).
+- [x] After deploy: `www` **301s** to apex (verified).
+- [x] `admin.theoutreachproject.app/admin` → `/admin-login` when unsigned (no **500**; deploy `93fd4ac`).
+- [ ] Confirm `admin.theoutreachproject.app/` (root) rewrites to `/admin` ( `vercel.json` host rewrite).
 
 ### QA domains (optional — test admin before Production)
 
@@ -112,16 +132,47 @@ Set on **Production** only. **Redeploy** after changes (required for `NEXT_PUBLI
 
 Details: [production-deployment.md](./production-deployment.md), [deployment-domains.md](./deployment-domains.md).
 
+**Verify in Vercel → Production (check each):**
+
+- [x] `NEXT_PUBLIC_APP_URL` / `APP_BASE_URL` = `https://theoutreachproject.app`
+- [x] `NEXT_PUBLIC_ADMIN_URL` = `https://admin.theoutreachproject.app`
+- [x] WorkOS **live** `WORKOS_API_KEY`, `WORKOS_CLIENT_ID`, `WORKOS_COOKIE_PASSWORD`
+- [x] `WORKOS_COOKIE_DOMAIN` = `theoutreachproject.app`
+- [x] `NEXT_PUBLIC_WORKOS_REDIRECT_URI` = `https://theoutreachproject.app/callback`
+- [x] Supabase Production URL + anon + service role (app APIs respond)
+- [x] Stripe live secret + webhook secret + membership price IDs (`GET /api/billing/capabilities` → `membershipCheckout`, `stripeWebhook` true)
+- [x] `NEXT_PUBLIC_ENABLE_DEMO_FLOWS=0` (or unset) — verified on live deploy: `GET /api/auth/status` → `"demoFlowsEnabled": false` (2026-06-04)
+- [x] `ENABLE_ADMIN_EMAIL_LOGIN` / `PLATFORM_ADMIN_EMAILS` per launch policy — verified: `"adminEmailLogin": false`, `"adminEmailLoginProduction": false` (WorkOS-only `/admin`; see below)
+
+**§4 last two vars — what to set in Vercel → Production**
+
+| Variable | Recommended for public launch | Verified on prod API |
+|----------|------------------------------|----------------------|
+| `NEXT_PUBLIC_ENABLE_DEMO_FLOWS` | `0` **or leave unset** (both disable demo on Vercel Production) | `demoFlowsEnabled: false` |
+| `ENABLE_ADMIN_EMAIL_LOGIN` | `0` **or leave unset** (WorkOS-only admin; no magic-link on `/admin-login`) | `adminEmailLoginProduction: false` |
+| `PLATFORM_ADMIN_EMAILS` | Optional comma-separated ops emails (e.g. `you@company.com,ops@company.com`) | N/A — only affects **who** can bootstrap as admin via WorkOS + approved-email list; does **not** turn on magic-link while `ENABLE_ADMIN_EMAIL_LOGIN` is off |
+
+**Re-check after any Vercel env change** (requires redeploy for `NEXT_PUBLIC_*`):
+
+```bash
+curl -s https://theoutreachproject.app/api/auth/status
+```
+
+Expect: `"demoFlowsEnabled":false`, `"adminEmailLogin":false`, `"adminEmailLoginProduction":false`.
+
+**Admin access without magic-link:** grant in Supabase (`platform_role = admin`, `admin_access_enabled = true`) **or** add the email to `PLATFORM_ADMIN_EMAILS` / the built-in bootstrap list in `adminPolicy.js` (andy@volentelabs.com, etc.) **and** sign in with WorkOS on `admin.theoutreachproject.app`.
+
 ---
 
 ## 5. WorkOS Production
 
 Do this in the **WorkOS Production** environment (not Staging):
 
-- [ ] Switch WorkOS dashboard to **Production**.
+- [ ] Switch WorkOS dashboard to **Production** (confirm in dashboard).
 - [ ] Copy `sk_live_…` and `client_…` into Vercel Production (must match §4).
 - [ ] Register redirect URI: **`https://theoutreachproject.app/callback`** (must match `NEXT_PUBLIC_WORKOS_REDIRECT_URI` exactly).
 - [ ] Add launch team emails to your **WorkOS Organization** (AuthKit sign-in requires org membership).
+- [ ] **Browser smoke:** sign in / sign out on `https://theoutreachproject.app` (real account).
 - [x] Confirm `WORKOS_COOKIE_DOMAIN=theoutreachproject.app` on Vercel so sessions work on apex + `www` + `admin` + mobile WebView.
 
 If sign-in fails with “not a valid redirect URI”, the URL in the error must appear in WorkOS **Production** → Redirects, and Vercel must be redeployed after any `NEXT_PUBLIC_*` change.
@@ -180,7 +231,7 @@ Repeat Phase B on **production** Supabase, Phase C with **Live** keys/prices/web
 
 ## 6. Stripe webhook (live)
 
-- [ ] Stripe Dashboard → **Live** mode → Webhooks → endpoint: `https://theoutreachproject.app/api/billing/webhook`
+- [ ] Stripe Dashboard → **Live** mode → Webhooks → endpoint: `https://theoutreachproject.app/api/billing/webhook` (confirm in dashboard).
 - [ ] Subscribe to these events (handled in `web/src/app/api/billing/webhook/route.js`):
   - `checkout.session.completed`
   - `customer.subscription.created`
@@ -190,9 +241,10 @@ Repeat Phase B on **production** Supabase, Phase C with **Live** keys/prices/web
   - `invoice.payment_failed`
   - `invoice.upcoming`
   - `payment_method.attached`
-- [ ] Copy **live** webhook secret into Vercel `STRIPE_WEBHOOK_SECRET`.
-- [ ] Set live price IDs in Vercel Production (`STRIPE_PRICE_SUPPORT_MONTHLY`, `STRIPE_PRICE_PRO_MONTHLY`, etc.).
-- [ ] Redeploy Production.
+- [x] Copy **live** webhook secret into Vercel `STRIPE_WEBHOOK_SECRET` (inferred: prod API reports `stripeWebhook: true`).
+- [x] Set live price IDs in Vercel Production (`STRIPE_PRICE_SUPPORT_MONTHLY`, `STRIPE_PRICE_PRO_MONTHLY`, etc.) (inferred: `membershipCheckout: true`).
+- [x] Redeploy Production (`93fd4ac`).
+- [ ] Send test webhook from Stripe Live → confirm **200** response.
 
 ---
 
@@ -202,22 +254,25 @@ Run through once on **real devices** (phone + desktop) after Production is live:
 
 | Check | Pass? |
 |-------|-------|
-| Home, directory search, trusted, sponsors, community, podcasts load | |
-| Sign up / sign in / sign out (WorkOS) | |
-| `/api/me` returns profile when signed in | |
-| Profile + onboarding save | |
-| One **live** membership checkout (small amount) → Stripe receipt → profile tier updates | |
-| Admin host: only platform admins reach `/admin`; others redirect to apex | |
-| Contact form / sponsor application submits | |
-| `/privacy`, `/terms`, `/contact` load | |
-| No demo-only UI (“Reset demo”, etc.) visible | |
+| Home, directory search, trusted, sponsors, community, podcasts load | [x] partial — `/`, `/community`, `/sponsors`, `/podcasts` **200** (2026-06-04); directory/trusted not in automated smoke |
+| Sign up / sign in / sign out (WorkOS) | [ ] browser |
+| `/api/me` returns profile when signed in | [ ] browser (unsigned curl returns **200** shell) |
+| Profile + onboarding save | [ ] browser |
+| One **live** membership checkout (small amount) → Stripe receipt → profile tier updates | [ ] browser + Stripe dashboard |
+| Admin host: only platform admins reach `/admin`; others redirect to apex | [ ] browser (unsigned → `/admin-login` verified) |
+| Contact form / sponsor application submits | [ ] browser |
+| `/privacy`, `/terms`, `/contact` load | [x] `/privacy`, `/terms`, `/contact` **200** |
+| No demo-only UI (“Reset demo”, etc.) visible | [ ] browser |
 
 Optional CLI (against live Production URL):
 
 ```bash
 pnpm --dir web run verify:workos-auth
-pnpm --dir web run smoke:qa:http
+pnpm --dir web run smoke:qa:http https://theoutreachproject.app
 ```
+
+- [x] `node scripts/qa-http-smoke.mjs https://theoutreachproject.app` — all checks passed (2026-06-04).
+- [ ] `pnpm --dir web run verify:workos-auth` (requires WorkOS env locally).
 
 If mobile is in scope, also run section **9.3** on a physical device before store submission.
 
@@ -253,21 +308,23 @@ For how web + mobile relate to the **legacy App Store client** (direct Supabase 
 | Native projects | `web/ios/`, `web/android/` |
 
 Draft store copy: [store-listing-copy.md](./store-listing-copy.md).  
+**Mobile launch checklist:** [MOBILE_LAUNCH_CHECKLIST.md](./MOBILE_LAUNCH_CHECKLIST.md) (all iOS/Android todos).  
+Mobile prep: [MOBILE_READINESS.md](./MOBILE_READINESS.md), gaps: [MOBILE_ARCHITECTURE_GAPS.md](./MOBILE_ARCHITECTURE_GAPS.md).  
 Deep technical reference: [web/docs/CAPACITOR_MOBILE.md](../web/docs/CAPACITOR_MOBILE.md).
 
 ---
 
 ### 9.1 Prerequisites
 
-- [ ] **Production web** live at `https://theoutreachproject.app` (section 7 passed).
+- [ ] **Production web** live at `https://theoutreachproject.app` (section 7 passed — web routes up; auth/billing smoke pending).
 - [ ] **Node ≥ 22** for Capacitor CLI (`pnpm exec cap …`).
 - [ ] **Apple Developer Program** enrolled ([developer.apple.com](https://developer.apple.com)) — required for TestFlight and App Store.
 - [ ] **Google Play Console** account ([play.google.com/console](https://play.google.com/console)) — one-time registration fee.
 - [ ] **macOS + Xcode** (latest stable) for iOS builds and App Store upload.
 - [ ] **Android Studio** for Android builds and Play upload (Windows/macOS/Linux).
-- [ ] **Privacy policy URL** live: `https://theoutreachproject.app/privacy`
-- [ ] **Terms URL** live: `https://theoutreachproject.app/terms`
-- [ ] **Support / contact URL** live: `https://theoutreachproject.app/contact`
+- [x] **Privacy policy URL** live: `https://theoutreachproject.app/privacy`
+- [x] **Terms URL** live: `https://theoutreachproject.app/terms`
+- [x] **Support / contact URL** live: `https://theoutreachproject.app/contact`
 
 ---
 
@@ -462,11 +519,13 @@ First **Production** submission triggers **Google review** (often hours to a few
 
 **Web**
 
-1. **WorkOS Production** keys + callback URI aligned with Vercel env (§4–§5).
-2. **Supabase Production** migrations applied (§2).
-3. **Stripe live** checkout + webhook updating membership status (§6).
-4. **Demo mode off** in Production (`NEXT_PUBLIC_ENABLE_DEMO_FLOWS=0`).
-5. **Admin** gated to platform admins only.
+| # | Blocker | Status |
+|---|---------|--------|
+| 1 | **WorkOS Production** keys + callback URI aligned with Vercel env (§4–§5) | [ ] — cookie domain OK; browser sign-in + redirect URI unverified |
+| 2 | **Supabase Production** migrations applied (§2) | [x] core — [ ] #3/#6.5 if needed, RLS, admin grant |
+| 3 | **Stripe live** checkout + webhook updating membership status (§6) | [ ] — API flags OK; live checkout + webhook **200** unverified |
+| 4 | **Demo mode off** in Production (`NEXT_PUBLIC_ENABLE_DEMO_FLOWS=0`) | [ ] confirm in Vercel |
+| 5 | **Admin** gated to platform admins only | [ ] — code deployed; ops `UPDATE` + signed-in admin smoke pending |
 
 **Mobile (if shipping native apps with MVP)**
 

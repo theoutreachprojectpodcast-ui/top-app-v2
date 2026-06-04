@@ -155,5 +155,7 @@ Changing only Next **source** (no static shell change) still requires **redeploy
 
 ## See also
 
+- [../../docs/MOBILE_READINESS.md](../../docs/MOBILE_READINESS.md) — build workflow, scripts, store checklist
+- [../../docs/MOBILE_ARCHITECTURE_GAPS.md](../../docs/MOBILE_ARCHITECTURE_GAPS.md) — feature matrix, plugins, compliance gaps
 - [../../docs/connecting-web-mobile-to-legacy-api.md](../../docs/connecting-web-mobile-to-legacy-api.md) — how web + Capacitor connect to the legacy App Store Supabase client vs Next `/api/*`
 - [../../docs/mvp-production-launch.md](../../docs/mvp-production-launch.md) §9 — store submission checklist

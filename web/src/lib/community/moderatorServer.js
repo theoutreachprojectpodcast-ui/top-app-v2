@@ -3,6 +3,8 @@
  * Prefer COMMUNITY_MODERATOR_EMAILS (secret) over NEXT_PUBLIC_* when available.
  */
 
+import { isPlatformAdminServer } from "@/lib/admin/platformAdminServer";
+
 function splitList(value) {
   return String(value || "")
     .split(",")
@@ -14,6 +16,8 @@ function splitList(value) {
  * @param {{ email?: string, workosUserId?: string, profileRow?: Record<string, unknown> | null }} params
  */
 export function isCommunityModeratorServer({ email = "", workosUserId = "", profileRow = null } = {}) {
+  if (isPlatformAdminServer({ email, workosUserId, profileRow })) return true;
+
   const pr = String(profileRow?.platform_role || "").toLowerCase();
   if (pr === "moderator" || pr === "admin") return true;
 

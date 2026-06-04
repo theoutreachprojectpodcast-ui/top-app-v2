@@ -13,7 +13,11 @@
     "sync:podcast-youtube": "pnpm --dir web run sync:podcast-youtube",
     "verify:platform-names": "pnpm --dir web run verify:platform-names",
     "repair:trusted-display-names": "pnpm --dir web run repair:trusted-display-names",
-    "vercel": "vercel"
+    "vercel": "vercel",
+    "mobile:prep:prod": "pnpm --dir web run mobile:prep:prod",
+    "mobile:prep:qa": "pnpm --dir web run mobile:prep:qa",
+    "mobile:sync": "pnpm --dir web run cap:sync",
+    "validate:capacitor": "pnpm --dir web run validate:capacitor"
   },
   "devDependencies": {
     "vercel": "^51.7.0"

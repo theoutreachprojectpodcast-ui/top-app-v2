@@ -6,6 +6,10 @@ import { isCommunityModeratorServer } from "@/lib/community/moderatorServer";
 import { isPlatformAdminServer } from "@/lib/admin/platformAdminServer";
 import { profileMaySubmitCommunityStory } from "@/lib/account/entitlements";
 import { createPlatformNotification, notifyStaffProfiles } from "@/server/notifications/notificationService";
+import {
+  buildCommunityModerationPatch,
+  notifyAuthorPostApproved,
+} from "@/lib/community/communityPostModeration";
 
 const TABLE = "community_posts";
 
@@ -173,7 +177,21 @@ export async function PATCH(request, context) {
     return Response.json({ ok: true });
   }
 
-  const patch = { updated_at: now, reviewed_by: user.id, reviewed_at: now };
+  if (!mod) {
+    return Response.json({ ok: false, message: "Moderator access required." }, { status: 403 });
+  }
+
+  const moderationPatch = buildCommunityModerationPatch(action, json, user.id);
+  if (moderationPatch) {
+    const { error } = await admin.from(TABLE).update(moderationPatch).eq("id", postId);
+    if (error) {
+      return Response.json({ ok: false, message: error.message || "Update failed." }, { status: 500 });
+    }
+    if (action === "approve") {
+      await notifyAuthorPostApproved(admin, existingPost, postId);
+    }
+    return Response.json({ ok: true });
+  }
 
   if (action === "edit") {
     if (!mod) {
@@ -198,47 +216,5 @@ export async function PATCH(request, context) {
     return Response.json({ ok: true });
   }
 
-  if (!mod) {
-    return Response.json({ ok: false, message: "Moderator access required." }, { status: 403 });
-  }
-
-  if (action === "approve") {
-    patch.status = "approved";
-    patch.published_at = now;
-    patch.rejection_reason = null;
-  } else if (action === "reject") {
-    patch.status = "rejected";
-    patch.rejection_reason = String(json.rejectionReason || "").trim() || "Did not meet moderation guidelines.";
-    patch.moderation_notes = String(json.moderationNotes || "").trim() || null;
-  } else if (action === "hide") {
-    patch.status = "hidden";
-    patch.moderation_notes = String(json.moderationNotes || "").trim() || null;
-  } else {
-    return Response.json({ ok: false, message: "Invalid action." }, { status: 400 });
-  }
-
-  const { error } = await admin.from(TABLE).update(patch).eq("id", postId);
-
-  if (error) {
-    return Response.json({ ok: false, message: error.message || "Update failed." }, { status: 500 });
-  }
-
-  if (action === "approve" && existingPost.author_profile_id) {
-    const snippet = String(existingPost.title || existingPost.body || "").trim().slice(0, 120);
-    await createPlatformNotification(admin, {
-      recipientProfileId: existingPost.author_profile_id,
-      audienceScope: "user",
-      type: "community_post_approved",
-      title: "Your community story is live",
-      message: snippet
-        ? `“${snippet}${snippet.length >= 120 ? "…" : ""}” is now visible in the community feed.`
-        : "Your post was approved and is visible in the community feed.",
-      linkPath: "/community",
-      entityType: "community_post",
-      entityId: postId,
-      metadata: { post_id: postId },
-    });
-  }
-
-  return Response.json({ ok: true });
+  return Response.json({ ok: false, message: "Invalid action." }, { status: 400 });
 }

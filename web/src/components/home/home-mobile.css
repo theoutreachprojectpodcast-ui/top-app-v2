@@ -786,10 +786,10 @@
     white-space: nowrap;
   }
 
-  /* Home: smaller wordmark band — full asset was ~500px tall and left a large dead zone above sponsors. */
+  /* Home wordmark: +75% vs prior compact band (still below full non-home mobile size). */
   main.topApp[data-page-atmosphere="home"] {
-    --mobile-site-header-logo-h: clamp(172px, 45vw, 228px);
-    --mobile-site-header-logo-max-w: min(520px, calc(100vw - 28px));
+    --mobile-site-header-logo-h: clamp(301px, 78.75vw, 399px);
+    --mobile-site-header-logo-max-w: min(910px, calc(100vw - 28px));
     padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
   }
 
@@ -808,7 +808,7 @@
 
   main.topApp[data-page-atmosphere="home"] .headerBrandStack img.brandMarkImg--header:not(.podcastBrandLogo),
   main.topApp[data-page-atmosphere="home"] .headerBrandStack .brandMarkImg--header {
-    margin-bottom: clamp(-88px, -22vw, -108px);
+    margin-bottom: clamp(-154px, -38.5vw, -189px);
   }
 
   main.topApp[data-page-atmosphere="home"] .shell.shell--home {
