@@ -1,17 +1,23 @@
 import MembershipTierArt from "@/features/membership/components/MembershipTierArt";
-import { normalizeMembershipTierKey } from "@/features/membership/membershipTiers";
+import {
+  membershipBadgeChipClass,
+  normalizeMembershipTierKey,
+} from "@/features/membership/membershipTiers";
 
 /**
- * Compact tier label for profile headers — uses ds-chip tokens + MembershipTierArt.
+ * Compact tier label for profile headers — ds-chip tones + tier art sized for badges.
  */
 export default function MembershipBadge({ tierKey, label, isMember = false }) {
   const tier = normalizeMembershipTierKey(tierKey);
-  const chipTone = isMember ? "ds-chip--emphasis" : tier !== "none" ? "ds-chip--accent" : "";
+  const chipTone = membershipBadgeChipClass(tier, isMember);
 
   return (
-    <span className={`membershipBadge ds-chip ${chipTone}`.trim()} role="status">
+    <span
+      className={`membershipBadge ds-chip ${chipTone} membershipBadge--${tier}`.trim()}
+      role="status"
+    >
       <span className="membershipBadge__art" aria-hidden="true">
-        <MembershipTierArt tierId={tier} />
+        <MembershipTierArt tierId={tier} variant="badge" />
       </span>
       <span className="membershipBadge__label">{label}</span>
     </span>

@@ -87,3 +87,12 @@ export function normalizeMembershipTierKey(value) {
   if (v === "demo") return MEMBERSHIP_TIER_KEYS.MEMBER;
   return MEMBERSHIP_TIER_KEYS.SUPPORT;
 }
+
+/** Design-system chip modifier for profile/header membership badges. */
+export function membershipBadgeChipClass(tierKey, isMember = false) {
+  const tier = normalizeMembershipTierKey(tierKey);
+  if (isMember || tier === MEMBERSHIP_TIER_KEYS.MEMBER || tier === MEMBERSHIP_TIER_KEYS.SPONSOR) {
+    return "ds-chip--emphasis";
+  }
+  return "ds-chip--accent";
+}

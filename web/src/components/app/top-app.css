@@ -25,7 +25,8 @@
   main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) {
     --header-floating-offset: 8px;
     --header-floating-height: clamp(350px, 49vw, 476px);
-    --header-fade-height: 20px;
+    --header-fade-height: 28px;
+    --home-logo-content-gap: 14px;
   }
 
   main.topApp[data-page-atmosphere="home"] .headerBrandStack {
@@ -33,9 +34,10 @@
   }
 
   main.topApp[data-page-atmosphere="home"] .shell.shell--home {
-    gap: var(--ds-space-3, 12px);
+    gap: var(--ds-space-4, 16px);
     padding-top: calc(
-      var(--header-floating-offset) + var(--header-floating-height) + var(--header-fade-height) + 4px
+      var(--header-floating-offset) + var(--header-floating-height) + var(--header-fade-height) +
+        var(--home-logo-content-gap, 14px)
     );
   }
 
@@ -1785,6 +1787,9 @@ span.headerBrandMarkFallback {
   margin-top: 0;
   margin-bottom: 0;
   padding: 5px 12px 5px 6px;
+  font-size: var(--text-caption);
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 .membershipBadge__art {
   flex-shrink: 0;
@@ -1792,6 +1797,11 @@ span.headerBrandMarkFallback {
   place-items: center;
   width: 26px;
   height: 26px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+}
+.membershipBadge.ds-chip--emphasis .membershipBadge__art {
+  background: color-mix(in srgb, var(--color-accent-hover) 14%, transparent);
 }
 .membershipBadge__art .membershipTierArtSvg {
   width: 22px;
@@ -1800,6 +1810,7 @@ span.headerBrandMarkFallback {
 }
 .membershipBadge__label {
   line-height: 1.25;
+  color: inherit;
 }
 .welcomeActions {
   display: flex;
