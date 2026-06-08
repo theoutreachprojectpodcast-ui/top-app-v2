@@ -1,57 +1,283 @@
-/* Admin console shell — matches TopApp header chrome + safe content offset (no logo overlap). */
+/* Admin console shell — shared site header + in-flow admin chrome (no overlap). */
 
 main.topApp.appShell--admin {
   min-height: 100vh;
   padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
 }
 
+/* Desktop: compact header reserve — same logo/topbar chrome, less dead space than home hero. */
+@media (min-width: 761px) {
+  main.topApp.appShell--admin[data-page-atmosphere="admin"] {
+    --header-floating-offset: 16px;
+    --header-floating-height: clamp(96px, 11vw, 132px);
+    --header-fade-height: 14px;
+  }
+
+  main.topApp.appShell--admin[data-page-atmosphere="admin"] img.brandMarkImg--header {
+    max-height: clamp(76px, 9vw, 116px);
+    max-width: min(480px, 68vw);
+  }
+
+  main.topApp.appShell--admin[data-page-atmosphere="admin"] .topbarOcclusion {
+    height: calc(var(--header-floating-offset) + var(--header-floating-height) + var(--header-fade-height));
+  }
+}
+
 main.topApp.appShell--admin .topbarOcclusion {
   pointer-events: none;
 }
 
-main.topApp.appShell--admin .shell.adminShellBody {
+/* Single in-flow column: title, nav, search, page content — all below fixed header. */
+main.topApp.appShell--admin .adminLayout {
+  position: relative;
+  z-index: 1;
   width: min(var(--content-max-width), calc(100% - var(--content-gutter)));
   margin: 0 auto;
-  padding: calc(var(--header-floating-offset) + var(--header-floating-height) + var(--header-fade-height) + 8px) 0
+  box-sizing: border-box;
+  padding:
+    calc(var(--header-floating-offset) + var(--header-floating-height) + var(--header-fade-height) + 12px)
+    max(12px, var(--content-gutter, 16px))
     calc(24px + env(safe-area-inset-bottom, 0px));
-  display: grid;
-  gap: var(--ds-section-gap, 20px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-space-3, 12px);
   min-width: 0;
 }
 
-main.topApp.appShell--admin .adminConsoleChrome {
-  position: relative;
-  z-index: 96;
-  width: min(var(--content-max-width), calc(100% - var(--content-gutter)));
-  margin: 0 auto;
-  padding: 0 var(--content-gutter, 16px);
-  box-sizing: border-box;
-}
-
-main.topApp.appShell--admin .adminConsoleTitleRow {
+main.topApp.appShell--admin .adminLayout__intro {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
-  gap: 8px 16px;
-  padding: 4px 0 8px;
+  gap: 6px 16px;
 }
 
-main.topApp.appShell--admin .adminConsoleTitleRow h1 {
+main.topApp.appShell--admin .adminLayout__title {
   margin: 0;
   font-size: 1.125rem;
   font-weight: 700;
   letter-spacing: 0.02em;
 }
 
-main.topApp.appShell--admin .adminConsoleNav {
+main.topApp.appShell--admin .adminLayout__session {
+  font-size: 0.8125rem;
+}
+
+main.topApp.appShell--admin .adminContentContainer {
+  display: grid;
+  gap: var(--ds-section-gap, 16px);
+  min-width: 0;
+}
+
+main.topApp.appShell--admin .adminSectionEditor__body {
+  margin-top: var(--ds-space-3, 12px);
+  display: grid;
+  gap: var(--ds-space-3, 12px);
+}
+
+/* Horizontal admin navigation */
+.adminHorizontalNav {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.adminHorizontalNav__row {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 6px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--color-border-subtle);
+  -webkit-overflow-scrolling: touch;
+}
+
+.adminHorizontalNav__link {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 8px 12px;
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: var(--text-body-sm, 0.875rem);
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.adminHorizontalNav__link:hover {
+  background: color-mix(in srgb, var(--color-bg-secondary) 80%, transparent);
+  color: var(--color-text-primary);
+}
+
+.adminHorizontalNav__link.isActive {
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  border-color: color-mix(in srgb, var(--color-accent) 28%, var(--color-border-subtle));
+  color: var(--color-text-primary);
+}
+
+.adminHorizontalNav__more {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.adminHorizontalNav__moreMenu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 20;
+  min-width: 220px;
+  max-height: min(60vh, 420px);
+  overflow: auto;
+  padding: 8px;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md, 8px);
+  box-shadow: 0 10px 28px rgb(0 0 0 / 14%);
+  display: grid;
+  gap: 4px;
+}
+
+.adminHorizontalNav__moreMenu a {
+  display: block;
+  padding: 8px 10px;
+  border-radius: var(--radius-md, 8px);
+  color: var(--color-text-primary);
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
+.adminHorizontalNav__moreMenu a:hover {
+  background: var(--color-bg-secondary);
+}
+
+.adminHorizontalNav__moreMenu a.isActive {
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  font-weight: 600;
+}
+
+.adminHorizontalNav__meta {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.adminHorizontalNav__breadcrumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8125rem;
+}
+
+.adminHorizontalNav__sectionDesc {
   margin: 0;
-  padding: 0 0 10px;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+/* Admin search — below nav, in document flow */
+.adminSearch {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.adminSearch__label {
+  margin: 0;
+}
+
+.adminSearch__fieldWrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.adminSearch__input {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.adminSearch__clear {
+  flex: 0 0 auto;
+}
+
+.adminSearch__results {
+  display: grid;
+  gap: 4px;
+  padding: 8px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md, 8px);
+  background: var(--color-bg-elevated);
+  max-height: min(50vh, 360px);
+  overflow: auto;
+}
+
+.adminSearch__result {
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md, 8px);
+  text-decoration: none;
+  color: inherit;
+}
+
+.adminSearch__result:hover {
+  background: var(--color-bg-secondary);
+}
+
+.adminSearch__resultLabel {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.adminSearch__resultMeta {
+  font-size: 0.75rem;
+}
+
+.adminSearch__status,
+.adminSearch__error {
+  margin: 0;
+  padding: 8px 12px;
+  font-size: 0.875rem;
+}
+
+.adminSearch__error {
+  color: var(--color-danger, #b42318);
 }
 
 @media (max-width: 760px) {
-  main.topApp.appShell--admin .adminConsoleChrome {
+  main.topApp.appShell--admin .adminLayout {
+    padding-top: calc(var(--header-floating-offset) + var(--header-floating-height) + var(--header-fade-height) + 8px);
     padding-left: max(12px, var(--content-gutter, 16px));
     padding-right: max(12px, var(--content-gutter, 16px));
+  }
+
+  .adminHorizontalNav__row {
+    gap: 4px;
+  }
+
+  .adminHorizontalNav__link {
+    min-height: 38px;
+    padding: 8px 10px;
+    font-size: 0.8125rem;
+  }
+
+  .adminSearch__fieldWrap {
+    display: grid;
+  }
+
+  .adminSearch__clear {
+    width: 100%;
   }
 }

@@ -1,16 +1,11 @@
 import Link from "next/link";
 import AdminHomepagePanel from "@/features/admin/AdminHomepagePanel";
+import AdminPanelShell from "@/components/admin/AdminPanelShell";
 
 export default function AdminContentPage() {
   return (
-    <div className="adminPanel">
-      <h1 style={{ marginTop: 0, fontSize: "1.5rem", fontWeight: 700 }}>
-        Content management
-      </h1>
-      <p className="adminMuted" style={{ lineHeight: 1.55 }}>
-        Manage public-facing homepage sponsors, the sponsors directory, and community posts. Changes persist to Supabase
-        via secured admin APIs.
-      </p>
+    <>
+      <AdminPanelShell panelId="homepage">
       <p style={{ marginTop: 12 }}>
         <Link className="btnPrimary" href="/admin/content/create">
           Create content
@@ -42,7 +37,8 @@ export default function AdminContentPage() {
           <span className="adminMuted">Upload and copy image URLs</span>
         </Link>
       </div>
+      </AdminPanelShell>
       <AdminHomepagePanel />
-    </div>
+    </>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import AdminPanelShell from "@/components/admin/AdminPanelShell";
 
 const DEFAULT_FORM = {
   recipientEmail: "",
@@ -72,12 +73,7 @@ export default function AdminContactPanel() {
   }
 
   return (
-    <div className="adminPanel">
-      <h2 style={{ marginTop: 0 }}>Contact settings and submissions</h2>
-      <p className="adminMuted">Set recipient routing and review stored contact submissions.</p>
-      {error ? <p role="alert" style={{ color: "var(--color-danger, #b42318)" }}>{error}</p> : null}
-      {message ? <p style={{ color: "var(--color-success, #166534)" }}>{message}</p> : null}
-
+    <AdminPanelShell panelId="contact" error={error} message={message}>
       <div className="adminFieldStack">
         {[
           ["recipientEmail", "Primary recipient email"],
@@ -139,6 +135,6 @@ export default function AdminContactPanel() {
           </tbody>
         </table>
       </div>
-    </div>
+    </AdminPanelShell>
   );
 }

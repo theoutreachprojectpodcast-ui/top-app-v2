@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import AdminPanelShell from "@/components/admin/AdminPanelShell";
 
 export default function AdminApplicationsPanel() {
   const [rows, setRows] = useState([]);
@@ -36,10 +37,7 @@ export default function AdminApplicationsPanel() {
   }
 
   return (
-    <div className="adminPanel">
-      <h2 style={{ marginTop: 0 }}>Sponsorship applications</h2>
-      <p className="adminMuted">Review sponsor applications and convert approved records to live sponsors.</p>
-      {error ? <p role="alert" style={{ color: "var(--color-danger, #b42318)" }}>{error}</p> : null}
+    <AdminPanelShell panelId="applications" error={error}>
       {loading ? <p className="adminMuted">Loading…</p> : null}
       <div className="adminTableWrap">
         <table className="adminTable">
@@ -78,6 +76,6 @@ export default function AdminApplicationsPanel() {
           </tbody>
         </table>
       </div>
-    </div>
+    </AdminPanelShell>
   );
 }

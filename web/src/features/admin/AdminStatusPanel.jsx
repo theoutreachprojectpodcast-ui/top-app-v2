@@ -1,5 +1,6 @@
 "use client";
 
+import AdminPanelShell from "@/components/admin/AdminPanelShell";
 import { useCallback, useEffect, useState } from "react";
 
 export default function AdminStatusPanel() {
@@ -33,13 +34,7 @@ export default function AdminStatusPanel() {
   }, [load]);
 
   return (
-    <div className="adminPanel">
-      <h2 style={{ marginTop: 0 }}>QA status & environment counters</h2>
-      <p className="adminMuted">
-        Live high-level counters from admin-managed tables. Primary admin workflows live on the dashboard; this panel is
-        for operators validating production readiness.
-      </p>
-      {error ? <p role="alert" style={{ color: "var(--color-danger, #b42318)" }}>{error}</p> : null}
+    <AdminPanelShell panelId="status" error={error}>
       {loading ? <p className="adminMuted">Loading…</p> : null}
       {!loading ? (
         <div className="adminTableWrap">
@@ -58,6 +53,6 @@ export default function AdminStatusPanel() {
       <button type="button" className="btnSoft" onClick={() => void load()} style={{ marginTop: 12 }}>
         Refresh status
       </button>
-    </div>
+    </AdminPanelShell>
   );
 }

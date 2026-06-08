@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import AdminPanelShell from "@/components/admin/AdminPanelShell";
 
 export default function AdminHomepagePanel() {
   const [settings, setSettings] = useState({ carouselLimit: 3, carouselIntervalMs: 3000 });
@@ -62,15 +63,8 @@ export default function AdminHomepagePanel() {
   }
 
   return (
-    <div className="adminPanel adminPanel--nested">
-      <h3 style={{ marginTop: 0 }}>Homepage — Mission Partners carousel</h3>
-      <p className="adminMuted">
-        Public home shows sponsors where <strong>mission_partner</strong> and <strong>featured</strong> are true and status is
-        active. Manage rows in <Link href="/admin/sponsors">Sponsors</Link>.
-      </p>
+    <AdminPanelShell panelId="homepage" nested error={error} message={status}>
       {loading ? <p className="adminMuted">Loading…</p> : null}
-      {error ? <p role="alert" style={{ color: "var(--color-danger, #b42318)" }}>{error}</p> : null}
-      {status ? <p style={{ color: "var(--color-success, #166534)" }}>{status}</p> : null}
       {!loading ? (
         <>
           <div className="adminFieldStack">
@@ -117,6 +111,9 @@ export default function AdminHomepagePanel() {
           )}
         </>
       ) : null}
-    </div>
+      <p className="adminMuted" style={{ marginTop: 8 }}>
+        Manage sponsor rows in <Link href="/admin/sponsors">Sponsors</Link>.
+      </p>
+    </AdminPanelShell>
   );
 }

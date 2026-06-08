@@ -1,5 +1,6 @@
 "use client";
 
+import AdminPanelShell from "@/components/admin/AdminPanelShell";
 import { useCallback, useEffect, useState } from "react";
 
 const ROLE_OPTIONS = ["user", "support", "member", "sponsor", "moderator", "admin"];
@@ -141,10 +142,8 @@ export default function AdminUsersPanel() {
   }
 
   return (
-    <div className="adminPanel">
-      <h2 style={{ marginTop: 0 }}>Users</h2>
-      <p className="adminMuted">Search users, update role/user type/status, suspend/reactivate, and issue admin magic-link sign-in.</p>
-      <div className="adminToolbar">
+    <AdminPanelShell panelId="users" error={error}>
+            <div className="adminToolbar">
         <label className="fieldLabel" htmlFor="admin-q">
           Search
         </label>
@@ -415,6 +414,6 @@ export default function AdminUsersPanel() {
           </button>
         </div>
       ) : null}
-    </div>
+    </AdminPanelShell>
   );
 }

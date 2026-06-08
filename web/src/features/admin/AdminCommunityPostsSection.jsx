@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import AdminRichTextEditor from "@/components/admin/AdminRichTextEditor";
 import AdminMediaUploadField from "@/components/admin/AdminMediaUploadField";
+import AdminPanelShell from "@/components/admin/AdminPanelShell";
 import { isLikelyHtml, sanitizeAdminHtml } from "@/lib/admin/sanitizeHtml";
 
 const POST_TYPES = [
@@ -163,15 +164,7 @@ export default function AdminCommunityPostsSection() {
   }
 
   return (
-    <div className="adminPanel">
-      <h1 style={{ marginTop: 0, fontSize: "1.5rem", fontWeight: 700 }}>
-        Community posts & moderation
-      </h1>
-      <p className="adminMuted" style={{ lineHeight: 1.55 }}>
-        Member stories submit as <strong>pending review</strong> and only appear on the public community page after
-        approval. Staff posts can be drafted or published directly. All changes persist to <code>community_posts</code>.
-      </p>
-
+    <AdminPanelShell panelId="community" error={error} message={statusMsg}>
       <div className="adminToolbar" style={{ gap: 8, flexWrap: "wrap" }}>
         {SCOPES.map((s) => (
           <button
@@ -190,13 +183,6 @@ export default function AdminCommunityPostsSection() {
           {showCreate ? "Close create form" : "New staff post"}
         </button>
       </div>
-
-      {error ? (
-        <p role="alert" style={{ color: "var(--color-danger, #b42318)", marginTop: 12 }}>
-          {error}
-        </p>
-      ) : null}
-      {statusMsg ? <p className="adminMuted" style={{ marginTop: 12 }}>{statusMsg}</p> : null}
 
       {showCreate ? (
         <div className="adminFieldStack" style={{ marginTop: 16, padding: 16, border: "1px solid var(--color-border-subtle)", borderRadius: 12 }}>
@@ -373,6 +359,6 @@ export default function AdminCommunityPostsSection() {
           );
         })}
       </div>
-    </div>
+    </AdminPanelShell>
   );
 }

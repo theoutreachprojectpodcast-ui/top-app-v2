@@ -6,7 +6,7 @@ import ColorSchemeToggle from "@/components/app/ColorSchemeToggle";
 import HeaderInner from "@/components/layout/HeaderInner";
 import SubpageTopbarActions from "@/components/layout/SubpageTopbarActions";
 import AdminViewToggle from "@/components/admin/AdminViewToggle";
-import AdminPlatformNav from "@/components/admin/AdminPlatformNav";
+import AdminLayout from "@/components/admin/AdminLayout";
 import { useImmersiveHeaderScroll } from "@/hooks/useImmersiveHeaderScroll";
 
 export default function AdminAppShell({ children, sessionEmail = "" }) {
@@ -44,19 +44,7 @@ export default function AdminAppShell({ children, sessionEmail = "" }) {
         </header>
       </div>
 
-      <div className="adminConsoleChrome">
-        <div className="adminConsoleTitleRow">
-          <h1>Platform admin</h1>
-          {sessionEmail ? (
-            <span className="adminMuted" style={{ fontSize: "0.8125rem" }}>
-              {sessionEmail}
-            </span>
-          ) : null}
-        </div>
-        <AdminPlatformNav />
-      </div>
-
-      <section className="shell adminShellBody">{children}</section>
+      <AdminLayout sessionEmail={sessionEmail}>{children}</AdminLayout>
     </main>
   );
 }

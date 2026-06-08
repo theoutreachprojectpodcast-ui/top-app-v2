@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import AdminPanelShell from "@/components/admin/AdminPanelShell";
 
 export default function AdminFormSubmissionsPanel() {
   const [rows, setRows] = useState([]);
@@ -54,11 +55,7 @@ export default function AdminFormSubmissionsPanel() {
   }
 
   return (
-    <div className="adminPanel">
-      <h1 style={{ marginTop: 0, fontSize: "1.5rem", fontWeight: 700 }}>
-        Form submissions
-      </h1>
-      <p className="adminMuted">General intake stored in `form_submissions`. Contact-specific routing is under Operations → Contact.</p>
+    <AdminPanelShell panelId="forms" error={error} message={message}>
       <div className="adminToolbar">
         <select className="adminConsoleInput" value={status} onChange={(e) => setStatus(e.target.value)}>
           <option value="">All statuses</option>
@@ -112,6 +109,6 @@ export default function AdminFormSubmissionsPanel() {
         </table>
       </div>
       {!loading && rows.length === 0 ? <p className="adminMuted">No submissions.</p> : null}
-    </div>
+    </AdminPanelShell>
   );
 }

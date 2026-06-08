@@ -1,5 +1,6 @@
 "use client";
 
+import AdminPanelShell from "@/components/admin/AdminPanelShell";
 import { useState } from "react";
 import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
 
@@ -87,12 +88,8 @@ export default function AdminNonprofitPanel() {
   }
 
   return (
-    <div className="adminPanel">
-      <h2 style={{ marginTop: 0 }}>Trusted resources & nonprofit directory</h2>
-      <p className="adminMuted">
-        Look up IRS/EIN directory rows and enrichment, or create a trusted listing manually on the Trusted admin page.
-      </p>
-      <div className="adminToolbar" style={{ gap: 8 }}>
+    <AdminPanelShell panelId="nonprofits" error={error} message={status}>
+            <div className="adminToolbar" style={{ gap: 8 }}>
         <a className="btnPrimary" href="/admin/trusted" style={{ display: "inline-flex", alignItems: "center" }}>
           Add trusted resource manually
         </a>
@@ -147,6 +144,6 @@ export default function AdminNonprofitPanel() {
           </button>
         </div>
       ) : null}
-    </div>
+    </AdminPanelShell>
   );
 }

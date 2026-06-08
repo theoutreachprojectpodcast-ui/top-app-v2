@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import AdminPanelShell from "@/components/admin/AdminPanelShell";
 
 const BLANK_FORM = {
   page_key: "",
@@ -67,12 +68,7 @@ export default function AdminPageImagesPanel() {
   }
 
   return (
-    <div className="adminPanel">
-      <h2 style={{ marginTop: 0 }}>Page image manager</h2>
-      <p className="adminMuted">Manage page/section images that can be consumed by public routes.</p>
-      {error ? <p role="alert" style={{ color: "var(--color-danger, #b42318)" }}>{error}</p> : null}
-      {message ? <p style={{ color: "var(--color-success, #166534)" }}>{message}</p> : null}
-
+    <AdminPanelShell panelId="page-images" error={error} message={message}>
       <div className="adminFieldStack">
         {[
           ["page_key", "Page key"],
@@ -125,6 +121,6 @@ export default function AdminPageImagesPanel() {
           </tbody>
         </table>
       </div>
-    </div>
+    </AdminPanelShell>
   );
 }

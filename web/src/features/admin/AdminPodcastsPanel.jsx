@@ -1,5 +1,6 @@
 "use client";
 
+import AdminPanelShell from "@/components/admin/AdminPanelShell";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import PodcastGuestApplicationsAdmin from "@/features/podcasts/components/PodcastGuestApplicationsAdmin";
@@ -96,7 +97,7 @@ export default function AdminPodcastsPanel() {
   }
 
   return (
-    <div className="adminPanel">
+    <AdminPanelShell panelId="podcast">
       <h1 style={{ marginTop: 0, fontSize: "1.5rem", fontWeight: 700 }}>Podcast admin</h1>
       <p className="adminMuted">
         Review guest applications (filter by status, approve, deny, schedule, archive), manage YouTube episode sync,
@@ -254,6 +255,6 @@ export default function AdminPodcastsPanel() {
           <p className="adminMuted">Re-run “Refresh podcast data” to rebuild heuristics from the latest four valid episodes.</p>
         </div>
       ) : null}
-    </div>
+    </AdminPanelShell>
   );
 }

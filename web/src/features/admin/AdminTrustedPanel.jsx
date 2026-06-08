@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import AdminPanelShell from "@/components/admin/AdminPanelShell";
 
 const EDIT_KEYS = [
   "display_name",
@@ -239,9 +240,7 @@ export default function AdminTrustedPanel() {
   }
 
   return (
-    <div className="adminPanel">
-      <h2 style={{ marginTop: 0 }}>Trusted resources</h2>
-      <p className="adminMuted">Edits `trusted_resources` (service role). Public listing still respects RLS for anon/authenticated clients.</p>
+    <AdminPanelShell panelId="trusted" error={error} message={status}>
       <div className="adminToolbar">
         <button type="button" className="btnSoft" onClick={() => void load()} disabled={loading}>
           Refresh
@@ -315,12 +314,6 @@ export default function AdminTrustedPanel() {
           </button>
         </div>
       ) : null}
-      {error ? (
-        <p role="alert" style={{ color: "var(--color-danger, #b42318)" }}>
-          {error}
-        </p>
-      ) : null}
-      {status ? <p style={{ color: "var(--color-success, #166534)" }}>{status}</p> : null}
       {loading ? <p className="adminMuted">Loading…</p> : null}
       {!loading && rows.length === 0 ? <p className="adminMuted">No rows.</p> : null}
       {rows.length > 0 ? (
@@ -373,6 +366,6 @@ export default function AdminTrustedPanel() {
           </button>
         </div>
       ) : null}
-    </div>
+    </AdminPanelShell>
   );
 }

@@ -1,7 +1,10 @@
 "use client";
 
+import PublicPageContentSlot from "@/components/content/PublicPageContentSlot";
+
 /**
  * Brand + mission strip for main app shells.
+ * Footer copy can be overridden by approved page_content_blocks (page_key=footer).
  * @param {"top" | "bottom"} [placement="top"] — Home hero: `top` (under the bar). Other tabs / site routes: `bottom` (end of main content).
  */
 export default function MissionPageTopStrip({ placement = "top" }) {
@@ -11,9 +14,21 @@ export default function MissionPageTopStrip({ placement = "top" }) {
       <div className="footerInner">
         <div>
           <div className="brandName">THE OUTREACH PROJECT</div>
-          <p className="footerNote">Mission-first resource navigation for veterans, first responders, and supporters.</p>
+          <PublicPageContentSlot
+            pageKey="footer"
+            sectionKey="mission_note"
+            className="footerNote"
+            fallback={
+              <p className="footerNote">Mission-first resource navigation for veterans, first responders, and supporters.</p>
+            }
+          />
         </div>
-        <p className="footerNote">Trust-driven support, built for clarity under pressure.</p>
+        <PublicPageContentSlot
+          pageKey="footer"
+          sectionKey="tagline"
+          className="footerNote"
+          fallback={<p className="footerNote">Trust-driven support, built for clarity under pressure.</p>}
+        />
         <nav className="footerLegalNav" aria-label="Legal">
           <a href="/privacy">Privacy</a>
           <span aria-hidden="true"> · </span>

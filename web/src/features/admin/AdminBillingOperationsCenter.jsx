@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import AdminBillingPanel from "@/features/admin/AdminBillingPanel";
+import AdminPanelShell from "@/components/admin/AdminPanelShell";
 
 export default function AdminBillingOperationsCenter() {
   const [scenario, setScenario] = useState("expected");
@@ -46,15 +47,14 @@ export default function AdminBillingOperationsCenter() {
 
   return (
     <>
-      <div className="adminPanel">
-        <h1 style={{ marginTop: 0, fontSize: "1.5rem", fontWeight: 700 }}>
-          Billing & revenue operations
-        </h1>
-        <p className="adminMuted" style={{ lineHeight: 1.55 }}>
-          {data?.disclaimer ||
-            "Operational visibility only—not audited financial statements. Card data is never shown in admin."}
-        </p>
-
+      <AdminPanelShell
+        panelId="billing"
+        error={error}
+        description={
+          data?.disclaimer ||
+          "Operational visibility only—not audited financial statements. Card data is never shown in admin."
+        }
+      >
         <div className="adminToolbar" style={{ marginTop: 12 }}>
           <button type="button" className={tab === "revenue" ? "btnPrimary" : "btnSoft"} onClick={() => setTab("revenue")}>
             Revenue & forecast
@@ -177,7 +177,7 @@ export default function AdminBillingOperationsCenter() {
             </table>
           </div>
         ) : null}
-      </div>
+      </AdminPanelShell>
 
       {tab === "invoices" ? <AdminBillingPanel /> : null}
     </>

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import AdminPanelShell from "@/components/admin/AdminPanelShell";
 
 function StatCard({ label, value, href }) {
   const inner = (
@@ -53,15 +54,7 @@ export default function AdminAnalyticsPlatform() {
   const m = metrics?.membership || {};
 
   return (
-    <div className="adminPanel">
-      <h1 style={{ marginTop: 0, fontSize: "1.5rem", fontWeight: 700 }}>
-        Analytics
-      </h1>
-      <p className="adminMuted">
-        Operational metrics from Supabase-backed tables. Page views and click-through rates require future analytics
-        instrumentation.
-      </p>
-      {error ? <p role="alert" style={{ color: "var(--color-danger, #b42318)" }}>{error}</p> : null}
+    <AdminPanelShell panelId="analytics" error={error}>
       {loading ? <p className="adminMuted">Loading…</p> : null}
 
       {!loading && metrics ? (
@@ -103,6 +96,6 @@ export default function AdminAnalyticsPlatform() {
       <button type="button" className="btnSoft" style={{ marginTop: 16 }} onClick={() => void load()}>
         Refresh
       </button>
-    </div>
+    </AdminPanelShell>
   );
 }

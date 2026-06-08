@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import AdminPanelShell from "@/components/admin/AdminPanelShell";
 
 const ACTIONS = [
   { href: "/admin/content/create", label: "Create content", desc: "Guided wizard" },
@@ -49,16 +50,7 @@ export default function AdminCommandCenterDashboard() {
   const s = data?.snapshots || {};
 
   return (
-    <div className="adminPanel">
-      <h1 style={{ marginTop: 0, fontSize: "1.5rem", fontWeight: 700 }}>
-        Command center
-      </h1>
-      <p className="adminMuted" style={{ lineHeight: 1.55 }}>
-        Actionable queues and platform health. Technical QA lives under{" "}
-        <Link href="/admin/advanced">Advanced</Link>.
-      </p>
-
-      {error ? <p role="alert" style={{ color: "var(--color-danger, #b42318)" }}>{error}</p> : null}
+    <AdminPanelShell panelId="dashboard" error={error}>
       {loading ? <p className="adminMuted">Loading…</p> : null}
 
       <h2 style={{ fontSize: "1.05rem", marginTop: 20 }}>Quick actions</h2>
@@ -185,6 +177,6 @@ export default function AdminCommandCenterDashboard() {
           Full analytics
         </Link>
       </p>
-    </div>
+    </AdminPanelShell>
   );
 }

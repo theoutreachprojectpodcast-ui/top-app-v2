@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import AdminScopeBanner from "@/components/admin/AdminScopeBanner";
+import AdminPanelShell from "@/components/admin/AdminPanelShell";
 import AdminMediaUploadField from "@/components/admin/AdminMediaUploadField";
 import Link from "next/link";
 
@@ -49,10 +50,7 @@ export default function AdminMediaLibraryPanel() {
   }
 
   return (
-    <div className="adminPanel">
-      <h1 style={{ marginTop: 0, fontSize: "1.5rem", fontWeight: 700 }}>
-        Media library
-      </h1>
+    <AdminPanelShell panelId="media-library" error={error} message={message}>
       <AdminScopeBanner readiness="production" title="Reusable assets">
         Upload images to the <code>admin-media</code> bucket (max 10 MB). Copy public URLs into sponsors, community posts, page
         images, or the content wizard.
@@ -127,6 +125,6 @@ export default function AdminMediaLibraryPanel() {
         ))}
       </div>
       {!loading && pageImages.length === 0 ? <p className="adminMuted">No page images yet.</p> : null}
-    </div>
+    </AdminPanelShell>
   );
 }

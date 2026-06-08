@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import AdminRichTextEditor from "@/components/admin/AdminRichTextEditor";
 import AdminMediaUploadField from "@/components/admin/AdminMediaUploadField";
+import AdminPanelShell from "@/components/admin/AdminPanelShell";
 import { routeForContentBlock } from "@/lib/admin/pageContentBlocks";
 import { htmlToPlainText } from "@/lib/admin/sanitizeHtml";
 
@@ -183,15 +184,7 @@ export default function AdminContentCreateWizard() {
   }
 
   return (
-    <div className="adminPanel">
-      <h1 style={{ marginTop: 0, fontSize: "1.5rem", fontWeight: 700 }}>
-        Create content
-      </h1>
-      <p className="adminMuted" style={{ lineHeight: 1.55 }}>
-        Step-by-step assistant for adding site content. Required fields are marked. Use{" "}
-        <strong>Publish</strong> to open the right admin panel with your choices pre-filled.
-      </p>
-
+    <AdminPanelShell panelId="content-create" error={error} message={message}>
       <ol className="adminWizardSteps" aria-label="Creation steps">
         {stepLabels.map((label, i) => (
           <li key={label} className={i === step ? "isCurrent" : i < step ? "isDone" : ""}>
@@ -409,6 +402,6 @@ export default function AdminContentCreateWizard() {
           Cancel
         </Link>
       </div>
-    </div>
+    </AdminPanelShell>
   );
 }

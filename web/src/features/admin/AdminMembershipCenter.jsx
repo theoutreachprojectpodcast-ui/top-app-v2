@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { MEMBERSHIP_TIER_DEFINITIONS } from "@/features/membership/membershipTiers";
 import AdminScopeBanner from "@/components/admin/AdminScopeBanner";
+import AdminPanelShell from "@/components/admin/AdminPanelShell";
 
 export default function AdminMembershipCenter() {
   const [stats, setStats] = useState(null);
@@ -33,22 +34,17 @@ export default function AdminMembershipCenter() {
   }, [load]);
 
   return (
-    <div className="adminPanel">
-      <h1 style={{ marginTop: 0, fontSize: "1.5rem", fontWeight: 700 }}>
-        Membership management
-      </h1>
-      <p className="adminMuted">
-        Tier definitions are code-driven today ({`MEMBERSHIP_TIER_DEFINITIONS`}) with Stripe price IDs in environment
-        variables. Per-user membership changes are on the{" "}
-        <Link href="/admin/users">Users</Link> screen.
-      </p>
-
+    <AdminPanelShell panelId="membership" error={error}>
       <AdminScopeBanner readiness="partial" title="Pricing & benefits editing">
         Tier copy and Stripe price IDs are not yet editable from admin without a deploy. Stats and user-level status
         changes are live.
       </AdminScopeBanner>
 
-      {error ? <p role="alert" style={{ color: "var(--color-danger, #b42318)" }}>{error}</p> : null}
+      <p className="adminMuted">
+        Tier definitions are code-driven today ({`MEMBERSHIP_TIER_DEFINITIONS`}) with Stripe price IDs in environment
+        variables. Per-user membership changes are on the <Link href="/admin/users">Users</Link> screen.
+      </p>
+
       {loading ? <p className="adminMuted">Loading…</p> : null}
 
       {stats ? (
@@ -114,6 +110,6 @@ export default function AdminMembershipCenter() {
           Refresh
         </button>
       </p>
-    </div>
+    </AdminPanelShell>
   );
 }

@@ -2,29 +2,28 @@
 
 One path from **QA → live** at `https://theoutreachproject.app`. Work sections **1–10** in order. Skip anything not needed for first real users.
 
-**Last status update:** 2026-06-08 — Production on `main` at **`524f38b`**. **Supabase migrations complete** (#1–#39 including `page_content_blocks_admin_v10` + `safe_alignment_extension_2026_04`). **Browser smoke passed** (WorkOS sign-in, live checkout, core routes). **Stripe Live webhooks delivering 200** (Workbench → Event deliveries). **Still open:** commit/deploy admin platform expansion + idle sign-out fix (`web/src/proxy.js`); optional sponsor branding SQL; §10 go-live.
+**Last status update:** 2026-06-08 — Production on `main` at **`63a0088`**. **Supabase migrations complete** (#1–#39 including `page_content_blocks_admin_v10` + `safe_alignment_extension_2026_04`). **Vercel Production deploy Ready** (admin platform + idle sign-out fix). **Browser smoke passed** (WorkOS sign-in, live checkout, core routes). **Stripe Live webhooks delivering 200** (Workbench → Event deliveries). **Next:** §8 admin smoke on expanded platform; optional sponsor branding SQL; §10 go-live.
 
 ### Progress at a glance
 
 | Step | Section | Status |
 |------|---------|--------|
-| 1 | Ship the code | **In progress** — baseline on `main`; **uncommitted** admin platform + `proxy.js` redirect fix need merge + redeploy |
+| 1 | Ship the code | **Done** — `63a0088` on `main`; Vercel Production **Ready** |
 | 2 | Database | **Done** — #1–#39 applied; optional sponsor `sponsor_v06`…`v17` branding only if matching QA layout |
 | 3 | Domains & Vercel | **Done** — apex, `www`→apex, `admin` host |
 | 4 | Production env vars | **Done** — billing + auth flags healthy on live API |
 | 5 | WorkOS Production | **Done** — sign-in/out verified in browser smoke |
 | 6 | Stripe webhook (live) | **Done** — Live endpoint + Event deliveries **200** |
 | 7 | Deploy & smoke test | **Done** — browser smoke passed (2026-06-08); CLI smoke passed earlier |
-| 8 | Admin console | **Partial** — baseline CMS on Production; expanded platform pending §1 deploy + admin smoke |
+| 8 | Admin console | **Next** — run admin smoke on expanded layout at `admin.theoutreachproject.app` |
 | 9 | Mobile stores | **Not started** (web-first) |
 | 10 | Go live | **Next** — final legal review + announce |
 
 ### Next actions (do these now)
 
-1. **Ship remaining code to Production** (§1) — commit + merge admin platform + `web/src/proxy.js` idle sign-out fix; confirm Vercel Production deploy succeeds.
-2. **Admin smoke on expanded platform** (§8) — after deploy: command center, community moderation, sponsors, users, billing on `admin.theoutreachproject.app`.
-3. **Optional:** run `sponsor_v06.sql` … `sponsor_v17.sql` if Production sponsor hub should match QA branding.
-4. **Go live** (§10) — counsel review of `/privacy` + `/terms` if needed; announce; watch Vercel logs + Stripe deliveries for the first hour.
+1. **Admin smoke on expanded platform** (§8) — command center, community moderation, sponsors, users, billing on `admin.theoutreachproject.app`.
+2. **Optional:** run `sponsor_v06.sql` … `sponsor_v17.sql` if Production sponsor hub should match QA branding.
+3. **Go live** (§10) — counsel review of `/privacy` + `/terms` if needed; announce; watch Vercel logs + Stripe deliveries for the first hour.
 
 ---
 
@@ -36,7 +35,7 @@ Shipped on **`main`** (and previously on **`QA`**) — verify on your branch if 
 |------|--------|
 | CI parity | `pnpm install`, lint, build, `smoke:routes`, `security:guards` |
 | Admin CMS (baseline) | Sponsors, community moderation, homepage settings, trusted manual create, podcast applications (`5818960`) |
-| Admin platform (expanded) | Command center, searchable nav, users center, membership/billing ops, analytics, forms inbox, operations hub — see [ADMIN_PLATFORM_AUDIT.md](./ADMIN_PLATFORM_AUDIT.md) (**deploy after merge**) |
+| Admin platform (expanded) | Command center, searchable nav, users center, membership/billing ops, analytics, forms inbox, operations hub — see [ADMIN_PLATFORM_AUDIT.md](./ADMIN_PLATFORM_AUDIT.md) (**live on Production `63a0088`**) |
 | WorkOS sign-in fix | No org pin on hosted login unless `WORKOS_PIN_ORG_ON_SIGNIN=1` (`524f38b`) |
 | Admin hosts | `admin-qa` host, `deploymentHosts`, `adminConsoleHref()`, cross-subdomain auth return targets |
 | Legal pages | `/privacy`, `/terms`, footer links |
@@ -69,8 +68,8 @@ Shipped on **`main`** (and previously on **`QA`**) — verify on your branch if 
 - [x] QA branch green in GitHub Actions (lint, build, security smoke).
 - [x] Merge **QA → `main`** (or deploy QA if that is your production branch).
 - [x] Confirm Vercel **Production** deploys from the correct branch (`main`).
-- [x] Confirm Vercel **Production deploy succeeded** for prior releases (`93fd4ac`, `5818960`, `524f38b`).
-- [ ] **Commit + merge + redeploy Production** after admin platform work (large uncommitted diff locally; lint + build pass before push).
+- [x] Confirm Vercel **Production deploy succeeded** for prior releases (`93fd4ac`, `5818960`, `524f38b`, **`63a0088`**).
+- [x] **Commit + merge + redeploy Production** — admin platform + `web/src/proxy.js` idle sign-out fix shipped 2026-06-08.
 
 **Local sanity (from repo root):**
 
@@ -314,7 +313,7 @@ Production admin URL: **`https://admin.theoutreachproject.app`** (or `/admin` on
 
 ### Production prerequisites
 
-- [ ] Merge and **deploy** latest **expanded** admin platform code to Vercel Production (baseline CMS already on `main`; see §1).
+- [x] Merge and **deploy** latest **expanded** admin platform code to Vercel Production (baseline CMS already on `main`; see §1).
 - [x] Grant **platform admin** in Supabase Production (`platform_role = admin`, `admin_access_enabled = true`) for ops emails, **or** add emails to `PLATFORM_ADMIN_EMAILS` / bootstrap list in `adminPolicy.js`.
 - [x] Sign in with **WorkOS** on admin host (`ENABLE_ADMIN_EMAIL_LOGIN=0` for launch = no magic-link on `/admin-login`).
 - [x] `NEXT_PUBLIC_ADMIN_URL=https://admin.theoutreachproject.app` on Production (already recommended in §4).

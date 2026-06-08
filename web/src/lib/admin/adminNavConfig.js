@@ -16,134 +16,112 @@
  * @property {AdminNavItem[]} [children]
  * @property {string[]} [keywords]
  * @property {boolean} [futureModule]
+ * @property {boolean} [exact]
+ * @property {string} [group]
  */
 
+/** Primary horizontal admin nav — always visible beneath site header. */
 /** @type {AdminNavItem[]} */
-export const ADMIN_NAV_SECTIONS = [
+export const ADMIN_HORIZONTAL_NAV = [
   {
     id: "dashboard",
     label: "Dashboard",
     href: "/admin",
     readiness: "production",
     matchPrefix: "/admin",
-    keywords: ["home", "overview", "command"],
+    exact: true,
+    keywords: ["home", "overview", "command center", "stats"],
+    description: "Platform overview, quick links, and activity.",
   },
   {
-    id: "content",
-    label: "Content",
+    id: "homepage",
+    label: "Homepage Content",
     href: "/admin/content",
     readiness: "production",
     matchPrefix: "/admin/content",
-    keywords: ["cms", "pages", "create"],
-    children: [
-      { id: "content-manager", label: "Content Manager", href: "/admin/content", readiness: "production", keywords: ["hub"] },
-      { id: "content-create", label: "Create content", href: "/admin/content/create", readiness: "production", keywords: ["wizard", "new"] },
-      { id: "content-blocks", label: "Page content blocks", href: "/admin/content/blocks", readiness: "production", keywords: ["copy", "about", "footer"] },
-      { id: "content-homepage", label: "Homepage settings", href: "/admin/content", readiness: "production", keywords: ["carousel", "featured"] },
-      { id: "content-sponsors", label: "Sponsors page", href: "/admin/sponsors", readiness: "production" },
-      { id: "content-community", label: "Community", href: "/admin/community", readiness: "production" },
-      { id: "content-podcast", label: "Podcast", href: "/admin/podcasts", readiness: "production" },
-      { id: "content-trusted", label: "Trusted resources", href: "/admin/trusted", readiness: "production" },
-      { id: "content-nonprofit", label: "Nonprofit directory", href: "/admin/nonprofits", readiness: "partial" },
-      { id: "content-images", label: "Page images & banners", href: "/admin/images", readiness: "production" },
-      { id: "content-announcements", label: "Site announcements", href: "/admin/content/announcements", readiness: "placeholder", futureModule: true },
-    ],
-  },
-  {
-    id: "users",
-    label: "Users",
-    href: "/admin/users",
-    readiness: "production",
-    matchPrefix: "/admin/users",
-    keywords: ["members", "accounts", "roles"],
-  },
-  {
-    id: "membership",
-    label: "Memberships",
-    href: "/admin/membership",
-    readiness: "production",
-    matchPrefix: "/admin/membership",
-    keywords: ["tiers", "subscriptions", "pro", "support"],
-  },
-  {
-    id: "billing",
-    label: "Billing",
-    href: "/admin/billing",
-    readiness: "production",
-    matchPrefix: "/admin/billing",
-    keywords: ["revenue", "stripe", "invoices", "forecast"],
-    children: [
-      { id: "billing-ops", label: "Revenue & operations", href: "/admin/billing", readiness: "production" },
-      { id: "billing-invoices", label: "Invoice tools", href: "/admin/billing#invoices", readiness: "production" },
-    ],
-  },
-  {
-    id: "sponsors",
-    label: "Sponsors",
-    href: "/admin/sponsors",
-    readiness: "production",
-    matchPrefix: "/admin/sponsors",
-    children: [
-      { id: "sponsors-catalog", label: "Sponsor catalog", href: "/admin/sponsors", readiness: "production" },
-      { id: "sponsors-apps", label: "Sponsorship applications", href: "/admin/applications", readiness: "production" },
-    ],
+    keywords: ["carousel", "featured sponsors", "hero", "home"],
+    description: "Homepage sponsors, featured cards, and hub settings.",
   },
   {
     id: "community",
-    label: "Community",
+    label: "Community Page",
     href: "/admin/community",
     readiness: "production",
     matchPrefix: "/admin/community",
+    keywords: ["posts", "moderation", "stories", "feed"],
+    description: "Community posts, moderation queue, and staff publishing.",
   },
   {
-    id: "podcast",
-    label: "Podcast",
-    href: "/admin/podcasts",
-    readiness: "production",
-    matchPrefix: "/admin/podcasts",
+    id: "nonprofits",
+    label: "Nonprofit Directory",
+    href: "/admin/nonprofits",
+    readiness: "partial",
+    matchPrefix: "/admin/nonprofits",
+    keywords: ["ein", "directory", "orgs", "header image"],
+    description: "Nonprofit directory enrichment and header images.",
   },
   {
-    id: "resources",
-    label: "Resources",
+    id: "trusted",
+    label: "Trusted Resources",
     href: "/admin/trusted",
     readiness: "production",
     matchPrefix: "/admin/trusted",
-    children: [
-      { id: "resources-trusted", label: "Trusted resources", href: "/admin/trusted", readiness: "production" },
-      { id: "resources-directory", label: "Nonprofit directory (EIN)", href: "/admin/nonprofits", readiness: "partial" },
-    ],
+    keywords: ["partners", "resources", "links", "trusted"],
+    description: "Trusted partner listings and resource details.",
   },
   {
-    id: "media",
+    id: "podcast",
+    label: "Podcast / Media",
+    href: "/admin/podcasts",
+    readiness: "production",
+    matchPrefix: "/admin/podcasts",
+    keywords: ["episodes", "guests", "youtube", "media", "video"],
+    description: "Podcast episodes, guests, and media overrides.",
+  },
+  {
+    id: "membership",
+    label: "Membership Content",
+    href: "/admin/membership",
+    readiness: "production",
+    matchPrefix: "/admin/membership",
+    keywords: ["tiers", "pricing", "pro", "support", "plans"],
+    description: "Membership tiers, copy, and subscription settings.",
+  },
+  {
+    id: "sponsors",
+    label: "Sponsor Content",
+    href: "/admin/sponsors",
+    readiness: "production",
+    matchPrefix: "/admin/sponsors",
+    keywords: ["catalog", "logos", "packages", "sponsorship"],
+    description: "Sponsor catalog, logos, categories, and packages.",
+  },
+  {
+    id: "users",
+    label: "Users & Profiles",
+    href: "/admin/users",
+    readiness: "production",
+    matchPrefix: "/admin/users",
+    keywords: ["accounts", "roles", "members", "profiles"],
+    description: "Search users, roles, and account administration.",
+  },
+  {
+    id: "billing",
+    label: "Billing & Revenue",
+    href: "/admin/billing",
+    readiness: "production",
+    matchPrefix: "/admin/billing",
+    keywords: ["stripe", "invoices", "revenue", "forecast", "payments"],
+    description: "Billing operations, invoices, and revenue tools.",
+  },
+  {
+    id: "media-library",
     label: "Media Library",
     href: "/admin/media-library",
     readiness: "production",
     matchPrefix: "/admin/media-library",
-  },
-  {
-    id: "analytics",
-    label: "Analytics",
-    href: "/admin/analytics",
-    readiness: "production",
-    matchPrefix: "/admin/analytics",
-  },
-  {
-    id: "operations",
-    label: "Operations",
-    href: "/admin/operations",
-    readiness: "production",
-    matchPrefix: "/admin/operations",
-    children: [
-      { id: "ops-contact", label: "Contact & inbox", href: "/admin/contact", readiness: "production" },
-      { id: "ops-forms", label: "Form submissions", href: "/admin/forms", readiness: "production" },
-    ],
-  },
-  {
-    id: "advanced",
-    label: "Advanced",
-    href: "/admin/advanced",
-    readiness: "production",
-    matchPrefix: "/admin/advanced",
+    keywords: ["images", "uploads", "assets", "files"],
+    description: "Upload images and copy URLs for site content.",
   },
   {
     id: "settings",
@@ -151,11 +129,129 @@ export const ADMIN_NAV_SECTIONS = [
     href: "/admin/settings",
     readiness: "partial",
     matchPrefix: "/admin/settings",
+    keywords: ["config", "platform", "admin access"],
+    description: "Platform settings and admin configuration.",
   },
 ];
 
-/** Flat list for search */
-export function flattenAdminNav(items = ADMIN_NAV_SECTIONS, sectionLabel = "") {
+/** Secondary items — grouped under “More” on narrow viewports. */
+/** @type {AdminNavItem[]} */
+export const ADMIN_MORE_NAV = [
+  {
+    id: "content-blocks",
+    label: "Page content blocks",
+    href: "/admin/content/blocks",
+    readiness: "production",
+    matchPrefix: "/admin/content/blocks",
+    keywords: ["copy", "about", "footer", "text blocks"],
+    group: "content",
+  },
+  {
+    id: "content-create",
+    label: "Create content",
+    href: "/admin/content/create",
+    readiness: "production",
+    matchPrefix: "/admin/content/create",
+    keywords: ["wizard", "new content"],
+    group: "content",
+  },
+  {
+    id: "page-images",
+    label: "Page images & banners",
+    href: "/admin/images",
+    readiness: "production",
+    matchPrefix: "/admin/images",
+    keywords: ["banners", "backgrounds", "header images"],
+    group: "content",
+  },
+  {
+    id: "applications",
+    label: "Sponsor applications",
+    href: "/admin/applications",
+    readiness: "production",
+    matchPrefix: "/admin/applications",
+    keywords: ["apply", "sponsorship forms"],
+    group: "sponsors",
+  },
+  {
+    id: "analytics",
+    label: "Analytics",
+    href: "/admin/analytics",
+    readiness: "production",
+    matchPrefix: "/admin/analytics",
+    keywords: ["metrics", "growth", "reports"],
+    group: "operations",
+  },
+  {
+    id: "operations",
+    label: "Operations hub",
+    href: "/admin/operations",
+    readiness: "production",
+    matchPrefix: "/admin/operations",
+    keywords: ["ops", "inbox"],
+    group: "operations",
+  },
+  {
+    id: "contact",
+    label: "Contact inbox",
+    href: "/admin/contact",
+    readiness: "production",
+    matchPrefix: "/admin/contact",
+    keywords: ["messages", "support"],
+    group: "operations",
+  },
+  {
+    id: "forms",
+    label: "Form submissions",
+    href: "/admin/forms",
+    readiness: "production",
+    matchPrefix: "/admin/forms",
+    keywords: ["submissions", "inquiries"],
+    group: "operations",
+  },
+  {
+    id: "advanced",
+    label: "Advanced tools",
+    href: "/admin/advanced",
+    readiness: "production",
+    matchPrefix: "/admin/advanced",
+    keywords: ["diagnostics", "status"],
+    group: "operations",
+  },
+  {
+    id: "status",
+    label: "System status",
+    href: "/admin/status",
+    readiness: "production",
+    matchPrefix: "/admin/status",
+    keywords: ["health", "counts"],
+    group: "operations",
+  },
+];
+
+/** @type {AdminNavItem[]} */
+export const ADMIN_NAV_SECTIONS = [
+  ...ADMIN_HORIZONTAL_NAV.filter((item) => item.id !== "dashboard"),
+  {
+    id: "content",
+    label: "Content tools",
+    href: "/admin/content",
+    readiness: "production",
+    matchPrefix: "/admin/content",
+    children: ADMIN_MORE_NAV.filter((i) => i.group === "content"),
+  },
+  {
+    id: "operations",
+    label: "Operations",
+    href: "/admin/operations",
+    readiness: "production",
+    matchPrefix: "/admin/operations",
+    children: ADMIN_MORE_NAV.filter((i) => i.group === "operations"),
+  },
+];
+
+/** Flat list for search (all routes). */
+export function flattenAdminNav(items = [...ADMIN_HORIZONTAL_NAV, ...ADMIN_MORE_NAV], sectionLabel = "") {
   /** @type {Array<AdminNavItem & { sectionLabel: string, searchLabel: string }>} */
   const out = [];
   for (const item of items) {
@@ -163,7 +259,7 @@ export function flattenAdminNav(items = ADMIN_NAV_SECTIONS, sectionLabel = "") {
     out.push({
       ...item,
       sectionLabel: sec,
-      searchLabel: `${sec} › ${item.label}`,
+      searchLabel: sectionLabel ? `${sectionLabel} › ${item.label}` : item.label,
     });
     if (item.children?.length) {
       out.push(...flattenAdminNav(item.children, sec));
@@ -172,12 +268,25 @@ export function flattenAdminNav(items = ADMIN_NAV_SECTIONS, sectionLabel = "") {
   return out;
 }
 
+export function isAdminNavItemActive(pathname, item) {
+  const href = item.href.split("#")[0];
+  const prefix = item.matchPrefix || href;
+  if (item.exact || href === "/admin") {
+    return pathname === "/admin" || pathname === href;
+  }
+  if (pathname === href) return true;
+  return pathname.startsWith(`${prefix}/`) || (prefix !== "/admin" && pathname.startsWith(prefix));
+}
+
 export function matchAdminNavPath(pathname) {
   const flat = flattenAdminNav();
-  let best = flat.find((i) => i.href === pathname);
+  let best = flat.find((i) => {
+    const href = i.href.split("#")[0];
+    return pathname === href || pathname === i.href;
+  });
   if (best) return best;
   best = flat
-    .filter((i) => pathname.startsWith(i.matchPrefix || i.href))
+    .filter((i) => isAdminNavItemActive(pathname, i))
     .sort((a, b) => (b.matchPrefix || b.href).length - (a.matchPrefix || a.href).length)[0];
   return best || flat[0];
 }

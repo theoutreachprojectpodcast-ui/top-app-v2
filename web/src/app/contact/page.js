@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import PublicPageContentSlot from "@/components/content/PublicPageContentSlot";
 
 const DEFAULT_SUCCESS = "Thanks for reaching out. We will get back to you shortly.";
 
@@ -63,7 +64,11 @@ export default function ContactPage() {
     <div className="sponsorPage sponsorLanding">
       <section className="panel" style={{ maxWidth: 760 }}>
         <h1>Contact</h1>
-        <p>Send a message to The Outreach Project team. Submissions are saved in the admin portal for follow-up.</p>
+        <PublicPageContentSlot
+          pageKey="contact"
+          sectionKey="intro"
+          fallback={<p>Send a message to The Outreach Project team. Submissions are saved in the admin portal for follow-up.</p>}
+        />
         {status ? <p style={{ color: "var(--color-success, #166534)" }}>{status}</p> : null}
         {error ? <p role="alert" style={{ color: "var(--color-danger, #b42318)" }}>{error}</p> : null}
         <form onSubmit={handleSubmit} style={{ display: "grid", gap: 12 }}>

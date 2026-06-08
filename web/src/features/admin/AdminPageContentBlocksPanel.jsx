@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import AdminRichTextEditor from "@/components/admin/AdminRichTextEditor";
+import AdminPanelShell from "@/components/admin/AdminPanelShell";
 import { routeForContentBlock } from "@/lib/admin/pageContentBlocks";
 
 const PAGE_KEYS = [
@@ -72,13 +73,11 @@ export default function AdminPageContentBlocksPanel() {
   }
 
   return (
-    <div className="adminPanel">
-      <h1 style={{ marginTop: 0, fontSize: "1.5rem", fontWeight: 700 }}>
-        Page content blocks
-      </h1>
+    <AdminPanelShell panelId="content-blocks" error={error} message={message}>
       <p className="adminMuted" style={{ lineHeight: 1.55 }}>
-        Universal copy store for About, footer, membership landing, and wizard drafts. Published site sections still use
-        their dedicated admins — open <strong>Complete in section admin</strong> after approving a block.
+        Set status to <strong>Approved</strong> to publish copy on the live site via <code>/api/page-content</code> (footer,
+        contact intro, and other page_key/section_key slots). Structured content (sponsors, posts, trusted listings) still
+        uses dedicated section admins below.
       </p>
       <p style={{ marginTop: 12 }}>
         <Link className="btnPrimary" href="/admin/content/create">
@@ -117,9 +116,6 @@ export default function AdminPageContentBlocksPanel() {
           New block
         </button>
       </div>
-
-      {error ? <p role="alert" style={{ color: "var(--color-danger, #b42318)", marginTop: 12 }}>{error}</p> : null}
-      {message ? <p className="adminMuted" style={{ marginTop: 12 }}>{message}</p> : null}
 
       {edit ? (
         <BlockEditor
@@ -160,7 +156,7 @@ export default function AdminPageContentBlocksPanel() {
           No blocks yet. Run <code>page_content_blocks_admin_v10.sql</code> in Supabase if the API errors on missing table.
         </p>
       ) : null}
-    </div>
+    </AdminPanelShell>
   );
 }
 

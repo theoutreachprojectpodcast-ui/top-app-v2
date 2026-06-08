@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import SponsorAdminReviewSection from "@/features/sponsors/components/SponsorAdminReviewSection";
 import SponsorLogoReviewPanel from "@/features/sponsors/admin/SponsorLogoReviewPanel";
+import AdminPanelShell from "@/components/admin/AdminPanelShell";
 
 const EDIT_KEYS = [
   "name",
@@ -219,12 +220,7 @@ export default function AdminSponsorsPanel() {
   }
 
   return (
-    <div className="adminPanel">
-      <h2 style={{ marginTop: 0 }}>Sponsors</h2>
-      <p className="adminMuted">
-        Single source of truth: <code>sponsors_catalog</code>. Homepage carousel uses rows with{" "}
-        <strong>mission_partner</strong> + <strong>featured</strong> + active status.
-      </p>
+    <AdminPanelShell panelId="sponsors" error={error} message={status}>
       <div className="adminFieldStack" style={{ marginBottom: 16 }}>
         <h3 style={{ margin: "0 0 8px", fontSize: "1rem" }}>Add sponsor</h3>
         <div className="adminToolbar">
@@ -245,12 +241,6 @@ export default function AdminSponsorsPanel() {
           Refresh
         </button>
       </div>
-      {error ? (
-        <p role="alert" style={{ color: "var(--color-danger, #b42318)" }}>
-          {error}
-        </p>
-      ) : null}
-      {status ? <p style={{ color: "var(--color-success, #166534)" }}>{status}</p> : null}
       {loading ? <p className="adminMuted">Loading…</p> : null}
       {!loading && rows.length === 0 ? <p className="adminMuted">No sponsors.</p> : null}
       {rows.length > 0 ? (
@@ -323,6 +313,6 @@ export default function AdminSponsorsPanel() {
       <hr className="adminRule" style={{ margin: "16px 0" }} />
       <SponsorAdminReviewSection showAdmin supabase={null} />
       <SponsorLogoReviewPanel showAdmin onChanged={() => void load()} />
-    </div>
+    </AdminPanelShell>
   );
 }
