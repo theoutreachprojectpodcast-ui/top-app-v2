@@ -1,5 +1,6 @@
-import AdminStatusPanel from "@/features/admin/AdminStatusPanel";
+import { redirect } from "next/navigation";
 
-export default function AdminStatusPage() {
-  return <AdminStatusPanel />;
+/** QA status moved under Advanced; keep legacy URL working. */
+export default function AdminStatusRedirectPage() {
+  redirect("/admin/advanced");
 }

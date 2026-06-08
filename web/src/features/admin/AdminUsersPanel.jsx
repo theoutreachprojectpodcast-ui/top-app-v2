@@ -26,6 +26,9 @@ export default function AdminUsersPanel() {
   const [userTypeFilter, setUserTypeFilter] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteInfo, setInviteInfo] = useState("");
+  const [selectedId, setSelectedId] = useState("");
+  const [detail, setDetail] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -55,7 +58,38 @@ export default function AdminUsersPanel() {
 
   useEffect(() => {
     void load();
-  }, []);
+  }, [load]);
+
+  async function loadDetail(workosUserId) {
+    if (!workosUserId) {
+      setDetail(null);
+      return;
+    }
+    setDetailLoading(true);
+    try {
+      const res = await fetch(`/api/admin/users/${encodeURIComponent(workosUserId)}/activity`, {
+        credentials: "include",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) setDetail(data);
+      else setDetail(null);
+    } catch {
+      setDetail(null);
+    } finally {
+      setDetailLoading(false);
+    }
+  }
+
+  function applyPreset(preset) {
+    if (preset === "active") setStatusFilter("active");
+    else if (preset === "suspended") setStatusFilter("suspended");
+    else if (preset === "invited") setStatusFilter("invited");
+    else if (preset === "new") {
+      setStatusFilter("");
+      setQInput("");
+    }
+    void load();
+  }
 
   async function patchUser(workosUserId, patch) {
     setSaving(workosUserId);
@@ -194,7 +228,14 @@ export default function AdminUsersPanel() {
           </thead>
           <tbody>
             {rows.map((r) => (
-              <tr key={r.id}>
+              <tr
+                key={r.id}
+                style={selectedId === r.workos_user_id ? { background: "color-mix(in srgb, var(--color-accent) 6%, transparent)" } : undefined}
+                onClick={() => {
+                  setSelectedId(r.workos_user_id);
+                  void loadDetail(r.workos_user_id);
+                }}
+              >
                 <td data-label="Email">{r.email || "—"}</td>
                 <td data-label="Name">
                   {(r.first_name || "") + " " + (r.last_name || "")}
@@ -290,7 +331,19 @@ export default function AdminUsersPanel() {
                 </td>
                 <td data-label="Last Login">{r.last_login_at ? new Date(r.last_login_at).toLocaleString() : "—"}</td>
                 <td data-label="Stripe">{r.stripe_customer_id ? "yes" : "—"}</td>
-                <td data-label="Actions" className="adminActionCell">
+                <td data-label="Actions" className="adminActionCell" onClick={(e) => e.stopPropagation()}>
+                  <select
+                    className="adminConsoleInput"
+                    value={String(r.membership_tier || "free")}
+                    disabled={saving === r.workos_user_id}
+                    onChange={(e) => patchUser(r.workos_user_id, { membership_tier: e.target.value })}
+                  >
+                    {["free", "support", "member", "sponsor"].map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
                   <select
                     className="adminConsoleInput"
                     value={String(r.membership_status || "none")}
@@ -303,12 +356,65 @@ export default function AdminUsersPanel() {
                       </option>
                     ))}
                   </select>
+                  <button
+                    type="button"
+                    className="btnSoft"
+                    disabled={saving === r.workos_user_id}
+                    onClick={() => {
+                      if (!window.confirm("Reset onboarding for this user?")) return;
+                      void patchUser(r.workos_user_id, { reset_onboarding: true });
+                    }}
+                  >
+                    Reset onboarding
+                  </button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      {selectedId ? (
+        <div className="adminPanel" style={{ marginTop: 20 }}>
+          <h2 style={{ marginTop: 0, fontSize: "1.1rem" }}>User detail</h2>
+          {detailLoading ? <p className="adminMuted">Loading activity…</p> : null}
+          {detail?.profile ? (
+            <>
+              <p className="adminMuted">
+                {detail.profile.email} · created {detail.profile.created_at ? new Date(detail.profile.created_at).toLocaleString() : "—"}
+              </p>
+              <p className="adminMuted">{detail.billingNote}</p>
+              <h3 style={{ fontSize: "0.95rem" }}>Community posts ({detail.communityPosts?.length || 0})</h3>
+              <ul style={{ fontSize: "0.875rem" }}>
+                {(detail.communityPosts || []).slice(0, 8).map((p) => (
+                  <li key={p.id}>
+                    {p.title || "(no title)"} — {p.status} — {String(p.created_at || "").slice(0, 10)}
+                  </li>
+                ))}
+              </ul>
+              <h3 style={{ fontSize: "0.95rem" }}>Podcast applications</h3>
+              <ul style={{ fontSize: "0.875rem" }}>
+                {(detail.podcastApplications || []).map((a) => (
+                  <li key={a.id}>
+                    {a.full_name} — {a.status}
+                  </li>
+                ))}
+              </ul>
+              <h3 style={{ fontSize: "0.95rem" }}>Sponsor applications</h3>
+              <ul style={{ fontSize: "0.875rem" }}>
+                {(detail.sponsorApplications || []).map((a) => (
+                  <li key={a.id}>
+                    {a.organization_name || "—"} — {a.status}
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : null}
+          <button type="button" className="btnSoft" onClick={() => setSelectedId("")}>
+            Close detail
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }

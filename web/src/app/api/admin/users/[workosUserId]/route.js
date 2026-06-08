@@ -111,6 +111,11 @@ export async function PATCH(request, context) {
   if (body.first_name != null) patch.first_name = String(body.first_name).trim() || null;
   if (body.last_name != null) patch.last_name = String(body.last_name).trim() || null;
   if (body.email != null) patch.email = String(body.email).trim() || null;
+  if (body.reset_onboarding === true) {
+    patch.onboarding_completed = false;
+    patch.onboarding_skipped = false;
+    patch.onboarding_status = "not_started";
+  }
 
   if (Object.keys(patch).length === 0) {
     return Response.json({ ok: false, error: "no_valid_fields" }, { status: 400 });

@@ -1,0 +1,57 @@
+/* Admin console shell — matches TopApp header chrome + safe content offset (no logo overlap). */
+
+main.topApp.appShell--admin {
+  min-height: 100vh;
+  padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+}
+
+main.topApp.appShell--admin .topbarOcclusion {
+  pointer-events: none;
+}
+
+main.topApp.appShell--admin .shell.adminShellBody {
+  width: min(var(--content-max-width), calc(100% - var(--content-gutter)));
+  margin: 0 auto;
+  padding: calc(var(--header-floating-offset) + var(--header-floating-height) + var(--header-fade-height) + 8px) 0
+    calc(24px + env(safe-area-inset-bottom, 0px));
+  display: grid;
+  gap: var(--ds-section-gap, 20px);
+  min-width: 0;
+}
+
+main.topApp.appShell--admin .adminConsoleChrome {
+  position: relative;
+  z-index: 96;
+  width: min(var(--content-max-width), calc(100% - var(--content-gutter)));
+  margin: 0 auto;
+  padding: 0 var(--content-gutter, 16px);
+  box-sizing: border-box;
+}
+
+main.topApp.appShell--admin .adminConsoleTitleRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 4px 0 8px;
+}
+
+main.topApp.appShell--admin .adminConsoleTitleRow h1 {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+main.topApp.appShell--admin .adminConsoleNav {
+  margin: 0;
+  padding: 0 0 10px;
+}
+
+@media (max-width: 760px) {
+  main.topApp.appShell--admin .adminConsoleChrome {
+    padding-left: max(12px, var(--content-gutter, 16px));
+    padding-right: max(12px, var(--content-gutter, 16px));
+  }
+}

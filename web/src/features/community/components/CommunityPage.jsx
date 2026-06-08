@@ -31,6 +31,8 @@ export default function CommunityPage({
   authLoading = false,
   authBackend = { workos: false },
   isMember,
+  canSubmitStory = false,
+  isPlatformAdmin = false,
   fullName,
   profile,
   onRequestUpgrade,
@@ -50,6 +52,7 @@ export default function CommunityPage({
     isAuthenticated,
   });
   const canModerate = isAuthenticated && isModeratorUser({ userId, profile });
+  const maySubmit = isMember || canSubmitStory;
   const useWorkOSApi = authBackend.workos && sessionKind === "workos";
   const workosCommunitySignUpHref = workosSignUpHref("/community", { rememberDevice: readRememberDevicePref() });
   const workosCommunitySignInHref = workosSignInLink("/community", null, "/community", {
@@ -112,7 +115,7 @@ export default function CommunityPage({
           </div>
         ) : (
           <div className="row wrap">
-            {isMember ? (
+            {maySubmit ? (
               <button
                 type="button"
                 className="btnPrimary"
@@ -125,7 +128,7 @@ export default function CommunityPage({
               </button>
             ) : (
               <button type="button" className="btnPrimary" onClick={onRequestUpgrade}>
-                Become a member to submit a story
+                Upgrade to Pro to submit a story
               </button>
             )}
             <button type="button" className="btnSoft" onClick={() => refresh()}>
@@ -156,7 +159,20 @@ export default function CommunityPage({
             <span className="communityApprovedPill">
               {feedTab === "latest" ? "Approved posts" : "Your submissions"}
             </span>
-            {canModerate ? <span className="communityModeratorPill">Moderator access</span> : null}
+            {canModerate ? (
+              <span className="communityModeratorPill">
+                Moderator access
+                {isPlatformAdmin ? (
+                  <>
+                    {" "}
+                    ·{" "}
+                    <Link href="/admin/community" className="communityModeratorPillLink">
+                      Review in admin
+                    </Link>
+                  </>
+                ) : null}
+              </span>
+            ) : null}
           </div>
         </div>
 
@@ -270,6 +286,7 @@ export default function CommunityPage({
                 refresh();
                 setEditPost(null);
                 setSubmitOpen(false);
+                if (useWorkOSApi) setFeedTab("mine");
               }}
             />
           </div>

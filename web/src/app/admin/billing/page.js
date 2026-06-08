@@ -1,5 +1,5 @@
-import AdminBillingPanel from "@/features/admin/AdminBillingPanel";
+import AdminBillingOperationsCenter from "@/features/admin/AdminBillingOperationsCenter";
 
 export default function AdminBillingPage() {
-  return <AdminBillingPanel />;
+  return <AdminBillingOperationsCenter />;
 }

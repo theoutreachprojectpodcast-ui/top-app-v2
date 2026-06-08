@@ -637,6 +637,8 @@ function TopAppInner({ initialNav = "home" }) {
               authLoading={loadingProfile}
               authBackend={authBackend}
               isMember={isMember}
+              canSubmitStory={!!entitlements?.communityStorySubmit}
+              isPlatformAdmin={!!entitlements?.isPlatformAdmin}
               fullName={fullName}
               profile={profile}
               onRequestUpgrade={() => {

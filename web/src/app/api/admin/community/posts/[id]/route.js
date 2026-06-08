@@ -1,5 +1,6 @@
 import { requirePlatformAdminMutation } from "@/lib/admin/adminRouteContext";
 import { writeAdminAuditLog } from "@/lib/admin/adminAuditLog";
+import { sanitizeAdminHtml, htmlToPlainText } from "@/lib/admin/sanitizeHtml";
 import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
 import {
   buildCommunityModerationPatch,
@@ -63,8 +64,8 @@ export async function PATCH(request, context) {
 
   if (action === "edit") {
     const title = String(body.title ?? "").trim().slice(0, 200);
-    const text = String(body.body ?? "").trim();
-    if (!text) {
+    const text = sanitizeAdminHtml(String(body.body ?? "").trim());
+    if (!htmlToPlainText(text).trim()) {
       return Response.json({ ok: false, error: "body_required" }, { status: 400 });
     }
     patch.title = title;

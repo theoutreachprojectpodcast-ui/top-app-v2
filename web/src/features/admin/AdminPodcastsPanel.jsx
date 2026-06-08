@@ -97,9 +97,10 @@ export default function AdminPodcastsPanel() {
 
   return (
     <div className="adminPanel">
-      <h2 style={{ marginTop: 0 }}>Podcasts</h2>
+      <h1 style={{ marginTop: 0, fontSize: "1.5rem", fontWeight: 700 }}>Podcast admin</h1>
       <p className="adminMuted">
-        YouTube uploads pipeline, episode acceptance, featured-guest enrichment, and guest applications (platform admin).
+        Review guest applications (filter by status, approve, deny, schedule, archive), manage YouTube episode sync,
+        featured guests, and upcoming guests. Applications open by default.
       </p>
 
       <div className="row wrap" style={{ gap: 8, marginBottom: 16 }}>

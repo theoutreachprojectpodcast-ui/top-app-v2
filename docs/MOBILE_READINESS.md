@@ -87,7 +87,7 @@ From **`web/`**:
 - [ ] Production web live (§7 in [mvp-production-launch.md](./mvp-production-launch.md))
 - [ ] Apple Developer + Google Play Console (you have accounts)
 - [ ] macOS + **Xcode** (iOS device, simulator, archive, TestFlight)
-- [ ] **Android Studio** (emulator, device, signed AAB)
+- [x] **Android Studio** installed — finish [ANDROID_STUDIO_SETUP.md](./ANDROID_STUDIO_SETUP.md), then emulator/AAB
 - [ ] `pnpm install` at repo root
 
 ### 5.2 Before each native release build

@@ -82,7 +82,13 @@
   --header-floating-offset: 12px;
   /* Action row at top (main-app layout); logo band sits below it. */
   --podcast-topbar-stack-height: 52px;
-  --podcast-header-brand-band: clamp(148px, 26vw, 228px);
+  /* Header wordmark scale (2.5 = 250% of prior default sizes). */
+  --podcast-brand-logo-scale: 2.5;
+  --podcast-header-brand-band: clamp(
+    calc(148px * var(--podcast-brand-logo-scale)),
+    calc(26vw * var(--podcast-brand-logo-scale)),
+    calc(228px * var(--podcast-brand-logo-scale))
+  );
   --podcast-header-chrome-height: calc(
     env(safe-area-inset-top, 0px) + var(--header-floating-offset, 12px) + var(--podcast-topbar-stack-height) +
       var(--podcast-header-brand-band)
@@ -380,8 +386,15 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
 
 @media (min-width: 761px) {
   .appShell--podcast .podcastBrandLogo {
-    max-height: min(clamp(132px, 24vw, 208px), calc(var(--podcast-header-brand-band, 200px) - 12px)) !important;
-    max-width: min(560px, calc(100vw - 48px)) !important;
+    max-height: min(
+      clamp(
+        calc(132px * var(--podcast-brand-logo-scale, 2.5)),
+        calc(24vw * var(--podcast-brand-logo-scale, 2.5)),
+        calc(208px * var(--podcast-brand-logo-scale, 2.5))
+      ),
+      calc(var(--podcast-header-brand-band, 500px) - 12px)
+    ) !important;
+    max-width: min(calc(560px * var(--podcast-brand-logo-scale, 2.5)), calc(100vw - 48px)) !important;
     width: auto;
   }
 }
@@ -430,7 +443,11 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
     flex-direction: column;
     position: relative;
     --podcast-topbar-stack-height: 48px;
-    --podcast-header-brand-band: clamp(120px, 32vw, 180px);
+    --podcast-header-brand-band: clamp(
+      calc(120px * var(--podcast-brand-logo-scale, 2.5)),
+      calc(32vw * var(--podcast-brand-logo-scale, 2.5)),
+      calc(180px * var(--podcast-brand-logo-scale, 2.5))
+    );
   }
 
   .topApp.appShell--podcastRoute .podcastScope {
@@ -1594,9 +1611,9 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
 
 @media (max-width: 760px) {
   .appShell--podcast .footerDock .bottomNav.bottomNav--withIcons.bottomNav--mobileDock {
-    margin-inline: max(var(--content-gutter, 16px), 11px);
-    width: calc(100% - 2 * max(var(--content-gutter, 16px), 11px));
-    max-width: calc(100% - 2 * max(var(--content-gutter, 16px), 11px));
+    margin-inline: 0;
+    width: 100%;
+    max-width: 100%;
     border-radius: 20px;
     padding: 8px 10px;
     box-shadow:

@@ -9,6 +9,13 @@ export function podcastPublicCacheSeconds() {
   return 900;
 }
 
+/** Shared Cache-Control for public podcast JSON routes (browser + CDN). */
+export function podcastPublicCacheControlHeader() {
+  const sec = podcastPublicCacheSeconds();
+  const swr = Math.min(sec * 2, 3600);
+  return `public, max-age=60, s-maxage=${sec}, stale-while-revalidate=${swr}`;
+}
+
 /**
  * Cached podcast landing payload for RSC + API routes (revalidate = PODCAST_CACHE_TTL seconds).
  */
@@ -19,7 +26,7 @@ export async function getCachedPodcastLandingBundle() {
       const admin = createSupabaseAdminClient();
       return loadPublicPodcastLandingData(admin);
     },
-    ["podcast-public-landing-v7"],
+    ["podcast-public-landing-v8"],
     { revalidate: ttl, tags: ["podcast-public-landing"] }
   );
   return cached();

@@ -13,11 +13,35 @@ export function hasActiveMemberBilling(membershipStatus) {
   return s === "active" || s === "trialing";
 }
 
-/** Paid tiers that unlock member-style product surfaces when billing is active. */
+function isPrivilegedStaff(row) {
+  const platformRole = String(row?.platform_role || "user").toLowerCase();
+  return platformRole === "admin" || platformRole === "moderator";
+}
+
 function paidTierWithActiveBilling(tier, membershipStatus) {
   const t = String(tier || "").toLowerCase();
   if (!["support", "member", "sponsor"].includes(t)) return false;
   return hasActiveMemberBilling(membershipStatus);
+}
+
+/**
+ * Pro (DB: membership_tier = member) — community story submission.
+ * @param {Record<string, unknown> | null | undefined} row
+ */
+export function tierAllowsCommunityStorySubmit(row) {
+  const tier = String(row?.membership_tier || "free").toLowerCase();
+  if (tier !== "member") return false;
+
+  const status = String(row?.membership_status || "none").toLowerCase();
+  if (hasActiveMemberBilling(status)) return true;
+
+  // Webhook may lag behind checkout; subscription id means Pro was purchased.
+  if (String(row?.stripe_subscription_id || "").trim()) return true;
+
+  // Admin-granted Pro in dashboard (membership_source manual).
+  if (String(row?.membership_source || "").toLowerCase() === "manual") return true;
+
+  return false;
 }
 
 /**
@@ -34,9 +58,8 @@ export function computeEntitlementsFromProfileRow(row) {
   }
   const tier = String(row.membership_tier || "free").toLowerCase();
   const status = String(row.membership_status || "none").toLowerCase();
-  const platformRole = String(row.platform_role || "user").toLowerCase();
-  const isPrivilegedStaff = platformRole === "admin" || platformRole === "moderator";
-  const privilegedContent = isPrivilegedStaff || paidTierWithActiveBilling(tier, status);
+  const privilegedStaff = isPrivilegedStaff(row);
+  const privilegedContent = privilegedStaff || paidTierWithActiveBilling(tier, status);
   const isPlatformAdmin = isPlatformAdminServer({
     email: String(row.email || ""),
     workosUserId: String(row.workos_user_id || ""),
@@ -44,8 +67,8 @@ export function computeEntitlementsFromProfileRow(row) {
   });
   return {
     podcastMemberContent: privilegedContent,
-    communityStorySubmit: privilegedContent,
-    isPrivilegedStaff,
+    communityStorySubmit: privilegedStaff || tierAllowsCommunityStorySubmit(row),
+    isPrivilegedStaff: privilegedStaff,
     isPlatformAdmin,
   };
 }

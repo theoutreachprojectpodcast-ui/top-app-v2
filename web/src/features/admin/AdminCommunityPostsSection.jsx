@@ -1,6 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import AdminRichTextEditor from "@/components/admin/AdminRichTextEditor";
+import AdminMediaUploadField from "@/components/admin/AdminMediaUploadField";
+import { isLikelyHtml, sanitizeAdminHtml } from "@/lib/admin/sanitizeHtml";
 
 const POST_TYPES = [
   { value: "admin_update", label: "Admin update / blog" },
@@ -11,10 +14,10 @@ const POST_TYPES = [
 ];
 
 const SCOPES = [
-  { id: "pending", label: "Pending review" },
+  { id: "pending", label: "Moderation queue" },
   { id: "published", label: "Published" },
   { id: "draft", label: "Drafts" },
-  { id: "rejected", label: "Rejected" },
+  { id: "rejected", label: "Denied" },
   { id: "bookmarked", label: "Bookmarked" },
   { id: "all", label: "All" },
 ];
@@ -22,11 +25,22 @@ const SCOPES = [
 function statusLabel(status) {
   const s = String(status || "").toLowerCase();
   if (s === "pending_review") return "Pending review";
+  if (s === "submitted") return "Submitted";
+  if (s === "under_review" || s === "in_review") return "In review";
   if (s === "approved") return "Published";
-  if (s === "rejected") return "Rejected";
-  if (s === "hidden") return "Hidden";
+  if (s === "rejected") return "Denied";
+  if (s === "hidden" || s === "archived") return "Archived";
   if (s === "draft") return "Draft";
   return status || "Unknown";
+}
+
+function formatWhen(iso) {
+  if (!iso) return "—";
+  try {
+    return new Date(iso).toLocaleString();
+  } catch {
+    return String(iso);
+  }
 }
 
 export default function AdminCommunityPostsSection() {
@@ -190,7 +204,7 @@ export default function AdminCommunityPostsSection() {
           <label className="fieldLabel">Title</label>
           <input className="adminConsoleInput" value={draft.title} onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))} />
           <label className="fieldLabel">Body</label>
-          <textarea className="adminConsoleInput" rows={5} value={draft.body} onChange={(e) => setDraft((d) => ({ ...d, body: e.target.value }))} />
+          <AdminRichTextEditor value={draft.body} onChange={(html) => setDraft((d) => ({ ...d, body: html }))} />
           <label className="fieldLabel">Post type</label>
           <select className="adminConsoleInput" value={draft.post_type} onChange={(e) => setDraft((d) => ({ ...d, post_type: e.target.value }))}>
             {POST_TYPES.map((t) => (
@@ -229,7 +243,7 @@ export default function AdminCommunityPostsSection() {
       <div className="adminPanelBody" style={{ gap: 16, marginTop: 12 }}>
         {posts.map((p) => {
           const st = String(p.status || "").toLowerCase();
-          const isPending = st === "pending_review";
+          const isPending = ["pending_review", "submitted", "under_review", "in_review"].includes(st);
           const isPublished = st === "approved";
           return (
             <article
@@ -248,6 +262,20 @@ export default function AdminCommunityPostsSection() {
                     {p.author_name ? ` · ${p.author_name}` : ""}
                     {p.post_type ? ` · ${p.post_type}` : ""}
                     {p.admin_bookmark ? " · bookmarked" : ""}
+                  </div>
+                  <div className="adminPostMeta">
+                    <span>Submitted: {formatWhen(p.created_at)}</span>
+                    {p.author_profile_id ? <span>Profile id: {String(p.author_profile_id).slice(0, 8)}…</span> : null}
+                    {p.author_id ? <span>Author id: {String(p.author_id).slice(0, 12)}…</span> : null}
+                    {p.link_url ? (
+                      <span>
+                        Link:{" "}
+                        <a href={p.link_url} target="_blank" rel="noopener noreferrer">
+                          {p.link_url}
+                        </a>
+                      </span>
+                    ) : null}
+                    {p.moderation_notes ? <span>Notes: {p.moderation_notes}</span> : null}
                   </div>
                 </div>
                 <div className="adminActionCell" style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
@@ -300,9 +328,17 @@ export default function AdminCommunityPostsSection() {
                   </button>
                 </div>
               </div>
-              <p style={{ marginTop: 10, whiteSpace: "pre-wrap", lineHeight: 1.5, maxHeight: 200, overflow: "auto" }}>
-                {p.body}
-              </p>
+              {isLikelyHtml(p.body) ? (
+                <div
+                  className="communityPostBody communityPostBody--rich"
+                  style={{ marginTop: 10, maxHeight: 200, overflow: "auto" }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeAdminHtml(p.body) }}
+                />
+              ) : (
+                <p style={{ marginTop: 10, whiteSpace: "pre-wrap", lineHeight: 1.5, maxHeight: 200, overflow: "auto" }}>
+                  {p.body}
+                </p>
+              )}
               {p.rejection_reason ? (
                 <p className="adminMuted" style={{ fontSize: "0.85rem" }}>
                   Rejection: {p.rejection_reason}
@@ -322,13 +358,7 @@ export default function AdminCommunityPostsSection() {
                   <label className="fieldLabel" htmlFor={`edit-b-${p.id}`}>
                     Body
                   </label>
-                  <textarea
-                    id={`edit-b-${p.id}`}
-                    className="adminConsoleInput"
-                    rows={6}
-                    value={editBody}
-                    onChange={(e) => setEditBody(e.target.value)}
-                  />
+                  <AdminRichTextEditor value={editBody} onChange={setEditBody} minHeight={120} />
                   <div className="adminToolbar">
                     <button type="button" className="btnPrimary" disabled={!!busy} onClick={() => void saveEdit(p.id)}>
                       Save edit

@@ -245,7 +245,7 @@ export async function POST(request) {
       type: "community_post_submitted_for_review",
       title: "New community post to review",
       message: title ? `“${title.slice(0, 80)}${title.length > 80 ? "…" : ""}”` : "A member submitted a story for moderation.",
-      linkPath: "/community",
+      linkPath: "/admin/community",
       entityType: "community_post",
       entityId: postId,
       dedupeHours: 12,

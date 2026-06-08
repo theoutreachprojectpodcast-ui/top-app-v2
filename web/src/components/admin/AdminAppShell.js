@@ -1,80 +1,62 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useRef } from "react";
 import AppHeaderBrand from "@/components/layout/AppHeaderBrand";
 import ColorSchemeToggle from "@/components/app/ColorSchemeToggle";
 import HeaderInner from "@/components/layout/HeaderInner";
-import { appPublicHref } from "@/lib/runtime/deploymentHosts";
-
-const LINKS = [
-  { href: "/admin", label: "Overview", match: (p) => p === "/admin" },
-  { href: "/admin/content", label: "Content", match: (p) => p.startsWith("/admin/content") },
-  { href: "/admin/sponsors", label: "Sponsors", match: (p) => p.startsWith("/admin/sponsors") },
-  { href: "/admin/community", label: "Community", match: (p) => p.startsWith("/admin/community") },
-  { href: "/admin/status", label: "QA Status", match: (p) => p.startsWith("/admin/status") },
-  { href: "/admin/podcasts", label: "Podcasts", match: (p) => p.startsWith("/admin/podcasts") },
-  { href: "/admin/nonprofits", label: "Directory", match: (p) => p.startsWith("/admin/nonprofits") },
-  { href: "/admin/trusted", label: "Trusted", match: (p) => p.startsWith("/admin/trusted") },
-  { href: "/admin/applications", label: "Applications", match: (p) => p.startsWith("/admin/applications") },
-  { href: "/admin/images", label: "Images", match: (p) => p.startsWith("/admin/images") },
-  { href: "/admin/contact", label: "Contact", match: (p) => p.startsWith("/admin/contact") },
-  { href: "/admin/forms", label: "Forms", match: (p) => p.startsWith("/admin/forms") },
-  { href: "/admin/media-library", label: "Media Library", match: (p) => p.startsWith("/admin/media-library") },
-  { href: "/admin/settings", label: "Settings", match: (p) => p.startsWith("/admin/settings") },
-  { href: "/admin/analytics", label: "Analytics", match: (p) => p.startsWith("/admin/analytics") },
-  { href: "/admin/billing", label: "Billing", match: (p) => p.startsWith("/admin/billing") },
-  { href: "/admin/membership", label: "Membership", match: (p) => p.startsWith("/admin/membership") },
-  { href: "/admin/users", label: "Users", match: (p) => p.startsWith("/admin/users") },
-];
+import SubpageTopbarActions from "@/components/layout/SubpageTopbarActions";
+import AdminViewToggle from "@/components/admin/AdminViewToggle";
+import AdminPlatformNav from "@/components/admin/AdminPlatformNav";
+import { useImmersiveHeaderScroll } from "@/hooks/useImmersiveHeaderScroll";
 
 export default function AdminAppShell({ children, sessionEmail = "" }) {
-  const pathname = usePathname() || "";
+  const shellRef = useRef(null);
+  useImmersiveHeaderScroll({
+    rootRef: shellRef,
+    enabled: true,
+    gradientBoost: true,
+  });
+
   return (
-    <div className="appShell appShell--subpage appShell--siteChrome adminConsole">
+    <main
+      ref={shellRef}
+      className="topApp appShell appShell--subpage appShell--admin adminConsole header-at-top"
+      data-page-atmosphere="admin"
+    >
+      <div className="topbarOcclusion" aria-hidden="true" />
       <div className="appSiteHeader">
-        <AppHeaderBrand brandAlt="The Outreach Project" />
-        <header className="subpageTopbar">
+        <AppHeaderBrand homeHref="/admin" ariaLabel="Admin dashboard" />
+        <header className="topbar">
           <HeaderInner className="topbarInner">
             <div className="topbarZone topbarLeft">
               <div className="topbarActionsCluster topbarActionsCluster--start">
                 <ColorSchemeToggle />
-                <Link className="btnSoft sponsorBtn" href={appPublicHref("/")}>
-                  Exit admin
-                </Link>
+                <AdminViewToggle />
               </div>
             </div>
-          <div className="topbarZone topbarCenter" aria-hidden="true" />
-          <div className="topbarZone topbarRight">
-            <div className="topbarActionsCluster">
-              <Link className="btnSoft sponsorBtn" href={appPublicHref("/profile")}>
-                Profile
-              </Link>
+            <div className="topbarZone topbarCenter" aria-hidden="true" />
+            <div className="topbarZone topbarRight">
+              <div className="topbarActionsCluster">
+                <SubpageTopbarActions section="auth" />
+              </div>
             </div>
-          </div>
-        </HeaderInner>
-      </header>
+          </HeaderInner>
+        </header>
       </div>
 
-      <nav className="adminConsoleNav" aria-label="Admin sections">
-        {LINKS.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={item.match(pathname) ? "isActive" : ""}
-          >
-            {item.label}
-          </Link>
-        ))}
-      </nav>
+      <div className="adminConsoleChrome">
+        <div className="adminConsoleTitleRow">
+          <h1>Platform admin</h1>
+          {sessionEmail ? (
+            <span className="adminMuted" style={{ fontSize: "0.8125rem" }}>
+              {sessionEmail}
+            </span>
+          ) : null}
+        </div>
+        <AdminPlatformNav />
+      </div>
 
-      {sessionEmail ? (
-        <p className="adminMuted adminSessionEmail">
-          Signed in as {sessionEmail}
-        </p>
-      ) : null}
-
-      <main className="content content--subpage adminConsoleMain">{children}</main>
-    </div>
+      <section className="shell adminShellBody">{children}</section>
+    </main>
   );
 }

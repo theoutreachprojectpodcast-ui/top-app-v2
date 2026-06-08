@@ -91,8 +91,18 @@ export default async function proxy(request) {
   const sessionName = workosSessionCookieName();
   const sessionVal = incoming.cookies.get(sessionName)?.value;
   const hasWorkosSession = Boolean(sessionVal);
+  const pathname = incoming.nextUrl.pathname || "/";
+  const skipIdleSignOutRedirect =
+    pathname === "/sign-out" ||
+    pathname.startsWith("/sign-out/") ||
+    pathname === "/callback" ||
+    pathname.startsWith("/callback/") ||
+    pathname === "/login" ||
+    pathname.startsWith("/login/") ||
+    pathname === "/sign-in" ||
+    pathname.startsWith("/sign-in/");
 
-  if (idleMs > 0 && hasWorkosSession) {
+  if (idleMs > 0 && hasWorkosSession && !skipIdleSignOutRedirect) {
     const fpNow = fingerprintFromSessionCookieValue(sessionVal);
     const fpCookie = incoming.cookies.get(sessionFingerprintCookieName())?.value || "";
     const lastRaw = incoming.cookies.get(lastActiveCookieName())?.value;

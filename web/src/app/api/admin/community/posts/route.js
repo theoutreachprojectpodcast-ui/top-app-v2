@@ -1,5 +1,6 @@
 import { requirePlatformAdminRouteContext, requirePlatformAdminMutation } from "@/lib/admin/adminRouteContext";
 import { writeAdminAuditLog } from "@/lib/admin/adminAuditLog";
+import { sanitizeAdminHtml, htmlToPlainText } from "@/lib/admin/sanitizeHtml";
 import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
 
 export const runtime = "nodejs";
@@ -20,7 +21,7 @@ export async function GET(request) {
   } else if (scope === "published") {
     query = query.eq("status", "approved");
   } else if (scope === "pending") {
-    query = query.eq("status", "pending_review");
+    query = query.in("status", ["pending_review", "submitted", "under_review", "in_review"]);
   } else if (scope === "rejected") {
     query = query.eq("status", "rejected");
   } else if (scope === "bookmarked") {
@@ -47,8 +48,10 @@ export async function POST(request) {
   }
 
   const title = String(body?.title || "").trim().slice(0, 200);
-  const text = String(body?.body || "").trim();
-  if (text.length < 10) {
+  const rawBody = String(body?.body || "").trim();
+  const text = sanitizeAdminHtml(rawBody);
+  const plainLen = htmlToPlainText(text).length;
+  if (plainLen < 10) {
     return Response.json({ ok: false, error: "body_too_short" }, { status: 400 });
   }
   if (text.length > 20000) {

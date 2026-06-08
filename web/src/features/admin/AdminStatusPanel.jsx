@@ -34,8 +34,11 @@ export default function AdminStatusPanel() {
 
   return (
     <div className="adminPanel">
-      <h2 style={{ marginTop: 0 }}>QA / admin status panel</h2>
-      <p className="adminMuted">Live high-level counters from admin-managed tables.</p>
+      <h2 style={{ marginTop: 0 }}>QA status & environment counters</h2>
+      <p className="adminMuted">
+        Live high-level counters from admin-managed tables. Primary admin workflows live on the dashboard; this panel is
+        for operators validating production readiness.
+      </p>
       {error ? <p role="alert" style={{ color: "var(--color-danger, #b42318)" }}>{error}</p> : null}
       {loading ? <p className="adminMuted">Loading…</p> : null}
       {!loading ? (

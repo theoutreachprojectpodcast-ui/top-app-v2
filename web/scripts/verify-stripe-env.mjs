@@ -40,17 +40,48 @@ function mask(value) {
   return `${v.slice(0, 12)}… (${v.length} chars)`;
 }
 
+function hintForBadValue(name, raw) {
+  const v = String(raw || "").trim();
+  if (!v) return "";
+  if (v.startsWith("mk_")) {
+    if (name.includes("PUBLISHABLE")) {
+      return " — use Publishable key pk_test_… or pk_live_… from Stripe → Developers → API keys";
+    }
+    return " — looks like a restricted/machine key; use Secret key sk_test_… or sk_live_… from Stripe → Developers → API keys";
+  }
+  if (/^\$|^\d+(\.\d+)?$/.test(v)) {
+    return " — use the Price ID (price_…), not the dollar amount; Stripe → Products → your price → API ID";
+  }
+  if (/^_{2,}$|^x+$/i.test(v) || v.toLowerCase() === "n/a") {
+    return " — replace placeholder; leave the line unset if optional";
+  }
+  if (name.includes("WEBHOOK") && !v.startsWith("whsec_")) {
+    return " — Stripe → Developers → Webhooks → endpoint → Signing secret (whsec_…)";
+  }
+  if (name.includes("PRICE") && !v.startsWith("price_")) {
+    return " — must be price_… from Stripe Dashboard (recurring price for subscriptions)";
+  }
+  if (name.includes("STRIPE_SECRET") && !v.startsWith("sk_") && !v.startsWith("rk_")) {
+    return " — Stripe → Developers → API keys → Secret key";
+  }
+  if (name.includes("PUBLISHABLE") && !v.startsWith("pk_")) {
+    return " — Stripe → Developers → API keys → Publishable key (pk_test_… or pk_live_…)";
+  }
+  return "";
+}
+
 function checkKey(name, { required = true, prefixes = [] } = {}) {
   const raw = String(process.env[name] || "").trim();
   const issues = [];
   if (!raw) {
     if (required) issues.push("missing");
-    return { name, ok: !required, raw: "", issues, mask: "(not set)" };
+    return { name, ok: !required, raw: "", issues, mask: "(not set)", hint: "" };
   }
   if (prefixes.length && !prefixes.some((p) => raw.startsWith(p))) {
     issues.push(`expected prefix ${prefixes.join(" or ")}`);
   }
-  return { name, ok: issues.length === 0, raw, issues, mask: mask(raw) };
+  const hint = issues.length ? hintForBadValue(name, raw) : "";
+  return { name, ok: issues.length === 0, raw, issues, mask: mask(raw), hint };
 }
 
 const hadLocal = loadDotEnvLocal();
@@ -86,11 +117,16 @@ if (!proPrice) {
 }
 
 let failed = 0;
+const failures = [];
 for (const c of checks) {
   const status = c.ok ? "OK" : "FAIL";
   const detail = c.issues?.length ? ` — ${c.issues.join(", ")}` : "";
-  console.log(`${status.padEnd(4)} ${c.name}: ${c.mask}${detail}`);
-  if (!c.ok) failed += 1;
+  const hint = !c.ok && c.hint ? c.hint : "";
+  console.log(`${status.padEnd(4)} ${c.name}: ${c.mask}${detail}${hint}`);
+  if (!c.ok) {
+    failed += 1;
+    failures.push(c);
+  }
 }
 
 const secret = String(process.env.STRIPE_SECRET_KEY || "").trim();
@@ -128,7 +164,20 @@ if (!webhookSecret) {
 }
 
 if (failed > 0) {
+  const requiredFails = failures.filter((c) =>
+    ["STRIPE_SECRET_KEY", "STRIPE_PRICE_SUPPORT_MONTHLY"].includes(c.name) ||
+    c.name.includes("PRO_MONTHLY or MEMBER"),
+  );
   console.error(`\n[verify:stripe-env] ${failed} check(s) failed. See web/.env.local.example and docs/mvp-production-launch.md §5b.`);
+  if (requiredFails.length) {
+    console.error("\n[verify:stripe-env] Minimum for membership checkout (QA = Test mode):");
+    console.error("  1. Stripe Dashboard → toggle Test mode (top right)");
+    console.error("  2. Developers → API keys → Secret key → sk_test_… → STRIPE_SECRET_KEY");
+    console.error("  3. Same page → Publishable key → pk_test_… → NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY");
+    console.error("  4. Product catalog → Support ($1/mo) + Pro ($5.99/mo) → each recurring Price → price_… IDs");
+    console.error("  5. Developers → Webhooks → Add endpoint → signing secret whsec_… → STRIPE_WEBHOOK_SECRET (or STRIPE_WEBHOOK_TEST_SECRET)");
+    console.error("  Optional podcast/sponsor price_* vars: comment out or fix — or leave unset if not testing those flows.");
+  }
   process.exit(1);
 }
 

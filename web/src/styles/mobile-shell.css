@@ -15,11 +15,22 @@ html {
 }
 
 @media (max-width: 760px) {
+  main.topApp {
+    --mobile-shell-pad-x: clamp(16px, 4.5vw, 20px);
+  }
+
   main.topApp > .shell {
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
     overflow-x: clip;
+    padding-inline: max(var(--mobile-shell-pad-x), env(safe-area-inset-left, 0px))
+      max(var(--mobile-shell-pad-x), env(safe-area-inset-right, 0px));
+  }
+
+  main.topApp .footerNavInner {
+    padding-inline: max(var(--mobile-shell-pad-x), env(safe-area-inset-left, 0px))
+      max(var(--mobile-shell-pad-x), env(safe-area-inset-right, 0px));
   }
 }
 
@@ -84,7 +95,7 @@ html {
     --mobile-site-header-logo-max-w: min(770px, calc(100vw - 28px));
     --mobile-site-header-control-size: 44px;
     --mobile-site-header-control-pad-top: calc(4px + env(safe-area-inset-top, 0px));
-    --mobile-site-header-pad-x: 11px;
+    --mobile-site-header-pad-x: max(var(--mobile-shell-pad-x, clamp(16px, 4.5vw, 20px)), env(safe-area-inset-left, 0px));
   }
 
   main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) {
@@ -92,7 +103,7 @@ html {
     --mobile-site-header-logo-max-w: min(910px, calc(100vw - 28px));
     --mobile-site-header-control-size: 44px;
     --mobile-site-header-control-pad-top: calc(4px + env(safe-area-inset-top, 0px));
-    --mobile-site-header-pad-x: 11px;
+    --mobile-site-header-pad-x: max(var(--mobile-shell-pad-x, clamp(16px, 4.5vw, 20px)), env(safe-area-inset-left, 0px));
   }
 
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .appSiteHeader {
@@ -254,11 +265,15 @@ html {
 @media (max-width: 760px) {
   main.topApp.appShell--podcast,
   main.topApp[data-page-atmosphere="podcast"] {
-    --mobile-podcast-header-logo-h: clamp(168px, 44vw, 248px);
-    --mobile-podcast-header-logo-max-w: min(320px, calc(100vw - 28px));
+    --mobile-podcast-header-logo-h: clamp(
+      calc(168px * var(--podcast-brand-logo-scale, 2.5)),
+      calc(44vw * var(--podcast-brand-logo-scale, 2.5)),
+      calc(248px * var(--podcast-brand-logo-scale, 2.5))
+    );
+    --mobile-podcast-header-logo-max-w: min(calc(320px * var(--podcast-brand-logo-scale, 2.5)), calc(100vw - 28px));
     --mobile-site-header-control-size: 44px;
     --mobile-site-header-control-pad-top: calc(4px + env(safe-area-inset-top, 0px));
-    --mobile-site-header-pad-x: 11px;
+    --mobile-site-header-pad-x: max(var(--mobile-shell-pad-x, clamp(16px, 4.5vw, 20px)), env(safe-area-inset-left, 0px));
     --header-floating-offset: 0px;
     --header-floating-height: 0px;
     --header-fade-height: 0px;
@@ -477,8 +492,8 @@ html {
     padding-top: 0 !important;
     width: min(var(--content-max-width), calc(100% - var(--content-gutter)));
     margin-inline: auto;
-    padding-inline: max(var(--content-gutter), env(safe-area-inset-left, 0px))
-      max(var(--content-gutter), env(safe-area-inset-right, 0px));
+    padding-inline: max(var(--mobile-shell-pad-x, clamp(16px, 4.5vw, 20px)), env(safe-area-inset-left, 0px))
+      max(var(--mobile-shell-pad-x, clamp(16px, 4.5vw, 20px)), env(safe-area-inset-right, 0px));
     overflow-x: clip;
     box-sizing: border-box;
   }

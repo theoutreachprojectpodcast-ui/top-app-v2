@@ -88,8 +88,16 @@ export default function AdminNonprofitPanel() {
 
   return (
     <div className="adminPanel">
-      <h2 style={{ marginTop: 0 }}>Directory nonprofit</h2>
-      <p className="adminMuted">Loads canonical directory row + enrichment (`nonprofit_directory_enrichment`). Saves upsert by EIN.</p>
+      <h2 style={{ marginTop: 0 }}>Trusted resources & nonprofit directory</h2>
+      <p className="adminMuted">
+        Look up IRS/EIN directory rows and enrichment, or create a trusted listing manually on the Trusted admin page.
+      </p>
+      <div className="adminToolbar" style={{ gap: 8 }}>
+        <a className="btnPrimary" href="/admin/trusted" style={{ display: "inline-flex", alignItems: "center" }}>
+          Add trusted resource manually
+        </a>
+      </div>
+      <h3 style={{ fontSize: "1rem", marginTop: 20 }}>EIN / IRS lookup</h3>
       <div className="adminToolbar">
         <label className="fieldLabel" htmlFor="ein-q">
           EIN

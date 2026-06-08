@@ -78,6 +78,17 @@ export default function AdminTrustedPanel() {
   const [scraping, setScraping] = useState(false);
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
+  const [showCreate, setShowCreate] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    display_name: "",
+    website_url: "",
+    logo_url: "",
+    header_image_url: "",
+    short_description: "",
+    listing_status: "pending",
+    featured: false,
+  });
+  const [creating, setCreating] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -162,6 +173,47 @@ export default function AdminTrustedPanel() {
     }
   }
 
+  async function createResource() {
+    const name = String(createForm.display_name || "").trim();
+    if (!name) {
+      setError("Organization name is required.");
+      return;
+    }
+    setCreating(true);
+    setError("");
+    setStatus("");
+    try {
+      const res = await fetch("/api/admin/trusted", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...createForm, featured: createForm.featured }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error || "Create failed.");
+        return;
+      }
+      setStatus("Trusted resource created.");
+      setShowCreate(false);
+      setCreateForm({
+        display_name: "",
+        website_url: "",
+        logo_url: "",
+        header_image_url: "",
+        short_description: "",
+        listing_status: "pending",
+        featured: false,
+      });
+      await load();
+      if (data.row?.id) setSelectedId(data.row.id);
+    } catch {
+      setError("Create failed.");
+    } finally {
+      setCreating(false);
+    }
+  }
+
   async function scrapeWebsite() {
     if (!selectedId) return;
     setScraping(true);
@@ -205,6 +257,64 @@ export default function AdminTrustedPanel() {
           </button>
         ) : null}
       </div>
+      {showCreate ? (
+        <div className="adminFieldStack" style={{ marginTop: 16, marginBottom: 16 }}>
+          <h3 style={{ marginTop: 0 }}>Manual trusted resource</h3>
+          <p className="adminMuted">No EIN lookup required. Assign listing status and publish from this form.</p>
+          <label className="fieldLabel">Organization name *</label>
+          <input
+            className="adminConsoleInput"
+            value={createForm.display_name}
+            onChange={(e) => setCreateForm((f) => ({ ...f, display_name: e.target.value }))}
+          />
+          <label className="fieldLabel">Short description</label>
+          <textarea
+            className="adminConsoleInput"
+            rows={3}
+            value={createForm.short_description}
+            onChange={(e) => setCreateForm((f) => ({ ...f, short_description: e.target.value }))}
+          />
+          <label className="fieldLabel">Website</label>
+          <input
+            className="adminConsoleInput"
+            value={createForm.website_url}
+            onChange={(e) => setCreateForm((f) => ({ ...f, website_url: e.target.value }))}
+          />
+          <label className="fieldLabel">Logo URL</label>
+          <input
+            className="adminConsoleInput"
+            value={createForm.logo_url}
+            onChange={(e) => setCreateForm((f) => ({ ...f, logo_url: e.target.value }))}
+          />
+          <label className="fieldLabel">Header image URL</label>
+          <input
+            className="adminConsoleInput"
+            value={createForm.header_image_url}
+            onChange={(e) => setCreateForm((f) => ({ ...f, header_image_url: e.target.value }))}
+          />
+          <label className="fieldLabel">Listing status</label>
+          <select
+            className="adminConsoleInput"
+            value={createForm.listing_status}
+            onChange={(e) => setCreateForm((f) => ({ ...f, listing_status: e.target.value }))}
+          >
+            <option value="pending">Pending</option>
+            <option value="active">Active (published)</option>
+            <option value="archived">Archived</option>
+          </select>
+          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <input
+              type="checkbox"
+              checked={createForm.featured}
+              onChange={(e) => setCreateForm((f) => ({ ...f, featured: e.target.checked }))}
+            />
+            Featured
+          </label>
+          <button type="button" className="btnPrimary" disabled={creating} onClick={() => void createResource()}>
+            Create resource
+          </button>
+        </div>
+      ) : null}
       {error ? (
         <p role="alert" style={{ color: "var(--color-danger, #b42318)" }}>
           {error}

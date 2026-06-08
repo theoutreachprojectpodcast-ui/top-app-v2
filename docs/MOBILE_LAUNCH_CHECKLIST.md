@@ -4,7 +4,7 @@ Single checklist for store submission. **Web production launch** ([mvp-productio
 
 **Guides:** [MOBILE_READINESS.md](./MOBILE_READINESS.md) · [MOBILE_ARCHITECTURE_GAPS.md](./MOBILE_ARCHITECTURE_GAPS.md) · [web/docs/CAPACITOR_MOBILE.md](../web/docs/CAPACITOR_MOBILE.md) · [store-listing-copy.md](./store-listing-copy.md)
 
-**Status snapshot:** 2026-06-04 — Capacitor configured in repo; **Android Studio not installed** on dev machine (Play Store steps blocked until Studio or CI).
+**Status snapshot:** 2026-06 — Capacitor configured; **Android Studio + SDK installed** on dev machine. Optional: add `adb` to Path; create emulator; signed AAB for Play.
 
 **App ID:** `org.theoutreachproject.torp` · **Production WebView URL:** `https://theoutreachproject.app`
 
@@ -18,7 +18,7 @@ Single checklist for store submission. **Web production launch** ([mvp-productio
 | B — Web production prerequisite | In progress (see MVP launch doc) |
 | C — Native prep & device smoke | Not started |
 | D — iOS App Store | Not started (needs Mac + Xcode) |
-| E — Google Play | **Blocked** — Android Studio not installed |
+| E — Google Play | SDK ready — emulator + signed AAB remaining |
 | F — Post-launch / phase 2 | Not started |
 
 ---
@@ -61,7 +61,7 @@ Complete [mvp-production-launch.md](./mvp-production-launch.md) §1–7 first. M
 - [x] Apple Developer Program enrolled
 - [x] Google Play Console account
 - [ ] **macOS + Xcode** installed (iOS builds)
-- [ ] **Android Studio** installed — **not on current machine**; required for emulator + signed AAB
+- [x] **Android Studio** installed (2026.1.1.8 via winget) — complete SDK setup + `adb` on PATH per [ANDROID_STUDIO_SETUP.md](./ANDROID_STUDIO_SETUP.md)
 - [ ] Node **≥ 22** for Capacitor CLI (or confirm `cap` works on current Node)
 - [ ] `pnpm install` at repo root
 
@@ -165,9 +165,9 @@ Test on **physical devices** after native builds run.
 
 ---
 
-## F. Android — Google Play (**blocked: install Android Studio**)
+## F. Android — Google Play
 
-Skip until [Android Studio](https://developer.android.com/studio) is installed (or CI pipeline builds AAB).
+Android Studio is installed; finish SDK setup in [ANDROID_STUDIO_SETUP.md](./ANDROID_STUDIO_SETUP.md), then complete F.1–F.4 below (or use CI for AAB).
 
 ### F.1 Play Console app record
 
@@ -235,7 +235,7 @@ Track in [MOBILE_ARCHITECTURE_GAPS.md](./MOBILE_ARCHITECTURE_GAPS.md).
 pnpm --dir web run mobile:prep:prod
 pnpm --dir web run validate:capacitor
 pnpm --dir web run cap:open:ios        # Mac only
-pnpm --dir web run cap:open:android    # needs Android Studio
+pnpm --dir web run cap:open:android    # opens Android Studio (after SDK setup)
 ```
 
 ---

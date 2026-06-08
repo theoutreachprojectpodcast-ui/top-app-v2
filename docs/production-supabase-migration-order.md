@@ -85,6 +85,7 @@ where platform_role is null
 | 34 | `admin_backend_v06_access_control.sql` | Admin access control |
 | 35 | `admin_cms_v05_all_in_one.sql` | Admin CMS |
 | 36 | `admin_audit_logs_v01.sql` | Admin audit logs |
+| 37 | `page_content_blocks_admin_v10.sql` | Universal page copy blocks + `admin-media` bucket + media asset registry |
 | 37 | `admin_enrichment_diagnostics.sql` | Admin diagnostics (optional) |
 | 38 | `platform_future_hooks.sql` | Future hooks (optional) |
 | 39 | `safe_alignment_extension_2026_04.sql` | Safe alignment patch |

@@ -24,7 +24,7 @@ See **“Already done in repo”** at the top of [mvp-production-launch.md](./mv
 | 6 | Stripe live webhook + price IDs | §6 | Partial |
 | 7 | Production browser smoke test | §7 | In progress |
 | 8 | QA admin (optional) | §8 | Not started |
-| 9 | Mobile store submission | [MOBILE_LAUNCH_CHECKLIST.md](./MOBILE_LAUNCH_CHECKLIST.md) | Not started (Android Studio not installed) |
+| 9 | Mobile store submission | [MOBILE_LAUNCH_CHECKLIST.md](./MOBILE_LAUNCH_CHECKLIST.md) | Android Studio + SDK ready; emulator/AAB + Play listing pending |
 | 10 | Go live | §10 | Not started |
 
 Supporting files: [vercel-production-env.template](./vercel-production-env.template), [production-supabase-migration-order.md](./production-supabase-migration-order.md), [store-listing-copy.md](./store-listing-copy.md).

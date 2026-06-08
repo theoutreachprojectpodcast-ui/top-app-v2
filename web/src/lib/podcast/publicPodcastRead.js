@@ -8,9 +8,21 @@ import { PODCAST_LANDING_RECENT_EPISODE_COUNT } from "./podcastLandingCuratedEpi
 
 /** Episode library card count on the public podcast landing (YouTube playlist order). */
 export const PODCAST_LANDING_FULL_EPISODE_COUNT = PODCAST_LANDING_RECENT_EPISODE_COUNT;
-const DB_EPISODE_FETCH_LIMIT = 400;
-/** Cap YouTube transcript fetches per landing rebuild (cold cache); avoids long serverless runs. */
-const TRANSCRIPT_BACKFILL_PER_BUILD = 6;
+const DB_EPISODE_FETCH_LIMIT = 120;
+/** Columns needed for landing cards + guest quotes (avoid select *). */
+const EPISODE_LIST_COLUMNS =
+  "id,youtube_video_id,title,description,thumbnail_url,youtube_url,published_at,view_count,is_featured,episode_link_status,pipeline_decision,pipeline_reason,manual_override,admin_exclude,admin_include,title_override,description_override,thumbnail_override_url,transcript_text,transcript_fetched_at";
+/** YouTube playlist walk — only need enough for the public strip. */
+const PLAYLIST_MAX_PAGES = 3;
+const PLAYLIST_MAX_ACCEPTED = 30;
+
+function transcriptBackfillCap() {
+  const raw = String(process.env.PODCAST_LANDING_TRANSCRIPT_BACKFILL ?? "").trim();
+  if (raw === "0") return 0;
+  const n = Number.parseInt(raw, 10);
+  if (Number.isFinite(n) && n >= 0) return n;
+  return process.env.NODE_ENV === "development" ? 4 : 0;
+}
 
 /**
  * Avoid showing playlist / episode titles as a person's name on featured cards.
@@ -190,7 +202,7 @@ export async function loadPublicPodcastLandingData(admin) {
   if (admin) {
     const { data: epData, error: epErr } = await admin
       .from("podcast_episodes")
-      .select("*")
+      .select(EPISODE_LIST_COLUMNS)
       .order("published_at", { ascending: false })
       .limit(DB_EPISODE_FETCH_LIMIT);
 
@@ -212,39 +224,53 @@ export async function loadPublicPodcastLandingData(admin) {
     }
   }
 
-  const pl = await fetchOfficialPlaylistAcceptedEpisodes({
-    excludeVideoIds,
-    forceIncludeVideoIds,
-    maxPages: 50,
-    maxAccepted: 200,
-  });
+  const useDbFastPath =
+    dbPublicEpisodes.length >= PODCAST_LANDING_RECENT_EPISODE_COUNT &&
+    String(process.env.PODCAST_LANDING_SKIP_YOUTUBE || "").trim() !== "0";
 
-  if (!pl.ok) {
-    degraded = true;
+  if (useDbFastPath) {
     episodes = sortByPublishedDesc(dbPublicEpisodes)
       .slice(0, PODCAST_LANDING_RECENT_EPISODE_COUNT)
       .map((ep) => ({ ...ep, episode_link_status: "live" }));
-    source = episodes.length ? "youtube_playlist_failed+supabase_fallback" : "youtube_playlist_failed";
-    if (!episodes.length) error = pl.error;
+    source = admin && byVideoId.size ? "supabase_fast_path+recent10" : "supabase_fast_path";
+    if (episodes.length < 5) degraded = true;
   } else {
-    const merged = (pl.videos || [])
-      .map((r) => mergePlaylistRuntimeWithDb(r, byVideoId.get(String(r.youtube_video_id || "").trim())))
-      .filter((ep) => episodeRowIsPublicListed(ep));
-    const mergedSorted = sortByPublishedDesc(merged);
-    episodes = mergedSorted.slice(0, PODCAST_LANDING_RECENT_EPISODE_COUNT).map((ep) => ({
-      ...ep,
-      episode_link_status: "live",
-    }));
-    if (!episodes.length && dbPublicEpisodes.length) {
+    const pl = await fetchOfficialPlaylistAcceptedEpisodes({
+      excludeVideoIds,
+      forceIncludeVideoIds,
+      maxPages: PLAYLIST_MAX_PAGES,
+      maxAccepted: PLAYLIST_MAX_ACCEPTED,
+    });
+
+    if (!pl.ok) {
+      degraded = true;
       episodes = sortByPublishedDesc(dbPublicEpisodes)
         .slice(0, PODCAST_LANDING_RECENT_EPISODE_COUNT)
         .map((ep) => ({ ...ep, episode_link_status: "live" }));
-      source = `${feedSource}+supabase_only_fallback`;
+      source = episodes.length ? "youtube_playlist_failed+supabase_fallback" : "youtube_playlist_failed";
+      if (!episodes.length) error = pl.error;
+    } else {
+      const feedSource = String(pl.source || "youtube_api");
+      const merged = (pl.videos || [])
+        .map((r) => mergePlaylistRuntimeWithDb(r, byVideoId.get(String(r.youtube_video_id || "").trim())))
+        .filter((ep) => episodeRowIsPublicListed(ep));
+      const mergedSorted = sortByPublishedDesc(merged);
+      episodes = mergedSorted.slice(0, PODCAST_LANDING_RECENT_EPISODE_COUNT).map((ep) => ({
+        ...ep,
+        episode_link_status: "live",
+      }));
+      if (!episodes.length && dbPublicEpisodes.length) {
+        episodes = sortByPublishedDesc(dbPublicEpisodes)
+          .slice(0, PODCAST_LANDING_RECENT_EPISODE_COUNT)
+          .map((ep) => ({ ...ep, episode_link_status: "live" }));
+        source = `${feedSource}+supabase_only_fallback`;
+      } else if (admin && byVideoId.size) {
+        source = `${feedSource}+supabase+recent10`;
+      } else {
+        source = `${feedSource}+recent10`;
+      }
+      if (episodes.length < 5) degraded = true;
     }
-    if (episodes.length < 5) degraded = true;
-    const feedSource = String(pl.source || "youtube_api");
-    if (admin && byVideoId.size) source = `${feedSource}+supabase+recent10`;
-    else source = `${feedSource}+recent10`;
   }
 
   if (admin && episodes.length) {
@@ -257,7 +283,8 @@ export async function loadPublicPodcastLandingData(admin) {
       return { episodes, featuredGuests, source, degraded, error };
     }
 
-    for (const ep of episodes.slice(0, TRANSCRIPT_BACKFILL_PER_BUILD)) {
+    const backfillCap = transcriptBackfillCap();
+    for (const ep of episodes.slice(0, backfillCap)) {
       await attachTranscriptIfNeeded(admin, ep);
     }
 

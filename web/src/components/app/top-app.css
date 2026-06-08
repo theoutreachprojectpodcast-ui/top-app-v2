@@ -4386,6 +4386,15 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   background: var(--color-bg-card);
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 18%, transparent);
 }
+.communityModeratorPillLink {
+  color: inherit;
+  font-weight: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.communityModeratorPillLink:hover {
+  color: var(--color-accent-hover);
+}
 .card.communitySection {
   border-color: var(--color-border-strong);
   box-shadow: var(--shadow-card);
@@ -6520,7 +6529,7 @@ html.dark .communityPostBodyGuideSteps li {
     --mobile-site-header-logo-max-w: min(770px, calc(100vw - 28px));
     --mobile-site-header-control-size: 44px;
     --mobile-site-header-control-pad-top: calc(4px + env(safe-area-inset-top, 0px));
-    --mobile-site-header-pad-x: 11px;
+    --mobile-site-header-pad-x: max(clamp(16px, 4.5vw, 20px), env(safe-area-inset-left, 0px));
   }
 
   main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) {
@@ -6528,7 +6537,7 @@ html.dark .communityPostBodyGuideSteps li {
     --mobile-site-header-logo-max-w: min(910px, calc(100vw - 28px));
     --mobile-site-header-control-size: 44px;
     --mobile-site-header-control-pad-top: calc(4px + env(safe-area-inset-top, 0px));
-    --mobile-site-header-pad-x: 11px;
+    --mobile-site-header-pad-x: max(clamp(16px, 4.5vw, 20px), env(safe-area-inset-left, 0px));
   }
 
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .appSiteHeader {
