@@ -47,58 +47,57 @@ create index if not exists idx_trusted_resources_listing on public.trusted_resou
 
 alter table public.trusted_resources enable row level security;
 
--- Idempotent RLS: create only when missing (avoids DROP POLICY).
+-- Idempotent RLS: deny direct PostgREST access; catalog + applications via Next.js API + service role.
 do $$
 begin
-  if not exists (
-    select 1
-    from pg_catalog.pg_policy pol
+  if exists (
+    select 1 from pg_catalog.pg_policy pol
     join pg_catalog.pg_class cls on cls.oid = pol.polrelid
     join pg_catalog.pg_namespace nsp on nsp.oid = cls.relnamespace
-    where nsp.nspname = 'public'
-      and cls.relname = 'trusted_resources'
+    where nsp.nspname = 'public' and cls.relname = 'trusted_resources'
       and pol.polname = 'trusted_resources_select_active'
   ) then
-    create policy trusted_resources_select_active on public.trusted_resources
-      for select to anon, authenticated
-      using (listing_status = 'active');
+    drop policy trusted_resources_select_active on public.trusted_resources;
   end if;
-end
-$$;
-
-do $$
-begin
-  if not exists (
-    select 1
-    from pg_catalog.pg_policy pol
+  if exists (
+    select 1 from pg_catalog.pg_policy pol
     join pg_catalog.pg_class cls on cls.oid = pol.polrelid
     join pg_catalog.pg_namespace nsp on nsp.oid = cls.relnamespace
-    where nsp.nspname = 'public'
-      and cls.relname = 'trusted_resources'
+    where nsp.nspname = 'public' and cls.relname = 'trusted_resources'
       and pol.polname = 'trusted_resources_insert_pending'
   ) then
-    create policy trusted_resources_insert_pending on public.trusted_resources
-      for insert to anon, authenticated
-      with check (listing_status = 'pending');
+    drop policy trusted_resources_insert_pending on public.trusted_resources;
   end if;
-end
-$$;
-
-do $$
-begin
-  if not exists (
-    select 1
-    from pg_catalog.pg_policy pol
+  if exists (
+    select 1 from pg_catalog.pg_policy pol
     join pg_catalog.pg_class cls on cls.oid = pol.polrelid
     join pg_catalog.pg_namespace nsp on nsp.oid = cls.relnamespace
-    where nsp.nspname = 'public'
-      and cls.relname = 'trusted_resources'
+    where nsp.nspname = 'public' and cls.relname = 'trusted_resources'
       and pol.polname = 'trusted_resources_update_pending'
   ) then
-    create policy trusted_resources_update_pending on public.trusted_resources
-      for update to anon, authenticated
-      using (listing_status = 'pending')
-      with check (listing_status = 'pending');
+    drop policy trusted_resources_update_pending on public.trusted_resources;
+  end if;
+
+  if not exists (
+    select 1 from pg_catalog.pg_policy pol
+    join pg_catalog.pg_class cls on cls.oid = pol.polrelid
+    join pg_catalog.pg_namespace nsp on nsp.oid = cls.relnamespace
+    where nsp.nspname = 'public' and cls.relname = 'trusted_resources'
+      and pol.polname = 'trusted_resources_block_anon'
+  ) then
+    create policy trusted_resources_block_anon on public.trusted_resources
+      for all to anon using (false) with check (false);
+  end if;
+
+  if not exists (
+    select 1 from pg_catalog.pg_policy pol
+    join pg_catalog.pg_class cls on cls.oid = pol.polrelid
+    join pg_catalog.pg_namespace nsp on nsp.oid = cls.relnamespace
+    where nsp.nspname = 'public' and cls.relname = 'trusted_resources'
+      and pol.polname = 'trusted_resources_block_authenticated'
+  ) then
+    create policy trusted_resources_block_authenticated on public.trusted_resources
+      for all to authenticated using (false) with check (false);
   end if;
 end
 $$;

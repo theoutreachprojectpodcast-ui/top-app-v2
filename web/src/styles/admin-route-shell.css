@@ -5,23 +5,8 @@ main.topApp.appShell--admin {
   padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
 }
 
-/* Desktop: compact header reserve — same logo/topbar chrome, less dead space than home hero. */
-@media (min-width: 761px) {
-  main.topApp.appShell--admin[data-page-atmosphere="admin"] {
-    --header-floating-offset: 16px;
-    --header-floating-height: clamp(96px, 11vw, 132px);
-    --header-fade-height: 14px;
-  }
-
-  main.topApp.appShell--admin[data-page-atmosphere="admin"] img.brandMarkImg--header {
-    max-height: clamp(76px, 9vw, 116px);
-    max-width: min(480px, 68vw);
-  }
-
-  main.topApp.appShell--admin[data-page-atmosphere="admin"] .topbarOcclusion {
-    height: calc(var(--header-floating-offset) + var(--header-floating-height) + var(--header-fade-height));
-  }
-}
+/* Header logo + reserve: inherit standard TopApp subpage tokens from top-app.css
+   (--header-floating-offset/height/fade, img.brandMarkImg--header). No compact admin override. */
 
 main.topApp.appShell--admin .topbarOcclusion {
   pointer-events: none;
@@ -35,7 +20,7 @@ main.topApp.appShell--admin .adminLayout {
   margin: 0 auto;
   box-sizing: border-box;
   padding:
-    calc(var(--header-floating-offset) + var(--header-floating-height) + var(--header-fade-height) + 12px)
+    calc(var(--header-floating-offset) + var(--header-floating-height) + var(--header-fade-height) + 8px)
     max(12px, var(--content-gutter, 16px))
     calc(24px + env(safe-area-inset-bottom, 0px));
   display: flex;
@@ -72,7 +57,7 @@ main.topApp.appShell--admin .adminContentContainer {
 main.topApp.appShell--admin .adminSectionEditor__body {
   margin-top: var(--ds-space-3, 12px);
   display: grid;
-  gap: var(--ds-space-3, 12px);
+  gap: var(--ds-space-4, 16px);
 }
 
 /* Horizontal admin navigation */
@@ -142,7 +127,7 @@ main.topApp.appShell--admin .adminSectionEditor__body {
   background: var(--color-bg-elevated);
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-md, 8px);
-  box-shadow: 0 10px 28px rgb(0 0 0 / 14%);
+  box-shadow: var(--admin-shadow-dropdown, 0 10px 28px var(--color-shadow));
   display: grid;
   gap: 4px;
 }
@@ -253,12 +238,12 @@ main.topApp.appShell--admin .adminSectionEditor__body {
 }
 
 .adminSearch__error {
-  color: var(--color-danger, #b42318);
+  color: var(--color-danger-text);
 }
 
 @media (max-width: 760px) {
   main.topApp.appShell--admin .adminLayout {
-    padding-top: calc(var(--header-floating-offset) + var(--header-floating-height) + var(--header-fade-height) + 8px);
+    padding-top: calc(var(--header-floating-offset) + var(--header-floating-height) + var(--header-fade-height) + var(--ds-space-2, 8px));
     padding-left: max(12px, var(--content-gutter, 16px));
     padding-right: max(12px, var(--content-gutter, 16px));
   }

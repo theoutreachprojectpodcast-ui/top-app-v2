@@ -14,6 +14,7 @@ import { useCommunityFeed } from "@/features/community/hooks/useCommunityFeed";
 import { emptyProfileAvatarUrl } from "@/lib/avatarFallback";
 import { readRememberDevicePref } from "@/lib/auth/lastUsedEmail";
 import { workosSignInLink, workosSignUpHref } from "@/lib/auth/workosReturnTo";
+import { openWebMembership, openWebSignup, requiresExternalWebAccountFlow } from "@/lib/capacitor/webAccountRedirects";
 
 function CommunityIcon() {
   const path = "M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6m8 0a3 3 0 1 1 0-6 3 3 0 0 1 0 6M3 19c0-2.8 2.8-4 5-4s5 1.2 5 4m3 0c0-2.4 2.3-3.5 5-3.5 2.1 0 5 1 5 3.5";
@@ -59,6 +60,26 @@ export default function CommunityPage({
     rememberDevice: readRememberDevicePref(),
   });
 
+  function handleCreateAccount() {
+    if (requiresExternalWebAccountFlow() && authBackend.workos) {
+      void openWebSignup({ returnPath: "/membership/success" });
+      return;
+    }
+    if (authBackend.workos) {
+      window.location.assign(workosCommunitySignUpHref);
+      return;
+    }
+    onRequestSignIn?.();
+  }
+
+  function handleUpgrade() {
+    if (requiresExternalWebAccountFlow()) {
+      void openWebMembership();
+      return;
+    }
+    onRequestUpgrade?.();
+  }
+
   useEffect(() => {
     if (!isAuthenticated) setFeedTab("latest");
   }, [isAuthenticated]);
@@ -92,9 +113,9 @@ export default function CommunityPage({
           <div className="row wrap">
             {authBackend.workos ? (
               <>
-                <a className="btnPrimary" href={workosCommunitySignUpHref}>
+                <button className="btnPrimary" type="button" onClick={handleCreateAccount}>
                   Create account
-                </a>
+                </button>
                 <a className="btnSoft" href={workosCommunitySignInHref}>
                   Sign in
                 </a>
@@ -127,7 +148,7 @@ export default function CommunityPage({
                 Share your story
               </button>
             ) : (
-              <button type="button" className="btnPrimary" onClick={onRequestUpgrade}>
+              <button type="button" className="btnPrimary" onClick={handleUpgrade}>
                 Upgrade to Pro to submit a story
               </button>
             )}

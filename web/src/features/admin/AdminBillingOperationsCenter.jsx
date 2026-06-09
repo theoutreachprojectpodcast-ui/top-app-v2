@@ -55,7 +55,7 @@ export default function AdminBillingOperationsCenter() {
           "Operational visibility only—not audited financial statements. Card data is never shown in admin."
         }
       >
-        <div className="adminToolbar" style={{ marginTop: 12 }}>
+        <div className="adminTabBar">
           <button type="button" className={tab === "revenue" ? "btnPrimary" : "btnSoft"} onClick={() => setTab("revenue")}>
             Revenue & forecast
           </button>
@@ -69,7 +69,7 @@ export default function AdminBillingOperationsCenter() {
 
         {tab === "revenue" ? (
           <>
-            <div className="adminToolbar" style={{ marginTop: 16 }}>
+            <div className="adminToolbar adminToolbar--spaced">
               <label className="fieldLabel">Scenario</label>
               <select className="adminConsoleInput" value={scenario} onChange={(e) => setScenario(e.target.value)}>
                 <option value="conservative">Conservative</option>
@@ -87,12 +87,12 @@ export default function AdminBillingOperationsCenter() {
               </button>
             </div>
 
-            {error ? <p role="alert" style={{ color: "var(--color-danger, #b42318)" }}>{error}</p> : null}
+            {error ? <p className="adminFeedback adminFeedback--error" role="alert">{error}</p> : null}
             {loading ? <p className="adminMuted">Loading…</p> : null}
 
             {!loading && data ? (
               <>
-                <div className="adminDashboardGrid" style={{ marginTop: 16 }}>
+                <div className="adminDashboardGrid adminMt4">
                   <div className="adminDashboardCard">
                     <span className="adminMuted">MRR (estimate)</span>
                     <span className="adminDashboardStat">${rev.mrrUsd}</span>
@@ -111,7 +111,7 @@ export default function AdminBillingOperationsCenter() {
                   </div>
                 </div>
 
-                <h2 style={{ fontSize: "1rem", marginTop: 24 }}>12-month membership forecast</h2>
+                <h2 className="adminSectionTitle">12-month membership forecast</h2>
                 <div className="adminForecastChart" role="img" aria-label="Membership MRR forecast">
                   {(data.forecasts?.membership || []).map((pt) => (
                     <div
@@ -125,7 +125,7 @@ export default function AdminBillingOperationsCenter() {
                   ))}
                 </div>
 
-                <h2 style={{ fontSize: "1rem", marginTop: 20 }}>Sponsor revenue forecast (illustrative)</h2>
+                <h2 className="adminSectionTitle">Sponsor revenue forecast (illustrative)</h2>
                 <div className="adminForecastChart" role="img" aria-label="Sponsor revenue forecast">
                   {(data.forecasts?.sponsors || []).slice(0, 13).map((pt) => (
                     <div
@@ -139,8 +139,8 @@ export default function AdminBillingOperationsCenter() {
                   ))}
                 </div>
 
-                <h2 style={{ fontSize: "1rem", marginTop: 24 }}>Stripe integration</h2>
-                <ul className="adminMuted" style={{ lineHeight: 1.7 }}>
+                <h2 className="adminSectionTitle">Stripe integration</h2>
+                <ul className="adminMuted adminProse">
                   <li>Secret key: {data.stripeIntegration?.secretConfigured ? "yes" : "no"}</li>
                   <li>Member recurring: {data.stripeIntegration?.memberRecurring ? "yes" : "no"}</li>
                   <li>Webhook: {data.stripeIntegration?.webhook ? "yes" : "no"}</li>
@@ -152,7 +152,7 @@ export default function AdminBillingOperationsCenter() {
         ) : null}
 
         {tab === "transactions" && data?.transactions ? (
-          <div className="adminTableWrap" style={{ marginTop: 16 }}>
+          <div className="adminTableWrap adminTableWrap--spaced">
             <table className="adminTable">
               <thead>
                 <tr>

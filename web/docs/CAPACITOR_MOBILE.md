@@ -105,6 +105,8 @@ Default Capacitor placeholders apply. Replace later with:
 
 ## Phase 11 — iOS on a Mac (next steps)
 
+**Full walkthrough:** [../../docs/IOS_XCODE_SETUP.md](../../docs/IOS_XCODE_SETUP.md)
+
 On **macOS** with **Xcode** installed:
 
 ```bash

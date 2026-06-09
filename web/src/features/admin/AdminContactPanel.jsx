@@ -102,7 +102,7 @@ export default function AdminContactPanel() {
         <button type="button" className="btnPrimary" onClick={() => void saveSettings()}>Save contact settings</button>
       </div>
 
-      <hr className="adminRule" style={{ margin: "16px 0" }} />
+      <hr className="adminRule" />
       <div className="adminToolbar">
         <select className="adminConsoleInput" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
           <option value="">All statuses</option>

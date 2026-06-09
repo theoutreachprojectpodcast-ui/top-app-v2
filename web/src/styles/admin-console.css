@@ -76,9 +76,9 @@
 .adminConsole .adminToolbar {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: var(--ds-space-2, 8px);
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: var(--ds-space-3, 12px);
 }
 
 .adminConsole .adminSessionEmail {
@@ -106,12 +106,12 @@
 
 .adminConsole .adminPanelBody {
   display: grid;
-  gap: 10px;
+  gap: var(--ds-space-3, 12px);
 }
 
 .adminConsole .adminFieldStack {
   display: grid;
-  gap: 10px;
+  gap: var(--ds-space-3, 12px);
   max-width: min(720px, 100%);
 }
 
@@ -226,9 +226,9 @@
 
 .adminContentHubGrid {
   display: grid;
-  gap: 16px;
+  gap: var(--ds-space-4, 16px);
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  margin-top: 20px;
+  margin-top: var(--ds-space-5, 20px);
 }
 
 .adminContentHubCard {
@@ -244,7 +244,7 @@
 
 .adminContentHubCard:hover {
   border-color: var(--color-border-strong, var(--color-border-subtle));
-  box-shadow: 0 4px 16px rgb(0 0 0 / 8%);
+  box-shadow: var(--shadow-card-hover, 0 4px 16px var(--color-shadow));
 }
 
 .adminContentHubCard h3 {
@@ -298,9 +298,8 @@
 
 .adminDashboardGrid {
   display: grid;
-  gap: 16px;
+  gap: var(--ds-space-4, 16px);
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  margin-top: 16px;
 }
 
 .adminDashboardCard {
@@ -319,7 +318,7 @@
 
 .adminDashboardCard:hover {
   border-color: var(--color-border-strong, var(--color-border-subtle));
-  box-shadow: 0 4px 16px rgb(0 0 0 / 8%);
+  box-shadow: var(--shadow-card-hover, 0 4px 16px var(--color-shadow));
 }
 
 .adminDashboardCard strong {
@@ -380,7 +379,7 @@
 }
 
 .adminForecastBar--sponsor {
-  background: color-mix(in srgb, #3b82f6 45%, transparent);
+  background: var(--admin-chart-sponsor, color-mix(in srgb, var(--color-info, #2c7be5) 45%, transparent));
 }
 
 .adminPostMeta {

@@ -82,23 +82,40 @@ create index if not exists nonprofit_directory_enrichment_slug_idx
 
 alter table public.nonprofit_directory_enrichment enable row level security;
 
--- Idempotent RLS: create only when missing (avoids DROP POLICY).
+-- Idempotent RLS: deny anon/authenticated — reads/writes via Next.js API + service role only.
 do $$
 begin
-  if not exists (
-    select 1
-    from pg_catalog.pg_policy pol
+  if exists (
+    select 1 from pg_catalog.pg_policy pol
     join pg_catalog.pg_class cls on cls.oid = pol.polrelid
     join pg_catalog.pg_namespace nsp on nsp.oid = cls.relnamespace
-    where nsp.nspname = 'public'
-      and cls.relname = 'nonprofit_directory_enrichment'
+    where nsp.nspname = 'public' and cls.relname = 'nonprofit_directory_enrichment'
       and pol.polname = 'nonprofit_directory_enrichment_select_public'
   ) then
-    create policy nonprofit_directory_enrichment_select_public
-      on public.nonprofit_directory_enrichment
-      for select
-      using (true);
+    drop policy nonprofit_directory_enrichment_select_public on public.nonprofit_directory_enrichment;
+  end if;
+
+  if not exists (
+    select 1 from pg_catalog.pg_policy pol
+    join pg_catalog.pg_class cls on cls.oid = pol.polrelid
+    join pg_catalog.pg_namespace nsp on nsp.oid = cls.relnamespace
+    where nsp.nspname = 'public' and cls.relname = 'nonprofit_directory_enrichment'
+      and pol.polname = 'nonprofit_directory_enrichment_block_anon'
+  ) then
+    create policy nonprofit_directory_enrichment_block_anon
+      on public.nonprofit_directory_enrichment for all to anon using (false) with check (false);
+  end if;
+
+  if not exists (
+    select 1 from pg_catalog.pg_policy pol
+    join pg_catalog.pg_class cls on cls.oid = pol.polrelid
+    join pg_catalog.pg_namespace nsp on nsp.oid = cls.relnamespace
+    where nsp.nspname = 'public' and cls.relname = 'nonprofit_directory_enrichment'
+      and pol.polname = 'nonprofit_directory_enrichment_block_authenticated'
+  ) then
+    create policy nonprofit_directory_enrichment_block_authenticated
+      on public.nonprofit_directory_enrichment for all to authenticated using (false) with check (false);
   end if;
 end
 $$;
--- Writes are intended for service role / SQL editor / trusted ingestion jobs — no anon insert/update policy.
+-- Writes are intended for service role / SQL editor / trusted ingestion jobs only.

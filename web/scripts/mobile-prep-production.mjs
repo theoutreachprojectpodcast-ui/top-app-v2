@@ -19,6 +19,8 @@ function run(cmd, args) {
 }
 
 run("pnpm", ["run", "build"]);
+run("pnpm", ["run", "mobile:splash"]);
+run("pnpm", ["run", "mobile:icons"]);
 run("pnpm", ["exec", "cap", "sync"]);
 run("pnpm", ["run", "mobile:verify:prod"]);
 

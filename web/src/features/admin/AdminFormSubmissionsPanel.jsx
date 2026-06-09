@@ -55,7 +55,7 @@ export default function AdminFormSubmissionsPanel() {
   }
 
   return (
-    <AdminPanelShell panelId="forms" error={error} message={message}>
+    <AdminPanelShell panelId="forms" error={error}>
       <div className="adminToolbar">
         <select className="adminConsoleInput" value={status} onChange={(e) => setStatus(e.target.value)}>
           <option value="">All statuses</option>
@@ -67,7 +67,6 @@ export default function AdminFormSubmissionsPanel() {
           Refresh
         </button>
       </div>
-      {error ? <p role="alert" style={{ color: "var(--color-danger, #b42318)" }}>{error}</p> : null}
       {loading ? <p className="adminMuted">Loading…</p> : null}
       <div className="adminTableWrap">
         <table className="adminTable">
@@ -87,7 +86,7 @@ export default function AdminFormSubmissionsPanel() {
                 <td>{row.status || "—"}</td>
                 <td>{String(row.created_at || "").slice(0, 19).replace("T", " ")}</td>
                 <td>
-                  <pre style={{ fontSize: 11, maxWidth: 320, overflow: "auto", margin: 0 }}>
+                  <pre className="adminInlinePre">
                     {JSON.stringify(row.payload || row.data || row, null, 0).slice(0, 400)}
                   </pre>
                 </td>

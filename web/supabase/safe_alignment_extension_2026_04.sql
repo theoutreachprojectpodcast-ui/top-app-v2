@@ -205,8 +205,28 @@ alter table if exists public.nonprofit_directory_enrichment
   add column if not exists verified boolean not null default true,
   add column if not exists verification_notes text;
 
-create index if not exists nonprofit_directory_enrichment_verified_idx
-  on public.nonprofit_directory_enrichment (verified, naming_review_required, last_verified_at desc);
+do $$
+begin
+  if to_regclass('public.nonprofit_directory_enrichment') is null then
+    return;
+  end if;
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'nonprofit_directory_enrichment'
+      and column_name = 'naming_review_required'
+  ) and exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'nonprofit_directory_enrichment'
+      and column_name = 'last_verified_at'
+  ) then
+    execute $idx$
+      create index if not exists nonprofit_directory_enrichment_verified_idx
+      on public.nonprofit_directory_enrichment (verified, naming_review_required, last_verified_at desc)
+    $idx$;
+  end if;
+end $$;
 
 -- =========================================================
 -- 7) RLS safe enhancements (non-breaking)
@@ -216,17 +236,29 @@ alter table if exists public.sponsors_catalog enable row level security;
 
 do $$
 begin
-  if not exists (
-    select 1
-    from pg_policies
-    where schemaname = 'public'
-      and tablename = 'sponsors_catalog'
+  if exists (
+    select 1 from pg_policies
+    where schemaname = 'public' and tablename = 'sponsors_catalog'
       and policyname = 'sponsors_catalog_select_public_active'
   ) then
-    create policy sponsors_catalog_select_public_active
-      on public.sponsors_catalog
-      for select
-      to anon, authenticated
-      using (coalesce(is_active, true));
+    drop policy sponsors_catalog_select_public_active on public.sponsors_catalog;
+  end if;
+
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public' and tablename = 'sponsors_catalog'
+      and policyname = 'sponsors_catalog_block_anon'
+  ) then
+    create policy sponsors_catalog_block_anon on public.sponsors_catalog
+      for all to anon using (false) with check (false);
+  end if;
+
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public' and tablename = 'sponsors_catalog'
+      and policyname = 'sponsors_catalog_block_authenticated'
+  ) then
+    create policy sponsors_catalog_block_authenticated on public.sponsors_catalog
+      for all to authenticated using (false) with check (false);
   end if;
 end $$;

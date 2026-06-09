@@ -98,13 +98,7 @@ export default function AdminPodcastsPanel() {
 
   return (
     <AdminPanelShell panelId="podcast">
-      <h1 style={{ marginTop: 0, fontSize: "1.5rem", fontWeight: 700 }}>Podcast admin</h1>
-      <p className="adminMuted">
-        Review guest applications (filter by status, approve, deny, schedule, archive), manage YouTube episode sync,
-        featured guests, and upcoming guests. Applications open by default.
-      </p>
-
-      <div className="row wrap" style={{ gap: 8, marginBottom: 16 }}>
+      <div className="adminTabBar">
         <button type="button" className={tab === "applications" ? "btnPrimary" : "btnSoft"} onClick={() => setTab("applications")}>
           Applications
         </button>
@@ -127,8 +121,8 @@ export default function AdminPodcastsPanel() {
       ) : null}
 
       {tab === "episodes" ? (
-        <div className="podcastAdminGrid" style={{ display: "grid", gap: 16 }}>
-          <div className="row wrap" style={{ gap: 8 }}>
+        <div className="adminPageStack">
+          <div className="adminRow">
             <button type="button" className="btnPrimary" disabled={loading} onClick={() => void runSync()}>
               Refresh podcast data (YouTube)
             </button>
@@ -138,8 +132,8 @@ export default function AdminPodcastsPanel() {
           </div>
           {syncMsg ? <p className="adminMuted">{syncMsg}</p> : null}
           {loading ? <p className="adminMuted">Loading…</p> : null}
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+          <div className="adminTableWrap">
+            <table className="adminTable">
               <thead>
                 <tr>
                   <th align="left">Published</th>
@@ -152,17 +146,17 @@ export default function AdminPodcastsPanel() {
               <tbody>
                 {episodes.map((row) => (
                   <tr key={row.youtube_video_id}>
-                    <td style={{ padding: "6px 8px", verticalAlign: "top", whiteSpace: "nowrap" }}>
+                    <td className="adminTable__cell--nowrap">
                       {String(row.published_at || "").slice(0, 10)}
                     </td>
-                    <td style={{ padding: "6px 8px", verticalAlign: "top" }}>{row.pipeline_decision || "—"}</td>
-                    <td style={{ padding: "6px 8px", verticalAlign: "top" }}>{reasonLabel(row.pipeline_reason)}</td>
-                    <td style={{ padding: "6px 8px", verticalAlign: "top", maxWidth: 360 }}>
+                    <td>{row.pipeline_decision || "—"}</td>
+                    <td>{reasonLabel(row.pipeline_reason)}</td>
+                    <td className="adminTable__cell--wide">
                       <a href={row.youtube_url} target="_blank" rel="noreferrer">
                         {String(row.title || "").slice(0, 120)}
                       </a>
                     </td>
-                    <td style={{ padding: "6px 8px", verticalAlign: "top", whiteSpace: "nowrap" }}>
+                    <td className="adminTable__cell--nowrap">
                       <button type="button" className="btnSoft" onClick={() => void setOverride(row.youtube_video_id, "include")}>
                         Force include
                       </button>{" "}
@@ -182,16 +176,16 @@ export default function AdminPodcastsPanel() {
       ) : null}
 
       {tab === "logs" ? (
-        <div style={{ display: "grid", gap: 12 }}>
+        <div className="adminPageStack">
           <button type="button" className="btnSoft" onClick={() => void loadLogs()}>
             Reload logs
           </button>
-          <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13 }}>
+          <ul className="adminLogList">
             {logs.map((log) => (
-              <li key={log.id} style={{ marginBottom: 8 }}>
+              <li key={log.id}>
                 <strong>{log.level}</strong> {log.message}{" "}
                 <span className="adminMuted">{String(log.created_at || "").replace("T", " ").slice(0, 19)}</span>
-                {log.meta ? <pre style={{ fontSize: 11, overflow: "auto" }}>{JSON.stringify(log.meta, null, 0).slice(0, 400)}</pre> : null}
+                {log.meta ? <pre className="adminInlinePre">{JSON.stringify(log.meta, null, 0).slice(0, 400)}</pre> : null}
               </li>
             ))}
           </ul>
@@ -201,16 +195,15 @@ export default function AdminPodcastsPanel() {
       {tab === "upcoming" ? <PodcastUpcomingGuestsAdmin /> : null}
 
       {tab === "featured" ? (
-        <div style={{ display: "grid", gap: 12, maxWidth: 720 }}>
-          <p className="adminMuted">Edit enrichment for a YouTube video id (11 characters), e.g. from the episodes table.</p>
+        <div className="adminFieldStack">
+          <p className="adminLead">Edit enrichment for a YouTube video id (11 characters), e.g. from the episodes table.</p>
           <label className="fieldLabel">
             YouTube video id
             <input
-              className="input"
+              className="adminConsoleInput"
               value={editVideo}
               onChange={(e) => setEditVideo(e.target.value.trim())}
               placeholder="dQw4w9WgXcQ"
-              style={{ width: "100%", marginTop: 4 }}
             />
           </label>
           {[
@@ -225,23 +218,21 @@ export default function AdminPodcastsPanel() {
               {key}
               {multiline ? (
                 <textarea
-                  className="input"
+                  className="adminConsoleInput"
                   rows={4}
                   value={editGuest[key] || ""}
                   onChange={(e) => setEditGuest((prev) => ({ ...prev, [key]: e.target.value }))}
-                  style={{ width: "100%", marginTop: 4 }}
                 />
               ) : (
                 <input
-                  className="input"
+                  className="adminConsoleInput"
                   value={editGuest[key] || ""}
                   onChange={(e) => setEditGuest((prev) => ({ ...prev, [key]: e.target.value }))}
-                  style={{ width: "100%", marginTop: 4 }}
                 />
               )}
             </label>
           ))}
-          <label className="fieldLabel" style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <label className="fieldLabel fieldLabel--row">
             <input
               type="checkbox"
               checked={!!editGuest.verified_for_public}

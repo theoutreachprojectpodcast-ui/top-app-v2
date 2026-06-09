@@ -5,6 +5,9 @@ import {
   PRO_MEMBERSHIP_PRICE_LABEL,
   SUPPORT_MEMBERSHIP_PRICE_LABEL,
 } from "@/features/membership/membershipTiers";
+import { navigateToStripeCheckout } from "@/lib/capacitor/billingNavigation";
+import { requiresExternalWebAccountFlow, openWebMembership } from "@/lib/capacitor/webAccountRedirects";
+import NativeAccountBillingNotice from "@/components/capacitor/NativeAccountBillingNotice";
 
 /**
  * Real Stripe Checkout for Support / Pro from the profile shell (WorkOS session).
@@ -21,6 +24,20 @@ export default function ProfileMembershipCheckout({
   const [error, setError] = useState("");
 
   async function start(tier) {
+    if (requiresExternalWebAccountFlow()) {
+      setError("");
+      setBusy(tier);
+      try {
+        onAfterRedirect?.();
+        await openWebMembership({ tier });
+      } catch {
+        setError("Could not open membership on the web.");
+      } finally {
+        setBusy("");
+      }
+      return;
+    }
+
     setError("");
     setBusy(tier);
     try {
@@ -33,7 +50,7 @@ export default function ProfileMembershipCheckout({
       const data = await res.json().catch(() => ({}));
       if (data.url) {
         onAfterRedirect?.();
-        window.location.assign(data.url);
+        await navigateToStripeCheckout(data.url, { tier });
         return;
       }
       if (res.status === 503) {
@@ -73,6 +90,7 @@ export default function ProfileMembershipCheckout({
 
   return (
     <div className="profileMembershipCheckout">
+      <NativeAccountBillingNotice />
       <h4 className="profileMembershipCheckoutTitle">Upgrade with Stripe</h4>
       <p className="sponsorSectionLead">
         Support {SUPPORT_MEMBERSHIP_PRICE_LABEL} · Pro {PRO_MEMBERSHIP_PRICE_LABEL}. You can manage or cancel in the

@@ -89,12 +89,12 @@ export default function AdminNonprofitPanel() {
 
   return (
     <AdminPanelShell panelId="nonprofits" error={error} message={status}>
-            <div className="adminToolbar" style={{ gap: 8 }}>
-        <a className="btnPrimary" href="/admin/trusted" style={{ display: "inline-flex", alignItems: "center" }}>
+      <div className="adminToolbar">
+        <a className="btnPrimary" href="/admin/trusted">
           Add trusted resource manually
         </a>
       </div>
-      <h3 style={{ fontSize: "1rem", marginTop: 20 }}>EIN / IRS lookup</h3>
+      <h3 className="adminBlockTitle adminMt4">EIN / IRS lookup</h3>
       <div className="adminToolbar">
         <label className="fieldLabel" htmlFor="ein-q">
           EIN
@@ -111,19 +111,13 @@ export default function AdminNonprofitPanel() {
         </button>
       </div>
       {directory ? (
-        <p className="adminMuted" style={{ marginBottom: "12px" }}>
+        <p className="adminMuted">
           Directory name:{" "}
           <strong>
             {String(directory.org_name || directory.name || directory.NAME || directory.organization_name || "—")}
           </strong>
         </p>
       ) : null}
-      {error ? (
-        <p role="alert" style={{ color: "var(--color-danger, #b42318)" }}>
-          {error}
-        </p>
-      ) : null}
-      {status ? <p style={{ color: "var(--color-success, #166534)" }}>{status}</p> : null}
       {ein ? (
         <div className="adminFieldStack">
           {FIELDS.map(([key, label]) => (

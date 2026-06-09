@@ -194,7 +194,7 @@ export default function AdminContentCreateWizard() {
       </ol>
 
       {message ? (
-        <p role="status" className="adminMuted" style={{ marginTop: 12 }}>
+        <p role="status" className="adminFeedback adminFeedback--success">
           {message}
         </p>
       ) : null}
@@ -203,7 +203,7 @@ export default function AdminContentCreateWizard() {
         <div className="adminFieldStack">
           <p className="fieldLabel">What page is this content for?</p>
           {PAGES.map((p) => (
-            <label key={p.id} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <label key={p.id} className="fieldLabel fieldLabel--row">
               <input type="radio" name="wizard-page" checked={page === p.id} onChange={() => setPage(p.id)} />
               {p.label}
             </label>
@@ -215,7 +215,7 @@ export default function AdminContentCreateWizard() {
         <div className="adminFieldStack">
           <p className="fieldLabel">What type of content?</p>
           {CONTENT_TYPES.map((t) => (
-            <label key={t.id} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <label key={t.id} className="fieldLabel fieldLabel--row">
               <input
                 type="radio"
                 name="wizard-type"
@@ -316,7 +316,7 @@ export default function AdminContentCreateWizard() {
             <option value="in_review">In review</option>
             <option value="approved">Approved</option>
           </select>
-          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <label className="fieldLabel fieldLabel--row">
             <input
               type="checkbox"
               checked={details.featured}

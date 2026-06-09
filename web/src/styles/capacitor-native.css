@@ -31,15 +31,59 @@ html[data-capacitor-native] .btnSoft {
   min-height: 44px;
 }
 
-/* Capacitor guest home: tighter vertical rhythm on iPhone-class viewports. */
-html[data-capacitor-native] main.topApp.topApp--mobileHomeEntrance[data-page-atmosphere="home"] .homeMobile {
-  padding-top: clamp(4px, 1.2vw, 8px);
+.mobileAccountReturnBridge {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: calc(var(--torp-bottom-nav-reserve, 96px) + 8px);
+  z-index: 30;
+  pointer-events: none;
 }
 
-html[data-capacitor-native] main.topApp.topApp--mobileHomeEntrance[data-page-atmosphere="home"] .homeMobileSplashEntrance {
-  margin-top: clamp(2px, 0.8vw, 6px);
+.mobileAccountReturnBridge__banner,
+.mobileAccountReturnBridge__refreshLink {
+  pointer-events: auto;
 }
 
-html[data-capacitor-native] main.topApp.topApp--mobileHomeEntrance[data-page-atmosphere="home"] .appSiteHeader {
-  padding-bottom: clamp(2px, 0.8vw, 6px);
+.mobileAccountReturnBridge__banner {
+  background: var(--color-bg-secondary, #fff);
+  border: 1px solid var(--color-border, #ddd);
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.mobileAccountReturnBridge__banner--error {
+  border-color: #c0392b;
+}
+
+.mobileAccountReturnBridge__banner p {
+  margin: 0 0 10px;
+  font-size: 0.92rem;
+}
+
+.mobileAccountReturnBridge__refreshLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border, #ddd);
+  background: var(--color-bg-secondary, #fff);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.nativeAccountBillingNotice {
+  margin: 12px 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.04);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.mobileReturnToAppPanel {
+  margin-bottom: 16px;
 }

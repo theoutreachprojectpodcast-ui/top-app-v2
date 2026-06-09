@@ -2,7 +2,7 @@
 
 One path from **QA → live** at `https://theoutreachproject.app`. Work sections **1–10** in order. Skip anything not needed for first real users.
 
-**Last status update:** 2026-06-08 — Production on `main` at **`63a0088`**. **Supabase migrations complete** (#1–#39 including `page_content_blocks_admin_v10` + `safe_alignment_extension_2026_04`). **Vercel Production deploy Ready** (admin platform + idle sign-out fix). **Browser smoke passed** (WorkOS sign-in, live checkout, core routes). **Stripe Live webhooks delivering 200** (Workbench → Event deliveries). **Next:** §8 admin smoke on expanded platform; optional sponsor branding SQL; §10 go-live.
+**Last status update:** 2026-06-08 — Production on `main`. **§8 admin QA skipped**. **§9 in progress:** `mobile:prep:prod` + Android debug build OK; device smoke + store consoles remain.
 
 ### Progress at a glance
 
@@ -15,15 +15,18 @@ One path from **QA → live** at `https://theoutreachproject.app`. Work sections
 | 5 | WorkOS Production | **Done** — sign-in/out verified in browser smoke |
 | 6 | Stripe webhook (live) | **Done** — Live endpoint + Event deliveries **200** |
 | 7 | Deploy & smoke test | **Done** — browser smoke passed (2026-06-08); CLI smoke passed earlier |
-| 8 | Admin console | **Next** — run admin smoke on expanded layout at `admin.theoutreachproject.app` |
-| 9 | Mobile stores | **Not started** (web-first) |
+| 8 | Admin console | **Skipped** — no separate QA admin pass; use Production `admin.theoutreachproject.app` |
+| 9 | Mobile stores | **Next** — `mobile:prep:prod`, device smoke, store submission |
 | 10 | Go live | **Next** — final legal review + announce |
 
 ### Next actions (do these now)
 
-1. **Admin smoke on expanded platform** (§8) — command center, community moderation, sponsors, users, billing on `admin.theoutreachproject.app`.
-2. **Optional:** run `sponsor_v06.sql` … `sponsor_v17.sql` if Production sponsor hub should match QA branding.
-3. **Go live** (§10) — counsel review of `/privacy` + `/terms` if needed; announce; watch Vercel logs + Stripe deliveries for the first hour.
+1. **Device smoke** (§9.3) — Install debug APK or Android Studio run on a **physical device**; sign-in, profile cold start, Stripe checkout. Repeat on iOS via Mac/Xcode TestFlight.
+2. **Store assets** (§9.4) — Phone screenshots; Android launcher icons via Image Asset Studio (`web/public/icon-1024.png`); iOS icon synced via `pnpm --dir web run mobile:icons`.
+3. **Store consoles** (§9.5–§9.6) — Create app records; complete [store-policy-forms.md](./store-policy-forms.md); add reviewer WorkOS account per [store-listing-copy.md](./store-listing-copy.md).
+4. **Signed release builds** — Android signed AAB; iOS Archive → App Store Connect.
+5. **Optional:** run `sponsor_v06.sql` … `sponsor_v17.sql` if Production sponsor hub should match QA branding.
+6. **Go live** (§10) — counsel review of `/privacy` + `/terms` if needed; announce; watch Vercel logs + Stripe deliveries for the first hour.
 
 ---
 
@@ -212,8 +215,8 @@ Code is on **`main`** (`/api/billing/*`, profile Membership & billing center, `/
 - [x] Vercel **Preview** deploy for `QA` is **Ready** — latest Preview deploy `02c234e` (2026-06-03); confirm dashboard shows **Ready** after any new push.
 - [x] In browser (logged into Vercel protection if enabled): `https://qa-the-outreach-project.vercel.app/api/billing/capabilities` returns JSON with `"ok": true` (not 404, not an HTML “Authentication Required” page).
   - **2026-06-01:** unauthenticated probe returns **401** (Vercel Deployment Protection) — expected; test signed into Vercel or use bypass token (see below).
-- [ ] If the URL shows Vercel’s login page, use **Vercel → Deployment Protection → bypass** for your team or test while signed into Vercel; membership flags are also on `GET /api/auth/status` when signed into the app.
-- [ ] Profile → **Membership & billing** section; Home → **Become a member** cards.
+- [x] If the URL shows Vercel’s login page, use **Vercel → Deployment Protection → bypass** for your team or test while signed into Vercel; membership flags are also on `GET /api/auth/status` when signed into the app.
+- [x] Profile → **Membership & billing** section; Home → **Become a member** cards.
 
 ### Phase B — Supabase (QA project)
 
@@ -287,8 +290,8 @@ Run through once on **real devices** (phone + desktop) after Production is live:
 | Profile + onboarding save | [x] browser |
 | One **live** membership checkout (small amount) → Stripe receipt → profile tier updates | [x] browser + Stripe Event deliveries **200** |
 | Admin host: only platform admins reach `/admin`; others redirect to login | [x] browser |
-| Admin command center loads; moderation queue counts plausible | [ ] after expanded admin platform deploy (§1) |
-| Admin: approve/deny test community post; sponsor CRUD smoke | [ ] after expanded admin platform deploy (§1) |
+| Admin command center / CMS smoke | [—] skipped (§8) |
+| Admin: approve/deny test post; sponsor CRUD smoke | [—] skipped (§8) |
 | Contact form / sponsor application submits | [x] browser |
 | `/privacy`, `/terms`, `/contact` load | [x] |
 | No demo-only UI (“Reset demo”, etc.) visible | [x] browser |
@@ -307,9 +310,14 @@ If mobile is in scope, also run section **9.3** on a physical device before stor
 
 ---
 
-## 8. Admin console (Production + QA)
+## 8. Admin console (Production + QA) — **skipped for launch**
 
-Production admin URL: **`https://admin.theoutreachproject.app`** (or `/admin` on apex if `NEXT_PUBLIC_ADMIN_URL` unset). Full route audit: [ADMIN_PLATFORM_AUDIT.md](./ADMIN_PLATFORM_AUDIT.md). Operator guide: [ADMIN_UPGRADE_READINESS.md](./ADMIN_UPGRADE_READINESS.md).
+**Decision:** Skip dedicated QA admin host and expanded Production admin smoke for MVP launch. Use **`https://admin.theoutreachproject.app`** on Production only; grant platform admins in Supabase as needed.
+
+Reference (optional later): [ADMIN_PLATFORM_AUDIT.md](./ADMIN_PLATFORM_AUDIT.md), [admin-qa-production-setup.md](./admin-qa-production-setup.md).
+
+<details>
+<summary>Original §8 checklist (deferred)</summary>
 
 ### Production prerequisites
 
@@ -346,6 +354,8 @@ Test on Preview before flipping Production. See [admin-qa-production-setup.md](.
 
 **Known partial modules (labeled in UI):** site announcements (`/admin/content/announcements`), membership tier **pricing** edit without deploy, media library upload tagging, page-view analytics.
 
+</details>
+
 ---
 
 ## 9. Mobile app (Capacitor → App Store & Play Store)
@@ -364,18 +374,20 @@ For how web + mobile relate to the **legacy App Store client** (direct Supabase 
 | Native projects | `web/ios/`, `web/android/` |
 
 Draft store copy: [store-listing-copy.md](./store-listing-copy.md).  
+Store policy forms (App Privacy / Data safety): [store-policy-forms.md](./store-policy-forms.md).  
 **Mobile launch checklist:** [MOBILE_LAUNCH_CHECKLIST.md](./MOBILE_LAUNCH_CHECKLIST.md) (all iOS/Android todos).  
 Mobile prep: [MOBILE_READINESS.md](./MOBILE_READINESS.md), gaps: [MOBILE_ARCHITECTURE_GAPS.md](./MOBILE_ARCHITECTURE_GAPS.md).  
+**Mac / iOS walkthrough:** [IOS_XCODE_SETUP.md](./IOS_XCODE_SETUP.md). **Android:** [ANDROID_STUDIO_SETUP.md](./ANDROID_STUDIO_SETUP.md).  
 Deep technical reference: [web/docs/CAPACITOR_MOBILE.md](../web/docs/CAPACITOR_MOBILE.md).
 
 ---
 
 ### 9.1 Prerequisites
 
-- [ ] **Production web** live at `https://theoutreachproject.app` (section 7 passed — browser smoke + billing verified 2026-06-08).
-- [ ] **Node ≥ 22** for Capacitor CLI (`pnpm exec cap …`).
-- [ ] **Apple Developer Program** enrolled ([developer.apple.com](https://developer.apple.com)) — required for TestFlight and App Store.
-- [ ] **Google Play Console** account ([play.google.com/console](https://play.google.com/console)) — one-time registration fee.
+- [x] **Production web** live at `https://theoutreachproject.app` (section 7 passed — browser smoke + billing verified 2026-06-08).
+- [x] **Node ≥ 22** for Capacitor CLI (`pnpm exec cap …`) — verified **v22.22.0** (2026-06-08).
+- [x] **Apple Developer Program** enrolled ([developer.apple.com](https://developer.apple.com)) — required for TestFlight and App Store.
+- [x] **Google Play Console** account ([play.google.com/console](https://play.google.com/console)) — one-time registration fee.
 - [ ] **macOS + Xcode** (latest stable) for iOS builds and App Store upload.
 - [x] **Android Studio** + SDK on Windows — emulator run + signed AAB per [ANDROID_STUDIO_SETUP.md](./ANDROID_STUDIO_SETUP.md)
 - [x] **Privacy policy URL** live: `https://theoutreachproject.app/privacy`
@@ -385,6 +397,8 @@ Deep technical reference: [web/docs/CAPACITOR_MOBILE.md](../web/docs/CAPACITOR_M
 ---
 
 ### 9.2 Point Capacitor at Production & sync
+
+- [x] `pnpm --dir web run mobile:prep:prod` — verified 2026-06-08 (`CAP_SERVER_URL=https://theoutreachproject.app`, `cap sync` OK)
 
 From repo root:
 
@@ -409,10 +423,10 @@ pnpm --dir web run cap:open:android  # Android Studio
 
 The app loads the same WorkOS AuthKit flow as the browser (see §5):
 
-- [ ] Redirect URI registered: `https://theoutreachproject.app/callback`
+- [x] Redirect URI registered: `https://theoutreachproject.app/callback` (WorkOS Production — verified in §7 browser smoke)
 - [x] `WORKOS_COOKIE_DOMAIN=theoutreachproject.app` on Vercel Production
 
-**Smoke on a real device** (not only emulator):
+**Smoke on a real device** (not only emulator) — **manual, required before store submit:**
 
 - [ ] Sign in / sign out
 - [ ] Profile load after cold start
@@ -423,12 +437,14 @@ The app loads the same WorkOS AuthKit flow as the browser (see §5):
 
 ### 9.4 Store assets & versioning (both platforms)
 
-- [ ] Replace placeholder **app icon** and **splash** (see [Capacitor assets guide](https://capacitorjs.com/docs/guides/splash-screens-and-icons) or `pnpm exec capacitor-assets` from `web/`).
+- [x] **iOS app icon** — brand 1024×1024 synced to Xcode asset catalog (`pnpm --dir web run mobile:icons`).
+- [ ] **Android launcher icons** — Android Studio → **Image Asset** using `web/public/icon-1024.png`, or `pnpm --dir web run mobile:assets` after `sharp` native build works.
+- [ ] Replace placeholder **splash** screens if not using current brand splash (see [Capacitor assets guide](https://capacitorjs.com/docs/guides/splash-screens-and-icons); sources in `web/resources/`).
 - [ ] Prepare **screenshots** (phone required; tablet optional for iPad / Play feature graphic).
-- [ ] Use draft copy from [store-listing-copy.md](./store-listing-copy.md) — replace `[support@…]` and reviewer test account placeholders.
-- [ ] Bump version before each submission:
+- [ ] Use draft copy from [store-listing-copy.md](./store-listing-copy.md) — create reviewer WorkOS account (see [store-policy-forms.md](./store-policy-forms.md)).
+- [x] Version **1.0 / build 1** set for first submission:
   - **iOS:** `MARKETING_VERSION` + build number in Xcode (`web/ios/App/App.xcodeproj`)
-  - **Android:** `versionName` + increment `versionCode` in `web/android/app/build.gradle`
+  - **Android:** `versionName` + `versionCode` in `web/android/app/build.gradle`
 
 ---
 
@@ -535,14 +551,16 @@ First **Production** submission triggers **Google review** (often hours to a few
 
 | Check | Pass? |
 |-------|-------|
-| `mobile:prep:prod` run before release build | |
-| Sign-in / sign-out on physical iOS + Android | |
-| Membership checkout completes on device | |
-| Icons + splash not placeholders (or acceptable for v1) | |
-| Privacy policy + support URLs live | |
-| TestFlight / internal track validated | |
-| Store listings + reviewer test account submitted | |
-| iOS + Android approved and published | |
+| `mobile:prep:prod` run before release build | [x] 2026-06-08 |
+| Android debug APK builds (`gradlew assembleDebug`) | [x] 2026-06-08 |
+| Production smoke includes `/privacy` + `/terms` | [x] 2026-06-08 |
+| Sign-in / sign-out on physical iOS + Android | [ ] |
+| Membership checkout completes on device | [ ] |
+| Icons + splash not placeholders (or acceptable for v1) | [ ] iOS icon synced; Android mipmap TBD |
+| Privacy policy + support URLs live | [x] |
+| TestFlight / internal track validated | [ ] |
+| Store listings + reviewer test account submitted | [ ] |
+| iOS + Android approved and published | [ ] |
 
 **Note:** Most product changes ship via **Vercel web deploy** — users get updates without a store release. Store resubmission is needed for native shell changes (Capacitor upgrade, permissions, icon, `Info.plist` / manifest changes).
 
@@ -582,7 +600,7 @@ First **Production** submission triggers **Google review** (often hours to a few
 | 2 | **Supabase Production** migrations applied (§2) | [x] #1–#39 complete |
 | 3 | **Stripe live** checkout + webhook updating membership status (§6) | [x] live checkout + Event deliveries **200** |
 | 4 | **Demo mode off** in Production (`NEXT_PUBLIC_ENABLE_DEMO_FLOWS=0`) | [x] verified on prod API; re-check after redeploy |
-| 5 | **Admin** gated to platform admins only | [x] baseline; expanded admin platform pending §1 deploy |
+| 5 | **Admin** gated to platform admins only | [x] baseline; expanded admin smoke skipped (§8) |
 
 **Mobile (if shipping native apps with MVP)**
 

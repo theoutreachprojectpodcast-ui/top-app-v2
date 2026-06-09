@@ -53,7 +53,7 @@ export default function AdminCommandCenterDashboard() {
     <AdminPanelShell panelId="dashboard" error={error}>
       {loading ? <p className="adminMuted">Loading…</p> : null}
 
-      <h2 style={{ fontSize: "1.05rem", marginTop: 20 }}>Quick actions</h2>
+      <h2 className="adminSectionTitle">Quick actions</h2>
       <div className="adminDashboardGrid">
         {ACTIONS.map((a) => (
           <Link key={a.href} className="adminDashboardCard" href={a.href}>
@@ -65,7 +65,7 @@ export default function AdminCommandCenterDashboard() {
 
       {!loading && data ? (
         <>
-          <h2 style={{ fontSize: "1.05rem", marginTop: 28 }}>Moderation & intake</h2>
+          <h2 className="adminSectionTitle">Moderation & intake</h2>
           <div className="adminDashboardGrid">
             <Link className="adminDashboardCard" href="/admin/community">
               <span className="adminMuted">Community pending</span>
@@ -85,7 +85,7 @@ export default function AdminCommandCenterDashboard() {
             </Link>
           </div>
 
-          <h2 style={{ fontSize: "1.05rem", marginTop: 28 }}>Platform snapshots</h2>
+          <h2 className="adminSectionTitle">Platform snapshots</h2>
           <div className="adminDashboardGrid">
             <Link className="adminDashboardCard" href="/admin/users">
               <span className="adminMuted">Total users</span>
@@ -106,7 +106,7 @@ export default function AdminCommandCenterDashboard() {
             </Link>
           </div>
 
-          <h2 style={{ fontSize: "1.05rem", marginTop: 28 }}>Recent admin activity</h2>
+          <h2 className="adminSectionTitle">Recent admin activity</h2>
           {activities.length ? (
             <ul className="adminActivityFeed">
               {activities.map((a) => (
@@ -126,8 +126,8 @@ export default function AdminCommandCenterDashboard() {
             <p className="adminMuted">No audit log entries yet. Actions across sponsors, community, billing, and content will appear here.</p>
           )}
 
-          <h2 style={{ fontSize: "1.05rem", marginTop: 28 }}>System health</h2>
-          <ul className="adminMuted" style={{ lineHeight: 1.7 }}>
+          <h2 className="adminSectionTitle">System health</h2>
+          <ul className="adminMuted adminProse">
             <li>
               Stripe secret: {data.stripe?.secretConfigured ? "configured" : "missing"}
             </li>
@@ -139,7 +139,7 @@ export default function AdminCommandCenterDashboard() {
 
           {data.recentBilling?.length ? (
             <>
-              <h2 style={{ fontSize: "1.05rem", marginTop: 20 }}>Recent invoice records</h2>
+              <h2 className="adminSectionTitle">Recent invoice records</h2>
               <div className="adminTableWrap">
                 <table className="adminTable">
                   <thead>
@@ -163,20 +163,18 @@ export default function AdminCommandCenterDashboard() {
             </>
           ) : null}
 
-          <p className="adminMuted" style={{ marginTop: 16, fontSize: "0.8rem" }}>
-            {data.disclaimer}
-          </p>
+          <p className="adminMuted adminDisclaimer">{data.disclaimer}</p>
         </>
       ) : null}
 
-      <p style={{ marginTop: 20 }}>
+      <div className="adminActions">
         <button type="button" className="btnSoft" onClick={() => void load()}>
           Refresh
-        </button>{" "}
+        </button>
         <Link className="btnSoft" href="/admin/analytics">
           Full analytics
         </Link>
-      </p>
+      </div>
     </AdminPanelShell>
   );
 }

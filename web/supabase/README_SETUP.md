@@ -107,7 +107,18 @@ Run at least one base enrichment definition; both are safe together if both use 
 | File | Purpose |
 |------|---------|
 | `admin_enrichment_diagnostics.sql` | Read-only / operational checks (see comments inside) |
+| `supabase_schema_repair_2026_06.sql` | **Run when verify:supabase fails** — QA profile parity, community FK shadow sync, missing columns |
+| `supabase_linter_security_fix_2026_06.sql` | Legacy views (`security_invoker`) + RLS on known ETL tables (superseded by hardening below if both run) |
+| `supabase_public_rls_hardening_2026_06.sql` | **Run on every environment** — deny-all RLS for anon/authenticated on all `public` tables; views → `security_invoker`. App + admin use service role only. |
 | `platform_future_hooks.sql` | Commented placeholders — **do not** run as-is |
+
+After SQL changes, validate locally:
+
+```bash
+pnpm --dir web run verify:supabase
+```
+
+Requires `SUPABASE_SERVICE_ROLE_KEY` in `web/.env.local` (anon key works with limited accuracy).
 
 ---
 

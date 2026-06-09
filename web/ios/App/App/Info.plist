@@ -53,5 +53,16 @@
 	<string>The Outreach Project needs camera access when you take a photo for your profile or a community post.</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>org.theoutreachproject.torp</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>org.theoutreachproject.torp</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

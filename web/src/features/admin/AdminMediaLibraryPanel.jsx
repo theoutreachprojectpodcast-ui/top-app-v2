@@ -50,42 +50,38 @@ export default function AdminMediaLibraryPanel() {
   }
 
   return (
-    <AdminPanelShell panelId="media-library" error={error} message={message}>
+    <AdminPanelShell panelId="media-library" error={error}>
       <AdminScopeBanner readiness="production" title="Reusable assets">
         Upload images to the <code>admin-media</code> bucket (max 10 MB). Copy public URLs into sponsors, community posts, page
         images, or the content wizard.
       </AdminScopeBanner>
 
-      <div style={{ marginTop: 16 }}>
-        <AdminMediaUploadField
-          label="Upload to media library"
-          hint="JPEG, PNG, WebP, or GIF. Stored in Supabase Storage with a public URL."
-          onUploaded={onUploaded}
-        />
-        {copied ? (
-          <p className="adminMuted" style={{ marginTop: 8 }}>
-            URL copied to clipboard: {String(copied).slice(0, 64)}…
-          </p>
-        ) : null}
-      </div>
+      <AdminMediaUploadField
+        label="Upload to media library"
+        hint="JPEG, PNG, WebP, or GIF. Stored in Supabase Storage with a public URL."
+        onUploaded={onUploaded}
+      />
+      {copied ? (
+        <p className="adminMuted adminMuted--sm">
+          URL copied to clipboard: {String(copied).slice(0, 64)}…
+        </p>
+      ) : null}
 
-      <p style={{ marginTop: 16 }}>
+      <div className="adminActions adminActions--flush">
         <Link className="btnSoft" href="/admin/images">
           Open page image manager
         </Link>
-        {" "}
         <button type="button" className="btnSoft" onClick={() => void load()} disabled={loading}>
           Refresh
         </button>
-      </p>
+      </div>
 
-      {error ? <p role="alert" style={{ color: "var(--color-danger, #b42318)", marginTop: 12 }}>{error}</p> : null}
       {loading ? <p className="adminMuted">Loading…</p> : null}
 
-      <h2 style={{ fontSize: "1.05rem", marginTop: 24 }}>Uploaded assets ({uploads.length})</h2>
-      <div className="adminDashboardGrid" style={{ marginTop: 12 }}>
+      <h2 className="adminSectionTitle">Uploaded assets ({uploads.length})</h2>
+      <div className="adminDashboardGrid">
         {uploads.map((row) => (
-          <div key={row.id} className="adminDashboardCard adminMediaCard" style={{ cursor: "default" }}>
+          <div key={row.id} className="adminDashboardCard adminMediaCard adminMediaCard--static">
             {row.public_url ? (
               <img src={row.public_url} alt={row.alt_text || row.filename || "Asset"} className="adminMediaCard__thumb" />
             ) : null}
@@ -107,10 +103,10 @@ export default function AdminMediaLibraryPanel() {
       </div>
       {!loading && uploads.length === 0 ? <p className="adminMuted">No uploads yet.</p> : null}
 
-      <h2 style={{ fontSize: "1.05rem", marginTop: 28 }}>Page images ({pageImages.length})</h2>
-      <div className="adminDashboardGrid" style={{ marginTop: 12 }}>
+      <h2 className="adminSectionTitle">Page images ({pageImages.length})</h2>
+      <div className="adminDashboardGrid">
         {pageImages.map((row) => (
-          <div key={row.id} className="adminDashboardCard" style={{ cursor: "default" }}>
+          <div key={row.id} className="adminDashboardCard adminMediaCard--static">
             <strong>{row.page_key || row.section_key || "Asset"}</strong>
             <span className="adminMuted">{row.image_kind || "image"}</span>
             {row.image_url ? (

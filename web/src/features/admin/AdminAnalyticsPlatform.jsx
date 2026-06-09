@@ -59,7 +59,7 @@ export default function AdminAnalyticsPlatform() {
 
       {!loading && metrics ? (
         <>
-          <h2 style={{ fontSize: "1.05rem" }}>Users</h2>
+          <h2 className="adminSectionTitle">Users</h2>
           <div className="adminDashboardGrid">
             <StatCard label="Total accounts" value={u.total} href="/admin/users" />
             <StatCard label="New (7d)" value={u.newWeek} href="/admin/users" />
@@ -67,21 +67,21 @@ export default function AdminAnalyticsPlatform() {
             <StatCard label="Suspended" value={u.suspended} href="/admin/users" />
           </div>
 
-          <h2 style={{ fontSize: "1.05rem", marginTop: 24 }}>Community</h2>
+          <h2 className="adminSectionTitle">Community</h2>
           <div className="adminDashboardGrid">
             <StatCard label="Approved posts" value={c.approved} href="/admin/community" />
             <StatCard label="Rejected" value={c.rejected} href="/admin/community" />
             <StatCard label="Pending review" value={c.pending} href="/admin/community" />
           </div>
 
-          <h2 style={{ fontSize: "1.05rem", marginTop: 24 }}>Sponsors & resources</h2>
+          <h2 className="adminSectionTitle">Sponsors & resources</h2>
           <div className="adminDashboardGrid">
             <StatCard label="Active sponsors" value={sp.active} href="/admin/sponsors" />
             <StatCard label="Featured sponsors" value={sp.featured} href="/admin/sponsors" />
             <StatCard label="Trusted resources" value={metrics.resources?.active} href="/admin/trusted" />
           </div>
 
-          <h2 style={{ fontSize: "1.05rem", marginTop: 24 }}>Podcast & membership</h2>
+          <h2 className="adminSectionTitle">Podcast & membership</h2>
           <div className="adminDashboardGrid">
             <StatCard label="Applications" value={p.applications} href="/admin/podcasts" />
             <StatCard label="Approved applications" value={p.approved} href="/admin/podcasts" />
@@ -89,13 +89,15 @@ export default function AdminAnalyticsPlatform() {
             <StatCard label="Canceled" value={m.canceled} href="/admin/membership" />
           </div>
 
-          {metrics.note ? <p className="adminMuted" style={{ marginTop: 16 }}>{metrics.note}</p> : null}
+          {metrics.note ? <p className="adminMuted adminDisclaimer">{metrics.note}</p> : null}
         </>
       ) : null}
 
-      <button type="button" className="btnSoft" style={{ marginTop: 16 }} onClick={() => void load()}>
-        Refresh
-      </button>
+      <div className="adminActions">
+        <button type="button" className="btnSoft" onClick={() => void load()}>
+          Refresh
+        </button>
+      </div>
     </AdminPanelShell>
   );
 }

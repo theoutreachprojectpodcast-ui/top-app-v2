@@ -221,15 +221,14 @@ export default function AdminSponsorsPanel() {
 
   return (
     <AdminPanelShell panelId="sponsors" error={error} message={status}>
-      <div className="adminFieldStack" style={{ marginBottom: 16 }}>
-        <h3 style={{ margin: "0 0 8px", fontSize: "1rem" }}>Add sponsor</h3>
+      <div className="adminFieldStack adminFieldStack--bordered">
+        <h3 className="adminBlockTitle">Add sponsor</h3>
         <div className="adminToolbar">
           <input
-            className="adminConsoleInput"
+            className="adminConsoleInput adminConsoleInput--grow"
             placeholder="Sponsor name"
             value={createName}
             onChange={(e) => setCreateName(e.target.value)}
-            style={{ flex: 1, minWidth: 200 }}
           />
           <button type="button" className="btnPrimary" disabled={creating || !createName.trim()} onClick={() => void createSponsor()}>
             Add sponsor
@@ -244,7 +243,7 @@ export default function AdminSponsorsPanel() {
       {loading ? <p className="adminMuted">Loading…</p> : null}
       {!loading && rows.length === 0 ? <p className="adminMuted">No sponsors.</p> : null}
       {rows.length > 0 ? (
-        <div style={{ marginBottom: "12px" }}>
+        <div className="adminSelectField">
           <label className="fieldLabel" htmlFor="sp-select">
             Sponsor
           </label>
@@ -253,7 +252,6 @@ export default function AdminSponsorsPanel() {
             className="adminConsoleInput"
             value={slug}
             onChange={(e) => setSlug(e.target.value)}
-            style={{ width: "100%", maxWidth: "560px" }}
           >
             {rows.map((r) => (
               <option key={r.slug} value={r.slug}>
@@ -310,7 +308,7 @@ export default function AdminSponsorsPanel() {
           </div>
         </div>
       ) : null}
-      <hr className="adminRule" style={{ margin: "16px 0" }} />
+      <hr className="adminRule" />
       <SponsorAdminReviewSection showAdmin supabase={null} />
       <SponsorLogoReviewPanel showAdmin onChanged={() => void load()} />
     </AdminPanelShell>

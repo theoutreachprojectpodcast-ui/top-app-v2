@@ -52,10 +52,10 @@ export default function AdminBillingPanel() {
 
   return (
     <div className="adminPanel">
-      <h2 style={{ marginTop: 0 }}>Invoice email tools</h2>
-      <p className="adminMuted">Send invoice emails and track billing action records.</p>
-      {error ? <p role="alert" style={{ color: "var(--color-danger, #b42318)" }}>{error}</p> : null}
-      {message ? <p style={{ color: "var(--color-success, #166534)" }}>{message}</p> : null}
+      <h2 className="adminBlockTitle">Invoice email tools</h2>
+      <p className="adminLead">Send invoice emails and track billing action records.</p>
+      {error ? <p className="adminFeedback adminFeedback--error" role="alert">{error}</p> : null}
+      {message ? <p className="adminFeedback adminFeedback--success" role="status">{message}</p> : null}
       <div className="adminFieldStack">
         {[
           ["workosUserId", "WorkOS user id"],
@@ -77,7 +77,7 @@ export default function AdminBillingPanel() {
         <button type="button" className="btnPrimary" onClick={() => void sendInvoice()}>Send invoice email</button>
       </div>
 
-      <hr className="adminRule" style={{ margin: "16px 0" }} />
+      <hr className="adminRule" />
       {loading ? <p className="adminMuted">Loading…</p> : null}
       <div className="adminTableWrap">
         <table className="adminTable">

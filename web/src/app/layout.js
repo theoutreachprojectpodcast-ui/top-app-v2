@@ -1,7 +1,9 @@
 import "./globals.css";
+import { Suspense } from "react";
 import { Roboto } from "next/font/google";
 import ColorSchemeRoot from "@/components/app/ColorSchemeRoot";
 import CapacitorNativeShell from "@/components/capacitor/CapacitorNativeShell";
+import MobileAccountReturnBridge from "@/components/capacitor/MobileAccountReturnBridge";
 import AuthSessionProvider from "@/components/auth/AuthSessionProvider";
 import { ProfileDataProvider } from "@/features/profile/ProfileDataProvider";
 import { ProfileEditProvider } from "@/features/profile/ProfileEditProvider";
@@ -58,7 +60,12 @@ export default function RootLayout({ children }) {
         <ColorSchemeRoot>
           <AuthSessionProvider>
             <ProfileDataProvider>
-              <ProfileEditProvider>{children}</ProfileEditProvider>
+              <ProfileEditProvider>
+                <Suspense fallback={null}>
+                  <MobileAccountReturnBridge />
+                </Suspense>
+                {children}
+              </ProfileEditProvider>
             </ProfileDataProvider>
           </AuthSessionProvider>
         </ColorSchemeRoot>

@@ -257,9 +257,9 @@ export default function AdminTrustedPanel() {
         ) : null}
       </div>
       {showCreate ? (
-        <div className="adminFieldStack" style={{ marginTop: 16, marginBottom: 16 }}>
-          <h3 style={{ marginTop: 0 }}>Manual trusted resource</h3>
-          <p className="adminMuted">No EIN lookup required. Assign listing status and publish from this form.</p>
+        <div className="adminFieldStack adminFieldStack--bordered">
+          <h3 className="adminBlockTitle">Manual trusted resource</h3>
+          <p className="adminLead">No EIN lookup required. Assign listing status and publish from this form.</p>
           <label className="fieldLabel">Organization name *</label>
           <input
             className="adminConsoleInput"
@@ -301,7 +301,7 @@ export default function AdminTrustedPanel() {
             <option value="active">Active (published)</option>
             <option value="archived">Archived</option>
           </select>
-          <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <label className="fieldLabel fieldLabel--row">
             <input
               type="checkbox"
               checked={createForm.featured}
@@ -317,7 +317,7 @@ export default function AdminTrustedPanel() {
       {loading ? <p className="adminMuted">Loading…</p> : null}
       {!loading && rows.length === 0 ? <p className="adminMuted">No rows.</p> : null}
       {rows.length > 0 ? (
-        <div style={{ marginBottom: "12px" }}>
+        <div className="adminSelectField">
           <label className="fieldLabel" htmlFor="tr-select">
             Resource
           </label>
@@ -326,7 +326,6 @@ export default function AdminTrustedPanel() {
             className="adminConsoleInput"
             value={selectedId}
             onChange={(e) => setSelectedId(e.target.value)}
-            style={{ width: "100%", maxWidth: "560px" }}
           >
             {rows.map((r) => (
               <option key={r.id} value={r.id}>

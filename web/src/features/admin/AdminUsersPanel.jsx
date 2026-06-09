@@ -203,7 +203,7 @@ export default function AdminUsersPanel() {
         {inviteInfo ? <span className="adminMuted">{inviteInfo}</span> : null}
       </div>
       {error ? (
-        <p role="alert" style={{ color: "var(--color-danger, #b42318)" }}>
+        <p className="adminFeedback adminFeedback--error" role="alert">
           {error}
         </p>
       ) : null}
@@ -238,7 +238,7 @@ export default function AdminUsersPanel() {
                 <td data-label="Email">{r.email || "—"}</td>
                 <td data-label="Name">
                   {(r.first_name || "") + " " + (r.last_name || "")}
-                  <div className="adminMuted" style={{ fontSize: "0.75rem" }}>
+                  <div className="adminMuted adminMuted--xs">
                     {r.workos_user_id}
                   </div>
                 </td>
@@ -303,27 +303,27 @@ export default function AdminUsersPanel() {
                     <strong>{r.onboarding_completed ? "Wizard complete" : "Wizard incomplete"}</strong>
                     {r.onboarding_skipped ? <span className="adminMuted"> · skipped</span> : null}
                   </div>
-                  <div className="adminMuted" style={{ fontSize: "0.8rem" }}>
+                  <div className="adminMuted adminMuted--sm">
                     Status: {r.onboarding_status || "—"}
                   </div>
-                  <div className="adminMuted" style={{ fontSize: "0.8rem" }}>
+                  <div className="adminMuted adminMuted--sm">
                     Identity: {r.identity_segment || "—"} · User type: {r.user_type || "—"}
                   </div>
-                  <div className="adminMuted" style={{ fontSize: "0.8rem" }}>
+                  <div className="adminMuted adminMuted--sm">
                     Completeness:{" "}
                     {r.profile_completeness_percentage != null ? `${r.profile_completeness_percentage}%` : "—"}
                   </div>
-                  <div className="adminMuted" style={{ fontSize: "0.75rem", maxWidth: 280 }}>
+                  <div className="adminMuted adminMuted--xs adminMuted--clamp">
                     Missing:{" "}
                     {Array.isArray(r.profile_completeness_missing_fields) && r.profile_completeness_missing_fields.length
                       ? r.profile_completeness_missing_fields.join(", ")
                       : "—"}
                   </div>
-                  <div className="adminMuted" style={{ fontSize: "0.75rem" }}>
+                  <div className="adminMuted adminMuted--xs">
                     Setup done:{" "}
                     {r.account_setup_completed_at ? new Date(r.account_setup_completed_at).toLocaleString() : "—"}
                   </div>
-                  <div className="adminMuted" style={{ fontSize: "0.75rem" }}>
+                  <div className="adminMuted adminMuted--xs">
                     Profile updated:{" "}
                     {r.profile_last_updated_at ? new Date(r.profile_last_updated_at).toLocaleString() : "—"}
                   </div>
@@ -374,8 +374,8 @@ export default function AdminUsersPanel() {
       </div>
 
       {selectedId ? (
-        <div className="adminPanel" style={{ marginTop: 20 }}>
-          <h2 style={{ marginTop: 0, fontSize: "1.1rem" }}>User detail</h2>
+        <div className="adminPanel adminDetailPanel">
+          <h2 className="adminSectionTitle">User detail</h2>
           {detailLoading ? <p className="adminMuted">Loading activity…</p> : null}
           {detail?.profile ? (
             <>
@@ -383,24 +383,24 @@ export default function AdminUsersPanel() {
                 {detail.profile.email} · created {detail.profile.created_at ? new Date(detail.profile.created_at).toLocaleString() : "—"}
               </p>
               <p className="adminMuted">{detail.billingNote}</p>
-              <h3 style={{ fontSize: "0.95rem" }}>Community posts ({detail.communityPosts?.length || 0})</h3>
-              <ul style={{ fontSize: "0.875rem" }}>
+              <h3 className="adminBlockTitle">Community posts ({detail.communityPosts?.length || 0})</h3>
+              <ul className="adminListPlain">
                 {(detail.communityPosts || []).slice(0, 8).map((p) => (
                   <li key={p.id}>
                     {p.title || "(no title)"} — {p.status} — {String(p.created_at || "").slice(0, 10)}
                   </li>
                 ))}
               </ul>
-              <h3 style={{ fontSize: "0.95rem" }}>Podcast applications</h3>
-              <ul style={{ fontSize: "0.875rem" }}>
+              <h3 className="adminBlockTitle">Podcast applications</h3>
+              <ul className="adminListPlain">
                 {(detail.podcastApplications || []).map((a) => (
                   <li key={a.id}>
                     {a.full_name} — {a.status}
                   </li>
                 ))}
               </ul>
-              <h3 style={{ fontSize: "0.95rem" }}>Sponsor applications</h3>
-              <ul style={{ fontSize: "0.875rem" }}>
+              <h3 className="adminBlockTitle">Sponsor applications</h3>
+              <ul className="adminListPlain">
                 {(detail.sponsorApplications || []).map((a) => (
                   <li key={a.id}>
                     {a.organization_name || "—"} — {a.status}

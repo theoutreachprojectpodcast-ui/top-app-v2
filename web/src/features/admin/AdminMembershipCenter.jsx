@@ -40,7 +40,7 @@ export default function AdminMembershipCenter() {
         changes are live.
       </AdminScopeBanner>
 
-      <p className="adminMuted">
+      <p className="adminLead">
         Tier definitions are code-driven today ({`MEMBERSHIP_TIER_DEFINITIONS`}) with Stripe price IDs in environment
         variables. Per-user membership changes are on the <Link href="/admin/users">Users</Link> screen.
       </p>
@@ -48,7 +48,7 @@ export default function AdminMembershipCenter() {
       {loading ? <p className="adminMuted">Loading…</p> : null}
 
       {stats ? (
-        <div className="adminMembershipGrid" style={{ marginTop: 16 }}>
+        <div className="adminMembershipGrid adminMt4">
           <div className="adminMembershipStat">
             <span className="adminMembershipStat__label">Total accounts</span>
             <strong>{stats.totalMembers}</strong>
@@ -84,16 +84,13 @@ export default function AdminMembershipCenter() {
         </div>
       ) : null}
 
-      <h2 style={{ fontSize: "1.05rem", marginTop: 28 }}>Tier catalog (read-only)</h2>
-      <div className="adminPanelBody">
+      <h2 className="adminSectionTitle">Tier catalog (read-only)</h2>
+      <div className="adminPanelBody adminPanelBody--loose">
         {MEMBERSHIP_TIER_DEFINITIONS.map((tier) => (
-          <article
-            key={tier.id}
-            style={{ border: "1px solid var(--color-border-subtle)", borderRadius: 10, padding: 14 }}
-          >
+          <article key={tier.id} className="adminEntityCard">
             <strong>{tier.label}</strong>
             {tier.priceLabel ? <span className="adminMuted"> — {tier.priceLabel}</span> : null}
-            <ul style={{ margin: "8px 0 0", paddingLeft: "1.1rem", fontSize: "0.875rem" }}>
+            <ul className="adminListPlain adminMt4">
               {tier.benefits.map((b) => (
                 <li key={b}>{b}</li>
               ))}
@@ -102,14 +99,14 @@ export default function AdminMembershipCenter() {
         ))}
       </div>
 
-      <p style={{ marginTop: 16 }}>
+      <div className="adminActions">
         <Link className="btnSoft" href="/admin/billing">
           Billing & forecasts
-        </Link>{" "}
+        </Link>
         <button type="button" className="btnSoft" onClick={() => void load()}>
           Refresh
         </button>
-      </p>
+      </div>
     </AdminPanelShell>
   );
 }

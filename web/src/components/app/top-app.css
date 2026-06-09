@@ -609,6 +609,16 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topba
 .topbarActionsCluster--start {
   justify-content: flex-start;
 }
+.downloadMobileAppBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.mobileAppLanding__actions {
+  margin-top: 16px;
+  margin-bottom: 8px;
+}
 .subpageAuthActionsPlaceholder {
   min-width: 88px;
   min-height: 42px;

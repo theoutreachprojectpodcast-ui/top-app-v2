@@ -95,7 +95,7 @@ export default function AdminPageImagesPanel() {
         <button type="button" className="btnPrimary" onClick={() => void addImage()}>Create image record</button>
       </div>
 
-      <hr className="adminRule" style={{ margin: "16px 0" }} />
+      <hr className="adminRule" />
       {loading ? <p className="adminMuted">Loading…</p> : null}
       <div className="adminTableWrap">
         <table className="adminTable">

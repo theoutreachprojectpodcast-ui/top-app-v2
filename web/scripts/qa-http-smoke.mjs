@@ -24,6 +24,8 @@ if (!base) {
 const routes = [
   { path: "/", kind: "html" },
   { path: "/contact", kind: "html" },
+  { path: "/privacy", kind: "html" },
+  { path: "/terms", kind: "html" },
   { path: "/community", kind: "html" },
   { path: "/api/me", kind: "json" },
   { path: "/api/auth/status", kind: "json" },

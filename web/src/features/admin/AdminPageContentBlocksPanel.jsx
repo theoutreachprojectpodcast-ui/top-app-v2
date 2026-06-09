@@ -74,18 +74,18 @@ export default function AdminPageContentBlocksPanel() {
 
   return (
     <AdminPanelShell panelId="content-blocks" error={error} message={message}>
-      <p className="adminMuted" style={{ lineHeight: 1.55 }}>
+      <p className="adminLead">
         Set status to <strong>Approved</strong> to publish copy on the live site via <code>/api/page-content</code> (footer,
         contact intro, and other page_key/section_key slots). Structured content (sponsors, posts, trusted listings) still
         uses dedicated section admins below.
       </p>
-      <p style={{ marginTop: 12 }}>
+      <div className="adminActions adminActions--flush">
         <Link className="btnPrimary" href="/admin/content/create">
           Content wizard
         </Link>
-      </p>
+      </div>
 
-      <div className="adminToolbar" style={{ marginTop: 16, gap: 8, flexWrap: "wrap" }}>
+      <div className="adminToolbar adminToolbar--spaced">
         <select className="adminConsoleInput" value={pageFilter} onChange={(e) => setPageFilter(e.target.value)} aria-label="Filter by page">
           <option value="">All pages</option>
           {PAGE_KEYS.map((k) => (
@@ -125,18 +125,18 @@ export default function AdminPageContentBlocksPanel() {
         />
       ) : null}
 
-      {loading ? <p className="adminMuted" style={{ marginTop: 16 }}>Loading…</p> : null}
-      <div className="adminPanelBody" style={{ gap: 12, marginTop: 16 }}>
+      {loading ? <p className="adminMuted adminMt4">Loading…</p> : null}
+      <div className="adminPanelBody adminPanelBody--loose adminMt4">
         {rows.map((row) => (
-          <article key={row.id} style={{ border: "1px solid var(--color-border-subtle)", borderRadius: 12, padding: 14 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+          <article key={row.id} className="adminEntityCard">
+            <div className="adminEntityCard__header">
               <div>
                 <strong>{row.title || "(untitled)"}</strong>
-                <div className="adminMuted" style={{ fontSize: "0.8rem", marginTop: 4 }}>
+                <div className="adminMuted adminEntityCard__meta">
                   {row.page_key} / {row.section_key} · {row.block_type} · {row.status}
                 </div>
               </div>
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <div className="adminEntityCard__actions">
                 <Link className="btnSoft" href={row.target_admin_route || routeForContentBlock(row.page_key, row.block_type)}>
                   Section admin
                 </Link>
@@ -145,14 +145,14 @@ export default function AdminPageContentBlocksPanel() {
                 </button>
               </div>
             </div>
-            <p className="adminMuted" style={{ marginTop: 8, maxHeight: 80, overflow: "hidden" }}>
+            <p className="adminMuted adminEntityCard__excerpt">
               {row.body_text || row.body_html?.replace(/<[^>]+>/g, "") || "—"}
             </p>
           </article>
         ))}
       </div>
       {!loading && rows.length === 0 ? (
-        <p className="adminMuted" style={{ marginTop: 16 }}>
+        <p className="adminMuted adminMt4">
           No blocks yet. Run <code>page_content_blocks_admin_v10.sql</code> in Supabase if the API errors on missing table.
         </p>
       ) : null}
@@ -174,8 +174,8 @@ function BlockEditor({ initial, onCancel, onSave }) {
   const id = initial.id;
 
   return (
-    <div className="adminFieldStack" style={{ marginTop: 20, padding: 16, border: "1px solid var(--color-border-subtle)", borderRadius: 12 }}>
-      <h3 style={{ marginTop: 0 }}>{id ? "Edit block" : "New block"}</h3>
+    <div className="adminFieldStack adminFieldStack--bordered">
+      <h3 className="adminBlockTitle">{id ? "Edit block" : "New block"}</h3>
       <label className="fieldLabel">Page key</label>
       <select className="adminConsoleInput" value={form.page_key} onChange={(e) => setForm((f) => ({ ...f, page_key: e.target.value }))}>
         {PAGE_KEYS.map((k) => (

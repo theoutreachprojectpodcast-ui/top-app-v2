@@ -42,7 +42,9 @@ Sign in with your TOP account to sync profile, saved items, and membership acros
 Questions? Contact us at [support@theoutreachproject.app] or via the in-app contact form.
 
 Privacy Policy: https://theoutreachproject.app/privacy  
-Terms of Use: https://theoutreachproject.app/terms
+Terms of Use: https://theoutreachproject.app/terms  
+
+**Full legal documents (store submission):** [docs/legal/privacy-policy.md](./legal/privacy-policy.md) · [docs/legal/terms-and-conditions.md](./legal/terms-and-conditions.md)
 
 ---
 
@@ -57,16 +59,24 @@ veterans,first responders,nonprofit,directory,resources,community,podcast,member
 
 ## App Store review notes (paste into Review Notes)
 
-This app loads our production web application (https://theoutreachproject.app) inside a native Capacitor WebView. Authentication uses WorkOS AuthKit; membership billing uses Stripe Checkout on the web (no Apple In-App Purchase products).
+Full app routing & coverage reference: **[legal/apple-app-routing-coverage.md](./legal/apple-app-routing-coverage.md)** (includes paste block §11).
 
-**Test account**  
-Email: [reviewer@example.com]  
-Password: [provided separately]
+**Routing App Coverage File (.geojson):** Not applicable — not a Maps routing app.
+
+The Outreach Project mobile app (Capacitor iOS/Android) loads our production web application inside a native WebView. **Sign-in** uses WorkOS AuthKit inside the app. **Account creation, membership purchases, sponsor packages, and all billing** (Stripe Checkout and Customer Portal) happen only on **https://theoutreachproject.app** in the **device system browser** (Safari / Chrome) — not inside the app WebView. The app does **not** collect payment details, does **not** show Apple In-App Purchase products, and does **not** embed Stripe checkout.
+
+Users share one account across web and mobile. After completing signup or payment on the web, they return to the app and tap **Refresh account status** (or use the deep link on the web success page) to sync membership from the server.
+
+**Test account** (create in Production WorkOS — do not commit password to repo):
+
+Email: `appreview+YOURDOMAIN@theoutreachproject.app` (example — use a mailbox you control)  
+Password: *(paste into App Store Review Notes / Play App access only)*
 
 Steps to test:
-1. Launch app → sign in with test account
-2. Browse Home, Directory, Community, Profile tabs
-3. Optional: start membership checkout (Stripe test/live per environment)
+1. Launch app → **Sign in** with test account (WorkOS in WebView)
+2. Browse Home, Directory, Community, Profile tabs — verify membership tier matches web account
+3. Tap **Upgrade** or **Manage billing** → confirm Safari/Chrome opens the website (no in-app payment form)
+4. Optional: complete membership on the website, return to app, tap **Refresh account status**
 
 Support: [support@theoutreachproject.app]
 
@@ -75,6 +85,8 @@ Support: [support@theoutreachproject.app]
 All users must sign in with a WorkOS account. Provide the same test credentials as above in the Play Console **App access** form.
 
 ## Data safety / App Privacy (summary for forms)
+
+See **[store-policy-forms.md](./store-policy-forms.md)** for full Apple App Privacy and Google Data safety answers.
 
 | Data type | Collected | Purpose |
 |-----------|-----------|---------|

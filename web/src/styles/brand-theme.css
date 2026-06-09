@@ -39,6 +39,12 @@
   --color-focus-ring: rgba(50, 196, 59, 0.3);
 
   --color-success: #1fa64a;
+  --color-success-text: #0d7a4a;
+  --color-success-surface: color-mix(in srgb, var(--color-success) 12%, transparent);
+  --color-success-border: color-mix(in srgb, var(--color-success) 32%, transparent);
+  --color-danger-text: #b42318;
+  --color-danger-surface: color-mix(in srgb, var(--color-error) 10%, transparent);
+  --color-danger-border: color-mix(in srgb, var(--color-error) 35%, transparent);
   --color-warning: #c58a18;
   --color-error: #c94b49;
   --color-info: #2c7be5;
@@ -193,6 +199,12 @@
   --color-link: #83e387;
   --color-focus-ring: rgba(131, 227, 135, 0.34);
   --color-success: #32c43b;
+  --color-success-text: #6ee778;
+  --color-success-surface: color-mix(in srgb, var(--color-success) 14%, transparent);
+  --color-success-border: color-mix(in srgb, var(--color-success) 38%, transparent);
+  --color-danger-text: #fda29b;
+  --color-danger-surface: color-mix(in srgb, var(--color-error) 16%, transparent);
+  --color-danger-border: color-mix(in srgb, var(--color-error) 42%, transparent);
   --color-warning: #d4a12a;
   --color-error: #d96866;
   --color-info: #8a9590;
