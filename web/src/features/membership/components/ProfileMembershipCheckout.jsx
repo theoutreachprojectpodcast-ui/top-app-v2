@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import {
+  APP_ACCESS_MEMBERSHIP_PRICE_LABEL,
   PRO_MEMBERSHIP_PRICE_LABEL,
   SUPPORT_MEMBERSHIP_PRICE_LABEL,
 } from "@/features/membership/membershipTiers";
@@ -93,8 +94,9 @@ export default function ProfileMembershipCheckout({
       <NativeAccountBillingNotice />
       <h4 className="profileMembershipCheckoutTitle">Upgrade with Stripe</h4>
       <p className="sponsorSectionLead">
-        Support {SUPPORT_MEMBERSHIP_PRICE_LABEL} · Pro {PRO_MEMBERSHIP_PRICE_LABEL}. You can manage or cancel in the
-        billing portal after your first successful checkout.
+        App Access {APP_ACCESS_MEMBERSHIP_PRICE_LABEL} is required for the mobile app. Support{" "}
+        {SUPPORT_MEMBERSHIP_PRICE_LABEL} and Pro {PRO_MEMBERSHIP_PRICE_LABEL} are optional advanced upgrades for
+        existing members. Manage billing in the portal after your first checkout.
       </p>
       {error ? <p className="applyError">{error}</p> : null}
       <div className="row wrap" style={{ marginTop: 10 }}>

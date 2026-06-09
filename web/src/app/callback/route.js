@@ -56,5 +56,9 @@ export async function GET(request) {
     returnPathname: "/",
     baseURL,
     onSuccess: onWorkOSSuccess,
+    onError: async ({ error }) => {
+      console.error("[torp] WorkOS callback failed:", error?.message || error);
+      return null;
+    },
   })(request);
 }

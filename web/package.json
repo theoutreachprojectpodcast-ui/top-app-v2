@@ -35,6 +35,7 @@
     "cap:open:android": "cap open android",
     "cap:open:ios": "cap open ios",
     "mobile:sync": "cap sync",
+    "mobile:icons": "node scripts/generate-mobile-icons.mjs",
     "mobile:open:android": "cap open android",
     "mobile:open:ios": "cap open ios",
     "mobile:prep": "pnpm run build && cap sync",

@@ -1,0 +1,192 @@
+/**
+ * Standalone mobile splash + access paywall (Capacitor / phone only).
+ */
+
+.mobileRouteShell {
+  --mobile-splash-topo-light: url("/home/app-page-background-light-mobile.png?v=3");
+  --mobile-splash-topo-filter-light: contrast(1.04) saturate(1.06) brightness(1.02);
+  position: relative;
+  isolation: isolate;
+  min-height: 100dvh;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding:
+    max(env(safe-area-inset-top, 0px), 12px)
+    max(env(safe-area-inset-right, 0px), var(--mobile-shell-pad-x, 16px))
+    max(env(safe-area-inset-bottom, 0px), 16px)
+    max(env(safe-area-inset-left, 0px), var(--mobile-shell-pad-x, 16px));
+  background:
+    linear-gradient(
+      160deg,
+      #152019 0%,
+      #101814 48%,
+      #0c1210 100%
+    );
+  color: var(--color-text-primary, #f8fcfa);
+}
+
+.mobileRouteShell > * {
+  position: relative;
+  z-index: 1;
+}
+
+:root[data-color-scheme="light"] .mobileRouteShell,
+html:not(.dark) .mobileRouteShell {
+  background-color: #e0e8cf;
+  background-image: none;
+  color: var(--color-text-primary, #111814);
+}
+
+:root[data-color-scheme="light"] .mobileRouteShell::before,
+html:not(.dark) .mobileRouteShell::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-color: #e0e8cf;
+  background-image: var(--mobile-splash-topo-light);
+  background-repeat: no-repeat;
+  background-position: center top;
+  background-size: cover;
+  filter: var(--mobile-splash-topo-filter-light);
+  -webkit-filter: var(--mobile-splash-topo-filter-light);
+}
+
+.mobileSplashPage {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-width: 0;
+}
+
+.mobileSplashPage__inner {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--ds-space-3, 12px);
+  padding: clamp(16px, 4vw, 24px);
+  border-radius: var(--radius-card, 16px);
+  border: 1px solid color-mix(in srgb, var(--color-border-soft, #3a4a40) 45%, transparent);
+  background: color-mix(in srgb, #101814 88%, transparent);
+  box-shadow: 0 16px 40px color-mix(in srgb, #000 28%, transparent);
+}
+
+:root[data-color-scheme="light"] .mobileSplashPage__inner,
+html:not(.dark) .mobileSplashPage__inner {
+  background: color-mix(in srgb, #ffffff 92%, #eef3ef 8%);
+  border-color: color-mix(in srgb, var(--color-border-soft) 70%, transparent);
+}
+
+.mobileSplashPage__brand {
+  display: flex;
+  justify-content: center;
+}
+
+.mobileSplashPage__brand--small .brandMarkImg--splash {
+  max-height: clamp(108px, 27vw, 144px);
+}
+
+.mobileSplashPage__brand .brandMarkImg--splash {
+  display: block;
+  width: min(102vw, 390px);
+  max-width: 100%;
+  height: auto;
+  max-height: clamp(132px, 33vw, 180px);
+  object-fit: contain;
+}
+
+.mobileSplashPage__title {
+  margin: 0;
+  text-align: center;
+  font-size: clamp(1.15rem, 4.5vw, 1.35rem);
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.mobileSplashPage__lead {
+  margin: 0;
+  text-align: center;
+  font-size: clamp(0.88rem, 3.5vw, 0.96rem);
+  line-height: 1.45;
+  color: var(--color-text-secondary, #b8c4bc);
+}
+
+.mobileSplashPage__pricing {
+  margin: 0;
+  text-align: center;
+  font-size: clamp(0.82rem, 3.2vw, 0.9rem);
+  line-height: 1.45;
+  color: var(--color-text-secondary, #b8c4bc);
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--color-accent, #3d9e5a) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-accent, #3d9e5a) 28%, transparent);
+}
+
+.mobileSplashPage__benefits {
+  margin: 0;
+  padding-left: 1.15rem;
+  font-size: clamp(0.84rem, 3.2vw, 0.92rem);
+  line-height: 1.5;
+  color: var(--color-text-secondary, #b8c4bc);
+}
+
+.mobileSplashPage__benefits li + li {
+  margin-top: 6px;
+}
+
+.mobileSplashPage__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-space-2, 8px);
+  margin-top: var(--ds-space-1, 4px);
+}
+
+.mobileSplashPage__btn {
+  width: 100%;
+  min-height: 48px;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.mobileSplashPage__legal {
+  margin: 0;
+  text-align: center;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--color-text-secondary, #b8c4bc);
+}
+
+.mobileSplashPage__legal a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.mobileSplashPage__notice {
+  margin: 0;
+  text-align: center;
+  font-size: 0.86rem;
+  line-height: 1.4;
+  color: var(--color-accent, #6dd88a);
+}
+
+.mobileSplashPage__notice--warn {
+  color: #e8b86d;
+}
+
+@media (min-width: 761px) {
+  html:not([data-capacitor-native]) .mobileRouteShell {
+    display: none;
+  }
+}
+
+html[data-capacitor-native] .mobileRouteShell {
+  min-height: 100dvh;
+}

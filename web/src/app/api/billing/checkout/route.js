@@ -13,6 +13,7 @@ import {
   priceIdForTier,
   requestOriginForStripeRedirects,
   safeAppReturnPath,
+  stripeAccessYearlyConfigured,
   stripeMemberRecurringConfigured,
   stripeSponsorSubscriptionConfigured,
 } from "@/lib/billing/stripeConfig";
@@ -68,7 +69,17 @@ export async function POST(request) {
     }
   }
 
-  if (tier === "sponsor") {
+  if (tier === "access") {
+    if (!stripeAccessYearlyConfigured()) {
+      return Response.json(
+        {
+          error: "access_billing_not_configured",
+          message: "Set STRIPE_PRICE_ACCESS_YEARLY for App Access ($5.99/year) checkout.",
+        },
+        { status: 503 },
+      );
+    }
+  } else if (tier === "sponsor") {
     if (!stripeSponsorSubscriptionConfigured()) {
       return Response.json(
         { error: "sponsor_billing_not_configured", message: "Set STRIPE_PRICE_SPONSOR_MONTHLY for sponsor subscription checkout." },

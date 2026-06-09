@@ -7,6 +7,7 @@ import { validateImageUpload } from "../src/lib/security/uploadPolicy.js";
 assert.equal(contactFormSchema.safeParse({ fullName: "A", email: "a@b.com", message: "hi" }).success, true);
 assert.equal(contactFormSchema.safeParse({ fullName: "", email: "bad", message: "" }).success, false);
 assert.equal(membershipCheckoutSchema.safeParse({ tier: "member" }).success, true);
+assert.equal(membershipCheckoutSchema.safeParse({ tier: "access" }).success, true);
 assert.equal(membershipCheckoutSchema.safeParse({ tier: "hacker" }).success, false);
 assert.equal(
   guestApplicationSchema.safeParse({

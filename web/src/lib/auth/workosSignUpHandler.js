@@ -1,6 +1,7 @@
 import { getSignUpUrl } from "@workos-inc/authkit-nextjs";
 import { NextResponse } from "next/server";
 import { isWorkOSConfigured } from "@/lib/auth/workosConfigured";
+import { workOSAuthRedirectBridge } from "@/lib/auth/workosAuthRedirectBridge";
 import { sanitizeWorkOSLoginHint } from "@/lib/auth/workosLoginHint";
 import { safeWorkOSReturnTarget } from "@/lib/auth/workosSafeReturn";
 import {
@@ -47,7 +48,7 @@ export async function workOSSignUpResponse(request) {
         prompt,
         invitationToken,
       });
-      return NextResponse.redirect(url);
+      return workOSAuthRedirectBridge(url);
     } catch {
       return NextResponse.json({ error: "workos_not_configured" }, { status: 503 });
     }
@@ -59,5 +60,5 @@ export async function workOSSignUpResponse(request) {
     prompt,
     ...workOSAuthKitAuthorizeOptions({ signUp: true }),
   });
-  return NextResponse.redirect(url);
+  return workOSAuthRedirectBridge(url);
 }

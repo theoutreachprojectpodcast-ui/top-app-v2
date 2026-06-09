@@ -1,6 +1,7 @@
 import { getSignInUrl } from "@workos-inc/authkit-nextjs";
 import { NextResponse } from "next/server";
 import { isWorkOSConfigured } from "@/lib/auth/workosConfigured";
+import { workOSAuthRedirectBridge } from "@/lib/auth/workosAuthRedirectBridge";
 import { sanitizeWorkOSLoginHint } from "@/lib/auth/workosLoginHint";
 import { resolvePostAuthReturnTarget } from "@/lib/auth/workosSafeReturn";
 import {
@@ -60,7 +61,7 @@ export async function workOSSignInResponse(request) {
         invitationToken,
         organizationId: orgOptions.organizationId,
       });
-      return NextResponse.redirect(url);
+      return workOSAuthRedirectBridge(url);
     } catch {
       return NextResponse.json({ error: "workos_not_configured" }, { status: 503 });
     }
@@ -73,7 +74,7 @@ export async function workOSSignInResponse(request) {
       prompt,
       ...orgOptions,
     });
-    return NextResponse.redirect(url);
+    return workOSAuthRedirectBridge(url);
   } catch (e) {
     console.error("[torp] WorkOS getSignInUrl failed:", e);
     return NextResponse.json(

@@ -326,13 +326,47 @@ def _has_meaningful_alpha(im: Image.Image) -> bool:
 
 
 def crop_mark(full_img: Image.Image) -> Image.Image:
+    """OP monogram only — crop above the THE OUTREACH wordmark band."""
     im = full_img.convert("RGBA")
     bbox = im.getbbox()
     if not bbox:
         return im
     x0, y0, x1, y1 = bbox
-    cut_y = y0 + int((y1 - y0) * 0.64)
-    return im.crop((x0, y0, x1, cut_y))
+    w, h = x1 - x0, y1 - y0
+    px = im.load()
+    rows: list[int] = []
+    for y in range(y0, y1):
+        rows.append(sum(1 for x in range(x0, x1) if px[x, y][3] > 16))
+    maxc = max(rows) if rows else 1
+    cut_y = y1
+    for i in range(len(rows) - 2):
+        if rows[i] > maxc * 0.12 and rows[i + 1] < maxc * 0.06 and rows[i + 2] < maxc * 0.06:
+            cut_y = y0 + i + 1
+            break
+    else:
+        cut_y = y0 + int(h * 0.66)
+    cropped = im.crop((x0, y0, x1, cut_y))
+    return _trim_mark_margins(cropped)
+
+
+def _trim_mark_margins(im: Image.Image, threshold: float = 0.05) -> Image.Image:
+    im = im.convert("RGBA")
+    w, h = im.size
+    px = im.load()
+    cols = [sum(1 for y in range(h) if px[x, y][3] > 16) for x in range(w)]
+    rows = [sum(1 for x in range(w) if px[x, y][3] > 16) for y in range(h)]
+    max_col = max(cols) if cols else 1
+    max_row = max(rows) if rows else 1
+    col_cut = max(1, int(max_col * threshold))
+    row_cut = max(1, int(max_row * threshold))
+    left = next((i for i, c in enumerate(cols) if c > col_cut), 0)
+    right = w - next((i for i, c in enumerate(reversed(cols)) if c > col_cut), 0)
+    top = next((i for i, r in enumerate(rows) if r > row_cut), 0)
+    bottom = h - next((i for i, r in enumerate(reversed(rows)) if r > row_cut), 0)
+    if left >= right or top >= bottom:
+        tight = im.getbbox()
+        return im.crop(tight) if tight else im
+    return im.crop((left, top, right, bottom))
 
 
 def main() -> None:

@@ -67,6 +67,20 @@ function rewriteAdminSubdomainRequest(request, host) {
   return new NextRequest(url, request);
 }
 
+/** AuthKit proxy mints a PKCE cookie on every unauthenticated hit — skip OAuth handoff routes. */
+function isWorkOSAuthHandoffPath(pathname) {
+  const p = pathname || "/";
+  if (p === "/callback" || p.startsWith("/callback/")) return true;
+  if (p === "/sign-in" || p.startsWith("/sign-in")) return true;
+  if (p === "/login" || p.startsWith("/login")) return true;
+  if (p === "/sign-up" || p.startsWith("/sign-up")) return true;
+  if (p === "/invite" || p.startsWith("/invite")) return true;
+  if (p === "/sign-out" || p.startsWith("/sign-out")) return true;
+  if (p.startsWith("/auth/sign-in") || p.startsWith("/auth/sign-up") || p.startsWith("/auth/logout")) return true;
+  if (p.startsWith("/api/auth/workos/")) return true;
+  return false;
+}
+
 export default async function proxy(request) {
   const host = requestHost(request);
 
@@ -82,25 +96,28 @@ export default async function proxy(request) {
     return applySecurityHeaders(NextResponse.next({ request: incoming }), incoming);
   }
 
-  if (!workosProxy) {
-    const res = await updateSession(incoming);
-    return applySecurityHeaders(res, incoming);
+  const pathname = incoming.nextUrl.pathname || "/";
+
+  if (workosProxy && isWorkOSAuthHandoffPath(pathname)) {
+    return applySecurityHeaders(NextResponse.next({ request: incoming }), incoming);
   }
 
   const idleMs = sessionIdleTimeoutMs();
   const sessionName = workosSessionCookieName();
   const sessionVal = incoming.cookies.get(sessionName)?.value;
   const hasWorkosSession = Boolean(sessionVal);
-  const pathname = incoming.nextUrl.pathname || "/";
-  const skipIdleSignOutRedirect =
-    pathname === "/sign-out" ||
-    pathname.startsWith("/sign-out/") ||
-    pathname === "/callback" ||
-    pathname.startsWith("/callback/") ||
-    pathname === "/login" ||
-    pathname.startsWith("/login/") ||
-    pathname === "/sign-in" ||
-    pathname.startsWith("/sign-in/");
+
+  /** Unauthenticated page loads: skip AuthKit proxy so it does not mint spurious PKCE cookies. */
+  if (workosProxy && !hasWorkosSession) {
+    return applySecurityHeaders(NextResponse.next({ request: incoming }), incoming);
+  }
+
+  if (!workosProxy) {
+    const res = await updateSession(incoming);
+    return applySecurityHeaders(res, incoming);
+  }
+
+  const skipIdleSignOutRedirect = isWorkOSAuthHandoffPath(pathname);
 
   if (idleMs > 0 && hasWorkosSession && !skipIdleSignOutRedirect) {
     const fpNow = fingerprintFromSessionCookieValue(sessionVal);

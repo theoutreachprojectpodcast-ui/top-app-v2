@@ -20,7 +20,7 @@ function isPrivilegedStaff(row) {
 
 function paidTierWithActiveBilling(tier, membershipStatus) {
   const t = String(tier || "").toLowerCase();
-  if (!["support", "member", "sponsor"].includes(t)) return false;
+  if (!["access", "support", "member", "sponsor"].includes(t)) return false;
   return hasActiveMemberBilling(membershipStatus);
 }
 

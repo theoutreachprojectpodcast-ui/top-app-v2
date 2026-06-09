@@ -2,9 +2,8 @@
  * Stripe configuration — env vars only, no hardcoded keys or price IDs.
  * Server routes should import from here; never expose STRIPE_SECRET_KEY to the client.
  *
- * Member recurring: STRIPE_PRICE_SUPPORT_MONTHLY (Stripe product “Support with $1”, $1/mo) + STRIPE_PRICE_PRO_MONTHLY (preferred)
- *   or legacy STRIPE_PRICE_MEMBER_MONTHLY for Pro.
- * Optional sponsor subscription: STRIPE_PRICE_SPONSOR_MONTHLY (onboarding “Sponsor Membership” tier).
+ * App Access (mobile gate): STRIPE_PRICE_ACCESS_YEARLY ($5.99/yr, required for Capacitor app).
+ * Advanced (optional): STRIPE_PRICE_SUPPORT_MONTHLY + STRIPE_PRICE_PRO_MONTHLY.
  */
 
 export function stripeSecretConfigured() {
@@ -22,7 +21,20 @@ export function proSubscriptionPriceId() {
   );
 }
 
-/** True when Support + Pro recurring checkouts can be created (does not require sponsor subscription price). */
+/** True when App Access yearly checkout can be created (mobile gate). */
+export function stripeAccessYearlyConfigured() {
+  return stripeSecretConfigured() && !!process.env.STRIPE_PRICE_ACCESS_YEARLY?.trim();
+}
+
+/** @returns {string[]} */
+export function stripeAccessYearlyMissingEnvKeys() {
+  const missing = [];
+  if (!stripeSecretConfigured()) missing.push("STRIPE_SECRET_KEY");
+  if (!process.env.STRIPE_PRICE_ACCESS_YEARLY?.trim()) missing.push("STRIPE_PRICE_ACCESS_YEARLY");
+  return missing;
+}
+
+/** True when Support + Pro recurring checkouts can be created (advanced upgrades). */
 export function stripeMemberRecurringConfigured() {
   return (
     stripeSecretConfigured() &&
@@ -75,6 +87,7 @@ export function stripeWebhookConfigured() {
 
 export function priceIdForTier(tier) {
   const t = String(tier || "").toLowerCase();
+  if (t === "access") return process.env.STRIPE_PRICE_ACCESS_YEARLY?.trim() || "";
   if (t === "support") return process.env.STRIPE_PRICE_SUPPORT_MONTHLY?.trim() || "";
   if (t === "member") return proSubscriptionPriceId();
   if (t === "sponsor") return process.env.STRIPE_PRICE_SPONSOR_MONTHLY?.trim() || "";

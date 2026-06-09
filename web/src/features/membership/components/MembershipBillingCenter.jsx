@@ -25,7 +25,8 @@ import {
 import { membershipTierRank } from "@/lib/billing/membershipTierOrder";
 
 const UPGRADE_TARGETS = {
-  [MEMBERSHIP_TIER_KEYS.NONE]: ["support", "member", "sponsor"],
+  [MEMBERSHIP_TIER_KEYS.NONE]: ["access", "support", "member", "sponsor"],
+  [MEMBERSHIP_TIER_KEYS.ACCESS]: ["support", "member", "sponsor"],
   [MEMBERSHIP_TIER_KEYS.SUPPORT]: ["member", "sponsor"],
   [MEMBERSHIP_TIER_KEYS.MEMBER]: ["sponsor"],
   [MEMBERSHIP_TIER_KEYS.SPONSOR]: [],
@@ -390,38 +391,28 @@ export default function MembershipBillingCenter({
 
       {stripeMemberReady && upgradeTiers.length > 0 ? (
         <div className="membershipBillingCenter__section">
-          <h4>Upgrade</h4>
+          <h4>{tierKey === MEMBERSHIP_TIER_KEYS.NONE ? "Membership" : "Upgrade"}</h4>
+          <p className="sponsorSectionLead">
+            {tierKey === MEMBERSHIP_TIER_KEYS.NONE
+              ? "App Access is required for the mobile app. Support and Pro are optional upgrades."
+              : "Advanced upgrades for existing App Access members."}
+          </p>
           <div className="membershipBillingCenter__actions row wrap">
             {upgradeTiers.map(({ key, def, price, checkoutTier }) => (
               <button
                 key={key}
                 type="button"
-                className={key === MEMBERSHIP_TIER_KEYS.MEMBER ? "btnPrimary" : "btnSoft"}
+                className={
+                  key === MEMBERSHIP_TIER_KEYS.ACCESS || key === MEMBERSHIP_TIER_KEYS.MEMBER
+                    ? "btnPrimary"
+                    : "btnSoft"
+                }
                 disabled={!!busy}
                 onClick={() => startCheckout(checkoutTier)}
               >
                 {busy === checkoutTier ? "Redirecting…" : `${def.shortLabel}${price ? ` — ${price}` : ""}`}
               </button>
             ))}
-          </div>
-        </div>
-      ) : null}
-
-      {tierKey === MEMBERSHIP_TIER_KEYS.NONE && stripeMemberReady ? (
-        <div className="membershipBillingCenter__section">
-          <h4>Join with Stripe</h4>
-          <div className="membershipBillingCenter__actions row wrap">
-            <button type="button" className="btnSoft" disabled={!!busy} onClick={() => startCheckout("support")}>
-              Support — {SUPPORT_MEMBERSHIP_PRICE_LABEL}
-            </button>
-            <button type="button" className="btnPrimary" disabled={!!busy} onClick={() => startCheckout("member")}>
-              Pro — {PRO_MEMBERSHIP_PRICE_LABEL}
-            </button>
-            {stripeSponsorSubscriptionReady ? (
-              <button type="button" className="btnSoft" disabled={!!busy} onClick={() => startCheckout("sponsor")}>
-                Sponsor membership
-              </button>
-            ) : null}
           </div>
         </div>
       ) : null}
