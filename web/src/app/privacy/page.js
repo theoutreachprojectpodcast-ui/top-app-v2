@@ -5,14 +5,18 @@ export const metadata = {
 
 export default function PrivacyPage() {
   return (
-    <div className="sponsorPage sponsorLanding">
-      <section className="panel legalPage" style={{ maxWidth: 760 }}>
+    <div className="legalPageRoute">
+      <section className="panel legalPage">
         <h1>Privacy Policy</h1>
-        <p className="legalPageMeta">Last updated: May 2026</p>
+        <p className="legalPageMeta">Last updated: June 8, 2026</p>
         <p>
           The Outreach Project (&ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;TOP&rdquo;) provides a resource network for
           veterans, first responders, and supporters. This policy describes how we handle information when you use our
-          website and mobile apps at <strong>theoutreachproject.app</strong>.
+          website and mobile apps (Apple App Store and Google Play) at <strong>theoutreachproject.app</strong>.
+        </p>
+        <p>
+          Our iOS and Android apps load the same secure web application in an in-app browser. Data practices are largely
+          the same on web and mobile.
         </p>
 
         <h2>Information we collect</h2>
@@ -36,7 +40,18 @@ export default function PrivacyPage() {
             <strong>Technical data</strong> — standard server and security logs (IP address, browser or app user agent,
             timestamps) needed to operate and protect the service.
           </li>
+          <li>
+            <strong>Device permissions (mobile)</strong> — if you choose to upload a photo, the app may request camera
+            or photo library access only at that moment. We do not collect precise location or advertising identifiers for
+            cross-app tracking.
+          </li>
         </ul>
+
+        <h2>Mobile apps &amp; payments</h2>
+        <p>
+          Membership checkout uses <strong>Stripe</strong> on the web (including from the mobile apps). We do not use Apple
+          In-App Purchase or Google Play Billing for membership tiers. We do not sell your personal information.
+        </p>
 
         <h2>How we use information</h2>
         <ul>

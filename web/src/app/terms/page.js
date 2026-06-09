@@ -5,13 +5,14 @@ export const metadata = {
 
 export default function TermsPage() {
   return (
-    <div className="sponsorPage sponsorLanding">
-      <section className="panel legalPage" style={{ maxWidth: 760 }}>
+    <div className="legalPageRoute">
+      <section className="panel legalPage">
         <h1>Terms of Use</h1>
-        <p className="legalPageMeta">Last updated: May 2026</p>
+        <p className="legalPageMeta">Last updated: June 8, 2026</p>
         <p>
           By accessing or using The Outreach Project (&ldquo;TOP,&rdquo; &ldquo;we,&rdquo; or &ldquo;the service&rdquo;)
-          at <strong>theoutreachproject.app</strong> or through our mobile apps, you agree to these Terms of Use.
+          at <strong>theoutreachproject.app</strong> or through our mobile apps (Apple App Store and Google Play), you
+          agree to these Terms of Use.
         </p>
 
         <h2>The service</h2>
@@ -36,9 +37,17 @@ export default function TermsPage() {
 
         <h2>Membership &amp; payments</h2>
         <p>
-          Paid memberships and sponsor offerings are billed through Stripe under the terms shown at checkout. Fees,
-          renewal, and cancellation follow Stripe and the plan you select. Refunds are handled according to our posted
-          policies and applicable law.
+          Paid memberships are billed through <strong>Stripe</strong> under the terms shown at checkout. We do not use
+          Apple In-App Purchase or Google Play Billing for membership subscriptions at this time. Fees, renewal, and
+          cancellation follow Stripe and the plan you select. Refunds are handled according to our posted policies and
+          applicable law.
+        </p>
+
+        <h2>Mobile apps (Apple &amp; Google)</h2>
+        <p>
+          If you obtained the app through the Apple App Store or Google Play, additional platform terms in our full Terms
+          and Conditions apply (Apple is not a party to your agreement with TOP; Google is not responsible for the app).
+          Most product updates ship through our web deployment at theoutreachproject.app.
         </p>
 
         <h2>User content</h2>
