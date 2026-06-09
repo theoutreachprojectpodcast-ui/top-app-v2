@@ -51,5 +51,7 @@
 	<string>The Outreach Project needs photo library access so you can choose a profile or community photo.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>The Outreach Project needs camera access when you take a photo for your profile or a community post.</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>

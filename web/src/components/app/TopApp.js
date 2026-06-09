@@ -29,6 +29,7 @@ import HeaderAccountMenu from "@/components/layout/HeaderAccountMenu";
 import AdminConsoleLink from "@/components/admin/AdminConsoleLink";
 import HeaderNotificationBell from "@/components/layout/HeaderNotificationBell";
 import { useDirectorySearch } from "@/hooks/useDirectorySearch";
+import { useMobileShell } from "@/hooks/useMobileShell";
 import { useProfileData } from "@/features/profile/ProfileDataProvider";
 import { useTrustedResources } from "@/hooks/useTrustedResources";
 import { showLocalDemoChrome } from "@/lib/runtime/demoUiVisibility";
@@ -447,6 +448,8 @@ function TopAppInner({ initialNav = "home" }) {
   }
 
   const pageAtmosphere = useMemo(() => resolvePageAtmosphere(pathname, nav), [pathname, nav]);
+  const isMobileShell = useMobileShell();
+  const showMobileHomeEntrance = isMobileShell && !isLoggedIn && pageAtmosphere === "home";
   const mainScrollRef = useRef(null);
   const immersiveHeaderScroll = pageAtmosphere !== "podcast";
   useImmersiveHeaderScroll({
@@ -477,11 +480,11 @@ function TopAppInner({ initialNav = "home" }) {
   return (
     <main
       ref={mainScrollRef}
-      className={`topApp theme-${profile.theme}${immersiveHeaderScroll ? " header-at-top" : ""} ${isLoggedIn ? "topApp--auth-in" : "topApp--auth-out"} appShell--withMobileNavDock`}
+      className={`topApp theme-${profile.theme}${immersiveHeaderScroll ? " header-at-top" : ""} ${isLoggedIn ? "topApp--auth-in" : "topApp--auth-out"}${showMobileHomeEntrance ? " topApp--mobileHomeEntrance" : ""} appShell--withMobileNavDock`}
       data-page-atmosphere={pageAtmosphere}
     >
       <div className="appSiteHeader">
-        <AppHeaderBrand />
+        <AppHeaderBrand compactMark={showMobileHomeEntrance} />
         <header className="topbar">
           <HeaderInner className="topbarInner">
             <div className="topbarZone topbarLeft">

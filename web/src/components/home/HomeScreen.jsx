@@ -7,7 +7,10 @@ import HomeDirectoryPanel from "@/components/home/HomeDirectoryPanel";
 import HomeFeatureCards from "@/components/home/HomeFeatureCards";
 import HomeMembershipBar from "@/components/home/HomeMembershipBar";
 import HomeMembershipSection from "@/components/home/HomeMembershipSection";
+import MobileSplashEntrance from "@/components/home/MobileSplashEntrance";
+import { useMobileShell } from "@/hooks/useMobileShell";
 import "@/components/home/home-mobile.css";
+import "@/components/home/mobile-splash-entrance.css";
 
 export default function HomeScreen({
   isAuthenticated,
@@ -32,9 +35,16 @@ export default function HomeScreen({
   onGoToProfile,
   showMembershipSection = true,
 }) {
+  const isMobileShell = useMobileShell();
+  const showMobileSplashEntrance = isMobileShell && !isAuthenticated;
+
   return (
     <>
       <div className="homeMobile">
+        {showMobileSplashEntrance ? (
+          <MobileSplashEntrance onSignIn={onSignIn} onCreateAccount={onCreateAccount} />
+        ) : null}
+
         <HomeSponsorBannerPlacements />
 
         {!isAuthenticated ? (
@@ -56,7 +66,7 @@ export default function HomeScreen({
           />
         ) : null}
 
-        {!isAuthenticated ? (
+        {!isAuthenticated && !showMobileSplashEntrance ? (
           <HomeAuthCards onCreateAccount={onCreateAccount} onSignIn={onSignIn} />
         ) : null}
 

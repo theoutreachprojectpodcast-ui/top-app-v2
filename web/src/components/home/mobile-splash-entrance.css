@@ -1,0 +1,131 @@
+/**
+ * Mobile-only home entrance (guest splash + auth CTAs at top of content).
+ */
+
+.homeMobileSplashEntrance {
+  order: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--ds-space-3, 12px);
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding:
+    clamp(12px, 3.2vw, 18px)
+    clamp(14px, 4vw, 18px)
+    clamp(14px, 3.6vw, 20px);
+  border-radius: var(--radius-card, 16px);
+  border: 1px solid color-mix(in srgb, var(--color-border-soft) 55%, transparent);
+  background:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, #152019 92%, var(--color-bg-card) 8%) 0%,
+      color-mix(in srgb, #101814 94%, var(--color-bg-card) 6%) 48%,
+      color-mix(in srgb, #0c1210 96%, var(--color-bg-card) 4%) 100%
+    );
+  box-shadow:
+    0 12px 28px color-mix(in srgb, #000 22%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #ffffff 8%, transparent);
+}
+
+:root[data-color-scheme="light"] .homeMobileSplashEntrance,
+html:not(.dark) .homeMobileSplashEntrance {
+  background:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--color-bg-card) 96%, #eef3ef 4%) 0%,
+      color-mix(in srgb, var(--color-bg-card) 98%, #e4ebe6 2%) 100%
+    );
+  border-color: color-mix(in srgb, var(--color-border-soft) 80%, transparent);
+}
+
+.homeMobileSplashEntrance__brand {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.homeMobileSplashEntrance__brand .brandMarkImg--splash {
+  display: block;
+  width: min(68vw, 260px);
+  max-width: 100%;
+  height: auto;
+  max-height: clamp(80px, 20vw, 112px);
+  object-fit: contain;
+  object-position: center;
+}
+
+.homeMobileSplashEntrance__title {
+  margin: 0;
+  text-align: center;
+  font-size: clamp(1.05rem, 4.2vw, 1.25rem);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  color: var(--color-text-primary);
+}
+
+.homeMobileSplashEntrance__lead {
+  margin: 0;
+  text-align: center;
+  font-size: clamp(0.82rem, 3.4vw, 0.92rem);
+  line-height: 1.45;
+  color: var(--color-text-secondary);
+  max-width: 34ch;
+  align-self: center;
+}
+
+.homeMobileSplashEntrance__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-space-2, 8px);
+  width: 100%;
+  margin-top: var(--ds-space-1, 4px);
+}
+
+.homeMobileSplashEntrance__btn {
+  width: 100%;
+  min-height: 48px;
+  justify-content: center;
+  font-size: clamp(0.92rem, 3.6vw, 1rem);
+  font-weight: 700;
+}
+
+@media (min-width: 761px) {
+  .homeMobileSplashEntrance {
+    display: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .homeMobile:has(.homeMobileSplashEntrance) .homeAuthCards {
+    display: none;
+  }
+
+  .homeMobile:has(.homeMobileSplashEntrance) .homeSponsorSpotlights {
+    order: 2;
+  }
+
+  .homeMobile:has(.homeMobileSplashEntrance) .homeMembershipBar {
+    order: 3;
+  }
+
+  .homeMobile:has(.homeMobileSplashEntrance) .homeMembershipSection {
+    order: 4;
+  }
+
+  .homeMobile:has(.homeMobileSplashEntrance) .homeFeatureList {
+    order: 5;
+  }
+
+  .homeMobile:has(.homeMobileSplashEntrance) .homeDirectoryPanel {
+    order: 6;
+  }
+
+  .homeMobile:has(.homeMobileSplashEntrance) .homeMobile__missionStrip {
+    order: 7;
+  }
+}

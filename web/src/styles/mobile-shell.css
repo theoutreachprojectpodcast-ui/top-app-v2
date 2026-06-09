@@ -106,6 +106,17 @@ html {
     --mobile-site-header-pad-x: max(var(--mobile-shell-pad-x, clamp(16px, 4.5vw, 20px)), env(safe-area-inset-left, 0px));
   }
 
+  /* Guest mobile home: compact header mark — splash panel carries branding + auth CTAs. */
+  main.topApp.topApp--mobileHomeEntrance[data-page-atmosphere="home"]:not(.appShell--podcast) {
+    --mobile-site-header-logo-h: clamp(52px, 13.5vw, 64px);
+    --mobile-site-header-logo-max-w: min(168px, calc(100vw - 120px));
+  }
+
+  main.topApp.topApp--mobileHomeEntrance[data-page-atmosphere="home"]:not(.appShell--podcast) .headerBrandStack .brandMarkImg,
+  main.topApp.topApp--mobileHomeEntrance[data-page-atmosphere="home"]:not(.appShell--podcast) .headerBrandStack img.brandMarkImg--header:not(.podcastBrandLogo) {
+    margin-bottom: 0 !important;
+  }
+
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .appSiteHeader {
     position: relative;
     display: flex;

@@ -30,3 +30,16 @@ html[data-capacitor-native] .btn,
 html[data-capacitor-native] .btnSoft {
   min-height: 44px;
 }
+
+/* Capacitor guest home: tighter vertical rhythm on iPhone-class viewports. */
+html[data-capacitor-native] main.topApp.topApp--mobileHomeEntrance[data-page-atmosphere="home"] .homeMobile {
+  padding-top: clamp(4px, 1.2vw, 8px);
+}
+
+html[data-capacitor-native] main.topApp.topApp--mobileHomeEntrance[data-page-atmosphere="home"] .homeMobileSplashEntrance {
+  margin-top: clamp(2px, 0.8vw, 6px);
+}
+
+html[data-capacitor-native] main.topApp.topApp--mobileHomeEntrance[data-page-atmosphere="home"] .appSiteHeader {
+  padding-bottom: clamp(2px, 0.8vw, 6px);
+}
