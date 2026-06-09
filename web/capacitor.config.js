@@ -33,13 +33,11 @@ if (capServer) {
   config.server = {
     url: origin,
     cleartext: origin.startsWith("http://"),
-    /** Allow in-WebView navigation to auth, Stripe, Supabase storage */
+    /** Allow in-WebView navigation to auth and Supabase storage — not Stripe (billing opens in system browser). */
     allowNavigation: [
       origin,
       "https://*.workos.com",
       "https://api.workos.com",
-      "https://checkout.stripe.com",
-      "https://billing.stripe.com",
       "https://*.supabase.co",
     ],
   };

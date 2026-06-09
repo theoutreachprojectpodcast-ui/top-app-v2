@@ -101,8 +101,10 @@ pnpm exec cap sync android
 | `pnpm --dir web run cap:open:android` | Open `web/android` in Android Studio |
 | `pnpm --dir web run mobile:prep:prod` | Point Capacitor at production URL + sync |
 | `pnpm --dir web run mobile:sync` | Build Next + `cap sync` |
+| `pnpm --dir web run mobile:icons` | Copy brand icon into iOS AppIcon slot |
+| `pnpm --dir web run mobile:assets` | Regenerate all native icons/splash (requires `sharp` native build) |
 
-See also: [web/docs/CAPACITOR_MOBILE.md](../web/docs/CAPACITOR_MOBILE.md), [MOBILE_READINESS.md](./MOBILE_READINESS.md), [mvp-production-launch.md](./mvp-production-launch.md) §9.
+See also: [web/docs/CAPACITOR_MOBILE.md](../web/docs/CAPACITOR_MOBILE.md), [MOBILE_READINESS.md](./MOBILE_READINESS.md), [IOS_XCODE_SETUP.md](./IOS_XCODE_SETUP.md), [mvp-production-launch.md](./mvp-production-launch.md) §9.
 
 ---
 
@@ -121,7 +123,8 @@ See also: [web/docs/CAPACITOR_MOBILE.md](../web/docs/CAPACITOR_MOBILE.md), [MOBI
 ## 6. Checklist
 
 - [x] Android Studio first-run wizard completed (this machine)
-- [ ] `adb version` works in a **new** terminal (add platform-tools to user Path — see §2)
-- [ ] `pnpm exec cap sync android` succeeds in `web/`
-- [ ] App runs on emulator or device against production or dev URL
-- [ ] [MOBILE_LAUNCH_CHECKLIST.md](./MOBILE_LAUNCH_CHECKLIST.md) section F updated for Play builds
+- [x] `adb` works via `%LOCALAPPDATA%\Android\Sdk\platform-tools\adb.exe` (add platform-tools to user Path for convenience)
+- [x] `pnpm exec cap sync android` / `mobile:prep:prod` succeeds in `web/`
+- [x] `gradlew assembleDebug` succeeds (set `JAVA_HOME` to Android Studio `jbr`)
+- [ ] App runs on **physical device** against production URL (§9.3 device smoke)
+- [ ] Signed **AAB** for Play internal testing — [MOBILE_LAUNCH_CHECKLIST.md](./MOBILE_LAUNCH_CHECKLIST.md) section F

@@ -5,20 +5,11 @@ export default function AdminScopeBanner({ readiness = "partial", title = "In de
   const isPlaceholder = readiness === "placeholder";
   return (
     <div
-      className="adminScopeBanner"
+      className={`adminScopeBanner${isPlaceholder ? " adminScopeBanner--placeholder" : ""}`}
       role="status"
-      style={{
-        marginBottom: 16,
-        padding: "12px 14px",
-        borderRadius: 10,
-        border: `1px solid ${isPlaceholder ? "var(--color-border-subtle)" : "color-mix(in srgb, var(--color-accent) 25%, var(--color-border-subtle))"}`,
-        background: isPlaceholder
-          ? "color-mix(in srgb, var(--color-bg-secondary) 70%, transparent)"
-          : "color-mix(in srgb, var(--color-accent) 8%, transparent)",
-      }}
     >
-      <strong style={{ display: "block", marginBottom: 4 }}>{title}</strong>
-      <span className="adminMuted" style={{ fontSize: "0.875rem", lineHeight: 1.5 }}>
+      <strong className="adminScopeBanner__title">{title}</strong>
+      <span className="adminScopeBanner__body adminMuted">
         {children ||
           (isPlaceholder
             ? "This module is planned but not fully implemented. Navigation remains available so operators know where it will live."

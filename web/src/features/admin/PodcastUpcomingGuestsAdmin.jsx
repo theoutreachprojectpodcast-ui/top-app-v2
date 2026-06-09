@@ -147,13 +147,13 @@ export default function PodcastUpcomingGuestsAdmin() {
   }
 
   return (
-    <div style={{ display: "grid", gap: 16 }}>
-      <p className="adminMuted">
+    <div className="adminPageStack">
+      <p className="adminLead">
         Rows in <strong>scheduled</strong>, <strong>confirmed</strong>, or <strong>published</strong> appear on the public podcast page.
         <strong> Draft</strong> and <strong>hidden</strong> stay admin-only. Apply DB migration{" "}
         <code>podcast_upcoming_guests_v09_status_topic.sql</code> if status updates fail.
       </p>
-      <div className="row wrap" style={{ gap: 8 }}>
+      <div className="adminRow">
         <button type="button" className="btnSoft" disabled={loading} onClick={() => void load()}>
           Reload
         </button>
@@ -163,8 +163,8 @@ export default function PodcastUpcomingGuestsAdmin() {
       </div>
       {msg ? <p className="adminMuted">{msg}</p> : null}
       {loading ? <p className="adminMuted">Loading…</p> : null}
-      <div style={{ overflowX: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+      <div className="adminTableWrap">
+        <table className="adminTable">
           <thead>
             <tr>
               <th align="left">Order</th>
@@ -179,7 +179,7 @@ export default function PodcastUpcomingGuestsAdmin() {
           <tbody>
             {rows.map((r, idx) => (
               <tr key={r.id}>
-                <td style={{ padding: "6px 8px", whiteSpace: "nowrap" }}>
+                <td className="adminTable__cell--nowrap">
                   <button type="button" className="btnSoft" disabled={idx === 0} onClick={() => move(idx, -1)}>
                     ↑
                   </button>{" "}
@@ -187,14 +187,14 @@ export default function PodcastUpcomingGuestsAdmin() {
                     ↓
                   </button>
                 </td>
-                <td style={{ padding: "6px 8px" }}>{r.status}</td>
-                <td style={{ padding: "6px 8px" }}>{r.name}</td>
-                <td style={{ padding: "6px 8px" }}>{r.organization}</td>
-                <td style={{ padding: "6px 8px", maxWidth: 180 }} title={r.episode_topic || ""}>
+                <td>{r.status}</td>
+                <td>{r.name}</td>
+                <td>{r.organization}</td>
+                <td className="adminTable__cell--clamp" title={r.episode_topic || ""}>
                   {r.episode_topic ? `${String(r.episode_topic).slice(0, 48)}${String(r.episode_topic).length > 48 ? "…" : ""}` : "—"}
                 </td>
-                <td style={{ padding: "6px 8px" }}>{r.expected_episode_date || "—"}</td>
-                <td style={{ padding: "6px 8px", whiteSpace: "nowrap" }}>
+                <td>{r.expected_episode_date || "—"}</td>
+                <td className="adminTable__cell--nowrap">
                   <button type="button" className="btnSoft" onClick={() => editRow(r)}>
                     Edit
                   </button>{" "}
@@ -208,76 +208,69 @@ export default function PodcastUpcomingGuestsAdmin() {
         </table>
       </div>
 
-      <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 16 }}>
-        <h3 style={{ marginTop: 0 }}>{form.id ? "Edit upcoming guest" : "Add upcoming guest"}</h3>
-        <div style={{ display: "grid", gap: 10, maxWidth: 560 }}>
+      <div className="adminDividerSection">
+        <h3 className="adminSubheading adminSubheading--sm">{form.id ? "Edit upcoming guest" : "Add upcoming guest"}</h3>
+        <div className="adminFieldStack adminFieldStack--wide">
           <label className="fieldLabel">
             Name *
-            <input className="input" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} style={{ width: "100%", marginTop: 4 }} />
+            <input className="adminConsoleInput" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
           </label>
           <label className="fieldLabel">
             Organization
             <input
-              className="input"
+              className="adminConsoleInput"
               value={form.organization}
               onChange={(e) => setForm((f) => ({ ...f, organization: e.target.value }))}
-              style={{ width: "100%", marginTop: 4 }}
             />
           </label>
           <label className="fieldLabel">
             Title / role
             <input
-              className="input"
+              className="adminConsoleInput"
               value={form.role_title}
               onChange={(e) => setForm((f) => ({ ...f, role_title: e.target.value }))}
-              style={{ width: "100%", marginTop: 4 }}
             />
           </label>
           <label className="fieldLabel">
             Short description
             <textarea
-              className="input"
+              className="adminConsoleInput"
               rows={3}
               value={form.short_description}
               onChange={(e) => setForm((f) => ({ ...f, short_description: e.target.value }))}
-              style={{ width: "100%", marginTop: 4 }}
             />
           </label>
           <label className="fieldLabel">
             Profile image URL
             <input
-              className="input"
+              className="adminConsoleInput"
               value={form.profile_image_url}
               onChange={(e) => setForm((f) => ({ ...f, profile_image_url: e.target.value }))}
-              style={{ width: "100%", marginTop: 4 }}
             />
           </label>
           <label className="fieldLabel">
             Episode / topic (optional)
             <input
-              className="input"
+              className="adminConsoleInput"
               value={form.episode_topic}
               onChange={(e) => setForm((f) => ({ ...f, episode_topic: e.target.value }))}
-              style={{ width: "100%", marginTop: 4 }}
             />
           </label>
           <label className="fieldLabel">
             Expected episode date
             <input
-              className="input"
+              className="adminConsoleInput"
               type="date"
               value={form.expected_episode_date}
               onChange={(e) => setForm((f) => ({ ...f, expected_episode_date: e.target.value }))}
-              style={{ width: "100%", marginTop: 4 }}
             />
           </label>
           <label className="fieldLabel">
             Status
             <select
-              className="input"
+              className="adminConsoleInput"
               value={form.status}
               onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
-              style={{ width: "100%", marginTop: 4 }}
             >
               <option value="draft">Draft</option>
               <option value="scheduled">Scheduled</option>
@@ -289,11 +282,10 @@ export default function PodcastUpcomingGuestsAdmin() {
           <label className="fieldLabel">
             Sort order (manual; use arrows in table for visual order)
             <input
-              className="input"
+              className="adminConsoleInput"
               type="number"
               value={form.sort_order}
               onChange={(e) => setForm((f) => ({ ...f, sort_order: Number(e.target.value) || 0 }))}
-              style={{ width: "100%", marginTop: 4 }}
             />
           </label>
           <button type="button" className="btnPrimary" onClick={() => void submitCreateOrUpdate()}>

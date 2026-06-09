@@ -14,7 +14,7 @@ export default function AdminCommunityPanel() {
       liveHint="Org header images appear on nonprofit profile pages at /nonprofit/[ein] when approved."
     >
       <OrgHeaderImageReviewPanel canModerate />
-      <hr className="adminRule" style={{ margin: "16px 0" }} />
+      <hr className="adminRule" />
       <ModerationQueuePreview />
     </AdminPanelShell>
   );

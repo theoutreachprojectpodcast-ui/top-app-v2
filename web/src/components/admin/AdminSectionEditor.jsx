@@ -14,28 +14,22 @@ export default function AdminSectionEditor({
 }) {
   return (
     <section className={`adminSectionEditor ${className}`.trim()}>
-      {title ? (
-        <h2 className="adminSectionEditor__title" style={{ marginTop: 0, fontSize: "1.25rem", fontWeight: 700 }}>
-          {title}
-        </h2>
-      ) : null}
+      {title ? <h2 className="adminSectionEditor__title">{title}</h2> : null}
       {description ? (
-        <p className="adminMuted adminSectionEditor__desc" style={{ lineHeight: 1.55, marginTop: title ? 8 : 0 }}>
-          {description}
-        </p>
+        <p className="adminMuted adminSectionEditor__desc">{description}</p>
       ) : null}
       {liveHint ? (
-        <p className="adminSectionEditor__liveHint adminMuted" style={{ fontSize: "0.8125rem", marginTop: 8 }}>
+        <p className="adminSectionEditor__liveHint adminMuted">
           <strong>Live site:</strong> {liveHint}
         </p>
       ) : null}
       {error ? (
-        <p className="adminSectionEditor__error" role="alert" style={{ color: "var(--color-danger, #b42318)", marginTop: 12 }}>
+        <p className="adminFeedback adminFeedback--error" role="alert">
           {error}
         </p>
       ) : null}
       {message ? (
-        <p className="adminSectionEditor__message" role="status" style={{ color: "var(--color-success, #067647)", marginTop: 12 }}>
+        <p className="adminFeedback adminFeedback--success" role="status">
           {message}
         </p>
       ) : null}

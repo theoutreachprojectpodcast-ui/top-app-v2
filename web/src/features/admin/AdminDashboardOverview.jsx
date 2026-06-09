@@ -44,74 +44,78 @@ export default function AdminDashboardOverview() {
   const podcastApps = summary?.podcastApplications ?? 0;
 
   return (
-    <div className="adminPanel">
-      <h1 style={{ marginTop: 0, fontSize: "1.5rem", fontWeight: 700 }}>
-        Dashboard
-      </h1>
-      <p className="adminMuted" style={{ lineHeight: 1.55 }}>
-        Quick actions, moderation queues, and content health. Technical QA tools live under{" "}
-        <Link href="/admin/advanced">Advanced</Link>.
-      </p>
+    <div className="adminPanel adminPageStack">
+      <div>
+        <h1 className="adminPageTitle">Dashboard</h1>
+        <p className="adminLead">
+          Quick actions, moderation queues, and content health. Technical QA tools live under{" "}
+          <Link href="/admin/advanced">Advanced</Link>.
+        </p>
+      </div>
 
       {error ? (
-        <p role="alert" style={{ color: "var(--color-danger, #b42318)" }}>
+        <p className="adminFeedback adminFeedback--error" role="alert">
           {error}
         </p>
       ) : null}
 
-      <h2 style={{ fontSize: "1.1rem", marginTop: 24 }}>Quick actions</h2>
-      <div className="adminDashboardGrid">
-        {QUICK_ACTIONS.map((card) => (
-          <Link key={card.href} className="adminDashboardCard" href={card.href}>
-            <strong>{card.label}</strong>
-            <span className="adminMuted">{card.desc}</span>
-          </Link>
-        ))}
-      </div>
-
-      <h2 style={{ fontSize: "1.1rem", marginTop: 28 }}>Queues & counts</h2>
-      {loading ? <p className="adminMuted">Loading…</p> : null}
-      {!loading && summary ? (
+      <section>
+        <h2 className="adminSectionTitle">Quick actions</h2>
         <div className="adminDashboardGrid">
-          <Link className="adminDashboardCard" href="/admin/community">
-            <span className="adminMuted">Community moderation</span>
-            <span className="adminDashboardStat">{pending}</span>
-            <span className="adminMuted">pending review</span>
-          </Link>
-          <Link className="adminDashboardCard" href="/admin/community">
-            <span className="adminMuted">Draft posts</span>
-            <span className="adminDashboardStat">{drafts}</span>
-            <span className="adminMuted">need attention</span>
-          </Link>
-          <Link className="adminDashboardCard" href="/admin/podcasts">
-            <span className="adminMuted">Podcast applications</span>
-            <span className="adminDashboardStat">{podcastApps}</span>
-            <span className="adminMuted">total on file</span>
-          </Link>
-          <Link className="adminDashboardCard" href="/admin/sponsors">
-            <span className="adminMuted">Active sponsors</span>
-            <span className="adminDashboardStat">{summary.sponsorsActive ?? 0}</span>
-          </Link>
-          <Link className="adminDashboardCard" href="/admin/trusted">
-            <span className="adminMuted">Trusted resources</span>
-            <span className="adminDashboardStat">{summary.trustedActive ?? 0}</span>
-            <span className="adminMuted">active listings</span>
-          </Link>
-          <Link className="adminDashboardCard" href="/admin/users">
-            <span className="adminMuted">Member accounts</span>
-            <span className="adminDashboardStat">{summary.users ?? 0}</span>
-          </Link>
+          {QUICK_ACTIONS.map((card) => (
+            <Link key={card.href} className="adminDashboardCard" href={card.href}>
+              <strong>{card.label}</strong>
+              <span className="adminMuted">{card.desc}</span>
+            </Link>
+          ))}
         </div>
-      ) : null}
+      </section>
 
-      <p style={{ marginTop: 24 }}>
+      <section>
+        <h2 className="adminSectionTitle">Queues & counts</h2>
+        {loading ? <p className="adminMuted">Loading…</p> : null}
+        {!loading && summary ? (
+          <div className="adminDashboardGrid">
+            <Link className="adminDashboardCard" href="/admin/community">
+              <span className="adminMuted">Community moderation</span>
+              <span className="adminDashboardStat">{pending}</span>
+              <span className="adminMuted">pending review</span>
+            </Link>
+            <Link className="adminDashboardCard" href="/admin/community">
+              <span className="adminMuted">Draft posts</span>
+              <span className="adminDashboardStat">{drafts}</span>
+              <span className="adminMuted">need attention</span>
+            </Link>
+            <Link className="adminDashboardCard" href="/admin/podcasts">
+              <span className="adminMuted">Podcast applications</span>
+              <span className="adminDashboardStat">{podcastApps}</span>
+              <span className="adminMuted">total on file</span>
+            </Link>
+            <Link className="adminDashboardCard" href="/admin/sponsors">
+              <span className="adminMuted">Active sponsors</span>
+              <span className="adminDashboardStat">{summary.sponsorsActive ?? 0}</span>
+            </Link>
+            <Link className="adminDashboardCard" href="/admin/trusted">
+              <span className="adminMuted">Trusted resources</span>
+              <span className="adminDashboardStat">{summary.trustedActive ?? 0}</span>
+              <span className="adminMuted">active listings</span>
+            </Link>
+            <Link className="adminDashboardCard" href="/admin/users">
+              <span className="adminMuted">Member accounts</span>
+              <span className="adminDashboardStat">{summary.users ?? 0}</span>
+            </Link>
+          </div>
+        ) : null}
+      </section>
+
+      <div className="adminActions">
         <Link className="btnSoft" href="/admin/content">
           Content manager hub
-        </Link>{" "}
+        </Link>
         <Link className="btnSoft" href="/admin/advanced">
           Advanced / QA
         </Link>
-      </p>
+      </div>
     </div>
   );
 }

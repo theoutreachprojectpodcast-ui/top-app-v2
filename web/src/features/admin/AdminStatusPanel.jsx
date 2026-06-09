@@ -42,7 +42,7 @@ export default function AdminStatusPanel() {
             <tbody>
               {Object.entries(stats).map(([key, value]) => (
                 <tr key={key}>
-                  <td data-label="Metric" style={{ textTransform: "capitalize" }}>{key}</td>
+                  <td data-label="Metric" className="adminTable__cell--capitalize">{key}</td>
                   <td data-label="Value">{String(value ?? 0)}</td>
                 </tr>
               ))}
@@ -50,9 +50,11 @@ export default function AdminStatusPanel() {
           </table>
         </div>
       ) : null}
-      <button type="button" className="btnSoft" onClick={() => void load()} style={{ marginTop: 12 }}>
-        Refresh status
-      </button>
+      <div className="adminActions">
+        <button type="button" className="btnSoft" onClick={() => void load()}>
+          Refresh status
+        </button>
+      </div>
     </AdminPanelShell>
   );
 }

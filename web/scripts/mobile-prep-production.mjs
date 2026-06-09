@@ -19,6 +19,9 @@ function run(cmd, args) {
 }
 
 run("pnpm", ["run", "build"]);
+run("pnpm", ["run", "mobile:splash"]);
+run("pnpm", ["run", "mobile:icons"]);
+run("pnpm", ["run", "mobile:assets"]);
 run("pnpm", ["exec", "cap", "sync"]);
 
 console.log("[mobile:prep:prod] Done. Open Android Studio or Xcode and create a signed release build.");

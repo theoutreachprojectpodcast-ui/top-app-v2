@@ -97,11 +97,11 @@ export default function AdminHomepagePanel() {
               Save homepage settings
             </button>
           </div>
-          <h4>Live preview (published Mission Partners)</h4>
+          <h3 className="adminBlockTitle adminMt4">Live preview (published Mission Partners)</h3>
           {preview.length === 0 ? (
             <p className="adminMuted">No homepage featured sponsors in the database. Mark Mission Partners as featured in Sponsors admin.</p>
           ) : (
-            <ol style={{ margin: 0, paddingLeft: "1.2rem" }}>
+            <ol className="adminListPlain">
               {preview.map((s) => (
                 <li key={s.slug || s.id}>
                   {s.name} <span className="adminMuted">({s.slug || s.id})</span>
@@ -111,7 +111,7 @@ export default function AdminHomepagePanel() {
           )}
         </>
       ) : null}
-      <p className="adminMuted" style={{ marginTop: 8 }}>
+      <p className="adminMuted adminMuted--sm">
         Manage sponsor rows in <Link href="/admin/sponsors">Sponsors</Link>.
       </p>
     </AdminPanelShell>

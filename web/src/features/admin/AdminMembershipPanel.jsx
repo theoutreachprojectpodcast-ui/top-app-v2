@@ -31,13 +31,19 @@ export default function AdminMembershipPanel() {
   }, [load]);
 
   if (loading) return <p className="adminMuted">Loading membership analytics…</p>;
-  if (error) return <p className="applyError">{error}</p>;
+  if (error) {
+    return (
+      <p className="adminFeedback adminFeedback--error" role="alert">
+        {error}
+      </p>
+    );
+  }
   if (!stats) return null;
 
   return (
     <div className="adminPanel">
-      <h2 style={{ marginTop: 0 }}>Membership analytics</h2>
-      <p className="adminMuted">
+      <h2 className="adminBlockTitle">Membership analytics</h2>
+      <p className="adminLead">
         Aggregates from profile records only — no Stripe secret keys or card data are shown here.
       </p>
       <div className="adminMembershipGrid">
@@ -74,9 +80,11 @@ export default function AdminMembershipPanel() {
           <strong>{stats.pastDueOrFailed}</strong>
         </div>
       </div>
-      <button type="button" className="btnSoft" style={{ marginTop: 16 }} onClick={() => load()}>
-        Refresh
-      </button>
+      <div className="adminActions">
+        <button type="button" className="btnSoft" onClick={() => load()}>
+          Refresh
+        </button>
+      </div>
     </div>
   );
 }

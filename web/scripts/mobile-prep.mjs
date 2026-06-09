@@ -30,6 +30,9 @@ function run(cmd, args) {
 }
 
 run("pnpm", ["run", "build"]);
+run("pnpm", ["run", "mobile:splash"]);
+run("pnpm", ["run", "mobile:icons"]);
+run("pnpm", ["run", "mobile:assets"]);
 run("pnpm", ["exec", "cap", "sync"]);
 
 console.log("[mobile:prep] Done. Open native IDEs: pnpm run cap:open:ios | cap:open:android");

@@ -165,7 +165,7 @@ export default function AdminCommunityPostsSection() {
 
   return (
     <AdminPanelShell panelId="community" error={error} message={statusMsg}>
-      <div className="adminToolbar" style={{ gap: 8, flexWrap: "wrap" }}>
+      <div className="adminToolbar">
         {SCOPES.map((s) => (
           <button
             key={s.id}
@@ -185,8 +185,8 @@ export default function AdminCommunityPostsSection() {
       </div>
 
       {showCreate ? (
-        <div className="adminFieldStack" style={{ marginTop: 16, padding: 16, border: "1px solid var(--color-border-subtle)", borderRadius: 12 }}>
-          <h3 style={{ marginTop: 0 }}>Create staff post</h3>
+        <div className="adminFieldStack adminFieldStack--bordered">
+          <h3 className="adminBlockTitle">Create staff post</h3>
           <label className="fieldLabel">Title</label>
           <input className="adminConsoleInput" value={draft.title} onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))} />
           <label className="fieldLabel">Body</label>
@@ -212,7 +212,7 @@ export default function AdminCommunityPostsSection() {
         </div>
       ) : null}
 
-      <h2 style={{ marginTop: 24, fontSize: "1.1rem" }}>
+      <h2 className="adminSectionTitle">
         {SCOPES.find((s) => s.id === scope)?.label || "Posts"}
         {!loading ? ` (${posts.length})` : ""}
       </h2>
@@ -226,24 +226,17 @@ export default function AdminCommunityPostsSection() {
         </p>
       ) : null}
 
-      <div className="adminPanelBody" style={{ gap: 16, marginTop: 12 }}>
+      <div className="adminPanelBody adminPanelBody--loose">
         {posts.map((p) => {
           const st = String(p.status || "").toLowerCase();
           const isPending = ["pending_review", "submitted", "under_review", "in_review"].includes(st);
           const isPublished = st === "approved";
           return (
-            <article
-              key={p.id}
-              style={{
-                border: "1px solid var(--color-border-subtle)",
-                borderRadius: "var(--radius-lg, 12px)",
-                padding: 14,
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+            <article key={p.id} className="adminEntityCard">
+              <div className="adminEntityCard__header">
                 <div>
                   <strong>{p.title || "(no title)"}</strong>
-                  <div className="adminMuted" style={{ fontSize: "0.8rem", marginTop: 4 }}>
+                  <div className="adminMuted adminEntityCard__meta">
                     {statusLabel(p.status)}
                     {p.author_name ? ` · ${p.author_name}` : ""}
                     {p.post_type ? ` · ${p.post_type}` : ""}
@@ -264,7 +257,7 @@ export default function AdminCommunityPostsSection() {
                     {p.moderation_notes ? <span>Notes: {p.moderation_notes}</span> : null}
                   </div>
                 </div>
-                <div className="adminActionCell" style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                <div className="adminEntityCard__actions">
                   {isPending ? (
                     <>
                       <button type="button" className="btnPrimary" disabled={!!busy} onClick={() => void act(p.id, "approve")}>
@@ -316,22 +309,21 @@ export default function AdminCommunityPostsSection() {
               </div>
               {isLikelyHtml(p.body) ? (
                 <div
-                  className="communityPostBody communityPostBody--rich"
-                  style={{ marginTop: 10, maxHeight: 200, overflow: "auto" }}
+                  className="communityPostBody communityPostBody--rich adminEntityCard__body"
                   dangerouslySetInnerHTML={{ __html: sanitizeAdminHtml(p.body) }}
                 />
               ) : (
-                <p style={{ marginTop: 10, whiteSpace: "pre-wrap", lineHeight: 1.5, maxHeight: 200, overflow: "auto" }}>
+                <p className="adminEntityCard__body adminEntityCard__body--pre">
                   {p.body}
                 </p>
               )}
               {p.rejection_reason ? (
-                <p className="adminMuted" style={{ fontSize: "0.85rem" }}>
+                <p className="adminMuted adminMuted--sm adminMt4">
                   Rejection: {p.rejection_reason}
                 </p>
               ) : null}
               {editId === p.id ? (
-                <div className="adminFieldStack" style={{ marginTop: 12 }}>
+                <div className="adminFieldStack adminMt4">
                   <label className="fieldLabel" htmlFor={`edit-t-${p.id}`}>
                     Title
                   </label>

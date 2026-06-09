@@ -4,6 +4,7 @@ import { resolveAdminGateSession } from "@/lib/admin/resolveAdminGateSession";
 import AdminAppShell from "@/components/admin/AdminAppShell";
 import "@/styles/admin-console.css";
 import "@/styles/admin-route-shell.css";
+import "@/styles/admin-theme.css";
 
 export const dynamic = "force-dynamic";
 

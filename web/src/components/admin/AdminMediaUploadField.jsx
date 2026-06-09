@@ -41,13 +41,13 @@ export default function AdminMediaUploadField({ label = "Upload image", onUpload
       <label className="profilePhotoUploadLabel">
         <span className="profilePhotoUploadTitle">{label}</span>
         {hint ? <span className="profilePhotoUploadHint">{hint}</span> : null}
-        <span className="btnSoft" style={{ display: "inline-block", marginTop: 8 }}>
+        <span className="btnSoft adminMediaUploadField__trigger">
           {busy ? "Uploading…" : "Choose file"}
         </span>
         <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="profileFileInput" onChange={(e) => void onFileChange(e)} disabled={busy} />
       </label>
       {error ? (
-        <p role="alert" style={{ color: "var(--color-danger, #b42318)", fontSize: "0.85rem", marginTop: 8 }}>
+        <p className="adminFeedback adminFeedback--error adminMuted--sm" role="alert">
           {error}
         </p>
       ) : null}

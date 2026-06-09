@@ -118,49 +118,50 @@ comment on table public.community_post_reactions is 'Account-backed reactions; u
 
 alter table public.community_post_reactions enable row level security;
 
--- ---------------------------------------------------------------------------
--- RLS: community_posts — public read of approved feed; no direct client writes
--- ---------------------------------------------------------------------------
+-- RLS: deny direct PostgREST access; community feed via /api/community/posts + service role.
 alter table public.community_posts enable row level security;
 
 do $$
 begin
-  if not exists (
-    select 1
-    from pg_catalog.pg_policy pol
+  if exists (
+    select 1 from pg_catalog.pg_policy pol
     join pg_catalog.pg_class cls on cls.oid = pol.polrelid
     join pg_catalog.pg_namespace nsp on nsp.oid = cls.relnamespace
-    where nsp.nspname = 'public'
-      and cls.relname = 'community_posts'
+    where nsp.nspname = 'public' and cls.relname = 'community_posts'
       and pol.polname = 'community_posts_anon_public_read'
   ) then
-    create policy community_posts_anon_public_read on public.community_posts for select to anon using (
-      deleted_at is null
-      and status = 'approved'
-      and visibility in ('community', 'public')
-    );
+    drop policy community_posts_anon_public_read on public.community_posts;
   end if;
-end
-$$;
-
-do $$
-begin
-  if not exists (
-    select 1
-    from pg_catalog.pg_policy pol
+  if exists (
+    select 1 from pg_catalog.pg_policy pol
     join pg_catalog.pg_class cls on cls.oid = pol.polrelid
     join pg_catalog.pg_namespace nsp on nsp.oid = cls.relnamespace
-    where nsp.nspname = 'public'
-      and cls.relname = 'community_posts'
+    where nsp.nspname = 'public' and cls.relname = 'community_posts'
       and pol.polname = 'community_posts_authenticated_public_read'
   ) then
-    create policy community_posts_authenticated_public_read on public.community_posts for select to authenticated using (
-      deleted_at is null
-      and status = 'approved'
-      and visibility in ('community', 'public')
-    );
+    drop policy community_posts_authenticated_public_read on public.community_posts;
+  end if;
+
+  if not exists (
+    select 1 from pg_catalog.pg_policy pol
+    join pg_catalog.pg_class cls on cls.oid = pol.polrelid
+    join pg_catalog.pg_namespace nsp on nsp.oid = cls.relnamespace
+    where nsp.nspname = 'public' and cls.relname = 'community_posts'
+      and pol.polname = 'community_posts_block_anon'
+  ) then
+    create policy community_posts_block_anon on public.community_posts
+      for all to anon using (false) with check (false);
+  end if;
+
+  if not exists (
+    select 1 from pg_catalog.pg_policy pol
+    join pg_catalog.pg_class cls on cls.oid = pol.polrelid
+    join pg_catalog.pg_namespace nsp on nsp.oid = cls.relnamespace
+    where nsp.nspname = 'public' and cls.relname = 'community_posts'
+      and pol.polname = 'community_posts_block_authenticated'
+  ) then
+    create policy community_posts_block_authenticated on public.community_posts
+      for all to authenticated using (false) with check (false);
   end if;
 end
 $$;
-
--- Inserts/updates/deletes: no policies for anon/authenticated → denied (service role bypasses RLS)

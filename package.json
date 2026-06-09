@@ -2,6 +2,9 @@
   "name": "top-app-v2",
   "private": true,
   "packageManager": "pnpm@10.33.0",
+  "pnpm": {
+    "onlyBuiltDependencies": ["sharp"]
+  },
   "scripts": {
     "dev": "pnpm --filter web dev",
     "build": "pnpm --filter web build",

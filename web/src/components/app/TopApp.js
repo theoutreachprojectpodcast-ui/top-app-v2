@@ -8,6 +8,7 @@ import FooterInner from "@/components/layout/FooterInner";
 import Avatar from "@/components/shared/Avatar";
 import AppIcon from "@/components/shared/AppIcon";
 import AppHeaderBrand from "@/components/layout/AppHeaderBrand";
+import DownloadMobileAppButton from "@/components/layout/DownloadMobileAppButton";
 import ColorSchemeToggle from "@/components/app/ColorSchemeToggle";
 import AccountInfoCard from "@/features/profile/components/AccountInfoCard";
 import ManageBillingButton from "@/features/profile/components/ManageBillingButton";
@@ -68,6 +69,14 @@ import AccountSettingsPage from "@/features/settings/components/AccountSettingsP
 import { FormCheckbox } from "@/components/forms/FormChoice";
 import { resolvePageAtmosphere } from "@/lib/design/pageAtmosphere";
 import MissionPageTopStrip from "@/components/layout/MissionPageTopStrip";
+import NativeAccountBillingNotice from "@/components/capacitor/NativeAccountBillingNotice";
+import {
+  openWebBilling,
+  openWebMembership,
+  openWebSignup,
+  openWebSponsorMembership,
+  requiresExternalWebAccountFlow,
+} from "@/lib/capacitor/webAccountRedirects";
 
 function DemoAuthPasswordVisibilityIcon({ revealed }) {
   return (
@@ -205,8 +214,14 @@ function TopAppInner({ initialNav = "home" }) {
   useEffect(() => {
     const c = searchParams.get("checkout");
     const pm = searchParams.get("payment_method");
+    const mobileReturn = searchParams.get("mobileReturn");
     const billingRefresh =
-      (c === "success" || c === "cancel" || pm === "success" || pm === "cancel") && sessionKind === "workos";
+      (c === "success" ||
+        c === "cancel" ||
+        pm === "success" ||
+        pm === "cancel" ||
+        mobileReturn === "account") &&
+      sessionKind === "workos";
     if (!billingRefresh) return;
     let cancelled = false;
     (async () => {
@@ -322,10 +337,22 @@ function TopAppInner({ initialNav = "home" }) {
   }
 
   function goToSponsorsHub() {
+    if (requiresExternalWebAccountFlow()) {
+      void openWebSponsorMembership();
+      return;
+    }
     router.push("/sponsors");
   }
 
   function openMembershipJourney() {
+    if (requiresExternalWebAccountFlow()) {
+      if (!isAuthenticated) {
+        void openWebSignup();
+        return;
+      }
+      void openWebMembership();
+      return;
+    }
     if (!isAuthenticated) {
       if (authBackend.workos) {
         writeRememberDevicePref(rememberDevice);
@@ -344,6 +371,18 @@ function TopAppInner({ initialNav = "home" }) {
   }
 
   async function startMembershipCheckoutFromHome(tier) {
+    if (requiresExternalWebAccountFlow()) {
+      if (!isAuthenticated) {
+        void openWebSignup();
+        return;
+      }
+      if (tier === "sponsor") {
+        void openWebSponsorMembership();
+        return;
+      }
+      void openWebMembership({ tier });
+      return;
+    }
     if (!isAuthenticated) {
       openMembershipJourney();
       return;
@@ -411,6 +450,21 @@ function TopAppInner({ initialNav = "home" }) {
       return;
     }
     setAuthMode("signin");
+    setOverlay("signin");
+  }
+
+  function openCreateAccountFlow() {
+    if (requiresExternalWebAccountFlow() && authBackend.workos) {
+      writeRememberDevicePref(rememberDevice);
+      void openWebSignup();
+      return;
+    }
+    if (authBackend.workos) {
+      writeRememberDevicePref(rememberDevice);
+      window.location.assign(workosSignUpModalHref);
+      return;
+    }
+    setAuthMode("signup");
     setOverlay("signin");
   }
 
@@ -492,6 +546,7 @@ function TopAppInner({ initialNav = "home" }) {
             <div className="topbarZone topbarCenter" aria-hidden="true" />
             <div className="topbarZone topbarRight">
             <div className="topbarActionsCluster">
+              {pageAtmosphere === "home" ? <DownloadMobileAppButton /> : null}
               {isLoggedIn ? (
                 <>
                   <AdminConsoleLink />
@@ -521,14 +576,14 @@ function TopAppInner({ initialNav = "home" }) {
                 </>
               ) : authBackend.workos ? (
                 <>
-                  <a className="btnSoft sponsorBtn" href="/api/auth/workos/signup?returnTo=/onboarding">
+                  <button className="btnSoft sponsorBtn" type="button" onClick={openCreateAccountFlow}>
                     <AppIcon name="profile" />
                     Create account
-                  </a>
-                  <a className="btnSoft sponsorBtn" href={workosSignInHereHref}>
+                  </button>
+                  <button className="btnSoft sponsorBtn" type="button" onClick={openSignInOverlay}>
                     <AppIcon name="profile" />
                     Sign in
-                  </a>
+                  </button>
                 </>
               ) : (
                 <>
@@ -593,15 +648,7 @@ function TopAppInner({ initialNav = "home" }) {
                 }
                 setNav("profile");
               }}
-              onCreateAccount={() => {
-                if (authBackend.workos) {
-                  writeRememberDevicePref(rememberDevice);
-                  window.location.assign(workosSignUpHref("/onboarding", { rememberDevice }));
-                  return;
-                }
-                setAuthMode("signup");
-                setOverlay("signin");
-              }}
+              onCreateAccount={openCreateAccountFlow}
               onSignIn={openSignInOverlay}
               onSponsors={goToSponsorsHub}
               onTrusted={() => {
@@ -642,6 +689,14 @@ function TopAppInner({ initialNav = "home" }) {
               fullName={fullName}
               profile={profile}
               onRequestUpgrade={() => {
+                if (requiresExternalWebAccountFlow()) {
+                  if (!isAuthenticated) {
+                    void openWebSignup();
+                    return;
+                  }
+                  void openWebMembership();
+                  return;
+                }
                 if (!isAuthenticated) {
                   if (authBackend.workos) {
                     writeRememberDevicePref(rememberDevice);
@@ -771,15 +826,7 @@ function TopAppInner({ initialNav = "home" }) {
                   <button
                     className="btnSoft"
                     type="button"
-                    onClick={() => {
-                      if (authBackend.workos) {
-                        writeRememberDevicePref(rememberDevice);
-                        window.location.assign(workosSignUpHref("/onboarding", { rememberDevice }));
-                        return;
-                      }
-                      setAuthMode("signup");
-                      setOverlay("signin");
-                    }}
+                    onClick={openCreateAccountFlow}
                   >
                     Create an account
                   </button>
@@ -899,10 +946,16 @@ function TopAppInner({ initialNav = "home" }) {
               <h3>Upgrade to Pro</h3>
               <p className="sponsorSectionLead">{membership.hint}</p>
               <div className="row wrap">
-                <button type="button" className="btnPrimary" onClick={() => setOverlay("upgrade")}>
+                <button type="button" className="btnPrimary" onClick={() => {
+                  if (requiresExternalWebAccountFlow()) {
+                    void openWebMembership();
+                    return;
+                  }
+                  setOverlay("upgrade");
+                }}>
                   View membership options
                 </button>
-                {authBackend.workos ? (
+                {authBackend.workos && !requiresExternalWebAccountFlow() ? (
                   <a className="btnSoft" href="/onboarding">
                     Open membership onboarding
                   </a>
@@ -1092,9 +1145,16 @@ function TopAppInner({ initialNav = "home" }) {
                 Not now
               </button>
               {authBackend.workos ? (
-                <a className="btnPrimary" href="/onboarding">
-                  Open membership onboarding
-                </a>
+                <button className="btnPrimary" type="button" onClick={() => {
+                  setOverlay(null);
+                  if (requiresExternalWebAccountFlow()) {
+                    void openWebMembership();
+                    return;
+                  }
+                  router.push("/onboarding");
+                }}>
+                  {requiresExternalWebAccountFlow() ? "Continue on web" : "Open membership onboarding"}
+                </button>
               ) : showLocalDemoChrome() ? (
                 <button
                   className="btnPrimary"
@@ -1152,13 +1212,16 @@ function TopAppInner({ initialNav = "home" }) {
                   >
                     Sign in
                   </a>
-                  <a
+                  <button
                     className="btnSoft"
-                    href={workosSignUpModalHref}
-                    onClick={() => persistAuthPrefsBeforeWorkOSRedirect()}
+                    type="button"
+                    onClick={() => {
+                      persistAuthPrefsBeforeWorkOSRedirect();
+                      openCreateAccountFlow();
+                    }}
                   >
                     Create account
-                  </a>
+                  </button>
                   <a
                     className="btnSoft"
                     href={workosSignInHereHref}

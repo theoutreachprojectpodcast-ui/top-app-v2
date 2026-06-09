@@ -83,22 +83,41 @@ create table if not exists public.podcast_episode_featured_guest (
 create index if not exists podcast_episode_featured_guest_episode_idx
   on public.podcast_episode_featured_guest (episode_id);
 
--- Public read for podcast landing (adjust if you use stricter RLS elsewhere)
+-- Deny direct PostgREST reads; podcast data via Next.js API + service role.
 alter table public.podcast_episodes enable row level security;
 alter table public.podcast_episode_featured_guest enable row level security;
 
 drop policy if exists "Public read podcast episodes" on public.podcast_episodes;
-create policy "Public read podcast episodes"
-  on public.podcast_episodes for select
-  using (
-    manual_override = 'include'
-    or (
-      coalesce(manual_override, '') <> 'exclude'
-      and coalesce(pipeline_decision, '') <> 'rejected'
-    )
-  );
-
 drop policy if exists "Public read featured guest rows" on public.podcast_episode_featured_guest;
-create policy "Public read featured guest rows"
-  on public.podcast_episode_featured_guest for select
-  using (true);
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies where schemaname = 'public' and tablename = 'podcast_episodes'
+      and policyname = 'podcast_episodes_block_anon'
+  ) then
+    create policy podcast_episodes_block_anon on public.podcast_episodes
+      for all to anon using (false) with check (false);
+  end if;
+  if not exists (
+    select 1 from pg_policies where schemaname = 'public' and tablename = 'podcast_episodes'
+      and policyname = 'podcast_episodes_block_authenticated'
+  ) then
+    create policy podcast_episodes_block_authenticated on public.podcast_episodes
+      for all to authenticated using (false) with check (false);
+  end if;
+  if not exists (
+    select 1 from pg_policies where schemaname = 'public' and tablename = 'podcast_episode_featured_guest'
+      and policyname = 'podcast_episode_featured_guest_block_anon'
+  ) then
+    create policy podcast_episode_featured_guest_block_anon on public.podcast_episode_featured_guest
+      for all to anon using (false) with check (false);
+  end if;
+  if not exists (
+    select 1 from pg_policies where schemaname = 'public' and tablename = 'podcast_episode_featured_guest'
+      and policyname = 'podcast_episode_featured_guest_block_authenticated'
+  ) then
+    create policy podcast_episode_featured_guest_block_authenticated on public.podcast_episode_featured_guest
+      for all to authenticated using (false) with check (false);
+  end if;
+end $$;

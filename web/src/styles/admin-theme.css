@@ -1,0 +1,580 @@
+/* Admin console — light/dark theme polish (scoped to .adminConsole). */
+
+main.topApp.appShell--admin.adminConsole {
+  --admin-shadow-dropdown: var(--shadow-card, 0 8px 24px rgb(0 0 0 / 12%));
+  --admin-shadow-hover: var(--shadow-card-hover, 0 12px 32px rgb(0 0 0 / 14%));
+  --admin-chart-sponsor: color-mix(in srgb, var(--color-info, #2c7be5) 45%, transparent);
+  color: var(--color-text-primary);
+}
+
+/* --- Layout chrome --- */
+.adminConsole .adminLayout__title {
+  color: var(--color-text-primary);
+}
+
+.adminConsole .adminLayout__session {
+  color: var(--color-text-secondary);
+}
+
+/* --- Page layout & typography --- */
+.adminConsole .adminPageStack {
+  display: grid;
+  gap: var(--ds-space-4, 16px);
+}
+
+.adminConsole .adminPageTitle {
+  margin: 0 0 var(--ds-space-3, 12px);
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--color-text-primary);
+}
+
+.adminConsole .adminSectionTitle {
+  margin: var(--ds-space-6, 24px) 0 var(--ds-space-3, 12px);
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--color-text-primary);
+}
+
+.adminConsole .adminSectionTitle:first-child,
+.adminConsole .adminSectionEditor__body > .adminSectionTitle:first-child,
+.adminConsole .adminFeedback + .adminSectionTitle,
+.adminConsole .adminFeedback--success + .adminSectionTitle {
+  margin-top: var(--ds-space-4, 16px);
+}
+
+.adminConsole .adminBlockTitle {
+  margin: 0 0 var(--ds-space-2, 8px);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--color-text-primary);
+}
+
+.adminConsole .adminBlockTitle.adminMt4 {
+  margin-top: var(--ds-space-4, 16px);
+}
+
+.adminConsole .adminDetailPanel .adminBlockTitle {
+  margin-top: var(--ds-space-4, 16px);
+}
+
+.adminConsole .adminDetailPanel .adminBlockTitle:first-of-type {
+  margin-top: 0;
+}
+
+.adminConsole .adminLead {
+  margin: 0 0 var(--ds-space-3, 12px);
+  font-size: var(--text-body-sm, 0.875rem);
+  line-height: 1.55;
+  color: var(--color-text-secondary);
+}
+
+.adminConsole .adminProse {
+  margin: 0;
+  padding-left: 1.15rem;
+  line-height: 1.7;
+  font-size: var(--text-body-sm, 0.875rem);
+}
+
+.adminConsole .adminProse li + li {
+  margin-top: var(--ds-space-1, 4px);
+}
+
+.adminConsole .adminActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-space-2, 8px);
+  align-items: center;
+  margin-top: var(--ds-space-5, 20px);
+}
+
+.adminConsole .adminRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-space-2, 8px);
+  align-items: center;
+}
+
+.adminConsole .adminTabBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-space-2, 8px);
+  align-items: center;
+  margin-bottom: var(--ds-space-4, 16px);
+}
+
+.adminConsole .adminDetailPanel {
+  margin-top: var(--ds-space-5, 20px);
+}
+
+.adminConsole .adminMuted--xs {
+  font-size: 0.75rem;
+}
+
+.adminConsole .adminMuted--sm {
+  font-size: 0.8125rem;
+}
+
+.adminConsole .adminMt4 {
+  margin-top: var(--ds-space-4, 16px);
+}
+
+.adminConsole .adminMt5 {
+  margin-top: var(--ds-space-5, 20px);
+}
+
+.adminConsole .adminMt6 {
+  margin-top: var(--ds-space-6, 24px);
+}
+
+.adminConsole .adminPanelBody--loose {
+  gap: var(--ds-space-4, 16px);
+}
+
+.adminConsole .adminFieldStack--bordered {
+  margin-top: var(--ds-space-4, 16px);
+  padding: var(--ds-space-4, 16px);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md, 12px);
+  background: color-mix(in srgb, var(--color-bg-secondary) 35%, var(--color-bg-elevated));
+}
+
+.adminConsole .adminFieldStack--wide {
+  max-width: min(560px, 100%);
+}
+
+.adminConsole .adminEntityCard {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg, 12px);
+  padding: var(--ds-space-4, 16px);
+  background: var(--color-bg-elevated);
+}
+
+.adminConsole .adminEntityCard__header {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--ds-space-3, 12px);
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.adminConsole .adminEntityCard__meta {
+  margin-top: var(--ds-space-1, 4px);
+  font-size: 0.8125rem;
+}
+
+.adminConsole .adminEntityCard__excerpt {
+  margin-top: var(--ds-space-2, 8px);
+  max-height: 80px;
+  overflow: hidden;
+}
+
+.adminConsole .adminEntityCard__body {
+  margin-top: var(--ds-space-3, 12px);
+  line-height: 1.5;
+  max-height: 200px;
+  overflow: auto;
+}
+
+.adminConsole .adminEntityCard__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-space-2, 8px);
+}
+
+.adminConsole .adminListPlain {
+  margin: 0;
+  padding-left: 1.15rem;
+  font-size: var(--text-body-sm, 0.875rem);
+  line-height: 1.55;
+}
+
+.adminConsole .adminListCompact {
+  margin: 0;
+  padding-left: 1.15rem;
+  font-size: var(--text-body-sm, 0.875rem);
+}
+
+.adminConsole .adminListCompact li {
+  margin-bottom: var(--ds-space-2, 8px);
+}
+
+.adminConsole .adminLogList {
+  margin: 0;
+  padding-left: 1.15rem;
+  font-size: var(--text-body-sm, 0.875rem);
+}
+
+.adminConsole .adminLogList li + li {
+  margin-top: var(--ds-space-2, 8px);
+}
+
+/* Field labels — stacked control spacing */
+.adminConsole .fieldLabel > .input,
+.adminConsole .fieldLabel > .adminConsoleInput,
+.adminConsole .fieldLabel > input:not([type="checkbox"]):not([type="radio"]),
+.adminConsole .fieldLabel > textarea,
+.adminConsole .fieldLabel > select {
+  display: block;
+  width: 100%;
+  margin-top: var(--ds-space-1, 4px);
+  box-sizing: border-box;
+}
+
+.adminConsole .fieldLabel--row {
+  display: flex;
+  gap: var(--ds-space-2, 8px);
+  align-items: center;
+}
+
+.adminConsole table.adminTable td.adminTable__cell--nowrap {
+  white-space: nowrap;
+}
+
+.adminConsole table.adminTable td.adminTable__cell--clamp {
+  max-width: 180px;
+}
+
+.adminConsole table.adminTable td.adminTable__cell--wide {
+  max-width: 360px;
+}
+
+.adminConsole .adminToolbar--spaced {
+  margin-top: var(--ds-space-4, 16px);
+}
+
+.adminConsole .adminTableWrap--spaced {
+  margin-top: var(--ds-space-4, 16px);
+}
+
+.adminConsole .adminDashboardGrid--tight {
+  margin-top: var(--ds-space-3, 12px);
+}
+
+.adminConsole .adminToolbar .adminConsoleInput--grow {
+  flex: 1;
+  min-width: 200px;
+}
+
+.adminConsole .adminSelectField {
+  margin-bottom: var(--ds-space-3, 12px);
+}
+
+.adminConsole .adminSelectField .adminConsoleInput {
+  max-width: min(560px, 100%);
+}
+
+.adminConsole .adminDisclaimer {
+  margin-top: var(--ds-space-4, 16px);
+  font-size: 0.8125rem;
+}
+
+.adminConsole .adminMediaUploadField__trigger {
+  display: inline-block;
+  margin-top: var(--ds-space-2, 8px);
+}
+
+.adminConsole .adminMediaCard--static {
+  cursor: default;
+}
+
+.adminConsole .adminActions--flush {
+  margin-top: 0;
+}
+
+.adminConsole table.adminTable td.adminTable__cell--capitalize {
+  text-transform: capitalize;
+}
+
+.adminConsole .adminEntityCard__body--pre {
+  white-space: pre-wrap;
+}
+
+.adminConsole .adminMuted--clamp {
+  max-width: 280px;
+}
+
+:root[data-color-scheme="dark"] main.topApp.appShell--admin.adminConsole,
+.dark main.topApp.appShell--admin.adminConsole {
+  --admin-shadow-dropdown: var(--shadow-card);
+  --admin-shadow-hover: var(--shadow-card-hover);
+  --admin-chart-sponsor: color-mix(in srgb, var(--color-info, #6ba3f0) 50%, transparent);
+}
+
+:root[data-color-scheme="dark"] main.topApp.appShell--admin[data-page-atmosphere="admin"] .adminHorizontalNav__link,
+.dark main.topApp.appShell--admin[data-page-atmosphere="admin"] .adminHorizontalNav__link {
+  color: var(--color-text-secondary);
+}
+
+:root[data-color-scheme="dark"] main.topApp.appShell--admin[data-page-atmosphere="admin"] .adminHorizontalNav__moreMenu,
+.dark main.topApp.appShell--admin[data-page-atmosphere="admin"] .adminHorizontalNav__moreMenu {
+  background: var(--color-bg-elevated);
+  border-color: var(--color-border-subtle);
+}
+
+/* --- Feedback (errors / success) --- */
+.adminConsole .adminFeedback {
+  margin: var(--ds-space-3, 12px) 0 0;
+  padding: var(--ds-space-3, 12px);
+  border-radius: var(--radius-md, 8px);
+  font-size: var(--text-body-sm, 0.875rem);
+  line-height: 1.45;
+}
+
+.adminConsole .adminFeedback--error,
+.adminConsole p.adminFeedback--error[role="alert"] {
+  color: var(--color-danger-text);
+  background: var(--color-danger-surface);
+  border: 1px solid var(--color-danger-border);
+}
+
+.adminConsole .adminFeedback--success,
+.adminConsole p.adminFeedback--success[role="status"] {
+  color: var(--color-success-text);
+  background: var(--color-success-surface);
+  border: 1px solid var(--color-success-border);
+}
+
+/* --- Section editor --- */
+.adminConsole .adminSectionEditor__title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.adminConsole .adminSectionEditor__desc {
+  line-height: 1.55;
+  margin-top: var(--ds-space-2, 8px);
+}
+
+.adminConsole .adminSectionEditor__desc:first-child,
+.adminConsole .adminSectionEditor__title + .adminSectionEditor__desc {
+  margin-top: var(--ds-space-2, 8px);
+}
+
+.adminConsole .adminSectionEditor__liveHint {
+  font-size: 0.8125rem;
+  margin-top: var(--ds-space-2, 8px);
+  padding: var(--ds-space-2, 8px) var(--ds-space-3, 12px);
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid var(--color-border-subtle);
+  background: color-mix(in srgb, var(--color-bg-secondary) 55%, transparent);
+}
+
+.adminConsole .adminSectionEditor__liveHint strong {
+  color: var(--color-text-primary);
+}
+
+.adminConsole .adminPanel--nested {
+  background: color-mix(in srgb, var(--color-bg-secondary) 40%, var(--color-bg-elevated));
+}
+
+/* --- Scope banner --- */
+.adminConsole .adminScopeBanner {
+  margin-bottom: var(--ds-space-4, 16px);
+  padding: 12px 14px;
+  border-radius: var(--radius-md, 10px);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 25%, var(--color-border-subtle));
+  background: color-mix(in srgb, var(--color-accent) 8%, var(--color-bg-elevated));
+}
+
+.adminConsole .adminScopeBanner--placeholder {
+  border-color: var(--color-border-subtle);
+  background: color-mix(in srgb, var(--color-bg-secondary) 70%, transparent);
+}
+
+.adminConsole .adminScopeBanner__title {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--color-text-primary);
+}
+
+.adminConsole .adminScopeBanner__body {
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* --- Structure utilities --- */
+.adminConsole .adminRule {
+  margin: var(--ds-space-4, 16px) 0;
+  border: 0;
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.adminConsole .adminSubheading {
+  margin: var(--ds-space-5, 20px) 0 var(--ds-space-3, 12px);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.adminConsole .adminSubheading--sm {
+  font-size: 0.95rem;
+}
+
+.adminConsole .adminSubheading:first-child {
+  margin-top: 0;
+}
+
+.adminConsole .adminCard {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md, 12px);
+  padding: 14px;
+  background: var(--color-bg-elevated);
+}
+
+.adminConsole .adminFormSection {
+  margin-top: var(--ds-space-4, 16px);
+  padding: var(--ds-space-4, 16px);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md, 12px);
+  background: color-mix(in srgb, var(--color-bg-secondary) 35%, var(--color-bg-elevated));
+}
+
+.adminConsole .adminFormSection__title {
+  margin: 0 0 var(--ds-space-3, 12px);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.adminConsole .adminDividerSection {
+  border-top: 1px solid var(--color-border-subtle);
+  padding-top: var(--ds-space-4, 16px);
+}
+
+.adminConsole .adminStack {
+  display: grid;
+  gap: var(--ds-space-3, 12px);
+}
+
+.adminConsole .adminStack--sm {
+  gap: var(--ds-space-2, 8px);
+}
+
+.adminConsole .adminInlinePre,
+.adminConsole pre.adminInlinePre {
+  margin: 0;
+  padding: var(--ds-space-2, 8px);
+  font-size: 11px;
+  max-width: 100%;
+  overflow: auto;
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+}
+
+.adminConsole code {
+  font-size: 0.875em;
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--color-bg-secondary) 80%, transparent);
+  color: var(--color-text-primary);
+}
+
+/* --- Inputs & rich text --- */
+.adminConsole .adminConsoleInput:focus-visible,
+.adminConsole select.adminConsoleInput:focus-visible,
+.adminConsole .adminRichText__editor:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+  border-color: var(--color-border-active);
+}
+
+.adminConsole .adminConsoleInput::placeholder,
+.adminConsole .adminRichText__editor:empty::before {
+  color: var(--color-text-muted);
+}
+
+.adminConsole .adminRichText__editor {
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+}
+
+.adminConsole .adminRichText__emojiPanel {
+  background: var(--color-bg-secondary);
+}
+
+.adminConsole .adminRichText__emoji:hover {
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  border-radius: 4px;
+}
+
+/* --- Tables (including legacy inline podcast tables) --- */
+.adminConsole .adminTableWrap table,
+.adminConsole table.adminTable {
+  color: var(--color-text-primary);
+}
+
+.adminConsole table.adminTable thead th {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.adminConsole table.adminTable tbody tr:hover {
+  background: color-mix(in srgb, var(--color-bg-secondary) 50%, transparent);
+}
+
+/* --- Nav & search (theme-aware shadows) --- */
+.adminConsole .adminHorizontalNav__moreMenu {
+  box-shadow: var(--admin-shadow-dropdown);
+}
+
+.adminConsole .adminHorizontalNav__breadcrumbs a {
+  color: var(--color-link, var(--color-accent-hover));
+}
+
+.adminConsole .adminHorizontalNav__breadcrumbs a:hover {
+  text-decoration: underline;
+}
+
+.adminConsole .adminSearch__results {
+  box-shadow: var(--admin-shadow-dropdown);
+}
+
+.adminConsole .adminSearch__error {
+  color: var(--color-danger-text);
+}
+
+/* --- Cards & charts --- */
+.adminConsole .adminContentHubCard:hover,
+.adminConsole .adminDashboardCard:hover {
+  box-shadow: var(--admin-shadow-hover);
+}
+
+.adminConsole .adminForecastBar--sponsor {
+  background: var(--admin-chart-sponsor);
+}
+
+.adminConsole .adminActivityFeed li {
+  background: color-mix(in srgb, var(--color-bg-elevated) 92%, var(--color-bg-secondary));
+}
+
+/* --- Community rich preview in admin --- */
+.adminConsole .communityPostBody--rich {
+  color: var(--color-text-primary);
+}
+
+.adminConsole .communityPostBody--rich a {
+  color: var(--color-link, var(--color-accent-hover));
+}
+
+/* --- Scrollbars (nav row, tables) --- */
+.adminConsole .adminHorizontalNav__row,
+.adminConsole .adminTableWrap,
+.adminConsole .adminSearch__results {
+  scrollbar-color: var(--color-scrollbar-thumb, var(--color-border-strong)) transparent;
+}
+
+.adminConsole .adminHorizontalNav__row::-webkit-scrollbar-thumb,
+.adminConsole .adminTableWrap::-webkit-scrollbar-thumb {
+  background: var(--color-scrollbar-thumb, var(--color-border-strong));
+  border-radius: 999px;
+}

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#22a52b</color>
+    <color name="colorPrimaryDark">#188a20</color>
+    <color name="colorAccent">#22a52b</color>
+    <!-- Brand canvas — matches iOS LaunchScreen and web --color-bg-app -->
+    <color name="splash_background">#F5F7F6</color>
+</resources>

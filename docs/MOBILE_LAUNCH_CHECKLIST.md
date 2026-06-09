@@ -2,9 +2,9 @@
 
 Single checklist for store submission. **Web production launch** ([mvp-production-launch.md](./mvp-production-launch.md) §1–7) is separate and should pass first.
 
-**Guides:** [MOBILE_READINESS.md](./MOBILE_READINESS.md) · [MOBILE_ARCHITECTURE_GAPS.md](./MOBILE_ARCHITECTURE_GAPS.md) · [web/docs/CAPACITOR_MOBILE.md](../web/docs/CAPACITOR_MOBILE.md) · [store-listing-copy.md](./store-listing-copy.md)
+**Guides:** [MOBILE_READINESS.md](./MOBILE_READINESS.md) · [MOBILE_ARCHITECTURE_GAPS.md](./MOBILE_ARCHITECTURE_GAPS.md) · [IOS_XCODE_SETUP.md](./IOS_XCODE_SETUP.md) (Mac) · [ANDROID_STUDIO_SETUP.md](./ANDROID_STUDIO_SETUP.md) (Windows) · [web/docs/CAPACITOR_MOBILE.md](../web/docs/CAPACITOR_MOBILE.md) · [store-listing-copy.md](./store-listing-copy.md)
 
-**Status snapshot:** 2026-06 — Capacitor configured; **Android Studio + SDK installed** on dev machine. Optional: add `adb` to Path; create emulator; signed AAB for Play.
+**Status snapshot:** 2026-06-08 — Capacitor synced to Production; Android **debug build OK**; iOS icon synced. **Next:** device smoke, Android Image Asset icons, signed AAB, store consoles.
 
 **App ID:** `org.theoutreachproject.torp` · **Production WebView URL:** `https://theoutreachproject.app`
 
@@ -15,8 +15,8 @@ Single checklist for store submission. **Web production launch** ([mvp-productio
 | Phase | Status |
 |-------|--------|
 | A — Repo & Capacitor setup | Mostly done |
-| B — Web production prerequisite | In progress (see MVP launch doc) |
-| C — Native prep & device smoke | Not started |
+| B — Web production prerequisite | **Done** (MVP §1–7; §8 admin QA skipped) |
+| C — Native prep & device smoke | **In progress** — automated prep done; device smoke manual |
 | D — iOS App Store | Not started (needs Mac + Xcode) |
 | E — Google Play | SDK ready — emulator + signed AAB remaining |
 | F — Post-launch / phase 2 | Not started |
@@ -35,21 +35,21 @@ Single checklist for store submission. **Web production launch** ([mvp-productio
 - [x] Docs: `MOBILE_READINESS.md`, `MOBILE_ARCHITECTURE_GAPS.md`
 - [x] `pnpm --dir web run validate:capacitor` — passed
 - [x] `pnpm --dir web run build` — passed
-- [x] `CAP_SERVER_URL=https://theoutreachproject.app` + `cap sync` — passed
+- [x] `CAP_SERVER_URL=https://theoutreachproject.app` + `cap sync` — passed (2026-06-08)
 - [ ] Commit/push mobile prep changes to `main` (if not already deployed)
 
 ---
 
 ## B. Web production prerequisite (before store review)
 
-Complete [mvp-production-launch.md](./mvp-production-launch.md) §1–7 first. Mobile WebView loads this URL.
+Complete [mvp-production-launch.md](./mvp-production-launch.md) §1–7 first (§8 admin QA **skipped**). Mobile WebView loads Production URL.
 
-- [ ] Production deploy green on `https://theoutreachproject.app`
-- [ ] WorkOS Production: `https://theoutreachproject.app/callback` registered
-- [ ] Browser sign-in / sign-out verified
-- [ ] Stripe live checkout + webhook **200** (one test purchase)
-- [ ] `GET /api/auth/status` → `demoFlowsEnabled: false`, `adminEmailLogin: false`
-- [ ] `/privacy`, `/terms`, `/contact` correct for stores
+- [x] Production deploy green on `https://theoutreachproject.app`
+- [x] WorkOS Production: `https://theoutreachproject.app/callback` registered
+- [x] Browser sign-in / sign-out verified
+- [x] Stripe live checkout + webhook **200** (test purchase)
+- [x] `GET /api/auth/status` → `demoFlowsEnabled: false`, `adminEmailLogin: false`
+- [x] `/privacy`, `/terms`, `/contact` live for stores
 - [x] Legal URLs return **200** (automated smoke 2026-06-04)
 
 ---
@@ -62,30 +62,31 @@ Complete [mvp-production-launch.md](./mvp-production-launch.md) §1–7 first. M
 - [x] Google Play Console account
 - [ ] **macOS + Xcode** installed (iOS builds)
 - [x] **Android Studio** installed (2026.1.1.8 via winget) — complete SDK setup + `adb` on PATH per [ANDROID_STUDIO_SETUP.md](./ANDROID_STUDIO_SETUP.md)
-- [ ] Node **≥ 22** for Capacitor CLI (or confirm `cap` works on current Node)
-- [ ] `pnpm install` at repo root
+- [x] Node **≥ 22** for Capacitor CLI — verified **v22.22.0** (2026-06-08)
+- [x] `pnpm install` at repo root
 
 ### C.2 Sync before each native release
 
-- [ ] Run `pnpm --dir web run mobile:prep:prod`
-- [ ] Confirm embedded server URL = `https://theoutreachproject.app` in native config (after sync)
+- [x] Run `pnpm --dir web run mobile:prep:prod` (2026-06-08)
+- [x] Confirm embedded server URL = `https://theoutreachproject.app` in native config (after sync)
 
 ### C.3 Automated checks (repeatable)
 
-- [ ] `pnpm --dir web run validate:capacitor`
-- [ ] `pnpm --dir web run build`
+- [x] `pnpm --dir web run validate:capacitor` (2026-06-08)
+- [x] `pnpm --dir web run build` (via `mobile:prep:prod`, 2026-06-08)
 - [ ] `pnpm --dir web run lint`
 - [ ] `pnpm --dir web run smoke:routes`
-- [ ] `pnpm --dir web run smoke:qa:http https://theoutreachproject.app`
+- [x] `pnpm --dir web run smoke:qa:http https://theoutreachproject.app` (includes `/privacy`, `/terms` — 2026-06-08)
+- [x] Android `gradlew assembleDebug` succeeds (set `JAVA_HOME` to Android Studio `jbr`)
 
 ### C.4 Store assets (both platforms)
 
-- [ ] Replace placeholder **app icon** and **splash** ([Capacitor assets guide](https://capacitorjs.com/docs/guides/splash-screens-and-icons))
+- [x] **iOS app icon** — `pnpm --dir web run mobile:icons` (from `public/icon-1024.png`)
+- [ ] **Android launcher icons** — Android Studio Image Asset or `pnpm --dir web run mobile:assets`
+- [x] Branded **splash** screens — `pnpm --dir web run mobile:splash` (brand mark on `#F5F7F6`; iOS LaunchScreen + Android drawables)
 - [ ] Phone **screenshots** (tablet / Play feature graphic optional)
-- [ ] Update [store-listing-copy.md](./store-listing-copy.md) — support email, reviewer test account
-- [ ] Bump versions before each upload:
-  - [ ] iOS: `MARKETING_VERSION` + build in `web/ios/App/App.xcodeproj`
-  - [ ] Android: `versionName` + `versionCode` in `web/android/app/build.gradle`
+- [ ] Reviewer WorkOS test account — see [store-policy-forms.md](./store-policy-forms.md)
+- [x] Version **1.0 / build 1** for first upload (iOS + Android gradle/Xcode)
 
 ---
 
@@ -95,7 +96,7 @@ Test on **physical devices** after native builds run.
 
 ### D.1 Auth & session
 
-- [ ] WorkOS redirect URI includes production callback
+- [x] WorkOS redirect URI includes production callback
 - [x] `WORKOS_COOKIE_DOMAIN=theoutreachproject.app` on Vercel
 - [ ] Sign in / sign out (iOS WebView)
 - [ ] Sign in / sign out (Android WebView)
@@ -119,7 +120,7 @@ Test on **physical devices** after native builds run.
 - [ ] Return from Checkout lands back in app/WebView
 - [ ] Profile shows tier / billing after webhook
 - [ ] Manage billing portal opens and returns
-- [ ] Review notes state: **subscriptions via website (Stripe), no native IAP SKU**
+- [ ] Review notes state: **subscriptions via website (Stripe), no native IAP SKU** — see [MOBILE_WEB_ACCOUNT_FLOW.md](./MOBILE_WEB_ACCOUNT_FLOW.md)
 
 ### D.4 Mobile UX
 
@@ -132,6 +133,8 @@ Test on **physical devices** after native builds run.
 ---
 
 ## E. iOS — App Store (requires Mac + Xcode)
+
+**Full walkthrough:** [IOS_XCODE_SETUP.md](./IOS_XCODE_SETUP.md)
 
 ### E.1 App Store Connect
 
@@ -220,12 +223,12 @@ Track in [MOBILE_ARCHITECTURE_GAPS.md](./MOBILE_ARCHITECTURE_GAPS.md).
 
 | # | Item | Done? |
 |---|------|-------|
-| 1 | Production web stable (§B) | [ ] |
-| 2 | `mobile:prep:prod` before each native build | [ ] |
+| 1 | Production web stable (§B) | [x] |
+| 2 | `mobile:prep:prod` before each native build | [x] |
 | 3 | Device smoke §D (auth, checkout, uploads) | [ ] |
 | 4 | Store policy forms + reviewer account | [ ] |
 | 5 | Signed release build (not debug QA URL) | [ ] |
-| 6 | Icons/splash not placeholders (or accepted for v1) | [ ] |
+| 6 | Icons/splash not placeholders (or accepted for v1) | [x] splash script |
 
 ---
 

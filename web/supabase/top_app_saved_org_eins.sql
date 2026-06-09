@@ -17,9 +17,20 @@ create index if not exists top_app_saved_org_eins_user_idx on public.top_app_sav
 
 alter table public.top_app_saved_org_eins enable row level security;
 
--- Idempotent RLS: create only when missing (avoids DROP POLICY).
+-- Idempotent RLS: deny direct PostgREST access (saved orgs via /api/me/saved-orgs + service role).
 do $$
 begin
+  if exists (
+    select 1 from pg_catalog.pg_policy pol
+    join pg_catalog.pg_class cls on cls.oid = pol.polrelid
+    join pg_catalog.pg_namespace nsp on nsp.oid = cls.relnamespace
+    where nsp.nspname = 'public'
+      and cls.relname = 'top_app_saved_org_eins'
+      and pol.polname = 'top_app_saved_org_eins_owner_all'
+  ) then
+    drop policy top_app_saved_org_eins_owner_all on public.top_app_saved_org_eins;
+  end if;
+
   if not exists (
     select 1
     from pg_catalog.pg_policy pol
@@ -27,14 +38,31 @@ begin
     join pg_catalog.pg_namespace nsp on nsp.oid = cls.relnamespace
     where nsp.nspname = 'public'
       and cls.relname = 'top_app_saved_org_eins'
-      and pol.polname = 'top_app_saved_org_eins_owner_all'
+      and pol.polname = 'top_app_saved_org_eins_block_anon'
   ) then
-    -- Demo/local: match profile table pattern — adjust to auth.uid() when using real Supabase Auth.
-    create policy top_app_saved_org_eins_owner_all
+    create policy top_app_saved_org_eins_block_anon
       on public.top_app_saved_org_eins
       for all
-      using (true)
-      with check (true);
+      to anon
+      using (false)
+      with check (false);
+  end if;
+
+  if not exists (
+    select 1
+    from pg_catalog.pg_policy pol
+    join pg_catalog.pg_class cls on cls.oid = pol.polrelid
+    join pg_catalog.pg_namespace nsp on nsp.oid = cls.relnamespace
+    where nsp.nspname = 'public'
+      and cls.relname = 'top_app_saved_org_eins'
+      and pol.polname = 'top_app_saved_org_eins_block_authenticated'
+  ) then
+    create policy top_app_saved_org_eins_block_authenticated
+      on public.top_app_saved_org_eins
+      for all
+      to authenticated
+      using (false)
+      with check (false);
   end if;
 end
 $$;

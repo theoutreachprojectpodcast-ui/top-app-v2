@@ -13,6 +13,7 @@ import { membershipAccountMenuHint } from "@/features/membership/membershipAccou
 import { emptyProfileAvatarUrl } from "@/lib/avatarFallback";
 import { readRememberDevicePref } from "@/lib/auth/lastUsedEmail";
 import { workosSignInLink, workosSignUpHref } from "@/lib/auth/workosReturnTo";
+import { openWebSignup, openWebSponsorMembership, requiresExternalWebAccountFlow } from "@/lib/capacitor/webAccountRedirects";
 
 const SPONSOR_ICON = "M4 6h16v12H4z M4 10h16";
 
@@ -42,6 +43,26 @@ export default function SubpageTopbarActions({ section = "all" }) {
       ? `/?signin=1&returnTo=${encodeURIComponent(pathname)}`
       : "/?signin=1";
 
+  function openCreateAccount() {
+    if (requiresExternalWebAccountFlow() && authState.workos) {
+      void openWebSignup();
+      return;
+    }
+    if (authState.workos) {
+      window.location.assign(workosOnboardingSignUpHref);
+      return;
+    }
+    window.location.assign(legacySignUpHref);
+  }
+
+  function openSponsorMembership() {
+    if (requiresExternalWebAccountFlow()) {
+      void openWebSponsorMembership();
+      return;
+    }
+    router.push("/sponsors");
+  }
+
   const session = useAuthSession();
   const cache = typeof window !== "undefined" ? readNavAuthCache() : null;
   const optimisticAuthed = session.loading && cache?.authenticated;
@@ -54,7 +75,12 @@ export default function SubpageTopbarActions({ section = "all" }) {
           authenticated: session.authenticated || optimisticAuthed,
         };
 
-  const sponsorLink = (
+  const sponsorLink = requiresExternalWebAccountFlow() ? (
+    <button className="btnSoft sponsorBtn" type="button" onClick={openSponsorMembership}>
+      <IconWrap path={SPONSOR_ICON} />
+      Become a Sponsor
+    </button>
+  ) : (
     <Link className="btnSoft sponsorBtn" href="/sponsors">
       <IconWrap path={SPONSOR_ICON} />
       Become a Sponsor
@@ -93,18 +119,18 @@ export default function SubpageTopbarActions({ section = "all" }) {
       </>
     ) : authState.workos ? (
       <>
-        <Link className="btnSoft sponsorBtn" href={workosOnboardingSignUpHref}>
+        <button className="btnSoft sponsorBtn" type="button" onClick={openCreateAccount}>
           Create account
-        </Link>
+        </button>
         <Link className="btnSoft sponsorBtn" href={workosSignInHereHref}>
           Sign in
         </Link>
       </>
     ) : (
       <>
-        <Link className="btnSoft sponsorBtn" href={legacySignUpHref}>
+        <button className="btnSoft sponsorBtn" type="button" onClick={openCreateAccount}>
           Create account
-        </Link>
+        </button>
         <Link className="btnSoft sponsorBtn" href={legacySignInHref}>
           Sign in
         </Link>
@@ -132,18 +158,18 @@ export default function SubpageTopbarActions({ section = "all" }) {
       />
     ) : authState.workos ? (
       <>
-        <Link className="btnSoft sponsorBtn" href={workosOnboardingSignUpHref}>
+        <button className="btnSoft sponsorBtn" type="button" onClick={openCreateAccount}>
           Create account
-        </Link>
+        </button>
         <Link className="btnSoft sponsorBtn" href={workosSignInHereHref}>
           Sign in
         </Link>
       </>
     ) : (
       <>
-        <Link className="btnSoft sponsorBtn" href={legacySignUpHref}>
+        <button className="btnSoft sponsorBtn" type="button" onClick={openCreateAccount}>
           Create account
-        </Link>
+        </button>
         <Link className="btnSoft sponsorBtn" href={legacySignInHref}>
           Sign in
         </Link>
