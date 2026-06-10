@@ -2,6 +2,7 @@
 
 import { Capacitor } from "@capacitor/core";
 import { Browser } from "@capacitor/browser";
+import { validateExternalBrowserUrl } from "@/lib/security/externalUrlPolicy";
 
 /**
  * Open a URL outside the Capacitor WebView (Safari / Chrome Custom Tab).
@@ -11,10 +12,11 @@ import { Browser } from "@capacitor/browser";
  * @returns {Promise<{ mode: "native-browser" | "browser-tab" | "same-window" }>}
  */
 export async function openExternalUrl(url) {
-  const target = String(url || "").trim();
-  if (!target) {
-    throw new Error("openExternalUrl: missing url");
+  const check = validateExternalBrowserUrl(url);
+  if (!check.ok) {
+    throw new Error(`openExternalUrl: blocked (${check.reason})`);
   }
+  const target = check.url.href;
 
   if (Capacitor.isNativePlatform()) {
     await Browser.open({ url: target });

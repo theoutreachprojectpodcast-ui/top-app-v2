@@ -35,6 +35,23 @@ if (vercelProduction && adminEmailLoginProd && !cookieDomain) {
   missing.push("WORKOS_COOKIE_DOMAIN (required for admin email login on apex + admin host)");
 }
 
+if (vercelProduction) {
+  if (!String(process.env.STRIPE_SECRET_KEY || "").trim()) {
+    missing.push("STRIPE_SECRET_KEY");
+  }
+  const hasWebhook =
+    String(process.env.STRIPE_WEBHOOK_LIVE_SECRET || "").trim() ||
+    String(process.env.STRIPE_WEBHOOK_SECRET || "").trim();
+  if (!hasWebhook) {
+    missing.push("STRIPE_WEBHOOK_LIVE_SECRET or STRIPE_WEBHOOK_SECRET");
+  }
+  if (adminEmailLoginProd) {
+    console.warn(
+      "[validate-production-env] WARNING: ENABLE_ADMIN_EMAIL_LOGIN=1 on production — prefer WorkOS-only admin auth.",
+    );
+  }
+}
+
 const privateRedirect = String(process.env.WORKOS_REDIRECT_URI || "").trim();
 const publicRedirect = String(process.env.NEXT_PUBLIC_WORKOS_REDIRECT_URI || "").trim();
 if (!privateRedirect && !publicRedirect) {

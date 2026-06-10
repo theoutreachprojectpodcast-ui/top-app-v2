@@ -201,6 +201,16 @@ export async function POST(request) {
     user.email ||
     "Member";
 
+  const linkUrl = String(body.link_url || "").trim().slice(0, 500);
+  if (linkUrl && !/^https?:\/\//i.test(linkUrl)) {
+    return Response.json({ ok: false, message: "Link URL must start with http:// or https://." }, { status: 400 });
+  }
+
+  const photoRaw = typeof body.photo_url === "string" ? body.photo_url.trim().slice(0, 2048) : "";
+  if (photoRaw && !/^https?:\/\//i.test(photoRaw)) {
+    return Response.json({ ok: false, message: "Photo URL must start with http:// or https://." }, { status: 400 });
+  }
+
   const record = {
     author_profile_id: profileRow.id,
     author_id: user.id,
@@ -213,8 +223,8 @@ export async function POST(request) {
     category: String(body.category || "success_story").slice(0, 64),
     post_type: String(body.post_type || "share_story").slice(0, 64),
     show_author_name: body.show_author_name !== false,
-    link_url: String(body.link_url || "").trim().slice(0, 500),
-    photo_url: typeof body.photo_url === "string" ? body.photo_url.slice(0, 120000) : "",
+    link_url: linkUrl,
+    photo_url: photoRaw,
     status: "pending_review",
     visibility: "community",
     like_count: 0,

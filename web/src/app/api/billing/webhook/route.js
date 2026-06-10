@@ -208,6 +208,7 @@ export async function POST(request) {
     }
   } catch (e) {
     console.error("[torp] webhook handler", e);
+    return Response.json({ error: "handler_failed", type: event?.type || "unknown" }, { status: 500 });
   }
 
   return Response.json({ received: true });

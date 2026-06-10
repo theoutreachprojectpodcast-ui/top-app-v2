@@ -56,6 +56,8 @@
     "validate:env:prod": "node scripts/validate-production-env.mjs --strict",
     "security:guards": "node scripts/security-guards-smoke.mjs",
     "security:audit": "pnpm audit --audit-level=high || exit 0",
+    "security:audit:ci": "pnpm audit --audit-level=high",
+    "verify:security": "node scripts/verify-security-posture.mjs",
     "qa:recompute-quality": "node scripts/qa-recompute-quality.mjs",
     "qa:recompute-quality:all": "node scripts/qa-recompute-quality.mjs --all",
     "export:store-screenshots": "node scripts/export-store-screenshots.mjs",

@@ -15,6 +15,18 @@ import { isDemoModeEnabled } from "@/lib/runtime/launchMode";
 import { isAdminEmailLoginEnabled, isAdminEmailLoginProductionEnabled } from "@/lib/auth/adminEmailLogin";
 
 export async function GET() {
+  const isProduction =
+    String(process.env.VERCEL_ENV || "").toLowerCase() === "production" ||
+    String(process.env.NODE_ENV || "").toLowerCase() === "production";
+
+  if (isProduction) {
+    return Response.json({
+      workos: isWorkOSConfigured(),
+      stripe: stripeMemberRecurringConfigured(),
+      sessionIdleTimeoutMs: sessionIdleTimeoutMs(),
+    });
+  }
+
   const workos = isWorkOSConfigured();
   const profileTable = profileTableName();
   const qaIsolatedProfiles =
