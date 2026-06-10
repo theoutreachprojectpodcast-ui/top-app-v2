@@ -3,13 +3,13 @@ import { requestOriginForStripeRedirects } from "@/lib/billing/stripeConfig";
 import { onWorkOSSuccess } from "@/lib/auth/workosAuthSuccess";
 
 /**
- * Per-request baseURL so localhost:3000 (`pnpm dev:alt`) and :3001 both match the browser origin
- * when using production WorkOS credentials (redirect URI must still be registered per port in WorkOS).
+ * WorkOS AuthKit callback for mobile browser sign-in/sign-up.
+ * Register `WORKOS_MOBILE_REDIRECT_URI` → `{origin}/mobile-auth/callback` in WorkOS.
  */
 export async function GET(request) {
   const baseURL = requestOriginForStripeRedirects(request);
   return handleAuth({
-    returnPathname: "/",
+    returnPathname: "/mobile-auth/complete",
     baseURL,
     onSuccess: onWorkOSSuccess,
   })(request);

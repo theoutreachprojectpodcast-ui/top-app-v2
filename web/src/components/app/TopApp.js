@@ -74,9 +74,11 @@ import {
   openWebBilling,
   openWebMembership,
   openWebSignup,
+  openWebLogin,
   openWebSponsorMembership,
   requiresExternalWebAccountFlow,
 } from "@/lib/capacitor/webAccountRedirects";
+import { workosReturnPathFromRouter } from "@/lib/auth/workosReturnTo";
 
 function DemoAuthPasswordVisibilityIcon({ revealed }) {
   return (
@@ -443,10 +445,31 @@ function TopAppInner({ initialNav = "home" }) {
     [favoriteEntityKeys],
   );
 
+  function startWorkOSSignIn(returnPathOverride) {
+    writeRememberDevicePref(rememberDevice);
+    const returnPath =
+      returnPathOverride ||
+      workosReturnPathFromRouter(pathname, searchParams) ||
+      "/";
+    if (requiresExternalWebAccountFlow()) {
+      void openWebLogin({
+        returnPath,
+        rememberDevice,
+        loginHint: authDraft.email,
+      });
+      return;
+    }
+    window.location.assign(
+      workosSignInLink(pathname, searchParams, returnPath, {
+        rememberDevice,
+        loginHint: authDraft.email,
+      }),
+    );
+  }
+
   function openSignInOverlay() {
     if (authBackend.workos) {
-      writeRememberDevicePref(rememberDevice);
-      window.location.assign(workosSignInHereHref);
+      startWorkOSSignIn();
       return;
     }
     setAuthMode("signin");
@@ -492,8 +515,7 @@ function TopAppInner({ initialNav = "home" }) {
 
   function openSignInForMembership() {
     if (authBackend.workos) {
-      writeRememberDevicePref(rememberDevice);
-      window.location.assign(workosSignInHereHref);
+      startWorkOSSignIn("/profile");
       return;
     }
     setAuthMode("signin");
@@ -711,10 +733,7 @@ function TopAppInner({ initialNav = "home" }) {
               }}
               onRequestSignIn={() => {
                 if (authBackend.workos) {
-                  writeRememberDevicePref(rememberDevice);
-                  window.location.assign(
-                    workosSignInLink("/community", null, "/community", { rememberDevice }),
-                  );
+                  startWorkOSSignIn("/community");
                   return;
                 }
                 setAuthMode("signin");
@@ -813,8 +832,7 @@ function TopAppInner({ initialNav = "home" }) {
                     type="button"
                     onClick={() => {
                       if (authBackend.workos) {
-                        writeRememberDevicePref(rememberDevice);
-                        window.location.assign(workosSignInHereHref);
+                        startWorkOSSignIn("/profile");
                         return;
                       }
                       setAuthMode("signin");

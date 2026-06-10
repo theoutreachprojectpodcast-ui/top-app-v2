@@ -8,6 +8,10 @@ import {
   readWorkOSInvitationToken,
 } from "@/lib/auth/workosAuthorizationRedirect";
 import { workOSAuthKitAuthorizeOptions } from "@/lib/auth/workosOrganizationScope";
+import {
+  mobileAuthCompletePath,
+  resolveWorkOSMobileRedirectUri,
+} from "@/lib/auth/workosMobileRedirect";
 
 function readReturnTo(searchParams, fallback = "/onboarding") {
   const raw =
@@ -37,6 +41,29 @@ export async function workOSSignUpResponse(request) {
   const prompt = remember === "0" ? "login" : undefined;
   const loginHint = sanitizeWorkOSLoginHint(searchParams.get("loginHint"));
   const invitationToken = readWorkOSInvitationToken(searchParams);
+  const mobileBrowserAuth = searchParams.get("mobile") === "1";
+
+  if (mobileBrowserAuth) {
+    const mobileRedirectUri = resolveWorkOSMobileRedirectUri(request);
+    if (!mobileRedirectUri) {
+      return NextResponse.json({ error: "mobile_redirect_not_configured" }, { status: 503 });
+    }
+    try {
+      const url = await getWorkOSAuthKitRedirectUrl({
+        returnPathname: mobileAuthCompletePath(returnTo),
+        screenHint: "sign-up",
+        loginHint,
+        prompt,
+        redirectUri: mobileRedirectUri,
+        invitationToken: invitationToken || undefined,
+        ...workOSAuthKitAuthorizeOptions({ signUp: true }),
+      });
+      return NextResponse.redirect(url);
+    } catch (e) {
+      console.error("[torp] WorkOS mobile sign-up failed:", e);
+      return NextResponse.json({ error: "workos_signup_failed" }, { status: 503 });
+    }
+  }
 
   if (invitationToken) {
     try {

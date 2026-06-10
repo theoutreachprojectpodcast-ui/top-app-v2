@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { useAuthSession } from "@/components/auth/AuthSessionProvider";
 import { useProfileData } from "@/features/profile/ProfileDataProvider";
 import {
+  openNativeWorkOSSignIn,
   openWebBilling,
   openWebLogin,
   openWebMembership,
@@ -45,6 +46,7 @@ export function useNativeWebAccountFlow() {
     refreshAccountStatus,
     openWebSignup,
     openWebLogin,
+    openNativeWorkOSSignIn,
     openWebMembership,
     openWebBilling,
     openWebSponsorMembership,

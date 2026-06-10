@@ -25,6 +25,34 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="org.theoutreachproject.torp" android:host="account" />
             </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="org.theoutreachproject.torp" android:host="auth" android:pathPrefix="/complete" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="theoutreachproject" android:host="auth" android:pathPrefix="/complete" />
+            </intent-filter>
+
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="theoutreachproject.app" android:pathPrefix="/mobile-auth" />
+            </intent-filter>
+
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="qa.theoutreachproject.app" android:pathPrefix="/mobile-auth" />
+            </intent-filter>
         </activity>
 
         <provider

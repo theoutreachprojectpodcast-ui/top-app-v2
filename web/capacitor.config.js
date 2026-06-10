@@ -24,7 +24,17 @@ const config = {
     /** Prefer Safari-like behavior for WorkOS / Stripe redirects */
     preferredContentMode: "mobile",
   },
-  plugins: {},
+  plugins: {
+    SplashScreen: {
+      launchAutoHide: false,
+      launchShowDuration: 0,
+      showSpinner: true,
+      iosSpinnerStyle: "large",
+      androidSpinnerStyle: "large",
+      spinnerColor: "#22a52b",
+      backgroundColor: "#121212",
+    },
+  },
 };
 
 const capServer = String(process.env.CAP_SERVER_URL || "").trim();

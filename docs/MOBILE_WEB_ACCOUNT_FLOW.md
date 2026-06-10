@@ -6,14 +6,26 @@ The Outreach Project native apps (Capacitor iOS/Android) share accounts with **h
 
 | Surface | Sign-in | Sign-up | Membership / billing |
 |--------|---------|---------|----------------------|
-| Mobile app (WebView) | WorkOS AuthKit in-app | Opens `/signup` in Safari/Chrome | Opens `/membership`, `/billing`, `/sponsor` in system browser |
+| Mobile app (WebView) | WorkOS in **system browser** → deep link session transfer into WebView | Opens `/signup?mobile=1` in system browser → same transfer | Opens `/membership`, `/billing`, `/sponsor` in system browser |
 | Mobile browser / desktop web | WorkOS in same tab | WorkOS in same tab | Stripe Checkout + Customer Portal on web |
 
 After external signup or payment, users return via:
 
-- Deep link: `org.theoutreachproject.torp://account/refresh`
+- Deep link (auth): `org.theoutreachproject.torp://auth/complete?token=…` (also `theoutreachproject://`)
+- Universal link (optional): `https://theoutreachproject.app/mobile-auth/complete`
+- Deep link (billing refresh): `org.theoutreachproject.torp://account/refresh`
 - Web query: `?mobileReturn=account` on success/cancel/profile URLs
 - In-app **Refresh account status** (fixed footer control via `MobileAccountReturnBridge`)
+
+### WorkOS mobile redirect URI
+
+Register in WorkOS dashboard (per environment):
+
+- Production: `https://theoutreachproject.app/mobile-auth/callback`
+- QA: `https://qa.theoutreachproject.app/mobile-auth/callback`
+- Optional env override: `WORKOS_MOBILE_REDIRECT_URI`
+
+Set `APPLE_TEAM_ID` on the web deploy for Universal Links (`/.well-known/apple-app-site-association`).
 
 ## Centralized redirect helpers
 

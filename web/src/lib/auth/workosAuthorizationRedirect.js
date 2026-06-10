@@ -44,12 +44,16 @@ function pkceCookieOptions() {
  *   prompt?: string,
  *   invitationToken?: string,
  *   organizationId?: string,
+ *   redirectUri?: string,
  * }} [options]
  */
 export async function getWorkOSAuthKitRedirectUrl(options = {}) {
   const clientId = String(process.env.WORKOS_CLIENT_ID || "").trim();
   const redirectUri = String(
-    process.env.NEXT_PUBLIC_WORKOS_REDIRECT_URI || process.env.WORKOS_REDIRECT_URI || "",
+    options.redirectUri ||
+      process.env.NEXT_PUBLIC_WORKOS_REDIRECT_URI ||
+      process.env.WORKOS_REDIRECT_URI ||
+      "",
   ).trim();
   const password = String(process.env.WORKOS_COOKIE_PASSWORD || "");
   if (!clientId || !redirectUri || password.length < 32) {

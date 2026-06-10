@@ -6,6 +6,7 @@ import { App } from "@capacitor/app";
 import { Browser } from "@capacitor/browser";
 import { useNativeWebAccountFlow } from "@/hooks/useNativeWebAccountFlow";
 import { isCapacitorNative } from "@/lib/capacitor/platform";
+import { handleMobileAuthDeepLink } from "@/lib/capacitor/mobileAuthReturn";
 
 /**
  * Refreshes WorkOS profile + session when returning from external web signup/billing,
@@ -28,12 +29,17 @@ export default function MobileAccountReturnBridge() {
     });
 
     const removeAppUrl = App.addListener("appUrlOpen", (event) => {
-      const url = String(event?.url || "");
-      if (!url.includes("account/refresh")) return;
-      void refreshAccountStatus().then((result) => {
-        if (result.ok) {
+      void handleMobileAuthDeepLink(String(event?.url || ""), {
+        refreshAccountStatus,
+        router,
+      }).then((result) => {
+        if (!result.handled) return;
+        if (result.kind === "auth-complete" && result.ok) {
+          setBanner("Welcome back. You are signed in inside the app.");
+        } else if (result.kind === "account-refresh") {
           setBanner("Welcome back. Your account status is up to date.");
-          router.replace("/profile?mobileReturn=account");
+        } else if (result.kind === "auth-complete" && result.ok === false) {
+          setBanner("Sign-in could not be completed. Please try again from the app.");
         }
       });
     });

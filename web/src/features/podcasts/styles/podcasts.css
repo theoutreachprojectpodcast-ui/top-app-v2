@@ -82,8 +82,8 @@
   --header-floating-offset: 12px;
   /* Action row at top (main-app layout); logo band sits below it. */
   --podcast-topbar-stack-height: 52px;
-  /* Header wordmark scale (2.5 = 250% of prior default sizes). */
-  --podcast-brand-logo-scale: 2.5;
+  /* Header wordmark scale (1.75 = 70% of prior 2.5 web size). */
+  --podcast-brand-logo-scale: 1.75;
   --podcast-header-brand-band: clamp(
     calc(148px * var(--podcast-brand-logo-scale)),
     calc(26vw * var(--podcast-brand-logo-scale)),
@@ -388,13 +388,13 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
   .appShell--podcast .podcastBrandLogo {
     max-height: min(
       clamp(
-        calc(132px * var(--podcast-brand-logo-scale, 2.5)),
-        calc(24vw * var(--podcast-brand-logo-scale, 2.5)),
-        calc(208px * var(--podcast-brand-logo-scale, 2.5))
+        calc(132px * var(--podcast-brand-logo-scale, 1.75)),
+        calc(24vw * var(--podcast-brand-logo-scale, 1.75)),
+        calc(208px * var(--podcast-brand-logo-scale, 1.75))
       ),
       calc(var(--podcast-header-brand-band, 500px) - 12px)
     ) !important;
-    max-width: min(calc(560px * var(--podcast-brand-logo-scale, 2.5)), calc(100vw - 48px)) !important;
+    max-width: min(calc(560px * var(--podcast-brand-logo-scale, 1.75)), calc(100vw - 48px)) !important;
     width: auto;
   }
 }
@@ -444,9 +444,9 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
     position: relative;
     --podcast-topbar-stack-height: 48px;
     --podcast-header-brand-band: clamp(
-      calc(120px * var(--podcast-brand-logo-scale, 2.5)),
-      calc(32vw * var(--podcast-brand-logo-scale, 2.5)),
-      calc(180px * var(--podcast-brand-logo-scale, 2.5))
+      calc(120px * var(--podcast-brand-logo-scale, 1.75)),
+      calc(32vw * var(--podcast-brand-logo-scale, 1.75)),
+      calc(180px * var(--podcast-brand-logo-scale, 1.75))
     );
   }
 

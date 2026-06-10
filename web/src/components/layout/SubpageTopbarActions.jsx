@@ -13,7 +13,7 @@ import { membershipAccountMenuHint } from "@/features/membership/membershipAccou
 import { emptyProfileAvatarUrl } from "@/lib/avatarFallback";
 import { readRememberDevicePref } from "@/lib/auth/lastUsedEmail";
 import { workosSignInLink, workosSignUpHref } from "@/lib/auth/workosReturnTo";
-import { openWebSignup, openWebSponsorMembership, requiresExternalWebAccountFlow } from "@/lib/capacitor/webAccountRedirects";
+import { openWebSignup, openWebSponsorMembership, openWebLogin, requiresExternalWebAccountFlow } from "@/lib/capacitor/webAccountRedirects";
 
 const SPONSOR_ICON = "M4 6h16v12H4z M4 10h16";
 
@@ -43,6 +43,26 @@ export default function SubpageTopbarActions({ section = "all" }) {
       ? `/?signin=1&returnTo=${encodeURIComponent(pathname)}`
       : "/?signin=1";
 
+  const session = useAuthSession();
+  const cache = typeof window !== "undefined" ? readNavAuthCache() : null;
+  const optimisticAuthed = session.loading && cache?.authenticated;
+  const authState =
+    section === "lead"
+      ? { loading: false, workos: false, authenticated: false }
+      : {
+          loading: session.loading && !optimisticAuthed,
+          workos: session.workos || (!!cache?.workos && optimisticAuthed),
+          authenticated: session.authenticated || optimisticAuthed,
+        };
+
+  function openSignIn() {
+    if (requiresExternalWebAccountFlow() && authState.workos) {
+      void openWebLogin({ returnPath: signInReturnFallback, rememberDevice });
+      return;
+    }
+    window.location.assign(workosSignInHereHref);
+  }
+
   function openCreateAccount() {
     if (requiresExternalWebAccountFlow() && authState.workos) {
       void openWebSignup();
@@ -62,18 +82,6 @@ export default function SubpageTopbarActions({ section = "all" }) {
     }
     router.push("/sponsors");
   }
-
-  const session = useAuthSession();
-  const cache = typeof window !== "undefined" ? readNavAuthCache() : null;
-  const optimisticAuthed = session.loading && cache?.authenticated;
-  const authState =
-    section === "lead"
-      ? { loading: false, workos: false, authenticated: false }
-      : {
-          loading: session.loading && !optimisticAuthed,
-          workos: session.workos || (!!cache?.workos && optimisticAuthed),
-          authenticated: session.authenticated || optimisticAuthed,
-        };
 
   const sponsorLink = requiresExternalWebAccountFlow() ? (
     <button className="btnSoft sponsorBtn" type="button" onClick={openSponsorMembership}>
@@ -122,7 +130,12 @@ export default function SubpageTopbarActions({ section = "all" }) {
         <button className="btnSoft sponsorBtn" type="button" onClick={openCreateAccount}>
           Create account
         </button>
-        <Link className="btnSoft sponsorBtn" href={workosSignInHereHref}>
+        <Link className="btnSoft sponsorBtn" href={workosSignInHereHref} onClick={(e) => {
+          if (requiresExternalWebAccountFlow() && authState.workos) {
+            e.preventDefault();
+            openSignIn();
+          }
+        }}>
           Sign in
         </Link>
       </>
@@ -161,7 +174,12 @@ export default function SubpageTopbarActions({ section = "all" }) {
         <button className="btnSoft sponsorBtn" type="button" onClick={openCreateAccount}>
           Create account
         </button>
-        <Link className="btnSoft sponsorBtn" href={workosSignInHereHref}>
+        <Link className="btnSoft sponsorBtn" href={workosSignInHereHref} onClick={(e) => {
+          if (requiresExternalWebAccountFlow() && authState.workos) {
+            e.preventDefault();
+            openSignIn();
+          }
+        }}>
           Sign in
         </Link>
       </>

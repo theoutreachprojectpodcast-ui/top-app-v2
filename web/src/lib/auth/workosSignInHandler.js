@@ -12,6 +12,10 @@ import {
   isBootstrapAdminWorkOSSignIn,
   workOSAuthKitAuthorizeOptions,
 } from "@/lib/auth/workosOrganizationScope";
+import {
+  mobileAuthCompletePath,
+  resolveWorkOSMobileRedirectUri,
+} from "@/lib/auth/workosMobileRedirect";
 
 function readReturnTo(searchParams, fallback = "/") {
   const raw =
@@ -49,6 +53,28 @@ export async function workOSSignInResponse(request) {
     adminReturn: isAdminReturnPath(returnTo),
     invitation: Boolean(invitationToken),
   });
+  const mobileBrowserAuth = searchParams.get("mobile") === "1";
+
+  if (mobileBrowserAuth) {
+    const mobileRedirectUri = resolveWorkOSMobileRedirectUri(request);
+    if (!mobileRedirectUri) {
+      return NextResponse.json({ error: "mobile_redirect_not_configured" }, { status: 503 });
+    }
+    try {
+      const url = await getWorkOSAuthKitRedirectUrl({
+        returnPathname: mobileAuthCompletePath(returnTo),
+        screenHint: "sign-in",
+        loginHint,
+        prompt,
+        redirectUri: mobileRedirectUri,
+        ...orgOptions,
+      });
+      return NextResponse.redirect(url);
+    } catch (e) {
+      console.error("[torp] WorkOS mobile sign-in failed:", e);
+      return NextResponse.json({ error: "workos_signin_failed" }, { status: 503 });
+    }
+  }
 
   if (invitationToken) {
     try {
