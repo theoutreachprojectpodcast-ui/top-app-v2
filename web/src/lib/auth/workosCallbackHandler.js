@@ -179,6 +179,12 @@ export async function runWorkOSCallbackForFetch(request) {
     }
   }
 
+  redirectTo = resolveMobileAppPostAuthPath(
+    redirectTo,
+    request.headers.get("user-agent") || "",
+    isCapacitorCallbackRequest(request),
+  );
+
   const ok = inner.status >= 300 && inner.status < 400;
   if (!ok) {
     let message = "Could not complete sign in. Please try again.";

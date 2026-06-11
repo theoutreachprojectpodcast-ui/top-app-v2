@@ -4,7 +4,9 @@ import { useEffect, useRef } from "react";
 import { App } from "@capacitor/app";
 import { Browser } from "@capacitor/browser";
 import { isCapacitorNative } from "@/lib/capacitor/platform";
+import { closeExternalBrowserIfOpen } from "@/lib/capacitor/openExternalUrl";
 import { TORP_OAUTH_BROWSER_PENDING, TORP_OAUTH_STATE_KEY } from "@/lib/auth/oauthMobileHandoff";
+import { parseOAuthBrowserDoneDeepLink } from "@/lib/auth/workosMobileRedirect";
 import { TORP_OAUTH_RETURN_KEY } from "@/components/capacitor/MobileOAuthSessionResume";
 
 const POLL_MS = 400;
@@ -30,9 +32,22 @@ function isOAuthPending() {
   );
 }
 
-function completeInWebView(data) {
+function primeOAuthHandoff(stateKey) {
+  if (typeof sessionStorage === "undefined") return;
+  const key = String(stateKey || "").trim();
+  if (!key) return;
+  sessionStorage.setItem(TORP_OAUTH_STATE_KEY, key);
+  sessionStorage.setItem(TORP_OAUTH_BROWSER_PENDING, "1");
+}
+
+function clearOAuthHandoffFlags() {
+  if (typeof sessionStorage === "undefined") return;
   sessionStorage.removeItem(TORP_OAUTH_BROWSER_PENDING);
   sessionStorage.removeItem(TORP_OAUTH_STATE_KEY);
+}
+
+function completeInWebView(data) {
+  clearOAuthHandoffFlags();
   sessionStorage.setItem(TORP_OAUTH_RETURN_KEY, "1");
 
   if (data?.bridge) {
@@ -70,8 +85,14 @@ function completeInWebView(data) {
   });
 }
 
+function oauthErrorRedirect(message) {
+  clearOAuthHandoffFlags();
+  window.location.replace(`/mobile?oauth_error=${encodeURIComponent(message || "Sign-in failed.")}`);
+}
+
 /**
  * Polls until the in-app browser saves OAuth code/state, then finishes sign-in in the WebView.
+ * Also handles `://oauth/browser-done` deep links that dismiss the in-app browser sheet.
  */
 export default function MobileOAuthBrowserFinish() {
   const claimedRef = useRef(false);
@@ -87,36 +108,57 @@ export default function MobileOAuthBrowserFinish() {
       }
     };
 
-    const tryFinish = async () => {
-      if (claimedRef.current || !isOAuthPending()) {
-        stopPolling();
-        return false;
-      }
+    const finishFromHandoff = async (stateKey) => {
+      const key = String(stateKey || "").trim();
+      if (!key || claimedRef.current) return false;
 
-      const stateKey = sessionStorage.getItem(TORP_OAUTH_STATE_KEY);
-      if (!stateKey) return false;
-
-      const { res, data } = await pollOAuthPending(stateKey);
+      const { res, data } = await pollOAuthPending(key);
       if (!res.ok || !data?.ok) return false;
 
       claimedRef.current = true;
       stopPolling();
 
-      try {
-        await Browser.close();
-      } catch {
-        /* sheet may already be closed */
-      }
+      await closeExternalBrowserIfOpen();
 
       try {
         await completeInWebView(data);
       } catch (err) {
-        sessionStorage.removeItem(TORP_OAUTH_BROWSER_PENDING);
-        sessionStorage.removeItem(TORP_OAUTH_STATE_KEY);
         const msg = err instanceof Error ? err.message : "Could not complete sign in.";
-        window.location.replace(`/mobile?oauth_error=${encodeURIComponent(msg || "Sign-in failed.")}`);
+        oauthErrorRedirect(msg);
       }
       return true;
+    };
+
+    const tryFinish = async (forcedKey = "") => {
+      if (claimedRef.current) {
+        stopPolling();
+        return false;
+      }
+
+      const stateKey = String(forcedKey || sessionStorage.getItem(TORP_OAUTH_STATE_KEY) || "").trim();
+      if (!stateKey) return false;
+      if (!forcedKey && !isOAuthPending()) {
+        stopPolling();
+        return false;
+      }
+
+      return finishFromHandoff(stateKey);
+    };
+
+    const handleBrowserDoneDeepLink = (raw) => {
+      const parsed = parseOAuthBrowserDoneDeepLink(raw);
+      if (!parsed) return;
+      primeOAuthHandoff(parsed.key);
+      void (async () => {
+        await closeExternalBrowserIfOpen();
+        for (const delay of BROWSER_FINISHED_RETRIES_MS) {
+          if (delay > 0) await new Promise((resolve) => setTimeout(resolve, delay));
+          if (await tryFinish(parsed.key)) return;
+        }
+        if (!claimedRef.current) {
+          oauthErrorRedirect("Sign-in did not finish. Please try again.");
+        }
+      })();
     };
 
     const startPollingIfNeeded = () => {
@@ -134,18 +176,21 @@ export default function MobileOAuthBrowserFinish() {
       }
 
       if (claimedRef.current || !isOAuthPending()) return;
-
-      sessionStorage.removeItem(TORP_OAUTH_BROWSER_PENDING);
-      sessionStorage.removeItem(TORP_OAUTH_STATE_KEY);
-      window.location.replace(
-        `/mobile?oauth_error=${encodeURIComponent("Sign-in did not finish. Please try again.")}`,
-      );
+      oauthErrorRedirect("Sign-in did not finish. Please try again.");
     };
 
     startPollingIfNeeded();
 
+    void App.getLaunchUrl().then((launch) => {
+      if (launch?.url) handleBrowserDoneDeepLink(launch.url);
+    });
+
     const browserListener = Browser.addListener("browserFinished", () => {
       void tryFinishWithRetries();
+    });
+
+    const appUrlListener = App.addListener("appUrlOpen", (event) => {
+      handleBrowserDoneDeepLink(String(event?.url || ""));
     });
 
     const appListener = App.addListener("appStateChange", ({ isActive }) => {
@@ -158,6 +203,7 @@ export default function MobileOAuthBrowserFinish() {
     return () => {
       stopPolling();
       void browserListener.then((handle) => handle.remove());
+      void appUrlListener.then((handle) => handle.remove());
       void appListener.then((handle) => handle.remove());
     };
   }, []);

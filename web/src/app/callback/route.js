@@ -69,12 +69,13 @@ async function mobileBrowserOAuthPendingResponse(request, url) {
     return callbackErrorResponse("Missing sign-in response. Please try again.", request);
   }
 
-  const saved = await saveOAuthMobilePending(hashOAuthState(state), code, state, MOBILE_POST_AUTH_HOME);
+  const stateKey = hashOAuthState(state);
+  const saved = await saveOAuthMobilePending(stateKey, code, state, MOBILE_POST_AUTH_HOME);
   if (!saved.ok) {
     return callbackErrorResponse("Could not prepare sign-in for the app. Please try again.", request);
   }
 
-  return new NextResponse(mobileOAuthBrowserDoneHtml(), {
+  return new NextResponse(mobileOAuthBrowserDoneHtml(stateKey), {
     status: 200,
     headers: {
       "Content-Type": "text/html; charset=utf-8",

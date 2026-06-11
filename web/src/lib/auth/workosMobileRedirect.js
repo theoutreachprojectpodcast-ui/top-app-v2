@@ -33,31 +33,82 @@ export function buildMobileOAuthCallbackDeepLink(searchParams) {
   return qs ? `${base}?${qs}` : base;
 }
 
+/** @returns {string} */
+export function mobileAppUrlScheme() {
+  const base = workosMobileRedirectUri();
+  const idx = base.indexOf("://");
+  return idx > 0 ? base.slice(0, idx) : "com.theoutreachproject.theoutreachproject";
+}
+
 /**
- * OAuth finished in Capacitor's in-app browser (SFSafariViewController).
- * Custom URL schemes do not work here — user closes the sheet (Done); WKWebView claims the session via handoff API.
+ * Deep link that dismisses the Capacitor in-app browser and resumes OAuth in the main WebView.
+ * @param {string} stateKey sha256 of OAuth state (matches `/api/mobile/oauth-handoff` poll key)
  */
-export function mobileOAuthBrowserDoneHtml() {
+export function buildOAuthBrowserDoneDeepLink(stateKey) {
+  const key = String(stateKey || "").trim();
+  const scheme = mobileAppUrlScheme();
+  const qs = key ? `?key=${encodeURIComponent(key)}` : "";
+  return `${scheme}://oauth/browser-done${qs}`;
+}
+
+/**
+ * @param {string} url
+ * @returns {{ key: string } | null}
+ */
+export function parseOAuthBrowserDoneDeepLink(url) {
+  const raw = String(url || "").trim();
+  if (!raw.toLowerCase().includes("oauth/browser-done")) return null;
+  let key = "";
+  try {
+    const parsed = new URL(raw);
+    key = String(parsed.searchParams.get("key") || "").trim();
+  } catch {
+    const match = raw.match(/[?&]key=([^&]+)/i);
+    if (match) key = decodeURIComponent(match[1]);
+  }
+  return { key };
+}
+
+/**
+ * OAuth finished in Capacitor's in-app browser — auto-return to the native shell via custom URL scheme.
+ * @param {string} [stateKey]
+ */
+export function mobileOAuthBrowserDoneHtml(stateKey = "") {
+  const deepLink = buildOAuthBrowserDoneDeepLink(stateKey);
+  const escaped = deepLink.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+  const json = JSON.stringify(deepLink);
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta http-equiv="refresh" content="0;url=${escaped}" />
   <title>Sign-in complete</title>
   <style>
     body { font-family: system-ui, sans-serif; display: flex; min-height: 100dvh; align-items: center; justify-content: center; margin: 0; padding: 24px; background: #101814; color: #f8fcfa; text-align: center; }
     .card { max-width: 22rem; padding: 20px; border-radius: 16px; background: #1a2420; border: 1px solid #3a4a40; }
     p { margin: 0 0 12px; line-height: 1.45; font-size: 0.95rem; }
-    p.hint { font-size: 0.85rem; color: #b8c8be; }
-    strong { color: #9fd4b0; }
+    a { color: #9fd4b0; font-weight: 600; }
   </style>
 </head>
 <body>
   <div class="card">
     <p>Sign-in complete.</p>
     <p>Returning to The Outreach Project…</p>
-    <p class="hint">If nothing happens, tap <strong>Done</strong> at the top of this screen.</p>
+    <p><a href="${escaped}">Continue in app</a></p>
   </div>
+  <script>
+    (function () {
+      var target = ${json};
+      function go() {
+        try { window.location.replace(target); } catch (e) {}
+        try { window.location.href = target; } catch (e2) {}
+      }
+      go();
+      setTimeout(go, 120);
+      setTimeout(go, 400);
+    })();
+  </script>
 </body>
 </html>`;
 }
