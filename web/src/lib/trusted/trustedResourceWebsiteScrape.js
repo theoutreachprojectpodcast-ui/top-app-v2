@@ -3,6 +3,8 @@
  * Results are stored on `trusted_resources` so detail pages do not re-fetch every load.
  */
 
+import { validateOutboundFetchUrl } from "@/lib/security/ssrfGuard";
+
 function readMetaContent(html, property) {
   const patterns = [
     new RegExp(
@@ -51,10 +53,13 @@ export async function scrapeTrustedResourceWebsite(websiteUrl) {
   const url = normalizeUrl(websiteUrl);
   if (!url) return null;
 
+  const safe = validateOutboundFetchUrl(url);
+  if (!safe.ok) return null;
+
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 12_000);
   try {
-    const res = await fetch(url, {
+    const res = await fetch(safe.url.href, {
       signal: controller.signal,
       headers: {
         Accept: "text/html,application/xhtml+xml",

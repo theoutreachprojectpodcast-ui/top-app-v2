@@ -71,6 +71,14 @@
 				<string>com.theoutreachproject.theoutreachproject</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>theoutreachproject</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>theoutreachproject</string>
+			</array>
+		</dict>
 	</array>
 </dict>
 </plist>

@@ -31,7 +31,10 @@ jobs:
         run: pnpm --dir web run security:guards
 
       - name: Dependency audit (high+)
-        run: pnpm --dir web run security:audit
+        run: pnpm --dir web run security:audit:ci
+
+      - name: Security posture checks
+        run: pnpm --dir web run verify:security
 
   lint-and-build:
     runs-on: ubuntu-latest

@@ -28,7 +28,17 @@ const config = {
     /** OAuth + Stripe stay in the main WKWebView when hosts match `allowNavigation`. */
     limitsNavigationsToAppBoundDomains: false,
   },
-  plugins: {},
+  plugins: {
+    SplashScreen: {
+      launchAutoHide: false,
+      launchShowDuration: 0,
+      showSpinner: true,
+      iosSpinnerStyle: "large",
+      androidSpinnerStyle: "large",
+      spinnerColor: "#22a52b",
+      backgroundColor: "#121212",
+    },
+  },
 };
 
 /** Production WebView origin — override with CAP_SERVER_URL for QA/local emulator sync. */

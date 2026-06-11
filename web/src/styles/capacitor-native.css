@@ -85,3 +85,63 @@ html[data-capacitor-native] .siteMobileNavMore__trigger {
 .mobileReturnToAppPanel {
   margin-bottom: 16px;
 }
+
+/* Branded boot overlay (Capacitor native only) */
+.mobileBootOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  padding: max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right))
+    max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgba(34, 165, 43, 0.18), transparent 58%),
+    linear-gradient(168deg, #1a241c 0%, #121212 42%, #121212 100%);
+  color: #e8eef6;
+}
+
+:root[data-color-scheme="light"] .mobileBootOverlay,
+html[data-color-scheme="light"] .mobileBootOverlay {
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgba(34, 165, 43, 0.14), transparent 58%),
+    linear-gradient(168deg, #eef2ef 0%, #e8ece8 42%, #e8ece8 100%);
+  color: #111714;
+}
+
+.mobileBootOverlay__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  text-align: center;
+}
+
+.mobileBootOverlay__logo {
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
+}
+
+.mobileBootOverlay__spinner {
+  width: 44px;
+  height: 44px;
+  border: 3px solid color-mix(in srgb, #22a52b 25%, transparent);
+  border-top-color: #22a52b;
+  border-radius: 50%;
+  animation: mobileBootSpin 0.85s linear infinite;
+}
+
+.mobileBootOverlay__text {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+@keyframes mobileBootSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}

@@ -347,11 +347,11 @@ html {
   main.topApp.appShell--podcast,
   main.topApp[data-page-atmosphere="podcast"] {
     --mobile-podcast-header-logo-h: clamp(
-      calc(168px * var(--podcast-brand-logo-scale, 2.5)),
-      calc(44vw * var(--podcast-brand-logo-scale, 2.5)),
-      calc(248px * var(--podcast-brand-logo-scale, 2.5))
+      calc(168px * var(--podcast-brand-logo-scale, 1.75)),
+      calc(44vw * var(--podcast-brand-logo-scale, 1.75)),
+      calc(248px * var(--podcast-brand-logo-scale, 1.75))
     );
-    --mobile-podcast-header-logo-max-w: min(calc(320px * var(--podcast-brand-logo-scale, 2.5)), calc(100vw - 28px));
+    --mobile-podcast-header-logo-max-w: min(calc(320px * var(--podcast-brand-logo-scale, 1.75)), calc(100vw - 28px));
     --mobile-site-header-control-size: 44px;
     --mobile-site-header-control-pad-top: calc(4px + env(safe-area-inset-top, 0px));
     --mobile-site-header-pad-x: max(var(--mobile-shell-pad-x, clamp(16px, 4.5vw, 20px)), env(safe-area-inset-left, 0px));

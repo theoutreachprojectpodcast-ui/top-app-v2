@@ -13,8 +13,8 @@ import { isModeratorUser } from "@/features/community/api/communityApi";
 import { useCommunityFeed } from "@/features/community/hooks/useCommunityFeed";
 import { emptyProfileAvatarUrl } from "@/lib/avatarFallback";
 import { readRememberDevicePref } from "@/lib/auth/lastUsedEmail";
-import { workosSignInLink, workosSignUpHref } from "@/lib/auth/workosReturnTo";
-import { openWebMembership, openWebSignup, requiresExternalWebAccountFlow } from "@/lib/capacitor/webAccountRedirects";
+import { workosSignUpHref } from "@/lib/auth/workosReturnTo";
+import { openWebLogin, openWebMembership, openWebSignup, requiresExternalWebAccountFlow } from "@/lib/capacitor/webAccountRedirects";
 
 function CommunityIcon() {
   const path = "M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6m8 0a3 3 0 1 1 0-6 3 3 0 0 1 0 6M3 19c0-2.8 2.8-4 5-4s5 1.2 5 4m3 0c0-2.4 2.3-3.5 5-3.5 2.1 0 5 1 5 3.5";
@@ -56,9 +56,6 @@ export default function CommunityPage({
   const maySubmit = isMember || canSubmitStory;
   const useWorkOSApi = authBackend.workos && sessionKind === "workos";
   const workosCommunitySignUpHref = workosSignUpHref("/community", { rememberDevice: readRememberDevicePref() });
-  const workosCommunitySignInHref = workosSignInLink("/community", null, "/community", {
-    rememberDevice: readRememberDevicePref(),
-  });
 
   function handleCreateAccount() {
     if (requiresExternalWebAccountFlow() && authBackend.workos) {
@@ -116,9 +113,22 @@ export default function CommunityPage({
                 <button className="btnPrimary" type="button" onClick={handleCreateAccount}>
                   Create account
                 </button>
-                <a className="btnSoft" href={workosCommunitySignInHref}>
+                <button
+                  className="btnSoft"
+                  type="button"
+                  onClick={() => {
+                    if (requiresExternalWebAccountFlow()) {
+                      void openWebLogin({
+                        returnPath: "/community",
+                        rememberDevice: readRememberDevicePref(),
+                      });
+                      return;
+                    }
+                    onRequestSignIn?.();
+                  }}
+                >
                   Sign in
-                </a>
+                </button>
               </>
             ) : (
               <>

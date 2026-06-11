@@ -50,10 +50,6 @@ async function classifyRouteSession(session) {
     return { kind: "ok", user: s.user };
   }
 
-  if (profileRow) {
-    return { kind: "ok", user: s.user };
-  }
-
   return { kind: "org_blocked" };
 }
 

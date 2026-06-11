@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { Roboto } from "next/font/google";
 import ColorSchemeRoot from "@/components/app/ColorSchemeRoot";
 import CapacitorNativeShell from "@/components/capacitor/CapacitorNativeShell";
+import MobileBootLoader from "@/components/capacitor/MobileBootLoader";
 import MobileAccountReturnBridge from "@/components/capacitor/MobileAccountReturnBridge";
 import MobileOAuthBrowserFinish from "@/components/capacitor/MobileOAuthBrowserFinish";
 import MobileOAuthDeepLink from "@/components/capacitor/MobileOAuthDeepLink";
@@ -60,12 +61,34 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={roboto.variable} suppressHydrationWarning data-color-scheme="light">
+      <head>
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
+html, body {
+  background-color: #121212;
+  color: #e8eef6;
+}
+html[data-color-scheme="light"], html[data-color-scheme="light"] body {
+  background-color: #e8ece8;
+  color: #111714;
+}
+html[data-capacitor-native], html[data-capacitor-native] body {
+  min-height: 100%;
+  min-height: 100dvh;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+            `.trim(),
+          }}
+        />
+      </head>
       <body suppressHydrationWarning>
         <CapacitorNativeShell />
         <ColorSchemeRoot>
           <AuthSessionProvider>
             <ProfileDataProvider>
               <ProfileEditProvider>
+                <MobileBootLoader />
                 <Suspense fallback={null}>
                   <MobileOAuthBrowserFinish />
                   <MobileOAuthDeepLink />
