@@ -1,0 +1,53 @@
+.membershipPlansModalOverlay {
+  align-items: flex-start;
+  padding: max(env(safe-area-inset-top, 0px), 16px) 12px max(env(safe-area-inset-bottom, 0px), 16px);
+  overflow-y: auto;
+}
+
+.membershipPlansModal {
+  width: min(100%, 980px);
+  max-height: none;
+  margin: auto;
+  padding: 12px 14px 16px;
+}
+
+.membershipPlansModal__toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.membershipPlansModal__close {
+  min-height: 40px;
+}
+
+.membershipPlansModal .homeMembershipSection {
+  margin: 0;
+  box-shadow: none;
+}
+
+.membershipPlansModal .homeMembershipSection__grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (min-width: 640px) {
+  .membershipPlansModal .homeMembershipSection__grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .membershipPlansModal {
+    padding: 10px 10px 14px;
+  }
+
+  .membershipPlansModal .homeMembershipSection__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 480px) and (max-width: 760px) {
+  .membershipPlansModal .homeMembershipSection__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

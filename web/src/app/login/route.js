@@ -1,6 +1,0 @@
-import { workOSSignInResponse } from "@/lib/auth/workosSignInHandler";
-
-/** Alias for WorkOS sign-in endpoint (`/login` per AuthKit quickstart). */
-export async function GET(request) {
-  return workOSSignInResponse(request);
-}

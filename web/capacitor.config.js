@@ -1,3 +1,5 @@
+const { CAPACITOR_ALLOW_NAVIGATION_HOSTS } = require("./src/lib/capacitor/allowNavigationHosts.js");
+
 /**
  * tORP — Capacitor wraps the existing Next.js product (remote WebView architecture).
  *
@@ -11,7 +13,7 @@
  * @type {import('@capacitor/cli').CapacitorConfig}
  */
 const config = {
-  appId: "org.theoutreachproject.torp",
+  appId: "com.theoutreachproject.theoutreachproject",
   appName: "The Outreach Project",
   webDir: "capacitor-www",
   android: {
@@ -20,26 +22,32 @@ const config = {
     androidScheme: "https",
   },
   ios: {
-    contentInset: "automatic",
-    /** Prefer Safari-like behavior for WorkOS / Stripe redirects */
+  /** CSS `env(safe-area-inset-*)` handles insets — avoid stacking with WKWebView automatic inset. */
+    contentInset: "never",
     preferredContentMode: "mobile",
+    /** OAuth + Stripe stay in the main WKWebView when hosts match `allowNavigation`. */
+    limitsNavigationsToAppBoundDomains: false,
   },
   plugins: {},
 };
 
-const capServer = String(process.env.CAP_SERVER_URL || "").trim();
+/** Production WebView origin — override with CAP_SERVER_URL for QA/local emulator sync. */
+const PRODUCTION_CAP_SERVER = "https://theoutreachproject.app";
+
+const capServer = String(
+  process.env.CAP_SERVER_URL || process.env.MOBILE_PRODUCTION_URL || PRODUCTION_CAP_SERVER,
+).trim();
 if (capServer) {
   const origin = capServer.replace(/\/$/, "");
+  /** Open mobile splash first — loading `/` traps users in TopApp while profile hydrates. */
+  const serverUrl = origin.endsWith("/mobile") ? origin : `${origin}/mobile`;
   config.server = {
-    url: origin,
+    url: serverUrl,
     cleartext: origin.startsWith("http://"),
-    /** Allow in-WebView navigation to auth and Supabase storage — not Stripe (billing opens in system browser). */
-    allowNavigation: [
-      origin,
-      "https://*.workos.com",
-      "https://api.workos.com",
-      "https://*.supabase.co",
-    ],
+    /** Server must detect Capacitor vs mobile Safari on `/callback` (WKWebView UA is often plain Mobile Safari). */
+    appendUserAgent: "TheOutreachProject/Capacitor",
+  /** Hostname patterns only (Capacitor matches host, not full URLs). */
+    allowNavigation: CAPACITOR_ALLOW_NAVIGATION_HOSTS,
   };
 }
 

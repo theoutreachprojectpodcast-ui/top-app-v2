@@ -113,7 +113,7 @@
   --shadow-bottom-nav: 0 -8px 32px color-mix(in srgb, var(--color-text-primary) 15%, transparent);
 
   /* Fixed bottom nav + iOS home indicator — use for `padding-bottom` on shells with docked nav */
-  --torp-bottom-nav-reserve: calc(120px + env(safe-area-inset-bottom, 0px));
+  --torp-bottom-nav-reserve: calc(68px + env(safe-area-inset-bottom, 0px));
   /* Horizontal page gutter on phones (avoid hard-coded 40px-only gutters) */
   --torp-page-gutter-x: clamp(12px, 4.2vw, 48px);
 

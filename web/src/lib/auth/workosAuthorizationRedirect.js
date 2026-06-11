@@ -1,18 +1,14 @@
-import fnv1a from "@sindresorhus/fnv1a";
 import { sealData } from "iron-session";
 import { cookies } from "next/headers";
 import { getWorkOS } from "@workos-inc/authkit-nextjs";
+import { workosMobileRedirectUri } from "@/lib/auth/workosMobileRedirect";
+import { TORP_OAUTH_SHELL_COOKIE, TORP_OAUTH_SHELL_NATIVE } from "@/lib/auth/workosOAuthShell";
 
-const PKCE_COOKIE_PREFIX = "wos-auth-verifier";
+/** AuthKit callback expects this exact cookie name (`handleAuth` in @workos-inc/authkit-nextjs). */
+export const WORKOS_PKCE_COOKIE_NAME = "wos-auth-verifier";
 
-/** Match AuthKit PKCE cookie naming so `/callback` can unseal the verifier. */
-function pkceCookieNameForState(sealedState) {
-  const hash = Number(fnv1a(sealedState, { size: 32 }));
-  return `${PKCE_COOKIE_PREFIX}-${hash.toString(16).padStart(8, "0")}`;
-}
-
-function pkceCookieOptions() {
-  const domain = String(process.env.WORKOS_COOKIE_DOMAIN || "").trim() || undefined;
+export function workosPkceCookieOptions() {
+  const domain = String(process.env.WORKOS_COOKIE_DOMAIN || "").trim();
   const redirectUri = String(
     process.env.NEXT_PUBLIC_WORKOS_REDIRECT_URI || process.env.WORKOS_REDIRECT_URI || "",
   ).trim();
@@ -44,13 +40,16 @@ function pkceCookieOptions() {
  *   prompt?: string,
  *   invitationToken?: string,
  *   organizationId?: string,
+ *   useMobileRedirect?: boolean,
+ *   markNativeShell?: boolean,
  * }} [options]
  */
 export async function getWorkOSAuthKitRedirectUrl(options = {}) {
   const clientId = String(process.env.WORKOS_CLIENT_ID || "").trim();
-  const redirectUri = String(
+  const webRedirectUri = String(
     process.env.NEXT_PUBLIC_WORKOS_REDIRECT_URI || process.env.WORKOS_REDIRECT_URI || "",
   ).trim();
+  const redirectUri = options.useMobileRedirect ? workosMobileRedirectUri() : webRedirectUri;
   const password = String(process.env.WORKOS_COOKIE_PASSWORD || "");
   if (!clientId || !redirectUri || password.length < 32) {
     throw new Error("workos_not_configured");
@@ -65,7 +64,11 @@ export async function getWorkOSAuthKitRedirectUrl(options = {}) {
   };
   const sealedState = await sealData(state, { password, ttl: 600 });
   const cookieStore = await cookies();
-  cookieStore.set(pkceCookieNameForState(sealedState), sealedState, pkceCookieOptions());
+  const cookieOpts = workosPkceCookieOptions();
+  cookieStore.set(WORKOS_PKCE_COOKIE_NAME, sealedState, cookieOpts);
+  if (options.markNativeShell) {
+    cookieStore.set(TORP_OAUTH_SHELL_COOKIE, TORP_OAUTH_SHELL_NATIVE, cookieOpts);
+  }
 
   return workos.userManagement.getAuthorizationUrl({
     provider: "authkit",

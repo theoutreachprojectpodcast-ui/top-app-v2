@@ -7,19 +7,31 @@ import {
   syncProfileEmailWithWorkOSUser,
 } from "@/lib/profile/serverProfile";
 import { computeEntitlementsFromProfileRow } from "@/lib/account/entitlements";
+import { isPlatformAdminServer } from "@/lib/admin/platformAdminServer";
 import { computeProfileCompletion } from "@/lib/profile/profileCompletion";
+
+function entitlementsForSession(row, user) {
+  if (row) return computeEntitlementsFromProfileRow(row);
+  const isPlatformAdmin = isPlatformAdminServer({
+    email: String(user.email || "").trim(),
+    workosUserId: String(user.id || ""),
+    profileRow: null,
+  });
+  return {
+    podcastMemberContent: isPlatformAdmin,
+    communityStorySubmit: isPlatformAdmin,
+    isPrivilegedStaff: false,
+    isPlatformAdmin,
+  };
+}
 
 function unauthenticatedMeResponse() {
   return Response.json({
     authenticated: false,
     profile: null,
     profileCompletion: null,
-    entitlements: {
-      podcastMemberContent: false,
-      communityStorySubmit: false,
-      isPrivilegedStaff: false,
-      isPlatformAdmin: false,
-    },
+    entitlements: null,
+    user: null,
   });
 }
 
@@ -50,12 +62,9 @@ export async function GET() {
   if (profileDto && sessionEmail && !String(profileDto.email || "").trim()) {
     profileDto = { ...profileDto, email: sessionEmail };
   }
-  const entitlements = row ? computeEntitlementsFromProfileRow(row) : {
-    podcastMemberContent: false,
-    communityStorySubmit: false,
-    isPrivilegedStaff: false,
-    isPlatformAdmin: false,
-  };
+  const entitlements = row
+    ? computeEntitlementsFromProfileRow({ ...row, email: sessionEmail || row.email })
+    : entitlementsForSession(null, user);
   const profileCompletion = computeProfileCompletion(profileDto, {
     workOSUser: {
       email: user.email ?? "",

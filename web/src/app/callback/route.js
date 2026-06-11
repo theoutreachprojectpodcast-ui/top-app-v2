@@ -1,64 +1,129 @@
-import { handleAuth } from "@workos-inc/authkit-nextjs";
-import { isDefaultApprovedAdminEmail } from "@/lib/admin/adminPolicy";
-import { isPlatformAdminServer } from "@/lib/admin/platformAdminServer";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { patchProfileByWorkOSId, upsertProfileFromWorkOSUser, getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
-import { requestOriginForStripeRedirects } from "@/lib/billing/stripeConfig";
-import { notifyStaffProfiles } from "@/server/notifications/notificationService";
-import { ensureWorkOSOrganizationMembership } from "@/lib/auth/workosEnsureOrgMembership";
+import { NextResponse } from "next/server";
+import { workosGoUrl } from "@/lib/auth/workosGoUrl";
+import { workosCallbackErrorHtml } from "@/lib/auth/workosGoRoute";
+import { workosCallbackErrorMessage, workosOAuthErrorMessage } from "@/lib/auth/workosCallbackErrors";
+import { isCapacitorCallbackRequest } from "@/lib/auth/workosCallbackRequest";
+import { runWorkOSCallbackDocument, runWorkOSCallbackForFetch } from "@/lib/auth/workosCallbackHandler";
+import { hashOAuthState, saveOAuthMobilePending } from "@/lib/auth/oauthMobileHandoffServer";
+import { MOBILE_POST_AUTH_HOME } from "@/lib/auth/oauthMobileHandoff";
+import {
+  buildMobileOAuthCallbackDeepLink,
+  isMobileExternalBrowserUserAgent,
+  mobileOAuthBrowserDoneHtml,
+  mobileOAuthReturnBridgeHtml,
+} from "@/lib/auth/workosMobileRedirect";
+import { WORKOS_PKCE_COOKIE_NAME } from "@/lib/auth/workosAuthorizationRedirect";
+import { oauthStartedInNativeShell } from "@/lib/auth/workosOAuthShell";
 
-async function onWorkOSSuccess({ user }) {
-  try {
-    const admin = createSupabaseAdminClient();
-    if (!admin) return;
-    const out = await upsertProfileFromWorkOSUser(admin, user);
-    await ensureWorkOSOrganizationMembership(user.id);
-    const email = String(user?.email || "").trim();
-    const row = await getProfileRowByWorkOSId(admin, user.id);
-    const isAdmin =
-      (email && isDefaultApprovedAdminEmail(email)) ||
-      isPlatformAdminServer({ email, workosUserId: user.id, profileRow: row });
-    if (out?.ok && isAdmin) {
-      const tier = String(row?.membership_tier || "free").toLowerCase();
-      await patchProfileByWorkOSId(admin, user.id, {
-        platform_role: "admin",
-        admin_access_enabled: true,
-        admin_access_granted_by: String(row?.admin_access_granted_by || "").trim() || "workos-bootstrap",
-        ...(tier === "free" || !tier
-          ? { membership_tier: "member", membership_status: "active", onboarding_completed: true }
-          : {}),
-      });
-    }
-    if (out?.ok && out.isNew) {
-      await notifyStaffProfiles(admin, {
-        type: "new_user_signup",
-        title: "New member signed up",
-        message: `${user.email || user.id} created a TOP account (first WorkOS sign-in).`,
-        linkPath: "/profile",
-        entityType: "workos_user",
-        entityId: user.id,
-        dedupeHours: 1,
-        metadata: { workos_user_id: user.id },
-      });
-    }
-  } catch (e) {
-    console.error("[torp] WorkOS onSuccess profile sync failed:", e);
-  }
+const BROWSER_OAUTH_COOKIE = "torp-oauth-browser";
+
+/** @param {Request} request */
+function callbackNavHrefs(request) {
+  const native = oauthStartedInNativeShell(request);
+  return {
+    tryAgainHref: native ? workosGoUrl({ mode: "signin", returnTo: "/" }) : "/",
+    homeHref: native ? "/mobile" : "/",
+  };
+}
+
+/** @param {string} message @param {Request} request @param {number} [status] */
+function callbackErrorResponse(message, request, status = 400) {
+  const { tryAgainHref, homeHref } = callbackNavHrefs(request);
+  return new NextResponse(workosCallbackErrorHtml(message, { tryAgainHref, homeHref }), {
+    status,
+    headers: {
+      "Content-Type": "text/html; charset=utf-8",
+      "Content-Disposition": "inline",
+      "Cache-Control": "no-store",
+    },
+  });
 }
 
 /**
- * Per-request baseURL so localhost:3000 (`pnpm dev:alt`) and :3001 both match the browser origin
- * when using production WorkOS credentials (redirect URI must still be registered per port in WorkOS).
+ * WorkOS Redirect URI — https://theoutreachproject.app/callback
+ * Route Handler (not RSC page) so AuthKit can set session cookies.
  */
-export async function GET(request) {
-  const baseURL = requestOriginForStripeRedirects(request);
-  return handleAuth({
-    returnPathname: "/",
-    baseURL,
-    onSuccess: onWorkOSSuccess,
-    onError: async ({ error }) => {
-      console.error("[torp] WorkOS callback failed:", error?.message || error);
-      return null;
+/** Standalone mobile Safari — deep link into native shell (legacy). */
+function mobileBrowserReturnBridgeResponse(url) {
+  const deepLink = buildMobileOAuthCallbackDeepLink(url.searchParams);
+  return new NextResponse(mobileOAuthReturnBridgeHtml(deepLink), {
+    status: 200,
+    headers: {
+      "Content-Type": "text/html; charset=utf-8",
+      "Content-Disposition": "inline",
+      "Cache-Control": "no-store",
     },
-  })(request);
+  });
+}
+
+/** OAuth ran in Capacitor in-app browser (cookie set by `/auth/workos-browser-start`). */
+function isCapacitorBrowserOAuthReturn(request) {
+  return request.cookies.get(BROWSER_OAUTH_COOKIE)?.value === "1";
+}
+
+/** Capacitor in-app browser — stash code/state; WebView finishes OAuth (PKCE cookie lives there). */
+async function mobileBrowserOAuthPendingResponse(request, url) {
+  const state = url.searchParams.get("state");
+  const code = url.searchParams.get("code");
+  if (!state || !code) {
+    return callbackErrorResponse("Missing sign-in response. Please try again.", request);
+  }
+
+  const saved = await saveOAuthMobilePending(hashOAuthState(state), code, state, MOBILE_POST_AUTH_HOME);
+  if (!saved.ok) {
+    return callbackErrorResponse("Could not prepare sign-in for the app. Please try again.", request);
+  }
+
+  return new NextResponse(mobileOAuthBrowserDoneHtml(), {
+    status: 200,
+    headers: {
+      "Content-Type": "text/html; charset=utf-8",
+      "Content-Disposition": "inline",
+      "Cache-Control": "no-store",
+    },
+  });
+}
+
+export async function GET(request) {
+  const url = new URL(request.url);
+  const ua = request.headers.get("user-agent") || "";
+  const startedInApp = oauthStartedInNativeShell(request);
+  const inMobileBrowser = isMobileExternalBrowserUserAgent(ua);
+  const oauthError = url.searchParams.get("error");
+  const code = url.searchParams.get("code");
+
+  // In-app browser sheet (Turnstile flow) — save code/state for WebView PKCE completion.
+  if (!startedInApp && inMobileBrowser && code && isCapacitorBrowserOAuthReturn(request)) {
+    return mobileBrowserOAuthPendingResponse(request, url);
+  }
+
+  // Mobile web Safari — PKCE cookie in this browser tab; finish sign-in normally.
+  const pkceInBrowser = !!request.cookies.get(WORKOS_PKCE_COOKIE_NAME)?.value;
+
+  // Standalone mobile Safari without PKCE — deep link into native shell (legacy).
+  if (!startedInApp && inMobileBrowser && (code || oauthError) && !pkceInBrowser) {
+    return mobileBrowserReturnBridgeResponse(url);
+  }
+
+  if (oauthError) {
+    return callbackErrorResponse(
+      workosOAuthErrorMessage(oauthError, url.searchParams.get("error_description") || ""),
+      request,
+    );
+  }
+
+  if (!code) {
+    return callbackErrorResponse("Missing sign-in response. Please try again.", request);
+  }
+
+  if (isCapacitorCallbackRequest(request)) {
+    return runWorkOSCallbackForFetch(request);
+  }
+
+  try {
+    return await runWorkOSCallbackDocument(request);
+  } catch (err) {
+    console.error("[torp] WorkOS callback failed:", err);
+    return callbackErrorResponse(workosCallbackErrorMessage(err), request);
+  }
 }

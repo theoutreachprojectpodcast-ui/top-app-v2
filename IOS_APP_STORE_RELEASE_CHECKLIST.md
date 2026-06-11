@@ -1,11 +1,12 @@
 # iOS App Store release checklist — The Outreach Project
 
-Mac / Capacitor / Xcode release guide for **`org.theoutreachproject.torp`**.  
+Mac / Capacitor / Xcode release guide for **`com.theoutreachproject.theoutreachproject`**.  
+App Store Connect: **The Outreach Project. Nonprofit Directory** (Prepare for Submission).  
 This environment wraps the **production web app** at `https://theoutreachproject.app` — it does not ship a bundled Next.js build inside the IPA.
 
 **Related:** [docs/MOBILE_READINESS.md](docs/MOBILE_READINESS.md) · [docs/MOBILE_LAUNCH_CHECKLIST.md](docs/MOBILE_LAUNCH_CHECKLIST.md) · [docs/MOBILE_ARCHITECTURE_GAPS.md](docs/MOBILE_ARCHITECTURE_GAPS.md)
 
-**Last updated:** 2026-06-09
+**Last updated:** 2026-06-09 (login verified on device)
 
 ---
 
@@ -14,13 +15,14 @@ This environment wraps the **production web app** at `https://theoutreachproject
 | Area | Status |
 |------|--------|
 | App icon (1024×1024, dark bg, no alpha) | ✅ Generated and installed |
-| Capacitor production config | ✅ `CAP_SERVER_URL` → `https://theoutreachproject.app` |
-| Xcode project / bundle ID | ✅ `org.theoutreachproject.torp` v**1.0** build **1** |
+| Capacitor production config | ✅ `CAP_SERVER_URL` → `https://theoutreachproject.app/mobile` |
+| Xcode project / bundle ID | ✅ `com.theoutreachproject.theoutreachproject` v**1.0** build **1** |
 | Production URL smoke (HTTP) | ✅ Home, privacy, terms, sponsors, community, trusted → 200 |
 | Production auth flags | ✅ `demoFlowsEnabled: false`, WorkOS + Stripe configured |
+| WorkOS login on device | ✅ Working (2026-06-09) |
 | `cap sync ios` | ✅ Passed |
-| Local Xcode build | ⚠️ Blocked — **iOS 26.5 Platform** not installed (see §8) |
-| Archive / upload | ⏳ Manual in Xcode after platform + signing |
+| iOS Release build (CLI) | ✅ `xcodebuild` Release succeeded (2026-06-10) |
+| Archive / upload | ⏳ Manual in Xcode — signing + App Store Connect |
 
 ---
 
@@ -62,13 +64,13 @@ The prior icon used a **white** background with transparency-capable PNG. The ne
 | Setting | Value |
 |---------|--------|
 | Config file | `web/capacitor.config.js` |
-| appId / bundle ID | `org.theoutreachproject.torp` |
+| appId / bundle ID | `com.theoutreachproject.theoutreachproject` |
 | appName | The Outreach Project |
 | webDir | `capacitor-www` (fallback shell only) |
-| Production `server.url` | `https://theoutreachproject.app` |
+| Production `server.url` | `https://theoutreachproject.app/mobile` |
 | cleartext | `false` (HTTPS only) |
 | allowNavigation | Production origin, WorkOS, Stripe Checkout/Billing, Supabase |
-| iOS `contentInset` | `automatic` |
+| iOS `contentInset` | `never` (safe areas via CSS) |
 | iOS `preferredContentMode` | `mobile` |
 | Plugins | `@capacitor/share` |
 
@@ -76,15 +78,14 @@ The prior icon used a **white** background with transparency-capable PNG. The ne
 
 ```bash
 pnpm install
-pnpm --dir web run validate:capacitor
-CAP_SERVER_URL=https://theoutreachproject.app pnpm --dir web exec cap sync ios
-# Or full pipeline (includes Next build):
-pnpm --dir web run mobile:prep:prod
+pnpm run mobile:store:prep
+# Or iOS-only sync after prep:
+pnpm --dir web exec cap sync ios
 ```
 
 **Verify** embedded config after sync:
 
-`web/ios/App/App/capacitor.config.json` → `"url": "https://theoutreachproject.app"`
+`web/ios/App/App/capacitor.config.json` → `"url": "https://theoutreachproject.app/mobile"`
 
 **Secrets:** WorkOS, Supabase, Stripe keys stay on **Vercel** — never in the native project.
 
@@ -96,7 +97,7 @@ pnpm --dir web run mobile:prep:prod
 |---------|--------|
 | Project path | `web/ios/App/App.xcodeproj` |
 | Scheme | **App** (shared: `xcshareddata/xcschemes/App.xcscheme`) |
-| Bundle identifier | `org.theoutreachproject.torp` |
+| Bundle identifier | `com.theoutreachproject.theoutreachproject` |
 | Marketing version | **1.0** |
 | Build number | **1** (increment before each App Store upload) |
 | Deployment target | iOS **15.0** |
@@ -128,9 +129,9 @@ pnpm --dir web run cap:open:ios
 
 ### Device smoke (required before submit)
 
-On simulator or **ADG iPhone** after platform install:
+On simulator or **physical iPhone** after platform install:
 
-- [ ] Sign in / sign out (WorkOS hosted auth)
+- [x] Sign in / sign out (WorkOS hosted auth)
 - [ ] Profile view + edit
 - [ ] Membership / Stripe checkout (web flow inside WebView)
 - [ ] Sponsors, community, trusted resources
@@ -182,8 +183,7 @@ Photo access uses standard HTML file inputs in the WebView — no `@capacitor/ca
 ```bash
 # From repo root
 pnpm install
-python3 web/scripts/generate-ios-app-icon.py   # when brand assets change
-pnpm --dir web run mobile:prep:prod            # build + cap sync → production URL
+pnpm run mobile:store:prep
 pnpm --dir web run cap:open:ios
 ```
 
@@ -197,20 +197,16 @@ pnpm --dir web run validate:capacitor
 
 ## 8. Manual Xcode steps (required on this Mac)
 
-### A. Install missing Xcode platform (blocker observed 2026-06-09)
+### A. Xcode platform
 
-Xcode **26.5** SDK is installed, but **iOS 26.5 Platform** components are missing. Builds fail with:
-
-> `iOS 26.5 Platform Not Installed`
-
-**Fix:** Xcode → **Settings** → **Components** → download **iOS 26.5** (and device support for **ADG iPhone** if testing on device).
+iOS **26.5 SDK** is installed (verified 2026-06-10). If builds fail with “Platform Not Installed”, use Xcode → **Settings** → **Components** to download the matching iOS platform.
 
 ### B. Signing
 
 1. Open `web/ios/App/App.xcodeproj`
 2. Target **App** → **Signing & Capabilities**
 3. Select your **Team** (Apple Developer account)
-4. Confirm **Bundle Identifier** = `org.theoutreachproject.torp`
+4. Confirm **Bundle Identifier** = `com.theoutreachproject.theoutreachproject`
 5. Let Xcode manage provisioning (Automatic)
 
 ### C. Version / build
@@ -236,7 +232,7 @@ Before each upload:
 
 ## 9. Manual App Store Connect steps
 
-1. Confirm app record exists for **`org.theoutreachproject.torp`**
+1. Confirm app record **The Outreach Project. Nonprofit Directory** uses **`com.theoutreachproject.theoutreachproject`**
 2. Upload build from Xcode Organizer (or Transporter)
 3. **App Privacy** questionnaire — align with web app data collection (WorkOS account, profile, Stripe)
 4. **Age rating** questionnaire
@@ -249,10 +245,10 @@ Before each upload:
 
 ## 10. Final pre-submit checklist
 
-- [ ] iOS 26.5 platform installed in Xcode
+- [ ] iOS platform available in Xcode (SDK 26.5+)
 - [ ] Team selected; archive succeeds
 - [ ] Build number incremented
-- [ ] `capacitor.config.json` shows `https://theoutreachproject.app`
+- [ ] `capacitor.config.json` shows `https://theoutreachproject.app/mobile`
 - [ ] App icon visible on home screen (dark mark on dark gradient)
 - [ ] Login / logout on physical device
 - [ ] Membership checkout tested (live or test mode per policy)

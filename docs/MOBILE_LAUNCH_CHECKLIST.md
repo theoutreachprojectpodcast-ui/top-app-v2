@@ -4,9 +4,11 @@ Single checklist for store submission. **Web production launch** ([mvp-productio
 
 **Guides:** [MOBILE_READINESS.md](./MOBILE_READINESS.md) · [MOBILE_ARCHITECTURE_GAPS.md](./MOBILE_ARCHITECTURE_GAPS.md) · [IOS_XCODE_SETUP.md](./IOS_XCODE_SETUP.md) (Mac) · [ANDROID_STUDIO_SETUP.md](./ANDROID_STUDIO_SETUP.md) (Windows) · [web/docs/CAPACITOR_MOBILE.md](../web/docs/CAPACITOR_MOBILE.md) · [store-listing-copy.md](./store-listing-copy.md)
 
-**Status snapshot:** 2026-06-08 — Capacitor synced to Production; Android **debug build OK**; iOS icon synced. **Next:** device smoke, Android Image Asset icons, signed AAB, store consoles.
+**Status snapshot:** 2026-06-09 — Production login verified on iOS; Capacitor synced to `https://theoutreachproject.app/mobile`. **Next:** iOS Archive → TestFlight; Android keystore + signed AAB → Play internal testing.
 
-**App ID:** `org.theoutreachproject.torp` · **Production WebView URL:** `https://theoutreachproject.app`
+**App ID:** `org.theoutreachproject.torp` · **Production WebView URL:** `https://theoutreachproject.app/mobile`
+
+**Store checklists:** [IOS_APP_STORE_RELEASE_CHECKLIST.md](../IOS_APP_STORE_RELEASE_CHECKLIST.md) · [ANDROID_PLAY_STORE_RELEASE_CHECKLIST.md](../ANDROID_PLAY_STORE_RELEASE_CHECKLIST.md)
 
 ---
 
@@ -14,11 +16,11 @@ Single checklist for store submission. **Web production launch** ([mvp-productio
 
 | Phase | Status |
 |-------|--------|
-| A — Repo & Capacitor setup | Mostly done |
+| A — Repo & Capacitor setup | Done |
 | B — Web production prerequisite | **Done** (MVP §1–7; §8 admin QA skipped) |
-| C — Native prep & device smoke | **In progress** — automated prep done; device smoke manual |
-| D — iOS App Store | Not started (needs Mac + Xcode) |
-| E — Google Play | SDK ready — emulator + signed AAB remaining |
+| C — Native prep & device smoke | **In progress** — login OK; billing/photos smoke remaining |
+| D — iOS App Store | **Ready to archive** — install Xcode iOS platform, then TestFlight |
+| E — Google Play | **Ready for AAB** — generate keystore, upload to internal testing |
 | F — Post-launch / phase 2 | Not started |
 
 ---
@@ -67,8 +69,8 @@ Complete [mvp-production-launch.md](./mvp-production-launch.md) §1–7 first (�
 
 ### C.2 Sync before each native release
 
-- [x] Run `pnpm --dir web run mobile:prep:prod` (2026-06-08)
-- [x] Confirm embedded server URL = `https://theoutreachproject.app` in native config (after sync)
+- [x] Run `pnpm run mobile:store:prep` (or `mobile:prep:prod`)
+- [x] Confirm embedded server URL = `https://theoutreachproject.app/mobile` in native config (after sync)
 
 ### C.3 Automated checks (repeatable)
 
@@ -98,8 +100,8 @@ Test on **physical devices** after native builds run.
 
 - [x] WorkOS redirect URI includes production callback
 - [x] `WORKOS_COOKIE_DOMAIN=theoutreachproject.app` on Vercel
-- [ ] Sign in / sign out (iOS WebView)
-- [ ] Sign in / sign out (Android WebView)
+- [ ] Sign in / sign out (iOS WebView) — **verified 2026-06-09**
+- [ ] Sign in / sign out (Android WebView) — verify on internal-testing build
 - [ ] Profile loads after **cold start**
 - [ ] Session persists across app restarts
 
@@ -134,7 +136,7 @@ Test on **physical devices** after native builds run.
 
 ## E. iOS — App Store (requires Mac + Xcode)
 
-**Full walkthrough:** [IOS_XCODE_SETUP.md](./IOS_XCODE_SETUP.md)
+**Full walkthrough:** [IOS_APP_STORE_RELEASE_CHECKLIST.md](../IOS_APP_STORE_RELEASE_CHECKLIST.md) · [IOS_XCODE_SETUP.md](./IOS_XCODE_SETUP.md)
 
 ### E.1 App Store Connect
 
@@ -170,7 +172,7 @@ Test on **physical devices** after native builds run.
 
 ## F. Android — Google Play
 
-Android Studio is installed; finish SDK setup in [ANDROID_STUDIO_SETUP.md](./ANDROID_STUDIO_SETUP.md), then complete F.1–F.4 below (or use CI for AAB).
+**Full walkthrough:** [ANDROID_PLAY_STORE_RELEASE_CHECKLIST.md](../ANDROID_PLAY_STORE_RELEASE_CHECKLIST.md) · [ANDROID_STUDIO_SETUP.md](./ANDROID_STUDIO_SETUP.md)
 
 ### F.1 Play Console app record
 
@@ -180,9 +182,8 @@ Android Studio is installed; finish SDK setup in [ANDROID_STUDIO_SETUP.md](./AND
 ### F.2 Signing & AAB
 
 - [ ] Play App Signing enabled
-- [ ] Upload keystore generated and stored securely
-- [ ] `pnpm --dir web run cap:open:android`
-- [ ] **Build → Generate Signed Bundle (AAB)**
+- [ ] Upload keystore generated (`web/android/keystore.properties.example` → `keystore.properties`)
+- [ ] `pnpm run mobile:android:bundle` → `app-release.aab`
 - [ ] Upload AAB to internal testing track
 
 ### F.3 Store listing & policy

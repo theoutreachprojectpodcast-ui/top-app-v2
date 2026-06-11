@@ -1,0 +1,138 @@
+/**
+ * Capacitor native shell — scroll container + dock clearance (header sizing matches mobile web via mobile-shell.css).
+ */
+
+/* Lock document scroll; only main.topApp scrolls (prevents short rubber-band past viewport). */
+html[data-capacitor-native],
+html[data-capacitor-native] body {
+  height: 100%;
+  max-height: 100dvh;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+html[data-capacitor-native] body {
+  width: 100%;
+  position: fixed;
+  inset: 0;
+}
+
+html[data-capacitor-native] main.topApp {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  min-height: 0 !important;
+  height: 100%;
+  max-height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 0 !important;
+}
+
+html[data-capacitor-native] main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* One dock reserve on scrollable content — not on main + footer. */
+html[data-capacitor-native] main.topApp > .shell,
+html[data-capacitor-native] main.topApp > section.shell {
+  padding-bottom: var(--torp-bottom-nav-reserve);
+  box-sizing: border-box;
+}
+
+html[data-capacitor-native] main.topApp .siteFooter,
+html[data-capacitor-native] main.topApp .siteFooter.siteFooter--pageBottom,
+html[data-capacitor-native] main.topApp .siteFooter.siteFooter--pageBottom.siteFooter--inMainShell {
+  padding-bottom: 0 !important;
+  margin-bottom: 0;
+}
+
+/* Portaled to `body` — viewport-fixed dock (see CapacitorFooterPortal.jsx). */
+@media (max-width: 760px) {
+  html[data-capacitor-native] body > .footerDockBackdrop {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: calc(68px + env(safe-area-inset-bottom, 0px)) !important;
+    min-height: 0;
+    z-index: 98;
+    background: transparent !important;
+    pointer-events: none;
+  }
+
+  html[data-capacitor-native] body > .footerDock {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 99;
+    background: transparent;
+    pointer-events: auto;
+  }
+
+  html[data-capacitor-native] body > .footerDock .footerNavInner {
+    padding: 4px 10px calc(4px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  html[data-capacitor-native] body > .footerDock .bottomNav.bottomNav--mobileDock {
+    width: 100%;
+    max-width: 100%;
+    margin-inline: 0;
+    padding: 6px 8px !important;
+    border-radius: 18px;
+    box-shadow:
+      0 8px 24px color-mix(in srgb, #000 16%, transparent),
+      0 0 0 1px color-mix(in srgb, var(--color-border-soft) 80%, transparent);
+  }
+
+  html[data-capacitor-native] body > .footerDock .bottomNav.bottomNav--mobileDock .navItem--dockPrimary {
+    min-height: 44px;
+    padding: 6px 4px;
+  }
+}
+
+@media (max-width: 760px) {
+  /* Match mobile web: in-flow header band — no extra occlusion layer under the logo. */
+  html[data-capacitor-native] main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) > .topbarOcclusion {
+    position: static;
+    display: block;
+    height: 0;
+    min-height: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  html[data-capacitor-native] main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarOcclusion::before,
+  html[data-capacitor-native] main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarOcclusion::after {
+    display: none;
+  }
+
+  /* In-app tabs (non-home): keep logo band from overlapping first card row. */
+  html[data-capacitor-native]
+    main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]):not([data-page-atmosphere="home"])
+    .appSiteHeader {
+    margin-bottom: clamp(6px, 1.6vw, 10px);
+    padding-bottom: 0;
+  }
+
+  html[data-capacitor-native]
+    main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]):not([data-page-atmosphere="home"])
+    .headerBrandStack
+    .brandMarkImg,
+  html[data-capacitor-native]
+    main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]):not([data-page-atmosphere="home"])
+    .headerBrandStack
+    img.brandMarkImg--header:not(.podcastBrandLogo) {
+    margin-bottom: 0 !important;
+  }
+
+  html[data-capacitor-native]
+    main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]):not([data-page-atmosphere="home"])
+    > .shell:not(.shell--home) {
+    padding-top: clamp(4px, 1.2vw, 8px);
+  }
+}

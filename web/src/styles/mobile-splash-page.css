@@ -9,6 +9,9 @@
   isolation: isolate;
   min-height: 100dvh;
   min-height: 100vh;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
@@ -189,4 +192,21 @@ html:not(.dark) .mobileSplashPage__inner {
 
 html[data-capacitor-native] .mobileRouteShell {
   min-height: 100dvh;
+  height: 100dvh;
+  max-height: 100dvh;
+}
+
+/* Access paywall can scroll when content is taller than the viewport */
+.mobileRouteShell:has(.mobileSplashPage--access) {
+  height: auto;
+  max-height: none;
+  min-height: 100dvh;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+body:has(.mobileSplashPage--access) {
+  height: auto;
+  max-height: none;
+  overflow: auto;
 }

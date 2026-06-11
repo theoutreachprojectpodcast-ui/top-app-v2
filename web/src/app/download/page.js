@@ -1,4 +1,5 @@
 import Link from "next/link";
+import MobileDownloadRedirect from "@/components/mobile/MobileDownloadRedirect";
 import DownloadMobileAppButton from "@/components/layout/DownloadMobileAppButton";
 import {
   ANDROID_PLAY_STORE_URL,
@@ -16,6 +17,7 @@ export default function DownloadMobileAppPage() {
 
   return (
     <main className="shell legalPageRoute">
+      <MobileDownloadRedirect />
       <section className="panel legalPage mobileAppLanding">
         <h1>The Outreach Project mobile app</h1>
         <p>
@@ -41,7 +43,7 @@ export default function DownloadMobileAppPage() {
         {!storesLive ? (
           <p className="sponsorSectionLead" role="status">
             Store links will appear here when the app is approved on the App Store and Google Play.
-            Bundle ID: <code>org.theoutreachproject.torp</code>
+            Bundle ID: <code>com.theoutreachproject.theoutreachproject</code>
           </p>
         ) : null}
 

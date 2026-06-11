@@ -4,6 +4,8 @@ import path from "node:path";
 const requiredFiles = [
   "src/proxy.js",
   "src/app/callback/route.js",
+  "src/app/api/auth/workos/callback/route.js",
+  "src/app/auth/workos-handoff/route.js",
   "src/app/sign-out/route.js",
   "src/app/api/auth/workos/signin/route.js",
   "src/app/api/auth/workos/signup/route.js",

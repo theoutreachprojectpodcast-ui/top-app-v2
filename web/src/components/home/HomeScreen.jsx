@@ -6,16 +6,10 @@ import HomeAuthCards from "@/components/home/HomeAuthCards";
 import HomeDirectoryPanel from "@/components/home/HomeDirectoryPanel";
 import HomeFeatureCards from "@/components/home/HomeFeatureCards";
 import HomeMembershipBar from "@/components/home/HomeMembershipBar";
-import HomeMembershipSection from "@/components/home/HomeMembershipSection";
 import "@/components/home/home-mobile.css";
 
 export default function HomeScreen({
   isAuthenticated,
-  loadingAccount = false,
-  currentTierKey = "none",
-  accountEmail = "",
-  membershipLabel = "",
-  membershipBillingStatus = "none",
   onActivateMembership,
   onCreateAccount,
   onSignIn,
@@ -23,14 +17,10 @@ export default function HomeScreen({
   onTrusted,
   onCommunity,
   onPodcasts,
-  onUpgradeTier,
-  onJoinFree,
   directoryProps,
   favoriteEinSet,
   onToggleFavorite,
   onRequestSignIn,
-  onGoToProfile,
-  showMembershipSection = true,
 }) {
   return (
     <>
@@ -39,21 +29,6 @@ export default function HomeScreen({
 
         {!isAuthenticated ? (
           <HomeMembershipBar onActivateMembership={onActivateMembership} />
-        ) : null}
-
-        {showMembershipSection ? (
-          <HomeMembershipSection
-            isAuthenticated={isAuthenticated}
-            loadingAccount={loadingAccount}
-            currentTierKey={currentTierKey}
-            accountEmail={accountEmail}
-            membershipLabel={membershipLabel}
-            membershipBillingStatus={membershipBillingStatus}
-            onRequestSignIn={onRequestSignIn || onSignIn}
-            onJoinFree={onJoinFree || onActivateMembership}
-            onUpgradeTier={onUpgradeTier}
-            onGoToProfile={onGoToProfile}
-          />
         ) : null}
 
         {!isAuthenticated ? (

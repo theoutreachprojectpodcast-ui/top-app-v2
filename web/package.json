@@ -61,7 +61,11 @@
     "qa:recompute-quality": "node scripts/qa-recompute-quality.mjs",
     "qa:recompute-quality:all": "node scripts/qa-recompute-quality.mjs --all",
     "export:store-screenshots": "node scripts/export-store-screenshots.mjs",
-    "export:app-icon-dark": "python scripts/export-app-icon-dark.py"
+    "export:app-icon-dark": "python scripts/export-app-icon-dark.py",
+    "verify:ios-icon": "node scripts/verify-ios-app-icon.mjs",
+    "mobile:android:bundle": "node scripts/mobile-android-bundle.mjs",
+    "mobile:store:prep": "node scripts/mobile-store-release-prep.mjs",
+    "vercel": "node -e \"console.error('\\nDeploy from the repo root (monorepo):\\n  cd .. && pnpm run deploy:prod\\n');process.exit(1)\""
   },
   "dependencies": {
     "@capacitor/android": "^8.3.0",

@@ -790,7 +790,6 @@
   main.topApp[data-page-atmosphere="home"] {
     --mobile-site-header-logo-h: clamp(301px, 78.75vw, 399px);
     --mobile-site-header-logo-max-w: min(910px, calc(100vw - 28px));
-    padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
   }
 
   main.topApp[data-page-atmosphere="home"] .headerNotificationBellBtn,
@@ -832,24 +831,8 @@
     margin-bottom: 6px;
   }
 
-  main.topApp[data-page-atmosphere="home"] .footerDockBackdrop {
-    height: calc(72px + env(safe-area-inset-bottom, 0px));
-    background: transparent;
-  }
-
   main.topApp[data-page-atmosphere="home"] {
     --home-pad-x: var(--mobile-shell-pad-x, clamp(16px, 4.5vw, 20px));
-  }
-
-  main.topApp[data-page-atmosphere="home"] .bottomNav.bottomNav--mobileDock {
-    margin-inline: 0;
-    width: 100%;
-    max-width: 100%;
-    border-radius: 20px;
-    padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
-    box-shadow:
-      0 12px 32px color-mix(in srgb, #000 18%, transparent),
-      0 0 0 1px color-mix(in srgb, var(--color-border-soft) 80%, transparent);
   }
 
   /* Home light: don’t stack a heavy veil over the boosted mobile background. */

@@ -2,7 +2,7 @@
  * Membership domain — tier definitions for UI and billing/entitlements.
  * Storage: profile.membershipStatus uses normalized keys from normalizeMembershipTierKey().
  *
- * Mobile app: App Access ($5.99/yr) is required for Capacitor. Support / Pro are optional upgrades.
+ * Mobile app: App Access ($5.99/yr) is required on web and in Capacitor. Support / Pro are optional upgrades.
  */
 
 import {
@@ -39,22 +39,22 @@ export const MEMBERSHIP_TIER_DEFINITIONS = [
     priceLabel: APP_ACCESS_MEMBERSHIP_PRICE_LABEL,
     requiredForMobile: true,
     benefits: [
-      "Sign in on the iOS and Android app",
+      "Full access on the website and iOS/Android app",
       "Browse sponsors, trusted resources, and community",
       "Save favorites and manage your profile",
     ],
     isMember: true,
-    hint: "Required for the mobile app. Billed annually at $5.99/year.",
+    hint: "Required for web and mobile app access. Billed annually at $5.99/year.",
   },
   {
     id: MEMBERSHIP_TIER_KEYS.NONE,
     label: "No membership",
     shortLabel: "None",
     benefits: [
-      "Website preview only until App Access is activated",
+      "Website and app preview only until App Access is activated",
     ],
     isMember: false,
-    hint: "Mobile app access requires App Access ($5.99/year).",
+    hint: "App Access ($5.99/year) is required on web and mobile.",
   },
   {
     id: MEMBERSHIP_TIER_KEYS.SUPPORT,

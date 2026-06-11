@@ -16,6 +16,7 @@ import { usePodcastDarkSchemeLock } from "@/hooks/usePodcastDarkSchemeLock";
 import { resolvePageAtmosphere } from "@/lib/design/pageAtmosphere";
 import { useImmersiveHeaderScroll } from "@/hooks/useImmersiveHeaderScroll";
 import { readNavAuthCache } from "@/lib/auth/navAuthCache";
+import CapacitorFooterPortal from "@/components/capacitor/CapacitorFooterPortal";
 
 const PRIMARY_BOTTOM_NAV_KEYS = new Set(["home", "profile", "contact"]);
 
@@ -194,30 +195,32 @@ export default function AppShell({
       )}
 
       {/* Fixed bottom nav dock (not .siteFooter). */}
-      {useFooterDockChrome ? <div className="footerDockBackdrop" aria-hidden="true" /> : null}
       {useFooterDockChrome ? (
-        <div className="footerDock">
-          <FooterInner className="footerNavInner">
-            <nav
-              className={`bottomNav bottomNav--withIcons${useFooterDockChrome ? " bottomNav--mobileDock" : ""}`}
-              aria-label="Bottom navigation"
-            >
-              {items.map((item) => (
-                <Link
-                  key={item.key}
-                  href={item.href}
-                  title={item.linkTitle || item.label}
-                  className={`navItem navItem--dockCol ${
-                    PRIMARY_BOTTOM_NAV_KEYS.has(item.key) ? "navItem--dockPrimary" : "navItem--dockOverflow"
-                  } ${activeNav === item.key ? "isActive" : ""}`}
-                >
-                  <SiteBottomNavGlyph navKey={item.key} className="navItemGlyph" />
-                  <span className="navItemLabel">{item.label}</span>
-                </Link>
-              ))}
-            </nav>
-          </FooterInner>
-        </div>
+        <CapacitorFooterPortal>
+          <div className="footerDockBackdrop" aria-hidden="true" />
+          <div className="footerDock">
+            <FooterInner className="footerNavInner">
+              <nav
+                className={`bottomNav bottomNav--withIcons${useFooterDockChrome ? " bottomNav--mobileDock" : ""}`}
+                aria-label="Bottom navigation"
+              >
+                {items.map((item) => (
+                  <Link
+                    key={item.key}
+                    href={item.href}
+                    title={item.linkTitle || item.label}
+                    className={`navItem navItem--dockCol ${
+                      PRIMARY_BOTTOM_NAV_KEYS.has(item.key) ? "navItem--dockPrimary" : "navItem--dockOverflow"
+                    } ${activeNav === item.key ? "isActive" : ""}`}
+                  >
+                    <SiteBottomNavGlyph navKey={item.key} className="navItemGlyph" />
+                    <span className="navItemLabel">{item.label}</span>
+                  </Link>
+                ))}
+              </nav>
+            </FooterInner>
+          </div>
+        </CapacitorFooterPortal>
       ) : (
         <nav
           className={`bottomNav bottomNav--withIcons${useFooterDockChrome ? " bottomNav--mobileDock" : ""}`}

@@ -21,7 +21,8 @@ import {
   toLocalStorageProfile,
 } from "@/features/profile/mappers";
 import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
-import { clearNavAuthCache, readNavAuthCache } from "@/lib/auth/navAuthCache";
+import { clearNavAuthCache, readNavAuthCache, writeNavAuthCache } from "@/lib/auth/navAuthCache";
+import { navCacheHasFreeAccess } from "@/lib/membership/appAccess";
 import { isDemoModeEnabled } from "@/lib/runtime/launchMode";
 import {
   fetchProfileByUserId,
@@ -128,14 +129,21 @@ export function useProfileDataState(supabase) {
   const refreshWorkOSProfile = useCallback(async () => {
     if (!workosRef.current) return;
     try {
-      const res = await fetch("/api/me", { credentials: "include" });
+      const res = await fetch("/api/me", { credentials: "include", cache: "no-store" });
       const data = await res.json();
+      if (!data?.authenticated) return;
       if (data.entitlements && typeof data.entitlements === "object") {
         setEntitlements({
           podcastMemberContent: !!data.entitlements.podcastMemberContent,
           communityStorySubmit: !!data.entitlements.communityStorySubmit,
           isPrivilegedStaff: !!data.entitlements.isPrivilegedStaff,
           isPlatformAdmin: !!data.entitlements.isPlatformAdmin,
+        });
+        writeNavAuthCache(true, true, {
+          hasFreeAccess: navCacheHasFreeAccess(
+            data.profile ? profileFromApiDto(mergeAccountEmailIntoProfileDto(data.profile, data.user)) : null,
+            data.entitlements,
+          ),
         });
       }
       if (data.user?.email != null) {
@@ -164,9 +172,11 @@ export function useProfileDataState(supabase) {
         const status = await statusRes.json();
         let me = await meRes.json();
         if (!me.authenticated && cacheNav?.authenticated) {
-          await new Promise((r) => setTimeout(r, 180));
-          const meRes2 = await fetch("/api/me", { credentials: "include", cache: "no-store" });
-          me = await meRes2.json().catch(() => ({}));
+          for (let attempt = 0; attempt < 3 && !me.authenticated; attempt++) {
+            await new Promise((r) => setTimeout(r, 150 * (attempt + 1)));
+            const meRetry = await fetch("/api/me", { credentials: "include", cache: "no-store" });
+            me = await meRetry.json().catch(() => ({}));
+          }
         }
         /* Authenticated but profile null: transient storage/read — avoid replacing with IdP-only stub. */
         if (me.authenticated && (me.profile == null || me.profile === undefined)) {
@@ -201,6 +211,12 @@ export function useProfileDataState(supabase) {
               communityStorySubmit: !!me.entitlements.communityStorySubmit,
               isPrivilegedStaff: !!me.entitlements.isPrivilegedStaff,
               isPlatformAdmin: !!me.entitlements.isPlatformAdmin,
+            });
+            writeNavAuthCache(true, !!status.workos, {
+              hasFreeAccess: navCacheHasFreeAccess(
+                me.profile ? profileFromApiDto(mergeAccountEmailIntoProfileDto(me.profile, me.user)) : null,
+                me.entitlements,
+              ),
             });
           }
           const raw =
@@ -790,35 +806,68 @@ export function useProfileDataState(supabase) {
     membership.isMember,
   ]);
 
-  return {
-    userId,
-    sessionKind,
-    authBackend,
-    workOSAccountEmail,
-    isAuthenticated,
-    loadingProfile,
-    profileError,
-    profileSource,
-    profile,
-    setProfile,
-    persistProfile,
-    fullName,
-    greetingName,
-    membership,
-    isMember,
-    favoriteEins,
-    favoriteEntityKeys,
-    toggleFavoriteEin,
-    toggleFavoriteEntityKey,
-    setFavoriteEinList,
-    savedOrganizations,
-    setMembershipStatus,
-    resetDemo,
-    createAccount,
-    signInWithCredentials,
-    signOut,
-    refreshWorkOSProfile,
-    uploadAvatarFile,
-    entitlements,
-  };
+  return useMemo(
+    () => ({
+      userId,
+      sessionKind,
+      authBackend,
+      workOSAccountEmail,
+      isAuthenticated,
+      loadingProfile,
+      profileError,
+      profileSource,
+      profile,
+      setProfile,
+      persistProfile,
+      fullName,
+      greetingName,
+      membership,
+      isMember,
+      favoriteEins,
+      favoriteEntityKeys,
+      toggleFavoriteEin,
+      toggleFavoriteEntityKey,
+      setFavoriteEinList,
+      savedOrganizations,
+      setMembershipStatus,
+      resetDemo,
+      createAccount,
+      signInWithCredentials,
+      signOut,
+      refreshWorkOSProfile,
+      uploadAvatarFile,
+      entitlements,
+    }),
+    [
+      userId,
+      sessionKind,
+      authBackend,
+      workOSAccountEmail,
+      isAuthenticated,
+      loadingProfile,
+      profileError,
+      profileSource,
+      profile,
+      setProfile,
+      persistProfile,
+      fullName,
+      greetingName,
+      membership,
+      isMember,
+      favoriteEins,
+      favoriteEntityKeys,
+      toggleFavoriteEin,
+      toggleFavoriteEntityKey,
+      setFavoriteEinList,
+      savedOrganizations,
+      setMembershipStatus,
+      resetDemo,
+      createAccount,
+      signInWithCredentials,
+      signOut,
+      refreshWorkOSProfile,
+      uploadAvatarFile,
+      entitlements,
+    ],
+  );
 }

@@ -73,3 +73,6 @@ jobs:
           WORKOS_COOKIE_DOMAIN: example.com
           NEXT_PUBLIC_WORKOS_REDIRECT_URI: https://example.com/callback
         run: pnpm build
+
+      - name: Validate Capacitor config
+        run: pnpm run validate:capacitor

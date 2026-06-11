@@ -5,7 +5,7 @@
  *
  * Usage:
  *   pnpm --dir web run export:store-screenshots
- *   SCREENSHOT_BASE_URL=http://localhost:3001 pnpm --dir web run export:store-screenshots
+ *   SCREENSHOT_PROFILE=ipad-13 SCREENSHOT_ONLY=01-home pnpm --dir web run export:store-screenshots
  */
 
 import { spawn } from "node:child_process";
@@ -18,18 +18,39 @@ import { chromium } from "playwright";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const WEB_ROOT = path.resolve(__dirname, "..");
 const REPO_ROOT = path.resolve(WEB_ROOT, "..");
-const OUT_DIR = path.join(REPO_ROOT, "docs", "store-screenshots", "svg");
 
 const BASE_URL = String(process.env.SCREENSHOT_BASE_URL || "http://localhost:3000").replace(/\/$/, "");
 
-/** Apple App Store 6.7" portrait (also accepts 1242×2688 for 6.5"). */
-const OUTPUT_WIDTH = 1284;
-const OUTPUT_HEIGHT = 2778;
-const DEVICE_SCALE = 3;
+/** Apple App Store display profiles (portrait). */
+const SCREENSHOT_PROFILES = {
+  /** 6.7" iPhone — also accepts 1242×2688 for 6.5". */
+  "iphone-67": { width: 1284, height: 2778, scale: 3, outSubdir: "svg" },
+  /** 13" iPad Pro (M4) — App Store Connect "iPad Pro 13-inch" slot. */
+  "ipad-13": { width: 2064, height: 2752, scale: 2, outSubdir: "ipad-13" },
+};
+
+const PROFILE_KEY = String(process.env.SCREENSHOT_PROFILE || "iphone-67").trim();
+const PROFILE = SCREENSHOT_PROFILES[PROFILE_KEY];
+if (!PROFILE) {
+  throw new Error(
+    `Unknown SCREENSHOT_PROFILE "${PROFILE_KEY}". Use: ${Object.keys(SCREENSHOT_PROFILES).join(", ")}`,
+  );
+}
+
+const OUT_DIR = path.join(REPO_ROOT, "docs", "store-screenshots", PROFILE.outSubdir);
+
+const OUTPUT_WIDTH = PROFILE.width;
+const OUTPUT_HEIGHT = PROFILE.height;
+const DEVICE_SCALE = PROFILE.scale;
 const VIEWPORT = {
   width: OUTPUT_WIDTH / DEVICE_SCALE,
   height: OUTPUT_HEIGHT / DEVICE_SCALE,
 };
+
+const ONLY_CAPTURE = String(process.env.SCREENSHOT_ONLY || "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
 
 const GENERIC_USER = {
   firstName: "Alex",
@@ -66,8 +87,10 @@ function buildSeedScript() {
     lastName: GENERIC_USER.lastName,
     name: `${GENERIC_USER.firstName} ${GENERIC_USER.lastName}`,
     email: GENERIC_USER.email,
-    tier: "support",
-    membershipStatus: "support",
+    tier: "access",
+    membershipTier: "access",
+    membershipStatus: "active",
+    membershipBillingStatus: "active",
     theme: "clean",
     colorScheme: "light",
     banner: "Veteran advocate exploring trusted nonprofits in the TOP network.",
@@ -86,6 +109,9 @@ function buildSeedScript() {
       )});
       localStorage.setItem("top_profile_v3", ${JSON.stringify(JSON.stringify(profile))});
       localStorage.setItem("top_favorites_v3", ${JSON.stringify(JSON.stringify(SAVED_EINS))});
+      sessionStorage.setItem("top_nav_auth_v1", ${JSON.stringify(
+        JSON.stringify({ authenticated: true, workos: false, hasFreeAccess: true, t: Date.now() }),
+      )});
       document.documentElement.setAttribute("data-color-scheme", "light");
       document.documentElement.classList.remove("dark");
     } catch (e) {
@@ -188,7 +214,7 @@ async function runCaptures(page) {
         await page.goto(`${BASE_URL}/`, { waitUntil: "domcontentloaded" });
         await page.addStyleTag({ content: SHOWCASE_CSS });
         await waitForSettled(page, 1200);
-        await page.locator(".homeFeatureCards, .homeDirectoryPanel, #home-directory").first().waitFor({
+        await page.locator(".homeFeatureList, .homeDirectoryPanel, #home-directory").first().waitFor({
           state: "visible",
           timeout: 45_000,
         });
@@ -292,6 +318,7 @@ async function runCaptures(page) {
   ];
 
   for (const capture of captures) {
+    if (ONLY_CAPTURE.length > 0 && !ONLY_CAPTURE.includes(capture.name)) continue;
     console.log(`[export-store-screenshots] Capturing ${capture.name}…`);
     await capture.run();
     console.log(`[export-store-screenshots] Wrote ${capture.name}.png + ${capture.name}.svg`);

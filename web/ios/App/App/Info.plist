@@ -65,10 +65,10 @@
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>org.theoutreachproject.torp</string>
+			<string>com.theoutreachproject.theoutreachproject</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>org.theoutreachproject.torp</string>
+				<string>com.theoutreachproject.theoutreachproject</string>
 			</array>
 		</dict>
 	</array>

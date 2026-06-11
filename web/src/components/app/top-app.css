@@ -14,10 +14,11 @@
   --home-podcasts-image: url("/home/home-podcast-mic.png");
   --topapp-mobile-atmosphere-image-light: url("/home/app-page-background-light-mobile.png?v=3");
   --topapp-mobile-atmosphere-image-dark: url("/home/app-page-background-dark.png?v=15");
-  min-height: 100vh;
+  min-height: 100dvh;
+  min-height: 100svh;
   background: transparent;
   color: var(--color-text-primary);
-  padding-bottom: calc(186px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: var(--torp-bottom-nav-reserve);
 }
 
 /* Home desktop: wordmark +75% vs prior compact home sizing. */
@@ -6535,8 +6536,8 @@ html.dark .communityPostBodyGuideSteps li {
   }
 
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]):not([data-page-atmosphere="home"]) {
-    --mobile-site-header-logo-h: clamp(367px, 95.5vw, 499px);
-    --mobile-site-header-logo-max-w: min(770px, calc(100vw - 28px));
+    --mobile-site-header-logo-h: clamp(72px, 18.5vw, 96px);
+    --mobile-site-header-logo-max-w: min(220px, calc(100vw - 108px));
     --mobile-site-header-control-size: 44px;
     --mobile-site-header-control-pad-top: calc(4px + env(safe-area-inset-top, 0px));
     --mobile-site-header-pad-x: max(clamp(16px, 4.5vw, 20px), env(safe-area-inset-left, 0px));
@@ -7015,16 +7016,22 @@ html.dark .communityPostBodyGuideSteps li {
   }
 }
 
-@media (max-width: 719px) {
+@media (max-width: 760px) {
   main.topApp.appShell--withMobileNavDock {
-    padding-bottom: calc(118px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: 0;
+  }
+
+  main.topApp.appShell--withMobileNavDock .siteFooter,
+  main.topApp.appShell--withMobileNavDock .siteFooter.siteFooter--pageBottom,
+  main.topApp.appShell--withMobileNavDock .siteFooter.siteFooter--pageBottom.siteFooter--inMainShell {
+    padding-bottom: 12px;
   }
 }
 
 @media (max-width: 520px) {
   .topApp {
     --content-gutter: clamp(28px, 7vw, 36px);
-    padding-bottom: calc(118px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: 0;
   }
   .topbarInner {
     grid-template-columns: 1fr;

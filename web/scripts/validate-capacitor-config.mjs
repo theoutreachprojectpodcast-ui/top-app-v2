@@ -21,7 +21,7 @@ if (missing.length) {
 }
 
 const configSrc = fs.readFileSync(path.join(webRoot, "capacitor.config.js"), "utf8");
-if (!/appId:\s*["']org\.theoutreachproject\.torp["']/.test(configSrc)) {
+if (!/appId:\s*["']com\.theoutreachproject\.theoutreachproject["']/.test(configSrc)) {
   console.error("[validate-capacitor] Unexpected or missing appId in capacitor.config.js");
   process.exit(1);
 }
@@ -30,7 +30,7 @@ if (!/webDir:\s*["']capacitor-www["']/.test(configSrc)) {
   process.exit(1);
 }
 
-console.log("[validate-capacitor] OK — appId=org.theoutreachproject.torp webDir=capacitor-www");
+console.log("[validate-capacitor] OK — appId=com.theoutreachproject.theoutreachproject webDir=capacitor-www");
 if (/server:\s*\{/.test(configSrc) && process.env.CAP_SERVER_URL) {
   console.log("[validate-capacitor] CAP_SERVER_URL=%s (set at sync time)", process.env.CAP_SERVER_URL);
 } else {

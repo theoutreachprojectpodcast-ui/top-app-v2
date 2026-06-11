@@ -44,10 +44,11 @@ import {
 } from "@/features/membership/membershipTiers";
 import {
   membershipAccountMenuHint,
-  shouldShowMembershipPickerOnHome,
+  shouldShowMembershipPickerModal,
   shouldShowMembershipPickerOnProfile,
 } from "@/features/membership/membershipAccountDisplay";
 import HomeMembershipSection from "@/components/home/HomeMembershipSection";
+import MembershipPlansModal from "@/components/membership/MembershipPlansModal";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { emptyProfileAvatarUrl } from "@/lib/avatarFallback";
 import { rowEin } from "@/lib/utils";
@@ -70,6 +71,7 @@ import { FormCheckbox } from "@/components/forms/FormChoice";
 import { resolvePageAtmosphere } from "@/lib/design/pageAtmosphere";
 import MissionPageTopStrip from "@/components/layout/MissionPageTopStrip";
 import NativeAccountBillingNotice from "@/components/capacitor/NativeAccountBillingNotice";
+import CapacitorFooterPortal from "@/components/capacitor/CapacitorFooterPortal";
 import {
   openWebBilling,
   openWebMembership,
@@ -77,6 +79,7 @@ import {
   openWebSponsorMembership,
   requiresExternalWebAccountFlow,
 } from "@/lib/capacitor/webAccountRedirects";
+import { isCapacitorNative } from "@/lib/capacitor/platform";
 
 function DemoAuthPasswordVisibilityIcon({ revealed }) {
   return (
@@ -139,6 +142,12 @@ function TopAppInner({ initialNav = "home" }) {
   }, [pathname]);
 
   useEffect(() => {
+    const tab = String(searchParams.get("nav") || "").trim().toLowerCase();
+    const allowed = new Set(["home", "community", "trusted", "profile", "contact", "sponsors"]);
+    if (allowed.has(tab)) setNav(tab);
+  }, [searchParams]);
+
+  useEffect(() => {
     if (searchParams.get("signin") === "1") {
       setAuthMode(searchParams.get("signup") === "1" ? "signup" : "signin");
       setOverlay("signin");
@@ -162,6 +171,14 @@ function TopAppInner({ initialNav = "home" }) {
     const last = readLastUsedEmail();
     if (last) setAuthDraft((d) => ({ ...d, email: d.email ? d.email : last }));
   }, [overlay]);
+
+  useEffect(() => {
+    if (!showMembershipModal || loadingProfile) return;
+    setOverlay((current) => {
+      if (current === "signin" || current === "membership") return current;
+      return "membership";
+    });
+  }, [showMembershipModal, loadingProfile]);
 
   const {
     userId,
@@ -202,13 +219,19 @@ function TopAppInner({ initialNav = "home" }) {
     });
   }, [isAuthenticated, profile, sessionKind, workOSAccountEmail]);
 
-  const showMembershipOnHome = useMemo(
-    () => shouldShowMembershipPickerOnHome({ isAuthenticated, profile }),
+  const showMembershipOnProfile = useMemo(
+    () =>
+      shouldShowMembershipPickerOnProfile({
+        isAuthenticated,
+        profile,
+        tierKey: profile.membershipStatus,
+        billingStatus: profile.membershipBillingStatus,
+      }),
     [isAuthenticated, profile],
   );
-  const showMembershipOnProfile = useMemo(
-    () => shouldShowMembershipPickerOnProfile({ isAuthenticated, profile }),
-    [isAuthenticated, profile],
+  const showMembershipModal = useMemo(
+    () => shouldShowMembershipPickerModal({ isAuthenticated, profile, sessionKind }),
+    [isAuthenticated, profile, sessionKind],
   );
 
   useEffect(() => {
@@ -284,11 +307,19 @@ function TopAppInner({ initialNav = "home" }) {
   }
 
   function dockNavHome() {
+    if (isCapacitorNative() && pathname === "/") {
+      setNav("home");
+      return;
+    }
     if (pathname && pathname !== "/") router.push("/");
     else setNav("home");
   }
 
   function dockNavProfile() {
+    if (isCapacitorNative() && pathname === "/") {
+      setNav("profile");
+      return;
+    }
     if (pathname !== "/profile") router.push("/profile");
     else setNav("profile");
   }
@@ -367,7 +398,7 @@ function TopAppInner({ initialNav = "home" }) {
       router.push("/onboarding");
       return;
     }
-    setOverlay("upgrade");
+    setOverlay(sessionKind === "workos" ? "upgrade" : "membership");
   }
 
   async function startMembershipCheckoutFromHome(tier) {
@@ -468,6 +499,45 @@ function TopAppInner({ initialNav = "home" }) {
     setOverlay("signin");
   }
 
+  async function completeInitialMembershipChoice(tierKey = "none") {
+    const normalizedTier = String(tierKey || "none").toLowerCase();
+    if (sessionKind === "workos") {
+      try {
+        const res = await fetch("/api/me/onboarding/complete", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            accountIntent:
+              normalizedTier === "sponsor"
+                ? "sponsor_user"
+                : normalizedTier === "member"
+                  ? "member_user"
+                  : normalizedTier === "support"
+                    ? "support_user"
+                    : "free_user",
+          }),
+        });
+        if (res.ok) await refreshWorkOSProfile();
+      } catch {
+        /* modal can be reopened */
+      }
+      return;
+    }
+    await persistProfile({
+      ...profile,
+      membershipStatus: normalizedTier === "none" ? "none" : normalizedTier,
+      membershipTier: normalizedTier === "none" ? "none" : normalizedTier,
+      membershipBillingStatus: "none",
+      onboardingCompleted: true,
+    });
+  }
+
+  async function dismissMembershipModalAsFree() {
+    await completeInitialMembershipChoice("none");
+    setOverlay(null);
+  }
+
   async function onAuthSubmit() {
     setAuthError("");
     setAuthStatus("");
@@ -487,7 +557,7 @@ function TopAppInner({ initialNav = "home" }) {
     setAuthStatus(authMode === "signup" ? "Account created. Welcome in." : "Signed in successfully.");
     setAuthDraft((d) => ({ ...d, password: "" }));
     setSignupAvatarDataUrl("");
-    setOverlay(null);
+    setOverlay("membership");
   }
 
   function openSignInForMembership() {
@@ -633,21 +703,7 @@ function TopAppInner({ initialNav = "home" }) {
           {nav === "home" && (
             <HomeScreen
               isAuthenticated={isAuthenticated}
-              loadingAccount={loadingProfile && isAuthenticated}
-              currentTierKey={profile.membershipStatus}
-              accountEmail={profile.email || workOSAccountEmail}
-              membershipLabel={membership.label}
-              membershipBillingStatus={profile.membershipBillingStatus}
-              onGoToProfile={() => router.push("/profile")}
               onActivateMembership={openMembershipJourney}
-              onUpgradeTier={startMembershipCheckoutFromHome}
-              onJoinFree={() => {
-                if (!isAuthenticated) {
-                  openMembershipJourney();
-                  return;
-                }
-                setNav("profile");
-              }}
               onCreateAccount={openCreateAccountFlow}
               onSignIn={openSignInOverlay}
               onSponsors={goToSponsorsHub}
@@ -671,7 +727,6 @@ function TopAppInner({ initialNav = "home" }) {
               favoriteEinSet={favoriteEinSet}
               onToggleFavorite={toggleFavoriteEin}
               onRequestSignIn={!isAuthenticated ? openSignInOverlay : undefined}
-              showMembershipSection={showMembershipOnHome}
             />
           )}
 
@@ -886,6 +941,7 @@ function TopAppInner({ initialNav = "home" }) {
           />
           {showMembershipOnProfile ? (
             <HomeMembershipSection
+              variant="profile"
               isAuthenticated={isAuthenticated}
               loadingAccount={loadingProfile}
               currentTierKey={profile.membershipStatus}
@@ -1076,10 +1132,11 @@ function TopAppInner({ initialNav = "home" }) {
       ) : null}
 
       {/* Fixed bottom navigation bar (dock). See top-app.css .footerDock / .footerDockBackdrop. */}
-      <div className="footerDockBackdrop" aria-hidden="true" />
-      <div className="footerDock">
-        <FooterInner className="footerNavInner">
-          <nav className="bottomNav bottomNav--withIcons bottomNav--mobileDock" aria-label="Bottom navigation">
+      <CapacitorFooterPortal>
+        <div className="footerDockBackdrop" aria-hidden="true" />
+        <div className="footerDock">
+          <FooterInner className="footerNavInner">
+            <nav className="bottomNav bottomNav--withIcons bottomNav--mobileDock" aria-label="Bottom navigation">
             <button
               className={`navItem navItem--dockCol navItem--dockPrimary ${nav === "home" ? "isActive" : ""}`}
               onClick={dockNavHome}
@@ -1131,6 +1188,31 @@ function TopAppInner({ initialNav = "home" }) {
           </nav>
         </FooterInner>
       </div>
+      </CapacitorFooterPortal>
+
+      {overlay === "membership" && (
+        <MembershipPlansModal
+          open
+          onClose={() => void dismissMembershipModalAsFree()}
+          isAuthenticated={isAuthenticated}
+          loadingAccount={loadingProfile}
+          currentTierKey={profile.membershipStatus}
+          accountEmail={profile.email || workOSAccountEmail}
+          membershipLabel={membership.label}
+          membershipBillingStatus={profile.membershipBillingStatus}
+          onRequestSignIn={openSignInForMembership}
+          onJoinFree={() => void dismissMembershipModalAsFree()}
+          onUpgradeTier={async (tier) => {
+            await completeInitialMembershipChoice(tier === "sponsor" ? "sponsor" : tier);
+            setOverlay(null);
+            await startMembershipCheckoutFromHome(tier);
+          }}
+          onGoToProfile={() => {
+            setOverlay(null);
+            setNav("profile");
+          }}
+        />
+      )}
 
       {overlay === "upgrade" && (
         <div className="modalOverlay" onClick={() => setOverlay(null)}>

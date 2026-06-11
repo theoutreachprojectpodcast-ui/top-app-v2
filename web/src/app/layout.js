@@ -4,7 +4,11 @@ import { Roboto } from "next/font/google";
 import ColorSchemeRoot from "@/components/app/ColorSchemeRoot";
 import CapacitorNativeShell from "@/components/capacitor/CapacitorNativeShell";
 import MobileAccountReturnBridge from "@/components/capacitor/MobileAccountReturnBridge";
+import MobileOAuthBrowserFinish from "@/components/capacitor/MobileOAuthBrowserFinish";
+import MobileOAuthDeepLink from "@/components/capacitor/MobileOAuthDeepLink";
+import MobileOAuthSessionResume from "@/components/capacitor/MobileOAuthSessionResume";
 import MobileNativeGate from "@/components/mobile/MobileNativeGate";
+import WebAppAccessGate from "@/components/membership/WebAppAccessGate";
 import AuthSessionProvider from "@/components/auth/AuthSessionProvider";
 import { ProfileDataProvider } from "@/features/profile/ProfileDataProvider";
 import { ProfileEditProvider } from "@/features/profile/ProfileEditProvider";
@@ -63,9 +67,13 @@ export default function RootLayout({ children }) {
             <ProfileDataProvider>
               <ProfileEditProvider>
                 <Suspense fallback={null}>
+                  <MobileOAuthBrowserFinish />
+                  <MobileOAuthDeepLink />
+                  <MobileOAuthSessionResume />
                   <MobileAccountReturnBridge />
+                  <MobileNativeGate />
                 </Suspense>
-                <MobileNativeGate />
+                <WebAppAccessGate />
                 {children}
               </ProfileEditProvider>
             </ProfileDataProvider>

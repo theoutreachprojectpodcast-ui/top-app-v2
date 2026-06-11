@@ -18,6 +18,10 @@ async function fetchMeAuthenticated() {
 }
 import { usePathname } from "next/navigation";
 import { clearNavAuthCache, readNavAuthCache, writeNavAuthCache } from "@/lib/auth/navAuthCache";
+import { profileFromApiDto } from "@/features/profile/mappers";
+import { navCacheHasFreeAccess } from "@/lib/membership/appAccess";
+import { isCapacitorNative } from "@/lib/capacitor/platform";
+import { TORP_OAUTH_BROWSER_PENDING } from "@/lib/auth/oauthMobileHandoff";
 
 const AuthSessionContext = createContext({
   loading: true,
@@ -67,7 +71,10 @@ export default function AuthSessionProvider({ children }) {
         await new Promise((r) => setTimeout(r, 400));
         authenticated = await fetchMeAuthenticated();
       }
-      writeNavAuthCache(authenticated, workos);
+      const profileForAccess = me.profile ? profileFromApiDto(me.profile) : null;
+      writeNavAuthCache(authenticated, workos, {
+        hasFreeAccess: authenticated && navCacheHasFreeAccess(profileForAccess, me.entitlements),
+      });
       setState({ loading: false, authenticated, workos });
     } catch {
       setState((prev) => ({
@@ -83,10 +90,20 @@ export default function AuthSessionProvider({ children }) {
     void refresh({ soft: false });
   }, [refresh]);
 
+  const lastPathRefreshRef = useRef(0);
+
   useEffect(() => {
     if (skipFirstPathnameEffect.current) {
       skipFirstPathnameEffect.current = false;
       return;
+    }
+    if (isCapacitorNative()) {
+      if (typeof sessionStorage !== "undefined" && sessionStorage.getItem(TORP_OAUTH_BROWSER_PENDING) === "1") {
+        return;
+      }
+      const now = Date.now();
+      if (now - lastPathRefreshRef.current < 8000) return;
+      lastPathRefreshRef.current = now;
     }
     void refresh({ soft: true });
   }, [pathname, refresh]);

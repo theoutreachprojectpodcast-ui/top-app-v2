@@ -1,60 +1,50 @@
 "use client";
 
-import { requiresExternalWebAccountFlow, openWebBilling, openWebMembership } from "@/lib/capacitor/webAccountRedirects";
 import { openExternalUrl } from "@/lib/capacitor/openExternalUrl";
 
 /**
- * Stripe Checkout must never load inside the Capacitor WebView.
+ * Navigate to Stripe Checkout (in-app WebView on native; same tab on web).
  * @param {string} stripeCheckoutUrl
- * @param {{ tier?: string }} [options]
  */
-export async function navigateToStripeCheckout(stripeCheckoutUrl, options = {}) {
-  if (requiresExternalWebAccountFlow()) {
-    return openWebMembership({ tier: options.tier });
-  }
-  if (stripeCheckoutUrl) {
-    window.location.assign(stripeCheckoutUrl);
+export async function navigateToStripeCheckout(stripeCheckoutUrl) {
+  const url = String(stripeCheckoutUrl || "").trim();
+  if (!url) return { mode: "missing-url" };
+  if (typeof window !== "undefined") {
+    window.location.assign(url);
     return { mode: "same-window" };
   }
-  return openWebMembership({ tier: options.tier });
+  return openExternalUrl(url);
 }
 
-/**
- * @param {string} stripePortalUrl
- */
+/** @param {string} stripePortalUrl */
 export async function navigateToStripePortal(stripePortalUrl) {
-  if (requiresExternalWebAccountFlow()) {
-    return openWebBilling();
-  }
-  if (stripePortalUrl) {
-    window.location.assign(stripePortalUrl);
+  const url = String(stripePortalUrl || "").trim();
+  if (!url) return { mode: "missing-url" };
+  if (typeof window !== "undefined") {
+    window.location.assign(url);
     return { mode: "same-window" };
   }
-  return openWebBilling();
+  return openExternalUrl(url);
 }
 
-/**
- * Payment-method setup URLs from Stripe also stay off the WebView on native.
- * @param {string} stripeSetupUrl
- */
+/** @param {string} stripeSetupUrl */
 export async function navigateToStripeSetupUrl(stripeSetupUrl) {
-  if (requiresExternalWebAccountFlow()) {
-    return openWebBilling();
-  }
-  if (stripeSetupUrl) {
-    window.location.assign(stripeSetupUrl);
+  const url = String(stripeSetupUrl || "").trim();
+  if (!url) return { mode: "missing-url" };
+  if (typeof window !== "undefined") {
+    window.location.assign(url);
     return { mode: "same-window" };
   }
-  return openWebBilling();
+  return openExternalUrl(url);
 }
 
-/**
- * Generic external navigation helper for third-party billing URLs.
- * @param {string} url
- */
+/** @param {string} url */
 export async function navigateToExternalBillingUrl(url) {
-  if (requiresExternalWebAccountFlow()) {
-    return openExternalUrl(String(url || "").trim());
+  const target = String(url || "").trim();
+  if (!target) return;
+  if (typeof window !== "undefined") {
+    window.location.assign(target);
+    return;
   }
-  if (url) window.location.assign(url);
+  return openExternalUrl(target);
 }

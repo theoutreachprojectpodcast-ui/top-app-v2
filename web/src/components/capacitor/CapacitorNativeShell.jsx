@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { installCapacitorInAppNavigation } from "@/lib/capacitor/inAppNavigation";
 import { capacitorPlatform, isCapacitorNative } from "@/lib/capacitor/platform";
 
 /**
@@ -15,6 +16,7 @@ export default function CapacitorNativeShell() {
       return;
     }
     root.dataset.capacitorNative = capacitorPlatform();
+    installCapacitorInAppNavigation();
     return () => {
       delete root.dataset.capacitorNative;
     };

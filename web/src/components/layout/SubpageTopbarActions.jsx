@@ -12,8 +12,9 @@ import { useProfileData } from "@/features/profile/ProfileDataProvider";
 import { membershipAccountMenuHint } from "@/features/membership/membershipAccountDisplay";
 import { emptyProfileAvatarUrl } from "@/lib/avatarFallback";
 import { readRememberDevicePref } from "@/lib/auth/lastUsedEmail";
-import { workosSignInLink, workosSignUpHref } from "@/lib/auth/workosReturnTo";
-import { openWebSignup, openWebSponsorMembership, requiresExternalWebAccountFlow } from "@/lib/capacitor/webAccountRedirects";
+import { launchWorkOSAuth } from "@/lib/auth/workosNativeAuthLaunch";
+import { workosSignInLink, workosSignUpHref, workosMobileSignInHref, workosMobileSignUpHref } from "@/lib/auth/workosReturnTo";
+import { isCapacitorNative } from "@/lib/capacitor/platform";
 
 const SPONSOR_ICON = "M4 6h16v12H4z M4 10h16";
 
@@ -32,8 +33,13 @@ export default function SubpageTopbarActions({ section = "all" }) {
   /** Avoid useSearchParams here (static routes like /contact must not CSR-bailout without Suspense). */
   const rememberDevice = readRememberDevicePref();
   const signInReturnFallback = pathname?.startsWith("/podcasts") ? pathname : "/";
-  const workosSignInHereHref = workosSignInLink(pathname, null, signInReturnFallback, { rememberDevice });
-  const workosOnboardingSignUpHref = workosSignUpHref("/onboarding", { rememberDevice });
+  const isNative = isCapacitorNative();
+  const workosSignInHereHref = isNative
+    ? workosMobileSignInHref(signInReturnFallback)
+    : workosSignInLink(pathname, null, signInReturnFallback, { rememberDevice });
+  const workosOnboardingSignUpHref = isNative
+    ? workosMobileSignUpHref("/onboarding")
+    : workosSignUpHref("/onboarding", { rememberDevice });
   const legacySignUpHref =
     pathname && pathname !== "/"
       ? `/?signin=1&signup=1&returnTo=${encodeURIComponent(pathname)}`
@@ -44,23 +50,27 @@ export default function SubpageTopbarActions({ section = "all" }) {
       : "/?signin=1";
 
   function openCreateAccount() {
-    if (requiresExternalWebAccountFlow() && authState.workos) {
-      void openWebSignup();
-      return;
-    }
     if (authState.workos) {
+      if (isNative) {
+        void launchWorkOSAuth(workosOnboardingSignUpHref);
+        return;
+      }
       window.location.assign(workosOnboardingSignUpHref);
       return;
     }
     window.location.assign(legacySignUpHref);
   }
 
-  function openSponsorMembership() {
-    if (requiresExternalWebAccountFlow()) {
-      void openWebSponsorMembership();
+  function openSignIn() {
+    if (!authState.workos) {
+      window.location.assign(legacySignInHref);
       return;
     }
-    router.push("/sponsors");
+    if (isNative) {
+      void launchWorkOSAuth(workosSignInHereHref);
+      return;
+    }
+    window.location.assign(workosSignInHereHref);
   }
 
   const session = useAuthSession();
@@ -75,12 +85,7 @@ export default function SubpageTopbarActions({ section = "all" }) {
           authenticated: session.authenticated || optimisticAuthed,
         };
 
-  const sponsorLink = requiresExternalWebAccountFlow() ? (
-    <button className="btnSoft sponsorBtn" type="button" onClick={openSponsorMembership}>
-      <IconWrap path={SPONSOR_ICON} />
-      Become a Sponsor
-    </button>
-  ) : (
+  const sponsorLink = (
     <Link className="btnSoft sponsorBtn" href="/sponsors">
       <IconWrap path={SPONSOR_ICON} />
       Become a Sponsor
@@ -122,9 +127,9 @@ export default function SubpageTopbarActions({ section = "all" }) {
         <button className="btnSoft sponsorBtn" type="button" onClick={openCreateAccount}>
           Create account
         </button>
-        <Link className="btnSoft sponsorBtn" href={workosSignInHereHref}>
+        <button className="btnSoft sponsorBtn" type="button" onClick={openSignIn}>
           Sign in
-        </Link>
+        </button>
       </>
     ) : (
       <>
@@ -161,9 +166,9 @@ export default function SubpageTopbarActions({ section = "all" }) {
         <button className="btnSoft sponsorBtn" type="button" onClick={openCreateAccount}>
           Create account
         </button>
-        <Link className="btnSoft sponsorBtn" href={workosSignInHereHref}>
+        <button className="btnSoft sponsorBtn" type="button" onClick={openSignIn}>
           Sign in
-        </Link>
+        </button>
       </>
     ) : (
       <>

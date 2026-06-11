@@ -2,14 +2,13 @@
 
 import { absoluteWebAppUrl, MOBILE_APP_DEEP_LINK, webAppPathWithMobileReturn } from "@/lib/capacitor/webAppOrigin";
 import { openExternalUrl } from "@/lib/capacitor/openExternalUrl";
-import { isCapacitorNative } from "@/lib/capacitor/platform";
 
 /**
- * Mobile native apps must not collect payment or run Stripe inside the WebView.
- * Sign-in stays in the WebView so WorkOS session cookies remain on the app origin.
+ * Account signup, membership checkout, and billing run in the Capacitor WebView
+ * (same as the website). Stripe Checkout is allowed via `allowNavigation` in capacitor.config.js.
  */
 export function requiresExternalWebAccountFlow() {
-  return isCapacitorNative();
+  return false;
 }
 
 /**
@@ -20,21 +19,21 @@ function encodeReturnTo(path, params) {
   return encodeURIComponent(webAppPathWithMobileReturn(path, params));
 }
 
-/** Open web signup (WorkOS AuthKit) in the system browser. */
+/** @deprecated Prefer in-app `/sign-up` routes. Kept for optional external flows. */
 export async function openWebSignup(options = {}) {
   const returnPath = options.returnPath || "/membership/success";
   const url = `${absoluteWebAppUrl("/signup").split("?")[0]}?returnTo=${encodeReturnTo(returnPath, options.params)}`;
   return openExternalUrl(url);
 }
 
-/** Open web login in the system browser (optional; primary sign-in remains in-app). */
+/** @deprecated Prefer in-app `/login` routes. */
 export async function openWebLogin(options = {}) {
   const returnPath = options.returnPath || "/profile";
   const url = `${absoluteWebAppUrl("/login").split("?")[0]}?returnTo=${encodeReturnTo(returnPath, options.params)}`;
   return openExternalUrl(url);
 }
 
-/** Open membership hub / upgrades on the website (Stripe checkout runs in browser). */
+/** @deprecated Prefer in-app `/membership`. */
 export async function openWebMembership(options = {}) {
   const params = { ...(options.params || {}) };
   if (options.tier) params.tier = String(options.tier);
@@ -42,26 +41,27 @@ export async function openWebMembership(options = {}) {
   return openExternalUrl(url);
 }
 
-/** Open billing portal setup on the website. */
+/** @deprecated Prefer in-app `/billing`. */
 export async function openWebBilling(options = {}) {
   const url = absoluteWebAppUrl("/billing", options.params || {});
   return openExternalUrl(url);
 }
 
-/** Open sponsor membership packages on the website. */
+/** @deprecated Prefer in-app `/sponsor`. */
 export async function openWebSponsorMembership(options = {}) {
   const url = absoluteWebAppUrl("/sponsor", options.params || {});
   return openExternalUrl(url);
 }
 
-/** Open profile on the website (account management). */
+/** @deprecated Prefer in-app `/profile`. */
 export async function openWebProfile(options = {}) {
   const url = absoluteWebAppUrl("/profile", options.params || {});
   return openExternalUrl(url);
 }
 
-/** Attempt to reopen the installed native app after a web flow. */
+/** Attempt to reopen the installed native app after an external flow. */
 export async function openMobileAppDeepLink() {
+  const { isCapacitorNative } = await import("@/lib/capacitor/platform");
   if (!isCapacitorNative()) return { ok: false, reason: "not-native" };
   try {
     await openExternalUrl(MOBILE_APP_DEEP_LINK);

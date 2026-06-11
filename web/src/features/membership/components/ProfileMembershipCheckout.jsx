@@ -7,11 +7,9 @@ import {
   SUPPORT_MEMBERSHIP_PRICE_LABEL,
 } from "@/features/membership/membershipTiers";
 import { navigateToStripeCheckout } from "@/lib/capacitor/billingNavigation";
-import { requiresExternalWebAccountFlow, openWebMembership } from "@/lib/capacitor/webAccountRedirects";
-import NativeAccountBillingNotice from "@/components/capacitor/NativeAccountBillingNotice";
 
 /**
- * Real Stripe Checkout for Support / Pro from the profile shell (WorkOS session).
+ * Real Stripe Checkout for App Access / Support / Pro from the profile shell (WorkOS session).
  * @param {{ stripeReady: boolean, missingEnvKeys?: string[], returnPath?: string, onAfterRedirect?: () => void }} props
  */
 export default function ProfileMembershipCheckout({
@@ -25,20 +23,6 @@ export default function ProfileMembershipCheckout({
   const [error, setError] = useState("");
 
   async function start(tier) {
-    if (requiresExternalWebAccountFlow()) {
-      setError("");
-      setBusy(tier);
-      try {
-        onAfterRedirect?.();
-        await openWebMembership({ tier });
-      } catch {
-        setError("Could not open membership on the web.");
-      } finally {
-        setBusy("");
-      }
-      return;
-    }
-
     setError("");
     setBusy(tier);
     try {
@@ -51,7 +35,7 @@ export default function ProfileMembershipCheckout({
       const data = await res.json().catch(() => ({}));
       if (data.url) {
         onAfterRedirect?.();
-        await navigateToStripeCheckout(data.url, { tier });
+        await navigateToStripeCheckout(data.url);
         return;
       }
       if (res.status === 503) {
@@ -79,8 +63,8 @@ export default function ProfileMembershipCheckout({
             <code>{missingEnvKeys.join(", ")}</code>
           ) : (
             <>
-              <code>STRIPE_SECRET_KEY</code>, <code>STRIPE_PRICE_SUPPORT_MONTHLY</code>,{" "}
-              <code>STRIPE_PRICE_PRO_MONTHLY</code> (or legacy <code>STRIPE_PRICE_MEMBER_MONTHLY</code>)
+              <code>STRIPE_SECRET_KEY</code>, <code>STRIPE_PRICE_ACCESS_YEARLY</code>,{" "}
+              <code>STRIPE_PRICE_SUPPORT_MONTHLY</code>, <code>STRIPE_PRICE_PRO_MONTHLY</code>
             </>
           )}
           .
@@ -91,15 +75,22 @@ export default function ProfileMembershipCheckout({
 
   return (
     <div className="profileMembershipCheckout">
-      <NativeAccountBillingNotice />
-      <h4 className="profileMembershipCheckoutTitle">Upgrade with Stripe</h4>
+      <h4 className="profileMembershipCheckoutTitle">Subscribe</h4>
       <p className="sponsorSectionLead">
-        App Access {APP_ACCESS_MEMBERSHIP_PRICE_LABEL} is required for the mobile app. Support{" "}
-        {SUPPORT_MEMBERSHIP_PRICE_LABEL} and Pro {PRO_MEMBERSHIP_PRICE_LABEL} are optional advanced upgrades for
-        existing members. Manage billing in the portal after your first checkout.
+        App Access {APP_ACCESS_MEMBERSHIP_PRICE_LABEL} is required on web and mobile. Support{" "}
+        {SUPPORT_MEMBERSHIP_PRICE_LABEL} and Pro {PRO_MEMBERSHIP_PRICE_LABEL} are optional upgrades. Manage billing in
+        the portal after your first checkout.
       </p>
       {error ? <p className="applyError">{error}</p> : null}
       <div className="row wrap" style={{ marginTop: 10 }}>
+        <button
+          type="button"
+          className="btnPrimary"
+          disabled={!!busy}
+          onClick={() => start("access")}
+        >
+          {busy === "access" ? "Redirecting…" : `App Access — ${APP_ACCESS_MEMBERSHIP_PRICE_LABEL}`}
+        </button>
         <button
           type="button"
           className="btnSoft"
@@ -110,7 +101,7 @@ export default function ProfileMembershipCheckout({
         </button>
         <button
           type="button"
-          className="btnPrimary"
+          className="btnSoft"
           disabled={!!busy}
           onClick={() => start("member")}
         >

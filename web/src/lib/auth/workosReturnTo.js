@@ -1,4 +1,5 @@
 import { safeAppReturnPath } from "@/lib/billing/stripeConfig";
+import { workosGoUrl } from "@/lib/auth/workosGoUrl";
 
 /**
  * Build a safe same-origin return path for WorkOS sign-in (current route, without auth-overlay query flags).
@@ -33,7 +34,31 @@ export function workosSignInLink(pathname, searchParams, fallback = "/", options
   params.set("remember", rememberDevice ? "1" : "0");
   const hint = String(options.loginHint || "").trim();
   if (hint) params.set("loginHint", hint);
-  return `/api/auth/workos/signin?${params.toString()}`;
+  return `/sign-in?${params.toString()}`;
+}
+
+/**
+ * Mobile WebView launcher pages (fetch JSON authorize URL — no route-handler navigation).
+ * @param {string} returnTo
+ * @param {WorkOSSignInLinkOptions} [options]
+ */
+export function workosMobileSignInHref(returnTo, options = {}) {
+  return workosGoUrl({
+    mode: "signin",
+    returnTo,
+    rememberDevice: options.rememberDevice,
+    loginHint: options.loginHint,
+  });
+}
+
+/** @param {string} returnTo @param {WorkOSSignInLinkOptions} [options] */
+export function workosMobileSignUpHref(returnTo, options = {}) {
+  return workosGoUrl({
+    mode: "signup",
+    returnTo: returnTo || "/",
+    rememberDevice: options.rememberDevice,
+    loginHint: options.loginHint,
+  });
 }
 
 /**
@@ -49,5 +74,5 @@ export function workosSignUpHref(returnTo, options = {}) {
   params.set("remember", rememberDevice ? "1" : "0");
   const hint = String(options.loginHint || "").trim();
   if (hint) params.set("loginHint", hint);
-  return `/api/auth/workos/signup?${params.toString()}`;
+  return `/sign-up?${params.toString()}`;
 }

@@ -11,18 +11,36 @@ export function readNavAuthCache() {
     const o = JSON.parse(raw);
     if (!o || typeof o.t !== "number") return null;
     if (Date.now() - o.t > MAX_STALE_MS) return null;
-    return { authenticated: !!o.authenticated, workos: !!o.workos, t: o.t };
+    return {
+      authenticated: !!o.authenticated,
+      workos: !!o.workos,
+      hasFreeAccess: !!o.hasFreeAccess,
+      t: o.t,
+    };
   } catch {
     return null;
   }
 }
 
-export function writeNavAuthCache(authenticated, workos) {
+/**
+ * @param {boolean} authenticated
+ * @param {boolean} workos
+ * @param {{ hasFreeAccess?: boolean }} [extra]
+ */
+export function writeNavAuthCache(authenticated, workos, extra = {}) {
   if (typeof sessionStorage === "undefined") return;
   try {
+    const prev = readNavAuthCache();
+    const hasFreeAccess =
+      extra.hasFreeAccess !== undefined ? !!extra.hasFreeAccess : !!(prev?.hasFreeAccess && authenticated);
     sessionStorage.setItem(
       TOP_NAV_AUTH_CACHE_KEY,
-      JSON.stringify({ authenticated: !!authenticated, workos: !!workos, t: Date.now() }),
+      JSON.stringify({
+        authenticated: !!authenticated,
+        workos: !!workos,
+        hasFreeAccess,
+        t: Date.now(),
+      }),
     );
   } catch {
     /* quota / private mode */

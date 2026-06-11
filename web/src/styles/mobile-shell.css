@@ -90,20 +90,28 @@ html {
 /* Mobile site header: corner controls · logo centered (non-podcast routes). */
 @media (max-width: 760px) {
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]):not([data-page-atmosphere="home"]) {
-    /* Full wordmark (~1536×1024): enough height for OP + THE OUTREACH + PROJECT */
-    --mobile-site-header-logo-h: clamp(367px, 95.5vw, 499px);
-    --mobile-site-header-logo-max-w: min(770px, calc(100vw - 28px));
+    /* In-app tabs: compact mark (Capacitor gets tighter overrides in mobile-capacitor-layout.css). */
+    --mobile-site-header-logo-h: clamp(72px, 18.5vw, 96px);
+    --mobile-site-header-logo-max-w: min(220px, calc(100vw - 108px));
     --mobile-site-header-control-size: 44px;
-    --mobile-site-header-control-pad-top: calc(4px + env(safe-area-inset-top, 0px));
-    --mobile-site-header-pad-x: max(var(--mobile-shell-pad-x, clamp(16px, 4.5vw, 20px)), env(safe-area-inset-left, 0px));
+    --mobile-site-header-control-pad-top: 4px;
+    --mobile-site-header-pad-x: max(
+      var(--mobile-shell-pad-x, clamp(16px, 4.5vw, 20px)),
+      env(safe-area-inset-left, 0px),
+      env(safe-area-inset-right, 0px)
+    );
   }
 
   main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) {
     --mobile-site-header-logo-h: clamp(301px, 78.75vw, 399px);
     --mobile-site-header-logo-max-w: min(910px, calc(100vw - 28px));
     --mobile-site-header-control-size: 44px;
-    --mobile-site-header-control-pad-top: calc(4px + env(safe-area-inset-top, 0px));
-    --mobile-site-header-pad-x: max(var(--mobile-shell-pad-x, clamp(16px, 4.5vw, 20px)), env(safe-area-inset-left, 0px));
+    --mobile-site-header-control-pad-top: 4px;
+    --mobile-site-header-pad-x: max(
+      var(--mobile-shell-pad-x, clamp(16px, 4.5vw, 20px)),
+      env(safe-area-inset-left, 0px),
+      env(safe-area-inset-right, 0px)
+    );
   }
 
   /* Guest mobile home: compact header mark — splash panel carries branding + auth CTAs. */
@@ -119,9 +127,10 @@ html {
 
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .appSiteHeader {
     position: relative;
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    grid-template-rows: auto;
+    align-items: start;
     box-sizing: border-box;
     width: 100%;
     /* Fit logo — avoid min-height tied to max logo size (left a large dead zone). */
@@ -130,8 +139,9 @@ html {
     overflow: visible;
     padding:
       env(safe-area-inset-top, 0px)
-      var(--mobile-site-header-pad-x)
-      0;
+      max(var(--mobile-shell-pad-x, clamp(16px, 4.5vw, 20px)), env(safe-area-inset-right, 0px))
+      0
+      max(var(--mobile-shell-pad-x, clamp(16px, 4.5vw, 20px)), env(safe-area-inset-left, 0px));
   }
 
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) header.topbar {
@@ -151,10 +161,11 @@ html {
     position: relative;
     top: auto;
     left: auto;
-    align-self: center;
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: center;
     transform: none;
     z-index: 0;
-    flex: 0 0 auto;
     width: auto;
     min-width: 0;
     max-width: 100%;
@@ -185,7 +196,7 @@ html {
     flex-shrink: 0;
     box-sizing: border-box;
     padding: 0 !important;
-    margin: 0 0 clamp(-53px, -14.52vw, -68px);
+    margin: 0 0 clamp(-22px, -6vw, -30px);
     width: auto !important;
     height: auto !important;
     min-width: 0 !important;
@@ -197,32 +208,40 @@ html {
     filter: none !important;
   }
 
-  /* Corner controls: pinned top-left / top-right (safe-area only on controls, not logo). */
+  /* Corner controls: equal grid columns keep the logo on true header center. */
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarLeft {
-    position: absolute;
-    top: var(--mobile-site-header-control-pad-top);
-    left: var(--mobile-site-header-pad-x);
+    grid-column: 1;
+    grid-row: 1;
+    position: relative;
+    top: auto;
+    left: auto;
     z-index: 2;
     display: flex;
     align-items: flex-start;
     justify-content: flex-start;
+    align-self: start;
+    justify-self: start;
     width: auto;
     min-width: 0;
-    padding: 0;
+    padding: var(--mobile-site-header-control-pad-top, 4px) 0 0;
     margin: 0;
   }
 
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarRight {
-    position: absolute;
-    top: var(--mobile-site-header-control-pad-top);
-    right: var(--mobile-site-header-pad-x);
+    grid-column: 3;
+    grid-row: 1;
+    position: relative;
+    top: auto;
+    right: auto;
     z-index: 2;
     display: flex;
     align-items: flex-start;
     justify-content: flex-end;
+    align-self: start;
+    justify-self: end;
     width: auto;
     min-width: 0;
-    padding: 0;
+    padding: var(--mobile-site-header-control-pad-top, 4px) 0 0;
     margin: 0;
   }
 
@@ -243,6 +262,35 @@ html {
     gap: 8px;
     align-items: center;
     justify-content: flex-end;
+  }
+
+  /* Bell sits left of avatar/menu — anchor dropdown to viewport, not the 44px button. */
+  .headerNotificationDropdown {
+    position: fixed;
+    top: calc(
+      env(safe-area-inset-top, 0px) + var(--mobile-site-header-control-pad-top, 4px) +
+        var(--mobile-site-header-control-size, 44px) + 8px
+    );
+    left: max(var(--mobile-shell-pad-x, 16px), env(safe-area-inset-left, 0px));
+    right: max(var(--mobile-shell-pad-x, 16px), env(safe-area-inset-right, 0px));
+    width: auto;
+    max-width: none;
+    max-height: min(58vh, 400px);
+    z-index: 200;
+  }
+
+  .headerAccountDropdown {
+    position: fixed;
+    top: calc(
+      env(safe-area-inset-top, 0px) + var(--mobile-site-header-control-pad-top, 4px) +
+        var(--mobile-site-header-control-size, 44px) + 8px
+    );
+    left: max(var(--mobile-shell-pad-x, 16px), env(safe-area-inset-left, 0px));
+    right: max(var(--mobile-shell-pad-x, 16px), env(safe-area-inset-right, 0px));
+    width: auto;
+    min-width: 0;
+    max-width: none;
+    z-index: 200;
   }
 
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarLeft .topbarActionsCluster,
@@ -269,6 +317,28 @@ html {
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarLeft .topbarActionsCluster,
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarRight .topbarActionsCluster {
     width: auto;
+  }
+}
+
+/* Mobile TopApp: one bottom reserve on `.shell` — not main + mission footer (fixes short extra scroll). */
+@media (max-width: 760px) {
+  main.topApp.appShell--withMobileNavDock {
+    min-height: 100dvh;
+    min-height: 100svh;
+    padding-bottom: 0;
+  }
+
+  main.topApp.appShell--withMobileNavDock > .shell,
+  main.topApp.appShell--withMobileNavDock > section.shell {
+    padding-bottom: var(--torp-bottom-nav-reserve);
+    box-sizing: border-box;
+  }
+
+  main.topApp.appShell--withMobileNavDock .siteFooter,
+  main.topApp.appShell--withMobileNavDock .siteFooter.siteFooter--pageBottom,
+  main.topApp.appShell--withMobileNavDock .siteFooter.siteFooter--pageBottom.siteFooter--inMainShell {
+    padding-bottom: 12px;
+    margin-bottom: 0;
   }
 }
 

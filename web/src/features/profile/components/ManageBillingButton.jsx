@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { navigateToStripePortal } from "@/lib/capacitor/billingNavigation";
-import { requiresExternalWebAccountFlow, openWebBilling } from "@/lib/capacitor/webAccountRedirects";
 
 /**
  * Opens Stripe Customer Portal for the signed-in WorkOS user (server uses torp_profiles.stripe_customer_id).
@@ -12,16 +11,6 @@ export default function ManageBillingButton({ stripeReady, hasStripeCustomer, va
   const [error, setError] = useState("");
 
   async function openPortal() {
-    if (requiresExternalWebAccountFlow()) {
-      setError("");
-      try {
-        await openWebBilling();
-      } catch {
-        setError("Could not open billing on the web.");
-      }
-      return;
-    }
-
     setBusy(true);
     setError("");
     try {
@@ -60,7 +49,7 @@ export default function ManageBillingButton({ stripeReady, hasStripeCustomer, va
 
   return (
     <div>
-      <button type="button" className={btnClass} disabled={busy || (!requiresExternalWebAccountFlow() && !hasStripeCustomer)} onClick={openPortal}>
+      <button type="button" className={btnClass} disabled={busy || !hasStripeCustomer} onClick={openPortal}>
         {busy ? "Opening…" : "Manage billing"}
       </button>
       {!hasStripeCustomer ? (

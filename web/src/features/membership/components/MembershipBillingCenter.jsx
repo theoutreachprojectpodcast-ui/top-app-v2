@@ -4,17 +4,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import MembershipTierArt from "@/features/membership/components/MembershipTierArt";
 import ManageBillingButton from "@/features/profile/components/ManageBillingButton";
-import NativeAccountBillingNotice from "@/components/capacitor/NativeAccountBillingNotice";
 import {
   navigateToStripeCheckout,
   navigateToStripeSetupUrl,
 } from "@/lib/capacitor/billingNavigation";
-import {
-  openWebBilling,
-  openWebMembership,
-  openWebSponsorMembership,
-  requiresExternalWebAccountFlow,
-} from "@/lib/capacitor/webAccountRedirects";
 import {
   MEMBERSHIP_TIER_KEYS,
   getMembershipTierDefinition,
@@ -136,24 +129,6 @@ export default function MembershipBillingCenter({
   }, [tierKey]);
 
   async function startCheckout(tier, sponsorPackageId) {
-    if (requiresExternalWebAccountFlow()) {
-      setError("");
-      setBusy(tier + (sponsorPackageId || ""));
-      try {
-        onCheckoutNavigate?.();
-        if (tier === "sponsor") {
-          await openWebSponsorMembership({ params: sponsorPackageId ? { tier: sponsorPackageId } : undefined });
-        } else {
-          await openWebMembership({ tier });
-        }
-      } catch {
-        setError("Could not open membership on the web.");
-      } finally {
-        setBusy("");
-      }
-      return;
-    }
-
     setError("");
     setBusy(tier + (sponsorPackageId || ""));
     try {
@@ -166,7 +141,7 @@ export default function MembershipBillingCenter({
       const data = await res.json().catch(() => ({}));
       if (data.url) {
         onCheckoutNavigate?.();
-        await navigateToStripeCheckout(data.url, { tier });
+        await navigateToStripeCheckout(data.url);
         return;
       }
       if (data.error === "use_billing_portal") {
@@ -182,16 +157,12 @@ export default function MembershipBillingCenter({
         });
         const pd = await pr.json().catch(() => ({}));
         if (pd.url) {
-          await navigateToStripeCheckout(pd.url, { tier: data.podcastTierId });
+          await navigateToStripeCheckout(pd.url);
           return;
         }
       }
       if (data.error === "use_sponsor_application") {
         const tid = data.missionTierId || "";
-        if (requiresExternalWebAccountFlow()) {
-          await openWebSponsorMembership({ params: tid ? { tier: tid } : undefined });
-          return;
-        }
         window.location.assign(`/sponsors?packages=1${tid ? `&tier=${encodeURIComponent(tid)}` : ""}`);
         return;
       }
@@ -204,19 +175,6 @@ export default function MembershipBillingCenter({
   }
 
   async function addPaymentMethod() {
-    if (requiresExternalWebAccountFlow()) {
-      setError("");
-      setBusy("pm-add");
-      try {
-        await openWebBilling();
-      } catch {
-        setError("Could not open billing on the web.");
-      } finally {
-        setBusy("");
-      }
-      return;
-    }
-
     setBusy("pm-add");
     setError("");
     try {
@@ -387,14 +345,12 @@ export default function MembershipBillingCenter({
       ) : null}
       {loading ? <p className="sponsorSectionLead">Loading billing…</p> : null}
 
-      <NativeAccountBillingNotice />
-
       {stripeMemberReady && upgradeTiers.length > 0 ? (
         <div className="membershipBillingCenter__section">
           <h4>{tierKey === MEMBERSHIP_TIER_KEYS.NONE ? "Membership" : "Upgrade"}</h4>
           <p className="sponsorSectionLead">
             {tierKey === MEMBERSHIP_TIER_KEYS.NONE
-              ? "App Access is required for the mobile app. Support and Pro are optional upgrades."
+              ? "App Access is required on web and mobile. Support and Pro are optional upgrades."
               : "Advanced upgrades for existing App Access members."}
           </p>
           <div className="membershipBillingCenter__actions row wrap">

@@ -1,6 +1,5 @@
-import TopApp from "@/components/app/TopApp";
+import NativeCommunityRoute from "@/components/mobile/NativeCommunityRoute";
 
 export default function CommunityPageRoute() {
-  return <TopApp initialNav="community" />;
+  return <NativeCommunityRoute />;
 }
-

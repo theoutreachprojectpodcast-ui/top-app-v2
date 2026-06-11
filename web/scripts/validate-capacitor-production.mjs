@@ -13,6 +13,10 @@ const PRODUCTION_ORIGIN = String(
   .trim()
   .replace(/\/$/, "");
 
+const PRODUCTION_SERVER_URL = PRODUCTION_ORIGIN.endsWith("/mobile")
+  ? PRODUCTION_ORIGIN
+  : `${PRODUCTION_ORIGIN}/mobile`;
+
 const FORBIDDEN = [/localhost/i, /127\.0\.0\.0\.1/, /qa\.theoutreachproject/i, /10\.0\.2\.2/];
 
 const embeddedPaths = [
@@ -35,8 +39,8 @@ for (const rel of embeddedPaths) {
     continue;
   }
   const url = String(cfg?.server?.url || "").trim().replace(/\/$/, "");
-  if (url !== PRODUCTION_ORIGIN) {
-    console.error(`[mobile:verify:prod] ${rel}: server.url=${url || "(unset)"} expected ${PRODUCTION_ORIGIN}`);
+  if (url !== PRODUCTION_SERVER_URL) {
+    console.error(`[mobile:verify:prod] ${rel}: server.url=${url || "(unset)"} expected ${PRODUCTION_SERVER_URL}`);
     failed = true;
     continue;
   }
@@ -81,7 +85,7 @@ if (checkLive && typeof fetch === "function") {
   }
 }
 
-console.log(`[mobile:verify:prod] Native shells target ${PRODUCTION_ORIGIN}`);
+console.log(`[mobile:verify:prod] Native shells target ${PRODUCTION_SERVER_URL}`);
 console.log(
   "[mobile:verify:prod] Web UI updates require Vercel production deploy — the WebView loads live production, not local web/.",
 );

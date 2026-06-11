@@ -13,6 +13,7 @@ import "@/components/home/home-membership-section.css";
  * Homepage membership — guest sees all tiers; signed-in users see current plan + upgrades only.
  */
 export default function HomeMembershipSection({
+  variant = "inline",
   isAuthenticated,
   loadingAccount = false,
   currentTierKey = "none",
@@ -55,30 +56,43 @@ export default function HomeMembershipSection({
     if (!isAuthenticated || view.ctaMode === "signin") {
       return plan.tierKey === "none" ? "Sign in — join free" : `Sign in — ${plan.cta}`;
     }
+    if (isModal && plan.tierKey === "none") return "Continue with free";
     return plan.cta;
   }
 
-  const title = isAuthenticated ? "Your membership" : "Become a member";
-  const lead = isAuthenticated
-    ? loadingAccount
-      ? "Loading your account and membership…"
-      : `Signed in as ${accountEmail || "your account"}. Current plan: ${membershipLabel || current.label}. Billing: ${billingLabel}.`
-    : "Support the mission with a free account or a recurring membership.";
+  const isProfileUpsell = variant === "profile";
+  const isModal = variant === "modal";
+  const title = isProfileUpsell
+    ? "Upgrade your membership"
+    : isAuthenticated
+      ? "Choose your membership"
+      : "Become a member";
+  const lead = isProfileUpsell
+    ? "You are on a free account. Support the mission with a recurring membership when you are ready."
+    : isAuthenticated
+      ? loadingAccount
+        ? "Loading your account and membership…"
+        : isModal
+          ? "Pick a free account or a paid tier to continue. You can change this later on your profile."
+          : `Signed in as ${accountEmail || "your account"}. Current plan: ${membershipLabel || current.label}. Billing: ${billingLabel}.`
+      : "Support the mission with a free account or a recurring membership.";
+
+  const headingId = isModal ? "membership-plans-modal-heading" : "home-membership-heading";
 
   return (
     <section
-      className="homeMembershipSection"
-      id={isAuthenticated ? "profile-membership-plans" : undefined}
-      aria-labelledby="home-membership-heading"
+      className={`homeMembershipSection${isModal ? " homeMembershipSection--modal" : ""}${isProfileUpsell ? " homeMembershipSection--profile" : ""}`}
+      id={isAuthenticated && !isModal ? "profile-membership-plans" : undefined}
+      aria-labelledby={headingId}
     >
       <div className="homeMembershipSection__header">
-        <h2 id="home-membership-heading" className="homeMembershipSection__title">
+        <h2 id={headingId} className="homeMembershipSection__title">
           {title}
         </h2>
         <p className="homeMembershipSection__lead">{lead}</p>
       </div>
 
-      {isAuthenticated && !loadingAccount ? (
+      {isAuthenticated && !loadingAccount && variant === "inline" ? (
         <div className="homeMembershipSection__account" role="status">
           <p className="homeMembershipSection__accountLine">
             <strong>Account</strong> {accountEmail || "—"}

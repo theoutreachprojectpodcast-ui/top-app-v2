@@ -17,11 +17,26 @@ export function getWebAppOrigin() {
   return PRODUCTION_ORIGIN;
 }
 
-/** Deep link opened by return pages to bring the user back into the native shell. */
-export const MOBILE_APP_DEEP_LINK = "org.theoutreachproject.torp://account/refresh";
+/** Native Capacitor WebView entry — splash + auth gate (not full TopApp home). */
+export const MOBILE_NATIVE_ENTRY_PATH = "/mobile";
+
+/**
+ * Capacitor `server.url` — load mobile splash first to avoid TopApp loading on `/`.
+ * @param {string} origin e.g. https://theoutreachproject.app
+ */
+export function capacitorServerUrl(origin) {
+  const base = String(origin || "").trim().replace(/\/$/, "");
+  if (!base) return MOBILE_NATIVE_ENTRY_PATH;
+  if (base.endsWith(MOBILE_NATIVE_ENTRY_PATH)) return base;
+  return `${base}${MOBILE_NATIVE_ENTRY_PATH}`;
+}
+
 
 /** Query flag appended to web return URLs after external signup / billing. */
 export const MOBILE_RETURN_QUERY = "mobileReturn=account";
+
+/** Deep link opened by return pages to bring the user back into the native shell. */
+export const MOBILE_APP_DEEP_LINK = "com.theoutreachproject.theoutreachproject://account/refresh";
 
 /**
  * @param {string} path

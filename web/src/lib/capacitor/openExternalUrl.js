@@ -4,11 +4,11 @@ import { Capacitor } from "@capacitor/core";
 import { Browser } from "@capacitor/browser";
 
 /**
- * Open a URL outside the Capacitor WebView (Safari / Chrome Custom Tab).
- * Used for signup, membership checkout, and billing — never for in-app Stripe embed.
+ * Navigate to a URL. On native, stay in the main Capacitor WebView (never Safari / SFSafariViewController).
+ * Host must be listed in `capacitor.config.js` → `server.allowNavigation`.
  *
  * @param {string} url
- * @returns {Promise<{ mode: "native-browser" | "browser-tab" | "same-window" }>}
+ * @returns {Promise<{ mode: "same-window" | "browser-tab" | "native-browser" }>}
  */
 export async function openExternalUrl(url) {
   const target = String(url || "").trim();
@@ -16,9 +16,9 @@ export async function openExternalUrl(url) {
     throw new Error("openExternalUrl: missing url");
   }
 
-  if (Capacitor.isNativePlatform()) {
-    await Browser.open({ url: target });
-    return { mode: "native-browser" };
+  if (Capacitor.isNativePlatform() && typeof window !== "undefined") {
+    window.location.assign(target);
+    return { mode: "same-window" };
   }
 
   if (typeof window !== "undefined") {

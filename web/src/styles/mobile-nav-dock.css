@@ -3,13 +3,13 @@
  * Applies to main `TopApp` and all `AppShell` routes that use `.footerDock` + `.bottomNav--mobileDock`.
  */
 
-@media (min-width: 720px) {
+@media (min-width: 761px) {
   .siteMobileNavMore {
     display: none !important;
   }
 }
 
-@media (max-width: 719px) {
+@media (max-width: 760px) {
   .siteMobileNavMore {
     position: relative;
     display: flex;
@@ -199,7 +199,8 @@
     text-align: center;
   }
 
-  .footerDockBackdrop {
+  main.topApp .footerDockBackdrop,
+  .appShell .footerDockBackdrop {
     height: calc(92px + env(safe-area-inset-bottom, 0px)) !important;
     background: transparent !important;
   }
@@ -212,7 +213,8 @@
     ) !important;
   }
 
-  .footerNavInner {
+  main.topApp .footerNavInner,
+  .appShell .footerNavInner {
     padding: 8px 10px calc(10px + env(safe-area-inset-bottom, 0px)) !important;
   }
 
