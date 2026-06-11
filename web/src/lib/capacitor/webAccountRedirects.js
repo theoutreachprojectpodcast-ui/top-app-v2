@@ -1,7 +1,10 @@
 "use client";
 
+import { launchWorkOSAuth } from "@/lib/auth/workosNativeAuthLaunch";
+import { workosGoUrl } from "@/lib/auth/workosGoUrl";
 import { absoluteWebAppUrl, MOBILE_APP_DEEP_LINK, webAppPathWithMobileReturn } from "@/lib/capacitor/webAppOrigin";
 import { openExternalUrl } from "@/lib/capacitor/openExternalUrl";
+import { isCapacitorNative } from "@/lib/capacitor/platform";
 
 /**
  * Account signup, membership checkout, and billing run in the Capacitor WebView
@@ -31,6 +34,22 @@ export async function openWebLogin(options = {}) {
   const returnPath = options.returnPath || "/profile";
   const url = `${absoluteWebAppUrl("/login").split("?")[0]}?returnTo=${encodeReturnTo(returnPath, options.params)}`;
   return openExternalUrl(url);
+}
+
+/** Native Capacitor WorkOS sign-in via in-app browser sheet (Turnstile-safe). */
+export async function openNativeWorkOSSignIn(options = {}) {
+  if (!isCapacitorNative()) {
+    return { ok: false, reason: "not-native" };
+  }
+  const goPath = workosGoUrl({
+    mode: "signin",
+    returnTo: options.returnPath || "/",
+    rememberDevice: options.rememberDevice,
+    loginHint: options.loginHint,
+    native: true,
+  });
+  await launchWorkOSAuth(goPath);
+  return { ok: true };
 }
 
 /** @deprecated Prefer in-app `/membership`. */
