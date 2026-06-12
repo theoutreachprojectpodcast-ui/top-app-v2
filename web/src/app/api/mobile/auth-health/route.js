@@ -32,11 +32,11 @@ export async function GET() {
     if (error) {
       checks.oauthHandoffError = error.message;
     } else {
-      const sessionCol = await admin.from(HANDOFF_TABLE).select("session_cookies").limit(0);
+      const sessionCol = await admin.from(HANDOFF_TABLE).select("set_cookies").limit(0);
       checks.oauthHandoffSessionCookies = !sessionCol.error;
       if (sessionCol.error) {
         checks.oauthHandoffMigration =
-          "Run: alter table public.torp_oauth_mobile_handoffs add column if not exists session_cookies text[];";
+          "Run: alter table public.torp_oauth_mobile_handoffs add column if not exists set_cookies text[] not null default '{}';";
       }
       const redirectCol = await admin.from(HANDOFF_TABLE).select("redirect_to").limit(0);
       checks.oauthHandoffRedirectTo = !redirectCol.error;
@@ -49,7 +49,7 @@ export async function GET() {
       const { error: probeErr } = await admin.from(HANDOFF_TABLE).upsert(
         {
           state_key: probeKey,
-          session_cookies: ["__torp_authorize:probe"],
+          set_cookies: ["__torp_authorize:probe"],
           redirect_to: "/",
           expires_at: probeExpires,
         },

@@ -10,8 +10,9 @@ const AUTHORIZE_PLACEHOLDER = "__authorize__";
 const COOKIE_AUTHORIZE = "__torp_authorize:";
 const COOKIE_OAUTH = "__torp_oauth:";
 
-/** Columns guaranteed on production handoff table. */
-const HANDOFF_SELECT = "session_cookies, redirect_to, expires_at";
+/** Production Supabase column for handoff payload cookies. */
+const HANDOFF_COOKIE_COLUMN = "set_cookies";
+const HANDOFF_SELECT = `${HANDOFF_COOKIE_COLUMN}, redirect_to, expires_at`;
 
 /** @param {string} state */
 export function hashOAuthState(state) {
@@ -88,7 +89,7 @@ function isProdLike() {
 function parseHandoffPayload(data) {
   if (!data) return null;
   const redirectTo = String(data.redirect_to || MOBILE_POST_AUTH_HOME);
-  const cookies = Array.isArray(data.session_cookies) ? data.session_cookies.filter(Boolean) : [];
+  const cookies = Array.isArray(data[HANDOFF_COOKIE_COLUMN]) ? data[HANDOFF_COOKIE_COLUMN].filter(Boolean) : [];
   const first = String(cookies[0] || "");
 
   if (first.startsWith(COOKIE_AUTHORIZE)) {
@@ -164,7 +165,7 @@ export async function saveOAuthAuthorizePending(stateKey, url, sealedState, redi
   const expiresAt = new Date(Date.now() + HANDOFF_TTL_MS);
   const row = {
     state_key: key,
-    session_cookies: [`${COOKIE_AUTHORIZE}${token}`],
+    [HANDOFF_COOKIE_COLUMN]: [`${COOKIE_AUTHORIZE}${token}`],
     redirect_to: redirectTo || MOBILE_POST_AUTH_HOME,
     expires_at: expiresAt.toISOString(),
   };
@@ -178,7 +179,7 @@ export async function saveOAuthAuthorizePending(stateKey, url, sealedState, redi
   }
 
   memoryHandoffStore().set(key, {
-    session_cookies: row.session_cookies,
+    [HANDOFF_COOKIE_COLUMN]: row[HANDOFF_COOKIE_COLUMN],
     redirect_to: row.redirect_to,
     expires_at: expiresAt.getTime(),
   });
@@ -209,7 +210,7 @@ export async function saveOAuthMobileSessionHandoff(stateKey, setCookies, redire
   const expiresAt = new Date(Date.now() + HANDOFF_TTL_MS);
   const row = {
     state_key: key,
-    session_cookies: cookies,
+    [HANDOFF_COOKIE_COLUMN]: cookies,
     redirect_to: redirectTo || MOBILE_POST_AUTH_HOME,
     expires_at: expiresAt.toISOString(),
   };
@@ -222,7 +223,7 @@ export async function saveOAuthMobileSessionHandoff(stateKey, setCookies, redire
   }
 
   memoryHandoffStore().set(key, {
-    session_cookies: cookies,
+    [HANDOFF_COOKIE_COLUMN]: cookies,
     redirect_to: row.redirect_to,
     expires_at: expiresAt.getTime(),
   });
@@ -245,7 +246,7 @@ export async function saveOAuthMobilePending(stateKey, code, state, redirectTo =
 
   const row = {
     state_key: key,
-    session_cookies: [`${COOKIE_OAUTH}${bridgeToken}`],
+    [HANDOFF_COOKIE_COLUMN]: [`${COOKIE_OAUTH}${bridgeToken}`],
     redirect_to: redirectTo || MOBILE_POST_AUTH_HOME,
     expires_at: expiresAt.toISOString(),
   };
@@ -258,7 +259,7 @@ export async function saveOAuthMobilePending(stateKey, code, state, redirectTo =
   }
 
   memoryHandoffStore().set(key, {
-    session_cookies: row.session_cookies,
+    [HANDOFF_COOKIE_COLUMN]: row[HANDOFF_COOKIE_COLUMN],
     redirect_to: row.redirect_to,
     expires_at: expiresAt.getTime(),
   });
@@ -292,7 +293,7 @@ async function readHandoffRow(stateKey, { consume = true } = {}) {
   if (!mem || mem.expires_at < Date.now()) return null;
   if (consume) memoryHandoffStore().delete(key);
   return {
-    session_cookies: mem.session_cookies,
+    [HANDOFF_COOKIE_COLUMN]: mem[HANDOFF_COOKIE_COLUMN],
     redirect_to: mem.redirect_to,
     expires_at: new Date(mem.expires_at).toISOString(),
   };
