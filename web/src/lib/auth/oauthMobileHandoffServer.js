@@ -163,7 +163,7 @@ async function readHandoffRow(stateKey, { consume = true } = {}) {
         await admin.from(HANDOFF_TABLE).delete().eq("state_key", key);
       }
       if (new Date(data.expires_at).getTime() < Date.now()) return null;
-      return { ...data, session_cookies: sessionCookies };
+      return data;
     }
     if (error) {
       console.error("[torp] oauth mobile handoff read failed:", error.message);

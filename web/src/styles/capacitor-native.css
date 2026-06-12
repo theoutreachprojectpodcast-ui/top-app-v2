@@ -140,6 +140,28 @@ html[data-color-scheme="light"] .mobileBootOverlay {
   letter-spacing: 0.01em;
 }
 
+.mobileBootOverlay__text--error {
+  max-width: 22rem;
+  line-height: 1.45;
+}
+
+.mobileBootOverlay__hint {
+  margin: 0;
+  max-width: 22rem;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  opacity: 0.82;
+}
+
+.mobileBootOverlay__retry {
+  margin-top: 4px;
+  min-width: 9rem;
+}
+
+.mobileBootOverlay--error .mobileBootOverlay__logo {
+  opacity: 0.92;
+}
+
 @keyframes mobileBootSpin {
   to {
     transform: rotate(360deg);

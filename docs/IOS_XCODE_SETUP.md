@@ -259,6 +259,7 @@ cd top-app-v2
 git pull
 pnpm install
 pnpm --dir web run mobile:prep:prod    # before every store build
+pnpm --dir web run verify:cap-server   # after cap sync — fails on localhost/missing URL
 pnpm --dir web run mobile:icons        # refresh iOS 1024×1024 icon
 pnpm --dir web run cap:open:ios        # open Xcode
 pnpm --dir web run validate:capacitor
@@ -276,8 +277,10 @@ pnpm --dir web run mobile:assets       # sources in web/resources/
 
 | Issue | Fix |
 |-------|-----|
-| White screen | Re-run `mobile:prep:prod`; confirm `capacitor.config.json` has Production URL |
-| Sign-in loops / fails | Confirm WorkOS redirect `https://theoutreachproject.app/callback`; test in Safari on device |
+| **“Server cannot be found”** in TestFlight | On Mac: `pnpm --dir web run mobile:prep:prod` then `grep url web/ios/App/App/capacitor.config.json` — must be `"https://theoutreachproject.app"`. Re-Archive and upload. Never archive after bare `cap sync` with `CAP_SERVER_URL=localhost`. |
+| White screen / black flash | Re-run `mobile:prep:prod`; confirm Production URL embedded; test `https://theoutreachproject.app` in Safari on device |
+| Sign-in opens browser but does not return to app | Register WorkOS mobile redirect `https://theoutreachproject.app/mobile-auth/callback`; enable Associated Domains in Xcode |
+| Sign-in loops / fails | Confirm WorkOS redirect `https://theoutreachproject.app/callback` (web) + mobile callback above; test in Safari on device |
 | Signing errors | Correct Team, active Developer Program, Bundle ID registered |
 | Archive disabled | Select **Any iOS Device (arm64)**, not simulator |
 | Build missing in TestFlight | Wait for processing; check email for export/compliance issues |

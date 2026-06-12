@@ -51,7 +51,11 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" android:host="qa.theoutreachproject.app" android:pathPrefix="/mobile-auth" />
+                <data
+                    android:scheme="https"
+                    android:host="qa.theoutreachproject.app"
+                    android:pathPrefix="/mobile-auth"
+                />
             </intent-filter>
         </activity>
 

@@ -25,7 +25,7 @@ Restore that point if needed: `git checkout <commit>`.
 | Supabase | Client + service routes from Next API |
 | Stripe | API routes + webhooks — requires **HTTPS** origin in production |
 | Browser-only assumptions | Minimal; native uses the **same** UI loaded from a URL |
-| Dev commands | `pnpm dev` → **localhost:3001**; `pnpm dev:alt` → **localhost:3000** |
+| Dev commands | `pnpm dev` → **localhost:3000**; `pnpm dev:alt` → **localhost:3001** |
 | Start prod locally | `pnpm start` (after `pnpm build`) |
 
 **Why `webDir` is not `.next`:** Capacitor expects static web assets. This app relies on **Next Route Handlers** and dynamic rendering, so the native wrapper loads the **real Next deployment** via `server.url` (see below).
@@ -55,17 +55,22 @@ Inside **`web/`** (the Next app root):
 | `pnpm run cap:sync` / `pnpm run mobile:sync` | Copy `capacitor-www` + config into native projects |
 | `pnpm run cap:open:android` / `mobile:open:android` | Open Android Studio |
 | `pnpm run cap:open:ios` / `mobile:open:ios` | Open Xcode (**macOS only**) |
-| `pnpm run mobile:prep` | `pnpm run build` then `cap sync` — verifies web build, then refreshes native assets |
+| `pnpm run mobile:prep` | Same as `mobile:prep:prod` — builds web, syncs native, verifies embedded Production URL |
+| `pnpm run mobile:prep:prod` | **TestFlight / App Store** — embeds `https://theoutreachproject.app` |
+| `pnpm run verify:cap-server` | Fails if iOS/Android `capacitor.config.json` has localhost or missing `server.url` |
 
-## Phase 6 — `CAP_SERVER_URL` (required for real app in WebView)
+## Phase 6 — `CAP_SERVER_URL` (remote WebView origin)
 
-Set **`CAP_SERVER_URL`** to the **origin** where Next is actually served (no trailing slash):
+**TestFlight / App Store:** `capacitor.config.js` **defaults to Production** (`https://theoutreachproject.app`) when `CAP_SERVER_URL` is unset. Always run `pnpm run mobile:prep:prod` before archiving in Xcode.
+
+Override **`CAP_SERVER_URL`** only for local dev / QA (no trailing slash):
 
 **Examples**
 
-- Production: `https://your-app.vercel.app` (or your custom domain)
-- Android **emulator** hitting host machine: `http://10.0.2.2:3001` (maps to host `localhost:3001`)
-- Physical device on LAN: `http://192.168.x.x:3001` (use your machine’s IP; same Wi‑Fi)
+- Production (default): `https://theoutreachproject.app`
+- QA native builds: `pnpm run mobile:prep:qa` → `https://qa.theoutreachproject.app`
+- Android **emulator** → host machine: `http://10.0.2.2:3000` (with `pnpm dev` on port 3000)
+- Physical device on LAN: `http://192.168.x.x:3000` (same Wi‑Fi; dev only)
 
 Then from **`web/`**:
 

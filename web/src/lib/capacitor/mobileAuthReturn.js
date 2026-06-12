@@ -3,6 +3,7 @@
 import { closeExternalBrowserIfOpen } from "@/lib/capacitor/openExternalUrl";
 import { parseMobileDeepLinkUrl } from "@/lib/capacitor/mobileDeepLinks";
 import { safeAppReturnPath } from "@/lib/billing/stripeConfig";
+import { logMobileBootEvent } from "@/lib/capacitor/mobileBootDiagnostics";
 
 /**
  * Handle Capacitor appUrlOpen deep links after mobile browser WorkOS auth.
@@ -38,9 +39,11 @@ export async function handleMobileAuthDeepLink(url, handlers) {
     });
     const body = await res.json().catch(() => ({}));
     if (!res.ok || !body?.ok) {
+      logMobileBootEvent("mobile_auth_complete_failed", { status: res.status });
       return { handled: true, kind: parsed.kind, ok: false };
     }
 
+    logMobileBootEvent("mobile_auth_complete_ok");
     await handlers.refreshAccountStatus();
     handlers.router.replace(String(body.returnTo || returnTo || "/"));
     return { handled: true, kind: parsed.kind, ok: true };

@@ -22,7 +22,7 @@ if (!capServerUrl.startsWith("http")) {
 
 console.log(`[mobile:prep] CAP_SERVER_URL=${capServerUrl}`);
 
-const env = { ...process.env, CAP_SERVER_URL: capServerUrl };
+const env = { ...process.env, CAP_SERVER_URL: capServerUrl, CAP_SERVER_PROFILE: capServerUrl.includes("qa.") ? "qa" : "production" };
 
 function run(cmd, args) {
   const r = spawnSync(cmd, args, { cwd: webRoot, env, stdio: "inherit", shell: process.platform === "win32" });
@@ -34,5 +34,6 @@ run("pnpm", ["run", "mobile:splash"]);
 run("pnpm", ["run", "mobile:icons"]);
 run("pnpm", ["run", "mobile:assets"]);
 run("pnpm", ["exec", "cap", "sync"]);
+run("node", ["scripts/verify-capacitor-server-url.mjs"]);
 
 console.log("[mobile:prep] Done. Open native IDEs: pnpm run cap:open:ios | cap:open:android");

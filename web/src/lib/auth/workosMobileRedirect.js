@@ -85,26 +85,14 @@ export function parseOAuthBrowserDoneDeepLink(url) {
 export function mobileOAuthBrowserDoneHtml(stateKey = "") {
   const deepLink = buildOAuthBrowserDoneDeepLink(stateKey);
   const escaped = deepLink.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
-  const json = JSON.stringify(deepLink);
   return workosAuthBrandedHtmlPage({
     title: "Sign in complete — The Outreach Project",
     heading: "Sign in complete",
-    showSpinner: true,
-    headExtra: `<meta http-equiv="refresh" content="0;url=${escaped}" />`,
-    bodyHtml: `<p class="torpAuth__lead">Returning to The Outreach Project…</p>
-      <p class="torpAuth__lead"><a class="torpAuth__link" href="${escaped}">Continue in app</a></p>`,
-    bodyEnd: `<script>
-    (function () {
-      var target = ${json};
-      function go() {
-        try { window.location.replace(target); } catch (e) {}
-        try { window.location.href = target; } catch (e2) {}
-      }
-      go();
-      setTimeout(go, 120);
-      setTimeout(go, 400);
-    })();
-  </script>`,
+    bodyHtml: `<p class="torpAuth__lead">Close this window to return to The Outreach Project.</p>
+      <p class="torpAuth__lead">Your sign-in will finish automatically when this window closes.</p>
+      <div class="torpAuth__actions">
+        <a class="torpAuth__btn torpAuth__btn--soft" href="${escaped}">Return to app</a>
+      </div>`,
   });
 }
 
@@ -115,7 +103,6 @@ export function mobileOAuthBrowserDoneHtml(stateKey = "") {
 export function mobileOAuthReturnBridgeHtml(deepLinkUrl) {
   const safe = String(deepLinkUrl || "").trim();
   const escaped = safe.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
-  const json = JSON.stringify(safe);
   return workosAuthBrandedHtmlPage({
     title: "Returning to app — The Outreach Project",
     heading: "Sign in complete",
@@ -123,7 +110,6 @@ export function mobileOAuthReturnBridgeHtml(deepLinkUrl) {
       <div class="torpAuth__actions">
         <a class="torpAuth__btn torpAuth__btn--primary" href="${escaped}">Open app</a>
       </div>`,
-    bodyEnd: `<script>setTimeout(function(){ location.replace(${json}); }, 300);</script>`,
   });
 }
 

@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import {
   WORKOS_PKCE_COOKIE_NAME,
   workosPkceCookieOptions,
 } from "@/lib/auth/workosAuthorizationRedirect";
+import { workOSAuthRedirectBridge } from "@/lib/auth/workosAuthRedirectBridge";
 
 const BROWSER_OAUTH_COOKIE = "torp-oauth-browser";
 const BROWSER_OAUTH_MAX_AGE = 600;
@@ -21,8 +23,8 @@ function browserOAuthCookieOptions() {
 
 /**
  * GET — seeds PKCE + shell marker cookies in the in-app browser (SFSafariViewController),
- * then redirects to WorkOS. The main WebView mints PKCE first; this copies the sealed state
- * into the browser cookie jar so `/callback` can validate state.
+ * then navigates to WorkOS via a 200 HTML bridge (302 Set-Cookie is unreliable in SFSafariViewController).
+ * The main WebView mints PKCE first; this copies the sealed state into the browser cookie jar.
  */
 export async function GET(request) {
   const url = new URL(request.url);
@@ -41,9 +43,8 @@ export async function GET(request) {
     return new NextResponse("Missing OAuth state.", { status: 400 });
   }
 
-  const res = NextResponse.redirect(go, 302);
-  res.cookies.set(BROWSER_OAUTH_COOKIE, "1", browserOAuthCookieOptions());
-  res.cookies.set(WORKOS_PKCE_COOKIE_NAME, sealedState, workosPkceCookieOptions());
-  res.headers.set("Cache-Control", "no-store");
-  return res;
+  const cookieStore = await cookies();
+  cookieStore.set(BROWSER_OAUTH_COOKIE, "1", browserOAuthCookieOptions());
+  cookieStore.set(WORKOS_PKCE_COOKIE_NAME, sealedState, workosPkceCookieOptions());
+  return workOSAuthRedirectBridge(go);
 }

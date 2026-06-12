@@ -18,8 +18,8 @@ export default function MobileReturnToAppPanel({ title, message, showSignInHint 
       <p className="sponsorSectionLead">{message}</p>
       {showSignInHint ? (
         <p className="sponsorSectionLead">
-          If you are not signed in inside the app yet, use <strong>Sign in</strong> on the Profile tab after
-          returning — your web account and membership sync from the server.
+          Tap <strong>Open The Outreach Project app</strong> to return with your account. If needed, use{" "}
+          <strong>Refresh account status</strong> inside the app.
         </p>
       ) : null}
       <div className="row wrap">

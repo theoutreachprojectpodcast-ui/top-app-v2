@@ -11,7 +11,7 @@ const capServerUrl = String(
   process.env.CAP_SERVER_URL || "https://qa.theoutreachproject.app",
 ).trim().replace(/\/$/, "");
 
-const env = { ...process.env, CAP_SERVER_URL: capServerUrl };
+const env = { ...process.env, CAP_SERVER_URL: capServerUrl, CAP_SERVER_PROFILE: "qa" };
 console.log(`[mobile:prep:qa] CAP_SERVER_URL=${capServerUrl}`);
 
 const r = spawnSync("node", ["scripts/mobile-prep.mjs", capServerUrl], {
