@@ -12,9 +12,17 @@ import {
 } from "react";
 
 async function fetchMeAuthenticated() {
-  const meRes = await fetch("/api/me", { credentials: "include", cache: "no-store" });
-  const me = await meRes.json().catch(() => ({}));
-  return !!me.authenticated;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 12_000);
+  try {
+    const meRes = await fetch("/api/me", { credentials: "include", cache: "no-store", signal: controller.signal });
+    const me = await meRes.json().catch(() => ({}));
+    return !!me.authenticated;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 import { usePathname } from "next/navigation";
 import { clearNavAuthCache, readNavAuthCache, writeNavAuthCache } from "@/lib/auth/navAuthCache";
@@ -54,10 +62,13 @@ export default function AuthSessionProvider({ children }) {
 
   const refresh = useCallback(async (opts = {}) => {
     const soft = !!opts.soft;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 12_000);
     try {
+      const fetchOpts = { credentials: "include", signal: controller.signal };
       const [statusRes, meRes] = await Promise.all([
-        fetch("/api/auth/status", { credentials: "include" }),
-        fetch("/api/me", { credentials: "include", cache: "no-store" }),
+        fetch("/api/auth/status", fetchOpts),
+        fetch("/api/me", { ...fetchOpts, cache: "no-store" }),
       ]);
       const status = await statusRes.json().catch(() => ({}));
       const me = await meRes.json().catch(() => ({}));
@@ -83,6 +94,8 @@ export default function AuthSessionProvider({ children }) {
         workos: soft ? prev.workos : false,
       }));
       if (!soft) clearNavAuthCache();
+    } finally {
+      clearTimeout(timer);
     }
   }, []);
 

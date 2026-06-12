@@ -36,6 +36,18 @@ import {
 import { mapNonprofitCardRow } from "@/features/nonprofits/mappers/nonprofitCardMapper";
 import { profileToApiPatch } from "@/lib/profile/profileApiPatch";
 
+const SESSION_FETCH_TIMEOUT_MS = 12_000;
+
+async function fetchWithTimeout(url, options = {}, timeoutMs = SESSION_FETCH_TIMEOUT_MS) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 function mapLegacyMembershipToTier(status) {
   const v = String(status || "").toLowerCase();
   if (v === "member" || v === "demo") return "member";
@@ -166,15 +178,15 @@ export function useProfileDataState(supabase) {
       const cacheNav = typeof window !== "undefined" ? readNavAuthCache() : null;
       try {
         const [statusRes, meRes] = await Promise.all([
-          fetch("/api/auth/status", { credentials: "include" }),
-          fetch("/api/me", { credentials: "include", cache: "no-store" }),
+          fetchWithTimeout("/api/auth/status", { credentials: "include" }),
+          fetchWithTimeout("/api/me", { credentials: "include", cache: "no-store" }),
         ]);
         const status = await statusRes.json();
         let me = await meRes.json();
         if (!me.authenticated && cacheNav?.authenticated) {
           for (let attempt = 0; attempt < 3 && !me.authenticated; attempt++) {
             await new Promise((r) => setTimeout(r, 150 * (attempt + 1)));
-            const meRetry = await fetch("/api/me", { credentials: "include", cache: "no-store" });
+            const meRetry = await fetchWithTimeout("/api/me", { credentials: "include", cache: "no-store" });
             me = await meRetry.json().catch(() => ({}));
           }
         }
@@ -183,7 +195,7 @@ export function useProfileDataState(supabase) {
           for (let attempt = 0; attempt < 2 && me.authenticated && me.profile == null; attempt++) {
             if (cancelled) return;
             await new Promise((r) => setTimeout(r, 160 * (attempt + 1)));
-            const meRetry = await fetch("/api/me", { credentials: "include", cache: "no-store" });
+            const meRetry = await fetchWithTimeout("/api/me", { credentials: "include", cache: "no-store" });
             me = await meRetry.json().catch(() => ({}));
           }
         }

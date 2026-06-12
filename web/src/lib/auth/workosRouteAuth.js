@@ -28,7 +28,9 @@ async function classifyRouteSession(session) {
 
   const admin = createSupabaseAdminClient();
   if (s.user?.id) {
-    await ensureWorkOSOrganizationMembership(s.user.id);
+    void ensureWorkOSOrganizationMembership(s.user.id).catch((e) => {
+      console.warn("[torp] background org membership sync failed:", e);
+    });
   }
 
   let profileRow = admin && s.user?.id ? await getProfileRowByWorkOSId(admin, s.user.id) : null;
