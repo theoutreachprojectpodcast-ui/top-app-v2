@@ -38,6 +38,9 @@ export function workosCallbackErrorMessage(error) {
   if (msg.includes("Cannot read properties of undefined") || msg.includes("reading 'get'")) {
     return "Could not complete sign in. Please try again.";
   }
+  if (msg.includes(" is not defined")) {
+    return "Could not complete sign in. Please try again.";
+  }
   if (msg.trim()) return msg;
   return "Could not complete sign in. Please try again.";
 }

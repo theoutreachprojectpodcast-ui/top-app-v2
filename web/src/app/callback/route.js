@@ -105,13 +105,17 @@ export async function GET(request) {
   try {
     const url = new URL(request.url);
     const ua = request.headers.get("user-agent") || "";
-    const startedInApp = oauthStartedInNativeShell(request);
     const inMobileBrowser = isMobileExternalBrowserUserAgent(ua);
     const oauthError = url.searchParams.get("error");
     const code = url.searchParams.get("code");
 
     // Legacy Capacitor in-app browser sheet — finish OAuth and hand session to WebView.
-    if (!startedInApp && inMobileBrowser && code && isCapacitorBrowserOAuthReturn(request)) {
+    if (
+      !oauthStartedInNativeShell(request) &&
+      inMobileBrowser &&
+      code &&
+      isCapacitorBrowserOAuthReturn(request)
+    ) {
       return mobileBrowserOAuthPendingResponse(request, url);
     }
 
