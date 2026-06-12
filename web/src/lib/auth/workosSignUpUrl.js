@@ -6,6 +6,7 @@ import {
   readWorkOSInvitationToken,
 } from "@/lib/auth/workosAuthorizationRedirect";
 import { workOSAuthKitAuthorizeOptions } from "@/lib/auth/workosOrganizationScope";
+import { shouldMarkOAuthNativeShell } from "@/lib/auth/workosOAuthShell";
 function readReturnTo(searchParams, fallback = "/onboarding") {
   const raw =
     searchParams.get("returnTo") ||
@@ -20,7 +21,7 @@ function readReturnTo(searchParams, fallback = "/onboarding") {
  * @param {string} [fallbackReturn="/onboarding"]
  * @returns {Promise<string>}
  */
-export async function resolveWorkOSSignUpFromSearchParams(searchParams, fallbackReturn = "/onboarding") {
+export async function resolveWorkOSSignUpFromSearchParams(searchParams, fallbackReturn = "/onboarding", request) {
   if (!isWorkOSConfigured()) {
     throw new Error("authentication_not_configured");
   }
@@ -39,8 +40,7 @@ export async function resolveWorkOSSignUpFromSearchParams(searchParams, fallback
     prompt,
     invitationToken: invitationToken || undefined,
     organizationId: orgOptions.organizationId,
-    markNativeShell:
-      returnTo.startsWith("/mobile") || returnTo.includes("nav=") || returnTo.startsWith("/community"),
+    markNativeShell: shouldMarkOAuthNativeShell(searchParams, request),
   });
 }
 
@@ -49,5 +49,5 @@ export async function resolveWorkOSSignUpFromSearchParams(searchParams, fallback
  * @returns {Promise<string>}
  */
 export async function resolveWorkOSSignUpUrl(request) {
-  return resolveWorkOSSignUpFromSearchParams(request.nextUrl.searchParams, "/onboarding");
+  return resolveWorkOSSignUpFromSearchParams(request.nextUrl.searchParams, "/onboarding", request);
 }

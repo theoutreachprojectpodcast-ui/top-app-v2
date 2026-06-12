@@ -25,6 +25,17 @@ export default function MobileSplashPage() {
   }, []);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const oauthErr = String(params.get("oauth_error") || "").trim();
+    if (!oauthErr) return;
+    setAuthError(oauthErr);
+    params.delete("oauth_error");
+    const qs = params.toString();
+    router.replace(qs ? `/mobile?${qs}` : "/mobile", { scroll: false });
+  }, [router]);
+
+  useEffect(() => {
     if (!clientReady || isNative) return;
     if (!isMobileShell) {
       router.replace("/");

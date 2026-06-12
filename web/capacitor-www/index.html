@@ -8,9 +8,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="TOP" />
     <meta name="theme-color" content="#121212" />
-    <link rel="manifest" href="/manifest.webmanifest" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta http-equiv="refresh" content="0;url=https://theoutreachproject.app/mobile" />
     <style>
       html,
       body {
@@ -27,17 +25,10 @@
         place-items: center;
         padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
           env(safe-area-inset-left);
-        background:
-          radial-gradient(120% 80% at 50% 0%, rgba(34, 165, 43, 0.18), transparent 58%),
-          linear-gradient(168deg, #1a241c 0%, #121212 42%, #121212 100%);
-      }
-      .boot__inner {
-        text-align: center;
       }
       .boot__spinner {
         width: 44px;
         height: 44px;
-        margin: 0 auto 1rem;
         border: 3px solid rgba(34, 165, 43, 0.25);
         border-top-color: #22a52b;
         border-radius: 50%;
@@ -49,13 +40,28 @@
         }
       }
     </style>
+    <script>
+      (function () {
+        var PROD = "https://theoutreachproject.app/mobile";
+        function go() {
+          try {
+            window.location.replace(PROD);
+          } catch (e) {
+            try {
+              window.location.href = PROD;
+            } catch (e2) {}
+          }
+        }
+        go();
+        setTimeout(go, 120);
+        setTimeout(go, 600);
+        setTimeout(go, 1500);
+      })();
+    </script>
   </head>
   <body>
     <div class="boot" role="status" aria-live="polite">
-      <div class="boot__inner">
-        <div class="boot__spinner" aria-hidden="true"></div>
-        <p>Loading The Outreach Project…</p>
-      </div>
+      <div class="boot__spinner" aria-hidden="true"></div>
     </div>
   </body>
 </html>

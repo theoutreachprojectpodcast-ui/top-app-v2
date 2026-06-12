@@ -6,7 +6,7 @@ import { isCapacitorNative } from "@/lib/capacitor/platform";
 import { launchWorkOSAuth } from "@/lib/auth/workosNativeAuthLaunch";
 import { workosGoUrl } from "@/lib/auth/workosGoUrl";
 import { workosOAuthErrorMessage } from "@/lib/auth/workosCallbackErrors";
-import "@/styles/mobile-splash-page.css";
+import WorkOSAuthShell from "@/components/auth/WorkOSAuthShell";
 
 /** @param {{ initialError?: string }} props */
 function WorkOSCallbackInner({ initialError = "" }) {
@@ -49,51 +49,32 @@ function WorkOSCallbackInner({ initialError = "" }) {
 
   if (error) {
     return (
-      <div className="mobileSplashPage">
-        <div className="mobileSplashPage__inner">
-          <p className="mobileSplashPage__notice mobileSplashPage__notice--warn" role="alert">
-            {error}
-          </p>
-          <div className="mobileSplashPage__actions">
-            <button type="button" className="btnPrimary mobileSplashPage__btn" onClick={tryAgain}>
-              Try again
-            </button>
-            {native ? (
-              <a className="btnSoft mobileSplashPage__btn" href="/mobile">
-                Back
-              </a>
-            ) : (
-              <a className="btnSoft mobileSplashPage__btn" href="/">
-                Home
-              </a>
-            )}
-          </div>
+      <WorkOSAuthShell title="Sign in" error={error}>
+        <div className="workosAuthShell__actions">
+          <button type="button" className="btnPrimary mobileSplashPage__btn" onClick={tryAgain}>
+            Try again
+          </button>
+          {native ? (
+            <a className="btnSoft mobileSplashPage__btn" href="/mobile">
+              Back
+            </a>
+          ) : (
+            <a className="btnSoft mobileSplashPage__btn" href="/">
+              Home
+            </a>
+          )}
         </div>
-      </div>
+      </WorkOSAuthShell>
     );
   }
 
-  return (
-    <div className="mobileSplashPage">
-      <div className="mobileSplashPage__inner">
-        <p className="mobileSplashPage__lead">Completing sign in…</p>
-      </div>
-    </div>
-  );
+  return <WorkOSAuthShell title="Sign in" lead="Completing sign in…" busy />;
 }
 
 /** @param {{ initialError?: string }} [props] */
 export default function WorkOSCallbackClient({ initialError } = {}) {
   return (
-    <Suspense
-      fallback={
-        <div className="mobileSplashPage">
-          <div className="mobileSplashPage__inner">
-            <p className="mobileSplashPage__lead">Loading…</p>
-          </div>
-        </div>
-      }
-    >
+    <Suspense fallback={<WorkOSAuthShell title="Sign in" lead="Loading…" busy />}>
       <WorkOSCallbackInner initialError={initialError} />
     </Suspense>
   );

@@ -6,7 +6,9 @@ function resolveAppleAppId() {
   const explicit = String(process.env.APPLE_APP_ID || "").trim();
   if (explicit) return explicit;
   const teamId = String(process.env.APPLE_TEAM_ID || "").trim();
-  const bundleId = String(process.env.APPLE_BUNDLE_ID || "org.theoutreachproject.torp").trim();
+  const bundleId = String(
+    process.env.APPLE_BUNDLE_ID || "com.theoutreachproject.theoutreachproject",
+  ).trim();
   if (teamId && bundleId) return `${teamId}.${bundleId}`;
   return "";
 }
@@ -25,10 +27,14 @@ export async function GET() {
             {
               appID,
               paths: [
+                "/callback",
+                "/callback/*",
                 "/mobile-auth/callback",
                 "/mobile-auth/callback/*",
                 "/mobile-auth/complete",
                 "/mobile-auth/complete/*",
+                "/api/mobile/oauth-handoff/bridge",
+                "/api/mobile/oauth-handoff/bridge/*",
               ],
             },
           ]

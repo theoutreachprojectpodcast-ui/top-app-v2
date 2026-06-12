@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
-import { workosGoUrl } from "@/lib/auth/workosGoUrl";
 import { workosCallbackErrorHtml } from "@/lib/auth/workosGoRoute";
 import { workosCallbackErrorMessage, workosOAuthErrorMessage } from "@/lib/auth/workosCallbackErrors";
 import { isCapacitorCallbackRequest } from "@/lib/auth/workosCallbackRequest";
-import { runWorkOSCallbackDocument, runWorkOSCallbackForFetch } from "@/lib/auth/workosCallbackHandler";
+import {
+  runWorkOSCallbackCapture,
+  runWorkOSCallbackDocument,
+  runWorkOSCallbackForFetch,
+} from "@/lib/auth/workosCallbackHandler";
+import { saveOAuthMobileSessionHandoff } from "@/lib/auth/oauthMobileHandoffServer";
 import { hashOAuthState, saveOAuthMobilePending } from "@/lib/auth/oauthMobileHandoffServer";
 import { MOBILE_POST_AUTH_HOME } from "@/lib/auth/oauthMobileHandoff";
 import {
@@ -21,7 +25,7 @@ const BROWSER_OAUTH_COOKIE = "torp-oauth-browser";
 function callbackNavHrefs(request) {
   const native = oauthStartedInNativeShell(request);
   return {
-    tryAgainHref: native ? workosGoUrl({ mode: "signin", returnTo: "/" }) : "/",
+    tryAgainHref: native ? "/sign-in?returnTo=%2F" : "/",
     homeHref: native ? "/mobile" : "/",
   };
 }
@@ -61,7 +65,7 @@ function isCapacitorBrowserOAuthReturn(request) {
   return request.cookies.get(BROWSER_OAUTH_COOKIE)?.value === "1";
 }
 
-/** Capacitor in-app browser — stash code/state; WebView finishes OAuth (PKCE cookie lives there). */
+/** Capacitor in-app browser — finish OAuth here (PKCE cookie from `/auth/workos-browser-start`), hand session to WebView. */
 async function mobileBrowserOAuthPendingResponse(request, url) {
   const state = url.searchParams.get("state");
   const code = url.searchParams.get("code");
@@ -70,6 +74,25 @@ async function mobileBrowserOAuthPendingResponse(request, url) {
   }
 
   const stateKey = hashOAuthState(state);
+
+  const captured = await runWorkOSCallbackCapture(request);
+  if (captured.ok && captured.setCookies?.length) {
+    const saved = await saveOAuthMobileSessionHandoff(stateKey, captured.setCookies, captured.redirectTo);
+    if (saved.ok) {
+      return new NextResponse(mobileOAuthBrowserDoneHtml(stateKey), {
+        status: 200,
+        headers: {
+          "Content-Type": "text/html; charset=utf-8",
+          "Content-Disposition": "inline",
+          "Cache-Control": "no-store",
+        },
+      });
+    }
+    console.error("[torp] oauth session handoff save failed after capture");
+  } else if (!captured.ok) {
+    console.error("[torp] oauth in-app browser capture failed:", captured.message);
+  }
+
   const saved = await saveOAuthMobilePending(stateKey, code, state, MOBILE_POST_AUTH_HOME);
   if (!saved.ok) {
     return callbackErrorResponse("Could not prepare sign-in for the app. Please try again.", request);

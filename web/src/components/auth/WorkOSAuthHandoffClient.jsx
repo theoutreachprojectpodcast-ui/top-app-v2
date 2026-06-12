@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { isCapacitorNative } from "@/lib/capacitor/platform";
 import { launchWorkOSAuth } from "@/lib/auth/workosNativeAuthLaunch";
 import { workosGoUrl } from "@/lib/auth/workosGoUrl";
-import "@/styles/mobile-splash-page.css";
+import WorkOSAuthShell from "@/components/auth/WorkOSAuthShell";
 
 /** Same-origin POST for browsers (200 HTML bridge — reliable PKCE commit). */
 const WEB_HANDOFF_ACTION = "/auth/workos-handoff";
@@ -75,25 +75,20 @@ function WorkOSAuthHandoffInner({ mode, backHref = "/mobile", fallbackReturn }) 
 
   if (error) {
     return (
-      <div className="mobileSplashPage">
-        <div className="mobileSplashPage__inner">
-          <p className="mobileSplashPage__notice mobileSplashPage__notice--warn" role="alert">
-            {error}
-          </p>
-          <p className="mobileSplashPage__lead">
-            <a href={backHref}>Back</a>
-          </p>
-        </div>
-      </div>
+      <WorkOSAuthShell title="Sign in" error={error}>
+        <p className="workosAuthShell__lead">
+          <a href={backHref}>Back</a>
+        </p>
+      </WorkOSAuthShell>
     );
   }
 
   return (
-    <div className="mobileSplashPage">
-      <div className="mobileSplashPage__inner">
-        <p className="mobileSplashPage__lead">Preparing secure sign in…</p>
-      </div>
-    </div>
+    <WorkOSAuthShell
+      title="Sign in"
+      lead="Preparing secure sign in…"
+      busy
+    />
   );
 }
 
@@ -102,15 +97,7 @@ function WorkOSAuthHandoffInner({ mode, backHref = "/mobile", fallbackReturn }) 
  */
 export default function WorkOSAuthHandoffClient({ mode = "signin", backHref = "/mobile", fallbackReturn }) {
   return (
-    <Suspense
-      fallback={
-        <div className="mobileSplashPage">
-          <div className="mobileSplashPage__inner">
-            <p className="mobileSplashPage__lead">Loading…</p>
-          </div>
-        </div>
-      }
-    >
+    <Suspense fallback={<WorkOSAuthShell title="Sign in" lead="Loading…" busy />}>
       <WorkOSAuthHandoffInner mode={mode} backHref={backHref} fallbackReturn={fallbackReturn} />
     </Suspense>
   );

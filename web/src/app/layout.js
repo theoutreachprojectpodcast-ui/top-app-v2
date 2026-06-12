@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { Roboto } from "next/font/google";
 import ColorSchemeRoot from "@/components/app/ColorSchemeRoot";
 import CapacitorNativeShell from "@/components/capacitor/CapacitorNativeShell";
+import CapacitorRemoteBootstrap from "@/components/capacitor/CapacitorRemoteBootstrap";
 import MobileBootLoader from "@/components/capacitor/MobileBootLoader";
 import MobileAccountReturnBridge from "@/components/capacitor/MobileAccountReturnBridge";
 import MobileOAuthBrowserFinish from "@/components/capacitor/MobileOAuthBrowserFinish";
@@ -83,6 +84,7 @@ html[data-capacitor-native], html[data-capacitor-native] body {
         />
       </head>
       <body suppressHydrationWarning>
+        <CapacitorRemoteBootstrap />
         <CapacitorNativeShell />
         <ColorSchemeRoot>
           <AuthSessionProvider>

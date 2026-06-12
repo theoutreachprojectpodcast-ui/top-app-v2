@@ -30,6 +30,7 @@ import HeaderAccountMenu from "@/components/layout/HeaderAccountMenu";
 import AdminConsoleLink from "@/components/admin/AdminConsoleLink";
 import HeaderNotificationBell from "@/components/layout/HeaderNotificationBell";
 import { useDirectorySearch } from "@/hooks/useDirectorySearch";
+import { useMobileShell } from "@/hooks/useMobileShell";
 import { useProfileData } from "@/features/profile/ProfileDataProvider";
 import { useTrustedResources } from "@/hooks/useTrustedResources";
 import { showLocalDemoChrome } from "@/lib/runtime/demoUiVisibility";
@@ -63,6 +64,8 @@ import {
   writeRememberEmailPref,
 } from "@/lib/auth/lastUsedEmail";
 import { workosSignInLink, workosSignUpHref } from "@/lib/auth/workosReturnTo";
+import { workosGoUrl } from "@/lib/auth/workosGoUrl";
+import { launchWorkOSAuth } from "@/lib/auth/workosNativeAuthLaunch";
 import { computeProfileCompletion } from "@/lib/profile/profileCompletion";
 import { markPendingProfileEdit } from "@/features/profile/lib/pendingProfileEdit";
 import { useProfileEdit } from "@/features/profile/ProfileEditProvider";
@@ -111,6 +114,7 @@ function TopAppInner({ initialNav = "home" }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const isMobileShell = useMobileShell();
   const sb = useMemo(() => getSupabaseClient(), []);
   const [nav, setNav] = useState(initialNav);
   const [overlay, setOverlay] = useState(null);
@@ -120,6 +124,7 @@ function TopAppInner({ initialNav = "home" }) {
   const [authError, setAuthError] = useState("");
   const [authStatus, setAuthStatus] = useState("");
   const [signupAvatarDataUrl, setSignupAvatarDataUrl] = useState("");
+  const signinQueryHandledRef = useRef(false);
   const [contactDraft, setContactDraft] = useState({ firstName: "", lastName: "", email: "", phone: "", message: "" });
   const [contactStatus, setContactStatus] = useState("");
   const [contactError, setContactError] = useState("");
@@ -150,11 +155,19 @@ function TopAppInner({ initialNav = "home" }) {
   }, [searchParams]);
 
   useEffect(() => {
-    if (searchParams.get("signin") === "1") {
-      setAuthMode(searchParams.get("signup") === "1" ? "signup" : "signin");
-      setOverlay("signin");
+    if (searchParams.get("signin") !== "1" || loadingProfile || signinQueryHandledRef.current) return;
+    signinQueryHandledRef.current = true;
+    if (authBackend.workos && isCapacitorNative()) {
+      if (searchParams.get("signup") === "1") {
+        void openCreateAccountFlow();
+      } else {
+        void startWorkOSSignIn();
+      }
+      return;
     }
-  }, [searchParams]);
+    setAuthMode(searchParams.get("signup") === "1" ? "signup" : "signin");
+    setOverlay("signin");
+  }, [searchParams, authBackend.workos, loadingProfile]);
 
   useEffect(() => {
     if (overlay !== "signin") {
@@ -173,14 +186,6 @@ function TopAppInner({ initialNav = "home" }) {
     const last = readLastUsedEmail();
     if (last) setAuthDraft((d) => ({ ...d, email: d.email ? d.email : last }));
   }, [overlay]);
-
-  useEffect(() => {
-    if (!showMembershipModal || loadingProfile) return;
-    setOverlay((current) => {
-      if (current === "signin" || current === "membership") return current;
-      return "membership";
-    });
-  }, [showMembershipModal, loadingProfile]);
 
   const {
     userId,
@@ -235,6 +240,14 @@ function TopAppInner({ initialNav = "home" }) {
     () => shouldShowMembershipPickerModal({ isAuthenticated, profile, sessionKind }),
     [isAuthenticated, profile, sessionKind],
   );
+
+  useEffect(() => {
+    if (!showMembershipModal || loadingProfile) return;
+    setOverlay((current) => {
+      if (current === "signin" || current === "membership") return current;
+      return "membership";
+    });
+  }, [showMembershipModal, loadingProfile]);
 
   useEffect(() => {
     const c = searchParams.get("checkout");
@@ -476,7 +489,21 @@ function TopAppInner({ initialNav = "home" }) {
     [favoriteEntityKeys],
   );
 
-  function startWorkOSSignIn(returnPathOverride) {
+  function buildWorkOSGoPath(returnPathOverride, mode = "signin") {
+    const returnPath =
+      returnPathOverride ||
+      workosReturnPathFromRouter(pathname, searchParams) ||
+      (mode === "signup" ? "/onboarding" : "/");
+    return workosGoUrl({
+      mode: mode === "signup" ? "signup" : "signin",
+      returnTo: returnPath,
+      rememberDevice,
+      loginHint: authDraft.email,
+      native: isCapacitorNative(),
+    });
+  }
+
+  async function startWorkOSSignIn(returnPathOverride) {
     writeRememberDevicePref(rememberDevice);
     const returnPath =
       returnPathOverride ||
@@ -488,6 +515,11 @@ function TopAppInner({ initialNav = "home" }) {
         rememberDevice,
         loginHint: authDraft.email,
       });
+      return;
+    }
+    persistAuthPrefsBeforeWorkOSRedirect();
+    if (isCapacitorNative()) {
+      await launchWorkOSAuth(buildWorkOSGoPath(returnPath, "signin"));
       return;
     }
     window.location.assign(
@@ -633,6 +665,7 @@ function TopAppInner({ initialNav = "home" }) {
             <div className="topbarZone topbarLeft">
               <div className="topbarActionsCluster topbarActionsCluster--start">
                 {pageAtmosphere !== "podcast" ? <ColorSchemeToggle /> : null}
+                {isMobileShell && isLoggedIn ? <AdminConsoleLink /> : null}
               </div>
             </div>
             <div className="topbarZone topbarCenter" aria-hidden="true" />
@@ -641,7 +674,7 @@ function TopAppInner({ initialNav = "home" }) {
               {pageAtmosphere === "home" ? <DownloadMobileAppButton /> : null}
               {isLoggedIn ? (
                 <>
-                  <AdminConsoleLink />
+                  {!isMobileShell ? <AdminConsoleLink /> : null}
                   <HeaderNotificationBell skipSessionGate />
                   <HeaderAccountMenu
                     avatarSrc={profile.avatarUrl || emptyProfileAvatarUrl()}
@@ -1305,30 +1338,67 @@ function TopAppInner({ initialNav = "home" }) {
                   </FormCheckbox>
                 </div>
                 <div className="row wrap demoAuthModal__providerRow">
-                  <a
-                    className="btnPrimary"
-                    href={workosSignInHereHref}
-                    onClick={() => persistAuthPrefsBeforeWorkOSRedirect()}
-                  >
-                    Sign in
-                  </a>
-                  <button
-                    className="btnSoft"
-                    type="button"
-                    onClick={() => {
-                      persistAuthPrefsBeforeWorkOSRedirect();
-                      openCreateAccountFlow();
-                    }}
-                  >
-                    Create account
-                  </button>
-                  <a
-                    className="btnSoft"
-                    href={workosSignInHereHref}
-                    onClick={() => persistAuthPrefsBeforeWorkOSRedirect()}
-                  >
-                    Continue with Google
-                  </a>
+                  {isCapacitorNative() ? (
+                    <>
+                      <button
+                        className="btnPrimary"
+                        type="button"
+                        onClick={() => {
+                          persistAuthPrefsBeforeWorkOSRedirect();
+                          void startWorkOSSignIn();
+                        }}
+                      >
+                        Sign in
+                      </button>
+                      <button
+                        className="btnSoft"
+                        type="button"
+                        onClick={() => {
+                          persistAuthPrefsBeforeWorkOSRedirect();
+                          void openCreateAccountFlow();
+                        }}
+                      >
+                        Create account
+                      </button>
+                      <button
+                        className="btnSoft"
+                        type="button"
+                        onClick={() => {
+                          persistAuthPrefsBeforeWorkOSRedirect();
+                          void startWorkOSSignIn();
+                        }}
+                      >
+                        Continue with Google
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <a
+                        className="btnPrimary"
+                        href={workosSignInHereHref}
+                        onClick={() => persistAuthPrefsBeforeWorkOSRedirect()}
+                      >
+                        Sign in
+                      </a>
+                      <button
+                        className="btnSoft"
+                        type="button"
+                        onClick={() => {
+                          persistAuthPrefsBeforeWorkOSRedirect();
+                          void openCreateAccountFlow();
+                        }}
+                      >
+                        Create account
+                      </button>
+                      <a
+                        className="btnSoft"
+                        href={workosSignInHereHref}
+                        onClick={() => persistAuthPrefsBeforeWorkOSRedirect()}
+                      >
+                        Continue with Google
+                      </a>
+                    </>
+                  )}
                 </div>
                 <p className="profilePhotoUploadHint" style={{ marginTop: 8 }}>
                   Forgot your password? Use the reset link on the WorkOS sign-in screen.

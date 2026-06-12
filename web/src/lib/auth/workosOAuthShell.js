@@ -43,19 +43,25 @@ export async function clearOAuthNativeShell() {
 }
 
 /** @param {Request} request */
+export function isNativeWorkOSShellRequest(request) {
+  const ua = String(request?.headers?.get("user-agent") || "");
+  if (ua.includes("Capacitor") || ua.includes("TheOutreachProject/Capacitor")) return true;
+  return request?.cookies?.get(TORP_OAUTH_SHELL_COOKIE)?.value === TORP_OAUTH_SHELL_NATIVE;
+}
+
+/** @param {Request} request */
 export function oauthStartedInNativeShell(request) {
-  const ua = String(request.headers.get("user-agent") || "");
-  if (ua.includes("Capacitor")) return true;
-  return request.cookies.get(TORP_OAUTH_SHELL_COOKIE)?.value === TORP_OAUTH_SHELL_NATIVE;
+  return isNativeWorkOSShellRequest(request);
 }
 
 /**
- * @param {URL} requestUrl
+ * @param {URLSearchParams} searchParams
  * @param {Request} [request]
  */
-export function shouldMarkOAuthNativeShell(requestUrl, request) {
-  const ua = String(request?.headers?.get("user-agent") || "");
-  if (ua.includes("Capacitor")) return true;
-  const returnTo = String(requestUrl.searchParams.get("returnTo") || "");
-  return returnTo.startsWith("/mobile");
+export function shouldMarkOAuthNativeShell(searchParams, request) {
+  if (isNativeWorkOSShellRequest(request)) return true;
+  if (String(searchParams.get("native") || "") === "1") return true;
+  const returnTo = String(searchParams.get("returnTo") || "");
+  return returnTo.startsWith("/mobile") || returnTo.includes("nav=") || returnTo.startsWith("/community");
 }
+

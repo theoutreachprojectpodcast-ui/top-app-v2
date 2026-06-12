@@ -298,6 +298,23 @@ html {
     justify-content: flex-start;
   }
 
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])
+    .topbarLeft
+    .topbarActionsCluster--start:has(.adminConsoleTopbarBtn) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarLeft .adminConsoleTopbarBtn {
+    min-width: 0;
+    min-height: 34px;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .themeToggle,
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .siteMobileNavMore__trigger {
     box-sizing: border-box;

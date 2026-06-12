@@ -14,6 +14,7 @@ export default async function MobileSignInLauncherPage({ searchParams }) {
     returnTo,
     rememberDevice: params?.remember !== "0",
     loginHint: typeof params?.loginHint === "string" ? params.loginHint : undefined,
+    native: true,
   });
 
   return <MobileWorkOSAuthLauncher goPath={goPath} label="Opening sign in…" />;

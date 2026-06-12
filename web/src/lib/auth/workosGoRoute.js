@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { workOSAuthRedirectBridge } from "@/lib/auth/workosAuthRedirectBridge";
+import { workosAuthBrandedHtmlPage } from "@/lib/auth/workosAuthBrand";
+import { isNativeWorkOSShellRequest } from "@/lib/auth/workosOAuthShell";
 import { resolveWorkOSSignInFromSearchParams } from "@/lib/auth/workosSignInUrl";
 import { resolveWorkOSSignUpFromSearchParams } from "@/lib/auth/workosSignUpUrl";
 import { toWorkOSUrlSearchParams } from "@/lib/auth/workosSearchParams";
@@ -11,26 +13,14 @@ import { toWorkOSUrlSearchParams } from "@/lib/auth/workosSearchParams";
 export function workosGoErrorHtml(message, backHref = "/mobile") {
   const safeMsg = String(message || "Could not start sign in.").replace(/</g, "&lt;");
   const safeBack = String(backHref).replace(/"/g, "&quot;");
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Sign in</title>
-  <style>
-    body { font-family: system-ui, sans-serif; display: flex; min-height: 100dvh; align-items: center; justify-content: center; margin: 0; padding: 24px; background: #101814; color: #f8fcfa; text-align: center; }
-    .card { max-width: 22rem; padding: 20px; border-radius: 16px; background: #1a2420; border: 1px solid #3a4a40; }
-    p { margin: 0 0 16px; line-height: 1.45; font-size: 0.95rem; }
-    a { display: inline-block; padding: 12px 20px; border-radius: 999px; background: #1a5c34; color: #fff; text-decoration: none; font-weight: 600; }
-  </style>
-</head>
-<body>
-  <div class="card">
-    <p>${safeMsg}</p>
-    <a href="${safeBack}">Try again</a>
-  </div>
-</body>
-</html>`;
+  return workosAuthBrandedHtmlPage({
+    title: "Sign in — The Outreach Project",
+    heading: "Sign in",
+    bodyHtml: `<p class="torpAuth__lead torpAuth__lead--warn" role="alert">${safeMsg}</p>
+      <div class="torpAuth__actions">
+        <a class="torpAuth__btn torpAuth__btn--primary" href="${safeBack}">Try again</a>
+      </div>`,
+  });
 }
 
 /**
@@ -45,32 +35,15 @@ export function workosCallbackErrorHtml(
   const safeMsg = String(message || "Could not complete sign in.").replace(/</g, "&lt;");
   const safeTry = String(tryAgainHref).replace(/"/g, "&quot;");
   const safeHome = String(homeHref).replace(/"/g, "&quot;");
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Sign in</title>
-  <style>
-    body { font-family: system-ui, sans-serif; display: flex; min-height: 100dvh; align-items: center; justify-content: center; margin: 0; padding: 24px; background: #101814; color: #f8fcfa; text-align: center; }
-    .card { max-width: 22rem; width: 100%; padding: 20px; border-radius: 16px; background: #1a2420; border: 1px solid #3a4a40; }
-    p { margin: 0 0 16px; line-height: 1.45; font-size: 0.95rem; color: #f5d76e; }
-    .actions { display: flex; flex-direction: column; gap: 10px; }
-    a { display: block; padding: 12px 20px; border-radius: 999px; text-decoration: none; font-weight: 600; }
-    .primary { background: #1a5c34; color: #fff; }
-    .soft { background: #2a3530; color: #f8fcfa; border: 1px solid #3a4a40; }
-  </style>
-</head>
-<body>
-  <div class="card">
-    <p role="alert">${safeMsg}</p>
-    <div class="actions">
-      <a class="primary" href="${safeTry}">Try again</a>
-      <a class="soft" href="${safeHome}">Home</a>
-    </div>
-  </div>
-</body>
-</html>`;
+  return workosAuthBrandedHtmlPage({
+    title: "Sign in — The Outreach Project",
+    heading: "Sign in",
+    bodyHtml: `<p class="torpAuth__lead torpAuth__lead--warn" role="alert">${safeMsg}</p>
+      <div class="torpAuth__actions">
+        <a class="torpAuth__btn torpAuth__btn--primary" href="${safeTry}">Try again</a>
+        <a class="torpAuth__btn torpAuth__btn--soft" href="${safeHome}">Home</a>
+      </div>`,
+  });
 }
 
 /**
@@ -91,12 +64,29 @@ function workOSGoContext(requestUrl) {
 
 /**
  * @param {URL} requestUrl
+ * @param {Request} [request]
  */
-export async function resolveWorkOSAuthorizeUrlFromGoUrl(requestUrl) {
+export async function resolveWorkOSAuthorizeUrlFromGoUrl(requestUrl, request) {
   const { mode, fallbackReturn, params } = workOSGoContext(requestUrl);
   return mode === "signup"
-    ? resolveWorkOSSignUpFromSearchParams(params, fallbackReturn)
-    : resolveWorkOSSignInFromSearchParams(params, fallbackReturn);
+    ? resolveWorkOSSignUpFromSearchParams(params, fallbackReturn, request)
+    : resolveWorkOSSignInFromSearchParams(params, fallbackReturn, request);
+}
+
+/**
+ * Capacitor WebView must not load WorkOS/Turnstile inline — bounce to `/sign-in` launcher.
+ * @param {URL} requestUrl
+ * @param {Request} request
+ */
+export function workOSGoNativeLauncherRedirect(requestUrl, request) {
+  if (!isNativeWorkOSShellRequest(request)) return null;
+  const { mode } = workOSGoContext(requestUrl);
+  const dest = new URL(mode === "signup" ? "/mobile/sign-up" : "/mobile/sign-in", requestUrl.origin);
+  const sp = new URLSearchParams(requestUrl.searchParams);
+  sp.delete("format");
+  sp.delete("native");
+  dest.search = sp.toString();
+  return NextResponse.redirect(dest, 302);
 }
 
 function workOSGoErrorResponse(message, backHref, status = 503) {
@@ -108,11 +98,12 @@ function workOSGoErrorResponse(message, backHref, status = 503) {
 
 /**
  * @param {URL} requestUrl
+ * @param {Request} [request]
  */
-export async function workOSGoJsonResponse(requestUrl) {
+export async function workOSGoJsonResponse(requestUrl, request) {
   const { backHref } = workOSGoContext(requestUrl);
   try {
-    const url = await resolveWorkOSAuthorizeUrlFromGoUrl(requestUrl);
+    const url = await resolveWorkOSAuthorizeUrlFromGoUrl(requestUrl, request);
     let stateKey = "";
     try {
       const sealed = new URL(String(url)).searchParams.get("state") || "";
@@ -149,11 +140,15 @@ export async function workOSGoJsonResponse(requestUrl) {
 
 /**
  * @param {URL} requestUrl
+ * @param {Request} [request]
  */
-export async function workOSGoResponse(requestUrl) {
+export async function workOSGoResponse(requestUrl, request) {
+  const nativeRedirect = request ? workOSGoNativeLauncherRedirect(requestUrl, request) : null;
+  if (nativeRedirect) return nativeRedirect;
+
   const { backHref } = workOSGoContext(requestUrl);
   try {
-    const url = await resolveWorkOSAuthorizeUrlFromGoUrl(requestUrl);
+    const url = await resolveWorkOSAuthorizeUrlFromGoUrl(requestUrl, request);
     return workOSAuthRedirectBridge(url);
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);

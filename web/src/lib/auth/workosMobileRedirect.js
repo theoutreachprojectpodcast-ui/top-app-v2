@@ -1,3 +1,5 @@
+import { workosAuthBrandedHtmlPage } from "@/lib/auth/workosAuthBrand";
+
 /** Deep link WorkOS uses to return OAuth results into the Capacitor shell (register in WorkOS dashboard). */
 export const WORKOS_MOBILE_CALLBACK_SCHEME = "com.theoutreachproject.theoutreachproject://callback";
 
@@ -42,62 +44,56 @@ export function mobileAppUrlScheme() {
 
 /**
  * Deep link that dismisses the Capacitor in-app browser and resumes OAuth in the main WebView.
- * @param {string} stateKey sha256 of OAuth state (matches `/api/mobile/oauth-handoff` poll key)
+ * Uses short `key` only — bridge tokens are too long for iOS custom URL schemes.
+ * @param {string} [stateKey] sha256 of OAuth state (poll `/api/mobile/oauth-handoff`)
  */
-export function buildOAuthBrowserDoneDeepLink(stateKey) {
-  const key = String(stateKey || "").trim();
+export function buildOAuthBrowserDoneDeepLink(stateKey = "") {
   const scheme = mobileAppUrlScheme();
-  const qs = key ? `?key=${encodeURIComponent(key)}` : "";
-  return `${scheme}://oauth/browser-done${qs}`;
+  const key = String(stateKey || "").trim();
+  if (!key) return `${scheme}://oauth/browser-done`;
+  return `${scheme}://oauth/browser-done?key=${encodeURIComponent(key)}`;
 }
 
 /**
  * @param {string} url
- * @returns {{ key: string } | null}
+ * @returns {{ key: string, bridge: string } | null}
  */
 export function parseOAuthBrowserDoneDeepLink(url) {
   const raw = String(url || "").trim();
   if (!raw.toLowerCase().includes("oauth/browser-done")) return null;
   let key = "";
+  let bridge = "";
   try {
     const parsed = new URL(raw);
     key = String(parsed.searchParams.get("key") || "").trim();
+    bridge = String(parsed.searchParams.get("bridge") || "").trim();
   } catch {
-    const match = raw.match(/[?&]key=([^&]+)/i);
-    if (match) key = decodeURIComponent(match[1]);
+    const keyMatch = raw.match(/[?&]key=([^&]+)/i);
+    if (keyMatch) key = decodeURIComponent(keyMatch[1]);
+    const bridgeMatch = raw.match(/[?&]bridge=([^&]+)/i);
+    if (bridgeMatch) bridge = decodeURIComponent(bridgeMatch[1]);
   }
-  return { key };
+  if (!key && !bridge) return null;
+  return { key, bridge };
 }
 
 /**
  * OAuth finished in Capacitor's in-app browser — auto-return to the native shell via custom URL scheme.
  * @param {string} [stateKey]
+ * @param {string} [bridgeToken]
  */
 export function mobileOAuthBrowserDoneHtml(stateKey = "") {
   const deepLink = buildOAuthBrowserDoneDeepLink(stateKey);
   const escaped = deepLink.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
   const json = JSON.stringify(deepLink);
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta http-equiv="refresh" content="0;url=${escaped}" />
-  <title>Sign-in complete</title>
-  <style>
-    body { font-family: system-ui, sans-serif; display: flex; min-height: 100dvh; align-items: center; justify-content: center; margin: 0; padding: 24px; background: #101814; color: #f8fcfa; text-align: center; }
-    .card { max-width: 22rem; padding: 20px; border-radius: 16px; background: #1a2420; border: 1px solid #3a4a40; }
-    p { margin: 0 0 12px; line-height: 1.45; font-size: 0.95rem; }
-    a { color: #9fd4b0; font-weight: 600; }
-  </style>
-</head>
-<body>
-  <div class="card">
-    <p>Sign-in complete.</p>
-    <p>Returning to The Outreach Project…</p>
-    <p><a href="${escaped}">Continue in app</a></p>
-  </div>
-  <script>
+  return workosAuthBrandedHtmlPage({
+    title: "Sign in complete — The Outreach Project",
+    heading: "Sign in complete",
+    showSpinner: true,
+    headExtra: `<meta http-equiv="refresh" content="0;url=${escaped}" />`,
+    bodyHtml: `<p class="torpAuth__lead">Returning to The Outreach Project…</p>
+      <p class="torpAuth__lead"><a class="torpAuth__link" href="${escaped}">Continue in app</a></p>`,
+    bodyEnd: `<script>
     (function () {
       var target = ${json};
       function go() {
@@ -108,9 +104,8 @@ export function mobileOAuthBrowserDoneHtml(stateKey = "") {
       setTimeout(go, 120);
       setTimeout(go, 400);
     })();
-  </script>
-</body>
-</html>`;
+  </script>`,
+  });
 }
 
 /**
@@ -121,27 +116,15 @@ export function mobileOAuthReturnBridgeHtml(deepLinkUrl) {
   const safe = String(deepLinkUrl || "").trim();
   const escaped = safe.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
   const json = JSON.stringify(safe);
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Returning to app…</title>
-  <style>
-    body { font-family: system-ui, sans-serif; display: flex; min-height: 100dvh; align-items: center; justify-content: center; margin: 0; padding: 24px; background: #101814; color: #f8fcfa; text-align: center; }
-    .card { max-width: 22rem; padding: 20px; border-radius: 16px; background: #1a2420; border: 1px solid #3a4a40; }
-    p { margin: 0 0 16px; line-height: 1.45; font-size: 0.95rem; }
-    a { display: inline-block; padding: 12px 20px; border-radius: 999px; background: #1a5c34; color: #fff; text-decoration: none; font-weight: 600; }
-  </style>
-</head>
-<body>
-  <div class="card">
-    <p>Sign-in complete. Open The Outreach Project to continue.</p>
-    <a href="${escaped}">Open app</a>
-  </div>
-  <script>setTimeout(function(){ location.replace(${json}); }, 300);</script>
-</body>
-</html>`;
+  return workosAuthBrandedHtmlPage({
+    title: "Returning to app — The Outreach Project",
+    heading: "Sign in complete",
+    bodyHtml: `<p class="torpAuth__lead">Open The Outreach Project to continue.</p>
+      <div class="torpAuth__actions">
+        <a class="torpAuth__btn torpAuth__btn--primary" href="${escaped}">Open app</a>
+      </div>`,
+    bodyEnd: `<script>setTimeout(function(){ location.replace(${json}); }, 300);</script>`,
+  });
 }
 
 /**

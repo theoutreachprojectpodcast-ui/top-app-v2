@@ -43,6 +43,7 @@
     "mobile:prep:prod": "node scripts/mobile-prep-production.mjs",
     "mobile:prep:qa": "node scripts/mobile-prep-qa.mjs",
     "mobile:verify:prod": "node scripts/validate-capacitor-production.mjs",
+    "mobile:preflight": "node scripts/mobile-preflight.mjs",
     "build:app-icon": "node scripts/build-app-icon.mjs",
     "mobile:assets": "capacitor-assets generate --assetPath resources --ios --android",
     "mobile:icons": "node scripts/generate-mobile-icons.mjs",

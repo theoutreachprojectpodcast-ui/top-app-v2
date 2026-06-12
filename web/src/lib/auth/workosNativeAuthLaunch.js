@@ -1,6 +1,7 @@
 "use client";
 
 import { Browser } from "@capacitor/browser";
+import { getWebAppOrigin } from "@/lib/capacitor/webAppOrigin";
 import { isCapacitorNative } from "@/lib/capacitor/platform";
 import { TORP_OAUTH_BROWSER_PENDING, TORP_OAUTH_STATE_KEY } from "@/lib/auth/oauthMobileHandoff";
 
@@ -18,15 +19,23 @@ export async function launchNativeWorkOSAuth(goPath) {
   }
 
   const jsonUrl = path.includes("?") ? `${path}&format=json` : `${path}?format=json`;
-  const res = await fetch(jsonUrl, {
-    method: "GET",
-    credentials: "include",
-    cache: "no-store",
-    headers: { Accept: "application/json" },
-  });
+  let res;
+  try {
+    res = await fetch(jsonUrl, {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+      headers: { Accept: "application/json" },
+    });
+  } catch {
+    throw new Error("Could not reach the sign-in service. Check your connection and try again.");
+  }
   const data = await res.json().catch(() => ({}));
   if (!res.ok || !data?.url) {
     const msg = String(data?.message || "").trim();
+    if (res.status === 503 || /not defined|referenceerror/i.test(msg)) {
+      throw new Error("Sign-in is temporarily unavailable. Try again in a moment or contact support.");
+    }
     throw new Error(msg || "Could not start secure sign in.");
   }
 
@@ -36,7 +45,6 @@ export async function launchNativeWorkOSAuth(goPath) {
     sessionStorage.setItem(TORP_OAUTH_BROWSER_PENDING, "1");
   }
 
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
   const browserStart = `${origin}/auth/workos-browser-start?go=${encodeURIComponent(String(data.url))}`;
 
   await Browser.open({

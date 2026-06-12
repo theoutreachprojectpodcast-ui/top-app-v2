@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { App } from "@capacitor/app";
 import { Browser } from "@capacitor/browser";
+import { getWebAppOrigin } from "@/lib/capacitor/webAppOrigin";
 import { isCapacitorNative } from "@/lib/capacitor/platform";
 import { closeExternalBrowserIfOpen } from "@/lib/capacitor/openExternalUrl";
 import { TORP_OAUTH_BROWSER_PENDING, TORP_OAUTH_STATE_KEY } from "@/lib/auth/oauthMobileHandoff";
@@ -10,7 +11,8 @@ import { parseOAuthBrowserDoneDeepLink } from "@/lib/auth/workosMobileRedirect";
 import { TORP_OAUTH_RETURN_KEY } from "@/components/capacitor/MobileOAuthSessionResume";
 
 const POLL_MS = 400;
-const BROWSER_FINISHED_RETRIES_MS = [0, 150, 350, 700, 1200];
+const POLL_MAX_MS = 30_000;
+const BROWSER_FINISHED_RETRIES_MS = [0, 200, 500, 1000, 2000, 3500, 5000, 8000, 12_000, 18_000, 25_000];
 
 async function pollOAuthPending(stateKey) {
   const url = `/api/mobile/oauth-handoff?key=${encodeURIComponent(stateKey)}`;
@@ -50,8 +52,15 @@ function completeInWebView(data) {
   clearOAuthHandoffFlags();
   sessionStorage.setItem(TORP_OAUTH_RETURN_KEY, "1");
 
+  if (data?.complete) {
+    const dest = String(data.complete);
+    window.location.replace(dest.startsWith("http") ? dest : appUrl(dest));
+    return Promise.resolve();
+  }
+
   if (data?.bridge) {
-    window.location.replace(String(data.bridge));
+    const dest = String(data.bridge);
+    window.location.replace(dest.startsWith("http") ? dest : appUrl(dest));
     return Promise.resolve();
   }
 
@@ -87,7 +96,7 @@ function completeInWebView(data) {
 
 function oauthErrorRedirect(message) {
   clearOAuthHandoffFlags();
-  window.location.replace(`/mobile?oauth_error=${encodeURIComponent(message || "Sign-in failed.")}`);
+  window.location.replace(appUrl(`/mobile?oauth_error=${encodeURIComponent(message || "Sign-in failed.")}`));
 }
 
 /**
@@ -97,6 +106,7 @@ function oauthErrorRedirect(message) {
 export default function MobileOAuthBrowserFinish() {
   const claimedRef = useRef(false);
   const pollIdRef = useRef(0);
+  const pollStartedAtRef = useRef(0);
 
   useEffect(() => {
     if (!isCapacitorNative() || typeof sessionStorage === "undefined") return undefined;
@@ -147,7 +157,7 @@ export default function MobileOAuthBrowserFinish() {
 
     const handleBrowserDoneDeepLink = (raw) => {
       const parsed = parseOAuthBrowserDoneDeepLink(raw);
-      if (!parsed) return;
+      if (!parsed?.key) return;
       primeOAuthHandoff(parsed.key);
       void (async () => {
         await closeExternalBrowserIfOpen();
@@ -163,7 +173,15 @@ export default function MobileOAuthBrowserFinish() {
 
     const startPollingIfNeeded = () => {
       if (!isOAuthPending() || pollIdRef.current) return;
+      pollStartedAtRef.current = Date.now();
       pollIdRef.current = window.setInterval(() => {
+        if (Date.now() - pollStartedAtRef.current > POLL_MAX_MS) {
+          stopPolling();
+          if (!claimedRef.current && isOAuthPending()) {
+            oauthErrorRedirect("Sign-in timed out. Please try again.");
+          }
+          return;
+        }
         void tryFinish();
       }, POLL_MS);
       void tryFinish();

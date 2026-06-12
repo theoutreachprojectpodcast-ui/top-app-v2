@@ -48,6 +48,7 @@ export function workosMobileSignInHref(returnTo, options = {}) {
     returnTo,
     rememberDevice: options.rememberDevice,
     loginHint: options.loginHint,
+    native: true,
   });
 }
 
@@ -58,6 +59,7 @@ export function workosMobileSignUpHref(returnTo, options = {}) {
     returnTo: returnTo || "/",
     rememberDevice: options.rememberDevice,
     loginHint: options.loginHint,
+    native: true,
   });
 }
 

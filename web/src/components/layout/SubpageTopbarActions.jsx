@@ -15,6 +15,7 @@ import { readRememberDevicePref } from "@/lib/auth/lastUsedEmail";
 import { launchWorkOSAuth } from "@/lib/auth/workosNativeAuthLaunch";
 import { workosSignInLink, workosSignUpHref, workosMobileSignInHref, workosMobileSignUpHref } from "@/lib/auth/workosReturnTo";
 import { isCapacitorNative } from "@/lib/capacitor/platform";
+import { useMobileShell } from "@/hooks/useMobileShell";
 
 const SPONSOR_ICON = "M4 6h16v12H4z M4 10h16";
 
@@ -29,6 +30,7 @@ const SPONSOR_ICON = "M4 6h16v12H4z M4 10h16";
 export default function SubpageTopbarActions({ section = "all" }) {
   const pathname = usePathname();
   const router = useRouter();
+  const isMobileShell = useMobileShell();
   const { profile, loadingProfile, fullName, signOut, isAuthenticated, workOSAccountEmail } = useProfileData();
   /** Avoid useSearchParams here (static routes like /contact must not CSR-bailout without Suspense). */
   const rememberDevice = readRememberDevicePref();
@@ -182,7 +184,12 @@ export default function SubpageTopbarActions({ section = "all" }) {
     );
 
   if (section === "lead") {
-    return sponsorLink;
+    return (
+      <>
+        {sponsorLink}
+        {isMobileShell && authed && !authLoading ? <AdminConsoleLink /> : null}
+      </>
+    );
   }
 
   if (section === "authNotifications") {

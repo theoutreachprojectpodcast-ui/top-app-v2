@@ -7,7 +7,7 @@ import { workOSGoJsonResponse, workOSGoResponse } from "@/lib/auth/workosGoRoute
 export async function GET(request) {
   const url = new URL(request.url);
   if (url.searchParams.get("format") === "json") {
-    return workOSGoJsonResponse(url);
+    return workOSGoJsonResponse(url, request);
   }
-  return workOSGoResponse(url);
+  return workOSGoResponse(url, request);
 }

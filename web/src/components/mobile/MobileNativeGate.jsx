@@ -124,11 +124,19 @@ export default function MobileNativeGate() {
         goHome();
         return;
       }
-      if (path === "/mobile" && !guest && access === "denied") {
-        const target = "/mobile/access";
-        if (lastRedirectRef.current !== target) {
-          lastRedirectRef.current = target;
-          router.replace(target);
+      if (path === "/mobile" && !guest) {
+        if (access === "pending") return;
+        if (access === "denied") {
+          const target = "/mobile/access";
+          if (lastRedirectRef.current !== target) {
+            lastRedirectRef.current = target;
+            router.replace(target);
+          }
+          return;
+        }
+        if (access === "granted") {
+          goHome();
+          return;
         }
       }
       return;

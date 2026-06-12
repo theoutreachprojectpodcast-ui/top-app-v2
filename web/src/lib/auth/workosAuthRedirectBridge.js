@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { workosAuthBrandedHtmlPage } from "@/lib/auth/workosAuthBrand";
 
 /**
  * Same-origin 200 HTML bridge before navigating to WorkOS AuthKit.
@@ -21,23 +22,15 @@ export function workOSAuthRedirectBridge(workosUrl, options = {}) {
 
   const escaped = safe.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
 
-  const html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta http-equiv="refresh" content="0;url=${escaped}" />
-  <title>Redirecting…</title>
-  <style>
-    body { font-family: system-ui, sans-serif; display: flex; min-height: 100vh; align-items: center; justify-content: center; margin: 0; color: #333; background: #f8f9fa; }
-    a { color: #1a5c34; }
-  </style>
-</head>
-<body>
-  <p>Redirecting to secure sign in… <a href="${escaped}">Continue</a></p>
-  <script>location.replace(${JSON.stringify(safe)});</script>
-</body>
-</html>`;
+  const html = workosAuthBrandedHtmlPage({
+    title: "Sign in — The Outreach Project",
+    heading: "Secure sign in",
+    showSpinner: true,
+    headExtra: `<meta http-equiv="refresh" content="0;url=${escaped}" />`,
+    bodyHtml: `<p class="torpAuth__lead">Redirecting to secure sign in…</p>
+      <p class="torpAuth__lead"><a class="torpAuth__link" href="${escaped}">Continue</a></p>`,
+    bodyEnd: `<script>location.replace(${JSON.stringify(safe)});</script>`,
+  });
 
   const response = new NextResponse(html, {
     status: 200,

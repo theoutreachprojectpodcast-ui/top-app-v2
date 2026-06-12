@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { consumeOAuthMobilePending } from "@/lib/auth/oauthMobileHandoffServer";
+import { hashOAuthState, peekOAuthMobileHandoff } from "@/lib/auth/oauthMobileHandoffServer";
 
 /**
- * GET — WebView polls by short `key` (sha256 of OAuth state) until in-app browser saves code/state.
+ * GET — WebView polls by short `key` (sha256 of OAuth state) until in-app browser finishes OAuth.
  */
 export async function GET(request) {
   const url = new URL(request.url);
@@ -11,7 +11,6 @@ export async function GET(request) {
 
   let key = stateKey;
   if (!key && legacyState) {
-    const { hashOAuthState } = await import("@/lib/auth/oauthMobileHandoffServer");
     key = hashOAuthState(legacyState);
   }
 
@@ -22,16 +21,29 @@ export async function GET(request) {
     );
   }
 
-  const pending = await consumeOAuthMobilePending(key);
-  if (!pending?.code || !pending.state) {
+  const pending = await peekOAuthMobileHandoff(key);
+  if (!pending) {
     return NextResponse.json(
       { ok: false, message: "Sign-in not ready yet." },
       { status: 404, headers: { "Cache-Control": "no-store" } },
     );
   }
 
+  if (pending.kind === "session") {
+    return NextResponse.json(
+      {
+        ok: true,
+        kind: "session",
+        complete: `/api/mobile/oauth-handoff/complete?key=${encodeURIComponent(key)}`,
+        redirectTo: pending.redirectTo,
+      },
+      { headers: { "Cache-Control": "no-store" } },
+    );
+  }
+
   const out = {
     ok: true,
+    kind: "oauth",
     code: pending.code,
     state: pending.state,
     redirectTo: pending.redirectTo,

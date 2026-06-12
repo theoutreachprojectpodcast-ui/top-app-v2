@@ -10,6 +10,7 @@ import {
   isBootstrapAdminWorkOSSignIn,
   workOSAuthKitAuthorizeOptions,
 } from "@/lib/auth/workosOrganizationScope";
+import { shouldMarkOAuthNativeShell } from "@/lib/auth/workosOAuthShell";
 function readReturnTo(searchParams, fallback = "/") {
   const raw =
     searchParams.get("returnTo") ||
@@ -23,9 +24,10 @@ function readReturnTo(searchParams, fallback = "/") {
  * Resolve WorkOS AuthKit authorize URL and mint PKCE cookie (via next/headers cookies()).
  * @param {URLSearchParams} searchParams
  * @param {string} [fallbackReturn="/"]
+ * @param {Request} [request]
  * @returns {Promise<string>}
  */
-export async function resolveWorkOSSignInFromSearchParams(searchParams, fallbackReturn = "/") {
+export async function resolveWorkOSSignInFromSearchParams(searchParams, fallbackReturn = "/", request) {
   if (!isWorkOSConfigured()) {
     throw new Error("authentication_not_configured");
   }
@@ -50,8 +52,7 @@ export async function resolveWorkOSSignInFromSearchParams(searchParams, fallback
     prompt,
     invitationToken: invitationToken || undefined,
     organizationId: orgOptions.organizationId,
-    markNativeShell:
-      returnTo.startsWith("/mobile") || returnTo.includes("nav=") || returnTo.startsWith("/community"),
+    markNativeShell: shouldMarkOAuthNativeShell(searchParams, request),
   });
 }
 
@@ -60,5 +61,5 @@ export async function resolveWorkOSSignInFromSearchParams(searchParams, fallback
  * @returns {Promise<string>}
  */
 export async function resolveWorkOSSignInUrl(request) {
-  return resolveWorkOSSignInFromSearchParams(request.nextUrl.searchParams, "/");
+  return resolveWorkOSSignInFromSearchParams(request.nextUrl.searchParams, "/", request);
 }

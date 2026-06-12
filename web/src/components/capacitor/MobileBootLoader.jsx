@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { SplashScreen } from "@capacitor/splash-screen";
 import { useAuthSession } from "@/components/auth/AuthSessionProvider";
 import { useProfileData } from "@/features/profile/ProfileDataProvider";
 import { isCapacitorNative } from "@/lib/capacitor/platform";
 import MobileLoadingOverlay from "@/components/capacitor/MobileLoadingOverlay";
+
+const BOOT_OVERLAY_MAX_MS = 8000;
+const SPLASH_HIDE_TIMEOUT_MS = 2000;
 
 /**
  * Keeps the native splash visible until auth bootstrap completes, then shows a branded overlay
@@ -21,23 +23,37 @@ export default function MobileBootLoader() {
 
   useEffect(() => {
     if (!native) return undefined;
-    void SplashScreen.show({ autoHide: false }).catch(() => {});
+    void import("@capacitor/splash-screen")
+      .then(({ SplashScreen }) => SplashScreen.show({ autoHide: false }).catch(() => {}))
+      .catch(() => {});
     return undefined;
   }, [native]);
 
   useEffect(() => {
-    if (!native || !bootReady) return;
+    if (!native) return undefined;
+    const maxTimer = window.setTimeout(() => setOverlayVisible(false), BOOT_OVERLAY_MAX_MS);
+    return () => window.clearTimeout(maxTimer);
+  }, [native]);
+
+  useEffect(() => {
+    if (!native || !bootReady) return undefined;
     let cancelled = false;
-    (async () => {
+
+    void (async () => {
       try {
-        await SplashScreen.hide();
+        const { SplashScreen } = await import("@capacitor/splash-screen");
+        await Promise.race([
+          SplashScreen.hide(),
+          new Promise((resolve) => {
+            window.setTimeout(resolve, SPLASH_HIDE_TIMEOUT_MS);
+          }),
+        ]);
       } catch {
-        /* native splash may already be hidden */
+        /* splash plugin may be unavailable in older native builds */
       }
-      if (!cancelled) {
-        setOverlayVisible(false);
-      }
+      if (!cancelled) setOverlayVisible(false);
     })();
+
     return () => {
       cancelled = true;
     };

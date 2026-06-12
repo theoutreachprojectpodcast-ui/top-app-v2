@@ -1,15 +1,30 @@
 import { isQaDeploymentContext } from "@/lib/runtime/qaDeploymentContext";
 
-const PRODUCTION_ORIGIN = "https://theoutreachproject.app";
+export const PRODUCTION_ORIGIN = "https://theoutreachproject.app";
 const QA_ORIGIN = "https://qa.theoutreachproject.app";
+
+function isLocalCapacitorShellOrigin(origin) {
+  try {
+    const u = new URL(String(origin || ""));
+    const host = (u.hostname || "").toLowerCase();
+    if (!host || host === "localhost" || host === "127.0.0.1") return true;
+    return u.protocol === "capacitor:";
+  } catch {
+    return true;
+  }
+}
 
 /**
  * Canonical web-app origin for external-browser account flows.
  * In the Capacitor WebView, `window.location.origin` matches the loaded deploy (prod or QA).
+ * Falls back when the native shell still points at `localhost` (missing `server.url` at archive time).
  */
 export function getWebAppOrigin() {
   if (typeof window !== "undefined" && window.location?.origin) {
-    return String(window.location.origin).replace(/\/$/, "");
+    const origin = String(window.location.origin).replace(/\/$/, "");
+    if (!isLocalCapacitorShellOrigin(origin)) {
+      return origin;
+    }
   }
   const fromEnv = String(process.env.NEXT_PUBLIC_APP_URL || process.env.APP_BASE_URL || "").trim();
   if (fromEnv) return fromEnv.replace(/\/$/, "");
