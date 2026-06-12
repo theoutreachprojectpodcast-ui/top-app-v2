@@ -6,6 +6,7 @@ import NonprofitVerificationBadge from "@/features/nonprofits/components/Nonprof
 import NonprofitStatusBadge from "@/features/nonprofits/components/NonprofitStatusBadge";
 import NonprofitSocialLinks from "@/features/nonprofits/components/NonprofitSocialLinks";
 import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
+import { openExternalBrowserSheet } from "@/lib/capacitor/openExternalBrowserSheet";
 
 export default function NonprofitCard({
   card,
@@ -68,6 +69,14 @@ export default function NonprofitCard({
     onRequestSignIn?.();
   }
 
+  function onFindInfoClick(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    const href = String(card.findInfoHref || "").trim();
+    if (!href) return;
+    void openExternalBrowserSheet(href);
+  }
+
   const metaRow = (
     <div className={`nonprofitMetaRow${isTrustedResourcesCard ? " nonprofitMetaRow--trustedResource" : ""}`}>
       <NonprofitStatusBadge status={card.status} />
@@ -122,15 +131,14 @@ export default function NonprofitCard({
   const actionRow = (
     <div className="nonprofitActionRow nonprofitActionRow--cardFooter" data-torp-card-interactive>
       {actionMode === "directory" && (
-        <a
+        <button
           className="btnBlack btnBlack--findInfo"
+          type="button"
           data-torp-card-interactive
-          href={card.findInfoHref}
-          target="_blank"
-          rel="noopener noreferrer"
+          onClick={onFindInfoClick}
         >
           Find Info
-        </a>
+        </button>
       )}
       {actionMode === "saved"
         ? card.links
