@@ -855,6 +855,14 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topba
   z-index: 130;
   overflow: hidden;
 }
+.headerNotificationDropdown--mobileSheet,
+.headerAccountDropdown--mobileSheet {
+  display: flex;
+  flex-direction: column;
+  border-radius: 14px;
+  border: 1px solid var(--color-border-subtle);
+  overflow: hidden;
+}
 .headerNotificationDropdown__head {
   display: flex;
   align-items: center;
@@ -6747,7 +6755,7 @@ html.dark .communityPostBodyGuideSteps li {
   }
   .topbarLeft .topbarActionsCluster--start {
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 12px;
   }
   /* Mobile site header — canonical rules above in this `@760` block; `mobile-shell.css` mirrors. */
   main.topApp.topApp--auth-out[data-page-atmosphere="home"] .topbarRight .topbarActionsCluster,
@@ -6760,7 +6768,7 @@ html.dark .communityPostBodyGuideSteps li {
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarRight .topbarActionsCluster {
     width: auto;
     flex-wrap: nowrap;
-    gap: 8px;
+    gap: 12px;
     align-items: center;
     justify-content: flex-end;
   }
@@ -7111,13 +7119,27 @@ html.dark .communityPostBodyGuideSteps li {
   main.topApp.appShell--withMobileNavDock .topbarRight .topbarActionsCluster {
     justify-content: flex-end;
     flex-wrap: nowrap;
-    gap: 8px;
+    gap: 12px;
   }
   .topbarLeft .topbarActionsCluster,
   .topbarRight .topbarActionsCluster {
     width: 100%;
     justify-content: center;
     flex-wrap: wrap;
+  }
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarLeft .topbarActionsCluster,
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarRight .topbarActionsCluster {
+    width: auto;
+    flex-wrap: nowrap;
+    gap: 12px;
+    align-items: center;
+  }
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarRight .topbarActionsCluster {
+    justify-content: flex-end;
+  }
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarLeft .topbarActionsCluster,
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarLeft .topbarActionsCluster--start {
+    justify-content: flex-start;
   }
   /* Theme toggle lives in `.topbarLeft`. */
   .topbarLeft .topbarActionsCluster,
@@ -7254,12 +7276,6 @@ html.dark .communityPostBodyGuideSteps li {
   .sponsorBtn {
     min-width: 0;
     padding-inline: 10px;
-  }
-  .headerNotificationBellBtn,
-  .headerAccountAvatar.profileAvatarShell,
-  .headerAccountTrigger {
-    width: 40px;
-    height: 40px;
   }
 }
 

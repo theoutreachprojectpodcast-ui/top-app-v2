@@ -115,13 +115,10 @@ export async function GET(request) {
     const oauthError = url.searchParams.get("error");
     const code = url.searchParams.get("code");
 
-    // Legacy Capacitor in-app browser sheet — finish OAuth and hand session to WebView.
-    if (
-      !oauthStartedInNativeShell(request) &&
-      inMobileBrowser &&
-      code &&
-      isCapacitorBrowserOAuthReturn(request)
-    ) {
+    // Capacitor in-app browser (SFSafariViewController) — session cookies stay in the browser jar;
+    // capture them and hand off to the WKWebView via Supabase + /api/mobile/oauth-handoff/complete.
+    // `torp-oauth-browser=1` is authoritative; do not gate on `torp-oauth-shell` (also set in browser).
+    if (inMobileBrowser && code && isCapacitorBrowserOAuthReturn(request)) {
       return mobileBrowserOAuthPendingResponse(request, url);
     }
 

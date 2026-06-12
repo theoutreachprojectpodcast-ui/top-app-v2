@@ -23,6 +23,7 @@ export async function GET(request) {
   }
 
   const dest = new URL(redirectTo, request.url);
+  dest.searchParams.set("oauth", "1");
   const res = NextResponse.redirect(dest, 302);
   for (const cookie of handoff.setCookies) {
     if (cookie) res.headers.append("Set-Cookie", cookie);

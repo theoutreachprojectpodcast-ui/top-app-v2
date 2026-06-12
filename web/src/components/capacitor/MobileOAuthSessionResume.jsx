@@ -19,7 +19,11 @@ export default function MobileOAuthSessionResume() {
   useEffect(() => {
     if (!isCapacitorNative() || ranRef.current) return;
     if (typeof sessionStorage === "undefined") return;
-    if (sessionStorage.getItem(TORP_OAUTH_RETURN_KEY) !== "1") return;
+    const fromStorage = sessionStorage.getItem(TORP_OAUTH_RETURN_KEY) === "1";
+    const fromQuery =
+      typeof window !== "undefined" &&
+      new URLSearchParams(window.location.search).get("oauth") === "1";
+    if (!fromStorage && !fromQuery) return;
 
     ranRef.current = true;
     sessionStorage.removeItem(TORP_OAUTH_RETURN_KEY);

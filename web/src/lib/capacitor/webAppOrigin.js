@@ -8,6 +8,12 @@ import {
 
 export { PRODUCTION_ORIGIN, MOBILE_POST_LOGIN_PATH as MOBILE_NATIVE_ENTRY_PATH };
 
+/** Production/QA origin for native OAuth API calls — never `https://localhost`. */
+export function nativeProductionAppOrigin() {
+  if (isQaDeploymentContext()) return QA_ORIGIN;
+  return PRODUCTION_ORIGIN;
+}
+
 function isLocalCapacitorShellOrigin(origin) {
   try {
     const u = new URL(String(origin || ""));

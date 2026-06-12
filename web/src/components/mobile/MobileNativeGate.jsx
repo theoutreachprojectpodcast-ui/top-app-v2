@@ -5,6 +5,11 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { isCapacitorNative } from "@/lib/capacitor/platform";
 import { hasMobileAppAccess } from "@/lib/membership/appAccess";
 import { readNavAuthCache } from "@/lib/auth/navAuthCache";
+import {
+  TORP_OAUTH_BROWSER_PENDING,
+  TORP_OAUTH_STATE_KEY,
+} from "@/lib/auth/oauthMobileHandoff";
+import { TORP_OAUTH_RETURN_KEY } from "@/components/capacitor/MobileOAuthSessionResume";
 import { useProfileData } from "@/features/profile/ProfileDataProvider";
 
 const MOBILE_GATE_ALLOW = [
@@ -36,6 +41,7 @@ const MOBILE_GATE_ALLOW = [
   /^\/auth\/workos-handoff(\/|$)/,
   /^\/auth\/workos-go(\/|$)/,
   /^\/auth\/workos-browser-start(\/|$)/,
+  /^\/auth\/workos-native-browser(\/|$)/,
   /^\/api\/auth\//,
   /^\/privacy(\/|$)/,
   /^\/terms(\/|$)/,
@@ -48,6 +54,15 @@ const NATIVE_LOGIN_ALIASES = {
 
 function isAllowedPath(pathname) {
   return MOBILE_GATE_ALLOW.some((re) => re.test(pathname || "/"));
+}
+
+function isOAuthInProgress() {
+  if (typeof sessionStorage === "undefined") return false;
+  return (
+    sessionStorage.getItem(TORP_OAUTH_BROWSER_PENDING) === "1" ||
+    !!sessionStorage.getItem(TORP_OAUTH_STATE_KEY) ||
+    sessionStorage.getItem(TORP_OAUTH_RETURN_KEY) === "1"
+  );
 }
 
 function accessOpts(entitlements) {
@@ -83,9 +98,11 @@ export default function MobileNativeGate() {
   const opts = accessOpts(entitlements);
   const sessionHint = !!readNavAuthCache()?.authenticated;
   const guest = !isAuthenticated && !sessionHint;
+  const oauthBusy = isOAuthInProgress();
 
   useEffect(() => {
     if (!isCapacitorNative()) return;
+    if (oauthBusy) return;
 
     const path = pathname || "/";
 
@@ -202,6 +219,7 @@ export default function MobileNativeGate() {
     profile?.platformRole,
     profile?.email,
     router,
+    oauthBusy,
   ]);
 
   return null;

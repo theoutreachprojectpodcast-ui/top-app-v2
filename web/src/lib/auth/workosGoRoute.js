@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { workosAuthBrandedHtmlPage } from "@/lib/auth/workosAuthBrand";
+import { resolvePostAuthReturnTarget } from "@/lib/auth/workosSafeReturn";
 import { shouldMarkOAuthNativeShell } from "@/lib/auth/workosOAuthShell";
 import { workOSAuthorizeBridgeFromBundle } from "@/lib/auth/workosAuthorizationRedirect";
 import { hashOAuthState, saveOAuthAuthorizePending } from "@/lib/auth/oauthMobileHandoffServer";
@@ -49,7 +50,7 @@ export function workosCallbackErrorHtml(
 /**
  * @param {URL} requestUrl
  */
-function workOSGoContext(requestUrl) {
+export function workOSGoContext(requestUrl) {
   const mode = requestUrl.searchParams.get("mode") === "signup" ? "signup" : "signin";
   const fallbackReturn = mode === "signup" ? "/onboarding" : "/";
   const backHref =
@@ -98,12 +99,23 @@ export async function workOSGoJsonResponse(requestUrl, request) {
   try {
     const bundle = await resolveWorkOSAuthorizeBundleFromGoUrl(requestUrl, request);
     const stateKey = bundle.sealedState ? hashOAuthState(bundle.sealedState) : "";
-    const returnTo = String(params.get("returnTo") || "").trim() || "/mobile/access";
+    const rawReturn =
+      params.get("returnTo") ||
+      params.get("return_pathname") ||
+      params.get("returnPathname") ||
+      "";
+    const returnTo = resolvePostAuthReturnTarget(rawReturn || "/mobile/access", "/mobile/access");
     if (stateKey && bundle.url && bundle.sealedState) {
       const saved = await saveOAuthAuthorizePending(stateKey, bundle.url, bundle.sealedState, returnTo);
       if (saved.ok) {
         return NextResponse.json(
-          { ok: true, key: stateKey, stateKey },
+          {
+            ok: true,
+            key: stateKey,
+            stateKey,
+            url: bundle.url,
+            browserStart: `/auth/workos-browser-start?key=${encodeURIComponent(stateKey)}`,
+          },
           { headers: { "Cache-Control": "no-store" } },
         );
       }
@@ -114,7 +126,9 @@ export async function workOSGoJsonResponse(requestUrl, request) {
         ok: true,
         url: bundle.url,
         stateKey,
-        sealedState: bundle.sealedState,
+        browserStart: stateKey
+          ? `/auth/workos-browser-start?key=${encodeURIComponent(stateKey)}`
+          : undefined,
       },
       { headers: { "Cache-Control": "no-store" } },
     );

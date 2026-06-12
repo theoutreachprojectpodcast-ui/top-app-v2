@@ -3,10 +3,14 @@
 import { useEffect, useRef } from "react";
 import { App } from "@capacitor/app";
 import { Browser } from "@capacitor/browser";
-import { appUrl } from "@/lib/capacitor/webAppOrigin";
+import { nativeProductionAppOrigin } from "@/lib/capacitor/webAppOrigin";
 import { isCapacitorNative } from "@/lib/capacitor/platform";
 import { closeExternalBrowserIfOpen } from "@/lib/capacitor/openExternalUrl";
-import { TORP_OAUTH_BROWSER_PENDING, TORP_OAUTH_STATE_KEY } from "@/lib/auth/oauthMobileHandoff";
+import {
+  readOAuthPollKeyFromDocumentCookie,
+  TORP_OAUTH_BROWSER_PENDING,
+  TORP_OAUTH_STATE_KEY,
+} from "@/lib/auth/oauthMobileHandoff";
 import { parseOAuthBrowserDoneDeepLink } from "@/lib/auth/workosMobileRedirect";
 import { TORP_OAUTH_RETURN_KEY } from "@/components/capacitor/MobileOAuthSessionResume";
 
@@ -14,8 +18,25 @@ const POLL_MS = 400;
 const POLL_MAX_MS = 30_000;
 const BROWSER_FINISHED_RETRIES_MS = [0, 200, 500, 1000, 2000, 3500, 5000, 8000, 12_000, 18_000, 25_000];
 
+function nativeOAuthUrl(path) {
+  const normalized = String(path || "").trim().startsWith("/") ? String(path).trim() : `/${String(path).trim()}`;
+  return `${nativeProductionAppOrigin()}${normalized}`;
+}
+
+function resolveOAuthPollKey() {
+  if (typeof sessionStorage === "undefined") return "";
+  const fromSession = String(sessionStorage.getItem(TORP_OAUTH_STATE_KEY) || "").trim();
+  if (fromSession) return fromSession;
+  return readOAuthPollKeyFromDocumentCookie();
+}
+
+function primeOAuthPollKeyFromCookie() {
+  const key = readOAuthPollKeyFromDocumentCookie();
+  if (key) primeOAuthHandoff(key);
+}
+
 async function pollOAuthPending(stateKey) {
-  const url = appUrl(`/api/mobile/oauth-handoff?key=${encodeURIComponent(stateKey)}`);
+  const url = nativeOAuthUrl(`/api/mobile/oauth-handoff?key=${encodeURIComponent(stateKey)}`);
   const res = await fetch(url, {
     method: "GET",
     credentials: "include",
@@ -30,7 +51,7 @@ function isOAuthPending() {
   return (
     typeof sessionStorage !== "undefined" &&
     sessionStorage.getItem(TORP_OAUTH_BROWSER_PENDING) === "1" &&
-    !!sessionStorage.getItem(TORP_OAUTH_STATE_KEY)
+    !!resolveOAuthPollKey()
   );
 }
 
@@ -54,44 +75,19 @@ function completeInWebView(data) {
 
   if (data?.complete) {
     const dest = String(data.complete);
-    window.location.replace(dest.startsWith("http") ? dest : appUrl(dest));
+    window.location.replace(dest.startsWith("http") ? dest : nativeOAuthUrl(dest));
     return Promise.resolve();
   }
 
   if (data?.bridge) {
     const dest = String(data.bridge);
-    window.location.replace(dest.startsWith("http") ? dest : appUrl(dest));
+    window.location.replace(dest.startsWith("http") ? dest : nativeOAuthUrl(dest));
     return Promise.resolve();
   }
 
-  const code = String(data?.code || "").trim();
-  const state = String(data?.state || "").trim();
-  if (!code || !state) {
-    return Promise.reject(new Error("Incomplete sign-in response."));
-  }
-
-  const qs = new URLSearchParams({ code, state });
-  return fetch(appUrl(`/callback?${qs.toString()}`), {
-    method: "GET",
-    credentials: "include",
-    cache: "no-store",
-    headers: {
-      Accept: "application/json",
-      "x-top-callback-fetch": "1",
-    },
-  }).then(async (res) => {
-    const body = await res.json().catch(() => ({}));
-    if (!res.ok || !body?.ok) {
-      const msg = String(body?.message || body?.error || "").trim();
-      throw new Error(msg || "Could not complete sign in.");
-    }
-    const redirectTo = String(body.redirectTo || "/").trim() || "/";
-    if (redirectTo.startsWith("http://") || redirectTo.startsWith("https://")) {
-      window.location.replace(redirectTo);
-      return;
-    }
-    window.location.replace(redirectTo.startsWith("/") ? redirectTo : `/${redirectTo}`);
-  });
+  return Promise.reject(
+    new Error("Sign-in did not finish in the app. Please try again."),
+  );
 }
 
 function oauthErrorRedirect(message) {
@@ -145,7 +141,7 @@ export default function MobileOAuthBrowserFinish() {
         return false;
       }
 
-      const stateKey = String(forcedKey || sessionStorage.getItem(TORP_OAUTH_STATE_KEY) || "").trim();
+      const stateKey = String(forcedKey || resolveOAuthPollKey() || "").trim();
       if (!stateKey) return false;
       if (!forcedKey && !isOAuthPending()) {
         stopPolling();
@@ -193,10 +189,17 @@ export default function MobileOAuthBrowserFinish() {
         if (await tryFinish()) return;
       }
 
-      if (claimedRef.current || !isOAuthPending()) return;
-      oauthErrorRedirect("Sign-in did not finish. Please try again.");
+      if (claimedRef.current) return;
+      if (isOAuthPending()) {
+        oauthErrorRedirect("Sign-in did not finish. Please try again.");
+        return;
+      }
+      if (sessionStorage.getItem(TORP_OAUTH_BROWSER_PENDING) === "1") {
+        clearOAuthHandoffFlags();
+      }
     };
 
+    primeOAuthPollKeyFromCookie();
     startPollingIfNeeded();
 
     void App.getLaunchUrl().then((launch) => {
@@ -213,6 +216,7 @@ export default function MobileOAuthBrowserFinish() {
 
     const appListener = App.addListener("appStateChange", ({ isActive }) => {
       if (isActive) {
+        primeOAuthPollKeyFromCookie();
         startPollingIfNeeded();
         void tryFinish();
       }

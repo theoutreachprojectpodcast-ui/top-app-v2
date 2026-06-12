@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Bookmark, CreditCard, LogOut, Settings, UserRound } from "lucide-react";
 import Avatar from "@/components/shared/Avatar";
+import HeaderDropdownLayer from "@/components/layout/HeaderDropdownLayer";
+import { useMobileShell } from "@/hooks/useMobileShell";
 
 function MenuRow({ icon: Icon, label, hint, danger, onClick }) {
   return (
@@ -43,7 +45,10 @@ export default function HeaderAccountMenu({
   useEffect(() => {
     if (!open) return;
     function onDocClick(e) {
-      if (!wrapRef.current?.contains(e.target)) setOpen(false);
+      const target = e.target;
+      if (wrapRef.current?.contains(target)) return;
+      if (target instanceof Element && target.closest(".headerAccountDropdown")) return;
+      setOpen(false);
     }
     function onKey(e) {
       if (e.key === "Escape") setOpen(false);
@@ -75,30 +80,35 @@ export default function HeaderAccountMenu({
       >
         <Avatar src={avatarSrc} alt="Account" className="headerAccountAvatar" sizes="40px" />
       </button>
-      {open ? (
-        <div className="headerAccountDropdown" role="menu">
-          <div className="headerAccountDropdownHeader">
-            <Avatar src={avatarSrc} alt="" className="headerAccountDropdownAvatar" sizes="44px" />
-            <div className="headerAccountDropdownMeta">
-              <p className="headerAccountDropdownName">{name || "Your account"}</p>
-              {emailLine ? <p className="headerAccountDropdownEmail">{emailLine}</p> : null}
+      <HeaderDropdownLayer open={open} onClose={() => setOpen(false)} ariaLabel="Close account menu">
+        {open ? (
+          <div
+            className={`headerAccountDropdown${mobileShell ? " headerAccountDropdown--mobileSheet" : ""}`}
+            role="menu"
+          >
+            <div className="headerAccountDropdownHeader">
+              <Avatar src={avatarSrc} alt="" className="headerAccountDropdownAvatar" sizes="44px" />
+              <div className="headerAccountDropdownMeta">
+                <p className="headerAccountDropdownName">{name || "Your account"}</p>
+                {emailLine ? <p className="headerAccountDropdownEmail">{emailLine}</p> : null}
+              </div>
             </div>
+            <div className="headerAccountMenuGroup" role="group" aria-label="Account">
+              <MenuRow icon={UserRound} label="Profile" onClick={closeAnd(onProfile)} />
+              <MenuRow icon={Settings} label="Settings" onClick={closeAnd(onSettings)} />
+              <MenuRow
+                icon={CreditCard}
+                label="Membership / account"
+                hint={membershipHint || undefined}
+                onClick={closeAnd(onMembership)}
+              />
+              <MenuRow icon={Bookmark} label="Saved organizations" onClick={closeAnd(onSavedItems)} />
+            </div>
+            <div className="headerAccountMenuRule" role="presentation" />
+            <MenuRow icon={LogOut} label="Sign out" danger onClick={closeAnd(onSignOut)} />
           </div>
-          <div className="headerAccountMenuGroup" role="group" aria-label="Account">
-            <MenuRow icon={UserRound} label="Profile" onClick={closeAnd(onProfile)} />
-            <MenuRow icon={Settings} label="Settings" onClick={closeAnd(onSettings)} />
-            <MenuRow
-              icon={CreditCard}
-              label="Membership / account"
-              hint={membershipHint || undefined}
-              onClick={closeAnd(onMembership)}
-            />
-            <MenuRow icon={Bookmark} label="Saved organizations" onClick={closeAnd(onSavedItems)} />
-          </div>
-          <div className="headerAccountMenuRule" role="presentation" />
-          <MenuRow icon={LogOut} label="Sign out" danger onClick={closeAnd(onSignOut)} />
-        </div>
-      ) : null}
+        ) : null}
+      </HeaderDropdownLayer>
     </div>
   );
 }

@@ -4,9 +4,10 @@ import {
   WORKOS_PKCE_COOKIE_NAME,
   workosPkceCookieOptions,
 } from "@/lib/auth/workosAuthorizationRedirect";
+import { TORP_OAUTH_POLL_KEY_COOKIE } from "@/lib/auth/oauthMobileHandoff";
+import { hashOAuthState } from "@/lib/auth/oauthMobileHandoffServer";
 import { workOSAuthRedirectBridge } from "@/lib/auth/workosAuthRedirectBridge";
 import { peekOAuthAuthorizePending } from "@/lib/auth/oauthMobileHandoffServer";
-import { oauthShellSetCookieHeader } from "@/lib/auth/workosOAuthShell";
 
 const BROWSER_OAUTH_COOKIE = "torp-oauth-browser";
 const BROWSER_OAUTH_MAX_AGE = 600;
@@ -23,6 +24,18 @@ function browserOAuthCookieOptions() {
   };
 }
 
+function pollKeyCookieOptions() {
+  const domain = String(process.env.WORKOS_COOKIE_DOMAIN || "").trim();
+  return {
+    path: "/",
+    httpOnly: false,
+    secure: true,
+    sameSite: "lax",
+    maxAge: BROWSER_OAUTH_MAX_AGE,
+    ...(domain ? { domain } : {}),
+  };
+}
+
 /**
  * GET — seeds PKCE + browser marker cookies on the HTML bridge response (reliable in
  * SFSafariViewController), then navigates to WorkOS.
@@ -31,13 +44,13 @@ function browserOAuthCookieOptions() {
  */
 export async function GET(request) {
   const url = new URL(request.url);
-  const stateKey = String(url.searchParams.get("key") || "").trim();
+  const handoffKey = String(url.searchParams.get("key") || "").trim();
 
   let authorizeUrl = "";
   let sealedState = "";
 
-  if (stateKey) {
-    const pending = await peekOAuthAuthorizePending(stateKey);
+  if (handoffKey) {
+    const pending = await peekOAuthAuthorizePending(handoffKey);
     if (!pending) {
       return new NextResponse("Sign-in session expired. Close the browser and try again.", {
         status: 410,
@@ -58,11 +71,10 @@ export async function GET(request) {
     return new NextResponse("Missing OAuth state.", { status: 400 });
   }
 
+  const pollKey = hashOAuthState(sealedState);
   const response = workOSAuthRedirectBridge(authorizeUrl);
   response.cookies.set(BROWSER_OAUTH_COOKIE, "1", browserOAuthCookieOptions());
   response.cookies.set(WORKOS_PKCE_COOKIE_NAME, sealedState, workosPkceCookieOptions());
-  if (stateKey) {
-    response.headers.append("Set-Cookie", oauthShellSetCookieHeader());
-  }
+  response.cookies.set(TORP_OAUTH_POLL_KEY_COOKIE, pollKey, pollKeyCookieOptions());
   return response;
 }

@@ -135,4 +135,85 @@ html[data-capacitor-native] main.topApp .siteFooter.siteFooter--pageBottom.siteF
     > .shell:not(.shell--home) {
     padding-top: clamp(4px, 1.2vw, 8px);
   }
+
+  /* Header corner controls — wins over `top-app.css` @520px dock rules (loads last). */
+  html[data-capacitor-native]
+    main.topApp.appShell--withMobileNavDock:not(.appShell--podcast):not([data-page-atmosphere="podcast"])
+    .topbarLeft
+    .topbarActionsCluster,
+  html[data-capacitor-native]
+    main.topApp.appShell--withMobileNavDock:not(.appShell--podcast):not([data-page-atmosphere="podcast"])
+    .topbarRight
+    .topbarActionsCluster {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    width: auto;
+    gap: 12px;
+  }
+
+  html[data-capacitor-native]
+    main.topApp.appShell--withMobileNavDock:not(.appShell--podcast):not([data-page-atmosphere="podcast"])
+    .topbarRight
+    .topbarActionsCluster {
+    justify-content: flex-end;
+  }
+
+  html[data-capacitor-native]
+    main.topApp.appShell--withMobileNavDock:not(.appShell--podcast):not([data-page-atmosphere="podcast"])
+    .topbarRight
+    .siteMobileNavMore {
+    margin-left: 0;
+  }
+
+  html[data-capacitor-native]
+    main.topApp.appShell--withMobileNavDock:not(.appShell--podcast):not([data-page-atmosphere="podcast"])
+    .headerNotificationBellBtn,
+  html[data-capacitor-native]
+    main.topApp.appShell--withMobileNavDock:not(.appShell--podcast):not([data-page-atmosphere="podcast"])
+    .headerAccountTrigger,
+  html[data-capacitor-native]
+    main.topApp.appShell--withMobileNavDock:not(.appShell--podcast):not([data-page-atmosphere="podcast"])
+    .headerAccountAvatar.profileAvatarShell,
+  html[data-capacitor-native]
+    main.topApp.appShell--withMobileNavDock:not(.appShell--podcast):not([data-page-atmosphere="podcast"])
+    .siteMobileNavMore__trigger,
+  html[data-capacitor-native]
+    main.topApp.appShell--withMobileNavDock:not(.appShell--podcast):not([data-page-atmosphere="podcast"])
+    .themeToggle {
+    box-sizing: border-box;
+    width: var(--mobile-site-header-control-size, 44px);
+    height: var(--mobile-site-header-control-size, 44px);
+    min-width: var(--mobile-site-header-control-size, 44px);
+    min-height: var(--mobile-site-header-control-size, 44px);
+    padding: 0;
+    flex-shrink: 0;
+  }
+
+  html[data-capacitor-native]
+    main.topApp.appShell--withMobileNavDock:not(.appShell--podcast):not([data-page-atmosphere="podcast"])
+    .headerNotificationBellBtn {
+    border-width: 1px;
+    border-color: var(--color-border);
+    border-radius: 12px;
+  }
+
+  html[data-capacitor-native]
+    main.topApp.appShell--withMobileNavDock:not(.appShell--podcast):not([data-page-atmosphere="podcast"])
+    .headerAccountTrigger {
+    border-width: 1px;
+    border-color: var(--color-border);
+    border-radius: 999px;
+  }
+
+  html[data-capacitor-native]
+    main.topApp.appShell--withMobileNavDock:not(.appShell--podcast):not([data-page-atmosphere="podcast"])
+    .headerNotificationWrap,
+  html[data-capacitor-native]
+    main.topApp.appShell--withMobileNavDock:not(.appShell--podcast):not([data-page-atmosphere="podcast"])
+    .headerAccountWrap {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
 }

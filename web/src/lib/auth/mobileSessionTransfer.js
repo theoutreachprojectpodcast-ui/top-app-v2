@@ -11,8 +11,32 @@ function transferPassword() {
   return password;
 }
 
-function workOSSessionCookieName() {
+export function workOSSessionCookieName() {
   return String(process.env.WORKOS_COOKIE_NAME || "wos-session").trim() || "wos-session";
+}
+
+function workOSSessionCookieMaxAge() {
+  const parsed = parseInt(String(process.env.WORKOS_COOKIE_MAX_AGE || ""), 10);
+  return Number.isFinite(parsed) ? parsed : 60 * 60 * 24 * 400;
+}
+
+/** Build a `Set-Cookie` header string for WKWebView handoff (matches AuthKit `saveSession`). */
+export function serializeWorkOSSessionSetCookie(cookieValue, requestUrl) {
+  const name = workOSSessionCookieName();
+  const opts = workOSSessionCookieOptions();
+  const sameSite =
+    String(opts.sameSite || "lax").charAt(0).toUpperCase() +
+    String(opts.sameSite || "lax").slice(1).toLowerCase();
+  const parts = [
+    `${name}=${cookieValue}`,
+    "Path=/",
+    "HttpOnly",
+    `SameSite=${sameSite}`,
+    `Max-Age=${workOSSessionCookieMaxAge()}`,
+  ];
+  if (opts.domain) parts.push(`Domain=${opts.domain}`);
+  if (opts.secure) parts.push("Secure");
+  return parts.join("; ");
 }
 
 /** @returns {import("next/dist/compiled/@edge-runtime/cookies").ResponseCookie["options"]} */

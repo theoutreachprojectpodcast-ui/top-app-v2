@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { handleAuth } from "@workos-inc/authkit-nextjs";
+import {
+  serializeWorkOSSessionSetCookie,
+  workOSSessionCookieName,
+} from "@/lib/auth/mobileSessionTransfer";
 import { requestOriginForStripeRedirects } from "@/lib/billing/stripeConfig";
 import { isCapacitorCallbackRequest } from "@/lib/auth/workosCallbackRequest";
 import { workosCallbackErrorMessage, mobileOAuthSplashErrorMessage } from "@/lib/auth/workosCallbackErrors";
@@ -86,6 +91,23 @@ function extractSetCookies(response) {
   return single ? [single] : [];
 }
 
+/**
+ * AuthKit `saveSession()` writes via `cookies()` — not always on the redirect response headers.
+ * Merge jar session cookies so mobile in-app browser handoff can apply them in the WebView.
+ * @param {Response} response
+ * @param {string} requestUrl
+ */
+async function collectAuthSetCookies(response, requestUrl) {
+  const out = extractSetCookies(response);
+  const jar = await cookies();
+  const name = workOSSessionCookieName();
+  const session = jar.get(name);
+  if (session?.value && !out.some((h) => h.startsWith(`${name}=`))) {
+    out.push(serializeWorkOSSessionSetCookie(session.value, requestUrl));
+  }
+  return out;
+}
+
 /** Copy Set-Cookie headers from an auth handler response onto another response. */
 export function forwardAuthSetCookies(from, to) {
   if (!from?.headers) return;
@@ -127,7 +149,8 @@ export async function runWorkOSCallbackCapture(request) {
       }
     }
     redirectTo = resolveMobileAppPostAuthPath(redirectTo, "TheOutreachProject/Capacitor", true);
-    return { ok: true, setCookies: extractSetCookies(response), redirectTo };
+    const setCookies = await collectAuthSetCookies(response, request.url);
+    return { ok: true, setCookies, redirectTo };
   }
 
   let message = "Could not complete sign in. Please try again.";
@@ -206,6 +229,16 @@ export async function runWorkOSCallbackForFetch(request) {
     { headers: { "Cache-Control": "no-store" } },
   );
   forwardAuthSetCookies(inner, out);
+  const sessionName = workOSSessionCookieName();
+  const jarCookies = await collectAuthSetCookies(inner, request.url);
+  const sessionHeader = jarCookies.find((h) => h.startsWith(`${sessionName}=`));
+  if (sessionHeader) {
+    const existing =
+      typeof out.headers.getSetCookie === "function" ? out.headers.getSetCookie() : [];
+    if (!existing.some((h) => h.startsWith(`${sessionName}=`))) {
+      out.headers.append("Set-Cookie", sessionHeader);
+    }
+  }
   return out;
 }
 

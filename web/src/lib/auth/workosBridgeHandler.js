@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { workOSAuthRedirectBridge } from "@/lib/auth/workosAuthRedirectBridge";
-import { resolveWorkOSSignInFromSearchParams } from "@/lib/auth/workosSignInUrl";
-import { resolveWorkOSSignUpFromSearchParams } from "@/lib/auth/workosSignUpUrl";
+import { attachWorkOSAuthorizeCookies } from "@/lib/auth/workosAuthorizationRedirect";
+import { resolveWorkOSSignInBundleFromSearchParams } from "@/lib/auth/workosSignInUrl";
+import { resolveWorkOSSignUpBundleFromSearchParams } from "@/lib/auth/workosSignUpUrl";
+import { shouldMarkOAuthNativeShell } from "@/lib/auth/workosOAuthShell";
 import { toWorkOSUrlSearchParams } from "@/lib/auth/workosSearchParams";
 
 /**
@@ -77,11 +79,14 @@ export async function workOSAuthBridgePost(request, options = {}) {
   }
 
   try {
-    const url =
+    const bundle =
       mode === "signup"
-        ? await resolveWorkOSSignUpFromSearchParams(params, fallbackReturn)
-        : await resolveWorkOSSignInFromSearchParams(params, fallbackReturn);
-    return workOSAuthRedirectBridge(url);
+        ? await resolveWorkOSSignUpBundleFromSearchParams(params, fallbackReturn, request)
+        : await resolveWorkOSSignInBundleFromSearchParams(params, fallbackReturn, request);
+    const markNative = shouldMarkOAuthNativeShell(params, request);
+    const response = workOSAuthRedirectBridge(bundle.url);
+    attachWorkOSAuthorizeCookies(response, bundle.sealedState, markNative);
+    return response;
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     if (message === "authentication_not_configured" || message === "workos_not_configured") {
