@@ -2,7 +2,7 @@ import { isWorkOSConfigured } from "@/lib/auth/workosConfigured";
 import { sanitizeWorkOSLoginHint } from "@/lib/auth/workosLoginHint";
 import { resolvePostAuthReturnTarget } from "@/lib/auth/workosSafeReturn";
 import {
-  getWorkOSAuthKitRedirectUrl,
+  getWorkOSAuthKitAuthorizeBundle,
   readWorkOSInvitationToken,
 } from "@/lib/auth/workosAuthorizationRedirect";
 import {
@@ -21,13 +21,16 @@ function readReturnTo(searchParams, fallback = "/") {
 }
 
 /**
- * Resolve WorkOS AuthKit authorize URL and mint PKCE cookie (via next/headers cookies()).
  * @param {URLSearchParams} searchParams
  * @param {string} [fallbackReturn="/"]
  * @param {Request} [request]
- * @returns {Promise<string>}
+ * @returns {Promise<{ url: string, sealedState: string }>}
  */
-export async function resolveWorkOSSignInFromSearchParams(searchParams, fallbackReturn = "/", request) {
+export async function resolveWorkOSSignInBundleFromSearchParams(
+  searchParams,
+  fallbackReturn = "/",
+  request,
+) {
   if (!isWorkOSConfigured()) {
     throw new Error("authentication_not_configured");
   }
@@ -45,7 +48,7 @@ export async function resolveWorkOSSignInFromSearchParams(searchParams, fallback
     invitation: Boolean(invitationToken),
   });
 
-  return getWorkOSAuthKitRedirectUrl({
+  return getWorkOSAuthKitAuthorizeBundle({
     returnPathname: returnTo,
     screenHint: "sign-in",
     loginHint,
@@ -54,6 +57,17 @@ export async function resolveWorkOSSignInFromSearchParams(searchParams, fallback
     organizationId: orgOptions.organizationId,
     markNativeShell: shouldMarkOAuthNativeShell(searchParams, request),
   });
+}
+
+/**
+ * @param {URLSearchParams} searchParams
+ * @param {string} [fallbackReturn="/"]
+ * @param {Request} [request]
+ * @returns {Promise<string>}
+ */
+export async function resolveWorkOSSignInFromSearchParams(searchParams, fallbackReturn = "/", request) {
+  const { url } = await resolveWorkOSSignInBundleFromSearchParams(searchParams, fallbackReturn, request);
+  return url;
 }
 
 /**

@@ -41,12 +41,16 @@ export async function launchNativeWorkOSAuth(goPath) {
   }
 
   const stateKey = String(data.stateKey || "").trim();
+  const sealedState = String(data.sealedState || "").trim();
   if (stateKey && typeof sessionStorage !== "undefined") {
     sessionStorage.setItem(TORP_OAUTH_STATE_KEY, stateKey);
     sessionStorage.setItem(TORP_OAUTH_BROWSER_PENDING, "1");
   }
 
-  const browserStart = appUrl(`/auth/workos-browser-start?go=${encodeURIComponent(String(data.url))}`);
+  const browserParams = new URLSearchParams();
+  browserParams.set("go", String(data.url));
+  if (sealedState) browserParams.set("s", sealedState);
+  const browserStart = appUrl(`/auth/workos-browser-start?${browserParams.toString()}`);
 
   await Browser.open({
     url: browserStart,

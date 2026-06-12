@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { workOSAuthRedirectBridge } from "@/lib/auth/workosAuthRedirectBridge";
 import { workosAuthBrandedHtmlPage } from "@/lib/auth/workosAuthBrand";
 import { isNativeWorkOSShellRequest } from "@/lib/auth/workosOAuthShell";
-import { resolveWorkOSSignInFromSearchParams } from "@/lib/auth/workosSignInUrl";
-import { resolveWorkOSSignUpFromSearchParams } from "@/lib/auth/workosSignUpUrl";
+import { resolveWorkOSSignInBundleFromSearchParams } from "@/lib/auth/workosSignInUrl";
+import { resolveWorkOSSignUpBundleFromSearchParams } from "@/lib/auth/workosSignUpUrl";
 import { toWorkOSUrlSearchParams } from "@/lib/auth/workosSearchParams";
 
 /**
@@ -65,12 +65,22 @@ function workOSGoContext(requestUrl) {
 /**
  * @param {URL} requestUrl
  * @param {Request} [request]
+ * @returns {Promise<{ url: string, sealedState: string }>}
  */
-export async function resolveWorkOSAuthorizeUrlFromGoUrl(requestUrl, request) {
+export async function resolveWorkOSAuthorizeBundleFromGoUrl(requestUrl, request) {
   const { mode, fallbackReturn, params } = workOSGoContext(requestUrl);
   return mode === "signup"
-    ? resolveWorkOSSignUpFromSearchParams(params, fallbackReturn, request)
-    : resolveWorkOSSignInFromSearchParams(params, fallbackReturn, request);
+    ? resolveWorkOSSignUpBundleFromSearchParams(params, fallbackReturn, request)
+    : resolveWorkOSSignInBundleFromSearchParams(params, fallbackReturn, request);
+}
+
+/**
+ * @param {URL} requestUrl
+ * @param {Request} [request]
+ */
+export async function resolveWorkOSAuthorizeUrlFromGoUrl(requestUrl, request) {
+  const { url } = await resolveWorkOSAuthorizeBundleFromGoUrl(requestUrl, request);
+  return url;
 }
 
 /**
@@ -103,19 +113,16 @@ function workOSGoErrorResponse(message, backHref, status = 503) {
 export async function workOSGoJsonResponse(requestUrl, request) {
   const { backHref } = workOSGoContext(requestUrl);
   try {
-    const url = await resolveWorkOSAuthorizeUrlFromGoUrl(requestUrl, request);
-    let stateKey = "";
-    try {
-      const sealed = new URL(String(url)).searchParams.get("state") || "";
-      if (sealed) {
-        const { hashOAuthState } = await import("@/lib/auth/oauthMobileHandoffServer");
-        stateKey = hashOAuthState(sealed);
-      }
-    } catch {
-      /* ignore */
-    }
+    const bundle = await resolveWorkOSAuthorizeBundleFromGoUrl(requestUrl, request);
+    const { hashOAuthState } = await import("@/lib/auth/oauthMobileHandoffServer");
+    const stateKey = bundle.sealedState ? hashOAuthState(bundle.sealedState) : "";
     return NextResponse.json(
-      { ok: true, url, stateKey },
+      {
+        ok: true,
+        url: bundle.url,
+        stateKey,
+        sealedState: bundle.sealedState,
+      },
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (e) {
@@ -148,7 +155,7 @@ export async function workOSGoResponse(requestUrl, request) {
 
   const { backHref } = workOSGoContext(requestUrl);
   try {
-    const url = await resolveWorkOSAuthorizeUrlFromGoUrl(requestUrl, request);
+    const { url } = await resolveWorkOSAuthorizeBundleFromGoUrl(requestUrl, request);
     return workOSAuthRedirectBridge(url);
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);

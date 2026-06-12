@@ -4,10 +4,12 @@
 
 /** @returns {string} */
 export function workosAuthPublicOrigin() {
-  const fromEnv = String(process.env.NEXT_PUBLIC_SITE_URL || "").trim();
-  if (fromEnv.startsWith("http")) return fromEnv.replace(/\/$/, "");
-  const vercel = String(process.env.VERCEL_URL || "").trim();
-  if (vercel) return `https://${vercel.replace(/\/$/, "")}`;
+  const appBase = String(
+    process.env.NEXT_PUBLIC_APP_URL || process.env.APP_BASE_URL || "",
+  ).trim();
+  if (appBase.startsWith("http")) return appBase.replace(/\/$/, "");
+  const site = String(process.env.NEXT_PUBLIC_SITE_URL || "").trim();
+  if (site.startsWith("http")) return site.replace(/\/$/, "");
   return "https://theoutreachproject.app";
 }
 

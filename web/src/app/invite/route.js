@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { isWorkOSConfigured } from "@/lib/auth/workosConfigured";
 import {
-  getWorkOSAuthKitRedirectUrl,
+  getWorkOSAuthKitAuthorizeBundle,
   readWorkOSInvitationToken,
 } from "@/lib/auth/workosAuthorizationRedirect";
+import { workOSAuthRedirectBridge } from "@/lib/auth/workosAuthRedirectBridge";
 import { safeWorkOSReturnTarget } from "@/lib/auth/workosSafeReturn";
 
 /**
@@ -29,12 +30,12 @@ export async function GET(request) {
   );
 
   try {
-    const url = await getWorkOSAuthKitRedirectUrl({
+    const { url } = await getWorkOSAuthKitAuthorizeBundle({
       returnPathname: returnTo,
       screenHint: "sign-up",
       invitationToken,
     });
-    return NextResponse.redirect(url);
+    return workOSAuthRedirectBridge(url);
   } catch {
     return NextResponse.json({ error: "workos_not_configured" }, { status: 503 });
   }

@@ -2,7 +2,7 @@ import { isWorkOSConfigured } from "@/lib/auth/workosConfigured";
 import { sanitizeWorkOSLoginHint } from "@/lib/auth/workosLoginHint";
 import { safeWorkOSReturnTarget } from "@/lib/auth/workosSafeReturn";
 import {
-  getWorkOSAuthKitRedirectUrl,
+  getWorkOSAuthKitAuthorizeBundle,
   readWorkOSInvitationToken,
 } from "@/lib/auth/workosAuthorizationRedirect";
 import { workOSAuthKitAuthorizeOptions } from "@/lib/auth/workosOrganizationScope";
@@ -19,9 +19,14 @@ function readReturnTo(searchParams, fallback = "/onboarding") {
 /**
  * @param {URLSearchParams} searchParams
  * @param {string} [fallbackReturn="/onboarding"]
- * @returns {Promise<string>}
+ * @param {Request} [request]
+ * @returns {Promise<{ url: string, sealedState: string }>}
  */
-export async function resolveWorkOSSignUpFromSearchParams(searchParams, fallbackReturn = "/onboarding", request) {
+export async function resolveWorkOSSignUpBundleFromSearchParams(
+  searchParams,
+  fallbackReturn = "/onboarding",
+  request,
+) {
   if (!isWorkOSConfigured()) {
     throw new Error("authentication_not_configured");
   }
@@ -33,7 +38,7 @@ export async function resolveWorkOSSignUpFromSearchParams(searchParams, fallback
   const invitationToken = readWorkOSInvitationToken(searchParams);
   const orgOptions = workOSAuthKitAuthorizeOptions({ signUp: true });
 
-  return getWorkOSAuthKitRedirectUrl({
+  return getWorkOSAuthKitAuthorizeBundle({
     returnPathname: returnTo,
     screenHint: "sign-up",
     loginHint,
@@ -42,6 +47,16 @@ export async function resolveWorkOSSignUpFromSearchParams(searchParams, fallback
     organizationId: orgOptions.organizationId,
     markNativeShell: shouldMarkOAuthNativeShell(searchParams, request),
   });
+}
+
+/**
+ * @param {URLSearchParams} searchParams
+ * @param {string} [fallbackReturn="/onboarding"]
+ * @returns {Promise<string>}
+ */
+export async function resolveWorkOSSignUpFromSearchParams(searchParams, fallbackReturn = "/onboarding", request) {
+  const { url } = await resolveWorkOSSignUpBundleFromSearchParams(searchParams, fallbackReturn, request);
+  return url;
 }
 
 /**

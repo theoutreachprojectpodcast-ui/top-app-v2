@@ -4,9 +4,10 @@ import { isWorkOSConfigured } from "@/lib/auth/workosConfigured";
 import { sanitizeWorkOSLoginHint } from "@/lib/auth/workosLoginHint";
 import { resolvePostAuthReturnTarget } from "@/lib/auth/workosSafeReturn";
 import {
-  getWorkOSAuthKitRedirectUrl,
+  getWorkOSAuthKitAuthorizeBundle,
   readWorkOSInvitationToken,
 } from "@/lib/auth/workosAuthorizationRedirect";
+import { workOSAuthRedirectBridge } from "@/lib/auth/workosAuthRedirectBridge";
 import {
   isAdminReturnPath,
   isBootstrapAdminWorkOSSignIn,
@@ -52,7 +53,7 @@ export async function respondWorkOSSignIn(request) {
 
   if (invitationToken) {
     try {
-      const url = await getWorkOSAuthKitRedirectUrl({
+      const { url } = await getWorkOSAuthKitAuthorizeBundle({
         returnPathname: returnTo,
         screenHint: "sign-in",
         loginHint,
@@ -60,7 +61,7 @@ export async function respondWorkOSSignIn(request) {
         invitationToken,
         organizationId: orgOptions.organizationId,
       });
-      return NextResponse.redirect(url);
+      return workOSAuthRedirectBridge(url);
     } catch {
       return NextResponse.json({ error: "workos_not_configured" }, { status: 503 });
     }
@@ -72,5 +73,5 @@ export async function respondWorkOSSignIn(request) {
     prompt,
     ...orgOptions,
   });
-  return NextResponse.redirect(url);
+  return workOSAuthRedirectBridge(url);
 }

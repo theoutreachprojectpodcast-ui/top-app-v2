@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import {
   WORKOS_PKCE_COOKIE_NAME,
+  oauthStateFromAuthorizeUrl,
   workosPkceCookieOptions,
 } from "@/lib/auth/workosAuthorizationRedirect";
 import { workOSAuthRedirectBridge } from "@/lib/auth/workosAuthRedirectBridge";
@@ -22,9 +22,9 @@ function browserOAuthCookieOptions() {
 }
 
 /**
- * GET — seeds PKCE + shell marker cookies in the in-app browser (SFSafariViewController),
- * then navigates to WorkOS via a 200 HTML bridge (302 Set-Cookie is unreliable in SFSafariViewController).
- * The main WebView mints PKCE first; this copies the sealed state into the browser cookie jar.
+ * GET — seeds PKCE + browser marker cookies on the HTML bridge response (reliable in
+ * SFSafariViewController), then navigates to WorkOS. Pass sealed OAuth state as `s`
+ * from `/auth/workos-go?format=json` to avoid re-parsing the authorize URL.
  */
 export async function GET(request) {
   const url = new URL(request.url);
@@ -33,18 +33,14 @@ export async function GET(request) {
     return new NextResponse("Invalid authorize URL.", { status: 400 });
   }
 
-  let sealedState = "";
-  try {
-    sealedState = String(new URL(go).searchParams.get("state") || "").trim();
-  } catch {
-    return new NextResponse("Invalid authorize URL.", { status: 400 });
-  }
+  const sealedParam = String(url.searchParams.get("s") || "").trim();
+  const sealedState = sealedParam || oauthStateFromAuthorizeUrl(go);
   if (!sealedState) {
     return new NextResponse("Missing OAuth state.", { status: 400 });
   }
 
-  const cookieStore = await cookies();
-  cookieStore.set(BROWSER_OAUTH_COOKIE, "1", browserOAuthCookieOptions());
-  cookieStore.set(WORKOS_PKCE_COOKIE_NAME, sealedState, workosPkceCookieOptions());
-  return workOSAuthRedirectBridge(go);
+  const response = workOSAuthRedirectBridge(go);
+  response.cookies.set(BROWSER_OAUTH_COOKIE, "1", browserOAuthCookieOptions());
+  response.cookies.set(WORKOS_PKCE_COOKIE_NAME, sealedState, workosPkceCookieOptions());
+  return response;
 }

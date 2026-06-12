@@ -30,8 +30,46 @@ export function workosPkceCookieOptions() {
   };
 }
 
+async function fetchWorkOSClaimNonce(clientId) {
+  const claimToken = String(process.env.WORKOS_CLAIM_TOKEN || "").trim();
+  if (!claimToken || !clientId) return null;
+  try {
+    const workos = getWorkOS();
+    const res = await fetch(`${workos.baseURL}/x/one-shot-environments/claim-nonces`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ client_id: clientId, claim_token: claimToken }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json().catch(() => ({}));
+    return String(data?.nonce || "").trim() || null;
+  } catch {
+    return null;
+  }
+}
+
 /**
- * Build a WorkOS AuthKit authorize URL and set the PKCE verifier cookie (same as AuthKit helpers).
+ * Read OAuth `state` from a WorkOS authorize URL without URLSearchParams `+` → space mangling.
+ * Prefer passing sealed state via `s` on `/auth/workos-browser-start` when possible.
+ * @param {string} authorizeUrl
+ */
+export function oauthStateFromAuthorizeUrl(authorizeUrl) {
+  const raw = String(authorizeUrl || "").trim();
+  const qIdx = raw.indexOf("?");
+  if (qIdx === -1) return "";
+  for (const segment of raw.slice(qIdx + 1).split("&")) {
+    if (!segment) continue;
+    const eq = segment.indexOf("=");
+    const name = eq === -1 ? segment : segment.slice(0, eq);
+    if (decodeURIComponent(name) !== "state") continue;
+    if (eq === -1) return "";
+    return decodeURIComponent(segment.slice(eq + 1));
+  }
+  return "";
+}
+
+/**
+ * Mint PKCE cookie + WorkOS authorize URL (AuthKit-compatible sealed state).
  *
  * @param {{
  *   returnPathname?: string,
@@ -43,8 +81,9 @@ export function workosPkceCookieOptions() {
  *   useMobileRedirect?: boolean,
  *   markNativeShell?: boolean,
  * }} [options]
+ * @returns {Promise<{ url: string, sealedState: string }>}
  */
-export async function getWorkOSAuthKitRedirectUrl(options = {}) {
+export async function getWorkOSAuthKitAuthorizeBundle(options = {}) {
   const clientId = String(process.env.WORKOS_CLIENT_ID || "").trim();
   const webRedirectUri = String(
     process.env.NEXT_PUBLIC_WORKOS_REDIRECT_URI || process.env.WORKOS_REDIRECT_URI || "",
@@ -57,6 +96,7 @@ export async function getWorkOSAuthKitRedirectUrl(options = {}) {
 
   const workos = getWorkOS();
   const pkce = await workos.pkce.generate();
+  const claimNonce = await fetchWorkOSClaimNonce(clientId);
   const state = {
     nonce: crypto.randomUUID(),
     codeVerifier: pkce.codeVerifier,
@@ -70,7 +110,7 @@ export async function getWorkOSAuthKitRedirectUrl(options = {}) {
     cookieStore.set(TORP_OAUTH_SHELL_COOKIE, TORP_OAUTH_SHELL_NATIVE, cookieOpts);
   }
 
-  return workos.userManagement.getAuthorizationUrl({
+  const url = workos.userManagement.getAuthorizationUrl({
     provider: "authkit",
     clientId,
     redirectUri,
@@ -82,7 +122,19 @@ export async function getWorkOSAuthKitRedirectUrl(options = {}) {
     ...(options.prompt ? { prompt: options.prompt } : {}),
     ...(options.invitationToken ? { invitationToken: options.invitationToken } : {}),
     ...(options.organizationId ? { organizationId: options.organizationId } : {}),
+    ...(claimNonce ? { claimNonce } : {}),
   });
+
+  return { url, sealedState };
+}
+
+/**
+ * @param {Parameters<typeof getWorkOSAuthKitAuthorizeBundle>[0]} [options]
+ * @returns {Promise<string>}
+ */
+export async function getWorkOSAuthKitRedirectUrl(options = {}) {
+  const { url } = await getWorkOSAuthKitAuthorizeBundle(options);
+  return url;
 }
 
 /** @param {URLSearchParams} searchParams */

@@ -7,9 +7,6 @@ import { launchWorkOSAuth } from "@/lib/auth/workosNativeAuthLaunch";
 import { workosGoUrl } from "@/lib/auth/workosGoUrl";
 import WorkOSAuthShell from "@/components/auth/WorkOSAuthShell";
 
-/** Same-origin POST for browsers (200 HTML bridge — reliable PKCE commit). */
-const WEB_HANDOFF_ACTION = "/auth/workos-handoff";
-
 function paramsFromSearchParams(searchParams) {
   const raw = {};
   searchParams.forEach((value, key) => {
@@ -42,6 +39,7 @@ function WorkOSAuthHandoffInner({ mode, backHref = "/mobile", fallbackReturn }) 
         returnTo,
         rememberDevice: params.remember !== "0",
         loginHint: params.loginHint,
+        native: true,
       });
       void launchWorkOSAuth(go).catch((err) => {
         setError(err instanceof Error ? err.message : "Could not start secure sign in.");
@@ -49,28 +47,15 @@ function WorkOSAuthHandoffInner({ mode, backHref = "/mobile", fallbackReturn }) 
       return;
     }
 
-    const form = document.createElement("form");
-    form.method = "POST";
-    form.action = WEB_HANDOFF_ACTION;
-    form.style.display = "none";
-
-    const add = (name, value) => {
-      const input = document.createElement("input");
-      input.type = "hidden";
-      input.name = name;
-      input.value = value;
-      form.appendChild(input);
-    };
-
-    add("_mode", mode === "signup" ? "signup" : "signin");
-    add("_fallbackReturn", fallbackReturn || "");
-    add("_backHref", backHref);
-    for (const [key, value] of Object.entries(params)) {
-      if (value != null) add(key, String(value));
-    }
-
-    document.body.appendChild(form);
-    form.submit();
+    const returnTo = params.returnTo || fallbackReturn || (mode === "signup" ? "/onboarding" : "/");
+    window.location.assign(
+      workosGoUrl({
+        mode: mode === "signup" ? "signup" : "signin",
+        returnTo,
+        rememberDevice: params.remember !== "0",
+        loginHint: params.loginHint,
+      }),
+    );
   }, [native, mode, paramKey, fallbackReturn, backHref, searchParams]);
 
   if (error) {
