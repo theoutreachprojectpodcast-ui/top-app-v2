@@ -6,6 +6,7 @@
  *   visible?: boolean,
  *   error?: boolean,
  *   errorMessage?: string,
+ *   loadingLabel?: string,
  *   onRetry?: () => void,
  * }} props
  */
@@ -13,6 +14,7 @@ export default function MobileLoadingOverlay({
   visible = true,
   error = false,
   errorMessage = "",
+  loadingLabel = "Loading The Outreach Project…",
   onRetry,
 }) {
   if (!visible) return null;
@@ -50,7 +52,7 @@ export default function MobileLoadingOverlay({
         ) : (
           <>
             <div className="mobileBootOverlay__spinner" aria-hidden="true" />
-            <p className="mobileBootOverlay__text">Loading The Outreach Project…</p>
+            <p className="mobileBootOverlay__text">{loadingLabel}</p>
           </>
         )}
       </div>

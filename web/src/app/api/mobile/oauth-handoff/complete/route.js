@@ -9,12 +9,12 @@ export async function GET(request) {
   const url = new URL(request.url);
   const stateKey = String(url.searchParams.get("key") || "").trim();
   if (!stateKey) {
-    return NextResponse.redirect(new URL("/mobile?oauth_error=Missing%20sign-in%20key", request.url), 302);
+    return NextResponse.redirect(new URL("/sign-in?oauth_error=Missing%20sign-in%20key", request.url), 302);
   }
 
   const handoff = await consumeOAuthMobileSessionHandoff(stateKey);
   if (!handoff?.setCookies?.length) {
-    return NextResponse.redirect(new URL("/mobile?oauth_error=Sign-in%20expired", request.url), 302);
+    return NextResponse.redirect(new URL("/sign-in?oauth_error=Sign-in%20expired", request.url), 302);
   }
 
   let redirectTo = String(handoff.redirectTo || "/").trim() || "/";

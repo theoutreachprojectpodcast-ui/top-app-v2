@@ -5,7 +5,6 @@
     <title>The Outreach Project</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#121212" />
-    <meta http-equiv="refresh" content="2;url=https://theoutreachproject.app/mobile" />
     <style>
       html,
       body {
@@ -50,10 +49,16 @@
         cursor: pointer;
         width: 100%;
       }
+      .hint {
+        margin-top: 1rem;
+        font-size: 0.85rem;
+        color: rgba(232, 238, 246, 0.65);
+      }
     </style>
     <script>
       (function () {
-        var PROD = "https://theoutreachproject.app/mobile";
+        var PROD = "https://theoutreachproject.app/";
+        var HEALTH = "https://theoutreachproject.app/api/health/mobile";
         function go() {
           try {
             window.location.replace(PROD);
@@ -63,12 +68,27 @@
             } catch (e2) {}
           }
         }
-        go();
-        setTimeout(go, 800);
-        setTimeout(go, 2500);
+        function checkThenGo() {
+          fetch(HEALTH, { cache: "no-store" })
+            .then(function (r) {
+              return r.json().catch(function () {
+                return {};
+              });
+            })
+            .then(function (body) {
+              if (body && body.ok) go();
+            })
+            .catch(function () {});
+        }
+        checkThenGo();
+        setTimeout(go, 1200);
+        setTimeout(go, 4000);
         window.addEventListener("load", function () {
           var btn = document.getElementById("retry");
-          if (btn) btn.addEventListener("click", go);
+          if (btn) btn.addEventListener("click", function () {
+            checkThenGo();
+            go();
+          });
         });
       })();
     </script>
@@ -79,6 +99,7 @@
         <h1>Connecting&hellip;</h1>
         <p>Loading The Outreach Project from the server. Tap below if this screen stays.</p>
         <button type="button" id="retry">Try again</button>
+        <p class="hint">Use <strong>theoutreachproject.app</strong> (with &ldquo;the&rdquo;).</p>
       </div>
     </div>
   </body>

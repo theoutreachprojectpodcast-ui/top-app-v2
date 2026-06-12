@@ -36,6 +36,19 @@ if (vercelProduction && adminEmailLoginProd && !cookieDomain) {
 }
 
 if (vercelProduction) {
+  const appUrlCheck = String(process.env.APP_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || "").toLowerCase();
+  if (appUrlCheck.includes("outreachproject.app") && !appUrlCheck.includes("theoutreachproject.app")) {
+    console.error(
+      "[validate-production-env] APP_BASE_URL uses outreachproject.app — production domain is theoutreachproject.app",
+    );
+    process.exit(1);
+  }
+  if (!String(process.env.NEXT_PUBLIC_WORKOS_REDIRECT_URI || process.env.WORKOS_REDIRECT_URI || "").includes("/callback")) {
+    missing.push("WORKOS redirect URI must end with /callback");
+  }
+}
+
+if (vercelProduction) {
   if (!String(process.env.STRIPE_SECRET_KEY || "").trim()) {
     missing.push("STRIPE_SECRET_KEY");
   }

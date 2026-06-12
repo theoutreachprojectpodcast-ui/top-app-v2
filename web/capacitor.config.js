@@ -39,7 +39,7 @@ const capServerOverride = String(
   process.env.CAP_SERVER_URL || process.env.MOBILE_PRODUCTION_URL || "",
 ).trim();
 const serverOrigin = (capServerOverride || PRODUCTION_ORIGIN).replace(/\/$/, "");
-const serverUrl = serverOrigin.endsWith("/mobile") ? serverOrigin : `${serverOrigin}/mobile`;
+const serverUrl = serverOrigin.replace(/\/mobile\/?$/, "");
 
 config.server = {
   url: serverUrl,

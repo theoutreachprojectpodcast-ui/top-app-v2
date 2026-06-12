@@ -30,6 +30,9 @@ jobs:
       - name: Security guard smoke tests
         run: pnpm --dir web run security:guards
 
+      - name: Auth production freeze guards
+        run: pnpm --dir web run verify:auth-freeze
+
       - name: Dependency audit (high+)
         run: pnpm --dir web run security:audit:ci
 
@@ -79,3 +82,21 @@ jobs:
 
       - name: Validate Capacitor config
         run: pnpm run validate:capacitor
+
+  production-smoke:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Production HTTP smoke (live)
+        run: node web/scripts/production-http-smoke.mjs
+        env:
+          PRODUCTION_BASE_URL: https://theoutreachproject.app
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}

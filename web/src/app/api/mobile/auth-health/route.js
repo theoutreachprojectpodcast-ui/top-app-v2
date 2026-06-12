@@ -22,7 +22,7 @@ export async function GET() {
       `${origin}/callback`,
     cookieDomain: String(process.env.WORKOS_COOKIE_DOMAIN || "").trim() || null,
     oauthHandoffTable: false,
-    embeddedCapacitorTarget: `${origin}/mobile`,
+    embeddedCapacitorTarget: origin,
   };
 
   const admin = createSupabaseAdminClient();

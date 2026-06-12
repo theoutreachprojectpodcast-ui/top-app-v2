@@ -19,9 +19,11 @@ export default function MobileBootLoader() {
   const { loadingProfile } = useProfileData();
   const [overlayVisible, setOverlayVisible] = useState(isCapacitorNative());
   const [bootError, setBootError] = useState("");
+  const [bootForced, setBootForced] = useState(false);
   const native = isCapacitorNative();
 
-  const bootReady = !authLoading && (!authenticated || !loadingProfile);
+  const bootReady =
+    bootForced || (!authLoading && (!authenticated || !loadingProfile));
 
   const handleRetry = useCallback(() => {
     setBootError("");
@@ -42,7 +44,13 @@ export default function MobileBootLoader() {
 
   useEffect(() => {
     if (!native) return undefined;
-    const maxTimer = window.setTimeout(() => setOverlayVisible(false), BOOT_OVERLAY_MAX_MS);
+    const maxTimer = window.setTimeout(() => {
+      setBootForced(true);
+      setOverlayVisible(false);
+      void import("@capacitor/splash-screen")
+        .then(({ SplashScreen }) => SplashScreen.hide().catch(() => {}))
+        .catch(() => {});
+    }, BOOT_OVERLAY_MAX_MS);
     return () => window.clearTimeout(maxTimer);
   }, [native]);
 

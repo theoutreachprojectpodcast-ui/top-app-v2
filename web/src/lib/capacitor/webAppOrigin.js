@@ -1,7 +1,12 @@
 import { isQaDeploymentContext } from "@/lib/runtime/qaDeploymentContext";
+import {
+  MOBILE_POST_LOGIN_PATH,
+  PRODUCTION_ORIGIN,
+  QA_ORIGIN,
+  webBaseUrl,
+} from "@/lib/runtime/appUrls";
 
-export const PRODUCTION_ORIGIN = "https://theoutreachproject.app";
-const QA_ORIGIN = "https://qa.theoutreachproject.app";
+export { PRODUCTION_ORIGIN, MOBILE_POST_LOGIN_PATH as MOBILE_NATIVE_ENTRY_PATH };
 
 function isLocalCapacitorShellOrigin(origin) {
   try {
@@ -25,6 +30,8 @@ export function getWebAppOrigin() {
     if (!isLocalCapacitorShellOrigin(origin)) {
       return origin;
     }
+    // Stale capacitor://localhost shell — always production (never QA/preview).
+    return PRODUCTION_ORIGIN;
   }
   const fromEnv = String(process.env.NEXT_PUBLIC_APP_URL || process.env.APP_BASE_URL || "").trim();
   if (fromEnv) return fromEnv.replace(/\/$/, "");
@@ -32,18 +39,14 @@ export function getWebAppOrigin() {
   return PRODUCTION_ORIGIN;
 }
 
-/** Native Capacitor WebView entry — splash + auth gate (not full TopApp home). */
-export const MOBILE_NATIVE_ENTRY_PATH = "/mobile";
-
 /**
- * Capacitor `server.url` — load mobile splash first to avoid TopApp loading on `/`.
+ * Capacitor `server.url` — production web origin (no `/mobile` suffix).
  * @param {string} origin e.g. https://theoutreachproject.app
  */
 export function capacitorServerUrl(origin) {
   const base = String(origin || "").trim().replace(/\/$/, "");
-  if (!base) return MOBILE_NATIVE_ENTRY_PATH;
-  if (base.endsWith(MOBILE_NATIVE_ENTRY_PATH)) return base;
-  return `${base}${MOBILE_NATIVE_ENTRY_PATH}`;
+  if (!base) return PRODUCTION_ORIGIN;
+  return base.replace(/\/mobile\/?$/, "");
 }
 
 

@@ -5,6 +5,7 @@ import ColorSchemeRoot from "@/components/app/ColorSchemeRoot";
 import CapacitorNativeShell from "@/components/capacitor/CapacitorNativeShell";
 import CapacitorRemoteBootstrap from "@/components/capacitor/CapacitorRemoteBootstrap";
 import MobileBootLoader from "@/components/capacitor/MobileBootLoader";
+import MobileProductionHealthGate from "@/components/capacitor/MobileProductionHealthGate";
 import MobileAccountReturnBridge from "@/components/capacitor/MobileAccountReturnBridge";
 import MobileOAuthBrowserFinish from "@/components/capacitor/MobileOAuthBrowserFinish";
 import MobileOAuthDeepLink from "@/components/capacitor/MobileOAuthDeepLink";
@@ -65,7 +66,7 @@ export default function RootLayout({ children }) {
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var p=location.protocol,h=(location.hostname||"").toLowerCase();if(p==="capacitor:"||p==="ionic:"||p==="file:"||(p!=="http:"&&p!=="https:"&&(!h||h==="localhost"||h==="127.0.0.1"))){location.replace("https://theoutreachproject.app/mobile");}}catch(e){}})();`,
+            __html: `(function(){try{var p=location.protocol,h=(location.hostname||"").toLowerCase();if(p==="capacitor:"||p==="ionic:"||p==="file:"||(p!=="http:"&&p!=="https:"&&(!h||h==="localhost"||h==="127.0.0.1"))){location.replace("https://theoutreachproject.app/");}}catch(e){}})();`,
           }}
         />
         <style
@@ -96,6 +97,7 @@ html[data-capacitor-native], html[data-capacitor-native] body {
             <ProfileDataProvider>
               <ProfileEditProvider>
                 <MobileBootLoader />
+                <MobileProductionHealthGate />
                 <Suspense fallback={null}>
                   <MobileOAuthBrowserFinish />
                   <MobileOAuthDeepLink />

@@ -17,7 +17,7 @@ const origin = String(
   .trim()
   .replace(/\/$/, "");
 
-const expectedServerUrl = origin.endsWith("/mobile") ? origin : `${origin}/mobile`;
+const expectedServerUrl = origin.replace(/\/mobile\/?$/, "");
 const expectedBundleId = "com.theoutreachproject.theoutreachproject";
 const forbidden = [/localhost/i, /127\.0\.0\.1/, /10\.0\.2\.2/, /qa\.theoutreachproject/i];
 
@@ -71,6 +71,14 @@ if (!capJs.includes(`appId: "com.theoutreachproject.theoutreachproject"`)) {
   fail("capacitor.config.js missing expected appId");
 } else {
   ok("capacitor.config.js appId");
+}
+
+// --- iOS associated domains (production only in App Store / TestFlight builds) ---
+const entitlements = fs.readFileSync(path.join(webRoot, "ios/App/App/App.entitlements"), "utf8");
+if (entitlements.includes("qa.theoutreachproject.app")) {
+  fail("App.entitlements must not include qa.theoutreachproject.app for production builds");
+} else {
+  ok("App.entitlements production applinks only");
 }
 
 // --- iOS URL schemes ---

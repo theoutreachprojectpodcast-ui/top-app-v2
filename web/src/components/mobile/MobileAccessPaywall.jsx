@@ -8,7 +8,7 @@ function MobileAccessPaywallInner() {
     <AppAccessPaywall
       checkoutReturnPath="/mobile/access"
       postAccessPath="/"
-      backHref="/mobile"
+      backHref="/"
       backLabel="Back"
     />
   );

@@ -8,7 +8,7 @@ export const metadata = {
 /** Legacy path — client launcher navigates the WebView to WorkOS (no Capacitor Browser sheet). */
 export default async function MobileSignUpLauncherPage({ searchParams }) {
   const params = await searchParams;
-  const returnTo = typeof params?.returnTo === "string" ? params.returnTo : "/mobile/access";
+  const returnTo = typeof params?.returnTo === "string" ? params.returnTo : "/mobile/auth/complete";
   const goPath = workosGoUrl({
     mode: "signup",
     returnTo,

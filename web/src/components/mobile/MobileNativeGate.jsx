@@ -8,9 +8,24 @@ import { readNavAuthCache } from "@/lib/auth/navAuthCache";
 import { useProfileData } from "@/features/profile/ProfileDataProvider";
 
 const MOBILE_GATE_ALLOW = [
+  /^\/$/,
+  /^\/profile(\/|$)/,
+  /^\/settings(\/|$)/,
+  /^\/community(\/|$)/,
+  /^\/trusted(\/|$)/,
+  /^\/podcasts(\/|$)/,
+  /^\/notifications(\/|$)/,
+  /^\/sponsors(\/|$)/,
+  /^\/sponsor(\/|$)/,
+  /^\/nonprofit(\/|$)/,
+  /^\/onboarding(\/|$)/,
+  /^\/membership(\/|$)/,
+  /^\/billing(\/|$)/,
+  /^\/contact(\/|$)/,
   /^\/mobile(\/|$)/,
   /^\/access(\/|$)/,
   /^\/mobile\/access(\/|$)/,
+  /^\/mobile\/auth(\/|$)/,
   /^\/callback(\/|$)/,
   /^\/sign-in(\/|$)/,
   /^\/sign-up(\/|$)/,
@@ -27,24 +42,12 @@ const MOBILE_GATE_ALLOW = [
   /^\/admin(\/|$)/,
 ];
 
-/** Native app should never sit on marketing / store pages. */
-const MOBILE_NATIVE_REDIRECT_HOME = [
-  /^\/download(\/|$)/,
-  /^\/$/,
-];
-
-const NATIVE_WEB_AUTH_TO_MOBILE = {
-  "/sign-in": "/mobile/sign-in",
-  "/sign-up": "/mobile/sign-up",
-  "/login": "/mobile",
+const NATIVE_LOGIN_ALIASES = {
+  "/login": "/sign-in",
 };
 
 function isAllowedPath(pathname) {
   return MOBILE_GATE_ALLOW.some((re) => re.test(pathname || "/"));
-}
-
-function shouldRedirectToMobileSplash(pathname) {
-  return MOBILE_NATIVE_REDIRECT_HOME.some((re) => re.test(pathname || "/"));
 }
 
 function accessOpts(entitlements) {
@@ -66,7 +69,8 @@ function resolveNativeAppAccess({ loadingProfile, profile, opts, isAuthenticated
 }
 
 /**
- * Capacitor-only router: guests → /mobile; signed-in without App Access → /mobile/access.
+ * Capacitor-only router: paywall for signed-in users without App Access; hide store download page.
+ * Native app loads from `/` (TopApp) — guests are not forced to `/mobile`.
  */
 export default function MobileNativeGate() {
   const router = useRouter();
@@ -84,10 +88,11 @@ export default function MobileNativeGate() {
     if (!isCapacitorNative()) return;
 
     const path = pathname || "/";
-    const authTarget = NATIVE_WEB_AUTH_TO_MOBILE[path];
-    if (authTarget) {
+
+    const loginAlias = NATIVE_LOGIN_ALIASES[path];
+    if (loginAlias) {
       const qs = searchParams?.toString?.() || "";
-      const target = qs ? `${authTarget}?${qs}` : authTarget;
+      const target = qs ? `${loginAlias}?${qs}` : loginAlias;
       if (lastRedirectRef.current !== target) {
         lastRedirectRef.current = target;
         router.replace(target);
@@ -116,7 +121,7 @@ export default function MobileNativeGate() {
 
     if (path.startsWith("/download")) {
       if (guest) {
-        const target = "/mobile";
+        const target = "/sign-in";
         if (lastRedirectRef.current !== target) {
           lastRedirectRef.current = target;
           router.replace(target);
@@ -128,7 +133,7 @@ export default function MobileNativeGate() {
         goHome();
         return;
       }
-      const target = "/mobile/access";
+      const target = "/access";
       if (lastRedirectRef.current !== target) {
         lastRedirectRef.current = target;
         router.replace(target);
@@ -137,14 +142,14 @@ export default function MobileNativeGate() {
     }
 
     if (isAllowedPath(path)) {
-      if (path === "/mobile/access" && access === "granted") {
+      if ((path === "/access" || path === "/mobile/access") && access === "granted") {
         goHome();
         return;
       }
       if (path === "/mobile" && !guest) {
         if (access === "pending") return;
         if (access === "denied") {
-          const target = "/mobile/access";
+          const target = "/access";
           if (lastRedirectRef.current !== target) {
             lastRedirectRef.current = target;
             router.replace(target);
@@ -156,47 +161,26 @@ export default function MobileNativeGate() {
           return;
         }
       }
-      return;
-    }
-
-    if (guest) {
-      if (shouldRedirectToMobileSplash(path) || !loadingProfile) {
-        const target = "/mobile";
-        if (lastRedirectRef.current !== target) {
-          lastRedirectRef.current = target;
-          router.replace(target);
+      if (path === "/" || path === "") {
+        if (guest) return;
+        if (access === "pending") return;
+        if (access === "denied") {
+          const target = "/access";
+          if (lastRedirectRef.current !== target) {
+            lastRedirectRef.current = target;
+            router.replace(target);
+          }
         }
       }
       return;
     }
 
-    if (path === "/" || path === "") {
-      if (access === "pending") return;
-      if (access === "granted") {
-        goHome();
-        return;
-      }
-      const target = "/mobile/access";
-      if (lastRedirectRef.current !== target) {
-        lastRedirectRef.current = target;
-        router.replace(target);
-      }
-      return;
-    }
+    if (guest) return;
 
     if (access === "pending") return;
 
-    if (!isAuthenticated && !sessionHint) {
-      const target = "/mobile";
-      if (lastRedirectRef.current !== target) {
-        lastRedirectRef.current = target;
-        router.replace(target);
-      }
-      return;
-    }
-
     if (access === "denied") {
-      const target = "/mobile/access";
+      const target = "/access";
       if (lastRedirectRef.current !== target) {
         lastRedirectRef.current = target;
         router.replace(target);

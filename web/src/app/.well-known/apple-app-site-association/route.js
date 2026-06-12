@@ -29,6 +29,8 @@ export async function GET() {
               paths: [
                 "/callback",
                 "/callback/*",
+                "/mobile/auth/complete",
+                "/mobile/auth/complete/*",
                 "/mobile-auth/callback",
                 "/mobile-auth/callback/*",
                 "/mobile-auth/complete",

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { workosCallbackErrorHtml } from "@/lib/auth/workosGoRoute";
-import { workosCallbackErrorMessage, workosOAuthErrorMessage } from "@/lib/auth/workosCallbackErrors";
+import { workosCallbackErrorMessage, workosOAuthErrorMessage, mobileOAuthSplashErrorMessage } from "@/lib/auth/workosCallbackErrors";
 import { isCapacitorCallbackRequest } from "@/lib/auth/workosCallbackRequest";
 import {
   runWorkOSCallbackCapture,
@@ -26,14 +26,20 @@ function callbackNavHrefs(request) {
   const native = oauthStartedInNativeShell(request);
   return {
     tryAgainHref: native ? "/sign-in?returnTo=%2F" : "/sign-in?returnTo=%2F",
-    homeHref: native ? "/mobile" : "/",
+    homeHref: native ? "/" : "/",
   };
 }
 
 /** @param {string} message @param {Request} request @param {number} [status] */
 function callbackErrorResponse(message, request, status = 400) {
+  const safeMessage = mobileOAuthSplashErrorMessage(message) || message;
+  if (oauthStartedInNativeShell(request) && !isCapacitorCallbackRequest(request)) {
+    const signIn = new URL("/sign-in", request.url);
+    signIn.searchParams.set("oauth_error", safeMessage);
+    return NextResponse.redirect(signIn, { status: 302, headers: { "Cache-Control": "no-store" } });
+  }
   const { tryAgainHref, homeHref } = callbackNavHrefs(request);
-  return new NextResponse(workosCallbackErrorHtml(message, { tryAgainHref, homeHref }), {
+  return new NextResponse(workosCallbackErrorHtml(safeMessage, { tryAgainHref, homeHref }), {
     status,
     headers: {
       "Content-Type": "text/html; charset=utf-8",

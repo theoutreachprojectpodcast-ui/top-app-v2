@@ -2,7 +2,14 @@
 export function workosOAuthErrorMessage(code, description = "") {
   const c = String(code || "").trim().toLowerCase();
   const desc = String(description || "").trim();
+  const descLower = desc.toLowerCase();
   if (c === "access_denied") return "Sign in was cancelled.";
+  if (descLower.includes("rate limit") || descLower.includes("too many")) {
+    return "Too many sign-in attempts. Wait a few minutes, then request a new verification code.";
+  }
+  if (descLower.includes("email") && (descLower.includes("deliver") || descLower.includes("send"))) {
+    return "We could not send a verification code to that email. Check the address or try password sign-in.";
+  }
   if (c === "invalid_request" && desc) return desc;
   if (c === "invalid_request") return "Sign-in request was invalid. Please try again.";
   if (c === "invalid_redirect_uri") {
@@ -43,4 +50,14 @@ export function workosCallbackErrorMessage(error) {
   }
   if (msg.trim()) return msg;
   return "Could not complete sign in. Please try again.";
+}
+
+/** User-facing copy for mobile splash `oauth_error` query param. */
+export function mobileOAuthSplashErrorMessage(raw) {
+  const msg = String(raw || "").trim();
+  if (!msg) return "";
+  if (msg.toLowerCase().includes("auth cookie missing") || msg.toLowerCase().includes("timed out")) {
+    return "Sign-in timed out. Tap Sign in again — you'll stay in the app.";
+  }
+  return msg;
 }

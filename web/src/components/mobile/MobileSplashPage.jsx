@@ -10,6 +10,7 @@ import {
 } from "@/lib/membership/appAccess";
 import { launchWorkOSAuth } from "@/lib/auth/workosNativeAuthLaunch";
 import { workosMobileSignInHref, workosMobileSignUpHref } from "@/lib/auth/workosReturnTo";
+import { mobileOAuthSplashErrorMessage } from "@/lib/auth/workosCallbackErrors";
 import { useMobileShell } from "@/hooks/useMobileShell";
 
 export default function MobileSplashPage() {
@@ -29,7 +30,7 @@ export default function MobileSplashPage() {
     const params = new URLSearchParams(window.location.search);
     const oauthErr = String(params.get("oauth_error") || "").trim();
     if (!oauthErr) return;
-    setAuthError(oauthErr);
+    setAuthError(mobileOAuthSplashErrorMessage(oauthErr) || oauthErr);
     params.delete("oauth_error");
     const qs = params.toString();
     router.replace(qs ? `/mobile?${qs}` : "/mobile", { scroll: false });
@@ -46,7 +47,7 @@ export default function MobileSplashPage() {
     setAuthError("");
     setAuthBusy(true);
     try {
-      await launchWorkOSAuth(workosMobileSignInHref("/mobile/access"));
+      await launchWorkOSAuth(workosMobileSignInHref());
     } catch (err) {
       setAuthError(err instanceof Error ? err.message : "Could not start sign in.");
     } finally {
@@ -58,7 +59,7 @@ export default function MobileSplashPage() {
     setAuthError("");
     setAuthBusy(true);
     try {
-      await launchWorkOSAuth(workosMobileSignUpHref("/mobile/access"));
+      await launchWorkOSAuth(workosMobileSignUpHref());
     } catch (err) {
       setAuthError(err instanceof Error ? err.message : "Could not start sign in.");
     } finally {

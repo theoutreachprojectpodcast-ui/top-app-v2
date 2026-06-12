@@ -82,6 +82,9 @@ function isWorkOSAuthHandoffPath(pathname) {
   if (p === "/auth/workos-go" || p.startsWith("/auth/workos-go/")) return true;
   if (p === "/auth/workos-browser-start" || p.startsWith("/auth/workos-browser-start/")) return true;
   if (p.startsWith("/mobile/sign-in") || p.startsWith("/mobile/sign-up")) return true;
+  if (p.startsWith("/mobile/auth")) return true;
+  if (p === "/mobile/home" || p.startsWith("/mobile/home/")) return true;
+  if (p.startsWith("/api/health")) return true;
   if (p === "/mobile-auth/callback" || p.startsWith("/mobile-auth/callback/")) return true;
   if (p === "/mobile-auth/complete" || p.startsWith("/mobile-auth/complete/")) return true;
   if (p.startsWith("/api/auth/workos/")) return true;

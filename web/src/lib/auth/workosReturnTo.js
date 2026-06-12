@@ -1,6 +1,9 @@
 import { safeAppReturnPath } from "@/lib/billing/stripeConfig";
 import { workosGoUrl } from "@/lib/auth/workosGoUrl";
+import { MOBILE_POST_LOGIN_PATH } from "@/lib/runtime/appUrls";
 
+/** Capacitor WebView post-OAuth landing — refreshes session before routing home. */
+export const MOBILE_POST_AUTH_COMPLETE_PATH = MOBILE_POST_LOGIN_PATH;
 /**
  * Build a safe same-origin return path for WorkOS sign-in (current route, without auth-overlay query flags).
  * @param {string} [pathname]
@@ -42,10 +45,10 @@ export function workosSignInLink(pathname, searchParams, fallback = "/", options
  * @param {string} returnTo
  * @param {WorkOSSignInLinkOptions} [options]
  */
-export function workosMobileSignInHref(returnTo, options = {}) {
+export function workosMobileSignInHref(returnTo = MOBILE_POST_AUTH_COMPLETE_PATH, options = {}) {
   return workosGoUrl({
     mode: "signin",
-    returnTo,
+    returnTo: returnTo || MOBILE_POST_AUTH_COMPLETE_PATH,
     rememberDevice: options.rememberDevice,
     loginHint: options.loginHint,
     native: true,
@@ -53,10 +56,10 @@ export function workosMobileSignInHref(returnTo, options = {}) {
 }
 
 /** @param {string} returnTo @param {WorkOSSignInLinkOptions} [options] */
-export function workosMobileSignUpHref(returnTo, options = {}) {
+export function workosMobileSignUpHref(returnTo = MOBILE_POST_AUTH_COMPLETE_PATH, options = {}) {
   return workosGoUrl({
     mode: "signup",
-    returnTo: returnTo || "/",
+    returnTo: returnTo || MOBILE_POST_AUTH_COMPLETE_PATH,
     rememberDevice: options.rememberDevice,
     loginHint: options.loginHint,
     native: true,

@@ -58,6 +58,9 @@ export function parseMobileDeepLinkUrl(url) {
   }
 
   if (parsed.protocol === "https:" || parsed.protocol === "http:") {
+    if (path === "mobile/auth/complete" || path.endsWith("/mobile/auth/complete")) {
+      return { kind: "auth-complete-web" };
+    }
     if (path === "mobile-auth/complete" || path.endsWith("/mobile-auth/complete")) {
       const token = String(parsed.searchParams.get("token") || "").trim();
       if (token) {

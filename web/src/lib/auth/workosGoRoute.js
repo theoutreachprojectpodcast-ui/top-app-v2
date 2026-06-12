@@ -8,9 +8,9 @@ import { resolveWorkOSSignUpBundleFromSearchParams } from "@/lib/auth/workosSign
 import { toWorkOSUrlSearchParams } from "@/lib/auth/workosSearchParams";
 /**
  * @param {string} message
- * @param {string} [backHref="/mobile"]
+ * @param {string} [backHref="/"]
  */
-export function workosGoErrorHtml(message, backHref = "/mobile") {
+export function workosGoErrorHtml(message, backHref = "/") {
   const safeMsg = String(message || "Could not start sign in.").replace(/</g, "&lt;");
   const safeBack = String(backHref).replace(/"/g, "&quot;");
   return workosAuthBrandedHtmlPage({
@@ -30,7 +30,7 @@ export function workosGoErrorHtml(message, backHref = "/mobile") {
  */
 export function workosCallbackErrorHtml(
   message,
-  { tryAgainHref = "/auth/workos-go?mode=signin&returnTo=/", homeHref = "/mobile" } = {},
+  { tryAgainHref = "/auth/workos-go?mode=signin&returnTo=/", homeHref = "/" } = {},
 ) {
   const safeMsg = String(message || "Could not complete sign in.").replace(/</g, "&lt;");
   const safeTry = String(tryAgainHref).replace(/"/g, "&quot;");
@@ -54,7 +54,7 @@ function workOSGoContext(requestUrl) {
   const fallbackReturn = mode === "signup" ? "/onboarding" : "/";
   const backHref =
     String(requestUrl.searchParams.get("back") || "").trim() ||
-    (fallbackReturn.startsWith("/mobile") ? "/mobile" : "/");
+    (fallbackReturn.startsWith("/mobile") ? "/" : "/");
   const params = toWorkOSUrlSearchParams(Object.fromEntries(requestUrl.searchParams));
   if (!params.get("returnTo")) {
     params.set("returnTo", fallbackReturn);

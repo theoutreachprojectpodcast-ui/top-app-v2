@@ -15,7 +15,7 @@ function paramsFromSearchParams(searchParams) {
   return raw;
 }
 
-function WorkOSAuthHandoffInner({ mode, backHref = "/mobile", fallbackReturn }) {
+function WorkOSAuthHandoffInner({ mode, backHref = "/", fallbackReturn }) {
   const searchParams = useSearchParams();
   const [error, setError] = useState("");
   const startedRef = useRef(false);
@@ -80,7 +80,7 @@ function WorkOSAuthHandoffInner({ mode, backHref = "/mobile", fallbackReturn }) 
 /**
  * @param {{ mode?: "signin" | "signup", backHref?: string, fallbackReturn?: string }} props
  */
-export default function WorkOSAuthHandoffClient({ mode = "signin", backHref = "/mobile", fallbackReturn }) {
+export default function WorkOSAuthHandoffClient({ mode = "signin", backHref = "/", fallbackReturn }) {
   return (
     <Suspense fallback={<WorkOSAuthShell title="Sign in" lead="Loading…" busy />}>
       <WorkOSAuthHandoffInner mode={mode} backHref={backHref} fallbackReturn={fallbackReturn} />

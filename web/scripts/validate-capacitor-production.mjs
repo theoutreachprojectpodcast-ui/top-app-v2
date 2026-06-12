@@ -13,9 +13,7 @@ const PRODUCTION_ORIGIN = String(
   .trim()
   .replace(/\/$/, "");
 
-const PRODUCTION_SERVER_URL = PRODUCTION_ORIGIN.endsWith("/mobile")
-  ? PRODUCTION_ORIGIN
-  : `${PRODUCTION_ORIGIN}/mobile`;
+const PRODUCTION_SERVER_URL = PRODUCTION_ORIGIN.replace(/\/mobile\/?$/, "");
 
 const FORBIDDEN = [/localhost/i, /127\.0\.0\.0\.1/, /qa\.theoutreachproject/i, /10\.0\.2\.2/];
 

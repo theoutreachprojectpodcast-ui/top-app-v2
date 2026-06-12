@@ -1,0 +1,38 @@
+---
+description: Production web auth invariants — do not regress without explicit review
+globs:
+  - web/src/lib/auth/**
+  - web/src/app/callback/**
+  - web/src/app/auth/workos-go/**
+  - web/src/proxy.js
+alwaysApply: false
+---
+
+# Production web auth freeze (2026-06)
+
+These fixes restored live sign-in at https://theoutreachproject.app. **Do not change without review.**
+
+## Invariants (CI: `pnpm --dir web run verify:auth-freeze`)
+
+1. **PKCE cookie name** — Must be exactly `wos-auth-verifier` (AuthKit v3). Never use hashed suffixes like `wos-auth-verifier-{hash}`.
+
+2. **Document callback** — `runWorkOSCallbackDocument` must return AuthKit's response directly via `patchNativeShellCallbackRedirect`. Do not rebuild redirects (drops session cookies).
+
+3. **Sign-in bridge** — `/auth/workos-go` must attach PKCE through `workOSAuthorizeBridgeFromBundle`.
+
+4. **No mobile Safari deep-link trap** — Do not redirect document `/callback` to custom URL schemes (`com.theoutreachproject...://callback`) for native WebView flows.
+
+5. **JSON callback detection** — Use header `x-top-callback-fetch: 1` only. Do not sniff `Accept: application/json`.
+
+## Mobile auth (separate from web freeze)
+
+- Capacitor WebView uses HTTPS redirect URI `https://theoutreachproject.app/callback` (not custom scheme) for in-app sign-in.
+- Post-auth landing: `/mobile/auth/complete` — refreshes session before routing home.
+- Native shell marker cookie: `torp-oauth-shell=native` during OAuth.
+
+## Required production env (Vercel)
+
+- `NEXT_PUBLIC_APP_URL=https://theoutreachproject.app`
+- `WORKOS_COOKIE_DOMAIN=theoutreachproject.app`
+- `NEXT_PUBLIC_WORKOS_REDIRECT_URI=https://theoutreachproject.app/callback`
+- `WORKOS_CLIENT_ID`, `WORKOS_API_KEY`, `WORKOS_COOKIE_PASSWORD` (≥32 chars)

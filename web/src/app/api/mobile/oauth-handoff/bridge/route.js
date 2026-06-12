@@ -8,7 +8,7 @@ export async function GET(request) {
   const token = new URL(request.url).searchParams.get("t");
   const payload = await unsealOAuthBridge(token || "");
   if (!payload) {
-    return NextResponse.redirect(new URL("/mobile?oauth_error=Sign-in%20expired", request.url), 302);
+    return NextResponse.redirect(new URL("/sign-in?oauth_error=Sign-in%20expired", request.url), 302);
   }
 
   const dest = new URL("/callback", request.url);

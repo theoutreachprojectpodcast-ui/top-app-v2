@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { handleAuth } from "@workos-inc/authkit-nextjs";
 import { requestOriginForStripeRedirects } from "@/lib/billing/stripeConfig";
 import { isCapacitorCallbackRequest } from "@/lib/auth/workosCallbackRequest";
-import { workosCallbackErrorMessage } from "@/lib/auth/workosCallbackErrors";
+import { workosCallbackErrorMessage, mobileOAuthSplashErrorMessage } from "@/lib/auth/workosCallbackErrors";
 import { workosCallbackErrorHtml } from "@/lib/auth/workosGoRoute";
 import { resolveMobileAppPostAuthPath } from "@/lib/auth/workosCallbackServer";
 import { onWorkOSSuccess } from "@/lib/auth/workosAuthSuccess";
@@ -41,6 +41,11 @@ export function createWorkOSCallbackHandler(request) {
     onError: async ({ error, request: req }) => {
       console.error("[torp] WorkOS callback failed:", error?.message || error);
       const description = workosCallbackErrorMessage(error);
+      if (req && oauthStartedInNativeShell(req) && !isCapacitorCallbackRequest(req)) {
+        const signIn = new URL("/sign-in", req.url);
+        signIn.searchParams.set("oauth_error", mobileOAuthSplashErrorMessage(description) || description);
+        return NextResponse.redirect(signIn, { status: 302, headers: { "Cache-Control": "no-store" } });
+      }
       if (req && isCapacitorCallbackRequest(req)) {
         return NextResponse.json(
           {
@@ -56,7 +61,7 @@ export function createWorkOSCallbackHandler(request) {
       return new NextResponse(
         workosCallbackErrorHtml(description, {
           tryAgainHref: native ? "/sign-in?returnTo=%2F" : "/sign-in?returnTo=%2F",
-          homeHref: native ? "/mobile" : "/",
+          homeHref: native ? "/" : "/",
         }),
         {
           status: 400,
