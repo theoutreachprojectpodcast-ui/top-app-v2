@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { workOSAuthRedirectBridge } from "@/lib/auth/workosAuthRedirectBridge";
 import { workosAuthBrandedHtmlPage } from "@/lib/auth/workosAuthBrand";
 import { isNativeWorkOSShellRequest } from "@/lib/auth/workosOAuthShell";
+import { hashOAuthState, saveOAuthAuthorizePending } from "@/lib/auth/oauthMobileHandoffServer";
 import { resolveWorkOSSignInBundleFromSearchParams } from "@/lib/auth/workosSignInUrl";
 import { resolveWorkOSSignUpBundleFromSearchParams } from "@/lib/auth/workosSignUpUrl";
 import { toWorkOSUrlSearchParams } from "@/lib/auth/workosSearchParams";
@@ -111,11 +112,20 @@ function workOSGoErrorResponse(message, backHref, status = 503) {
  * @param {Request} [request]
  */
 export async function workOSGoJsonResponse(requestUrl, request) {
-  const { backHref } = workOSGoContext(requestUrl);
+  const { backHref, params } = workOSGoContext(requestUrl);
   try {
     const bundle = await resolveWorkOSAuthorizeBundleFromGoUrl(requestUrl, request);
-    const { hashOAuthState } = await import("@/lib/auth/oauthMobileHandoffServer");
     const stateKey = bundle.sealedState ? hashOAuthState(bundle.sealedState) : "";
+    const returnTo = String(params.get("returnTo") || "").trim() || "/mobile/access";
+    if (stateKey && bundle.url && bundle.sealedState) {
+      const saved = await saveOAuthAuthorizePending(stateKey, bundle.url, bundle.sealedState, returnTo);
+      if (saved.ok) {
+        return NextResponse.json(
+          { ok: true, key: stateKey },
+          { headers: { "Cache-Control": "no-store" } },
+        );
+      }
+    }
     return NextResponse.json(
       {
         ok: true,

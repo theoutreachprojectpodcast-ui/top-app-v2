@@ -5,7 +5,13 @@ import { Capacitor } from "@capacitor/core";
 /** True when running inside a Capacitor Android / iOS WebView (not desktop or mobile browser). */
 export function isCapacitorNative() {
   if (typeof window === "undefined") return false;
-  return Capacitor.isNativePlatform();
+  try {
+    if (Capacitor.isNativePlatform()) return true;
+  } catch {
+    /* Capacitor bridge not ready */
+  }
+  const ua = String(navigator.userAgent || "");
+  return /TheOutreachProject\/Capacitor/i.test(ua);
 }
 
 /** Human-readable platform label for logging or diagnostics. */

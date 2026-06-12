@@ -6,6 +6,7 @@ import { MOBILE_POST_AUTH_HOME } from "@/lib/auth/oauthMobileHandoff";
 const HANDOFF_TABLE = "torp_oauth_mobile_handoffs";
 const HANDOFF_TTL_MS = 10 * 60 * 1000;
 const SESSION_PLACEHOLDER = "__session__";
+const AUTHORIZE_PLACEHOLDER = "__authorize__";
 
 /** @param {string} state */
 export function hashOAuthState(state) {
@@ -22,6 +23,87 @@ function memoryHandoffStore() {
     globalThis.__torpOAuthHandoffs = new Map();
   }
   return globalThis.__torpOAuthHandoffs;
+}
+
+async function sealAuthorizeBundle(url, sealedState) {
+  const password = handoffPassword();
+  if (password.length < 32) return "";
+  try {
+    return await sealData({ url, sealedState }, { password, ttl: 600 });
+  } catch {
+    return "";
+  }
+}
+
+async function unsealAuthorizeBundle(token) {
+  const password = handoffPassword();
+  const raw = String(token || "").trim();
+  if (!raw || password.length < 32) return null;
+  try {
+    const { unsealData } = await import("iron-session");
+    const data = await unsealData(raw, { password, ttl: 600 });
+    const url = String(data?.url || "").trim();
+    const sealedState = String(data?.sealedState || "").trim();
+    if (!url.startsWith("https://") || !sealedState) return null;
+    return { url, sealedState };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Store WorkOS authorize URL + sealed state for Capacitor Browser.open (short `?key=` URL).
+ * @param {string} stateKey
+ * @param {string} url
+ * @param {string} sealedState
+ * @param {string} [redirectTo]
+ */
+export async function saveOAuthAuthorizePending(stateKey, url, sealedState, redirectTo = MOBILE_POST_AUTH_HOME) {
+  const key = String(stateKey || "").trim();
+  const authorizeUrl = String(url || "").trim();
+  const state = String(sealedState || "").trim();
+  if (!key || !authorizeUrl.startsWith("https://") || !state) {
+    return { ok: false };
+  }
+
+  const token = await sealAuthorizeBundle(authorizeUrl, state);
+  if (!token) return { ok: false };
+
+  const expiresAt = new Date(Date.now() + HANDOFF_TTL_MS);
+  const row = {
+    state_key: key,
+    oauth_code: AUTHORIZE_PLACEHOLDER,
+    oauth_state: state,
+    bridge_token: token,
+    redirect_to: redirectTo || MOBILE_POST_AUTH_HOME,
+    expires_at: expiresAt.toISOString(),
+  };
+
+  const saved = await upsertHandoffRow(row);
+  if (saved.ok) return { ok: true };
+
+  if (isProdLike()) {
+    return { ok: false, reason: "handoff_storage_unavailable" };
+  }
+
+  memoryHandoffStore().set(key, {
+    oauth_code: AUTHORIZE_PLACEHOLDER,
+    oauth_state: state,
+    bridge_token: token,
+    redirect_to: row.redirect_to,
+    expires_at: expiresAt.getTime(),
+  });
+  return { ok: true };
+}
+
+/**
+ * @param {string} stateKey
+ * @returns {Promise<{ url: string, sealedState: string } | null>}
+ */
+export async function consumeOAuthAuthorizePending(stateKey) {
+  const data = await readHandoffRow(stateKey, { consume: true });
+  if (!data || String(data.oauth_code || "") !== AUTHORIZE_PLACEHOLDER) return null;
+  return unsealAuthorizeBundle(data.bridge_token);
 }
 
 async function sealOAuthBridge(code, state) {
@@ -216,7 +298,7 @@ export async function consumeOAuthMobilePending(stateKey) {
 
   const code = String(data.oauth_code || "").trim();
   const state = String(data.oauth_state || "").trim();
-  if (!code || !state || code === SESSION_PLACEHOLDER) return null;
+  if (!code || !state || code === SESSION_PLACEHOLDER || code === AUTHORIZE_PLACEHOLDER) return null;
 
   return {
     code,
@@ -245,7 +327,7 @@ export async function peekOAuthMobileHandoff(stateKey) {
 
   const code = String(data.oauth_code || "").trim();
   const state = String(data.oauth_state || "").trim();
-  if (!code || !state || code === SESSION_PLACEHOLDER) return null;
+  if (!code || !state || code === SESSION_PLACEHOLDER || code === AUTHORIZE_PLACEHOLDER) return null;
 
   return {
     kind: "oauth",

@@ -33,6 +33,12 @@ const MOBILE_NATIVE_REDIRECT_HOME = [
   /^\/$/,
 ];
 
+const NATIVE_WEB_AUTH_TO_MOBILE = {
+  "/sign-in": "/mobile/sign-in",
+  "/sign-up": "/mobile/sign-up",
+  "/login": "/mobile",
+};
+
 function isAllowedPath(pathname) {
   return MOBILE_GATE_ALLOW.some((re) => re.test(pathname || "/"));
 }
@@ -78,6 +84,17 @@ export default function MobileNativeGate() {
     if (!isCapacitorNative()) return;
 
     const path = pathname || "/";
+    const authTarget = NATIVE_WEB_AUTH_TO_MOBILE[path];
+    if (authTarget) {
+      const qs = searchParams?.toString?.() || "";
+      const target = qs ? `${authTarget}?${qs}` : authTarget;
+      if (lastRedirectRef.current !== target) {
+        lastRedirectRef.current = target;
+        router.replace(target);
+      }
+      return;
+    }
+
     const access = resolveNativeAppAccess({
       loadingProfile,
       profile,
@@ -188,6 +205,7 @@ export default function MobileNativeGate() {
   }, [
     pathname,
     navQuery,
+    searchParams,
     isAuthenticated,
     loadingProfile,
     guest,

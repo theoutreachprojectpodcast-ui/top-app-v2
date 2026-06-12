@@ -1,5 +1,6 @@
 function isCapacitorUserAgent(ua) {
-  return String(ua || "").includes("Capacitor");
+  const agent = String(ua || "");
+  return agent.includes("Capacitor") || agent.includes("TheOutreachProject/Capacitor");
 }
 
 /**
@@ -12,5 +13,6 @@ export function resolveMobileAppPostAuthPath(returnPathname, userAgent, startedI
   const inApp = isCapacitorUserAgent(userAgent) || startedInNativeShell;
   if (!inApp) return path;
   if (path.startsWith("/onboarding")) return path;
+  if (path.startsWith("/mobile")) return path;
   return "/";
 }

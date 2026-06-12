@@ -522,12 +522,7 @@ function TopAppInner({ initialNav = "home" }) {
       await launchWorkOSAuth(buildWorkOSGoPath(returnPath, "signin"));
       return;
     }
-    window.location.assign(
-      workosSignInLink(pathname, searchParams, returnPath, {
-        rememberDevice,
-        loginHint: authDraft.email,
-      }),
-    );
+    window.location.assign(buildWorkOSGoPath(returnPath, "signin"));
   }
 
   function openSignInOverlay() {

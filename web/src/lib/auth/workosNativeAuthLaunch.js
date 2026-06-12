@@ -18,7 +18,7 @@ export async function launchNativeWorkOSAuth(goPath) {
     throw new Error("Invalid WorkOS handoff path.");
   }
 
-  const jsonPath = path.includes("?") ? `${path}&format=json` : `${path}?format=json`;
+  const jsonPath = path.includes("?") ? `${path}&format=json&native=1` : `${path}?format=json&native=1`;
   const jsonUrl = appUrl(jsonPath);
   let res;
   try {
@@ -32,7 +32,10 @@ export async function launchNativeWorkOSAuth(goPath) {
     throw new Error("Could not reach the sign-in service. Check your connection and try again.");
   }
   const data = await res.json().catch(() => ({}));
-  if (!res.ok || !data?.url) {
+  const stateKey = String(data?.key || data?.stateKey || "").trim();
+  const authorizeUrl = String(data?.url || "").trim();
+
+  if (!res.ok || (!stateKey && !authorizeUrl)) {
     const msg = String(data?.message || "").trim();
     if (res.status === 503 || /not defined|referenceerror/i.test(msg)) {
       throw new Error("Sign-in is temporarily unavailable. Try again in a moment or contact support.");
@@ -40,17 +43,21 @@ export async function launchNativeWorkOSAuth(goPath) {
     throw new Error(msg || "Could not start secure sign in.");
   }
 
-  const stateKey = String(data.stateKey || "").trim();
-  const sealedState = String(data.sealedState || "").trim();
   if (stateKey && typeof sessionStorage !== "undefined") {
     sessionStorage.setItem(TORP_OAUTH_STATE_KEY, stateKey);
     sessionStorage.setItem(TORP_OAUTH_BROWSER_PENDING, "1");
   }
 
-  const browserParams = new URLSearchParams();
-  browserParams.set("go", String(data.url));
-  if (sealedState) browserParams.set("s", sealedState);
-  const browserStart = appUrl(`/auth/workos-browser-start?${browserParams.toString()}`);
+  let browserStart;
+  if (stateKey) {
+    browserStart = appUrl(`/auth/workos-browser-start?key=${encodeURIComponent(stateKey)}`);
+  } else {
+    const browserParams = new URLSearchParams();
+    browserParams.set("go", authorizeUrl);
+    const sealedState = String(data.sealedState || "").trim();
+    if (sealedState) browserParams.set("s", sealedState);
+    browserStart = appUrl(`/auth/workos-browser-start?${browserParams.toString()}`);
+  }
 
   await Browser.open({
     url: browserStart,

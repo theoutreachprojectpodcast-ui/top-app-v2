@@ -46,7 +46,7 @@ export default function MobileSplashPage() {
     setAuthError("");
     setAuthBusy(true);
     try {
-      await launchWorkOSAuth(workosMobileSignInHref("/"));
+      await launchWorkOSAuth(workosMobileSignInHref("/mobile/access"));
     } catch (err) {
       setAuthError(err instanceof Error ? err.message : "Could not start sign in.");
     } finally {
@@ -58,7 +58,7 @@ export default function MobileSplashPage() {
     setAuthError("");
     setAuthBusy(true);
     try {
-      await launchWorkOSAuth(workosMobileSignUpHref("/"));
+      await launchWorkOSAuth(workosMobileSignUpHref("/mobile/access"));
     } catch (err) {
       setAuthError(err instanceof Error ? err.message : "Could not start sign in.");
     } finally {
