@@ -3,7 +3,16 @@
   "private": true,
   "packageManager": "pnpm@10.33.0",
   "pnpm": {
-    "onlyBuiltDependencies": ["sharp"]
+    "onlyBuiltDependencies": ["sharp"],
+    "overrides": {
+      "tar": ">=7.5.11",
+      "basic-ftp": ">=5.3.1",
+      "@xmldom/xmldom": ">=0.8.13",
+      "undici": ">=6.24.0",
+      "path-to-regexp": ">=8.4.0",
+      "minimatch@>=9": ">=10.2.3",
+      "minimatch@<9": ">=3.1.4"
+    }
   },
   "scripts": {
     "dev": "pnpm --filter web dev",
@@ -26,6 +35,6 @@
     "validate:capacitor": "pnpm --dir web run validate:capacitor"
   },
   "devDependencies": {
-    "vercel": "^51.7.0"
+    "vercel": "^54.12.2"
   }
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { isCapacitorNative } from "@/lib/capacitor/platform";
 import { launchWorkOSAuth } from "@/lib/auth/workosNativeAuthLaunch";
@@ -55,13 +56,13 @@ function WorkOSCallbackInner({ initialError = "" }) {
             Try again
           </button>
           {native ? (
-            <a className="btnSoft mobileSplashPage__btn" href="/mobile">
+            <Link className="btnSoft mobileSplashPage__btn" href="/mobile">
               Back
-            </a>
+            </Link>
           ) : (
-            <a className="btnSoft mobileSplashPage__btn" href="/">
+            <Link className="btnSoft mobileSplashPage__btn" href="/">
               Home
-            </a>
+            </Link>
           )}
         </div>
       </WorkOSAuthShell>

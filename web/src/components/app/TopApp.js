@@ -155,21 +155,6 @@ function TopAppInner({ initialNav = "home" }) {
   }, [searchParams]);
 
   useEffect(() => {
-    if (searchParams.get("signin") !== "1" || loadingProfile || signinQueryHandledRef.current) return;
-    signinQueryHandledRef.current = true;
-    if (authBackend.workos && isCapacitorNative()) {
-      if (searchParams.get("signup") === "1") {
-        void openCreateAccountFlow();
-      } else {
-        void startWorkOSSignIn();
-      }
-      return;
-    }
-    setAuthMode(searchParams.get("signup") === "1" ? "signup" : "signin");
-    setOverlay("signin");
-  }, [searchParams, authBackend.workos, loadingProfile]);
-
-  useEffect(() => {
     if (overlay !== "signin") {
       setSignupAvatarDataUrl("");
       return;
@@ -548,6 +533,23 @@ function TopAppInner({ initialNav = "home" }) {
     setAuthMode("signup");
     setOverlay("signin");
   }
+
+  useEffect(() => {
+    if (searchParams.get("signin") !== "1" || loadingProfile || signinQueryHandledRef.current) return;
+    signinQueryHandledRef.current = true;
+    if (authBackend.workos && isCapacitorNative()) {
+      if (searchParams.get("signup") === "1") {
+        void openCreateAccountFlow();
+      } else {
+        void startWorkOSSignIn();
+      }
+      return;
+    }
+    setAuthMode(searchParams.get("signup") === "1" ? "signup" : "signin");
+    setOverlay("signin");
+    // Handlers are stable within render; ref prevents duplicate launches.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- signinQueryHandledRef
+  }, [searchParams, authBackend.workos, loadingProfile]);
 
   async function completeInitialMembershipChoice(tierKey = "none") {
     const normalizedTier = String(tierKey || "none").toLowerCase();
