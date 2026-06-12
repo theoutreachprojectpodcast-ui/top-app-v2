@@ -55,7 +55,7 @@ export function createWorkOSCallbackHandler(request) {
       const native = req ? oauthStartedInNativeShell(req) : false;
       return new NextResponse(
         workosCallbackErrorHtml(description, {
-          tryAgainHref: native ? "/sign-in?returnTo=%2F" : "/",
+          tryAgainHref: native ? "/sign-in?returnTo=%2F" : "/sign-in?returnTo=%2F",
           homeHref: native ? "/mobile" : "/",
         }),
         {

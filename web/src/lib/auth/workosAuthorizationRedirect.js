@@ -5,15 +5,12 @@ import { workOSAuthRedirectBridge } from "@/lib/auth/workosAuthRedirectBridge";
 import { workosMobileRedirectUri } from "@/lib/auth/workosMobileRedirect";
 import { TORP_OAUTH_SHELL_COOKIE, TORP_OAUTH_SHELL_NATIVE } from "@/lib/auth/workosOAuthShell";
 
-/** AuthKit v3 flow-specific PKCE cookie name (`wos-auth-verifier-{hash}`). */
-export function pkceCookieNameForState(sealedState) {
-  const input = String(sealedState || "");
-  let hash = 2166136261;
-  for (let i = 0; i < input.length; i++) {
-    hash ^= input.charCodeAt(i);
-    hash = Math.imul(hash, 16777619);
-  }
-  return `${WORKOS_PKCE_COOKIE_NAME}-${(hash >>> 0).toString(16).padStart(8, "0")}`;
+/** AuthKit callback expects this exact cookie name (`handleAuth` in @workos-inc/authkit-nextjs). */
+export const WORKOS_PKCE_COOKIE_NAME = "wos-auth-verifier";
+
+/** @deprecated AuthKit v3 uses a single cookie name; kept for call-site compatibility. */
+export function pkceCookieNameForState(_sealedState) {
+  return WORKOS_PKCE_COOKIE_NAME;
 }
 
 /**
@@ -27,23 +24,20 @@ export function workOSAuthorizeBridgeFromBundle(bundle, markNativeShell = false)
   return response;
 }
 
-/** Attach PKCE (+ optional native shell marker) on the HTML bridge response — AuthKit v3 cookie name. */
+/** Attach PKCE (+ optional native shell marker) on the HTML bridge response. */
 export function attachWorkOSAuthorizeCookies(response, sealedState, markNativeShell = false) {
   const state = String(sealedState || "").trim();
   if (!state || !response?.cookies) return response;
   const opts = workosPkceCookieOptions();
-  response.cookies.set(pkceCookieNameForState(state), state, opts);
+  response.cookies.set(WORKOS_PKCE_COOKIE_NAME, state, opts);
   if (markNativeShell) {
     response.cookies.set(TORP_OAUTH_SHELL_COOKIE, TORP_OAUTH_SHELL_NATIVE, opts);
   }
   return response;
 }
 
-/** AuthKit callback expects this exact cookie name (`handleAuth` in @workos-inc/authkit-nextjs). */
-export const WORKOS_PKCE_COOKIE_NAME = "wos-auth-verifier";
-
 /**
- * True when the browser tab holds a WorkOS PKCE verifier cookie (legacy or AuthKit v3 hashed name).
+ * True when the browser tab holds a WorkOS PKCE verifier cookie.
  * @param {Request} request
  * @param {string} [oauthState] OAuth `state` query param from the callback URL
  */
@@ -164,7 +158,7 @@ export async function getWorkOSAuthKitAuthorizeBundle(options = {}) {
   const sealedState = await sealData(state, { password, ttl: 600 });
   const cookieStore = await cookies();
   const cookieOpts = workosPkceCookieOptions();
-  cookieStore.set(pkceCookieNameForState(sealedState), sealedState, cookieOpts);
+  cookieStore.set(WORKOS_PKCE_COOKIE_NAME, sealedState, cookieOpts);
   if (options.markNativeShell) {
     cookieStore.set(TORP_OAUTH_SHELL_COOKIE, TORP_OAUTH_SHELL_NATIVE, cookieOpts);
   }

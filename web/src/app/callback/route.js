@@ -25,7 +25,7 @@ const BROWSER_OAUTH_COOKIE = "torp-oauth-browser";
 function callbackNavHrefs(request) {
   const native = oauthStartedInNativeShell(request);
   return {
-    tryAgainHref: native ? "/sign-in?returnTo=%2F" : "/",
+    tryAgainHref: native ? "/sign-in?returnTo=%2F" : "/sign-in?returnTo=%2F",
     homeHref: native ? "/mobile" : "/",
   };
 }

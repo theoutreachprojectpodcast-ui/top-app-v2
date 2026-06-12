@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import {
   oauthStateFromAuthorizeUrl,
-  pkceCookieNameForState,
+  WORKOS_PKCE_COOKIE_NAME,
   workosPkceCookieOptions,
 } from "@/lib/auth/workosAuthorizationRedirect";
 import { workOSAuthRedirectBridge } from "@/lib/auth/workosAuthRedirectBridge";
@@ -60,7 +60,7 @@ export async function GET(request) {
 
   const response = workOSAuthRedirectBridge(authorizeUrl);
   response.cookies.set(BROWSER_OAUTH_COOKIE, "1", browserOAuthCookieOptions());
-  response.cookies.set(pkceCookieNameForState(sealedState), sealedState, workosPkceCookieOptions());
+  response.cookies.set(WORKOS_PKCE_COOKIE_NAME, sealedState, workosPkceCookieOptions());
   if (stateKey) {
     response.headers.append("Set-Cookie", oauthShellSetCookieHeader());
   }
