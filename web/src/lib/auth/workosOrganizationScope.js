@@ -100,6 +100,8 @@ export function sessionMatchesExpectedWorkOSOrganization(session) {
       orgId = "";
     }
   }
+  /** Fresh WorkOS sessions often omit org_id until membership propagates — do not treat as cross-org. */
+  if (!orgId) return true;
   return orgId === expected;
 }
 
@@ -109,7 +111,7 @@ export function sessionMatchesExpectedWorkOSOrganization(session) {
  * (common for WorkOS dashboard owners who are not yet org members).
  *
  * @param {{ organizationId?: string, accessToken?: string, user?: { email?: string } } | null | undefined} session
- * @param {{ email?: string }} [options]
+ * @param {{ email?: string, profileRow?: Record<string, unknown> | null, workosUserId?: string }} [options]
  */
 export function sessionAuthorizedForWorkOS(session, options = {}) {
   if (sessionMatchesExpectedWorkOSOrganization(session)) return true;
