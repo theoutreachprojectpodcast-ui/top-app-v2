@@ -1,8 +1,15 @@
 import { NextResponse } from "next/server";
+import { getSignInUrl, getSignUpUrl } from "@workos-inc/authkit-nextjs";
 import { workOSAuthRedirectBridge } from "@/lib/auth/workosAuthRedirectBridge";
 import { workosAuthBrandedHtmlPage } from "@/lib/auth/workosAuthBrand";
-import { shouldMarkOAuthNativeShell } from "@/lib/auth/workosOAuthShell";
-import { attachWorkOSAuthorizeCookies } from "@/lib/auth/workosAuthorizationRedirect";
+import { shouldMarkOAuthNativeShell, TORP_OAUTH_SHELL_COOKIE, TORP_OAUTH_SHELL_NATIVE } from "@/lib/auth/workosOAuthShell";
+import { attachWorkOSAuthorizeCookies, readWorkOSInvitationToken, workosPkceCookieOptions } from "@/lib/auth/workosAuthorizationRedirect";
+import { sanitizeWorkOSLoginHint } from "@/lib/auth/workosLoginHint";
+import {
+  isAdminReturnPath,
+  isBootstrapAdminWorkOSSignIn,
+  workOSAuthKitAuthorizeOptions,
+} from "@/lib/auth/workosOrganizationScope";
 import { hashOAuthState, saveOAuthAuthorizePending } from "@/lib/auth/oauthMobileHandoffServer";
 import { resolveWorkOSSignInBundleFromSearchParams } from "@/lib/auth/workosSignInUrl";
 import { resolveWorkOSSignUpBundleFromSearchParams } from "@/lib/auth/workosSignUpUrl";
@@ -62,6 +69,27 @@ function workOSGoContext(requestUrl) {
     params.set("returnTo", fallbackReturn);
   }
   return { mode, fallbackReturn, backHref, params };
+}
+
+function workOSGoAuthOptions(params) {
+  const returnTo = String(params.get("returnTo") || "").trim() || "/";
+  const loginHint = sanitizeWorkOSLoginHint(params.get("loginHint"));
+  const prompt = params.get("remember") === "0" ? "login" : undefined;
+  const bootstrap = isBootstrapAdminWorkOSSignIn(params) || isAdminReturnPath(returnTo);
+  const invitationToken = readWorkOSInvitationToken(params);
+  const orgOptions = workOSAuthKitAuthorizeOptions({
+    loginHint,
+    bootstrap,
+    adminReturn: isAdminReturnPath(returnTo),
+    invitation: Boolean(invitationToken),
+  });
+  return { returnTo, loginHint, prompt, invitationToken, orgOptions };
+}
+
+function markNativeShellOnBridge(response, params, request) {
+  if (!request || !shouldMarkOAuthNativeShell(params, request)) return response;
+  response.cookies.set(TORP_OAUTH_SHELL_COOKIE, TORP_OAUTH_SHELL_NATIVE, workosPkceCookieOptions());
+  return response;
 }
 
 /**
@@ -146,16 +174,25 @@ export async function workOSGoJsonResponse(requestUrl, request) {
  * @param {Request} [request]
  */
 export async function workOSGoResponse(requestUrl, request) {
-  const { backHref, params } = workOSGoContext(requestUrl);
+  const { mode, backHref, params } = workOSGoContext(requestUrl);
+  const { returnTo, loginHint, prompt, invitationToken, orgOptions } = workOSGoAuthOptions(params);
+
   try {
-    const bundle = await resolveWorkOSAuthorizeBundleFromGoUrl(requestUrl, request);
-    const response = workOSAuthRedirectBridge(bundle.url);
-    attachWorkOSAuthorizeCookies(
-      response,
-      bundle.sealedState,
-      request ? shouldMarkOAuthNativeShell(params, request) : false,
-    );
-    return response;
+    let url;
+
+    if (invitationToken) {
+      const bundle = await resolveWorkOSAuthorizeBundleFromGoUrl(requestUrl, request);
+      url = bundle.url;
+      const response = workOSAuthRedirectBridge(url);
+      attachWorkOSAuthorizeCookies(response, bundle.sealedState, false);
+      return markNativeShellOnBridge(response, params, request);
+    }
+
+    const authOpts = { returnTo, loginHint, prompt, ...orgOptions };
+    url = mode === "signup" ? await getSignUpUrl(authOpts) : await getSignInUrl(authOpts);
+
+    const response = workOSAuthRedirectBridge(url);
+    return markNativeShellOnBridge(response, params, request);
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     if (message === "authentication_not_configured" || message === "workos_not_configured") {

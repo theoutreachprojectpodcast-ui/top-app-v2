@@ -4,12 +4,23 @@ import { getWorkOS } from "@workos-inc/authkit-nextjs";
 import { workosMobileRedirectUri } from "@/lib/auth/workosMobileRedirect";
 import { TORP_OAUTH_SHELL_COOKIE, TORP_OAUTH_SHELL_NATIVE } from "@/lib/auth/workosOAuthShell";
 
-/** Attach PKCE (+ optional native shell marker) on the HTML bridge response — reliable vs cookies() alone. */
+/** AuthKit v3 flow-specific PKCE cookie name (`wos-auth-verifier-{hash}`). */
+export function pkceCookieNameForState(sealedState) {
+  const input = String(sealedState || "");
+  let hash = 2166136261;
+  for (let i = 0; i < input.length; i++) {
+    hash ^= input.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return `${WORKOS_PKCE_COOKIE_NAME}-${(hash >>> 0).toString(16).padStart(8, "0")}`;
+}
+
+/** Attach PKCE (+ optional native shell marker) on the HTML bridge response — AuthKit v3 cookie name. */
 export function attachWorkOSAuthorizeCookies(response, sealedState, markNativeShell = false) {
   const state = String(sealedState || "").trim();
   if (!state || !response?.cookies) return response;
   const opts = workosPkceCookieOptions();
-  response.cookies.set(WORKOS_PKCE_COOKIE_NAME, state, opts);
+  response.cookies.set(pkceCookieNameForState(state), state, opts);
   if (markNativeShell) {
     response.cookies.set(TORP_OAUTH_SHELL_COOKIE, TORP_OAUTH_SHELL_NATIVE, opts);
   }
@@ -117,7 +128,7 @@ export async function getWorkOSAuthKitAuthorizeBundle(options = {}) {
   const sealedState = await sealData(state, { password, ttl: 600 });
   const cookieStore = await cookies();
   const cookieOpts = workosPkceCookieOptions();
-  cookieStore.set(WORKOS_PKCE_COOKIE_NAME, sealedState, cookieOpts);
+  cookieStore.set(pkceCookieNameForState(sealedState), sealedState, cookieOpts);
   if (options.markNativeShell) {
     cookieStore.set(TORP_OAUTH_SHELL_COOKIE, TORP_OAUTH_SHELL_NATIVE, cookieOpts);
   }

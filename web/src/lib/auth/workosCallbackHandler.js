@@ -3,9 +3,33 @@ import { handleAuth } from "@workos-inc/authkit-nextjs";
 import { requestOriginForStripeRedirects } from "@/lib/billing/stripeConfig";
 import { isCapacitorCallbackRequest } from "@/lib/auth/workosCallbackRequest";
 import { workosCallbackErrorMessage } from "@/lib/auth/workosCallbackErrors";
+import { workosCallbackErrorHtml } from "@/lib/auth/workosGoRoute";
 import { resolveMobileAppPostAuthPath } from "@/lib/auth/workosCallbackServer";
 import { onWorkOSSuccess } from "@/lib/auth/workosAuthSuccess";
 import { oauthShellClearCookieHeader, oauthStartedInNativeShell } from "@/lib/auth/workosOAuthShell";
+
+/** @param {Request} request @param {Response} response */
+function patchNativeShellCallbackRedirect(request, response) {
+  if (!response || response.status < 300 || response.status >= 400) return response;
+  if (!oauthStartedInNativeShell(request)) return response;
+
+  const ua = request.headers.get("user-agent") || "";
+  const location = response.headers.get("Location") || "";
+  let redirectTo = "/";
+  if (location) {
+    try {
+      const u = new URL(location, request.url);
+      redirectTo = `${u.pathname}${u.search}`;
+    } catch {
+      redirectTo = "/";
+    }
+  }
+  redirectTo = resolveMobileAppPostAuthPath(redirectTo, ua, true);
+  response.headers.set("Location", new URL(redirectTo, request.url).toString());
+  response.headers.append("Set-Cookie", oauthShellClearCookieHeader());
+  response.headers.set("Cache-Control", "no-store");
+  return response;
+}
 
 /** @param {Request} request */
 export function createWorkOSCallbackHandler(request) {
@@ -14,17 +38,34 @@ export function createWorkOSCallbackHandler(request) {
     returnPathname: "/",
     baseURL,
     onSuccess: onWorkOSSuccess,
-    onError: async ({ error }) => {
+    onError: async ({ error, request: req }) => {
       console.error("[torp] WorkOS callback failed:", error?.message || error);
       const description = workosCallbackErrorMessage(error);
-      return NextResponse.json(
+      if (req && isCapacitorCallbackRequest(req)) {
+        return NextResponse.json(
+          {
+            error: {
+              message: "Authentication failed",
+              description,
+            },
+          },
+          { status: 400 },
+        );
+      }
+      const native = req ? oauthStartedInNativeShell(req) : false;
+      return new NextResponse(
+        workosCallbackErrorHtml(description, {
+          tryAgainHref: native ? "/sign-in?returnTo=%2F" : "/",
+          homeHref: native ? "/mobile" : "/",
+        }),
         {
-          error: {
-            message: "Authentication failed",
-            description,
+          status: 400,
+          headers: {
+            "Content-Type": "text/html; charset=utf-8",
+            "Content-Disposition": "inline",
+            "Cache-Control": "no-store",
           },
         },
-        { status: 400 },
       );
     },
   });
@@ -164,7 +205,8 @@ export async function runWorkOSCallbackForFetch(request) {
 }
 
 /**
- * Document navigation to `/callback?code=…` — must run in a Route Handler (sets session cookies).
+ * Document navigation to `/callback?code=…` — return AuthKit's response directly so
+ * `saveSession()` cookies from `cookies()` are not dropped by a rebuilt redirect.
  * @param {Request} request
  */
 export async function runWorkOSCallbackDocument(request) {
@@ -180,38 +222,7 @@ export async function runWorkOSCallbackDocument(request) {
     throw new Error("Could not complete sign in. Please try again.");
   }
 
-  if (response.status >= 300 && response.status < 400) {
-    const ua = request.headers.get("user-agent") || "";
-    const location = response.headers.get("Location") || "";
-    let redirectTo = "/";
-    if (location) {
-      try {
-        const u = new URL(location, request.url);
-        redirectTo = `${u.pathname}${u.search}`;
-      } catch {
-        redirectTo = "/";
-      }
-    }
-    const startedInApp = oauthStartedInNativeShell(request);
-    redirectTo = resolveMobileAppPostAuthPath(redirectTo, ua, startedInApp);
-    const dest = new URL(redirectTo, request.url);
-    const out = NextResponse.redirect(dest, response.status);
-    forwardAuthSetCookies(response, out);
-    if (startedInApp) {
-      out.headers.append("Set-Cookie", oauthShellClearCookieHeader());
-    }
-    out.headers.set("Cache-Control", "no-store");
-    return out;
-  }
-
-  let message = "Could not complete sign in. Please try again.";
-  try {
-    const body = await response.json();
-    message = body?.error?.description || body?.error?.message || message;
-  } catch {
-    /* ignore */
-  }
-  throw new Error(message);
+  return patchNativeShellCallbackRedirect(request, response);
 }
 
 /**
