@@ -7,10 +7,14 @@ import { isCapacitorNative } from "@/lib/capacitor/platform";
 function isLocalShellLocation() {
   if (typeof window === "undefined") return false;
   try {
-    const host = (window.location.hostname || "").toLowerCase();
     const protocol = (window.location.protocol || "").toLowerCase();
-    if (!host || host === "localhost" || host === "127.0.0.1") return true;
-    return protocol === "capacitor:" || protocol === "ionic:";
+    if (protocol === "capacitor:" || protocol === "ionic:" || protocol === "file:") return true;
+    const host = (window.location.hostname || "").toLowerCase();
+    if (!host || host === "localhost" || host === "127.0.0.1") {
+      // Intentional dev: server.url=http://localhost:3000/mobile loads over https://localhost
+      return protocol !== "http:" && protocol !== "https:";
+    }
+    return false;
   } catch {
     return true;
   }

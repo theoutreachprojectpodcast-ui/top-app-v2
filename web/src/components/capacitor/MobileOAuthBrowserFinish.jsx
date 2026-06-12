@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { App } from "@capacitor/app";
 import { Browser } from "@capacitor/browser";
-import { getWebAppOrigin } from "@/lib/capacitor/webAppOrigin";
+import { appUrl } from "@/lib/capacitor/webAppOrigin";
 import { isCapacitorNative } from "@/lib/capacitor/platform";
 import { closeExternalBrowserIfOpen } from "@/lib/capacitor/openExternalUrl";
 import { TORP_OAUTH_BROWSER_PENDING, TORP_OAUTH_STATE_KEY } from "@/lib/auth/oauthMobileHandoff";
@@ -15,7 +15,7 @@ const POLL_MAX_MS = 30_000;
 const BROWSER_FINISHED_RETRIES_MS = [0, 200, 500, 1000, 2000, 3500, 5000, 8000, 12_000, 18_000, 25_000];
 
 async function pollOAuthPending(stateKey) {
-  const url = `/api/mobile/oauth-handoff?key=${encodeURIComponent(stateKey)}`;
+  const url = appUrl(`/api/mobile/oauth-handoff?key=${encodeURIComponent(stateKey)}`);
   const res = await fetch(url, {
     method: "GET",
     credentials: "include",
@@ -71,7 +71,7 @@ function completeInWebView(data) {
   }
 
   const qs = new URLSearchParams({ code, state });
-  return fetch(`/callback?${qs.toString()}`, {
+  return fetch(appUrl(`/callback?${qs.toString()}`), {
     method: "GET",
     credentials: "include",
     cache: "no-store",

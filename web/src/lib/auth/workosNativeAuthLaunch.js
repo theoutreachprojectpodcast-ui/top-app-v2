@@ -1,7 +1,7 @@
 "use client";
 
 import { Browser } from "@capacitor/browser";
-import { getWebAppOrigin } from "@/lib/capacitor/webAppOrigin";
+import { appUrl } from "@/lib/capacitor/webAppOrigin";
 import { isCapacitorNative } from "@/lib/capacitor/platform";
 import { TORP_OAUTH_BROWSER_PENDING, TORP_OAUTH_STATE_KEY } from "@/lib/auth/oauthMobileHandoff";
 
@@ -18,7 +18,8 @@ export async function launchNativeWorkOSAuth(goPath) {
     throw new Error("Invalid WorkOS handoff path.");
   }
 
-  const jsonUrl = path.includes("?") ? `${path}&format=json` : `${path}?format=json`;
+  const jsonPath = path.includes("?") ? `${path}&format=json` : `${path}?format=json`;
+  const jsonUrl = appUrl(jsonPath);
   let res;
   try {
     res = await fetch(jsonUrl, {
@@ -45,7 +46,7 @@ export async function launchNativeWorkOSAuth(goPath) {
     sessionStorage.setItem(TORP_OAUTH_BROWSER_PENDING, "1");
   }
 
-  const browserStart = `${origin}/auth/workos-browser-start?go=${encodeURIComponent(String(data.url))}`;
+  const browserStart = appUrl(`/auth/workos-browser-start?go=${encodeURIComponent(String(data.url))}`);
 
   await Browser.open({
     url: browserStart,

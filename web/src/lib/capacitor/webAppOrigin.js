@@ -76,3 +76,15 @@ export function absoluteWebAppUrl(path, extraParams) {
   const normalized = webAppPathWithMobileReturn(path, extraParams);
   return `${getWebAppOrigin()}${normalized}`;
 }
+
+/**
+ * Absolute same-app URL for auth/API fetches in Capacitor (avoids `https://localhost/...` when
+ * the native shell lacks `server.url` or WKWebView origin is still local).
+ * @param {string} path
+ */
+export function appUrl(path) {
+  const p = String(path || "").trim() || "/";
+  if (p.startsWith("http://") || p.startsWith("https://")) return p;
+  const normalized = p.startsWith("/") ? p : `/${p}`;
+  return `${getWebAppOrigin()}${normalized}`;
+}

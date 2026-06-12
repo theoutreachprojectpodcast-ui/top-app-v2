@@ -63,6 +63,11 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={roboto.variable} suppressHydrationWarning data-color-scheme="light">
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var p=location.protocol,h=(location.hostname||"").toLowerCase();if(p==="capacitor:"||p==="ionic:"||p==="file:"||(p!=="http:"&&p!=="https:"&&(!h||h==="localhost"||h==="127.0.0.1"))){location.replace("https://theoutreachproject.app/mobile");}}catch(e){}})();`,
+          }}
+        />
         <style
           dangerouslySetInnerHTML={{
             __html: `
