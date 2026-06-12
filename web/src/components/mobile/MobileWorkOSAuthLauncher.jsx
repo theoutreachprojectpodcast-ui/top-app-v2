@@ -5,8 +5,8 @@ import { launchWorkOSAuth } from "@/lib/auth/workosNativeAuthLaunch";
 import "@/styles/mobile-splash-page.css";
 
 /**
- * Auto-starts WorkOS sign-in/sign-up via the native in-app browser sheet (Turnstile-safe).
- * Used by `/mobile/sign-in` and `/mobile/sign-up` legacy launcher routes.
+ * Starts WorkOS sign-in/sign-up in the Capacitor WebView (no external browser sheet).
+ * Used by `/mobile/sign-in` and `/mobile/sign-up` launcher routes.
  *
  * @param {{ goPath: string, label?: string }} props
  */

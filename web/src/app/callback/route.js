@@ -19,6 +19,9 @@ import {
 import { WORKOS_PKCE_COOKIE_NAME } from "@/lib/auth/workosAuthorizationRedirect";
 import { oauthStartedInNativeShell } from "@/lib/auth/workosOAuthShell";
 
+export const maxDuration = 60;
+export const runtime = "nodejs";
+
 const BROWSER_OAUTH_COOKIE = "torp-oauth-browser";
 
 /** @param {Request} request */
@@ -73,78 +76,84 @@ async function mobileBrowserOAuthPendingResponse(request, url) {
     return callbackErrorResponse("Missing sign-in response. Please try again.", request);
   }
 
-  const stateKey = hashOAuthState(state);
+  try {
+    const stateKey = hashOAuthState(state);
 
-  const captured = await runWorkOSCallbackCapture(request);
-  if (captured.ok && captured.setCookies?.length) {
-    const saved = await saveOAuthMobileSessionHandoff(stateKey, captured.setCookies, captured.redirectTo);
-    if (saved.ok) {
-      return new NextResponse(mobileOAuthBrowserDoneHtml(stateKey), {
-        status: 200,
-        headers: {
-          "Content-Type": "text/html; charset=utf-8",
-          "Content-Disposition": "inline",
-          "Cache-Control": "no-store",
-        },
-      });
+    const captured = await runWorkOSCallbackCapture(request);
+    if (captured.ok && captured.setCookies?.length) {
+      const saved = await saveOAuthMobileSessionHandoff(stateKey, captured.setCookies, captured.redirectTo);
+      if (saved.ok) {
+        return new NextResponse(mobileOAuthBrowserDoneHtml(stateKey), {
+          status: 200,
+          headers: {
+            "Content-Type": "text/html; charset=utf-8",
+            "Content-Disposition": "inline",
+            "Cache-Control": "no-store",
+          },
+        });
+      }
+      console.error("[torp] oauth session handoff save failed after capture");
+    } else if (!captured.ok) {
+      console.error("[torp] oauth in-app browser capture failed:", captured.message);
+      return callbackErrorResponse(captured.message, request);
     }
-    console.error("[torp] oauth session handoff save failed after capture");
-  } else if (!captured.ok) {
-    console.error("[torp] oauth in-app browser capture failed:", captured.message);
-  }
 
-  const saved = await saveOAuthMobilePending(stateKey, code, state, MOBILE_POST_AUTH_HOME);
-  if (!saved.ok) {
-    return callbackErrorResponse("Could not prepare sign-in for the app. Please try again.", request);
-  }
+    const saved = await saveOAuthMobilePending(stateKey, code, state, MOBILE_POST_AUTH_HOME);
+    if (!saved.ok) {
+      return callbackErrorResponse("Could not prepare sign-in for the app. Please try again.", request);
+    }
 
-  return new NextResponse(mobileOAuthBrowserDoneHtml(stateKey), {
-    status: 200,
-    headers: {
-      "Content-Type": "text/html; charset=utf-8",
-      "Content-Disposition": "inline",
-      "Cache-Control": "no-store",
-    },
-  });
+    return new NextResponse(mobileOAuthBrowserDoneHtml(stateKey), {
+      status: 200,
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+        "Content-Disposition": "inline",
+        "Cache-Control": "no-store",
+      },
+    });
+  } catch (err) {
+    console.error("[torp] mobile browser oauth callback failed:", err);
+    return callbackErrorResponse(workosCallbackErrorMessage(err), request);
+  }
 }
 
 export async function GET(request) {
-  const url = new URL(request.url);
-  const ua = request.headers.get("user-agent") || "";
-  const startedInApp = oauthStartedInNativeShell(request);
-  const inMobileBrowser = isMobileExternalBrowserUserAgent(ua);
-  const oauthError = url.searchParams.get("error");
-  const code = url.searchParams.get("code");
-
-  // In-app browser sheet (Turnstile flow) — save code/state for WebView PKCE completion.
-  if (!startedInApp && inMobileBrowser && code && isCapacitorBrowserOAuthReturn(request)) {
-    return mobileBrowserOAuthPendingResponse(request, url);
-  }
-
-  // Mobile web Safari — PKCE cookie in this browser tab; finish sign-in normally.
-  const pkceInBrowser = !!request.cookies.get(WORKOS_PKCE_COOKIE_NAME)?.value;
-
-  // Standalone mobile Safari without PKCE — deep link into native shell (legacy).
-  if (!startedInApp && inMobileBrowser && (code || oauthError) && !pkceInBrowser) {
-    return mobileBrowserReturnBridgeResponse(url);
-  }
-
-  if (oauthError) {
-    return callbackErrorResponse(
-      workosOAuthErrorMessage(oauthError, url.searchParams.get("error_description") || ""),
-      request,
-    );
-  }
-
-  if (!code) {
-    return callbackErrorResponse("Missing sign-in response. Please try again.", request);
-  }
-
-  if (isCapacitorCallbackRequest(request)) {
-    return runWorkOSCallbackForFetch(request);
-  }
-
   try {
+    const url = new URL(request.url);
+    const ua = request.headers.get("user-agent") || "";
+    const startedInApp = oauthStartedInNativeShell(request);
+    const inMobileBrowser = isMobileExternalBrowserUserAgent(ua);
+    const oauthError = url.searchParams.get("error");
+    const code = url.searchParams.get("code");
+
+    // Legacy Capacitor in-app browser sheet — finish OAuth and hand session to WebView.
+    if (!startedInApp && inMobileBrowser && code && isCapacitorBrowserOAuthReturn(request)) {
+      return mobileBrowserOAuthPendingResponse(request, url);
+    }
+
+    // Mobile web Safari — PKCE cookie in this browser tab; finish sign-in normally.
+    const pkceInBrowser = !!request.cookies.get(WORKOS_PKCE_COOKIE_NAME)?.value;
+
+    // Standalone mobile Safari without PKCE — deep link into native shell (legacy).
+    if (!startedInApp && inMobileBrowser && (code || oauthError) && !pkceInBrowser) {
+      return mobileBrowserReturnBridgeResponse(url);
+    }
+
+    if (oauthError) {
+      return callbackErrorResponse(
+        workosOAuthErrorMessage(oauthError, url.searchParams.get("error_description") || ""),
+        request,
+      );
+    }
+
+    if (!code) {
+      return callbackErrorResponse("Missing sign-in response. Please try again.", request);
+    }
+
+    if (isCapacitorCallbackRequest(request)) {
+      return runWorkOSCallbackForFetch(request);
+    }
+
     return await runWorkOSCallbackDocument(request);
   } catch (err) {
     console.error("[torp] WorkOS callback failed:", err);

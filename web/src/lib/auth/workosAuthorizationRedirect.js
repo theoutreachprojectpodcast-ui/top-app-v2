@@ -4,6 +4,18 @@ import { getWorkOS } from "@workos-inc/authkit-nextjs";
 import { workosMobileRedirectUri } from "@/lib/auth/workosMobileRedirect";
 import { TORP_OAUTH_SHELL_COOKIE, TORP_OAUTH_SHELL_NATIVE } from "@/lib/auth/workosOAuthShell";
 
+/** Attach PKCE (+ optional native shell marker) on the HTML bridge response — reliable vs cookies() alone. */
+export function attachWorkOSAuthorizeCookies(response, sealedState, markNativeShell = false) {
+  const state = String(sealedState || "").trim();
+  if (!state || !response?.cookies) return response;
+  const opts = workosPkceCookieOptions();
+  response.cookies.set(WORKOS_PKCE_COOKIE_NAME, state, opts);
+  if (markNativeShell) {
+    response.cookies.set(TORP_OAUTH_SHELL_COOKIE, TORP_OAUTH_SHELL_NATIVE, opts);
+  }
+  return response;
+}
+
 /** AuthKit callback expects this exact cookie name (`handleAuth` in @workos-inc/authkit-nextjs). */
 export const WORKOS_PKCE_COOKIE_NAME = "wos-auth-verifier";
 

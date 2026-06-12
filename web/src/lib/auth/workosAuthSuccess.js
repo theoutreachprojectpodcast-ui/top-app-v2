@@ -5,8 +5,8 @@ import { isPlatformAdminServer } from "@/lib/admin/platformAdminServer";
 import { notifyStaffProfiles } from "@/server/notifications/notificationService";
 import { ensureWorkOSOrganizationMembership } from "@/lib/auth/workosEnsureOrgMembership";
 
-/** Shared WorkOS AuthKit onSuccess hook for web and mobile callbacks. */
-export async function onWorkOSSuccess({ user }) {
+/** Profile/org sync after OAuth — must not block callback redirect (Vercel timeout → browser "page couldn't load"). */
+async function syncWorkOSUserAfterAuth(user) {
   try {
     const admin = createSupabaseAdminClient();
     if (!admin) return;
@@ -43,4 +43,9 @@ export async function onWorkOSSuccess({ user }) {
   } catch (e) {
     console.error("[torp] WorkOS onSuccess profile sync failed:", e);
   }
+}
+
+/** Shared WorkOS AuthKit onSuccess hook for web and mobile callbacks. */
+export async function onWorkOSSuccess({ user }) {
+  void syncWorkOSUserAfterAuth(user);
 }

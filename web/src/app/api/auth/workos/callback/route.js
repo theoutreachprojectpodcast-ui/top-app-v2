@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { runWorkOSCallback } from "@/lib/auth/workosCallbackHandler";
 
+export const maxDuration = 60;
+export const runtime = "nodejs";
+
 /**
  * WorkOS OAuth code exchange — used by `/callback` page fetch (Capacitor-safe).
  * Register redirect URI: https://theoutreachproject.app/callback

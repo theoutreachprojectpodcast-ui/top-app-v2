@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { workOSAuthRedirectBridge } from "@/lib/auth/workosAuthRedirectBridge";
-import { resolveWorkOSSignInUrl } from "@/lib/auth/workosSignInUrl";
+import { attachWorkOSAuthorizeCookies } from "@/lib/auth/workosAuthorizationRedirect";
+import { shouldMarkOAuthNativeShell } from "@/lib/auth/workosOAuthShell";
+import { resolveWorkOSSignInBundleFromSearchParams } from "@/lib/auth/workosSignInUrl";
 
 /**
  * WorkOS AuthKit sign-in entry — used by `/sign-in`, `/login`, and `/api/auth/workos/signin`.
@@ -10,8 +12,15 @@ import { resolveWorkOSSignInUrl } from "@/lib/auth/workosSignInUrl";
  */
 export async function workOSSignInResponse(request) {
   try {
-    const url = await resolveWorkOSSignInUrl(request);
-    return workOSAuthRedirectBridge(url);
+    const params = request.nextUrl.searchParams;
+    const bundle = await resolveWorkOSSignInBundleFromSearchParams(params, "/", request);
+    const response = workOSAuthRedirectBridge(bundle.url);
+    attachWorkOSAuthorizeCookies(
+      response,
+      bundle.sealedState,
+      shouldMarkOAuthNativeShell(params, request),
+    );
+    return response;
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     if (message === "authentication_not_configured") {

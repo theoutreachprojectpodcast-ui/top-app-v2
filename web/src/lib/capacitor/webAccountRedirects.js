@@ -36,7 +36,7 @@ export async function openWebLogin(options = {}) {
   return openExternalUrl(url);
 }
 
-/** Native Capacitor WorkOS sign-in via in-app browser sheet (Turnstile-safe). */
+/** Native Capacitor WorkOS sign-in inside the main WebView (same path as web). */
 export async function openNativeWorkOSSignIn(options = {}) {
   if (!isCapacitorNative()) {
     return { ok: false, reason: "not-native" };

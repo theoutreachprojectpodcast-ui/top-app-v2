@@ -5,7 +5,7 @@ export const metadata = {
   title: "Create account — The Outreach Project",
 };
 
-/** Legacy path — client launcher opens WorkOS in the native in-app browser (Turnstile-safe). */
+/** Legacy path — client launcher navigates the WebView to WorkOS (no Capacitor Browser sheet). */
 export default async function MobileSignUpLauncherPage({ searchParams }) {
   const params = await searchParams;
   const returnTo = typeof params?.returnTo === "string" ? params.returnTo : "/mobile/access";

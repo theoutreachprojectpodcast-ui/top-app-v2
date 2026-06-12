@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { workOSAuthRedirectBridge } from "@/lib/auth/workosAuthRedirectBridge";
 import { workosAuthBrandedHtmlPage } from "@/lib/auth/workosAuthBrand";
-import { isNativeWorkOSShellRequest } from "@/lib/auth/workosOAuthShell";
+import { shouldMarkOAuthNativeShell } from "@/lib/auth/workosOAuthShell";
+import { attachWorkOSAuthorizeCookies } from "@/lib/auth/workosAuthorizationRedirect";
 import { hashOAuthState, saveOAuthAuthorizePending } from "@/lib/auth/oauthMobileHandoffServer";
 import { resolveWorkOSSignInBundleFromSearchParams } from "@/lib/auth/workosSignInUrl";
 import { resolveWorkOSSignUpBundleFromSearchParams } from "@/lib/auth/workosSignUpUrl";
@@ -84,22 +85,6 @@ export async function resolveWorkOSAuthorizeUrlFromGoUrl(requestUrl, request) {
   return url;
 }
 
-/**
- * Capacitor WebView must not load WorkOS/Turnstile inline — bounce to `/sign-in` launcher.
- * @param {URL} requestUrl
- * @param {Request} request
- */
-export function workOSGoNativeLauncherRedirect(requestUrl, request) {
-  if (!isNativeWorkOSShellRequest(request)) return null;
-  const { mode } = workOSGoContext(requestUrl);
-  const dest = new URL(mode === "signup" ? "/mobile/sign-up" : "/mobile/sign-in", requestUrl.origin);
-  const sp = new URLSearchParams(requestUrl.searchParams);
-  sp.delete("format");
-  sp.delete("native");
-  dest.search = sp.toString();
-  return NextResponse.redirect(dest, 302);
-}
-
 function workOSGoErrorResponse(message, backHref, status = 503) {
   return new Response(workosGoErrorHtml(message, backHref), {
     status,
@@ -161,13 +146,16 @@ export async function workOSGoJsonResponse(requestUrl, request) {
  * @param {Request} [request]
  */
 export async function workOSGoResponse(requestUrl, request) {
-  const nativeRedirect = request ? workOSGoNativeLauncherRedirect(requestUrl, request) : null;
-  if (nativeRedirect) return nativeRedirect;
-
-  const { backHref } = workOSGoContext(requestUrl);
+  const { backHref, params } = workOSGoContext(requestUrl);
   try {
-    const { url } = await resolveWorkOSAuthorizeBundleFromGoUrl(requestUrl, request);
-    return workOSAuthRedirectBridge(url);
+    const bundle = await resolveWorkOSAuthorizeBundleFromGoUrl(requestUrl, request);
+    const response = workOSAuthRedirectBridge(bundle.url);
+    attachWorkOSAuthorizeCookies(
+      response,
+      bundle.sealedState,
+      request ? shouldMarkOAuthNativeShell(params, request) : false,
+    );
+    return response;
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     if (message === "authentication_not_configured" || message === "workos_not_configured") {
