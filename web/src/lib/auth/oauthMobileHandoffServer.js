@@ -7,6 +7,11 @@ const HANDOFF_TABLE = "torp_oauth_mobile_handoffs";
 const HANDOFF_TTL_MS = 10 * 60 * 1000;
 const SESSION_PLACEHOLDER = "__session__";
 const AUTHORIZE_PLACEHOLDER = "__authorize__";
+const COOKIE_AUTHORIZE = "__torp_authorize:";
+const COOKIE_OAUTH = "__torp_oauth:";
+
+/** Columns guaranteed on production handoff table. */
+const HANDOFF_SELECT = "session_cookies, redirect_to, expires_at";
 
 /** @param {string} state */
 export function hashOAuthState(state) {
@@ -51,73 +56,6 @@ async function unsealAuthorizeBundle(token) {
   }
 }
 
-/**
- * Store WorkOS authorize URL + sealed state for Capacitor Browser.open (short `?key=` URL).
- * @param {string} stateKey
- * @param {string} url
- * @param {string} sealedState
- * @param {string} [redirectTo]
- */
-export async function saveOAuthAuthorizePending(stateKey, url, sealedState, redirectTo = MOBILE_POST_AUTH_HOME) {
-  const key = String(stateKey || "").trim();
-  const authorizeUrl = String(url || "").trim();
-  const state = String(sealedState || "").trim();
-  if (!key || !authorizeUrl.startsWith("https://") || !state) {
-    return { ok: false };
-  }
-
-  const token = await sealAuthorizeBundle(authorizeUrl, state);
-  if (!token) return { ok: false, reason: "seal_failed" };
-
-  const expiresAt = new Date(Date.now() + HANDOFF_TTL_MS);
-  const row = {
-    state_key: key,
-    oauth_code: AUTHORIZE_PLACEHOLDER,
-    oauth_state: token,
-    redirect_to: redirectTo || MOBILE_POST_AUTH_HOME,
-    expires_at: expiresAt.toISOString(),
-  };
-
-  const saved = await upsertHandoffRow(row);
-  if (saved.ok) return { ok: true };
-
-  if (isProdLike()) {
-    console.error("[torp] oauth authorize pending save failed:", saved.reason || saved.error?.message || "unknown");
-    return { ok: false, reason: saved.reason || "handoff_storage_unavailable" };
-  }
-
-  memoryHandoffStore().set(key, {
-    oauth_code: AUTHORIZE_PLACEHOLDER,
-    oauth_state: token,
-    redirect_to: row.redirect_to,
-    expires_at: expiresAt.getTime(),
-  });
-  return { ok: true };
-}
-
-/**
- * Read pending authorize bundle without consuming (browser-start may reload once).
- * @param {string} stateKey
- * @returns {Promise<{ url: string, sealedState: string } | null>}
- */
-export async function peekOAuthAuthorizePending(stateKey) {
-  const data = await readHandoffRow(stateKey, { consume: false });
-  if (!data || String(data.oauth_code || "") !== AUTHORIZE_PLACEHOLDER) return null;
-  const token = String(data.oauth_state || data.bridge_token || "").trim();
-  return unsealAuthorizeBundle(token);
-}
-
-/**
- * @param {string} stateKey
- * @returns {Promise<{ url: string, sealedState: string } | null>}
- */
-export async function consumeOAuthAuthorizePending(stateKey) {
-  const pending = await peekOAuthAuthorizePending(stateKey);
-  if (!pending) return null;
-  await deleteHandoffRow(stateKey);
-  return pending;
-}
-
 async function sealOAuthBridge(code, state) {
   const password = handoffPassword();
   if (password.length < 32) return "";
@@ -133,6 +71,51 @@ function isProdLike() {
     String(process.env.VERCEL_ENV || "").toLowerCase() === "production" ||
     String(process.env.NODE_ENV || "").toLowerCase() === "production"
   );
+}
+
+/**
+ * @param {object | null | undefined} data
+ * @returns {{
+ *   kind: "authorize" | "oauth" | "session",
+ *   token?: string,
+ *   bridgeToken?: string,
+ *   code?: string,
+ *   state?: string,
+ *   cookies?: string[],
+ *   redirectTo: string,
+ * } | null}
+ */
+function parseHandoffPayload(data) {
+  if (!data) return null;
+  const redirectTo = String(data.redirect_to || MOBILE_POST_AUTH_HOME);
+  const cookies = Array.isArray(data.session_cookies) ? data.session_cookies.filter(Boolean) : [];
+  const first = String(cookies[0] || "");
+
+  if (first.startsWith(COOKIE_AUTHORIZE)) {
+    return { kind: "authorize", token: first.slice(COOKIE_AUTHORIZE.length), redirectTo };
+  }
+  if (first.startsWith(COOKIE_OAUTH)) {
+    return { kind: "oauth", bridgeToken: first.slice(COOKIE_OAUTH.length), redirectTo };
+  }
+  if (cookies.length > 0) {
+    return { kind: "session", cookies, redirectTo };
+  }
+
+  const code = String(data.oauth_code || "").trim();
+  const state = String(data.oauth_state || "").trim();
+  if (code === AUTHORIZE_PLACEHOLDER) {
+    return { kind: "authorize", token: state || String(data.bridge_token || ""), redirectTo };
+  }
+  if (code && state && code !== SESSION_PLACEHOLDER && code !== AUTHORIZE_PLACEHOLDER) {
+    return {
+      kind: "oauth",
+      code,
+      state,
+      bridgeToken: String(data.bridge_token || "") || undefined,
+      redirectTo,
+    };
+  }
+  return null;
 }
 
 /**
@@ -165,10 +148,57 @@ async function deleteHandoffRow(stateKey) {
 }
 
 /**
- * @param {string} stateKey
- * @param {string[]} setCookies
- * @param {string} [redirectTo]
+ * Store WorkOS authorize URL + sealed state for Capacitor Browser.open (short `?key=` URL).
  */
+export async function saveOAuthAuthorizePending(stateKey, url, sealedState, redirectTo = MOBILE_POST_AUTH_HOME) {
+  const key = String(stateKey || "").trim();
+  const authorizeUrl = String(url || "").trim();
+  const state = String(sealedState || "").trim();
+  if (!key || !authorizeUrl.startsWith("https://") || !state) {
+    return { ok: false };
+  }
+
+  const token = await sealAuthorizeBundle(authorizeUrl, state);
+  if (!token) return { ok: false, reason: "seal_failed" };
+
+  const expiresAt = new Date(Date.now() + HANDOFF_TTL_MS);
+  const row = {
+    state_key: key,
+    session_cookies: [`${COOKIE_AUTHORIZE}${token}`],
+    redirect_to: redirectTo || MOBILE_POST_AUTH_HOME,
+    expires_at: expiresAt.toISOString(),
+  };
+
+  const saved = await upsertHandoffRow(row);
+  if (saved.ok) return { ok: true };
+
+  if (isProdLike()) {
+    console.error("[torp] oauth authorize pending save failed:", saved.reason || saved.error?.message || "unknown");
+    return { ok: false, reason: saved.reason || "handoff_storage_unavailable" };
+  }
+
+  memoryHandoffStore().set(key, {
+    session_cookies: row.session_cookies,
+    redirect_to: row.redirect_to,
+    expires_at: expiresAt.getTime(),
+  });
+  return { ok: true };
+}
+
+export async function peekOAuthAuthorizePending(stateKey) {
+  const data = await readHandoffRow(stateKey, { consume: false });
+  const payload = parseHandoffPayload(data);
+  if (payload?.kind !== "authorize") return null;
+  return unsealAuthorizeBundle(payload.token);
+}
+
+export async function consumeOAuthAuthorizePending(stateKey) {
+  const pending = await peekOAuthAuthorizePending(stateKey);
+  if (!pending) return null;
+  await deleteHandoffRow(stateKey);
+  return pending;
+}
+
 export async function saveOAuthMobileSessionHandoff(stateKey, setCookies, redirectTo = MOBILE_POST_AUTH_HOME) {
   const key = String(stateKey || "").trim();
   const cookies = Array.isArray(setCookies) ? setCookies.filter(Boolean) : [];
@@ -179,9 +209,6 @@ export async function saveOAuthMobileSessionHandoff(stateKey, setCookies, redire
   const expiresAt = new Date(Date.now() + HANDOFF_TTL_MS);
   const row = {
     state_key: key,
-    oauth_code: SESSION_PLACEHOLDER,
-    oauth_state: SESSION_PLACEHOLDER,
-    bridge_token: null,
     session_cookies: cookies,
     redirect_to: redirectTo || MOBILE_POST_AUTH_HOME,
     expires_at: expiresAt.toISOString(),
@@ -202,12 +229,6 @@ export async function saveOAuthMobileSessionHandoff(stateKey, setCookies, redire
   return { ok: true };
 }
 
-/**
- * @param {string} stateKey
- * @param {string} code
- * @param {string} state
- * @param {string} [redirectTo]
- */
 export async function saveOAuthMobilePending(stateKey, code, state, redirectTo = MOBILE_POST_AUTH_HOME) {
   const key = String(stateKey || "").trim();
   const oauthCode = String(code || "").trim();
@@ -218,11 +239,13 @@ export async function saveOAuthMobilePending(stateKey, code, state, redirectTo =
 
   const expiresAt = new Date(Date.now() + HANDOFF_TTL_MS);
   const bridgeToken = await sealOAuthBridge(oauthCode, oauthState);
+  if (!bridgeToken) {
+    return { ok: false, reason: "seal_failed" };
+  }
+
   const row = {
     state_key: key,
-    oauth_code: oauthCode,
-    oauth_state: oauthState,
-    bridge_token: bridgeToken || null,
+    session_cookies: [`${COOKIE_OAUTH}${bridgeToken}`],
     redirect_to: redirectTo || MOBILE_POST_AUTH_HOME,
     expires_at: expiresAt.toISOString(),
   };
@@ -230,28 +253,18 @@ export async function saveOAuthMobilePending(stateKey, code, state, redirectTo =
   const saved = await upsertHandoffRow(row);
   if (saved.ok) return { ok: true, bridgeToken };
 
-  if (bridgeToken) {
-    return { ok: true, bridgeToken, bridgeOnly: true };
-  }
-
   if (isProdLike()) {
     return { ok: false, reason: "handoff_storage_unavailable" };
   }
 
   memoryHandoffStore().set(key, {
-    oauth_code: oauthCode,
-    oauth_state: oauthState,
-    bridge_token: bridgeToken,
+    session_cookies: row.session_cookies,
     redirect_to: row.redirect_to,
     expires_at: expiresAt.getTime(),
   });
   return { ok: true, bridgeToken };
 }
 
-/**
- * @param {string} stateKey
- * @param {{ consume?: boolean }} [options]
- */
 async function readHandoffRow(stateKey, { consume = true } = {}) {
   const key = String(stateKey || "").trim();
   if (!key) return null;
@@ -260,7 +273,7 @@ async function readHandoffRow(stateKey, { consume = true } = {}) {
   if (admin) {
     const { data, error } = await admin
       .from(HANDOFF_TABLE)
-      .select("oauth_code, oauth_state, bridge_token, session_cookies, redirect_to, expires_at")
+      .select(HANDOFF_SELECT)
       .eq("state_key", key)
       .maybeSingle();
     if (!error && data) {
@@ -279,92 +292,86 @@ async function readHandoffRow(stateKey, { consume = true } = {}) {
   if (!mem || mem.expires_at < Date.now()) return null;
   if (consume) memoryHandoffStore().delete(key);
   return {
-    oauth_code: mem.oauth_code,
-    oauth_state: mem.oauth_state,
-    bridge_token: mem.bridge_token,
     session_cookies: mem.session_cookies,
     redirect_to: mem.redirect_to,
     expires_at: new Date(mem.expires_at).toISOString(),
   };
 }
 
-/**
- * @param {string} stateKey
- * @returns {Promise<{ setCookies: string[], redirectTo: string } | null>}
- */
 export async function consumeOAuthMobileSessionHandoff(stateKey) {
   const data = await readHandoffRow(stateKey, { consume: true });
-  if (!data) return null;
-
-  const cookies = Array.isArray(data.session_cookies) ? data.session_cookies.filter(Boolean) : [];
-  if (cookies.length > 0) {
-    return {
-      setCookies: cookies,
-      redirectTo: String(data.redirect_to || MOBILE_POST_AUTH_HOME),
-    };
-  }
-  return null;
-}
-
-/**
- * @param {string} stateKey
- * @returns {Promise<{ code: string, state: string, bridgeToken?: string, redirectTo: string } | null>}
- */
-export async function consumeOAuthMobilePending(stateKey) {
-  const data = await readHandoffRow(stateKey, { consume: true });
-  if (!data) return null;
-
-  const cookies = Array.isArray(data.session_cookies) ? data.session_cookies.filter(Boolean) : [];
-  if (cookies.length > 0) {
-    return null;
-  }
-
-  const code = String(data.oauth_code || "").trim();
-  const state = String(data.oauth_state || "").trim();
-  if (!code || !state || code === SESSION_PLACEHOLDER || code === AUTHORIZE_PLACEHOLDER) return null;
-
+  const payload = parseHandoffPayload(data);
+  if (payload?.kind !== "session" || !payload.cookies?.length) return null;
   return {
-    code,
-    state,
-    bridgeToken: String(data.bridge_token || "") || undefined,
-    redirectTo: String(data.redirect_to || MOBILE_POST_AUTH_HOME),
+    setCookies: payload.cookies,
+    redirectTo: payload.redirectTo,
   };
 }
 
-/**
- * Peek without consuming — WebView poll until handoff is ready.
- * @param {string} stateKey
- */
+export async function consumeOAuthMobilePending(stateKey) {
+  const data = await readHandoffRow(stateKey, { consume: true });
+  const payload = parseHandoffPayload(data);
+  if (payload?.kind !== "oauth") return null;
+
+  if (payload.bridgeToken) {
+    const unsealed = await unsealOAuthBridge(payload.bridgeToken);
+    if (!unsealed) return null;
+    return {
+      code: unsealed.code,
+      state: unsealed.state,
+      bridgeToken: payload.bridgeToken,
+      redirectTo: payload.redirectTo,
+    };
+  }
+
+  if (!payload.code || !payload.state) return null;
+  return {
+    code: payload.code,
+    state: payload.state,
+    bridgeToken: payload.bridgeToken,
+    redirectTo: payload.redirectTo,
+  };
+}
+
 export async function peekOAuthMobileHandoff(stateKey) {
   const data = await readHandoffRow(stateKey, { consume: false });
   if (!data) return null;
   if (new Date(data.expires_at).getTime() < Date.now()) return null;
 
-  const cookies = Array.isArray(data.session_cookies) ? data.session_cookies.filter(Boolean) : [];
-  if (cookies.length > 0) {
+  const payload = parseHandoffPayload(data);
+  if (!payload) return null;
+
+  if (payload.kind === "authorize") return null;
+
+  if (payload.kind === "session") {
     return {
       kind: "session",
-      redirectTo: String(data.redirect_to || MOBILE_POST_AUTH_HOME),
+      redirectTo: payload.redirectTo,
     };
   }
 
-  const code = String(data.oauth_code || "").trim();
-  const state = String(data.oauth_state || "").trim();
-  if (!code || !state || code === SESSION_PLACEHOLDER || code === AUTHORIZE_PLACEHOLDER) return null;
+  if (payload.bridgeToken) {
+    const unsealed = await unsealOAuthBridge(payload.bridgeToken);
+    if (!unsealed) return null;
+    return {
+      kind: "oauth",
+      code: unsealed.code,
+      state: unsealed.state,
+      bridgeToken: payload.bridgeToken,
+      redirectTo: payload.redirectTo,
+    };
+  }
 
+  if (!payload.code || !payload.state) return null;
   return {
     kind: "oauth",
-    code,
-    state,
-    bridgeToken: String(data.bridge_token || "") || undefined,
-    redirectTo: String(data.redirect_to || MOBILE_POST_AUTH_HOME),
+    code: payload.code,
+    state: payload.state,
+    bridgeToken: payload.bridgeToken,
+    redirectTo: payload.redirectTo,
   };
 }
 
-/**
- * @param {string} bridgeToken
- * @returns {Promise<{ code: string, state: string } | null>}
- */
 export async function unsealOAuthBridge(bridgeToken) {
   const password = handoffPassword();
   const token = String(bridgeToken || "").trim();

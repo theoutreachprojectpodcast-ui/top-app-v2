@@ -49,8 +49,7 @@ export async function GET() {
       const { error: probeErr } = await admin.from(HANDOFF_TABLE).upsert(
         {
           state_key: probeKey,
-          oauth_code: "__authorize__",
-          oauth_state: "probe",
+          session_cookies: ["__torp_authorize:probe"],
           redirect_to: "/",
           expires_at: probeExpires,
         },
