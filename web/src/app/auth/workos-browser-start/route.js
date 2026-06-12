@@ -5,7 +5,7 @@ import {
   workosPkceCookieOptions,
 } from "@/lib/auth/workosAuthorizationRedirect";
 import { workOSAuthRedirectBridge } from "@/lib/auth/workosAuthRedirectBridge";
-import { consumeOAuthAuthorizePending } from "@/lib/auth/oauthMobileHandoffServer";
+import { peekOAuthAuthorizePending } from "@/lib/auth/oauthMobileHandoffServer";
 import { oauthShellSetCookieHeader } from "@/lib/auth/workosOAuthShell";
 
 const BROWSER_OAUTH_COOKIE = "torp-oauth-browser";
@@ -37,7 +37,7 @@ export async function GET(request) {
   let sealedState = "";
 
   if (stateKey) {
-    const pending = await consumeOAuthAuthorizePending(stateKey);
+    const pending = await peekOAuthAuthorizePending(stateKey);
     if (!pending) {
       return new NextResponse("Sign-in session expired. Close the browser and try again.", {
         status: 410,

@@ -121,10 +121,11 @@ export async function workOSGoJsonResponse(requestUrl, request) {
       const saved = await saveOAuthAuthorizePending(stateKey, bundle.url, bundle.sealedState, returnTo);
       if (saved.ok) {
         return NextResponse.json(
-          { ok: true, key: stateKey },
+          { ok: true, key: stateKey, stateKey },
           { headers: { "Cache-Control": "no-store" } },
         );
       }
+      console.warn("[torp] WorkOS authorize pending save failed, using inline URL fallback:", saved.reason);
     }
     return NextResponse.json(
       {

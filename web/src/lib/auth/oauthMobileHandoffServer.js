@@ -67,14 +67,13 @@ export async function saveOAuthAuthorizePending(stateKey, url, sealedState, redi
   }
 
   const token = await sealAuthorizeBundle(authorizeUrl, state);
-  if (!token) return { ok: false };
+  if (!token) return { ok: false, reason: "seal_failed" };
 
   const expiresAt = new Date(Date.now() + HANDOFF_TTL_MS);
   const row = {
     state_key: key,
     oauth_code: AUTHORIZE_PLACEHOLDER,
-    oauth_state: state,
-    bridge_token: token,
+    oauth_state: token,
     redirect_to: redirectTo || MOBILE_POST_AUTH_HOME,
     expires_at: expiresAt.toISOString(),
   };
@@ -83,13 +82,13 @@ export async function saveOAuthAuthorizePending(stateKey, url, sealedState, redi
   if (saved.ok) return { ok: true };
 
   if (isProdLike()) {
-    return { ok: false, reason: "handoff_storage_unavailable" };
+    console.error("[torp] oauth authorize pending save failed:", saved.reason || saved.error?.message || "unknown");
+    return { ok: false, reason: saved.reason || "handoff_storage_unavailable" };
   }
 
   memoryHandoffStore().set(key, {
     oauth_code: AUTHORIZE_PLACEHOLDER,
-    oauth_state: state,
-    bridge_token: token,
+    oauth_state: token,
     redirect_to: row.redirect_to,
     expires_at: expiresAt.getTime(),
   });
@@ -97,13 +96,26 @@ export async function saveOAuthAuthorizePending(stateKey, url, sealedState, redi
 }
 
 /**
+ * Read pending authorize bundle without consuming (browser-start may reload once).
+ * @param {string} stateKey
+ * @returns {Promise<{ url: string, sealedState: string } | null>}
+ */
+export async function peekOAuthAuthorizePending(stateKey) {
+  const data = await readHandoffRow(stateKey, { consume: false });
+  if (!data || String(data.oauth_code || "") !== AUTHORIZE_PLACEHOLDER) return null;
+  const token = String(data.oauth_state || data.bridge_token || "").trim();
+  return unsealAuthorizeBundle(token);
+}
+
+/**
  * @param {string} stateKey
  * @returns {Promise<{ url: string, sealedState: string } | null>}
  */
 export async function consumeOAuthAuthorizePending(stateKey) {
-  const data = await readHandoffRow(stateKey, { consume: true });
-  if (!data || String(data.oauth_code || "") !== AUTHORIZE_PLACEHOLDER) return null;
-  return unsealAuthorizeBundle(data.bridge_token);
+  const pending = await peekOAuthAuthorizePending(stateKey);
+  if (!pending) return null;
+  await deleteHandoffRow(stateKey);
+  return pending;
 }
 
 async function sealOAuthBridge(code, state) {
@@ -129,16 +141,27 @@ function isProdLike() {
 async function upsertHandoffRow(row) {
   const admin = createSupabaseAdminClient();
   if (admin) {
-    const { error } = await admin.from(HANDOFF_TABLE).upsert(row);
+    const { error } = await admin.from(HANDOFF_TABLE).upsert(row, { onConflict: "state_key" });
     if (!error) return { ok: true, via: "supabase" };
-    console.error("[torp] oauth mobile handoff upsert failed:", error.message, error.code || "");
-    return { ok: false, error };
+    console.error("[torp] oauth mobile handoff upsert failed:", error.message, error.code || "", error.details || "");
+    return { ok: false, error, reason: error.message };
   }
   if (isProdLike()) {
     console.warn("[torp] oauth mobile handoff: Supabase admin unavailable");
-    return { ok: false };
+    return { ok: false, reason: "supabase_admin_unavailable" };
   }
   return { ok: false, via: "memory" };
+}
+
+async function deleteHandoffRow(stateKey) {
+  const key = String(stateKey || "").trim();
+  if (!key) return;
+  const admin = createSupabaseAdminClient();
+  if (admin) {
+    await admin.from(HANDOFF_TABLE).delete().eq("state_key", key);
+    return;
+  }
+  memoryHandoffStore().delete(key);
 }
 
 /**

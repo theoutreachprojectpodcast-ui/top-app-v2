@@ -38,6 +38,30 @@ export async function GET() {
         checks.oauthHandoffMigration =
           "Run: alter table public.torp_oauth_mobile_handoffs add column if not exists session_cookies text[];";
       }
+      const redirectCol = await admin.from(HANDOFF_TABLE).select("redirect_to").limit(0);
+      checks.oauthHandoffRedirectTo = !redirectCol.error;
+      if (redirectCol.error) {
+        checks.oauthHandoffMigration =
+          "Run: alter table public.torp_oauth_mobile_handoffs add column if not exists redirect_to text not null default '/';";
+      }
+      const probeKey = `__health_probe_${Date.now()}`;
+      const probeExpires = new Date(Date.now() + 60_000).toISOString();
+      const { error: probeErr } = await admin.from(HANDOFF_TABLE).upsert(
+        {
+          state_key: probeKey,
+          oauth_code: "__authorize__",
+          oauth_state: "probe",
+          redirect_to: "/",
+          expires_at: probeExpires,
+        },
+        { onConflict: "state_key" },
+      );
+      checks.oauthHandoffAuthorizeUpsert = !probeErr;
+      if (probeErr) {
+        checks.oauthHandoffAuthorizeUpsertError = probeErr.message;
+      } else {
+        await admin.from(HANDOFF_TABLE).delete().eq("state_key", probeKey);
+      }
     }
   } else {
     checks.oauthHandoffError = "supabase_admin_unavailable";
@@ -47,6 +71,7 @@ export async function GET() {
     checks.workos &&
     checks.workosIssues.length === 0 &&
     checks.oauthHandoffTable &&
+    checks.oauthHandoffAuthorizeUpsert !== false &&
     String(checks.redirectUri).includes("/callback");
 
   return NextResponse.json(

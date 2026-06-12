@@ -32,10 +32,14 @@ export async function launchNativeWorkOSAuth(goPath) {
     throw new Error("Could not reach the sign-in service. Check your connection and try again.");
   }
   const data = await res.json().catch(() => ({}));
-  const stateKey = String(data?.key || data?.stateKey || "").trim();
+
+  /** `key` is only present when the authorize bundle was stored server-side. */
+  const savedKey = String(data?.key || "").trim();
+  /** Poll key after OAuth — always the sha256 of sealed state. */
+  const pollKey = String(data?.stateKey || savedKey || "").trim();
   const authorizeUrl = String(data?.url || "").trim();
 
-  if (!res.ok || (!stateKey && !authorizeUrl)) {
+  if (!res.ok || (!savedKey && !authorizeUrl)) {
     const msg = String(data?.message || "").trim();
     if (res.status === 503 || /not defined|referenceerror/i.test(msg)) {
       throw new Error("Sign-in is temporarily unavailable. Try again in a moment or contact support.");
@@ -43,14 +47,14 @@ export async function launchNativeWorkOSAuth(goPath) {
     throw new Error(msg || "Could not start secure sign in.");
   }
 
-  if (stateKey && typeof sessionStorage !== "undefined") {
-    sessionStorage.setItem(TORP_OAUTH_STATE_KEY, stateKey);
+  if (pollKey && typeof sessionStorage !== "undefined") {
+    sessionStorage.setItem(TORP_OAUTH_STATE_KEY, pollKey);
     sessionStorage.setItem(TORP_OAUTH_BROWSER_PENDING, "1");
   }
 
   let browserStart;
-  if (stateKey) {
-    browserStart = appUrl(`/auth/workos-browser-start?key=${encodeURIComponent(stateKey)}`);
+  if (savedKey) {
+    browserStart = appUrl(`/auth/workos-browser-start?key=${encodeURIComponent(savedKey)}`);
   } else {
     const browserParams = new URLSearchParams();
     browserParams.set("go", authorizeUrl);
