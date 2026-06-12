@@ -11,12 +11,9 @@ import { saveOAuthMobileSessionHandoff } from "@/lib/auth/oauthMobileHandoffServ
 import { hashOAuthState, saveOAuthMobilePending } from "@/lib/auth/oauthMobileHandoffServer";
 import { MOBILE_POST_AUTH_HOME } from "@/lib/auth/oauthMobileHandoff";
 import {
-  buildMobileOAuthCallbackDeepLink,
   isMobileExternalBrowserUserAgent,
   mobileOAuthBrowserDoneHtml,
-  mobileOAuthReturnBridgeHtml,
 } from "@/lib/auth/workosMobileRedirect";
-import { WORKOS_PKCE_COOKIE_NAME } from "@/lib/auth/workosAuthorizationRedirect";
 import { oauthStartedInNativeShell } from "@/lib/auth/workosOAuthShell";
 
 export const maxDuration = 60;
@@ -50,19 +47,6 @@ function callbackErrorResponse(message, request, status = 400) {
  * WorkOS Redirect URI — https://theoutreachproject.app/callback
  * Route Handler (not RSC page) so AuthKit can set session cookies.
  */
-/** Standalone mobile Safari — deep link into native shell (legacy). */
-function mobileBrowserReturnBridgeResponse(url) {
-  const deepLink = buildMobileOAuthCallbackDeepLink(url.searchParams);
-  return new NextResponse(mobileOAuthReturnBridgeHtml(deepLink), {
-    status: 200,
-    headers: {
-      "Content-Type": "text/html; charset=utf-8",
-      "Content-Disposition": "inline",
-      "Cache-Control": "no-store",
-    },
-  });
-}
-
 /** OAuth ran in Capacitor in-app browser (cookie set by `/auth/workos-browser-start`). */
 function isCapacitorBrowserOAuthReturn(request) {
   return request.cookies.get(BROWSER_OAUTH_COOKIE)?.value === "1";
@@ -129,14 +113,6 @@ export async function GET(request) {
     // Legacy Capacitor in-app browser sheet — finish OAuth and hand session to WebView.
     if (!startedInApp && inMobileBrowser && code && isCapacitorBrowserOAuthReturn(request)) {
       return mobileBrowserOAuthPendingResponse(request, url);
-    }
-
-    // Mobile web Safari — PKCE cookie in this browser tab; finish sign-in normally.
-    const pkceInBrowser = !!request.cookies.get(WORKOS_PKCE_COOKIE_NAME)?.value;
-
-    // Standalone mobile Safari without PKCE — deep link into native shell (legacy).
-    if (!startedInApp && inMobileBrowser && (code || oauthError) && !pkceInBrowser) {
-      return mobileBrowserReturnBridgeResponse(url);
     }
 
     if (oauthError) {

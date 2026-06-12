@@ -1,27 +1,7 @@
-import { getSignInUrl } from "@workos-inc/authkit-nextjs";
 import { NextResponse } from "next/server";
 import { isWorkOSConfigured } from "@/lib/auth/workosConfigured";
-import { sanitizeWorkOSLoginHint } from "@/lib/auth/workosLoginHint";
-import { resolvePostAuthReturnTarget } from "@/lib/auth/workosSafeReturn";
-import {
-  getWorkOSAuthKitAuthorizeBundle,
-  readWorkOSInvitationToken,
-} from "@/lib/auth/workosAuthorizationRedirect";
-import { workOSAuthRedirectBridge } from "@/lib/auth/workosAuthRedirectBridge";
-import {
-  isAdminReturnPath,
-  isBootstrapAdminWorkOSSignIn,
-  workOSAuthKitAuthorizeOptions,
-} from "@/lib/auth/workosOrganizationScope";
-
-function readReturnTo(searchParams) {
-  const raw =
-    searchParams.get("returnTo") ||
-    searchParams.get("return_pathname") ||
-    searchParams.get("returnPathname") ||
-    "/";
-  return resolvePostAuthReturnTarget(raw, "/");
-}
+import { workOSAuthorizeBridgeFromBundle } from "@/lib/auth/workosAuthorizationRedirect";
+import { resolveWorkOSSignInBundleFromSearchParams } from "@/lib/auth/workosSignInUrl";
 
 /**
  * WorkOS AuthKit sign-in entry — used by `/login`, `/sign-in`, and API aliases.
@@ -37,41 +17,10 @@ export async function respondWorkOSSignIn(request) {
     );
   }
 
-  const { searchParams } = request.nextUrl;
-  const returnTo = readReturnTo(searchParams);
-  const remember = searchParams.get("remember");
-  const prompt = remember === "0" ? "login" : undefined;
-  const loginHint = sanitizeWorkOSLoginHint(searchParams.get("loginHint"));
-  const bootstrap = isBootstrapAdminWorkOSSignIn(searchParams) || isAdminReturnPath(returnTo);
-  const invitationToken = readWorkOSInvitationToken(searchParams);
-  const orgOptions = workOSAuthKitAuthorizeOptions({
-    loginHint,
-    bootstrap,
-    adminReturn: isAdminReturnPath(returnTo),
-    invitation: Boolean(invitationToken),
-  });
-
-  if (invitationToken) {
-    try {
-      const { url } = await getWorkOSAuthKitAuthorizeBundle({
-        returnPathname: returnTo,
-        screenHint: "sign-in",
-        loginHint,
-        prompt,
-        invitationToken,
-        organizationId: orgOptions.organizationId,
-      });
-      return workOSAuthRedirectBridge(url);
-    } catch {
-      return NextResponse.json({ error: "workos_not_configured" }, { status: 503 });
-    }
+  try {
+    const bundle = await resolveWorkOSSignInBundleFromSearchParams(request.nextUrl.searchParams, "/", request);
+    return workOSAuthorizeBridgeFromBundle(bundle, false);
+  } catch {
+    return NextResponse.json({ error: "workos_not_configured" }, { status: 503 });
   }
-
-  const url = await getSignInUrl({
-    returnTo,
-    loginHint,
-    prompt,
-    ...orgOptions,
-  });
-  return workOSAuthRedirectBridge(url);
 }

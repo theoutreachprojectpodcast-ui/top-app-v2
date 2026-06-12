@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { workOSAuthRedirectBridge } from "@/lib/auth/workosAuthRedirectBridge";
-import { resolveWorkOSSignUpUrl } from "@/lib/auth/workosSignUpUrl";
+import { workOSAuthorizeBridgeFromBundle } from "@/lib/auth/workosAuthorizationRedirect";
+import { resolveWorkOSSignUpBundleFromSearchParams } from "@/lib/auth/workosSignUpUrl";
 
 /**
  * WorkOS AuthKit sign-up entry — used by `/sign-up`, `/auth/sign-up`, and `/api/auth/workos/signup`.
@@ -9,8 +9,12 @@ import { resolveWorkOSSignUpUrl } from "@/lib/auth/workosSignUpUrl";
  */
 export async function workOSSignUpResponse(request) {
   try {
-    const url = await resolveWorkOSSignUpUrl(request);
-    return workOSAuthRedirectBridge(url);
+    const bundle = await resolveWorkOSSignUpBundleFromSearchParams(
+      request.nextUrl.searchParams,
+      "/onboarding",
+      request,
+    );
+    return workOSAuthorizeBridgeFromBundle(bundle, false);
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     if (message === "authentication_not_configured") {
@@ -22,7 +26,7 @@ export async function workOSSignUpResponse(request) {
     if (message === "workos_not_configured") {
       return NextResponse.json({ error: "workos_not_configured" }, { status: 503 });
     }
-    console.error("[torp] WorkOS getSignUpUrl failed:", e);
+    console.error("[torp] WorkOS sign-up redirect failed:", e);
     return NextResponse.json(
       { error: "workos_signup_failed", message: "Could not start sign-up." },
       { status: 503 },

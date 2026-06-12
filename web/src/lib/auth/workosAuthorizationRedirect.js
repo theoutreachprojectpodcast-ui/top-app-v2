@@ -1,6 +1,7 @@
 import { sealData } from "iron-session";
 import { cookies } from "next/headers";
 import { getWorkOS } from "@workos-inc/authkit-nextjs";
+import { workOSAuthRedirectBridge } from "@/lib/auth/workosAuthRedirectBridge";
 import { workosMobileRedirectUri } from "@/lib/auth/workosMobileRedirect";
 import { TORP_OAUTH_SHELL_COOKIE, TORP_OAUTH_SHELL_NATIVE } from "@/lib/auth/workosOAuthShell";
 
@@ -13,6 +14,17 @@ export function pkceCookieNameForState(sealedState) {
     hash = Math.imul(hash, 16777619);
   }
   return `${WORKOS_PKCE_COOKIE_NAME}-${(hash >>> 0).toString(16).padStart(8, "0")}`;
+}
+
+/**
+ * HTML bridge to WorkOS with PKCE (+ optional native shell marker) on the response.
+ * @param {{ url: string, sealedState: string }} bundle
+ * @param {boolean} [markNativeShell=false]
+ */
+export function workOSAuthorizeBridgeFromBundle(bundle, markNativeShell = false) {
+  const response = workOSAuthRedirectBridge(bundle.url);
+  attachWorkOSAuthorizeCookies(response, bundle.sealedState, markNativeShell);
+  return response;
 }
 
 /** Attach PKCE (+ optional native shell marker) on the HTML bridge response — AuthKit v3 cookie name. */
@@ -29,6 +41,30 @@ export function attachWorkOSAuthorizeCookies(response, sealedState, markNativeSh
 
 /** AuthKit callback expects this exact cookie name (`handleAuth` in @workos-inc/authkit-nextjs). */
 export const WORKOS_PKCE_COOKIE_NAME = "wos-auth-verifier";
+
+/**
+ * True when the browser tab holds a WorkOS PKCE verifier cookie (legacy or AuthKit v3 hashed name).
+ * @param {Request} request
+ * @param {string} [oauthState] OAuth `state` query param from the callback URL
+ */
+export function requestHasWorkOSPkceCookie(request, oauthState = "") {
+  const jar = request.cookies;
+  if (jar.get(WORKOS_PKCE_COOKIE_NAME)?.value) return true;
+
+  const state = String(oauthState || "").trim();
+  if (state && jar.get(pkceCookieNameForState(state))?.value) return true;
+
+  const all = typeof jar.getAll === "function" ? jar.getAll() : [];
+  for (const cookie of all) {
+    if (
+      cookie.value &&
+      (cookie.name === WORKOS_PKCE_COOKIE_NAME || cookie.name.startsWith(`${WORKOS_PKCE_COOKIE_NAME}-`))
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
 
 export function workosPkceCookieOptions() {
   const domain = String(process.env.WORKOS_COOKIE_DOMAIN || "").trim();
