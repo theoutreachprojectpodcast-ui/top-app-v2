@@ -11,6 +11,7 @@ import {
 } from "@/server/notifications/notificationService";
 import { shouldHideDemoCommunitySeeds } from "@/lib/runtime/qaEnv";
 import { mergeFounderOnboardingPostRows } from "@/lib/community/mergeFounderOnboardingPosts";
+import { sanitizeCommunityStoryPhotoUrl } from "@/features/community/domain/communityStoryPhoto";
 
 const REACTIONS = "community_post_reactions";
 
@@ -206,10 +207,7 @@ export async function POST(request) {
     return Response.json({ ok: false, message: "Link URL must start with http:// or https://." }, { status: 400 });
   }
 
-  const photoRaw = typeof body.photo_url === "string" ? body.photo_url.trim().slice(0, 2048) : "";
-  if (photoRaw && !/^https?:\/\//i.test(photoRaw)) {
-    return Response.json({ ok: false, message: "Photo URL must start with http:// or https://." }, { status: 400 });
-  }
+  const photoRaw = sanitizeCommunityStoryPhotoUrl(body.photo_url);
 
   const record = {
     author_profile_id: profileRow.id,

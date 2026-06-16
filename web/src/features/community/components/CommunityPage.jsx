@@ -288,7 +288,7 @@ export default function CommunityPage({
 
       {(submitOpen || editPost) && isAuthenticated ? (
         <div
-          className="modalOverlay"
+          className="modalOverlay modalOverlay--communitySubmit"
           role="dialog"
           aria-modal="true"
           aria-labelledby="community-submit-title"
@@ -298,7 +298,7 @@ export default function CommunityPage({
           }}
         >
           <div className="modalCard communitySubmitModalCard" onClick={(e) => e.stopPropagation()}>
-            <div className="sponsorApplyModalHead">
+            <div className="sponsorApplyModalHead communitySubmitModalHead">
               <h3 id="community-submit-title">{editPost ? "Edit your story" : "Share your story"}</h3>
               <button
                 type="button"
@@ -311,7 +311,8 @@ export default function CommunityPage({
                 Close
               </button>
             </div>
-            <CommunitySubmissionForm
+            <div className="communitySubmitModalBody">
+              <CommunitySubmissionForm
               supabase={supabase}
               userId={userId}
               authorName={authorName}
@@ -329,6 +330,7 @@ export default function CommunityPage({
                 if (useWorkOSApi) setFeedTab("mine");
               }}
             />
+            </div>
           </div>
         </div>
       ) : null}

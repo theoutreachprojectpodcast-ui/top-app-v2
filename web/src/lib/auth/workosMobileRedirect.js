@@ -1,4 +1,6 @@
 import { workosAuthBrandedHtmlPage } from "@/lib/auth/workosAuthBrand";
+import { webBaseUrl } from "@/lib/runtime/appUrls";
+import { buildOAuthHandoffCompleteUniversalLink } from "@/lib/capacitor/mobileDeepLinks";
 
 /** Deep link WorkOS uses to return OAuth results into the Capacitor shell (register in WorkOS dashboard). */
 export const WORKOS_MOBILE_CALLBACK_SCHEME = "com.theoutreachproject.theoutreachproject://callback";
@@ -85,16 +87,28 @@ export function parseOAuthBrowserDoneDeepLink(url) {
 export function mobileOAuthBrowserDoneHtml(stateKey = "") {
   const deepLink = buildOAuthBrowserDoneDeepLink(stateKey);
   const escaped = deepLink.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
-  const headExtra = `<meta http-equiv="refresh" content="0;url=${escaped}" />`;
+  const universalLink = buildOAuthHandoffCompleteUniversalLink(stateKey, webBaseUrl());
+  const universalEscaped = universalLink
+    ? universalLink.replace(/&/g, "&amp;").replace(/"/g, "&quot;")
+    : "";
+  const headExtra = universalLink
+    ? `<meta http-equiv="refresh" content="1;url=${universalEscaped}" />`
+    : `<meta http-equiv="refresh" content="0;url=${escaped}" />`;
   const bodyEnd = `<script>
     (function () {
       var link = ${JSON.stringify(deepLink)};
+      var universal = ${JSON.stringify(universalLink || "")};
       function openApp() {
         try { window.location.replace(link); } catch (e) {}
       }
+      function openUniversal() {
+        if (!universal) return;
+        try { window.location.replace(universal); } catch (e) {}
+      }
       openApp();
       setTimeout(openApp, 120);
-      setTimeout(function () { try { window.close(); } catch (e) {} }, 450);
+      setTimeout(openUniversal, 650);
+      setTimeout(function () { try { window.close(); } catch (e) {} }, 900);
     })();
   </script>`;
   return workosAuthBrandedHtmlPage({
@@ -107,6 +121,11 @@ export function mobileOAuthBrowserDoneHtml(stateKey = "") {
       <p class="torpAuth__lead">Your account will open automatically.</p>
       <div class="torpAuth__actions">
         <a class="torpAuth__btn torpAuth__btn--primary" href="${escaped}">Open app</a>
+        ${
+          universalEscaped
+            ? `<a class="torpAuth__btn torpAuth__btn--soft" href="${universalEscaped}">Continue in app</a>`
+            : ""
+        }
       </div>`,
   });
 }

@@ -1,12 +1,21 @@
+/** Primary native URL scheme (matches iOS Info.plist + Capacitor appId). */
+export const NATIVE_APP_URL_SCHEME = "com.theoutreachproject.theoutreachproject";
+
 /** Custom URL schemes that reopen the installed Capacitor app. */
 export const MOBILE_AUTH_DEEP_LINK_SCHEMES = [
-  "org.theoutreachproject.torp",
+  NATIVE_APP_URL_SCHEME,
   "theoutreachproject",
+  "org.theoutreachproject.torp",
 ];
 
 /** @deprecated Prefer auth/complete deep links; kept for billing return sync. */
 export const MOBILE_ACCOUNT_REFRESH_HOST = "account";
 export const MOBILE_ACCOUNT_REFRESH_PATH = "refresh";
+
+function isNativeAppDeepLinkProtocol(protocol) {
+  const p = String(protocol || "").toLowerCase();
+  return MOBILE_AUTH_DEEP_LINK_SCHEMES.some((scheme) => p === `${scheme}:`);
+}
 
 /**
  * Build a deep link that returns auth session into the native app WebView.
@@ -18,7 +27,35 @@ export function buildMobileAuthCompleteDeepLink(transferToken, returnTo = "/") {
   params.set("token", String(transferToken || "").trim());
   const safeReturn = String(returnTo || "/").trim() || "/";
   if (safeReturn !== "/") params.set("returnTo", safeReturn);
-  return `org.theoutreachproject.torp://auth/complete?${params.toString()}`;
+  return `${NATIVE_APP_URL_SCHEME}://auth/complete?${params.toString()}`;
+}
+
+/**
+ * Universal-link fallback when Safari cannot open a custom scheme (opens app → WebView).
+ * @param {string} transferToken
+ * @param {string} [returnTo]
+ * @param {string} origin e.g. https://theoutreachproject.app
+ */
+export function buildMobileAuthCompleteUniversalLink(transferToken, returnTo = "/", origin = "") {
+  const params = new URLSearchParams();
+  params.set("token", String(transferToken || "").trim());
+  const safeReturn = String(returnTo || "/").trim() || "/";
+  if (safeReturn !== "/") params.set("returnTo", safeReturn);
+  const base = String(origin || "").replace(/\/$/, "");
+  if (!base) return "";
+  return `${base}/mobile-auth/complete?${params.toString()}`;
+}
+
+/**
+ * Universal-link fallback after in-app browser OAuth (applies session cookies in the WebView).
+ * @param {string} stateKey
+ * @param {string} origin
+ */
+export function buildOAuthHandoffCompleteUniversalLink(stateKey, origin = "") {
+  const key = String(stateKey || "").trim();
+  const base = String(origin || "").replace(/\/$/, "");
+  if (!key || !base) return "";
+  return `${base}/api/mobile/oauth-handoff/complete?key=${encodeURIComponent(key)}`;
 }
 
 /**
@@ -39,10 +76,7 @@ export function parseMobileDeepLinkUrl(url) {
   const host = parsed.hostname.toLowerCase();
   const path = `${parsed.pathname || ""}`.replace(/^\/+/, "");
 
-  if (
-    parsed.protocol === "org.theoutreachproject.torp:" ||
-    parsed.protocol === "theoutreachproject:"
-  ) {
+  if (isNativeAppDeepLinkProtocol(parsed.protocol)) {
     if (host === "auth" && (path === "complete" || path.startsWith("complete"))) {
       const token = String(parsed.searchParams.get("token") || "").trim();
       if (!token) return null;

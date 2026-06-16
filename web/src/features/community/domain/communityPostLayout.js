@@ -31,7 +31,7 @@ export function resolveCommunityPostLayout(postType, feedLayout, feedMedia) {
   if (pt.includes("image")) return "image";
   if (pt.includes("carousel")) return "carousel";
   if (pt.includes("resource")) return "resource";
-  return "image";
+  return "step";
 }
 
 /**

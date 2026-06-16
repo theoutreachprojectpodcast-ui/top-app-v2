@@ -10,6 +10,7 @@ import {
   buildCommunityModerationPatch,
   notifyAuthorPostApproved,
 } from "@/lib/community/communityPostModeration";
+import { sanitizeCommunityStoryPhotoUrl } from "@/features/community/domain/communityStoryPhoto";
 
 const TABLE = "community_posts";
 
@@ -109,7 +110,7 @@ export async function PATCH(request, context) {
       post_type: String(json.post_type || "share_story").slice(0, 64),
       show_author_name: json.show_author_name !== false,
       link_url: String(json.link_url || "").trim().slice(0, 500),
-      photo_url: typeof json.photo_url === "string" ? json.photo_url.slice(0, 120000) : "",
+      photo_url: sanitizeCommunityStoryPhotoUrl(json.photo_url),
       is_edited: true,
       updated_at: now,
     };

@@ -1,5 +1,6 @@
 "use client";
 
+import BrandMark from "@/components/BrandMark";
 import PublicPageContentSlot from "@/components/content/PublicPageContentSlot";
 
 /**
@@ -12,22 +13,22 @@ export default function MissionPageTopStrip({ placement = "top" }) {
   return (
     <footer className={`siteFooter ${positionClass} siteFooter--inMainShell`} aria-label="The Outreach Project">
       <div className="footerInner">
-        <div>
-          <div className="brandName">THE OUTREACH PROJECT</div>
-          <PublicPageContentSlot
-            pageKey="footer"
-            sectionKey="mission_note"
-            className="footerNote"
-            fallback={
-              <p className="footerNote">Mission-first resource navigation for veterans, first responders, and supporters.</p>
-            }
-          />
-        </div>
+        <BrandMark variant="mark" className="footerInner__mark" alt="" />
+        <div className="brandName">THE OUTREACH PROJECT</div>
+        <span className="footerInner__badge">Resource Network</span>
+        <PublicPageContentSlot
+          pageKey="footer"
+          sectionKey="mission_note"
+          className="footerNote footerNote--mission"
+          fallback={
+            <p>Mission-first resource navigation for veterans, first responders, and supporters.</p>
+          }
+        />
         <PublicPageContentSlot
           pageKey="footer"
           sectionKey="tagline"
-          className="footerNote"
-          fallback={<p className="footerNote">Trust-driven support, built for clarity under pressure.</p>}
+          className="footerNote footerNote--tagline"
+          fallback={<p>Trust-driven support, built for clarity under pressure.</p>}
         />
         <nav className="footerLegalNav" aria-label="Legal">
           <a href="/privacy">Privacy</a>

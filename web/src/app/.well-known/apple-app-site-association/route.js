@@ -35,6 +35,8 @@ export async function GET() {
                 "/mobile-auth/callback/*",
                 "/mobile-auth/complete",
                 "/mobile-auth/complete/*",
+                "/api/mobile/oauth-handoff/complete",
+                "/api/mobile/oauth-handoff/complete/*",
                 "/api/mobile/oauth-handoff/bridge",
                 "/api/mobile/oauth-handoff/bridge/*",
               ],

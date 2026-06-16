@@ -52,7 +52,7 @@ assert(
 );
 
 assert(
-  read("src/app/api/community/posts/route.js").includes("2048"),
+  read("src/app/api/community/posts/route.js").includes("sanitizeCommunityStoryPhotoUrl"),
   "community photo_url must be length-limited",
 );
 
