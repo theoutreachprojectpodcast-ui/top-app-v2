@@ -13,6 +13,7 @@ import {
   Youtube,
 } from "lucide-react";
 import { sanitizeDisplayableImageUrl } from "@/lib/media/safeImageUrl";
+import OrganizationLogo from "@/components/shared/OrganizationLogo";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { getSponsorBySlug } from "@/features/sponsors/api/sponsorCatalogApi";
 import { sponsorBlurbsRedundant } from "@/features/sponsors/domain/sponsorViewModels";
@@ -104,26 +105,18 @@ export default function SponsorProfilePage({ slug }) {
             ) : null}
             <div className="sponsorProfileIntroBody">
               <div className="sponsorProfileIdentityRow">
-                <div
-                  className={`sponsorPremiumLogoShell sponsorProfileLogoShell${
-                    profile.logoPanelMode === "light" ? " sponsorPremiumLogoShell--panel-light" : ""
-                  }`}
-                >
-                  {logoSrc ? (
-                    <img
-                      className="sponsorPremiumLogoImg"
-                      src={logoSrc}
-                      alt=""
-                      loading="lazy"
-                      decoding="async"
-                      onError={() => {
-                        if (logoIndex < logoCandidates.length - 1) setLogoIndex((i) => i + 1);
-                      }}
-                    />
-                  ) : (
-                    <span className="sponsorPremiumWordmark">{brandName}</span>
-                  )}
-                </div>
+                <OrganizationLogo
+                  className="sponsorProfileLogoShell"
+                  src={logoSrc}
+                  alt=""
+                  name={brandName}
+                  size="profile"
+                  surface="page"
+                  panel={profile.logoPanelMode === "light" ? "light" : profile.logoPanelMode === "dark" ? "dark" : "auto"}
+                  onError={() => {
+                    if (logoIndex < logoCandidates.length - 1) setLogoIndex((i) => i + 1);
+                  }}
+                />
                 <div className="sponsorProfileTitleBlock">
                   <h1 className="sponsorProfileTitle">{brandName}</h1>
                   <p className="sponsorProfileTypeLine">

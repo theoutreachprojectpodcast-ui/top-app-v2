@@ -1,9 +1,9 @@
 /**
  * Stripe configuration — env vars only, no hardcoded keys or price IDs.
- * Server routes should import from here; never expose STRIPE_SECRET_KEY to the client.
  *
- * App Access (mobile gate): STRIPE_PRICE_ACCESS_YEARLY ($5.99/yr, required for Capacitor app).
- * Advanced (optional): STRIPE_PRICE_SUPPORT_MONTHLY + STRIPE_PRICE_PRO_MONTHLY.
+ * User memberships: Support ($0.99/yr) + Pro ($5.99/yr).
+ * Legacy: STRIPE_PRICE_ACCESS_YEARLY for existing access subscribers.
+ * Sponsor subscriptions use STRIPE_PRICE_SPONSOR_MONTHLY (Sponsors page only).
  */
 
 export function stripeSecretConfigured() {
@@ -14,14 +14,27 @@ export function stripePublishableConfigured() {
   return !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.trim();
 }
 
-/** Pro / “member” tier recurring price — prefer STRIPE_PRICE_PRO_MONTHLY, else legacy MEMBER. */
-export function proSubscriptionPriceId() {
+/** Support tier yearly price — prefer STRIPE_PRICE_SUPPORT_YEARLY, then monthly, then legacy access yearly. */
+export function supportSubscriptionPriceId() {
   return (
-    process.env.STRIPE_PRICE_PRO_MONTHLY?.trim() || process.env.STRIPE_PRICE_MEMBER_MONTHLY?.trim() || ""
+    process.env.STRIPE_PRICE_SUPPORT_YEARLY?.trim() ||
+    process.env.STRIPE_PRICE_SUPPORT_MONTHLY?.trim() ||
+    process.env.STRIPE_PRICE_ACCESS_YEARLY?.trim() ||
+    ""
   );
 }
 
-/** True when App Access yearly checkout can be created (mobile gate). */
+/** Pro / “member” tier yearly price — prefer STRIPE_PRICE_PRO_YEARLY, else monthly / legacy member monthly. */
+export function proSubscriptionPriceId() {
+  return (
+    process.env.STRIPE_PRICE_PRO_YEARLY?.trim() ||
+    process.env.STRIPE_PRICE_PRO_MONTHLY?.trim() ||
+    process.env.STRIPE_PRICE_MEMBER_MONTHLY?.trim() ||
+    ""
+  );
+}
+
+/** @deprecated Use supportSubscriptionPriceId — legacy App Access yearly checkout. */
 export function stripeAccessYearlyConfigured() {
   return stripeSecretConfigured() && !!process.env.STRIPE_PRICE_ACCESS_YEARLY?.trim();
 }
@@ -30,17 +43,15 @@ export function stripeAccessYearlyConfigured() {
 export function stripeAccessYearlyMissingEnvKeys() {
   const missing = [];
   if (!stripeSecretConfigured()) missing.push("STRIPE_SECRET_KEY");
-  if (!process.env.STRIPE_PRICE_ACCESS_YEARLY?.trim()) missing.push("STRIPE_PRICE_ACCESS_YEARLY");
+  if (!supportSubscriptionPriceId()) {
+    missing.push("STRIPE_PRICE_SUPPORT_YEARLY (or STRIPE_PRICE_SUPPORT_MONTHLY / STRIPE_PRICE_ACCESS_YEARLY)");
+  }
   return missing;
 }
 
-/** True when Support + Pro recurring checkouts can be created (advanced upgrades). */
+/** True when Support + Pro recurring checkouts can be created. */
 export function stripeMemberRecurringConfigured() {
-  return (
-    stripeSecretConfigured() &&
-    !!process.env.STRIPE_PRICE_SUPPORT_MONTHLY?.trim() &&
-    !!proSubscriptionPriceId()
-  );
+  return stripeSecretConfigured() && !!supportSubscriptionPriceId() && !!proSubscriptionPriceId();
 }
 
 /** True when sponsor *subscription* tier checkout is available (optional). */
@@ -60,8 +71,12 @@ export function stripeCheckoutConfigured() {
 export function stripeMemberRecurringMissingEnvKeys() {
   const missing = [];
   if (!stripeSecretConfigured()) missing.push("STRIPE_SECRET_KEY");
-  if (!process.env.STRIPE_PRICE_SUPPORT_MONTHLY?.trim()) missing.push("STRIPE_PRICE_SUPPORT_MONTHLY");
-  if (!proSubscriptionPriceId()) missing.push("STRIPE_PRICE_PRO_MONTHLY or STRIPE_PRICE_MEMBER_MONTHLY");
+  if (!supportSubscriptionPriceId()) {
+    missing.push("STRIPE_PRICE_SUPPORT_YEARLY (or STRIPE_PRICE_SUPPORT_MONTHLY)");
+  }
+  if (!proSubscriptionPriceId()) {
+    missing.push("STRIPE_PRICE_PRO_YEARLY (or STRIPE_PRICE_PRO_MONTHLY / STRIPE_PRICE_MEMBER_MONTHLY)");
+  }
   return missing;
 }
 
@@ -87,8 +102,8 @@ export function stripeWebhookConfigured() {
 
 export function priceIdForTier(tier) {
   const t = String(tier || "").toLowerCase();
-  if (t === "access") return process.env.STRIPE_PRICE_ACCESS_YEARLY?.trim() || "";
-  if (t === "support") return process.env.STRIPE_PRICE_SUPPORT_MONTHLY?.trim() || "";
+  if (t === "access") return process.env.STRIPE_PRICE_ACCESS_YEARLY?.trim() || supportSubscriptionPriceId();
+  if (t === "support") return supportSubscriptionPriceId();
   if (t === "member") return proSubscriptionPriceId();
   if (t === "sponsor") return process.env.STRIPE_PRICE_SPONSOR_MONTHLY?.trim() || "";
   return "";

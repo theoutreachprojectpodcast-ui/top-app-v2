@@ -104,7 +104,7 @@ export default function SubpageTopbarActions({ section = "all" }) {
       <span className="subpageAuthActionsPlaceholder" aria-hidden="true" />
     ) : authed ? (
       <>
-        <AdminConsoleLink />
+        {!isMobileShell ? <AdminConsoleLink /> : null}
         <HeaderNotificationBell skipSessionGate />
         <HeaderAccountMenu
           avatarSrc={profile?.avatarUrl || emptyProfileAvatarUrl()}
@@ -179,12 +179,7 @@ export default function SubpageTopbarActions({ section = "all" }) {
     );
 
   if (section === "lead") {
-    return (
-      <>
-        {sponsorLink}
-        {isMobileShell && authed && !authLoading ? <AdminConsoleLink /> : null}
-      </>
-    );
+    return sponsorLink;
   }
 
   if (section === "authNotifications") {

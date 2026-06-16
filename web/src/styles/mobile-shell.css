@@ -52,7 +52,8 @@ html {
 .podcastEpisodeCard img,
 .communityPostCard img,
 .nonprofitCard img,
-.sponsorPremiumLogoShell img {
+.sponsorPremiumLogoShell img,
+.organizationLogo__img {
   max-width: 100%;
 }
 
@@ -103,8 +104,8 @@ html {
   }
 
   main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) {
-    --mobile-site-header-logo-h: clamp(72px, 18vw, 96px);
-    --mobile-site-header-logo-max-w: min(220px, calc(100vw - 96px));
+    --mobile-site-header-logo-h: clamp(301px, 78.75vw, 399px);
+    --mobile-site-header-logo-max-w: min(910px, calc(100vw - 28px));
     --mobile-site-header-control-size: 44px;
     --mobile-site-header-control-pad-top: 2px;
     --mobile-site-header-pad-x: max(
@@ -114,17 +115,10 @@ html {
     );
   }
 
-  /* Signed-in home: compact header — content starts higher. */
-  main.topApp.topApp--auth-in[data-page-atmosphere="home"]:not(.appShell--podcast) {
-    --mobile-site-header-logo-h: clamp(48px, 12vw, 64px);
-    --mobile-site-header-logo-max-w: min(160px, calc(100vw - 96px));
-  }
-
-  /* Guest mobile home: compact mark — splash panel carries branding + auth CTAs. */
-  main.topApp.topApp--mobileHomeEntrance[data-page-atmosphere="home"]:not(.appShell--podcast),
-  main.topApp.topApp--auth-out[data-page-atmosphere="home"]:not(.appShell--podcast) {
+  /* Guest mobile home: compact header mark — splash panel carries branding + auth CTAs. */
+  main.topApp.topApp--mobileHomeEntrance[data-page-atmosphere="home"]:not(.appShell--podcast) {
     --mobile-site-header-logo-h: clamp(52px, 13.5vw, 64px);
-    --mobile-site-header-logo-max-w: min(168px, calc(100vw - 96px));
+    --mobile-site-header-logo-max-w: min(168px, calc(100vw - 120px));
   }
 
   main.topApp.topApp--mobileHomeEntrance[data-page-atmosphere="home"]:not(.appShell--podcast) .headerBrandStack .brandMarkImg,
@@ -335,23 +329,28 @@ html {
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarLeft .topbarActionsCluster,
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarLeft .topbarActionsCluster--start {
     justify-content: flex-start;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 8px;
+    max-width: min(100%, calc(50vw - 12px));
   }
 
-  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])
-    .topbarLeft
-    .topbarActionsCluster--start:has(.adminConsoleTopbarBtn) {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarRight .adminConsoleTopbarBtn {
+    display: none !important;
   }
 
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarLeft .adminConsoleTopbarBtn {
     min-width: 0;
-    min-height: 34px;
-    padding: 6px 10px;
+    min-height: var(--mobile-site-header-control-size, 44px);
+    max-width: 5.5rem;
+    padding: 0 10px;
     font-size: 12px;
     font-weight: 600;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-shrink: 1;
   }
 
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .themeToggle,

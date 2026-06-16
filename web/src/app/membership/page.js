@@ -19,9 +19,9 @@ function MembershipHubInner() {
 
   const lead = useMemo(() => {
     if (!isAuthenticated) {
-      return "Sign in or create an account to activate App Access ($5.99/yr) or choose optional Support and Pro upgrades.";
+      return "Sign in or create an account to activate Support Membership ($0.99/yr) or upgrade to Pro ($5.99/yr).";
     }
-    return "Manage App Access and optional upgrades. All billing is handled securely through Stripe in the app.";
+    return "Manage Support and Pro memberships. All billing is handled securely through Stripe in the app.";
   }, [isAuthenticated]);
 
   return (
@@ -50,7 +50,6 @@ function MembershipHubInner() {
             currentTierKey={profile.membershipStatus}
             sessionKind={sessionKind}
             stripeMemberReady={!!authBackend?.stripe}
-            stripeSponsorSubscriptionReady={!!authBackend?.stripeSponsorSubscription}
             checkoutReturnPath="/membership/success"
             membershipBillingStatus={profile.membershipBillingStatus}
             stripeCustomerReady={!!profile.stripeCustomerIdSet}

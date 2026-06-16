@@ -3,9 +3,9 @@ export const MEMBERSHIP_TIER_RANK = {
   free: 0,
   none: 0,
   access: 1,
-  support: 2,
-  member: 3,
-  sponsor: 4,
+  support: 1,
+  member: 2,
+  sponsor: 3,
 };
 
 export function membershipTierRank(tier) {

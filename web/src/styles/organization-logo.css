@@ -1,0 +1,202 @@
+/* Shared organization / sponsor / nonprofit logo frame — single circular shell, no inner rings. */
+
+.organizationLogo {
+  --org-logo-size: 96px;
+  --org-logo-pad: 10%;
+  --org-logo-bg: var(--color-surface-raised, var(--color-bg-card));
+  --org-logo-border: var(--color-border-subtle);
+  display: inline-flex;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.organizationLogo--xs {
+  --org-logo-size: 52px;
+  --org-logo-pad: 12%;
+}
+
+.organizationLogo--sm {
+  --org-logo-size: 72px;
+  --org-logo-pad: 10%;
+}
+
+.organizationLogo--md {
+  --org-logo-size: 80px;
+  --org-logo-pad: 10%;
+}
+
+.organizationLogo--card {
+  --org-logo-size: 96px;
+  --org-logo-pad: 10%;
+}
+
+.organizationLogo--profile {
+  --org-logo-size: 88px;
+  --org-logo-pad: 10%;
+}
+
+.organizationLogo--lg {
+  --org-logo-size: 144px;
+  --org-logo-pad: 8%;
+}
+
+.organizationLogo--banner {
+  --org-logo-size: 72px;
+  --org-logo-pad: 10%;
+}
+
+.organizationLogo__frame {
+  width: var(--org-logo-size);
+  height: var(--org-logo-size);
+  aspect-ratio: 1 / 1;
+  border-radius: 9999px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--org-logo-bg);
+  border: 1px solid var(--org-logo-border);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--color-shadow, #000) 28%, transparent);
+}
+
+.organizationLogo--onDark .organizationLogo__frame {
+  --org-logo-bg: rgba(8, 12, 16, 0.88);
+  --org-logo-border: color-mix(in srgb, #ffffff 20%, transparent);
+}
+
+.organizationLogo--page .organizationLogo__frame {
+  --org-logo-bg: var(--color-bg-card);
+  --org-logo-border: var(--color-border);
+}
+
+.organizationLogo__img {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center;
+  padding: var(--org-logo-pad);
+  box-sizing: border-box;
+  display: block;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+.organizationLogo__fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: clamp(0.75rem, 22%, 1.35rem);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  background: color-mix(in srgb, var(--color-bg-muted) 72%, var(--color-bg-elevated) 28%);
+  user-select: none;
+}
+
+.organizationLogo__fallbackIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: color-mix(in srgb, var(--color-bg-muted) 72%, var(--color-bg-elevated) 28%);
+}
+
+/* Tone-aware shell (auto panel) */
+.organizationLogo__frame--tone-lightmono {
+  --org-logo-bg: rgba(10, 14, 18, 0.95);
+}
+
+.organizationLogo__frame--tone-darkmono {
+  --org-logo-bg: rgba(242, 246, 250, 0.98);
+}
+
+.organizationLogo__frame--tone-highsat {
+  --org-logo-bg: color-mix(in srgb, var(--color-bg-card) 70%, var(--color-accent-soft) 30%);
+  --org-logo-border: color-mix(in srgb, var(--color-border-strong) 55%, rgba(255, 255, 255, 0.12));
+}
+
+.organizationLogo__frame--panel-light {
+  --org-logo-bg: #f8fafc;
+  --org-logo-border: color-mix(in srgb, var(--color-border-strong) 35%, rgba(20, 22, 21, 0.14));
+  box-shadow: 0 8px 24px color-mix(in srgb, #000 28%, transparent);
+}
+
+.organizationLogo__frame--panel-light .organizationLogo__img {
+  filter: none;
+}
+
+.organizationLogo__frame--panel-light .organizationLogo__fallback {
+  color: #141816;
+}
+
+.organizationLogo__img--tone-highsat {
+  filter: saturate(0.95) contrast(1.04);
+}
+
+:root .organizationLogo__img--tone-lightmono {
+  filter: invert(1) brightness(0.34) contrast(1.08);
+}
+
+:root .organizationLogo__img--tone-darkmono {
+  filter: none;
+}
+
+:root[data-color-scheme="dark"] .organizationLogo__frame--tone-lightmono,
+.dark .organizationLogo__frame--tone-lightmono {
+  --org-logo-bg: rgb(from var(--color-bg-card) r g b / 0.9);
+}
+
+:root[data-color-scheme="dark"] .organizationLogo__frame--tone-darkmono,
+.dark .organizationLogo__frame--tone-darkmono {
+  --org-logo-bg: rgba(236, 244, 250, 0.96);
+}
+
+:root[data-color-scheme="dark"] .organizationLogo__img--tone-lightmono,
+.dark .organizationLogo__img--tone-lightmono {
+  filter: none;
+}
+
+:root[data-color-scheme="dark"] .organizationLogo__img--tone-darkmono,
+.dark .organizationLogo__img--tone-darkmono {
+  filter: invert(1) brightness(0.92) contrast(1.05);
+}
+
+/* Card overlap placement (trusted resources) */
+.trustedResourceCard__logoSlot {
+  margin-top: -52px;
+  position: relative;
+  z-index: 3;
+}
+
+.trustedDetailHero__logoSlot {
+  position: absolute;
+  left: var(--ds-space-5, 20px);
+  bottom: -44px;
+  z-index: 2;
+}
+
+.sponsorPremiumCard[data-sponsor-slug="green-gorilla-land-management"] .organizationLogo__img {
+  padding: 5px;
+}
+
+/* Legacy class aliases — keep sponsor card selectors working during migration */
+.sponsorPremiumLogoShell {
+  width: var(--org-logo-size, 144px);
+  height: var(--org-logo-size, 144px);
+}
+
+.sponsorPremiumLogoShell .organizationLogo__frame {
+  width: 100%;
+  height: 100%;
+}
+
+.sponsorProfileLogoShell.organizationLogo {
+  --org-logo-size: 88px;
+}

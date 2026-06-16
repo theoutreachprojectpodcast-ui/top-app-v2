@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import NonprofitIcon from "@/features/nonprofits/components/NonprofitIcon";
+import OrganizationLogo from "@/components/shared/OrganizationLogo";
 import NonprofitSocialLinks from "@/features/nonprofits/components/NonprofitSocialLinks";
 import { fetchNonprofitProfileDetail } from "@/features/directory/api";
 import { resolveFindInfoHref } from "@/features/nonprofits/domain/nonprofitCardActions";
@@ -205,14 +206,16 @@ export default function NonprofitProfilePage({ ein: einParam }) {
               >
                 <div className="nonprofitProfileHeroInner">
                   <div className="nonprofitProfileIdentity">
-                    {card.logoUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img className="nonprofitProfileLogo" src={card.logoUrl} alt="" loading="lazy" />
-                    ) : (
-                      <div className="nonprofitProfileIconWrap">
-                        <NonprofitIcon category={card.category} size={40} variant="default" />
-                      </div>
-                    )}
+                    <OrganizationLogo
+                      src={card.logoUrl || ""}
+                      alt=""
+                      name={card.name}
+                      size="sm"
+                      surface="page"
+                      panel="auto"
+                      fallback="icon"
+                      fallbackIcon={<NonprofitIcon category={card.category} size={40} variant="default" />}
+                    />
                     <div className="nonprofitProfileTitleBlock">
                       <h1 className="nonprofitProfileTitle">{card.name}</h1>
                       {card.displayNameOnSite &&

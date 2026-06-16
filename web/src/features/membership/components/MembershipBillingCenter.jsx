@@ -18,10 +18,10 @@ import {
 import { membershipTierRank } from "@/lib/billing/membershipTierOrder";
 
 const UPGRADE_TARGETS = {
-  [MEMBERSHIP_TIER_KEYS.NONE]: ["access", "support", "member", "sponsor"],
-  [MEMBERSHIP_TIER_KEYS.ACCESS]: ["support", "member", "sponsor"],
-  [MEMBERSHIP_TIER_KEYS.SUPPORT]: ["member", "sponsor"],
-  [MEMBERSHIP_TIER_KEYS.MEMBER]: ["sponsor"],
+  [MEMBERSHIP_TIER_KEYS.NONE]: ["support", "member"],
+  [MEMBERSHIP_TIER_KEYS.ACCESS]: ["member"],
+  [MEMBERSHIP_TIER_KEYS.SUPPORT]: ["member"],
+  [MEMBERSHIP_TIER_KEYS.MEMBER]: [],
   [MEMBERSHIP_TIER_KEYS.SPONSOR]: [],
 };
 
@@ -52,7 +52,6 @@ export default function MembershipBillingCenter({
   currentTierKey,
   membershipBillingStatus = "none",
   stripeMemberReady = false,
-  stripeSponsorSubscriptionReady = false,
   stripeCustomerReady = false,
   checkoutReturnPath = "/profile",
   onRequestSignIn,
@@ -65,7 +64,6 @@ export default function MembershipBillingCenter({
   const [summary, setSummary] = useState(null);
   const [invoices, setInvoices] = useState([]);
   const [paymentMethods, setPaymentMethods] = useState([]);
-  const [sponsorOpps, setSponsorOpps] = useState([]);
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -88,20 +86,17 @@ export default function MembershipBillingCenter({
     setLoading(true);
     setError("");
     try {
-      const [sumRes, invRes, pmRes, oppRes] = await Promise.all([
+      const [sumRes, invRes, pmRes] = await Promise.all([
         fetch("/api/billing/summary", { credentials: "include", cache: "no-store" }),
         fetch("/api/billing/invoices?limit=12", { credentials: "include", cache: "no-store" }),
         fetch("/api/billing/payment-methods", { credentials: "include", cache: "no-store" }),
-        fetch("/api/billing/sponsor-opportunities", { cache: "no-store" }),
       ]);
       const sum = await sumRes.json().catch(() => ({}));
       const inv = await invRes.json().catch(() => ({}));
       const pm = await pmRes.json().catch(() => ({}));
-      const opp = await oppRes.json().catch(() => ({}));
       if (sumRes.ok) setSummary(sum.membership || null);
       if (invRes.ok) setInvoices(Array.isArray(inv.invoices) ? inv.invoices : []);
       if (pmRes.ok) setPaymentMethods(Array.isArray(pm.paymentMethods) ? pm.paymentMethods : []);
-      setSponsorOpps(Array.isArray(opp.opportunities) ? opp.opportunities : []);
     } catch {
       setError("Could not load billing details.");
     } finally {
@@ -313,14 +308,15 @@ export default function MembershipBillingCenter({
           <dt>Renewal</dt>
           <dd>{formatDate(renewalDate)}</dd>
         </div>
-        <div>
-          <dt>Subscription</dt>
-          <dd>{summary?.subscriptionStatus || (stripeCustomerReady ? "—" : "None")}</dd>
-        </div>
-        {summary?.sponsorTier ? (
+        {summary?.subscriptionStatus ? (
           <div>
-            <dt>Sponsor package</dt>
-            <dd>{summary.sponsorTier}</dd>
+            <dt>Subscription</dt>
+            <dd>{summary.subscriptionStatus}</dd>
+          </div>
+        ) : stripeCustomerReady ? (
+          <div>
+            <dt>Subscription</dt>
+            <dd>—</dd>
           </div>
         ) : null}
         {pmDisplay ? (
@@ -350,19 +346,15 @@ export default function MembershipBillingCenter({
           <h4>{tierKey === MEMBERSHIP_TIER_KEYS.NONE ? "Membership" : "Upgrade"}</h4>
           <p className="sponsorSectionLead">
             {tierKey === MEMBERSHIP_TIER_KEYS.NONE
-              ? "App Access is required on web and mobile. Support and Pro are optional upgrades."
-              : "Advanced upgrades for existing App Access members."}
+              ? "Choose Support or Pro — both are billed annually."
+              : "Upgrade your annual membership when you are ready."}
           </p>
           <div className="membershipBillingCenter__actions row wrap">
             {upgradeTiers.map(({ key, def, price, checkoutTier }) => (
               <button
                 key={key}
                 type="button"
-                className={
-                  key === MEMBERSHIP_TIER_KEYS.ACCESS || key === MEMBERSHIP_TIER_KEYS.MEMBER
-                    ? "btnPrimary"
-                    : "btnSoft"
-                }
+                className={key === MEMBERSHIP_TIER_KEYS.MEMBER ? "btnPrimary" : "btnSoft"}
                 disabled={!!busy}
                 onClick={() => startCheckout(checkoutTier)}
               >
@@ -370,50 +362,6 @@ export default function MembershipBillingCenter({
               </button>
             ))}
           </div>
-        </div>
-      ) : null}
-
-      {stripeSponsorSubscriptionReady || sponsorOpps.length > 0 ? (
-        <div className="membershipBillingCenter__section">
-          <h4>Sponsor opportunities</h4>
-          <p className="sponsorSectionLead">Pricing and benefits come from our sponsor packages — not hardcoded here.</p>
-          <ul className="membershipBillingCenter__sponsorList">
-            {sponsorOpps.slice(0, 8).map((opp) => (
-              <li key={opp.id} className="membershipBillingCenter__sponsorItem">
-                <strong>{opp.name}</strong>
-                <span className="membershipBillingCenter__sponsorMeta">
-                  {opp.amountLabel} · {opp.familyLabel}
-                </span>
-                <p className="membershipTierCardHint">{opp.spotlight}</p>
-                {opp.checkoutKind === "subscription" ? (
-                  <button
-                    type="button"
-                    className="btnSoft"
-                    disabled={!!busy}
-                    onClick={() => startCheckout("sponsor", opp.id)}
-                  >
-                    Subscribe
-                  </button>
-                ) : opp.checkoutKind === "one_time" && opp.stripeConfigured ? (
-                  <button
-                    type="button"
-                    className="btnSoft"
-                    disabled={!!busy}
-                    onClick={() => startCheckout("sponsor", opp.id)}
-                  >
-                    Checkout
-                  </button>
-                ) : (
-                  <Link className="btnSoft" href={`/sponsors?packages=1&tier=${encodeURIComponent(opp.missionTierId || opp.id)}`}>
-                    Apply
-                  </Link>
-                )}
-              </li>
-            ))}
-          </ul>
-          <Link className="btnSoft" href="/sponsors?packages=1">
-            View all sponsor packages
-          </Link>
         </div>
       ) : null}
 

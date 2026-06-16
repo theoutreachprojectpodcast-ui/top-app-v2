@@ -58,7 +58,7 @@ export default function AdminMembershipCenter() {
             <strong>{stats.freeMembers}</strong>
           </div>
           <div className="adminMembershipStat">
-            <span className="adminMembershipStat__label">Support ($1/mo)</span>
+            <span className="adminMembershipStat__label">Support ($0.99/yr)</span>
             <strong>{stats.supportMembers}</strong>
           </div>
           <div className="adminMembershipStat">

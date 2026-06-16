@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import OrganizationLogo from "@/components/shared/OrganizationLogo";
 import { runSponsorLogoEnrichment } from "@/features/sponsors/api/sponsorCatalogApi";
 
 /**
@@ -199,18 +200,13 @@ export default function SponsorLogoReviewPanel({ showAdmin = false, onChanged })
           ) : null}
           {logoUrl ? (
             <div style={{ marginTop: "0.5rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
-              <div
-                style={{
-                  width: 72,
-                  height: 72,
-                  borderRadius: "50%",
-                  border: "1px solid var(--color-border-subtle)",
-                  background: "var(--color-surface-card)",
-                  backgroundImage: `url(${JSON.stringify(logoUrl)})`,
-                  backgroundSize: "contain",
-                  backgroundPosition: "center",
-                  backgroundRepeat: "no-repeat",
-                }}
+              <OrganizationLogo
+                src={logoUrl}
+                alt=""
+                name={String(sp.name || sp.slug)}
+                size="sm"
+                surface="page"
+                panel="auto"
               />
               <span className="sponsorMuted" style={{ wordBreak: "break-all" }}>
                 {logoUrl}

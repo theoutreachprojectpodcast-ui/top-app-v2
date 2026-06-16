@@ -27,7 +27,7 @@ const INTENT_CARDS = [
   {
     id: "support_user",
     title: "Support the Mission",
-    blurb: "Back the work with a light monthly subscription. Profile and saves stay in sync.",
+    blurb: "Back the work with annual Support Membership. Profile and saves stay in sync.",
   },
   {
     id: "member_user",
@@ -52,23 +52,16 @@ const PLANS = [
   {
     id: "support",
     title: SUPPORT_MEMBERSHIP_DISPLAY_NAME,
-    price: SUPPORT_MEMBERSHIP_PRICE_LABEL.replace("/mo", ""),
-    cadence: "/month",
-    blurb: "Back the mission with a $1/month subscription. Saves and profile stay in sync.",
+    price: SUPPORT_MEMBERSHIP_PRICE_LABEL.replace("/yr", ""),
+    cadence: "/year",
+    blurb: "Unlock the full platform with annual Support Membership.",
   },
   {
     id: "member",
     title: "Pro Membership",
-    price: PRO_MEMBERSHIP_PRICE_LABEL.replace("/mo", ""),
-    cadence: "/month",
-    blurb: "Full member flows as they roll out, including community submissions where enabled.",
-  },
-  {
-    id: "sponsor",
-    title: "Sponsor Membership",
-    price: "Monthly",
-    cadence: " — set in Stripe",
-    blurb: "Platform sponsor tier for aligned organizations (requires STRIPE_PRICE_SPONSOR_MONTHLY). Large mission partner packages are applied for separately on the Sponsors page.",
+    price: PRO_MEMBERSHIP_PRICE_LABEL.replace("/yr", ""),
+    cadence: "/year",
+    blurb: "Community story submission and premium features as they roll out.",
   },
 ];
 
@@ -78,6 +71,14 @@ const NOTIFICATION_CHOICES = [
   { id: "push", label: "Push" },
   { id: "in_app", label: "In-app" },
 ];
+
+const SPONSOR_ONBOARDING_PLAN = {
+  id: "sponsor",
+  title: "Sponsor Membership",
+  price: "Packages vary",
+  cadence: "",
+  blurb: "Platform sponsor subscriptions and mission partner packages live on the Sponsors page.",
+};
 
 const STEP_LABELS = ["Main account", "Identity", "Contribution", "Membership"];
 
@@ -452,7 +453,7 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
     }
     if (["support", "member"].includes(selectedTier) && !authBackend?.stripeMemberRecurring) {
       setError(
-        "Support and Pro checkout require STRIPE_PRICE_SUPPORT_MONTHLY and STRIPE_PRICE_PRO_MONTHLY (or STRIPE_PRICE_MEMBER_MONTHLY).",
+        "Support and Pro checkout require STRIPE_PRICE_SUPPORT_YEARLY and STRIPE_PRICE_PRO_YEARLY (or monthly fallbacks).",
       );
       return;
     }
@@ -995,7 +996,7 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
                     ) : (
                       <>
                         <div className="onboardingPlanGrid">
-                          {PLANS.filter((p) => p.id === "sponsor").map((p) => (
+                          {[SPONSOR_ONBOARDING_PLAN].map((p) => (
                             <button
                               key={p.id}
                               type="button"

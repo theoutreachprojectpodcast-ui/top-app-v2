@@ -14,7 +14,7 @@ import { useCommunityFeed } from "@/features/community/hooks/useCommunityFeed";
 import { emptyProfileAvatarUrl } from "@/lib/avatarFallback";
 import { readRememberDevicePref } from "@/lib/auth/lastUsedEmail";
 import { workosSignUpHref } from "@/lib/auth/workosReturnTo";
-import { openWebLogin, openWebMembership, openWebSignup, requiresExternalWebAccountFlow } from "@/lib/capacitor/webAccountRedirects";
+import ProMembershipUpgradeCard from "@/features/membership/components/ProMembershipUpgradeCard";
 
 function CommunityIcon() {
   const path = "M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6m8 0a3 3 0 1 1 0-6 3 3 0 0 1 0 6M3 19c0-2.8 2.8-4 5-4s5 1.2 5 4m3 0c0-2.4 2.3-3.5 5-3.5 2.1 0 5 1 5 3.5";
@@ -43,6 +43,7 @@ export default function CommunityPage({
   const [editPost, setEditPost] = useState(null);
   const [selectedMemberId, setSelectedMemberId] = useState("");
   const [feedTab, setFeedTab] = useState("latest");
+  const [proUpgradeOpen, setProUpgradeOpen] = useState(false);
 
   const authorName = fullName || [profile.firstName, profile.lastName].filter(Boolean).join(" ").trim() || "Community member";
   const feedScope =
@@ -74,6 +75,7 @@ export default function CommunityPage({
       void openWebMembership();
       return;
     }
+    setProUpgradeOpen(true);
     onRequestUpgrade?.();
   }
 
@@ -170,6 +172,13 @@ export default function CommunityPage({
       </section>
 
       <CommunityTrustDisclosure />
+
+      {proUpgradeOpen && isAuthenticated && !maySubmit ? (
+        <ProMembershipUpgradeCard
+          returnPath="/community"
+          onDismiss={() => setProUpgradeOpen(false)}
+        />
+      ) : null}
 
       {isAuthenticated ? (
         <CommunityConnectionsPanel userId={userId} onOpenMember={setSelectedMemberId} />

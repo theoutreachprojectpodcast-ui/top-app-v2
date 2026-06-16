@@ -97,30 +97,6 @@
   pointer-events: none;
 }
 
-.trustedDetailHero__logoBadge {
-  position: absolute;
-  left: var(--ds-space-5, 20px);
-  bottom: -44px;
-  z-index: 2;
-  width: 96px;
-  height: 96px;
-  padding: 8px;
-  display: grid;
-  place-items: center;
-  border-radius: var(--radius-input, 12px);
-  border: 1px solid var(--color-border);
-  background: var(--color-bg-card);
-  box-shadow:
-    0 4px 16px color-mix(in srgb, var(--color-shadow) 45%, transparent),
-    0 0 0 1px color-mix(in srgb, var(--color-bg-card) 80%, transparent);
-}
-
-.trustedDetailHero__logo {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
 .trustedDetailHero__panel {
   margin-top: 0;
   padding: 52px var(--ds-space-5, 20px) var(--ds-space-5, 20px);
@@ -688,14 +664,15 @@
     border-radius: var(--radius-card, 16px) var(--radius-card, 16px) 0 0;
   }
 
-  .trustedDetailHero__logoBadge {
+  .trustedDetailHero__logoSlot {
     position: relative;
     left: auto;
     bottom: auto;
-    width: 64px;
-    height: 64px;
     margin: -28px 0 0 var(--ds-space-3, 12px);
-    padding: 6px;
+  }
+
+  .trustedDetailHero__logoSlot .organizationLogo {
+    --org-logo-size: 64px;
   }
 
   .trustedDetailHero__panel {

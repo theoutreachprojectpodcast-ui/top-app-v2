@@ -201,6 +201,7 @@ export default function NonprofitCard({
               category={card.category}
               tier={card.tier}
               logoUrl={card.logoUrl}
+              name={card.name}
               layout={isTrustedResourcesCard ? "trustedResource" : "default"}
             />
           </div>

@@ -2,19 +2,17 @@
 
 import { useState } from "react";
 import {
-  APP_ACCESS_MEMBERSHIP_PRICE_LABEL,
   PRO_MEMBERSHIP_PRICE_LABEL,
+  SUPPORT_MEMBERSHIP_DISPLAY_NAME,
   SUPPORT_MEMBERSHIP_PRICE_LABEL,
 } from "@/features/membership/membershipTiers";
 import { navigateToStripeCheckout } from "@/lib/capacitor/billingNavigation";
 
 /**
- * Real Stripe Checkout for App Access / Support / Pro from the profile shell (WorkOS session).
- * @param {{ stripeReady: boolean, missingEnvKeys?: string[], returnPath?: string, onAfterRedirect?: () => void }} props
+ * Stripe Checkout for Support / Pro from settings (WorkOS session).
  */
 export default function ProfileMembershipCheckout({
   stripeReady,
-  stripeSponsorSubscriptionReady = false,
   missingEnvKeys = [],
   returnPath = "/profile",
   onAfterRedirect,
@@ -63,8 +61,8 @@ export default function ProfileMembershipCheckout({
             <code>{missingEnvKeys.join(", ")}</code>
           ) : (
             <>
-              <code>STRIPE_SECRET_KEY</code>, <code>STRIPE_PRICE_ACCESS_YEARLY</code>,{" "}
-              <code>STRIPE_PRICE_SUPPORT_MONTHLY</code>, <code>STRIPE_PRICE_PRO_MONTHLY</code>
+              <code>STRIPE_SECRET_KEY</code>, <code>STRIPE_PRICE_SUPPORT_YEARLY</code>,{" "}
+              <code>STRIPE_PRICE_PRO_YEARLY</code>
             </>
           )}
           .
@@ -77,23 +75,15 @@ export default function ProfileMembershipCheckout({
     <div className="profileMembershipCheckout">
       <h4 className="profileMembershipCheckoutTitle">Subscribe</h4>
       <p className="sponsorSectionLead">
-        App Access {APP_ACCESS_MEMBERSHIP_PRICE_LABEL} is required on web and mobile. Support{" "}
-        {SUPPORT_MEMBERSHIP_PRICE_LABEL} and Pro {PRO_MEMBERSHIP_PRICE_LABEL} are optional upgrades. Manage billing in
-        the portal after your first checkout.
+        {SUPPORT_MEMBERSHIP_DISPLAY_NAME} ({SUPPORT_MEMBERSHIP_PRICE_LABEL}) unlocks the platform. Pro (
+        {PRO_MEMBERSHIP_PRICE_LABEL}) adds community posting and premium features. Manage billing in the portal after
+        your first checkout.
       </p>
       {error ? <p className="applyError">{error}</p> : null}
       <div className="row wrap" style={{ marginTop: 10 }}>
         <button
           type="button"
           className="btnPrimary"
-          disabled={!!busy}
-          onClick={() => start("access")}
-        >
-          {busy === "access" ? "Redirecting…" : `App Access — ${APP_ACCESS_MEMBERSHIP_PRICE_LABEL}`}
-        </button>
-        <button
-          type="button"
-          className="btnSoft"
           disabled={!!busy}
           onClick={() => start("support")}
         >
@@ -107,16 +97,6 @@ export default function ProfileMembershipCheckout({
         >
           {busy === "member" ? "Redirecting…" : `Pro — ${PRO_MEMBERSHIP_PRICE_LABEL}`}
         </button>
-        {stripeSponsorSubscriptionReady ? (
-          <button
-            type="button"
-            className="btnSoft"
-            disabled={!!busy}
-            onClick={() => start("sponsor")}
-          >
-            {busy === "sponsor" ? "Redirecting…" : "Sponsor membership (monthly)"}
-          </button>
-        ) : null}
       </div>
     </div>
   );

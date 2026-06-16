@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import OrganizationLogo from "@/components/shared/OrganizationLogo";
 import "./home-sponsor-banner.css";
 
 const MOBILE_CAROUSEL_MQ = "(max-width: 760px)";
@@ -40,7 +41,14 @@ function SponsorHomePlacement({ sponsor }) {
       <div className="homeSponsorBannerSlot__brandRow">
         {hasLogo ? (
           <div className="homeSponsorBannerSlot__logoCell">
-            <img className="homeSponsorBannerSlot__logoFloat" src={logo} alt="" loading="lazy" decoding="async" />
+            <OrganizationLogo
+              src={logo}
+              alt=""
+              name={sponsor.name}
+              size="banner"
+              surface="onDark"
+              panel="auto"
+            />
           </div>
         ) : null}
         <div className="homeSponsorBannerSlot__detailsCell">

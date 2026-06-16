@@ -13,9 +13,9 @@ import {
   priceIdForTier,
   requestOriginForStripeRedirects,
   safeAppReturnPath,
-  stripeAccessYearlyConfigured,
   stripeMemberRecurringConfigured,
   stripeSponsorSubscriptionConfigured,
+  supportSubscriptionPriceId,
 } from "@/lib/billing/stripeConfig";
 import { getSponsorOpportunityById } from "@/lib/billing/sponsorOpportunities";
 import { isUpgrade, membershipTierRank } from "@/lib/billing/membershipTierOrder";
@@ -70,11 +70,11 @@ export async function POST(request) {
   }
 
   if (tier === "access") {
-    if (!stripeAccessYearlyConfigured()) {
+    if (!supportSubscriptionPriceId()) {
       return Response.json(
         {
-          error: "access_billing_not_configured",
-          message: "Set STRIPE_PRICE_ACCESS_YEARLY for App Access ($5.99/year) checkout.",
+          error: "billing_not_configured",
+          message: "Set STRIPE_PRICE_SUPPORT_YEARLY (or legacy STRIPE_PRICE_ACCESS_YEARLY) for Support Membership checkout.",
         },
         { status: 503 },
       );
@@ -90,7 +90,7 @@ export async function POST(request) {
     return Response.json(
       {
         error: "billing_not_configured",
-        message: "Set STRIPE_SECRET_KEY, STRIPE_PRICE_SUPPORT_MONTHLY, and STRIPE_PRICE_PRO_MONTHLY (or STRIPE_PRICE_MEMBER_MONTHLY).",
+        message: "Set STRIPE_SECRET_KEY, STRIPE_PRICE_SUPPORT_YEARLY, and STRIPE_PRICE_PRO_YEARLY (or monthly fallbacks).",
       },
       { status: 503 },
     );

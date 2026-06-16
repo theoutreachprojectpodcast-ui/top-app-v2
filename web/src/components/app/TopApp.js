@@ -696,6 +696,7 @@ function TopAppInner({ initialNav = "home" }) {
                     Become a Sponsor
                   </button>
                 </SiteMobileNavMoreMenu>
+                {isMobileShell && pageAtmosphere !== "podcast" ? <ColorSchemeToggle /> : null}
                 {isMobileShell && isLoggedIn ? <AdminConsoleLink /> : null}
               </div>
             </div>
@@ -703,7 +704,7 @@ function TopAppInner({ initialNav = "home" }) {
             <div className="topbarZone topbarRight">
             <div className="topbarActionsCluster">
               {pageAtmosphere === "home" ? <DownloadMobileAppButton /> : null}
-              {pageAtmosphere !== "podcast" ? <ColorSchemeToggle /> : null}
+              {!isMobileShell && pageAtmosphere !== "podcast" ? <ColorSchemeToggle /> : null}
               {isLoggedIn ? (
                 <>
                   {!isMobileShell ? <AdminConsoleLink /> : null}
@@ -963,7 +964,6 @@ function TopAppInner({ initialNav = "home" }) {
                 onRequestSignIn={openSignInForMembership}
                 sessionKind={sessionKind}
                 stripeMemberReady={!!authBackend?.stripe}
-                stripeSponsorSubscriptionReady={!!authBackend?.stripeSponsorSubscription}
                 stripeMemberMissingEnv={authBackend?.stripeMemberRecurringMissingEnv || []}
                 checkoutReturnPath="/profile"
                 membershipBillingStatus={profile.membershipBillingStatus}
@@ -990,7 +990,6 @@ function TopAppInner({ initialNav = "home" }) {
             onRequestSignIn={openSignInForMembership}
             sessionKind={sessionKind}
             stripeMemberReady={!!authBackend?.stripe}
-            stripeSponsorSubscriptionReady={!!authBackend?.stripeSponsorSubscription}
             checkoutReturnPath="/profile"
             membershipBillingStatus={profile.membershipBillingStatus}
             stripeCustomerReady={!!profile.stripeCustomerIdSet}

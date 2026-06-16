@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import SponsorsTieredSections from "@/features/sponsors/components/SponsorsTieredSections";
+import SponsorOpportunitiesSection from "@/features/sponsors/components/SponsorOpportunitiesSection";
 
 function ChannelChip({ icon, label }) {
   return (
@@ -95,6 +96,8 @@ export default function SponsorsLandingPage({
           </button>
         </div>
       </section>
+
+      <SponsorOpportunitiesSection checkoutReturnPath="/sponsors" />
     </div>
   );
 }

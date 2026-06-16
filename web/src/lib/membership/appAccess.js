@@ -2,9 +2,9 @@ import { hasActiveMemberBilling } from "@/lib/account/entitlements";
 import { isDefaultApprovedAdminEmail } from "@/lib/admin/adminPolicy";
 import { normalizeDbMembershipTier } from "@/lib/billing/membershipTierOrder";
 
-/** Canonical $5.99/year app access product (required on web and mobile). */
-export const APP_ACCESS_MEMBERSHIP_DISPLAY_NAME = "App Access";
-export const APP_ACCESS_MEMBERSHIP_PRICE_LABEL = "$5.99/yr";
+/** Canonical Support membership product (required on web and mobile). */
+export const APP_ACCESS_MEMBERSHIP_DISPLAY_NAME = "Support Membership";
+export const APP_ACCESS_MEMBERSHIP_PRICE_LABEL = "$0.99/yr";
 
 const PAID_ACCESS_TIERS = new Set(["access", "support", "member", "sponsor"]);
 

@@ -9,9 +9,11 @@ import SiteBottomNavGlyph from "@/components/navigation/SiteBottomNavGlyph";
 import SiteMobileNavMoreMenu from "@/components/navigation/SiteMobileNavMoreMenu";
 import HeaderInner from "@/components/layout/HeaderInner";
 import SubpageTopbarActions from "@/components/layout/SubpageTopbarActions";
+import AdminConsoleLink from "@/components/admin/AdminConsoleLink";
 import FooterInner from "@/components/layout/FooterInner";
 import MissionPageTopStrip from "@/components/layout/MissionPageTopStrip";
 import { useNavAuthState } from "@/hooks/useNavAuthState";
+import { useMobileShell } from "@/hooks/useMobileShell";
 import { usePodcastDarkSchemeLock } from "@/hooks/usePodcastDarkSchemeLock";
 import { resolvePageAtmosphere } from "@/lib/design/pageAtmosphere";
 import { useImmersiveHeaderScroll } from "@/hooks/useImmersiveHeaderScroll";
@@ -65,6 +67,7 @@ export default function AppShell({
   usePodcastDarkSchemeLock(podcastThemeShell);
 
   const { authed: isLoggedIn } = useNavAuthState();
+  const isMobileShell = useMobileShell();
 
   const mainChromeClass = immersiveHeaderScroll ? " header-at-top" : "";
   const authChromeClass = useTopAppStructure ? (isLoggedIn ? " topApp--auth-in" : " topApp--auth-out") : "";
@@ -159,13 +162,15 @@ export default function AppShell({
                         </Link>
                       </SiteMobileNavMoreMenu>
                     ) : null}
+                    {isMobileShell && !podcastThemeShell && showThemeToggle ? <ColorSchemeToggle /> : null}
+                    {isMobileShell && isLoggedIn ? <AdminConsoleLink /> : null}
                     <SubpageTopbarActions section="lead" />
                   </div>
                 </div>
                 <div className="topbarZone topbarCenter" aria-hidden="true" />
                 <div className="topbarZone topbarRight">
                   <div className="topbarActionsCluster">
-                    {!podcastThemeShell && showThemeToggle ? <ColorSchemeToggle /> : null}
+                    {!isMobileShell && !podcastThemeShell && showThemeToggle ? <ColorSchemeToggle /> : null}
                     <SubpageTopbarActions section="auth" />
                   </div>
                 </div>

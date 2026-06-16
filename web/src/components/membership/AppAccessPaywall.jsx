@@ -7,11 +7,11 @@ import AuthLoadingOverlay from "@/components/auth/AuthLoadingOverlay";
 import { useAuthSession } from "@/components/auth/AuthSessionProvider";
 import { readNavAuthCache } from "@/lib/auth/navAuthCache";
 import {
-  APP_ACCESS_MEMBERSHIP_DISPLAY_NAME,
-  APP_ACCESS_MEMBERSHIP_PRICE_LABEL,
-  hasMobileAppAccess,
-  navCacheHasFreeAccess,
-} from "@/lib/membership/appAccess";
+  SUPPORT_MEMBERSHIP_DISPLAY_NAME,
+  SUPPORT_MEMBERSHIP_PRICE_LABEL,
+  PRO_MEMBERSHIP_PRICE_LABEL,
+} from "@/features/membership/membershipTiers";
+import { hasMobileAppAccess, navCacheHasFreeAccess } from "@/lib/membership/appAccess";
 import { useProfileData } from "@/features/profile/ProfileDataProvider";
 
 /**
@@ -85,16 +85,16 @@ export default function AppAccessPaywall({
         credentials: "include",
         cache: "no-store",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tier: "access", returnPath: checkoutReturnPath }),
+        body: JSON.stringify({ tier: "support", returnPath: checkoutReturnPath }),
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.url) {
         window.location.assign(data.url);
         return;
       }
-      if (data.error === "access_billing_not_configured" || data.error === "price_not_configured") {
+      if (data.error === "access_billing_not_configured" || data.error === "billing_not_configured" || data.error === "price_not_configured") {
         setError(
-          "App Access checkout is being configured in Stripe. Please try again shortly or contact support@theoutreachproject.app.",
+          "Support Membership checkout is being configured in Stripe. Please try again shortly or contact support@theoutreachproject.app.",
         );
         return;
       }
@@ -127,15 +127,15 @@ export default function AppAccessPaywall({
         <div className="mobileSplashPage__brand mobileSplashPage__brand--small">
           <BrandMark variant="mark" size="splash" alt="The Outreach Project" />
         </div>
-        <h1 className="mobileSplashPage__title">Activate App Access</h1>
+        <h1 className="mobileSplashPage__title">Activate Support Membership</h1>
         <p className="mobileSplashPage__lead">
-          App Access ({APP_ACCESS_MEMBERSHIP_PRICE_LABEL}) is required to use The Outreach Project on the web and in
-          the mobile app.
+          {SUPPORT_MEMBERSHIP_DISPLAY_NAME} ({SUPPORT_MEMBERSHIP_PRICE_LABEL}) is required to use The Outreach Project on
+          the web and in the mobile app.
         </p>
         <ul className="mobileSplashPage__benefits">
-          <li>Full access to sponsors, trusted resources, and community</li>
+          <li>Trusted resources, nonprofit directory, and community browsing</li>
           <li>Save favorites and sync your profile across devices</li>
-          <li>Optional Support ($1/mo) and Pro ($5.99/mo) upgrades after activation</li>
+          <li>Optional Pro upgrade ({PRO_MEMBERSHIP_PRICE_LABEL}) for posting and premium tools</li>
         </ul>
         {checkoutResult === "success" ? (
           <p className="mobileSplashPage__notice" role="status">
@@ -144,7 +144,7 @@ export default function AppAccessPaywall({
         ) : null}
         {checkoutResult === "cancel" ? (
           <p className="mobileSplashPage__notice mobileSplashPage__notice--warn" role="status">
-            Checkout was canceled. App Access is required to continue.
+            Checkout was canceled. Support Membership is required to continue.
           </p>
         ) : null}
         {error ? (
@@ -159,7 +159,7 @@ export default function AppAccessPaywall({
             onClick={startAccessCheckout}
             disabled={busy || loadingProfile || authLoading}
           >
-            {busy ? "Redirecting to checkout…" : `Continue — ${APP_ACCESS_MEMBERSHIP_PRICE_LABEL}`}
+            {busy ? "Redirecting to checkout…" : `Continue — ${SUPPORT_MEMBERSHIP_PRICE_LABEL}`}
           </button>
           <button type="button" className="btnSoft mobileSplashPage__btn" onClick={() => router.push(backHref)}>
             {backLabel}

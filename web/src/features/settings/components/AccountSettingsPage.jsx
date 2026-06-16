@@ -203,7 +203,6 @@ export default function AccountSettingsPage({
           onRequestSignIn={openSignInForMembership}
           sessionKind={sessionKind}
           stripeMemberReady={!!authBackend?.stripe}
-          stripeSponsorSubscriptionReady={!!authBackend?.stripeSponsorSubscription}
           checkoutReturnPath="/settings"
           membershipBillingStatus={profile.membershipBillingStatus}
           stripeCustomerReady={!!profile.stripeCustomerIdSet}

@@ -2,23 +2,22 @@
  * Membership domain — tier definitions for UI and billing/entitlements.
  * Storage: profile.membershipStatus uses normalized keys from normalizeMembershipTierKey().
  *
- * Mobile app: App Access ($5.99/yr) is required on web and in Capacitor. Support / Pro are optional upgrades.
+ * User billing offers Support ($0.99/yr) and Pro ($5.99/yr) only.
+ * Legacy `access` tier remains in DB for existing subscribers.
  */
 
-import {
-  APP_ACCESS_MEMBERSHIP_DISPLAY_NAME,
-  APP_ACCESS_MEMBERSHIP_PRICE_LABEL,
-} from "@/lib/membership/appAccess";
+/** Advanced optional tier — Stripe `STRIPE_PRICE_SUPPORT_YEARLY` (fallback: monthly / legacy access yearly). */
+export const SUPPORT_MEMBERSHIP_DISPLAY_NAME = "Support Membership";
+export const SUPPORT_MEMBERSHIP_PRICE_LABEL = "$0.99/yr";
 
-export { APP_ACCESS_MEMBERSHIP_DISPLAY_NAME, APP_ACCESS_MEMBERSHIP_PRICE_LABEL };
-
-/** Advanced optional tier — Stripe `STRIPE_PRICE_SUPPORT_MONTHLY`. */
-export const SUPPORT_MEMBERSHIP_DISPLAY_NAME = "Support with $1";
-export const SUPPORT_MEMBERSHIP_PRICE_LABEL = "$1/mo";
-
-/** Advanced optional tier — Stripe `STRIPE_PRICE_PRO_MONTHLY`. */
+/** Pro tier — Stripe `STRIPE_PRICE_PRO_YEARLY` (fallback: monthly). Stored as `member` in DB. */
 export const PRO_MEMBERSHIP_DISPLAY_NAME = "Pro Membership";
-export const PRO_MEMBERSHIP_PRICE_LABEL = "$5.99/mo";
+export const PRO_MEMBERSHIP_PRICE_LABEL = "$5.99/yr";
+
+/** @deprecated Legacy app-access product label — use Support Membership for new checkouts. */
+export const APP_ACCESS_MEMBERSHIP_DISPLAY_NAME = SUPPORT_MEMBERSHIP_DISPLAY_NAME;
+/** @deprecated */
+export const APP_ACCESS_MEMBERSHIP_PRICE_LABEL = SUPPORT_MEMBERSHIP_PRICE_LABEL;
 
 export const MEMBERSHIP_TIER_KEYS = {
   NONE: "none",
@@ -28,74 +27,70 @@ export const MEMBERSHIP_TIER_KEYS = {
   MEMBER: "member",
 };
 
-/** @typedef {{ id: string, label: string, shortLabel: string, benefits: string[], isMember: boolean, hint: string, priceLabel?: string, requiredForMobile?: boolean, advancedUpgrade?: boolean }} MembershipTierDefinition */
+/** @typedef {{ id: string, label: string, shortLabel: string, benefits: string[], isMember: boolean, hint: string, priceLabel?: string, advancedUpgrade?: boolean, legacy?: boolean, internal?: boolean }} MembershipTierDefinition */
 
 /** @type {MembershipTierDefinition[]} */
 export const MEMBERSHIP_TIER_DEFINITIONS = [
   {
-    id: MEMBERSHIP_TIER_KEYS.ACCESS,
-    label: APP_ACCESS_MEMBERSHIP_DISPLAY_NAME,
-    shortLabel: "App Access",
-    priceLabel: APP_ACCESS_MEMBERSHIP_PRICE_LABEL,
-    requiredForMobile: true,
-    benefits: [
-      "Full access on the website and iOS/Android app",
-      "Browse sponsors, trusted resources, and community",
-      "Save favorites and manage your profile",
-    ],
-    isMember: true,
-    hint: "Required for web and mobile app access. Billed annually at $5.99/year.",
-  },
-  {
     id: MEMBERSHIP_TIER_KEYS.NONE,
     label: "No membership",
-    shortLabel: "None",
+    shortLabel: "Free",
     benefits: [
-      "Website and app preview only until App Access is activated",
+      "Browse public previews until you activate Support Membership",
     ],
     isMember: false,
-    hint: "App Access ($5.99/year) is required on web and mobile.",
+    hint: "Support Membership ($0.99/year) unlocks the full platform.",
   },
   {
     id: MEMBERSHIP_TIER_KEYS.SUPPORT,
     label: SUPPORT_MEMBERSHIP_DISPLAY_NAME,
     shortLabel: "Support",
     priceLabel: SUPPORT_MEMBERSHIP_PRICE_LABEL,
-    advancedUpgrade: true,
     benefits: [
-      "Everything in App Access",
-      "Priority newsletter identity and supporter recognition pathways",
-      "Enhanced profile presentation as features roll out",
+      "User account access and profile creation",
+      "Trusted Resources and nonprofit directory",
+      "Basic community viewing and podcast browsing",
+      "Save and favorite supported content",
+      "Basic platform participation",
     ],
     isMember: false,
-    hint: "Optional upgrade for existing App Access members.",
+    hint: "Entry-level paid membership — billed annually at $0.99/year.",
   },
   {
     id: MEMBERSHIP_TIER_KEYS.MEMBER,
     label: PRO_MEMBERSHIP_DISPLAY_NAME,
     shortLabel: "Pro",
     priceLabel: PRO_MEMBERSHIP_PRICE_LABEL,
-    advancedUpgrade: true,
     benefits: [
-      "Everything in App Access",
-      "Submit community stories for moderation review",
-      "Member-only flows and enhanced profile fields",
+      "Everything in Support Membership",
+      "Full community participation and story submission",
+      "Enhanced community interactions",
+      "Advanced podcast and premium resource tools",
+      "Priority access to future Pro-exclusive features",
     ],
     isMember: true,
-    hint: "Optional upgrade for existing App Access members.",
+    hint: "Premium membership — billed annually at $5.99/year.",
+  },
+  {
+    id: MEMBERSHIP_TIER_KEYS.ACCESS,
+    label: "App Access (legacy)",
+    shortLabel: "Access",
+    priceLabel: SUPPORT_MEMBERSHIP_PRICE_LABEL,
+    legacy: true,
+    benefits: ["Legacy annual access — same platform features as Support"],
+    isMember: true,
+    hint: "Existing subscribers keep access; new members choose Support Membership.",
   },
   {
     id: MEMBERSHIP_TIER_KEYS.SPONSOR,
     label: "Sponsor Membership",
     shortLabel: "Sponsor",
-    advancedUpgrade: true,
+    internal: true,
     benefits: [
-      "Partnership pathways aligned to sponsor packages",
-      "Priority routing for sponsorship inquiries",
-      "Co-marketing touchpoints per executed agreement",
+      "Internal sponsor role assigned after partnership onboarding",
     ],
     isMember: false,
-    hint: "Assigned after sponsorship onboarding. Separate from mission partner packages.",
+    hint: "Not available in profile billing — see Sponsor opportunities on the Sponsors page.",
   },
 ];
 
@@ -108,7 +103,7 @@ export function getMembershipTierDefinition(tierKey) {
 export function normalizeMembershipTierKey(value) {
   const v = String(value || "").toLowerCase().trim();
   if (v === "access" || v === "app_access") return MEMBERSHIP_TIER_KEYS.ACCESS;
-  if (v === "member" || v === "member_active" || v === "active") return MEMBERSHIP_TIER_KEYS.MEMBER;
+  if (v === "member" || v === "member_active" || v === "active" || v === "pro") return MEMBERSHIP_TIER_KEYS.MEMBER;
   if (v === "sponsor") return MEMBERSHIP_TIER_KEYS.SPONSOR;
   if (v === "none" || v === "guest" || v === "" || v === "free") return MEMBERSHIP_TIER_KEYS.NONE;
   if (v === "supporter" || v === "support") return MEMBERSHIP_TIER_KEYS.SUPPORT;
@@ -122,6 +117,7 @@ export function membershipBadgeChipClass(tierKey, isMember = false) {
   if (
     isMember
     || tier === MEMBERSHIP_TIER_KEYS.ACCESS
+    || tier === MEMBERSHIP_TIER_KEYS.SUPPORT
     || tier === MEMBERSHIP_TIER_KEYS.MEMBER
     || tier === MEMBERSHIP_TIER_KEYS.SPONSOR
   ) {

@@ -6,9 +6,10 @@ import BrandMark from "@/components/BrandMark";
 import AuthLoadingOverlay from "@/components/auth/AuthLoadingOverlay";
 import { isCapacitorNative } from "@/lib/capacitor/platform";
 import {
-  APP_ACCESS_MEMBERSHIP_DISPLAY_NAME,
-  APP_ACCESS_MEMBERSHIP_PRICE_LABEL,
-} from "@/lib/membership/appAccess";
+  SUPPORT_MEMBERSHIP_DISPLAY_NAME,
+  SUPPORT_MEMBERSHIP_PRICE_LABEL,
+  PRO_MEMBERSHIP_PRICE_LABEL,
+} from "@/features/membership/membershipTiers";
 import { launchWorkOSAuth } from "@/lib/auth/workosNativeAuthLaunch";
 import { workosMobileSignInHref, workosMobileSignUpHref } from "@/lib/auth/workosReturnTo";
 import { mobileOAuthSplashErrorMessage } from "@/lib/auth/workosCallbackErrors";
@@ -87,8 +88,8 @@ export default function MobileSplashPage() {
           Veterans, sponsors, trusted resources, and community — in one app.
         </p>
         <p className="mobileSplashPage__pricing">
-          <strong>{APP_ACCESS_MEMBERSHIP_DISPLAY_NAME}</strong> — {APP_ACCESS_MEMBERSHIP_PRICE_LABEL} required for web
-          and app access. Support and Pro are optional upgrades for members.
+          <strong>{SUPPORT_MEMBERSHIP_DISPLAY_NAME}</strong> — {SUPPORT_MEMBERSHIP_PRICE_LABEL} for web and app access.
+          Pro ({PRO_MEMBERSHIP_PRICE_LABEL}) adds community posting and premium tools.
         </p>
         {authError ? (
           <p className="mobileSplashPage__notice mobileSplashPage__notice--warn" role="alert">
