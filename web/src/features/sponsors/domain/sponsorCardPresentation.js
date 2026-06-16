@@ -12,6 +12,7 @@ import {
   THE_VETERANS_VETERAN_LOGO_URL,
   VET_NAV_SERVICES_LOGO_URL,
 } from "@/features/sponsors/data/featuredSponsors";
+import { getCatalogLogoPanelMode } from "@/lib/media/logoPresentationCatalog";
 
 const DEFAULT = {
   accentColor: "color-mix(in srgb, var(--color-accent) 88%, #ffffff 12%)",
@@ -110,13 +111,18 @@ export function getSponsorCardPresentation(slug) {
   const raw = String(slug || "").trim().toLowerCase();
   const row = BY_SLUG[raw];
   if (!row) {
-    return { ...DEFAULT, locationChips: [], logoFallbackUrls: [] };
+    return {
+      ...DEFAULT,
+      locationChips: [],
+      logoFallbackUrls: [],
+      logoPanelMode: getCatalogLogoPanelMode(raw) || DEFAULT.logoPanelMode,
+    };
   }
   return {
     ...DEFAULT,
     ...row,
     locationChips: Array.isArray(row.locationChips) ? [...row.locationChips] : [],
     logoFallbackUrls: Array.isArray(row.logoFallbackUrls) ? [...row.logoFallbackUrls] : [],
-    logoPanelMode: row.logoPanelMode ?? DEFAULT.logoPanelMode,
+    logoPanelMode: row.logoPanelMode ?? getCatalogLogoPanelMode(raw) ?? DEFAULT.logoPanelMode,
   };
 }

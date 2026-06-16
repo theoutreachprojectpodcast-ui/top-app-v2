@@ -197,22 +197,40 @@ function recommendPad(aspect, fill, fit) {
   return 8;
 }
 
-function recommendFraming(bounds, samples, matte) {
+function recommendFraming(bounds, samples) {
   const avgSat = samples.length
     ? samples.reduce((s, px) => s + px.sat, 0) / samples.length
     : 0;
-  const photoBacked = bounds.fill > 0.9 && avgSat > 0.16;
-  const letterboxX = bounds.fillW < 0.86;
-  const letterboxY = bounds.fillH < 0.86;
+  const avgLuma = samples.length
+    ? samples.reduce((s, px) => s + px.luma, 0) / samples.length
+    : 0;
 
-  if (photoBacked || letterboxX || letterboxY) {
-    const zoomX = letterboxX ? clamp(1 / bounds.fillW, 1.04, 1.42) : 1;
-    const zoomY = letterboxY ? clamp(1 / bounds.fillH, 1.04, 1.42) : 1;
+  const hasTransparency = bounds.fill < 0.72;
+  const isFlatPlate =
+    (avgLuma < 0.18 || avgLuma > 0.86) && avgSat < 0.14;
+  const isWideMark = bounds.aspect >= 1.32;
+  const isTallMark = bounds.aspect <= 0.76;
+  const photoBacked =
+    bounds.fill > 0.92 && avgSat > 0.22 && !isFlatPlate && !hasTransparency && !isWideMark;
+
+  if (hasTransparency || isWideMark || isTallMark || isFlatPlate) {
+    const pad = isWideMark || isTallMark ? 5 : bounds.fill >= 0.95 ? 6 : 8;
+    return {
+      fit: "contain",
+      pad,
+      scale: isWideMark ? 1.02 : bounds.fill >= 0.95 && bounds.aspect > 0.9 && bounds.aspect < 1.1 ? 1.03 : 1,
+      photoBacked: false,
+    };
+  }
+
+  if (photoBacked) {
+    const zoomX = bounds.fillW < 0.9 ? clamp(1 / bounds.fillW, 1.04, 1.38) : 1;
+    const zoomY = bounds.fillH < 0.9 ? clamp(1 / bounds.fillH, 1.04, 1.38) : 1;
     return {
       fit: "cover",
       pad: 0,
-      scale: clamp(Math.max(zoomX, zoomY, photoBacked ? 1.06 : 1), 1, 1.38),
-      photoBacked,
+      scale: clamp(Math.max(zoomX, zoomY, 1.06), 1, 1.35),
+      photoBacked: true,
     };
   }
 
