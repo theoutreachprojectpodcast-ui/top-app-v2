@@ -81,6 +81,7 @@ export default function FeaturedSponsorCard({
   isFavorite = false,
   onToggleFavorite,
   onRequestSignIn,
+  hidePrimaryBadge = false,
 }) {
   const router = useRouter();
   const [logoIndex, setLogoIndex] = useState(0);
@@ -138,6 +139,8 @@ export default function FeaturedSponsorCard({
     : undefined;
 
   const tierClass = sponsor.displayGroup ? ` sponsorPremiumCard--displayTier-${sponsor.displayGroup}` : "";
+  const showFavoriteControl = favoriteKey && (favoritesEnabled || onRequestSignIn);
+  const showCardTop = !hidePrimaryBadge || showFavoriteControl;
 
   return (
     <article
@@ -166,49 +169,53 @@ export default function FeaturedSponsorCard({
         aria-hidden
       />
       <div className="sponsorPremiumCardInner">
-        <div className="sponsorPremiumCardTop">
-          <div className="sponsorPremiumCardBadges" aria-label="Sponsor recognition">
-            {sponsor.primaryBadge ? (
-              <span
-                className={`sponsorPremiumBadge sponsorPremiumBadge--primary sponsorPremiumBadge--${sponsor.primaryBadge.key}`}
-              >
-                {sponsor.primaryBadge.label}
-              </span>
+        {showCardTop ? (
+          <div className="sponsorPremiumCardTop">
+            {!hidePrimaryBadge ? (
+              <div className="sponsorPremiumCardBadges" aria-label="Sponsor recognition">
+                {sponsor.primaryBadge ? (
+                  <span
+                    className={`sponsorPremiumBadge sponsorPremiumBadge--primary sponsorPremiumBadge--${sponsor.primaryBadge.key}`}
+                  >
+                    {sponsor.primaryBadge.label}
+                  </span>
+                ) : null}
+              </div>
+            ) : null}
+            {showFavoriteControl ? (
+              <div className="sponsorPremiumCardTopActions">
+                {favoritesEnabled ? (
+                  <button
+                    type="button"
+                    className={`favBtn sponsorPremiumFavBtn${isFavorite ? " favBtn--on" : ""}`}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      onToggleFavorite?.(`sponsor:${favoriteKey}`);
+                    }}
+                    aria-pressed={isFavorite}
+                    aria-label={isFavorite ? "Remove sponsor from saved" : "Save sponsor"}
+                  >
+                    {isFavorite ? "★" : "☆"}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="favBtn favBtn--muted sponsorPremiumFavBtn"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      onRequestSignIn();
+                    }}
+                    aria-label="Sign in to save sponsor"
+                  >
+                    ☆
+                  </button>
+                )}
+              </div>
             ) : null}
           </div>
-          {favoriteKey ? (
-            <div className="sponsorPremiumCardTopActions">
-              {favoritesEnabled ? (
-                <button
-                  type="button"
-                  className={`favBtn sponsorPremiumFavBtn${isFavorite ? " favBtn--on" : ""}`}
-                  onClick={(event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    onToggleFavorite?.(`sponsor:${favoriteKey}`);
-                  }}
-                  aria-pressed={isFavorite}
-                  aria-label={isFavorite ? "Remove sponsor from saved" : "Save sponsor"}
-                >
-                  {isFavorite ? "★" : "☆"}
-                </button>
-              ) : onRequestSignIn ? (
-                <button
-                  type="button"
-                  className="favBtn favBtn--muted sponsorPremiumFavBtn"
-                  onClick={(event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    onRequestSignIn();
-                  }}
-                  aria-label="Sign in to save sponsor"
-                >
-                  ☆
-                </button>
-              ) : null}
-            </div>
-          ) : null}
-        </div>
+        ) : null}
         <div className="sponsorPremiumBrand">
           <div className="sponsorPremiumBrandIdentity">
             <OrganizationLogo

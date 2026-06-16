@@ -4,6 +4,7 @@ import {
   HeartHandshake,
   Home,
   Mail,
+  Podcast,
   Shield,
   UserRound,
   UsersRound,
@@ -15,6 +16,7 @@ const GLYPHS = {
   community: UsersRound,
   sponsors: HeartHandshake,
   profile: UserRound,
+  podcast: Podcast,
   contact: Mail,
 };
 

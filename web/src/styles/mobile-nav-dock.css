@@ -1,5 +1,5 @@
 /**
- * Unified mobile bottom dock (Home · Profile · Contact) + header hamburger overflow.
+ * Unified mobile bottom dock (Home · Profile · Podcast) + header hamburger overflow.
  * Applies to main `TopApp` and all `AppShell` routes that use `.footerDock` + `.bottomNav--mobileDock`.
  */
 
@@ -217,7 +217,7 @@
     border-color: rgba(111, 194, 255, 0.35);
   }
 
-  /* Three-tile bottom dock: hide overflow destinations; keep Home, Profile, Contact */
+  /* Three-tile bottom dock: hide overflow destinations; keep Home, Profile, Podcast */
   .footerDock .bottomNav.bottomNav--withIcons.bottomNav--mobileDock {
     display: grid !important;
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;

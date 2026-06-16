@@ -689,8 +689,8 @@ function TopAppInner({ initialNav = "home" }) {
                   <button type="button" className="siteMobileNavMore__entry" onClick={goToSponsorsHub}>
                     Sponsors
                   </button>
-                  <button type="button" className="siteMobileNavMore__entry" onClick={() => router.push("/podcasts")}>
-                    Podcast
+                  <button type="button" className="siteMobileNavMore__entry" onClick={() => setNav("contact")}>
+                    Contact
                   </button>
                   <button type="button" className="siteMobileNavMore__entry" onClick={goToSponsorsHub}>
                     Become a Sponsor
@@ -1235,13 +1235,13 @@ function TopAppInner({ initialNav = "home" }) {
               <span className="navItemLabel">Profile</span>
             </button>
             <button
-              className={`navItem navItem--dockCol navItem--dockPrimary ${nav === "contact" ? "isActive" : ""}`}
-              onClick={() => setNav("contact")}
+              className={`navItem navItem--dockCol navItem--dockPrimary ${pathname?.startsWith("/podcasts") ? "isActive" : ""}`}
+              onClick={() => router.push("/podcasts")}
               type="button"
-              title="Contact"
+              title="Podcast"
             >
-              <SiteBottomNavGlyph navKey="contact" className="navItemGlyph" />
-              <span className="navItemLabel">Contact</span>
+              <SiteBottomNavGlyph navKey="podcast" className="navItemGlyph" />
+              <span className="navItemLabel">Podcast</span>
             </button>
           </nav>
         </FooterInner>

@@ -19,13 +19,14 @@ import { resolvePageAtmosphere } from "@/lib/design/pageAtmosphere";
 import { useImmersiveHeaderScroll } from "@/hooks/useImmersiveHeaderScroll";
 import CapacitorFooterPortal from "@/components/capacitor/CapacitorFooterPortal";
 
-const PRIMARY_BOTTOM_NAV_KEYS = new Set(["home", "profile", "contact"]);
+const PRIMARY_BOTTOM_NAV_KEYS = new Set(["home", "profile", "podcast"]);
 
 const NAV_ITEMS = [
   { href: "/", key: "home", label: "Home", linkTitle: "Home" },
   { href: "/trusted", key: "trusted", label: "Trusted", linkTitle: "Trusted Resources" },
   { href: "/community", key: "community", label: "Community", linkTitle: "Community" },
   { href: "/sponsors", key: "sponsors", label: "Sponsors", linkTitle: "Sponsors" },
+  { href: "/podcasts", key: "podcast", label: "Podcast", linkTitle: "Podcast" },
   { href: "/profile", key: "profile", label: "Profile", linkTitle: "Profile" },
   { href: "/contact", key: "contact", label: "Contact", linkTitle: "Contact" },
 ];
@@ -114,6 +115,9 @@ export default function AppShell({
                         <Link className="siteMobileNavMore__entry" href="/sponsors">
                           Sponsors
                         </Link>
+                        <Link className="siteMobileNavMore__entry" href="/contact">
+                          Contact
+                        </Link>
                         <Link className="siteMobileNavMore__entry" href="/">
                           Main app home
                         </Link>
@@ -154,8 +158,8 @@ export default function AppShell({
                         <Link className="siteMobileNavMore__entry" href="/sponsors">
                           Sponsors
                         </Link>
-                        <Link className="siteMobileNavMore__entry" href="/podcasts">
-                          Podcast
+                        <Link className="siteMobileNavMore__entry" href="/contact">
+                          Contact
                         </Link>
                         <Link className="siteMobileNavMore__entry" href="/sponsors">
                           Become a Sponsor

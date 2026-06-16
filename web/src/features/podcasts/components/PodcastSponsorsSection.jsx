@@ -17,7 +17,7 @@ export default function PodcastSponsorsSection({ sponsors = [] }) {
       </p>
       <div className="sponsorFeaturedShowcase podcastSponsorsCardGrid">
         {models.map((s) => (
-          <FeaturedSponsorCard key={s.id} sponsor={s} />
+          <FeaturedSponsorCard key={s.id} sponsor={s} hidePrimaryBadge />
         ))}
       </div>
     </section>
