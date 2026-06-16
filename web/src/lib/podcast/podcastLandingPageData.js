@@ -99,7 +99,7 @@ export async function getCachedPodcastLandingExtras(episodeIds = []) {
       const admin = createSupabaseAdminClient();
       return loadPodcastLandingExtras(admin, episodeIds);
     },
-    ["podcast-landing-extras-v1", key],
+    ["podcast-landing-extras-v2", key],
     { revalidate: ttl, tags: ["podcast-landing-extras"] },
   );
   return cached();

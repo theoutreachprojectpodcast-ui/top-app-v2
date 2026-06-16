@@ -12,6 +12,35 @@ const SPONSOR_TABLE = "sponsors_catalog";
 /** Omitted from `/sponsors` tier roster and static fallback seed (slug unchanged in DB for history). */
 const HIDDEN_SPONSOR_HUB_ROSTER_SLUGS = new Set(["wars-end-merch"]);
 
+/** QA / legacy podcast slugs that map to curated FEATURED_SPONSORS ids. */
+export const PODCAST_SPONSOR_SEED_SLUG_ALIASES = {
+  "game-day-mens-health": "gameday-mens-health",
+};
+
+const WARS_END_MERCH_LOGO_URL =
+  "https://images.squarespace-cdn.com/content/v1/6959573fd567e738e7c613f3/cfd220a6-7daf-4845-8d83-fdb8c2ffa128/ChatGPT+Image+Jan+7%2C+2026%2C+08_37_51+PM.png?format=2500w";
+
+/** Podcast-only seed rows not present in FEATURED_SPONSORS (hub-hidden or legacy slugs). */
+const PODCAST_SPONSOR_EXTRA_SEEDS = [
+  {
+    id: "wars-end-merch",
+    slug: "wars-end-merch",
+    name: "War's End",
+    logo_url: WARS_END_MERCH_LOGO_URL,
+    logo_status: "curated",
+    logo_review_status: "curated",
+    website_url: "https://warsendmerch.com/",
+    short_description: "Podcast sponsor",
+    tagline: "Supporting The Outreach Project podcast.",
+    featured: true,
+    is_active: true,
+    sponsor_scope: "podcast",
+    sponsor_type: "podcast_sponsor",
+    enrichment_status: "seed",
+    verified: true,
+  },
+];
+
 /** Slugs hidden from /sponsors roster only (direct `/sponsors/[slug]` may still resolve when active in DB). */
 export function isHiddenFromSponsorHubRosterSlug(slug) {
   const key = String(slug || "").trim().toLowerCase();
@@ -172,6 +201,65 @@ export function mergeLiveHubCatalogWithStaticSeed(liveRows) {
   return sortSponsorsCatalogRows(filterAppSponsorHubListRows([...bySlug.values()]));
 }
 
+function buildPodcastSeedBySlug() {
+  const bySlug = new Map();
+  for (const r of fallbackRows()) {
+    const k = sponsorCatalogRowKey(r);
+    if (k) bySlug.set(k, normalizeSponsorRecord({ ...r, sponsor_scope: "podcast" }));
+  }
+  for (const extra of PODCAST_SPONSOR_EXTRA_SEEDS) {
+    const row = normalizeSponsorRecord(extra);
+    const k = sponsorCatalogRowKey(row);
+    if (k) bySlug.set(k, row);
+  }
+  for (const [alias, canonical] of Object.entries(PODCAST_SPONSOR_SEED_SLUG_ALIASES)) {
+    const seed = bySlug.get(canonical);
+    if (seed) bySlug.set(alias, seed);
+  }
+  return bySlug;
+}
+
+function lookupPodcastSeedRow(seedBySlug, slug) {
+  const key = sponsorCatalogRowKey({ slug });
+  if (!key) return null;
+  if (seedBySlug.has(key)) return seedBySlug.get(key);
+  const alias = PODCAST_SPONSOR_SEED_SLUG_ALIASES[key];
+  return alias && seedBySlug.has(alias) ? seedBySlug.get(alias) : null;
+}
+
+/** Offline podcast roster floor (curated logos + copy when DB rows are sparse). */
+export function getStaticPodcastSponsorCatalogRows() {
+  const seen = new Set();
+  const rows = [];
+  for (const row of buildPodcastSeedBySlug().values()) {
+    const id = sponsorCatalogRowKey(row);
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    rows.push(row);
+  }
+  return sortSponsorsCatalogRows(rows);
+}
+
+/**
+ * `/podcasts` sponsor strip: merge live `sponsor_scope=podcast` rows with curated seed art/links.
+ * @param {Record<string, unknown>[]} liveRows
+ */
+export function mergeLivePodcastCatalogWithStaticSeed(liveRows) {
+  const seedBySlug = buildPodcastSeedBySlug();
+  const live = Array.isArray(liveRows) ? liveRows : [];
+  if (!live.length) return getStaticPodcastSponsorCatalogRows();
+
+  const bySlug = new Map();
+  for (const r of live) {
+    const k = sponsorCatalogRowKey(r);
+    if (!k) continue;
+    const normalized = normalizeSponsorRecord({ ...r, sponsor_scope: "podcast" });
+    const seed = lookupPodcastSeedRow(seedBySlug, k);
+    bySlug.set(k, seed ? mergeSponsorHubSeedRowWithLive(seed, normalized) : normalized);
+  }
+  return sortSponsorsCatalogRows([...bySlug.values()]);
+}
+
 function fallbackRows() {
   const seed = FEATURED_SPONSORS;
   return seed.map((item, idx) =>
@@ -249,7 +337,7 @@ export async function mergeSponsorEnrichmentForRows(supabase, normalizedRows) {
 /** Load sponsors from Supabase (no HTTP proxy). Used by API routes with the service role. */
 export async function listSponsorsCatalogWithClient(supabase, opts = {}) {
   const sponsorScope = String(opts.sponsorScope || opts.scope || "app").toLowerCase();
-  if (!supabase) return sponsorScope === "podcast" ? [] : filterAppSponsorHubListRows(fallbackRows());
+  if (!supabase) return sponsorScope === "podcast" ? getStaticPodcastSponsorCatalogRows() : filterAppSponsorHubListRows(fallbackRows());
   let q = supabase.from(SPONSOR_TABLE).select("*");
   if (sponsorScope === "podcast") {
     q = q.eq("sponsor_scope", "podcast").eq("is_active", true);
@@ -261,7 +349,7 @@ export async function listSponsorsCatalogWithClient(supabase, opts = {}) {
     .order("display_order", { ascending: true, nullsFirst: false })
     .order("name", { ascending: true });
   if (error || !Array.isArray(data) || !data.length) {
-    return sponsorScope === "podcast" ? [] : filterAppSponsorHubListRows(fallbackRows());
+    return sponsorScope === "podcast" ? getStaticPodcastSponsorCatalogRows() : filterAppSponsorHubListRows(fallbackRows());
   }
 
   const scoped = sponsorScope === "app" ? filterAppSponsorRows(data) : data;
@@ -271,7 +359,10 @@ export async function listSponsorsCatalogWithClient(supabase, opts = {}) {
 
   const rows = scoped.map((row) => normalizeSponsorRecord(row));
   const merged = await mergeSponsorEnrichmentForRows(supabase, rows);
-  return sponsorScope === "app" ? filterAppSponsorHubListRows(merged) : merged;
+  if (sponsorScope === "podcast") {
+    return mergeLivePodcastCatalogWithStaticSeed(merged);
+  }
+  return filterAppSponsorHubListRows(merged);
 }
 
 async function fetchAppSponsorsCatalogFromApi() {
