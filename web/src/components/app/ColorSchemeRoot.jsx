@@ -61,7 +61,9 @@ export function usePodcastDarkSchemeLock(enabled) {
   useEffect(() => {
     if (!enabled) return;
     setColorScheme("dark", { persist: false });
+    document.documentElement.dataset.usePodcastTheme = "true";
     return () => {
+      delete document.documentElement.dataset.usePodcastTheme;
       try {
         const stored = localStorage.getItem(COLOR_SCHEME_STORAGE_KEY);
         if (stored === "dark" || stored === "light") {

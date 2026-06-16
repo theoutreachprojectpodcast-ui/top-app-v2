@@ -89,6 +89,18 @@ html[data-capacitor-native] main.topApp .siteFooter.siteFooter--pageBottom.siteF
       0 0 0 1px color-mix(in srgb, var(--color-border-soft) 80%, transparent);
   }
 
+  html[data-use-podcast-theme="true"][data-capacitor-native] body > .footerDock .bottomNav.bottomNav--mobileDock {
+    background: linear-gradient(
+      165deg,
+      color-mix(in srgb, #0f1726 94%, #ffffff 6%) 0%,
+      color-mix(in srgb, #111d30 90%, #0b0d12 10%) 100%
+    );
+    border: 1px solid color-mix(in srgb, rgba(148, 171, 210, 0.32) 78%, transparent);
+    box-shadow:
+      0 10px 24px color-mix(in srgb, #000 34%, transparent),
+      inset 0 1px 0 color-mix(in srgb, #ffffff 7%, transparent);
+  }
+
   html[data-capacitor-native] body > .footerDock .bottomNav.bottomNav--mobileDock .navItem--dockPrimary {
     min-height: 44px;
     padding: 6px 4px;

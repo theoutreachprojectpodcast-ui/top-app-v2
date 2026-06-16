@@ -30,12 +30,16 @@ export function mergeLogoPresentation(manual, assessed, context = {}) {
   let pad = assessed.pad;
   let scale = assessed.scale || 1;
   let fit = assessed.fit || "contain";
+  let focusX = assessed.focusX ?? 50;
+  let focusY = assessed.focusY ?? 50;
 
   if (manual) {
     if (manual.bgColor) bgColor = manual.bgColor;
     if (manual.pad != null) pad = manual.pad;
     if (manual.scale != null) scale = manual.scale;
     if (manual.fit) fit = manual.fit;
+    if (manual.focusX != null) focusX = manual.focusX;
+    if (manual.focusY != null) focusY = manual.focusY;
   }
 
   if (panel === "light") bgColor = manual?.bgColor || "#f8fafc";
@@ -51,5 +55,7 @@ export function mergeLogoPresentation(manual, assessed, context = {}) {
     borderColor: manual?.borderColor || "",
     minimalFrame: !!manual?.minimalFrame,
     panel,
+    focusX,
+    focusY,
   };
 }

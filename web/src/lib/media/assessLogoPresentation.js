@@ -197,7 +197,52 @@ function recommendPad(aspect, fill, fit) {
   return 8;
 }
 
-function recommendFraming(bounds, samples) {
+function measureMarkPlateBounds(data, width, height) {
+  let minX = width;
+  let minY = height;
+  let maxX = 0;
+  let maxY = 0;
+  let markPixels = 0;
+  let whitePixels = 0;
+  let opaquePixels = 0;
+
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const i = (y * width + x) * 4;
+      if (data[i + 3] < 128) continue;
+      opaquePixels += 1;
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      if (r > 235 && g > 235 && b > 235) {
+        whitePixels += 1;
+        continue;
+      }
+      markPixels += 1;
+      minX = Math.min(minX, x);
+      minY = Math.min(minY, y);
+      maxX = Math.max(maxX, x);
+      maxY = Math.max(maxY, y);
+    }
+  }
+
+  if (!markPixels || !opaquePixels) return null;
+
+  const boxW = maxX - minX + 1;
+  const boxH = maxY - minY + 1;
+  const plate = whitePixels / opaquePixels > 0.12 && markPixels / opaquePixels < 0.88;
+  const zoom = clamp(Math.max(width / boxW, height / boxH), 1, 1.38);
+
+  return {
+    plate,
+    zoom,
+    focusX: ((minX + maxX) / 2 / width) * 100,
+    focusY: ((minY + maxY) / 2 / height) * 100,
+    boxAspect: boxW / boxH,
+  };
+}
+
+function recommendFraming(bounds, samples, markPlate) {
   const avgSat = samples.length
     ? samples.reduce((s, px) => s + px.sat, 0) / samples.length
     : 0;
@@ -213,6 +258,17 @@ function recommendFraming(bounds, samples) {
   const photoBacked =
     bounds.fill > 0.92 && avgSat > 0.22 && !isFlatPlate && !hasTransparency && !isWideMark;
 
+  if (markPlate?.plate && markPlate.zoom > 1.06) {
+    return {
+      fit: "cover",
+      pad: 0,
+      scale: markPlate.zoom,
+      photoBacked: false,
+      focusX: markPlate.focusX,
+      focusY: markPlate.focusY,
+    };
+  }
+
   if (hasTransparency || isWideMark || isTallMark || isFlatPlate) {
     const pad = isWideMark || isTallMark ? 5 : bounds.fill >= 0.95 ? 6 : 8;
     return {
@@ -220,6 +276,8 @@ function recommendFraming(bounds, samples) {
       pad,
       scale: isWideMark ? 1.02 : bounds.fill >= 0.95 && bounds.aspect > 0.9 && bounds.aspect < 1.1 ? 1.03 : 1,
       photoBacked: false,
+      focusX: 50,
+      focusY: 50,
     };
   }
 
@@ -231,6 +289,8 @@ function recommendFraming(bounds, samples) {
       pad: 0,
       scale: clamp(Math.max(zoomX, zoomY, 1.06), 1, 1.35),
       photoBacked: true,
+      focusX: 50,
+      focusY: 50,
     };
   }
 
@@ -239,6 +299,8 @@ function recommendFraming(bounds, samples) {
     pad: null,
     scale: bounds.fill >= 0.82 && bounds.aspect > 0.88 && bounds.aspect < 1.12 ? 1.02 : 1,
     photoBacked: false,
+    focusX: 50,
+    focusY: 50,
   };
 }
 
@@ -268,6 +330,8 @@ export function assessLogoPresentationFromElement(imgEl, options = {}) {
     scale: 1,
     fit: "contain",
     aspect: 1,
+    focusX: 50,
+    focusY: 50,
   };
 
   if (!imgEl?.naturalWidth || !imgEl?.naturalHeight) return empty;
@@ -290,7 +354,8 @@ export function assessLogoPresentationFromElement(imgEl, options = {}) {
     }
 
     const bounds = measureContentBounds(data, width, height);
-    const framing = recommendFraming(bounds, samples, null);
+    const markPlate = measureMarkPlateBounds(data, width, height);
+    const framing = recommendFraming(bounds, samples, markPlate);
     const matte = sampleMatteColor(data, width, height, bounds, framing.photoBacked);
     const tone = classifyTone(samples, matte);
     const pad = framing.pad ?? recommendPad(bounds.aspect, bounds.fill, framing.fit);
@@ -303,6 +368,8 @@ export function assessLogoPresentationFromElement(imgEl, options = {}) {
       scale: framing.scale,
       fit: framing.fit,
       aspect: bounds.aspect,
+      focusX: framing.focusX ?? 50,
+      focusY: framing.focusY ?? 50,
     };
   } catch {
     return empty;

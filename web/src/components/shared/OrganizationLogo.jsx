@@ -34,6 +34,8 @@ const DEFAULT_PRESENTATION = {
   borderColor: "",
   minimalFrame: false,
   panel: "auto",
+  focusX: 50,
+  focusY: 50,
 };
 
 function resolveManual(presentation, entityKey, logoSrc) {
@@ -115,12 +117,16 @@ export default function OrganizationLogo({
     mark.fit === "cover" ? "organizationLogo__img--cover" : "organizationLogo__img--contain",
   ].join(" ");
 
-  const imgStyle = useMemo(
-    () => ({
-      transform: mark.scale && mark.scale !== 1 ? `scale(${mark.scale})` : undefined,
-    }),
-    [mark.scale],
-  );
+  const imgStyle = useMemo(() => {
+    const scale = mark.scale && mark.scale !== 1 ? mark.scale : 1;
+    const focusX = mark.focusX ?? 50;
+    const focusY = mark.focusY ?? 50;
+    return {
+      width: scale !== 1 ? `${scale * 100}%` : undefined,
+      height: scale !== 1 ? `${scale * 100}%` : undefined,
+      objectPosition: `${focusX}% ${focusY}%`,
+    };
+  }, [mark.scale, mark.focusX, mark.focusY]);
 
   function onLogoLoad(event) {
     if (!logoSrc || !detectTone) return;

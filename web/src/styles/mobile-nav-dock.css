@@ -254,7 +254,8 @@
     background: transparent !important;
   }
 
-  .appShell--podcast .footerDockBackdrop {
+  .appShell--podcast .footerDockBackdrop,
+  html[data-use-podcast-theme="true"] .footerDockBackdrop {
     background: linear-gradient(
       180deg,
       transparent,
