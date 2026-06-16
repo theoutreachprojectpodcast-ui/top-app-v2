@@ -14,7 +14,7 @@ export const GAMEDAY_MENS_HEALTH_LOGO_URL = "/sponsors/gameday-mens-health-wordm
 export const ROPE_SOLUTIONS_LOGO_URL = "/sponsors/rope-solutions-logo.png";
 
 /** Apex Global Outdoors — official circular wordmark PNG (card logo slot); hero art is `featured-bg-apex-global-outdoors.png`. */
-export const APEX_GLOBAL_OUTDOORS_LOGO_URL = "/sponsors/apex-global-outdoors-logo.png";
+export const APEX_GLOBAL_OUTDOORS_LOGO_URL = "/sponsors/apex-global-outdoors-logo.png?v=2";
 
 /** Iron Soldiers Coffee Company round emblem — app-hosted PNG. */
 export const IRON_SOLDIERS_COFFEE_LOGO_URL = "/sponsors/iron-soldiers-coffee-company-logo.png";

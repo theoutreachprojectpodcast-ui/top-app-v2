@@ -248,6 +248,19 @@
     text-align: center;
   }
 
+  /* Lock tab slots: Home (1) · Profile (2) · Podcast (3) */
+  .footerDock .bottomNav.bottomNav--withIcons.bottomNav--mobileDock .navItem[data-nav-key="home"] {
+    grid-column: 1;
+  }
+
+  .footerDock .bottomNav.bottomNav--withIcons.bottomNav--mobileDock .navItem[data-nav-key="profile"] {
+    grid-column: 2;
+  }
+
+  .footerDock .bottomNav.bottomNav--withIcons.bottomNav--mobileDock .navItem[data-nav-key="podcast"] {
+    grid-column: 3;
+  }
+
   main.topApp .footerDockBackdrop,
   .appShell .footerDockBackdrop {
     height: calc(92px + env(safe-area-inset-bottom, 0px)) !important;

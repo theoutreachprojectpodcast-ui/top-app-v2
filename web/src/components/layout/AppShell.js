@@ -18,8 +18,7 @@ import { usePodcastDarkSchemeLock } from "@/hooks/usePodcastDarkSchemeLock";
 import { resolvePageAtmosphere } from "@/lib/design/pageAtmosphere";
 import { useImmersiveHeaderScroll } from "@/hooks/useImmersiveHeaderScroll";
 import CapacitorFooterPortal from "@/components/capacitor/CapacitorFooterPortal";
-
-const PRIMARY_BOTTOM_NAV_KEYS = new Set(["home", "profile", "podcast"]);
+import { SITE_MOBILE_DOCK_ITEMS } from "@/components/navigation/siteBottomNavConfig";
 
 const NAV_ITEMS = [
   { href: "/", key: "home", label: "Home", linkTitle: "Home" },
@@ -209,14 +208,13 @@ export default function AppShell({
                 className={`bottomNav bottomNav--withIcons${useFooterDockChrome ? " bottomNav--mobileDock" : ""}`}
                 aria-label="Bottom navigation"
               >
-                {items.map((item) => (
+                {SITE_MOBILE_DOCK_ITEMS.map((item) => (
                   <Link
                     key={item.key}
                     href={item.href}
                     title={item.linkTitle || item.label}
-                    className={`navItem navItem--dockCol ${
-                      PRIMARY_BOTTOM_NAV_KEYS.has(item.key) ? "navItem--dockPrimary" : "navItem--dockOverflow"
-                    } ${activeNav === item.key ? "isActive" : ""}`}
+                    data-nav-key={item.key}
+                    className={`navItem navItem--dockCol navItem--dockPrimary ${activeNav === item.key ? "isActive" : ""}`}
                   >
                     <SiteBottomNavGlyph navKey={item.key} className="navItemGlyph" />
                     <span className="navItemLabel">{item.label}</span>
@@ -236,9 +234,7 @@ export default function AppShell({
               key={item.key}
               href={item.href}
               title={item.linkTitle || item.label}
-              className={`navItem navItem--dockCol ${
-                PRIMARY_BOTTOM_NAV_KEYS.has(item.key) ? "navItem--dockPrimary" : "navItem--dockOverflow"
-              } ${activeNav === item.key ? "isActive" : ""}`}
+              className={`navItem navItem--dockCol ${activeNav === item.key ? "isActive" : ""}`}
             >
               <SiteBottomNavGlyph navKey={item.key} className="navItemGlyph" />
               <span className="navItemLabel">{item.label}</span>

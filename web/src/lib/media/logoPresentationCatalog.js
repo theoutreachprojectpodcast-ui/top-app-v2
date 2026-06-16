@@ -19,11 +19,11 @@
 export const LOGO_PRESENTATION_CATALOG = {
   /* ── Sponsors ─────────────────────────────────────────────────────────── */
   "apex-global-outdoors": {
-    panel: "neutral",
-    bgColor: "#352619",
-    pad: 0,
-    fit: "cover",
-    scale: 1.05,
+    panel: "light",
+    bgColor: "#ffffff",
+    pad: 5,
+    fit: "contain",
+    scale: 1.02,
     minimalFrame: true,
   },
   "gameday-mens-health": {

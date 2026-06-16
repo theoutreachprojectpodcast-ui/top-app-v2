@@ -32,8 +32,8 @@ const BY_SLUG = {
       "linear-gradient(118deg, rgba(14, 10, 8, 0.94) 0%, rgba(22, 14, 8, 0.76) 46%, rgba(12, 8, 6, 0.52) 100%)",
     veteranOwnedDefault: false,
     locationChips: [],
-    /* Square brand art (central disc + scene); avoid forcing a light logo shell over warm tones. */
-    logoPanelMode: "neutral",
+    /* Circular wordmark PNG (transparent outside disc); hero art is separate. */
+    logoPanelMode: "light",
     logoFallbackUrls: [APEX_GLOBAL_OUTDOORS_LOGO_URL],
   },
   "rope-solutions": {

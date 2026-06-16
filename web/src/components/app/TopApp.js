@@ -22,6 +22,7 @@ import ProfileIdentitySection from "@/features/profile/components/ProfileIdentit
 import ProfileQuickStats from "@/features/profile/components/ProfileQuickStats";
 import SavedOrganizationsList from "@/features/profile/components/SavedOrganizationsList";
 import SiteBottomNavGlyph from "@/components/navigation/SiteBottomNavGlyph";
+import { SITE_MOBILE_DOCK_ITEMS } from "@/components/navigation/siteBottomNavConfig";
 import SiteMobileNavMoreMenu from "@/components/navigation/SiteMobileNavMoreMenu";
 import HomeScreen from "@/components/home/HomeScreen";
 import { SUPPORT_EMAIL } from "@/lib/runtime/brandContact";
@@ -1195,55 +1196,33 @@ function TopAppInner({ initialNav = "home" }) {
         <div className="footerDock">
           <FooterInner className="footerNavInner">
             <nav className="bottomNav bottomNav--withIcons bottomNav--mobileDock" aria-label="Bottom navigation">
-            <button
-              className={`navItem navItem--dockCol navItem--dockPrimary ${nav === "home" ? "isActive" : ""}`}
-              onClick={dockNavHome}
-              type="button"
-              title="Home"
-            >
-              <SiteBottomNavGlyph navKey="home" className="navItemGlyph" />
-              <span className="navItemLabel">Home</span>
-            </button>
-            <button
-              className={`navItem navItem--dockCol navItem--dockOverflow ${nav === "trusted" ? "isActive" : ""}`}
-              onClick={() => {
-                setNav("trusted");
-                if (!trusted.length) loadTrusted(true);
-              }}
-              type="button"
-              title="Trusted Resources"
-            >
-              <SiteBottomNavGlyph navKey="trusted" className="navItemGlyph" />
-              <span className="navItemLabel">Trusted Resources</span>
-            </button>
-            <button
-              className={`navItem navItem--dockCol navItem--dockOverflow ${nav === "community" ? "isActive" : ""}`}
-              onClick={() => setNav("community")}
-              type="button"
-              title="Community"
-            >
-              <SiteBottomNavGlyph navKey="community" className="navItemGlyph" />
-              <span className="navItemLabel">Community</span>
-            </button>
-            <button
-              className={`navItem navItem--dockCol navItem--dockPrimary ${nav === "profile" ? "isActive" : ""}`}
-              onClick={dockNavProfile}
-              type="button"
-              title="Profile"
-            >
-              <SiteBottomNavGlyph navKey="profile" className="navItemGlyph" />
-              <span className="navItemLabel">Profile</span>
-            </button>
-            <button
-              className={`navItem navItem--dockCol navItem--dockPrimary ${pathname?.startsWith("/podcasts") ? "isActive" : ""}`}
-              onClick={() => router.push("/podcasts")}
-              type="button"
-              title="Podcast"
-            >
-              <SiteBottomNavGlyph navKey="podcast" className="navItemGlyph" />
-              <span className="navItemLabel">Podcast</span>
-            </button>
-          </nav>
+              {SITE_MOBILE_DOCK_ITEMS.map((item) => {
+                const isActive =
+                  item.key === "home"
+                    ? nav === "home"
+                    : item.key === "profile"
+                      ? nav === "profile"
+                      : pathname?.startsWith("/podcasts");
+                const onDockClick = () => {
+                  if (item.key === "home") dockNavHome();
+                  else if (item.key === "profile") dockNavProfile();
+                  else router.push(item.href);
+                };
+                return (
+                  <button
+                    key={item.key}
+                    type="button"
+                    data-nav-key={item.key}
+                    className={`navItem navItem--dockCol navItem--dockPrimary ${isActive ? "isActive" : ""}`}
+                    onClick={onDockClick}
+                    title={item.linkTitle || item.label}
+                  >
+                    <SiteBottomNavGlyph navKey={item.key} className="navItemGlyph" />
+                    <span className="navItemLabel">{item.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
         </FooterInner>
       </div>
       </CapacitorFooterPortal>
