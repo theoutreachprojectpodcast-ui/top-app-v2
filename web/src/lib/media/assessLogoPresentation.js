@@ -16,20 +16,18 @@ function colorDistance(a, b) {
 function readPixel(data, i) {
   const alpha = data[i + 3] / 255;
   if (alpha < 0.35) return null;
+  const r = data[i];
+  const g = data[i + 1];
+  const b = data[i + 2];
+  const max = Math.max(r, g, b) / 255;
+  const min = Math.min(r, g, b) / 255;
   return {
-    r: data[i],
-    g: data[i + 1],
-    b: data[i + 2],
+    r,
+    g,
+    b,
     a: alpha,
-    luma: (0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2]) / 255,
-    sat: (() => {
-      const r = data[i] / 255;
-      const g = data[i + 1] / 255;
-      const b = data[i + 2] / 255;
-      const max = Math.max(r, g, b);
-      const min = Math.min(r, g, b);
-      return max === 0 ? 0 : (max - min) / max;
-    })(),
+    luma: (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255,
+    sat: max === 0 ? 0 : (max - min) / max,
   };
 }
 
@@ -45,46 +43,6 @@ function averageColors(colors) {
   }
   const n = colors.length;
   return { r: r / n, g: g / n, b: b / n };
-}
-
-/** Sample matte color from corners and outer rim of logo artwork. */
-function sampleMatteColor(data, width, height) {
-  const corners = [];
-  const rim = [];
-  const cornerSize = Math.max(2, Math.floor(Math.min(width, height) * 0.18));
-
-  for (let y = 0; y < height; y += 1) {
-    for (let x = 0; x < width; x += 1) {
-      const i = (y * width + x) * 4;
-      const px = readPixel(data, i);
-      if (!px) continue;
-      const inCorner =
-        (x < cornerSize && y < cornerSize) ||
-        (x >= width - cornerSize && y < cornerSize) ||
-        (x < cornerSize && y >= height - cornerSize) ||
-        (x >= width - cornerSize && y >= height - cornerSize);
-      const onRim = x < 2 || y < 2 || x >= width - 2 || y >= height - 2;
-      if (inCorner) corners.push(px);
-      else if (onRim) rim.push(px);
-    }
-  }
-
-  const cornerAvg = averageColors(corners);
-  const rimAvg = averageColors(rim);
-  const pool = corners.length >= 8 ? corners : rim.length >= 8 ? rim : [...corners, ...rim];
-  if (!pool.length) return null;
-
-  const avg = averageColors(pool);
-  if (!avg) return null;
-
-  const spread = pool.reduce((max, px) => Math.max(max, colorDistance(px, avg)), 0);
-  if (spread > 72) return null;
-
-  return {
-    hex: rgbToHex(avg.r, avg.g, avg.b),
-    luma: pool.reduce((s, px) => s + px.luma, 0) / pool.length,
-    sat: pool.reduce((s, px) => s + px.sat, 0) / pool.length,
-  };
 }
 
 function measureContentBounds(data, width, height) {
@@ -107,25 +65,93 @@ function measureContentBounds(data, width, height) {
   }
 
   if (!opaque) {
-    return { fill: 0, aspect: 1 };
+    return { fill: 0, fillW: 0, fillH: 0, aspect: 1, minX: 0, minY: 0, maxX: width, maxY: height };
   }
 
   const boxW = Math.max(1, maxX - minX + 1);
   const boxH = Math.max(1, maxY - minY + 1);
   return {
     fill: opaque / (width * height),
+    fillW: boxW / width,
+    fillH: boxH / height,
     aspect: boxW / boxH,
+    minX,
+    minY,
+    maxX,
+    maxY,
+    boxW,
+    boxH,
   };
 }
 
-function recommendPad(aspect, fill) {
-  if (aspect >= 1.65) return 5;
-  if (aspect >= 1.28) return 6;
-  if (aspect <= 0.62) return 5;
-  if (aspect <= 0.78) return 6;
-  if (fill >= 0.72) return 4;
-  if (fill >= 0.5) return 7;
-  return 9;
+/** Sample matte from corners — skip near-white if the mark is clearly photo-backed. */
+function sampleMatteColor(data, width, height, bounds, photoBacked) {
+  const corners = [];
+  const cornerSize = Math.max(2, Math.floor(Math.min(width, height) * 0.16));
+
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const i = (y * width + x) * 4;
+      const px = readPixel(data, i);
+      if (!px) continue;
+      const inCorner =
+        (x < cornerSize && y < cornerSize) ||
+        (x >= width - cornerSize && y < cornerSize) ||
+        (x < cornerSize && y >= height - cornerSize) ||
+        (x >= width - cornerSize && y >= height - cornerSize);
+      if (inCorner) corners.push(px);
+    }
+  }
+
+  if (!corners.length) return null;
+
+  const avg = averageColors(corners);
+  if (!avg) return null;
+
+  const spread = corners.reduce((max, px) => Math.max(max, colorDistance(px, avg)), 0);
+  if (spread > 78) return null;
+
+  const luma = corners.reduce((s, px) => s + px.luma, 0) / corners.length;
+  const sat = corners.reduce((s, px) => s + px.sat, 0) / corners.length;
+
+  if (photoBacked && luma > 0.82) {
+    return sampleEdgeMutedColor(data, width, height, bounds);
+  }
+
+  return { hex: rgbToHex(avg.r, avg.g, avg.b), luma, sat };
+}
+
+/** Dark/muted edge color for photo-backed marks (avoids white sky gutters). */
+function sampleEdgeMutedColor(data, width, height, bounds) {
+  const edge = [];
+  const step = Math.max(1, Math.floor(Math.min(width, height) / 24));
+
+  for (let x = 0; x < width; x += step) {
+    for (const y of [0, height - 1]) {
+      const px = readPixel(data, (y * width + x) * 4);
+      if (px) edge.push(px);
+    }
+  }
+  for (let y = 0; y < height; y += step) {
+    for (const x of [0, width - 1]) {
+      const px = readPixel(data, (y * width + x) * 4);
+      if (px) edge.push(px);
+    }
+  }
+
+  const ranked = edge
+    .filter((px) => px.sat > 0.06)
+    .sort((a, b) => a.luma - b.luma);
+  const pool = ranked.length >= 6 ? ranked.slice(0, Math.ceil(ranked.length * 0.35)) : edge;
+  const avg = averageColors(pool);
+  if (!avg) return null;
+
+  const darken = 0.72;
+  return {
+    hex: rgbToHex(avg.r * darken, avg.g * darken, avg.b * darken),
+    luma: (avg.r + avg.g + avg.b) / (3 * 255),
+    sat: 0.2,
+  };
 }
 
 function classifyTone(samples, matte) {
@@ -160,6 +186,44 @@ function fallbackBg(tone, surface) {
   return "#f8fafc";
 }
 
+function recommendPad(aspect, fill, fit) {
+  if (fit === "cover") return 0;
+  if (aspect >= 1.65) return 5;
+  if (aspect >= 1.28) return 6;
+  if (aspect <= 0.62) return 5;
+  if (aspect <= 0.78) return 6;
+  if (fill >= 0.72) return 4;
+  if (fill >= 0.5) return 7;
+  return 8;
+}
+
+function recommendFraming(bounds, samples, matte) {
+  const avgSat = samples.length
+    ? samples.reduce((s, px) => s + px.sat, 0) / samples.length
+    : 0;
+  const photoBacked = bounds.fill > 0.9 && avgSat > 0.16;
+  const letterboxX = bounds.fillW < 0.86;
+  const letterboxY = bounds.fillH < 0.86;
+
+  if (photoBacked || letterboxX || letterboxY) {
+    const zoomX = letterboxX ? clamp(1 / bounds.fillW, 1.04, 1.42) : 1;
+    const zoomY = letterboxY ? clamp(1 / bounds.fillH, 1.04, 1.42) : 1;
+    return {
+      fit: "cover",
+      pad: 0,
+      scale: clamp(Math.max(zoomX, zoomY, photoBacked ? 1.06 : 1), 1, 1.38),
+      photoBacked,
+    };
+  }
+
+  return {
+    fit: "contain",
+    pad: null,
+    scale: bounds.fill >= 0.82 && bounds.aspect > 0.88 && bounds.aspect < 1.12 ? 1.02 : 1,
+    photoBacked: false,
+  };
+}
+
 export function getCachedLogoPresentation(src) {
   const key = String(src || "").trim();
   if (!key) return null;
@@ -173,25 +237,30 @@ export function setCachedLogoPresentation(src, presentation) {
 }
 
 /**
- * Analyze logo artwork for per-mark framing: matte color, padding, tone.
+ * Analyze logo artwork for per-mark framing: matte color, padding, tone, fit.
  * @param {HTMLImageElement} imgEl
  * @param {{ surface?: string }} [options]
  */
 export function assessLogoPresentationFromElement(imgEl, options = {}) {
   const surface = options.surface || "page";
-  if (!imgEl?.naturalWidth || !imgEl?.naturalHeight) {
-    return { bgColor: fallbackBg("normal", surface), pad: 9, tone: "normal", scale: 1 };
-  }
+  const empty = {
+    bgColor: fallbackBg("normal", surface),
+    pad: 8,
+    tone: "normal",
+    scale: 1,
+    fit: "contain",
+    aspect: 1,
+  };
+
+  if (!imgEl?.naturalWidth || !imgEl?.naturalHeight) return empty;
 
   const canvas = document.createElement("canvas");
-  const width = Math.min(72, imgEl.naturalWidth);
-  const height = Math.min(72, imgEl.naturalHeight);
+  const width = Math.min(96, imgEl.naturalWidth);
+  const height = Math.min(96, imgEl.naturalHeight);
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
-  if (!ctx) {
-    return { bgColor: fallbackBg("normal", surface), pad: 9, tone: "normal", scale: 1 };
-  }
+  if (!ctx) return empty;
 
   try {
     ctx.drawImage(imgEl, 0, 0, width, height);
@@ -202,16 +271,23 @@ export function assessLogoPresentationFromElement(imgEl, options = {}) {
       if (px) samples.push(px);
     }
 
-    const matte = sampleMatteColor(data, width, height);
     const bounds = measureContentBounds(data, width, height);
+    const framing = recommendFraming(bounds, samples, null);
+    const matte = sampleMatteColor(data, width, height, bounds, framing.photoBacked);
     const tone = classifyTone(samples, matte);
-    const pad = recommendPad(bounds.aspect, bounds.fill);
+    const pad = framing.pad ?? recommendPad(bounds.aspect, bounds.fill, framing.fit);
     const bgColor = matte?.hex || fallbackBg(tone, surface);
-    const scale = bounds.fill >= 0.82 && bounds.aspect > 0.88 && bounds.aspect < 1.12 ? 1.02 : 1;
 
-    return { bgColor, pad, tone, scale, aspect: bounds.aspect };
+    return {
+      bgColor,
+      pad,
+      tone,
+      scale: framing.scale,
+      fit: framing.fit,
+      aspect: bounds.aspect,
+    };
   } catch {
-    return { bgColor: fallbackBg("normal", surface), pad: 9, tone: "normal", scale: 1 };
+    return empty;
   }
 }
 
@@ -230,6 +306,12 @@ export function getCachedLogoTone(src) {
 export function setCachedLogoTone(src, tone) {
   const key = String(src || "").trim();
   if (!key) return;
-  const prev = presentationCache.get(key) || { bgColor: "#f8fafc", pad: 9, tone: "normal", scale: 1 };
+  const prev = presentationCache.get(key) || {
+    bgColor: "#f8fafc",
+    pad: 8,
+    tone: "normal",
+    scale: 1,
+    fit: "contain",
+  };
   presentationCache.set(key, { ...prev, tone });
 }

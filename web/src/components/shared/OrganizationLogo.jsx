@@ -27,12 +27,17 @@ const SURFACE_CLASS = {
 
 const DEFAULT_PRESENTATION = {
   bgColor: "",
-  pad: 9,
+  pad: 8,
   scale: 1,
+  fit: "contain",
   tone: "normal",
   borderColor: "",
   panel: "auto",
 };
+
+function resolveManual(presentation, entityKey, logoSrc) {
+  return presentation || getLogoPresentationOverride(entityKey, logoSrc);
+}
 
 /**
  * Circular 1:1 organization logo with per-mark matte color, padding, and framing.
@@ -54,16 +59,17 @@ export default function OrganizationLogo({
   frameClassName = "",
 }) {
   const logoSrc = String(src || "").trim();
+
   const [mark, setMark] = useState(() => {
     const cached = getCachedLogoPresentation(logoSrc);
-    if (!cached) return DEFAULT_PRESENTATION;
-    const manual = presentation || getLogoPresentationOverride(entityKey);
+    const manual = resolveManual(presentation, entityKey, logoSrc);
+    if (!cached) return mergeLogoPresentation(manual, DEFAULT_PRESENTATION, { panel, surface });
     return mergeLogoPresentation(manual, cached, { panel, surface });
   });
 
   useEffect(() => {
     const cached = getCachedLogoPresentation(logoSrc);
-    const manual = presentation || getLogoPresentationOverride(entityKey);
+    const manual = resolveManual(presentation, entityKey, logoSrc);
     if (cached) {
       setMark(mergeLogoPresentation(manual, cached, { panel, surface }));
       return;
@@ -95,17 +101,28 @@ export default function OrganizationLogo({
     return style;
   }, [mark.bgColor, mark.borderColor]);
 
+  const insetStyle = useMemo(
+    () => ({
+      padding: `${mark.pad ?? 8}%`,
+    }),
+    [mark.pad],
+  );
+
+  const imgClass = [
+    "organizationLogo__img",
+    mark.fit === "cover" ? "organizationLogo__img--cover" : "organizationLogo__img--contain",
+  ].join(" ");
+
   const imgStyle = useMemo(
     () => ({
-      padding: `${mark.pad ?? 9}%`,
       transform: mark.scale && mark.scale !== 1 ? `scale(${mark.scale})` : undefined,
     }),
-    [mark.pad, mark.scale],
+    [mark.scale],
   );
 
   function onLogoLoad(event) {
     if (!logoSrc || !detectTone) return;
-    const manual = presentation || getLogoPresentationOverride(entityKey);
+    const manual = resolveManual(presentation, entityKey, logoSrc);
     const cached = getCachedLogoPresentation(logoSrc);
     const assessed = cached || assessLogoPresentationFromElement(event.currentTarget, { surface });
     if (!cached) setCachedLogoPresentation(logoSrc, assessed);
@@ -124,20 +141,22 @@ export default function OrganizationLogo({
     <span className={rootClass}>
       <span className={frameClass} style={frameStyle}>
         {logoSrc ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            className="organizationLogo__img"
-            src={logoSrc}
-            alt={alt}
-            loading="lazy"
-            decoding="async"
-            style={imgStyle}
-            onLoad={onLogoLoad}
-            onError={(event) => {
-              setMark(mergeLogoPresentation(presentation, DEFAULT_PRESENTATION, { panel, surface }));
-              onError?.(event);
-            }}
-          />
+          <span className="organizationLogo__inset" style={insetStyle}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              className={imgClass}
+              src={logoSrc}
+              alt={alt}
+              loading="lazy"
+              decoding="async"
+              style={imgStyle}
+              onLoad={onLogoLoad}
+              onError={(event) => {
+                setMark(mergeLogoPresentation(presentation, DEFAULT_PRESENTATION, { panel, surface }));
+                onError?.(event);
+              }}
+            />
+          </span>
         ) : (
           renderFallback()
         )}
