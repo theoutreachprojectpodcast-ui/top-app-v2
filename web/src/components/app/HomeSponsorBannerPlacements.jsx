@@ -45,6 +45,7 @@ function SponsorHomePlacement({ sponsor }) {
               src={logo}
               alt=""
               name={sponsor.name}
+              entityKey={slug}
               size="banner"
               surface="onDark"
               panel="auto"

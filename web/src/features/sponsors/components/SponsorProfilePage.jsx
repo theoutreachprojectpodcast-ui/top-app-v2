@@ -110,9 +110,18 @@ export default function SponsorProfilePage({ slug }) {
                   src={logoSrc}
                   alt=""
                   name={brandName}
+                  entityKey={slug}
                   size="profile"
                   surface="page"
-                  panel={profile.logoPanelMode === "light" ? "light" : profile.logoPanelMode === "dark" ? "dark" : "auto"}
+                  panel={
+                    profile.logoPanelMode === "light"
+                      ? "light"
+                      : profile.logoPanelMode === "dark"
+                        ? "dark"
+                        : profile.logoPanelMode === "neutral"
+                          ? "neutral"
+                          : "auto"
+                  }
                   onError={() => {
                     if (logoIndex < logoCandidates.length - 1) setLogoIndex((i) => i + 1);
                   }}

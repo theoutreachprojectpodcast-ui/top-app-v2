@@ -210,6 +210,7 @@ export default function NonprofitProfilePage({ ein: einParam }) {
                       src={card.logoUrl || ""}
                       alt=""
                       name={card.name}
+                      entityKey={card.ein || card.slug || card.id}
                       size="sm"
                       surface="page"
                       panel="auto"

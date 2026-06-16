@@ -97,6 +97,7 @@ export default function TrustedResourceCard({ resource }) {
               src={logoImage || ""}
               alt=""
               name={name}
+              entityKey={trustedResourceSlug || id}
               size="card"
               surface="page"
               panel="auto"

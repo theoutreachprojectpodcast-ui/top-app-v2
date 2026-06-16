@@ -147,6 +147,7 @@ export default function TrustedResourceDetailPage({ slug }) {
                   src={resource.logoImage || ""}
                   alt=""
                   name={resource.name}
+                  entityKey={resource.trustedResourceSlug || resource.id}
                   size="card"
                   surface="page"
                   panel="auto"

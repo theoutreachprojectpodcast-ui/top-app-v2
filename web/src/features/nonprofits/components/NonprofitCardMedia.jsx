@@ -3,7 +3,7 @@
 import NonprofitIcon from "@/features/nonprofits/components/NonprofitIcon";
 import OrganizationLogo from "@/components/shared/OrganizationLogo";
 
-export default function NonprofitCardMedia({ category, tier, logoUrl, layout = "default", name = "" }) {
+export default function NonprofitCardMedia({ category, tier, logoUrl, layout = "default", name = "", entityKey = "" }) {
   const tint = category?.tint || "var(--color-accent-soft)";
   const url = String(logoUrl || "").trim();
   const showLogo = layout === "trustedResource" && !!url;
@@ -16,6 +16,7 @@ export default function NonprofitCardMedia({ category, tier, logoUrl, layout = "
           src={url}
           alt=""
           name={name || category?.label || "Organization"}
+          entityKey={entityKey}
           size="md"
           surface="page"
           panel="auto"

@@ -126,7 +126,13 @@ export default function FeaturedSponsorCard({
   const profileHref = `/sponsors/${encodeURIComponent(sponsor.slug || sponsor.id || "")}`;
   const favoriteKey = String(sponsor.slug || sponsor.id || "").trim().toLowerCase();
   const logoPanel =
-    sponsor.logoPanelMode === "light" ? "light" : sponsor.logoPanelMode === "dark" ? "dark" : "auto";
+    sponsor.logoPanelMode === "light"
+      ? "light"
+      : sponsor.logoPanelMode === "dark"
+        ? "dark"
+        : sponsor.logoPanelMode === "neutral"
+          ? "neutral"
+          : "auto";
   const accentStyle = sponsor.sponsorAccentColor
     ? { "--sponsor-card-accent": sponsor.sponsorAccentColor }
     : undefined;
@@ -209,6 +215,7 @@ export default function FeaturedSponsorCard({
               src={logoSrc}
               alt=""
               name={displayName}
+              entityKey={String(sponsor.slug || sponsor.id || "").trim().toLowerCase()}
               size="lg"
               surface="onDark"
               panel={logoPanel}
