@@ -3273,23 +3273,18 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
     inset 0 1px 0 color-mix(in srgb, #ffffff 55%, transparent),
     0 10px 36px color-mix(in srgb, var(--color-text-primary) 10%, transparent);
 }
-.footerInner__mark {
-  display: block;
-  width: 72px;
-  height: 72px;
-  margin: 0 auto 2px;
-  object-fit: contain;
-}
 .footerInner__badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   margin: 0;
+  max-width: min(36ch, 100%);
   font-size: 10px;
   font-weight: 800;
-  letter-spacing: 0.08em;
-  line-height: 1.2;
+  letter-spacing: 0.06em;
+  line-height: 1.35;
   text-transform: uppercase;
+  text-wrap: balance;
   color: color-mix(in srgb, var(--color-accent-hover, var(--color-accent)) 82%, var(--color-text-primary) 18%);
   border: 1px solid color-mix(in srgb, var(--color-accent) 34%, var(--color-border-soft));
   border-radius: 999px;

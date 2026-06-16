@@ -1,5 +1,5 @@
 /**
- * Unified mobile bottom dock (Home · Profile · Podcast) + header hamburger overflow.
+ * Unified mobile bottom dock (Home · Trusted · Community · Profile · Contact) + header hamburger overflow.
  * Applies to main `TopApp` and all `AppShell` routes that use `.footerDock` + `.bottomNav--mobileDock`.
  */
 
@@ -217,15 +217,15 @@
     border-color: rgba(111, 194, 255, 0.35);
   }
 
-  /* Three-tile bottom dock: hide overflow destinations; keep Home, Profile, Podcast */
+  /* Five-tile bottom dock: hide overflow destinations; keep primary tabs in the footer */
   .footerDock .bottomNav.bottomNav--withIcons.bottomNav--mobileDock {
     display: grid !important;
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-    gap: 8px;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 4px;
     width: 100%;
     max-width: 100%;
     flex-wrap: nowrap !important;
-    padding: 8px 10px;
+    padding: 8px 6px;
     align-items: stretch;
   }
 
@@ -242,23 +242,36 @@
     min-width: 0;
     max-width: none;
     min-height: 48px;
-    padding: 8px 6px;
+    padding: 6px 2px;
     white-space: normal;
     line-height: 1.15;
     text-align: center;
   }
 
-  /* Lock tab slots: Home (1) · Profile (2) · Podcast (3) */
+  .footerDock .bottomNav.bottomNav--withIcons.bottomNav--mobileDock .navItemLabel {
+    font-size: clamp(9px, 2.4vw, 11px);
+    letter-spacing: 0.01em;
+  }
+
+  /* Lock tab slots: Home (1) · Trusted (2) · Community (3) · Profile (4) · Contact (5) */
   .footerDock .bottomNav.bottomNav--withIcons.bottomNav--mobileDock .navItem[data-nav-key="home"] {
     grid-column: 1;
   }
 
-  .footerDock .bottomNav.bottomNav--withIcons.bottomNav--mobileDock .navItem[data-nav-key="profile"] {
+  .footerDock .bottomNav.bottomNav--withIcons.bottomNav--mobileDock .navItem[data-nav-key="trusted"] {
     grid-column: 2;
   }
 
-  .footerDock .bottomNav.bottomNav--withIcons.bottomNav--mobileDock .navItem[data-nav-key="podcast"] {
+  .footerDock .bottomNav.bottomNav--withIcons.bottomNav--mobileDock .navItem[data-nav-key="community"] {
     grid-column: 3;
+  }
+
+  .footerDock .bottomNav.bottomNav--withIcons.bottomNav--mobileDock .navItem[data-nav-key="profile"] {
+    grid-column: 4;
+  }
+
+  .footerDock .bottomNav.bottomNav--withIcons.bottomNav--mobileDock .navItem[data-nav-key="contact"] {
+    grid-column: 5;
   }
 
   main.topApp .footerDockBackdrop,

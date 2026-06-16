@@ -154,11 +154,6 @@ html[data-use-podcast-theme="true"] {
   text-align: center;
 }
 
-.appShell--podcast .footerInner__mark {
-  width: 64px;
-  height: 64px;
-}
-
 .appShell--podcast .footerInner__badge {
   color: color-mix(in srgb, #ffb08f 82%, #e8f0ff 18%);
   border-color: color-mix(in srgb, #ff7a43 42%, rgba(148, 171, 210, 0.28));

@@ -22,7 +22,11 @@ import ProfileIdentitySection from "@/features/profile/components/ProfileIdentit
 import ProfileQuickStats from "@/features/profile/components/ProfileQuickStats";
 import SavedOrganizationsList from "@/features/profile/components/SavedOrganizationsList";
 import SiteBottomNavGlyph from "@/components/navigation/SiteBottomNavGlyph";
-import { SITE_MOBILE_DOCK_ITEMS } from "@/components/navigation/siteBottomNavConfig";
+import {
+  isSiteDockNavActive,
+  SITE_MOBILE_DOCK_ITEMS,
+  SITE_TOP_APP_DOCK_TAB_KEYS,
+} from "@/components/navigation/siteBottomNavConfig";
 import SiteMobileNavMoreMenu from "@/components/navigation/SiteMobileNavMoreMenu";
 import HomeScreen from "@/components/home/HomeScreen";
 import { SUPPORT_EMAIL } from "@/lib/runtime/brandContact";
@@ -325,6 +329,25 @@ function TopAppInner({ initialNav = "home" }) {
     }
     if (pathname !== "/profile") router.push("/profile");
     else setNav("profile");
+  }
+
+  function dockNavItem(item) {
+    const key = String(item?.key || "");
+    if (key === "home") {
+      dockNavHome();
+      return;
+    }
+    if (key === "profile") {
+      dockNavProfile();
+      return;
+    }
+    if (pathname === "/" && SITE_TOP_APP_DOCK_TAB_KEYS.has(key)) {
+      setNav(key);
+      return;
+    }
+    const href = String(item?.href || "/").trim() || "/";
+    if (pathname !== href) router.push(href);
+    else if (SITE_TOP_APP_DOCK_TAB_KEYS.has(key)) setNav(key);
   }
 
   async function fileToCompressedDataUrl(file) {
@@ -674,24 +697,11 @@ function TopAppInner({ initialNav = "home" }) {
             <div className="topbarZone topbarLeft">
               <div className="topbarActionsCluster topbarActionsCluster--start">
                 <SiteMobileNavMoreMenu tone="app" align="start">
-                  <button
-                    type="button"
-                    className="siteMobileNavMore__entry"
-                    onClick={() => {
-                      setNav("trusted");
-                      if (!trusted.length) loadTrusted(true);
-                    }}
-                  >
-                    Trusted Resources
-                  </button>
-                  <button type="button" className="siteMobileNavMore__entry" onClick={openCommunity}>
-                    Community
+                  <button type="button" className="siteMobileNavMore__entry" onClick={() => router.push("/podcasts")}>
+                    Podcast
                   </button>
                   <button type="button" className="siteMobileNavMore__entry" onClick={goToSponsorsHub}>
                     Sponsors
-                  </button>
-                  <button type="button" className="siteMobileNavMore__entry" onClick={() => setNav("contact")}>
-                    Contact
                   </button>
                   <button type="button" className="siteMobileNavMore__entry" onClick={goToSponsorsHub}>
                     Become a Sponsor
@@ -1197,24 +1207,14 @@ function TopAppInner({ initialNav = "home" }) {
           <FooterInner className="footerNavInner">
             <nav className="bottomNav bottomNav--withIcons bottomNav--mobileDock" aria-label="Bottom navigation">
               {SITE_MOBILE_DOCK_ITEMS.map((item) => {
-                const isActive =
-                  item.key === "home"
-                    ? nav === "home"
-                    : item.key === "profile"
-                      ? nav === "profile"
-                      : pathname?.startsWith("/podcasts");
-                const onDockClick = () => {
-                  if (item.key === "home") dockNavHome();
-                  else if (item.key === "profile") dockNavProfile();
-                  else router.push(item.href);
-                };
+                const isActive = isSiteDockNavActive(item.key, { nav, pathname });
                 return (
                   <button
                     key={item.key}
                     type="button"
                     data-nav-key={item.key}
                     className={`navItem navItem--dockCol navItem--dockPrimary ${isActive ? "isActive" : ""}`}
-                    onClick={onDockClick}
+                    onClick={() => dockNavItem(item)}
                     title={item.linkTitle || item.label}
                   >
                     <SiteBottomNavGlyph navKey={item.key} className="navItemGlyph" />

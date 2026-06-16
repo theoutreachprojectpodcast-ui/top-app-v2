@@ -18,7 +18,7 @@ import { usePodcastDarkSchemeLock } from "@/hooks/usePodcastDarkSchemeLock";
 import { resolvePageAtmosphere } from "@/lib/design/pageAtmosphere";
 import { useImmersiveHeaderScroll } from "@/hooks/useImmersiveHeaderScroll";
 import CapacitorFooterPortal from "@/components/capacitor/CapacitorFooterPortal";
-import { SITE_MOBILE_DOCK_ITEMS } from "@/components/navigation/siteBottomNavConfig";
+import { isSiteDockNavActive, SITE_MOBILE_DOCK_ITEMS } from "@/components/navigation/siteBottomNavConfig";
 
 const NAV_ITEMS = [
   { href: "/", key: "home", label: "Home", linkTitle: "Home" },
@@ -105,17 +105,11 @@ export default function AppShell({
                     <SubpageTopbarActions section="authMenu" />
                     {useFooterDockChrome ? (
                       <SiteMobileNavMoreMenu tone="podcast" align="end">
-                        <Link className="siteMobileNavMore__entry" href="/trusted">
-                          Trusted Resources
-                        </Link>
-                        <Link className="siteMobileNavMore__entry" href="/community">
-                          Community
+                        <Link className="siteMobileNavMore__entry" href="/podcasts">
+                          Podcast
                         </Link>
                         <Link className="siteMobileNavMore__entry" href="/sponsors">
                           Sponsors
-                        </Link>
-                        <Link className="siteMobileNavMore__entry" href="/contact">
-                          Contact
                         </Link>
                         <Link className="siteMobileNavMore__entry" href="/">
                           Main app home
@@ -148,17 +142,11 @@ export default function AppShell({
                   <div className="topbarActionsCluster topbarActionsCluster--start">
                     {useFooterDockChrome ? (
                       <SiteMobileNavMoreMenu tone="app" align="start">
-                        <Link className="siteMobileNavMore__entry" href="/trusted">
-                          Trusted Resources
-                        </Link>
-                        <Link className="siteMobileNavMore__entry" href="/community">
-                          Community
+                        <Link className="siteMobileNavMore__entry" href="/podcasts">
+                          Podcast
                         </Link>
                         <Link className="siteMobileNavMore__entry" href="/sponsors">
                           Sponsors
-                        </Link>
-                        <Link className="siteMobileNavMore__entry" href="/contact">
-                          Contact
                         </Link>
                         <Link className="siteMobileNavMore__entry" href="/sponsors">
                           Become a Sponsor
@@ -214,7 +202,7 @@ export default function AppShell({
                     href={item.href}
                     title={item.linkTitle || item.label}
                     data-nav-key={item.key}
-                    className={`navItem navItem--dockCol navItem--dockPrimary ${activeNav === item.key ? "isActive" : ""}`}
+                    className={`navItem navItem--dockCol navItem--dockPrimary ${isSiteDockNavActive(item.key, { nav: activeNav, pathname }) ? "isActive" : ""}`}
                   >
                     <SiteBottomNavGlyph navKey={item.key} className="navItemGlyph" />
                     <span className="navItemLabel">{item.label}</span>
