@@ -49,6 +49,7 @@ export function mergeLogoPresentation(manual, assessed, context = {}) {
     fit,
     tone: assessed.tone || "normal",
     borderColor: manual?.borderColor || "",
+    minimalFrame: !!manual?.minimalFrame,
     panel,
   };
 }

@@ -32,6 +32,7 @@ const DEFAULT_PRESENTATION = {
   fit: "contain",
   tone: "normal",
   borderColor: "",
+  minimalFrame: false,
   panel: "auto",
 };
 
@@ -89,6 +90,7 @@ export default function OrganizationLogo({
   const frameClass = [
     "organizationLogo__frame",
     mark.bgColor ? "organizationLogo__frame--matte" : "",
+    mark.minimalFrame ? "organizationLogo__frame--minimal" : "",
     frameClassName,
   ]
     .filter(Boolean)

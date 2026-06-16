@@ -49,8 +49,20 @@
   box-shadow: 0 4px 14px color-mix(in srgb, var(--color-shadow, #000) 22%, transparent);
 }
 
+/* Sponsor surfaces: logo only — no decorative outer ring or drop shadow */
+.organizationLogo__frame--minimal,
+.sponsorPremiumCard .organizationLogo__frame,
+.sponsorProfilePageRoot .organizationLogo__frame,
+.homeSponsorBannerSlot .organizationLogo__frame {
+  border: none;
+  box-shadow: none;
+}
+
 .organizationLogo--onDark .organizationLogo__frame:not(.organizationLogo__frame--matte) {
   background: #0a100e;
+}
+
+.organizationLogo--onDark .organizationLogo__frame:not(.organizationLogo__frame--minimal) {
   border-color: color-mix(in srgb, #ffffff 18%, transparent);
 }
 
