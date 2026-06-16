@@ -5,11 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { isCapacitorNative } from "@/lib/capacitor/platform";
 import { hasMobileAppAccess } from "@/lib/membership/appAccess";
 import { readNavAuthCache } from "@/lib/auth/navAuthCache";
-import {
-  TORP_OAUTH_BROWSER_PENDING,
-  TORP_OAUTH_STATE_KEY,
-} from "@/lib/auth/oauthMobileHandoff";
-import { TORP_OAUTH_RETURN_KEY } from "@/components/capacitor/MobileOAuthSessionResume";
+import { isOAuthInProgress } from "@/lib/auth/oauthInProgress";
 import { useProfileData } from "@/features/profile/ProfileDataProvider";
 
 const MOBILE_GATE_ALLOW = [
@@ -54,15 +50,6 @@ const NATIVE_LOGIN_ALIASES = {
 
 function isAllowedPath(pathname) {
   return MOBILE_GATE_ALLOW.some((re) => re.test(pathname || "/"));
-}
-
-function isOAuthInProgress() {
-  if (typeof sessionStorage === "undefined") return false;
-  return (
-    sessionStorage.getItem(TORP_OAUTH_BROWSER_PENDING) === "1" ||
-    !!sessionStorage.getItem(TORP_OAUTH_STATE_KEY) ||
-    sessionStorage.getItem(TORP_OAUTH_RETURN_KEY) === "1"
-  );
 }
 
 function accessOpts(entitlements) {
@@ -124,6 +111,19 @@ export default function MobileNativeGate() {
       isAuthenticated,
       sessionHint,
     });
+
+    if (
+      !guest &&
+      (path === "/sign-in" || path === "/sign-up" || path === "/auth/sign-in" || path === "/auth/sign-up")
+    ) {
+      if (access === "pending") return;
+      const target = access === "denied" ? "/access" : "/";
+      if (lastRedirectRef.current !== target) {
+        lastRedirectRef.current = target;
+        router.replace(target);
+      }
+      return;
+    }
 
     const goHome = () => {
       const nav = String(navQuery).trim().toLowerCase();

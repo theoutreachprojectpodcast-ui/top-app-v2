@@ -1,26 +1,34 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { useAuthSession } from "@/components/auth/AuthSessionProvider";
 import { useProfileData } from "@/features/profile/ProfileDataProvider";
 import { isCapacitorNative } from "@/lib/capacitor/platform";
-import MobileLoadingOverlay from "@/components/capacitor/MobileLoadingOverlay";
+import AuthLoadingOverlay from "@/components/auth/AuthLoadingOverlay";
+import { isOAuthInProgress } from "@/lib/auth/oauthInProgress";
+import { readNavAuthCache } from "@/lib/auth/navAuthCache";
+import { MOBILE_POST_LOGIN_PATH } from "@/lib/runtime/appUrls";
 
-const BOOT_OVERLAY_MAX_MS = 8000;
-const BOOT_STALL_MS = 14000;
-const SPLASH_HIDE_TIMEOUT_MS = 2000;
+const BOOT_OVERLAY_MAX_MS = 2000;
+const BOOT_STALL_MS = 12000;
+const SPLASH_HIDE_TIMEOUT_MS = 1200;
 
 /**
- * Keeps the native splash visible until auth bootstrap completes, then shows a branded overlay
- * until profile hydration is ready — prevents the black flash between LaunchScreen and the app.
+ * Native splash → single branded overlay until session is ready. Skips during OAuth return.
  */
 export default function MobileBootLoader() {
+  const pathname = usePathname();
   const { loading: authLoading, authenticated, refresh } = useAuthSession();
   const { loadingProfile } = useProfileData();
   const [overlayVisible, setOverlayVisible] = useState(isCapacitorNative());
   const [bootError, setBootError] = useState("");
   const [bootForced, setBootForced] = useState(false);
   const native = isCapacitorNative();
+
+  const oauthBusy = isOAuthInProgress();
+  const onAuthCompleteRoute = pathname === MOBILE_POST_LOGIN_PATH;
+  const sessionHint = !!readNavAuthCache()?.authenticated;
 
   const bootReady =
     bootForced || (!authLoading && (!authenticated || !loadingProfile));
@@ -43,7 +51,10 @@ export default function MobileBootLoader() {
   }, [native]);
 
   useEffect(() => {
-    if (!native) return undefined;
+    if (!native || oauthBusy || onAuthCompleteRoute) {
+      setOverlayVisible(false);
+      return undefined;
+    }
     const maxTimer = window.setTimeout(() => {
       setBootForced(true);
       setOverlayVisible(false);
@@ -52,10 +63,10 @@ export default function MobileBootLoader() {
         .catch(() => {});
     }, BOOT_OVERLAY_MAX_MS);
     return () => window.clearTimeout(maxTimer);
-  }, [native]);
+  }, [native, oauthBusy, onAuthCompleteRoute]);
 
   useEffect(() => {
-    if (!native || bootReady || bootError) return undefined;
+    if (!native || bootReady || bootError || oauthBusy || onAuthCompleteRoute) return undefined;
     const stallTimer = window.setTimeout(() => {
       setBootError(
         "The Outreach Project servers are taking too long to respond. Check your connection and try again.",
@@ -63,10 +74,19 @@ export default function MobileBootLoader() {
       setOverlayVisible(true);
     }, BOOT_STALL_MS);
     return () => window.clearTimeout(stallTimer);
-  }, [native, bootReady, bootError, authLoading, loadingProfile, authenticated]);
+  }, [
+    native,
+    bootReady,
+    bootError,
+    authLoading,
+    loadingProfile,
+    authenticated,
+    oauthBusy,
+    onAuthCompleteRoute,
+  ]);
 
   useEffect(() => {
-    if (!native || !bootReady) return undefined;
+    if (!native || !bootReady || oauthBusy || onAuthCompleteRoute) return undefined;
     let cancelled = false;
 
     void (async () => {
@@ -90,12 +110,14 @@ export default function MobileBootLoader() {
     return () => {
       cancelled = true;
     };
-  }, [native, bootReady]);
+  }, [native, bootReady, oauthBusy, onAuthCompleteRoute]);
 
-  if (!native) return null;
+  if (!native || oauthBusy || onAuthCompleteRoute) return null;
+
   return (
-    <MobileLoadingOverlay
+    <AuthLoadingOverlay
       visible={overlayVisible}
+      variant={sessionHint && (authLoading || loadingProfile) ? "session" : "boot"}
       error={!!bootError}
       errorMessage={bootError}
       onRetry={bootError ? handleRetry : undefined}

@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import TopApp from "@/components/app/TopApp";
+import AuthLoadingOverlay from "@/components/auth/AuthLoadingOverlay";
 import { isCapacitorNative } from "@/lib/capacitor/platform";
 
 /** Native shell uses a single `/` TopApp instance — avoid remounting on `/community`. */
@@ -16,13 +17,7 @@ export default function NativeCommunityRoute() {
   }, [router]);
 
   if (isCapacitorNative()) {
-    return (
-      <div className="mobileSplashPage">
-        <div className="mobileSplashPage__inner">
-          <p className="mobileSplashPage__lead">Loading…</p>
-        </div>
-      </div>
-    );
+    return <AuthLoadingOverlay visible variant="generic" />;
   }
 
   return <TopApp initialNav="community" />;

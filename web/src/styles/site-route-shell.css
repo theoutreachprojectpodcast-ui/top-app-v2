@@ -90,7 +90,17 @@
 .nonprofitProfileToolbar {
   width: min(var(--content-max-width), calc(100% - var(--content-gutter)));
   margin: 0 auto;
-  padding: 8px 0 0;
+  padding:
+    8px
+    max(var(--mobile-shell-pad-x, 16px), env(safe-area-inset-right, 0px))
+    8px
+    max(var(--mobile-shell-pad-x, 16px), env(safe-area-inset-left, 0px));
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: color-mix(in srgb, var(--color-bg-app, #121212) 92%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .onboardingRouteWrap {
@@ -123,6 +133,10 @@
   .nonprofitProfileToolbar {
     width: min(var(--content-max-width), calc(100% - var(--content-gutter)));
     padding-top: 6px;
+  }
+
+  .appShell--siteChrome.appShell--subpage .shell:has(.nonprofitProfileShell) {
+    padding-top: 0;
   }
 }
 

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { consumeOAuthMobileSessionHandoff } from "@/lib/auth/oauthMobileHandoffServer";
+import { MOBILE_POST_LOGIN_PATH } from "@/lib/runtime/appUrls";
 
 /**
  * GET — apply WorkOS session cookies captured in the in-app browser, then redirect into the app.
@@ -17,9 +18,12 @@ export async function GET(request) {
     return NextResponse.redirect(new URL("/sign-in?oauth_error=Sign-in%20expired", request.url), 302);
   }
 
-  let redirectTo = String(handoff.redirectTo || "/").trim() || "/";
+  let redirectTo = String(handoff.redirectTo || MOBILE_POST_LOGIN_PATH).trim() || MOBILE_POST_LOGIN_PATH;
   if (!redirectTo.startsWith("/")) {
-    redirectTo = "/";
+    redirectTo = MOBILE_POST_LOGIN_PATH;
+  }
+  if (redirectTo === "/") {
+    redirectTo = MOBILE_POST_LOGIN_PATH;
   }
 
   const dest = new URL(redirectTo, request.url);

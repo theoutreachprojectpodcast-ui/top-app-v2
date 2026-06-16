@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import AuthLoadingOverlay from "@/components/auth/AuthLoadingOverlay";
 import MobileAccessPaywall from "@/components/mobile/MobileAccessPaywall";
 
 export const metadata = {
@@ -6,19 +7,9 @@ export const metadata = {
   description: "Activate App Access membership for the mobile app.",
 };
 
-function MobileAccessFallback() {
-  return (
-    <div className="mobileSplashPage">
-      <div className="mobileSplashPage__inner">
-        <p className="mobileSplashPage__lead">Loading…</p>
-      </div>
-    </div>
-  );
-}
-
 export default function MobileAccessPage() {
   return (
-    <Suspense fallback={<MobileAccessFallback />}>
+    <Suspense fallback={<AuthLoadingOverlay visible variant="generic" />}>
       <MobileAccessPaywall />
     </Suspense>
   );

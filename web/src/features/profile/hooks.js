@@ -22,6 +22,7 @@ import {
 } from "@/features/profile/mappers";
 import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
 import { clearNavAuthCache, readNavAuthCache, writeNavAuthCache } from "@/lib/auth/navAuthCache";
+import { useAuthSession } from "@/components/auth/AuthSessionProvider";
 import { navCacheHasFreeAccess } from "@/lib/membership/appAccess";
 import { isDemoModeEnabled } from "@/lib/runtime/launchMode";
 import {
@@ -80,6 +81,7 @@ function profileSaveErrorMessage(data, res) {
  */
 export function useProfileDataState(supabase) {
   const demoModeEnabled = isDemoModeEnabled();
+  const { authenticated: sessionAuthenticated } = useAuthSession();
   const hydratedRef = useRef(false);
   const syncingRef = useRef(false);
   const workosRef = useRef(false);
@@ -139,6 +141,13 @@ export function useProfileDataState(supabase) {
   }, []);
 
   const refreshWorkOSProfile = useCallback(async () => {
+    const cache = readNavAuthCache();
+    if (!workosRef.current && cache?.authenticated) {
+      workosRef.current = true;
+      setSessionKind("workos");
+      setIsAuthenticated(true);
+      setAuthProvider(AUTH_PROVIDER.WORKOS);
+    }
     if (!workosRef.current) return;
     try {
       const res = await fetch("/api/me", { credentials: "include", cache: "no-store" });
@@ -169,6 +178,16 @@ export function useProfileDataState(supabase) {
       setProfileError("Could not refresh your profile.");
     }
   }, []);
+
+  useEffect(() => {
+    if (!sessionAuthenticated) return;
+    if (workosRef.current && isAuthenticated) return;
+    workosRef.current = true;
+    setSessionKind("workos");
+    setIsAuthenticated(true);
+    setAuthProvider(AUTH_PROVIDER.WORKOS);
+    void refreshWorkOSProfile();
+  }, [sessionAuthenticated, isAuthenticated, refreshWorkOSProfile]);
 
   useEffect(() => {
     let cancelled = false;
@@ -263,25 +282,14 @@ export function useProfileDataState(supabase) {
         }
 
         /**
-         * Nav cache said we were signed in (last /api/me success), but API now says not — session ended or transient
-         * failure after retry. Never load unrelated demo localStorage profile in this branch (shared device bug).
+         * Nav cache said we were signed in but /api/me still failed after retry — keep the session
+         * hint (transient cookie/network). Only explicit sign-out clears nav cache.
          */
         if (cacheNav?.authenticated) {
-          clearNavAuthCache();
-          workosRef.current = false;
-          setSessionKind("none");
-          setIsAuthenticated(false);
-          setAuthProvider(null);
-          setWorkOSAccountEmail("");
-          setProfile(createInitialProfile());
-          setFavoriteEins([]);
-          setSavedOrganizations([]);
-          setEntitlements({
-            podcastMemberContent: false,
-            communityStorySubmit: false,
-            isPrivilegedStaff: false,
-            isPlatformAdmin: false,
-          });
+          workosRef.current = true;
+          setSessionKind("workos");
+          setIsAuthenticated(true);
+          setAuthProvider(AUTH_PROVIDER.WORKOS);
           hydratedRef.current = true;
           setLoadingProfile(false);
           return;

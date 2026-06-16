@@ -92,7 +92,9 @@ function completeInWebView(data) {
 
 function oauthErrorRedirect(message) {
   clearOAuthHandoffFlags();
-  window.location.replace(appUrl(`/sign-in?oauth_error=${encodeURIComponent(message || "Sign-in failed.")}`));
+  window.location.replace(
+    nativeOAuthUrl(`/sign-in?oauth_error=${encodeURIComponent(message || "Sign-in failed.")}`),
+  );
 }
 
 /**

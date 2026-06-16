@@ -5,6 +5,8 @@ import { useSearchParams } from "next/navigation";
 import { isCapacitorNative } from "@/lib/capacitor/platform";
 import { launchWorkOSAuth } from "@/lib/auth/workosNativeAuthLaunch";
 import { workosGoUrl } from "@/lib/auth/workosGoUrl";
+import { MOBILE_POST_AUTH_COMPLETE_PATH } from "@/lib/auth/workosReturnTo";
+import AuthLoadingOverlay from "@/components/auth/AuthLoadingOverlay";
 import WorkOSAuthShell from "@/components/auth/WorkOSAuthShell";
 
 function paramsFromSearchParams(searchParams) {
@@ -33,7 +35,10 @@ function WorkOSAuthHandoffInner({ mode, backHref = "/", fallbackReturn }) {
     }
 
     if (native) {
-      const returnTo = params.returnTo || fallbackReturn || (mode === "signup" ? "/onboarding" : "/community");
+      const returnTo =
+        params.returnTo ||
+        fallbackReturn ||
+        MOBILE_POST_AUTH_COMPLETE_PATH;
       const go = workosGoUrl({
         mode: mode === "signup" ? "signup" : "signin",
         returnTo,
@@ -69,11 +74,7 @@ function WorkOSAuthHandoffInner({ mode, backHref = "/", fallbackReturn }) {
   }
 
   return (
-    <WorkOSAuthShell
-      title="Sign in"
-      lead="Preparing secure sign in…"
-      busy
-    />
+    <AuthLoadingOverlay visible variant="authLaunch" />
   );
 }
 
@@ -82,7 +83,7 @@ function WorkOSAuthHandoffInner({ mode, backHref = "/", fallbackReturn }) {
  */
 export default function WorkOSAuthHandoffClient({ mode = "signin", backHref = "/", fallbackReturn }) {
   return (
-    <Suspense fallback={<WorkOSAuthShell title="Sign in" lead="Loading…" busy />}>
+    <Suspense fallback={<AuthLoadingOverlay visible variant="authLaunch" />}>
       <WorkOSAuthHandoffInner mode={mode} backHref={backHref} fallbackReturn={fallbackReturn} />
     </Suspense>
   );

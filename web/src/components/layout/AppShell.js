@@ -11,11 +11,10 @@ import HeaderInner from "@/components/layout/HeaderInner";
 import SubpageTopbarActions from "@/components/layout/SubpageTopbarActions";
 import FooterInner from "@/components/layout/FooterInner";
 import MissionPageTopStrip from "@/components/layout/MissionPageTopStrip";
-import { useAuthSession } from "@/components/auth/AuthSessionProvider";
+import { useNavAuthState } from "@/hooks/useNavAuthState";
 import { usePodcastDarkSchemeLock } from "@/hooks/usePodcastDarkSchemeLock";
 import { resolvePageAtmosphere } from "@/lib/design/pageAtmosphere";
 import { useImmersiveHeaderScroll } from "@/hooks/useImmersiveHeaderScroll";
-import { readNavAuthCache } from "@/lib/auth/navAuthCache";
 import CapacitorFooterPortal from "@/components/capacitor/CapacitorFooterPortal";
 
 const PRIMARY_BOTTOM_NAV_KEYS = new Set(["home", "profile", "contact"]);
@@ -65,10 +64,7 @@ export default function AppShell({
   });
   usePodcastDarkSchemeLock(podcastThemeShell);
 
-  const session = useAuthSession();
-  const navAuthCache = typeof window !== "undefined" ? readNavAuthCache() : null;
-  const optimisticAuthed = session.loading && navAuthCache?.authenticated;
-  const isLoggedIn = session.authenticated || optimisticAuthed;
+  const { authed: isLoggedIn } = useNavAuthState();
 
   const mainChromeClass = immersiveHeaderScroll ? " header-at-top" : "";
   const authChromeClass = useTopAppStructure ? (isLoggedIn ? " topApp--auth-in" : " topApp--auth-out") : "";
@@ -144,16 +140,8 @@ export default function AppShell({
               <HeaderInner className="topbarInner">
                 <div className="topbarZone topbarLeft">
                   <div className="topbarActionsCluster topbarActionsCluster--start">
-                    {!podcastThemeShell && showThemeToggle ? <ColorSchemeToggle /> : null}
-                    <SubpageTopbarActions section="lead" />
-                  </div>
-                </div>
-                <div className="topbarZone topbarCenter" aria-hidden="true" />
-                <div className="topbarZone topbarRight">
-                  <div className="topbarActionsCluster">
-                    <SubpageTopbarActions section="auth" />
                     {useFooterDockChrome ? (
-                      <SiteMobileNavMoreMenu tone="app" align="end">
+                      <SiteMobileNavMoreMenu tone="app" align="start">
                         <Link className="siteMobileNavMore__entry" href="/trusted">
                           Trusted Resources
                         </Link>
@@ -171,6 +159,14 @@ export default function AppShell({
                         </Link>
                       </SiteMobileNavMoreMenu>
                     ) : null}
+                    <SubpageTopbarActions section="lead" />
+                  </div>
+                </div>
+                <div className="topbarZone topbarCenter" aria-hidden="true" />
+                <div className="topbarZone topbarRight">
+                  <div className="topbarActionsCluster">
+                    {!podcastThemeShell && showThemeToggle ? <ColorSchemeToggle /> : null}
+                    <SubpageTopbarActions section="auth" />
                   </div>
                 </div>
               </HeaderInner>

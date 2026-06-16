@@ -34,6 +34,10 @@ export async function launchWorkOSAuth(goPath) {
     return;
   }
 
+  if (typeof sessionStorage !== "undefined") {
+    sessionStorage.setItem(TORP_OAUTH_BROWSER_PENDING, "1");
+  }
+
   const origin = nativeProductionAppOrigin();
   const jsonUrl = `${origin}${buildWorkOSGoJsonPath(path)}`;
 
@@ -46,23 +50,33 @@ export async function launchWorkOSAuth(goPath) {
       headers: { Accept: "application/json" },
     });
   } catch {
+    if (typeof sessionStorage !== "undefined") {
+      sessionStorage.removeItem(TORP_OAUTH_BROWSER_PENDING);
+      sessionStorage.removeItem(TORP_OAUTH_STATE_KEY);
+    }
     throw new Error("Could not reach the sign-in service. Check your connection and try again.");
   }
 
   const data = await res.json().catch(() => ({}));
   if (!res.ok || !data?.ok) {
+    if (typeof sessionStorage !== "undefined") {
+      sessionStorage.removeItem(TORP_OAUTH_BROWSER_PENDING);
+      sessionStorage.removeItem(TORP_OAUTH_STATE_KEY);
+    }
     const msg = String(data?.message || "").trim();
     throw new Error(msg || "Could not start secure sign in.");
   }
 
   const stateKey = String(data.stateKey || data.key || "").trim();
   if (!stateKey) {
+    if (typeof sessionStorage !== "undefined") {
+      sessionStorage.removeItem(TORP_OAUTH_BROWSER_PENDING);
+    }
     throw new Error("Could not start secure sign in.");
   }
 
   if (typeof sessionStorage !== "undefined") {
     sessionStorage.setItem(TORP_OAUTH_STATE_KEY, stateKey);
-    sessionStorage.setItem(TORP_OAUTH_BROWSER_PENDING, "1");
   }
 
   const browserStart = String(data.browserStart || "").trim();

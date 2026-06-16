@@ -62,6 +62,8 @@ export default function AuthSessionProvider({ children }) {
 
   const refresh = useCallback(async (opts = {}) => {
     const soft = !!opts.soft;
+    const cacheBefore = readNavAuthCache();
+    const stickyAuthed = sessionRef.current.authenticated || !!cacheBefore?.authenticated;
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 12_000);
     try {
@@ -74,26 +76,42 @@ export default function AuthSessionProvider({ children }) {
       const me = await meRes.json().catch(() => ({}));
       const workos = !!status.workos;
       let authenticated = !!me.authenticated;
-      if (soft && sessionRef.current.authenticated && !authenticated) {
-        await new Promise((r) => setTimeout(r, 150));
-        authenticated = await fetchMeAuthenticated();
-      }
-      if (soft && sessionRef.current.authenticated && !authenticated) {
-        await new Promise((r) => setTimeout(r, 400));
-        authenticated = await fetchMeAuthenticated();
+      if (stickyAuthed && !authenticated) {
+        for (const delay of [150, 400, 900, 1600]) {
+          await new Promise((r) => setTimeout(r, delay));
+          authenticated = await fetchMeAuthenticated();
+          if (authenticated) break;
+        }
       }
       const profileForAccess = me.profile ? profileFromApiDto(me.profile) : null;
-      writeNavAuthCache(authenticated, workos, {
-        hasFreeAccess: authenticated && navCacheHasFreeAccess(profileForAccess, me.entitlements),
-      });
-      setState({ loading: false, authenticated, workos });
+      if (authenticated) {
+        writeNavAuthCache(authenticated, workos, {
+          hasFreeAccess: authenticated && navCacheHasFreeAccess(profileForAccess, me.entitlements),
+        });
+        setState({ loading: false, authenticated: true, workos });
+        return;
+      }
+      if (soft && stickyAuthed) {
+        setState((prev) => ({
+          loading: false,
+          authenticated: true,
+          workos: prev.workos || !!cacheBefore?.workos || workos,
+        }));
+        return;
+      }
+      if (!soft) {
+        clearNavAuthCache();
+      }
+      setState({ loading: false, authenticated: false, workos });
     } catch {
+      const cache = readNavAuthCache();
+      const preserve = soft || !!cache?.authenticated;
       setState((prev) => ({
         loading: false,
-        authenticated: soft ? prev.authenticated : false,
-        workos: soft ? prev.workos : false,
+        authenticated: preserve ? prev.authenticated || !!cache?.authenticated : false,
+        workos: preserve ? prev.workos || !!cache?.workos : false,
       }));
-      if (!soft) clearNavAuthCache();
+      if (!soft && !cache?.authenticated) clearNavAuthCache();
     } finally {
       clearTimeout(timer);
     }

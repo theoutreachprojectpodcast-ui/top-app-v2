@@ -5,7 +5,8 @@ import { usePathname } from "next/navigation";
 import { useAuthSession } from "@/components/auth/AuthSessionProvider";
 import { useProfileData } from "@/features/profile/ProfileDataProvider";
 import { isCapacitorNative } from "@/lib/capacitor/platform";
-export const TORP_OAUTH_RETURN_KEY = "torp-oauth-return";
+import { TORP_OAUTH_RETURN_KEY } from "@/lib/auth/oauthMobileHandoff";
+export { TORP_OAUTH_RETURN_KEY };
 
 /**
  * After OAuth deep-link return, hard-refresh session + profile so the native shell is logged in.

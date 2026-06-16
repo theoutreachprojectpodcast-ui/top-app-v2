@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useEffect } from "react";
-import WorkOSAuthShell from "@/components/auth/WorkOSAuthShell";
+import AuthLoadingOverlay from "@/components/auth/AuthLoadingOverlay";
 
 /**
  * Legacy route — handoff now redirects to WorkOS on the sign-in page itself.
@@ -12,19 +12,13 @@ function WorkOSExternalContinueInner({ backHref = "/mobile" }) {
     window.location.replace(backHref);
   }, [backHref]);
 
-  return (
-    <WorkOSAuthShell title="Sign in" lead="Returning to sign in…" busy>
-      <p className="workosAuthShell__lead">
-        <a href={backHref}>Continue</a>
-      </p>
-    </WorkOSAuthShell>
-  );
+  return <AuthLoadingOverlay visible variant="authLaunch" />;
 }
 
 /** @param {{ backHref?: string }} props */
 export default function WorkOSExternalContinueClient({ backHref = "/mobile" }) {
   return (
-    <Suspense fallback={<WorkOSAuthShell title="Sign in" lead="Loading…" busy />}>
+    <Suspense fallback={<AuthLoadingOverlay visible variant="authLaunch" />}>
       <WorkOSExternalContinueInner backHref={backHref} />
     </Suspense>
   );

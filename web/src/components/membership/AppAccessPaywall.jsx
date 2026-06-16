@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import BrandMark from "@/components/BrandMark";
+import AuthLoadingOverlay from "@/components/auth/AuthLoadingOverlay";
 import { useAuthSession } from "@/components/auth/AuthSessionProvider";
 import { readNavAuthCache } from "@/lib/auth/navAuthCache";
 import {
@@ -117,13 +118,7 @@ export default function AppAccessPaywall({
     !clientReady || (signedInHint && (loadingProfile || authLoading)) || (hasAccessHint && checkoutResult !== "cancel");
 
   if (waitingForSession) {
-    return (
-      <div className="mobileSplashPage">
-        <div className="mobileSplashPage__inner">
-          <p className="mobileSplashPage__lead">Loading…</p>
-        </div>
-      </div>
-    );
+    return <AuthLoadingOverlay visible variant="session" />;
   }
 
   return (

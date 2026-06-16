@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
+import AuthLoadingOverlay from "@/components/auth/AuthLoadingOverlay";
 import AppAccessPaywall from "@/components/membership/AppAccessPaywall";
 import "@/styles/mobile-splash-page.css";
 
@@ -17,15 +18,7 @@ function WebAccessPaywallInner() {
 
 export default function WebAccessPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="mobileSplashPage">
-          <div className="mobileSplashPage__inner">
-            <p className="mobileSplashPage__lead">Loading…</p>
-          </div>
-        </div>
-      }
-    >
+    <Suspense fallback={<AuthLoadingOverlay visible variant="generic" />}>
       <WebAccessPaywallInner />
     </Suspense>
   );

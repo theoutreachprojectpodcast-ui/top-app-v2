@@ -85,13 +85,28 @@ export function parseOAuthBrowserDoneDeepLink(url) {
 export function mobileOAuthBrowserDoneHtml(stateKey = "") {
   const deepLink = buildOAuthBrowserDoneDeepLink(stateKey);
   const escaped = deepLink.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+  const headExtra = `<meta http-equiv="refresh" content="0;url=${escaped}" />`;
+  const bodyEnd = `<script>
+    (function () {
+      var link = ${JSON.stringify(deepLink)};
+      function openApp() {
+        try { window.location.replace(link); } catch (e) {}
+      }
+      openApp();
+      setTimeout(openApp, 120);
+      setTimeout(function () { try { window.close(); } catch (e) {} }, 450);
+    })();
+  </script>`;
   return workosAuthBrandedHtmlPage({
-    title: "Sign in complete — The Outreach Project",
+    title: "Returning to app — The Outreach Project",
     heading: "Sign in complete",
-    bodyHtml: `<p class="torpAuth__lead">Close this window to return to The Outreach Project.</p>
-      <p class="torpAuth__lead">Your sign-in will finish automatically when this window closes.</p>
+    showSpinner: true,
+    headExtra,
+    bodyEnd,
+    bodyHtml: `<p class="torpAuth__lead">Returning to The Outreach Project…</p>
+      <p class="torpAuth__lead">Your account will open automatically.</p>
       <div class="torpAuth__actions">
-        <a class="torpAuth__btn torpAuth__btn--soft" href="${escaped}">Return to app</a>
+        <a class="torpAuth__btn torpAuth__btn--primary" href="${escaped}">Open app</a>
       </div>`,
   });
 }

@@ -63,7 +63,7 @@ import {
   writeRememberDevicePref,
   writeRememberEmailPref,
 } from "@/lib/auth/lastUsedEmail";
-import { workosSignInLink, workosSignUpHref } from "@/lib/auth/workosReturnTo";
+import { workosSignInLink, workosSignUpHref, MOBILE_POST_AUTH_COMPLETE_PATH } from "@/lib/auth/workosReturnTo";
 import { workosGoUrl } from "@/lib/auth/workosGoUrl";
 import { launchWorkOSAuth } from "@/lib/auth/workosNativeAuthLaunch";
 import { computeProfileCompletion } from "@/lib/profile/profileCompletion";
@@ -84,6 +84,7 @@ import {
   requiresExternalWebAccountFlow,
 } from "@/lib/capacitor/webAccountRedirects";
 import { isCapacitorNative } from "@/lib/capacitor/platform";
+import { useNavAuthState } from "@/hooks/useNavAuthState";
 import { workosReturnPathFromRouter } from "@/lib/auth/workosReturnTo";
 
 function DemoAuthPasswordVisibilityIcon({ revealed }) {
@@ -115,6 +116,7 @@ function TopAppInner({ initialNav = "home" }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const isMobileShell = useMobileShell();
+  const { authed: isLoggedIn } = useNavAuthState();
   const sb = useMemo(() => getSupabaseClient(), []);
   const [nav, setNav] = useState(initialNav);
   const [overlay, setOverlay] = useState(null);
@@ -464,7 +466,6 @@ function TopAppInner({ initialNav = "home" }) {
     if (isAuthenticated && favoriteEins.length) return [];
     return fallbackSavedOrganizations.map((raw) => mapNonprofitCardRow(raw, "saved"));
   }, [savedOrganizations, isAuthenticated, favoriteEins, fallbackSavedOrganizations]);
-  const isLoggedIn = isAuthenticated;
   const favoriteEinSet = useMemo(
     () => new Set((favoriteEins || []).map((e) => normalizeEinDigits(e)).filter((e) => e.length === 9)),
     [favoriteEins]
@@ -475,10 +476,15 @@ function TopAppInner({ initialNav = "home" }) {
   );
 
   function buildWorkOSGoPath(returnPathOverride, mode = "signin") {
+    const defaultReturn = isCapacitorNative()
+      ? MOBILE_POST_AUTH_COMPLETE_PATH
+      : mode === "signup"
+        ? "/onboarding"
+        : "/";
     const returnPath =
       returnPathOverride ||
       workosReturnPathFromRouter(pathname, searchParams) ||
-      (mode === "signup" ? "/onboarding" : "/");
+      defaultReturn;
     return workosGoUrl({
       mode: mode === "signup" ? "signup" : "signin",
       returnTo: returnPath,
@@ -490,10 +496,11 @@ function TopAppInner({ initialNav = "home" }) {
 
   async function startWorkOSSignIn(returnPathOverride) {
     writeRememberDevicePref(rememberDevice);
+    const defaultReturn = isCapacitorNative() ? MOBILE_POST_AUTH_COMPLETE_PATH : "/";
     const returnPath =
       returnPathOverride ||
       workosReturnPathFromRouter(pathname, searchParams) ||
-      "/";
+      defaultReturn;
     if (requiresExternalWebAccountFlow()) {
       void openWebLogin({
         returnPath,
@@ -527,6 +534,10 @@ function TopAppInner({ initialNav = "home" }) {
     }
     if (authBackend.workos) {
       writeRememberDevicePref(rememberDevice);
+      if (isCapacitorNative()) {
+        void launchWorkOSAuth(buildWorkOSGoPath(MOBILE_POST_AUTH_COMPLETE_PATH, "signup"));
+        return;
+      }
       window.location.assign(workosSignUpModalHref);
       return;
     }
@@ -661,7 +672,30 @@ function TopAppInner({ initialNav = "home" }) {
           <HeaderInner className="topbarInner">
             <div className="topbarZone topbarLeft">
               <div className="topbarActionsCluster topbarActionsCluster--start">
-                {pageAtmosphere !== "podcast" ? <ColorSchemeToggle /> : null}
+                <SiteMobileNavMoreMenu tone="app" align="start">
+                  <button
+                    type="button"
+                    className="siteMobileNavMore__entry"
+                    onClick={() => {
+                      setNav("trusted");
+                      if (!trusted.length) loadTrusted(true);
+                    }}
+                  >
+                    Trusted Resources
+                  </button>
+                  <button type="button" className="siteMobileNavMore__entry" onClick={openCommunity}>
+                    Community
+                  </button>
+                  <button type="button" className="siteMobileNavMore__entry" onClick={goToSponsorsHub}>
+                    Sponsors
+                  </button>
+                  <button type="button" className="siteMobileNavMore__entry" onClick={() => router.push("/podcasts")}>
+                    Podcast
+                  </button>
+                  <button type="button" className="siteMobileNavMore__entry" onClick={goToSponsorsHub}>
+                    Become a Sponsor
+                  </button>
+                </SiteMobileNavMoreMenu>
                 {isMobileShell && isLoggedIn ? <AdminConsoleLink /> : null}
               </div>
             </div>
@@ -669,6 +703,7 @@ function TopAppInner({ initialNav = "home" }) {
             <div className="topbarZone topbarRight">
             <div className="topbarActionsCluster">
               {pageAtmosphere === "home" ? <DownloadMobileAppButton /> : null}
+              {pageAtmosphere !== "podcast" ? <ColorSchemeToggle /> : null}
               {isLoggedIn ? (
                 <>
                   {!isMobileShell ? <AdminConsoleLink /> : null}
@@ -719,30 +754,6 @@ function TopAppInner({ initialNav = "home" }) {
                   </button>
                 </>
               )}
-              <SiteMobileNavMoreMenu tone="app" align="end">
-                <button
-                  type="button"
-                  className="siteMobileNavMore__entry"
-                  onClick={() => {
-                    setNav("trusted");
-                    if (!trusted.length) loadTrusted(true);
-                  }}
-                >
-                  Trusted Resources
-                </button>
-                <button type="button" className="siteMobileNavMore__entry" onClick={openCommunity}>
-                  Community
-                </button>
-                <button type="button" className="siteMobileNavMore__entry" onClick={goToSponsorsHub}>
-                  Sponsors
-                </button>
-                <button type="button" className="siteMobileNavMore__entry" onClick={() => router.push("/podcasts")}>
-                  Podcast
-                </button>
-                <button type="button" className="siteMobileNavMore__entry" onClick={goToSponsorsHub}>
-                  Become a Sponsor
-                </button>
-              </SiteMobileNavMoreMenu>
             </div>
           </div>
         </HeaderInner>

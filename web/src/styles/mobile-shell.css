@@ -91,33 +91,40 @@ html {
 @media (max-width: 760px) {
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]):not([data-page-atmosphere="home"]) {
     /* In-app tabs: compact mark (Capacitor gets tighter overrides in mobile-capacitor-layout.css). */
-    --mobile-site-header-logo-h: clamp(72px, 18.5vw, 96px);
-    --mobile-site-header-logo-max-w: min(220px, calc(100vw - 108px));
+    --mobile-site-header-logo-h: clamp(56px, 14vw, 72px);
+    --mobile-site-header-logo-max-w: min(180px, calc(100vw - 96px));
     --mobile-site-header-control-size: 44px;
-    --mobile-site-header-control-pad-top: 4px;
+    --mobile-site-header-control-pad-top: 2px;
     --mobile-site-header-pad-x: max(
-      var(--mobile-shell-pad-x, clamp(16px, 4.5vw, 20px)),
+      clamp(8px, 2.5vw, 12px),
       env(safe-area-inset-left, 0px),
       env(safe-area-inset-right, 0px)
     );
   }
 
   main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) {
-    --mobile-site-header-logo-h: clamp(301px, 78.75vw, 399px);
-    --mobile-site-header-logo-max-w: min(910px, calc(100vw - 28px));
+    --mobile-site-header-logo-h: clamp(72px, 18vw, 96px);
+    --mobile-site-header-logo-max-w: min(220px, calc(100vw - 96px));
     --mobile-site-header-control-size: 44px;
-    --mobile-site-header-control-pad-top: 4px;
+    --mobile-site-header-control-pad-top: 2px;
     --mobile-site-header-pad-x: max(
-      var(--mobile-shell-pad-x, clamp(16px, 4.5vw, 20px)),
+      clamp(8px, 2.5vw, 12px),
       env(safe-area-inset-left, 0px),
       env(safe-area-inset-right, 0px)
     );
   }
 
-  /* Guest mobile home: compact header mark — splash panel carries branding + auth CTAs. */
-  main.topApp.topApp--mobileHomeEntrance[data-page-atmosphere="home"]:not(.appShell--podcast) {
+  /* Signed-in home: compact header — content starts higher. */
+  main.topApp.topApp--auth-in[data-page-atmosphere="home"]:not(.appShell--podcast) {
+    --mobile-site-header-logo-h: clamp(48px, 12vw, 64px);
+    --mobile-site-header-logo-max-w: min(160px, calc(100vw - 96px));
+  }
+
+  /* Guest mobile home: compact mark — splash panel carries branding + auth CTAs. */
+  main.topApp.topApp--mobileHomeEntrance[data-page-atmosphere="home"]:not(.appShell--podcast),
+  main.topApp.topApp--auth-out[data-page-atmosphere="home"]:not(.appShell--podcast) {
     --mobile-site-header-logo-h: clamp(52px, 13.5vw, 64px);
-    --mobile-site-header-logo-max-w: min(168px, calc(100vw - 120px));
+    --mobile-site-header-logo-max-w: min(168px, calc(100vw - 96px));
   }
 
   main.topApp.topApp--mobileHomeEntrance[data-page-atmosphere="home"]:not(.appShell--podcast) .headerBrandStack .brandMarkImg,
@@ -141,9 +148,9 @@ html {
     overflow: visible;
     padding:
       env(safe-area-inset-top, 0px)
-      max(var(--mobile-shell-pad-x, clamp(16px, 4.5vw, 20px)), env(safe-area-inset-right, 0px))
+      max(var(--mobile-site-header-pad-x, clamp(8px, 2.5vw, 12px)), env(safe-area-inset-right, 0px))
       0
-      max(var(--mobile-shell-pad-x, clamp(16px, 4.5vw, 20px)), env(safe-area-inset-left, 0px));
+      max(var(--mobile-site-header-pad-x, clamp(8px, 2.5vw, 12px)), env(safe-area-inset-left, 0px));
   }
 
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) header.topbar {
@@ -198,7 +205,7 @@ html {
     flex-shrink: 0;
     box-sizing: border-box;
     padding: 0 !important;
-    margin: 0 0 clamp(-22px, -6vw, -30px);
+    margin: 0 0 clamp(-8px, -2vw, -12px);
     width: auto !important;
     height: auto !important;
     min-width: 0 !important;
@@ -261,7 +268,7 @@ html {
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarRight .topbarActionsCluster {
     width: auto;
     flex-wrap: nowrap;
-    gap: 12px;
+    gap: 8px;
     align-items: center;
     justify-content: flex-end;
   }

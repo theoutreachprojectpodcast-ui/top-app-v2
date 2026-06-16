@@ -1,3 +1,5 @@
+import { MOBILE_POST_LOGIN_PATH } from "@/lib/runtime/appUrls";
+
 function isCapacitorUserAgent(ua) {
   const agent = String(ua || "");
   return agent.includes("Capacitor") || agent.includes("TheOutreachProject/Capacitor");
@@ -14,5 +16,5 @@ export function resolveMobileAppPostAuthPath(returnPathname, userAgent, startedI
   if (!inApp) return path;
   if (path.startsWith("/onboarding")) return path;
   if (path.startsWith("/mobile")) return path;
-  return "/";
+  return MOBILE_POST_LOGIN_PATH;
 }

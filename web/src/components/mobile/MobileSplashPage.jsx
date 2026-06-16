@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import BrandMark from "@/components/BrandMark";
+import AuthLoadingOverlay from "@/components/auth/AuthLoadingOverlay";
 import { isCapacitorNative } from "@/lib/capacitor/platform";
 import {
   APP_ACCESS_MEMBERSHIP_DISPLAY_NAME,
@@ -67,14 +68,8 @@ export default function MobileSplashPage() {
     }
   }
 
-  if (!clientReady) {
-    return (
-      <div className="mobileSplashPage mobileSplashPage--landing">
-        <div className="mobileSplashPage__inner">
-          <p className="mobileSplashPage__lead">Loading…</p>
-        </div>
-      </div>
-    );
+  if (!clientReady || authBusy) {
+    return <AuthLoadingOverlay visible variant={authBusy ? "authLaunch" : "generic"} />;
   }
 
   if (!isMobileShell && !isNative) {

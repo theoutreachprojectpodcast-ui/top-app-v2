@@ -4,6 +4,8 @@ Next.js web app for the resource network. Legacy static files (`index.html`, `ap
 
 **Source of truth:** [github.com/theoutreachprojectpodcast-ui/top-app-v2](https://github.com/theoutreachprojectpodcast-ui/top-app-v2). Ship changes with `git commit` and `git push origin main` (or your branch + PR) so GitHub always reflects the latest product.
 
+**GitHub push access:** this repo uses the `theoutreachprojectpodcast-ui` org account — not personal `gh` logins. One-time setup: [`docs/GITHUB_AUTH.md`](docs/GITHUB_AUTH.md) or `pnpm run setup:github-auth`.
+
 ## Development launch
 
 From the **repository root** (this folder):

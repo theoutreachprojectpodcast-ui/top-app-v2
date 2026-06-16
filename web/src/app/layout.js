@@ -10,6 +10,8 @@ import MobileAccountReturnBridge from "@/components/capacitor/MobileAccountRetur
 import MobileOAuthBrowserFinish from "@/components/capacitor/MobileOAuthBrowserFinish";
 import MobileOAuthDeepLink from "@/components/capacitor/MobileOAuthDeepLink";
 import MobileOAuthSessionResume from "@/components/capacitor/MobileOAuthSessionResume";
+import MobileOAuthProgressOverlay from "@/components/capacitor/MobileOAuthProgressOverlay";
+import ExternalBrowserSheetHost from "@/components/capacitor/ExternalBrowserSheetHost";
 import MobileNativeGate from "@/components/mobile/MobileNativeGate";
 import WebAppAccessGate from "@/components/membership/WebAppAccessGate";
 import AuthSessionProvider from "@/components/auth/AuthSessionProvider";
@@ -83,7 +85,8 @@ html[data-color-scheme="light"], html[data-color-scheme="light"] body {
 html[data-capacitor-native], html[data-capacitor-native] body {
   min-height: 100%;
   min-height: 100dvh;
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  /* Top safe area lives on .appSiteHeader only — avoid double inset above the header row. */
+  padding: 0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
             `.trim(),
           }}
@@ -97,6 +100,8 @@ html[data-capacitor-native], html[data-capacitor-native] body {
             <ProfileDataProvider>
               <ProfileEditProvider>
                 <MobileBootLoader />
+                <MobileOAuthProgressOverlay />
+                <ExternalBrowserSheetHost />
                 <MobileProductionHealthGate />
                 <Suspense fallback={null}>
                   <MobileOAuthBrowserFinish />

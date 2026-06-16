@@ -96,6 +96,14 @@ html[data-capacitor-native] main.topApp .siteFooter.siteFooter--pageBottom.siteF
 }
 
 @media (max-width: 760px) {
+  /* Native: header owns the top safe area (body omits top inset in layout.js). */
+  html[data-capacitor-native]
+    main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])
+    .appSiteHeader,
+  html[data-capacitor-native] .appShell.appShell--subpage:not(.appShell--podcast) .appSiteHeader {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
   /* Match mobile web: in-flow header band — no extra occlusion layer under the logo. */
   html[data-capacitor-native] main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) > .topbarOcclusion {
     position: static;
@@ -115,7 +123,7 @@ html[data-capacitor-native] main.topApp .siteFooter.siteFooter--pageBottom.siteF
   html[data-capacitor-native]
     main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]):not([data-page-atmosphere="home"])
     .appSiteHeader {
-    margin-bottom: clamp(6px, 1.6vw, 10px);
+    margin-bottom: clamp(2px, 0.8vw, 6px);
     padding-bottom: 0;
   }
 
@@ -133,7 +141,7 @@ html[data-capacitor-native] main.topApp .siteFooter.siteFooter--pageBottom.siteF
   html[data-capacitor-native]
     main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]):not([data-page-atmosphere="home"])
     > .shell:not(.shell--home) {
-    padding-top: clamp(4px, 1.2vw, 8px);
+    padding-top: clamp(2px, 0.6vw, 6px);
   }
 
   /* Header corner controls — wins over `top-app.css` @520px dock rules (loads last). */
@@ -149,7 +157,7 @@ html[data-capacitor-native] main.topApp .siteFooter.siteFooter--pageBottom.siteF
     flex-wrap: nowrap;
     align-items: center;
     width: auto;
-    gap: 12px;
+    gap: 8px;
   }
 
   html[data-capacitor-native]

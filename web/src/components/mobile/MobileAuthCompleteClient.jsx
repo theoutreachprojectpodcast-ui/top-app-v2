@@ -5,19 +5,19 @@ import { useRouter } from "next/navigation";
 import { useAuthSession } from "@/components/auth/AuthSessionProvider";
 import { useProfileData } from "@/features/profile/ProfileDataProvider";
 import { hasMobileAppAccess } from "@/lib/membership/appAccess";
-import MobileLoadingOverlay from "@/components/capacitor/MobileLoadingOverlay";
+import AuthLoadingOverlay from "@/components/auth/AuthLoadingOverlay";
 
-const COMPLETE_STALL_MS = 18_000;
+const COMPLETE_STALL_MS = 14_000;
 
 /**
- * Post-OAuth landing inside the Capacitor WebView — refresh session, then route to home or access paywall.
+ * Post-OAuth landing — single loading overlay, then route home or access paywall.
  */
 export default function MobileAuthCompleteClient() {
   const router = useRouter();
   const { refresh, authenticated, loading: authLoading } = useAuthSession();
   const { loadingProfile, profile, entitlements, refreshWorkOSProfile } = useProfileData();
   const [error, setError] = useState("");
-  const [loadingLabel, setLoadingLabel] = useState("Finishing sign in…");
+  const [phase, setPhase] = useState("complete");
   const routedRef = useRef(false);
   const bootRef = useRef(false);
 
@@ -25,7 +25,8 @@ export default function MobileAuthCompleteClient() {
     setError("");
     routedRef.current = false;
     bootRef.current = false;
-    router.replace("/");
+    setPhase("complete");
+    router.replace("/mobile");
   }, [router]);
 
   useEffect(() => {
@@ -33,7 +34,7 @@ export default function MobileAuthCompleteClient() {
     bootRef.current = true;
     void (async () => {
       try {
-        setLoadingLabel("Verifying your account…");
+        setPhase("verify");
         await refresh({ soft: false });
         await refreshWorkOSProfile();
       } catch {
@@ -79,11 +80,11 @@ export default function MobileAuthCompleteClient() {
   }, [error]);
 
   return (
-    <MobileLoadingOverlay
+    <AuthLoadingOverlay
       visible
+      variant={phase === "verify" ? "authVerify" : "authComplete"}
       error={!!error}
       errorMessage={error}
-      loadingLabel={loadingLabel}
       onRetry={error ? handleRetry : undefined}
     />
   );

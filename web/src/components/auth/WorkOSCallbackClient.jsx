@@ -7,6 +7,7 @@ import { isCapacitorNative } from "@/lib/capacitor/platform";
 import { launchWorkOSAuth } from "@/lib/auth/workosNativeAuthLaunch";
 import { workosGoUrl } from "@/lib/auth/workosGoUrl";
 import { workosOAuthErrorMessage } from "@/lib/auth/workosCallbackErrors";
+import AuthLoadingOverlay from "@/components/auth/AuthLoadingOverlay";
 import WorkOSAuthShell from "@/components/auth/WorkOSAuthShell";
 
 /** @param {{ initialError?: string }} props */
@@ -69,13 +70,13 @@ function WorkOSCallbackInner({ initialError = "" }) {
     );
   }
 
-  return <WorkOSAuthShell title="Sign in" lead="Completing sign in…" busy />;
+  return <AuthLoadingOverlay visible variant="authComplete" />;
 }
 
 /** @param {{ initialError?: string }} [props] */
 export default function WorkOSCallbackClient({ initialError } = {}) {
   return (
-    <Suspense fallback={<WorkOSAuthShell title="Sign in" lead="Loading…" busy />}>
+    <Suspense fallback={<AuthLoadingOverlay visible variant="authComplete" />}>
       <WorkOSCallbackInner initialError={initialError} />
     </Suspense>
   );

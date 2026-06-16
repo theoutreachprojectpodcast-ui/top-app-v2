@@ -23,7 +23,7 @@
 		}
 	},
 	"server": {
-		"url": "https://theoutreachproject.app/mobile",
+		"url": "https://theoutreachproject.app",
 		"cleartext": false,
 		"errorPath": "error.html",
 		"appendUserAgent": "TheOutreachProject/Capacitor",

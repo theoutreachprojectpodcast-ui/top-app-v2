@@ -1,12 +1,13 @@
 "use client";
 
 import { isCapacitorNative } from "@/lib/capacitor/platform";
+import { openExternalBrowserSheet } from "@/lib/capacitor/openExternalBrowserSheet";
 
 let installed = false;
 
 /**
- * Keep http(s) navigation in the Capacitor WKWebView — never Safari / Chrome Custom Tabs.
- * Requires matching hosts in `capacitor.config.js` → `server.allowNavigation`.
+ * Keep same-origin navigation in the Capacitor WKWebView.
+ * External https links open in the in-app browser sheet — never `location.assign` the main WebView.
  */
 export function installCapacitorInAppNavigation() {
   if (typeof window === "undefined" || !isCapacitorNative() || installed) return;
@@ -15,11 +16,11 @@ export function installCapacitorInAppNavigation() {
   const nativeOpen = window.open.bind(window);
   window.open = (url, target, features) => {
     const raw = String(url || "").trim();
-    if (raw && (!target || target === "_blank")) {
-      if (/^https?:\/\//i.test(raw)) {
-        window.location.assign(raw);
-        return null;
-      }
+    if (raw && (!target || target === "_blank") && /^https?:\/\//i.test(raw)) {
+      void openExternalBrowserSheet(raw).catch(() => {
+        nativeOpen(url, target, features);
+      });
+      return null;
     }
     return nativeOpen(url, target, features);
   };
@@ -33,7 +34,10 @@ export function installCapacitorInAppNavigation() {
       if (!href || href.startsWith("mailto:") || href.startsWith("tel:")) return;
       if (/^https?:\/\//i.test(href)) {
         event.preventDefault();
-        window.location.assign(anchor.href);
+        const label = String(anchor.getAttribute("aria-label") || anchor.textContent || "").trim();
+        void openExternalBrowserSheet(anchor.href, { title: label || undefined }).catch(() => {
+          window.location.assign(anchor.href);
+        });
       }
     },
     true,

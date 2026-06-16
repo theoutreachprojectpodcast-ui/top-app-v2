@@ -786,10 +786,15 @@
     white-space: nowrap;
   }
 
-  /* Home wordmark: +75% vs prior compact band (still below full non-home mobile size). */
+  /* Home wordmark: compact band — more content above the fold. */
   main.topApp[data-page-atmosphere="home"] {
-    --mobile-site-header-logo-h: clamp(301px, 78.75vw, 399px);
-    --mobile-site-header-logo-max-w: min(910px, calc(100vw - 28px));
+    --mobile-site-header-logo-h: clamp(72px, 18vw, 96px);
+    --mobile-site-header-logo-max-w: min(220px, calc(100vw - 96px));
+  }
+
+  main.topApp.topApp--auth-in[data-page-atmosphere="home"] {
+    --mobile-site-header-logo-h: clamp(48px, 12vw, 64px);
+    --mobile-site-header-logo-max-w: min(160px, calc(100vw - 96px));
   }
 
   main.topApp[data-page-atmosphere="home"] .headerNotificationBellBtn,
@@ -799,15 +804,20 @@
     height: var(--mobile-site-header-control-size, 44px);
   }
 
-  /* Home: breathing room between wordmark and first section (featured sponsors). */
+  /* Home: minimal gap between wordmark and first section. */
   main.topApp[data-page-atmosphere="home"] .appSiteHeader {
     margin-bottom: 0;
-    padding-bottom: clamp(10px, 2.2vw, 14px);
+    padding-bottom: clamp(4px, 1vw, 8px);
   }
 
   main.topApp[data-page-atmosphere="home"] .headerBrandStack img.brandMarkImg--header:not(.podcastBrandLogo),
   main.topApp[data-page-atmosphere="home"] .headerBrandStack .brandMarkImg--header {
-    margin-bottom: clamp(-142px, -36vw, -176px);
+    margin-bottom: 0;
+  }
+
+  main.topApp.topApp--auth-in[data-page-atmosphere="home"] .headerBrandStack img.brandMarkImg--header:not(.podcastBrandLogo),
+  main.topApp.topApp--auth-in[data-page-atmosphere="home"] .headerBrandStack .brandMarkImg--header {
+    margin-bottom: 0;
   }
 
   main.topApp[data-page-atmosphere="home"] .shell.shell--home {
@@ -823,7 +833,7 @@
 
   main.topApp[data-page-atmosphere="home"] .homeSponsorSpotlights {
     margin-top: 0;
-    padding-top: clamp(10px, 2.4vw, 16px);
+    padding-top: clamp(4px, 1.2vw, 8px);
   }
 
   main.topApp[data-page-atmosphere="home"] .homeSponsorSpotlights__head {

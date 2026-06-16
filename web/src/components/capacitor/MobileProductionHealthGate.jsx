@@ -3,18 +3,20 @@
 import { useCallback, useEffect, useState } from "react";
 import { isCapacitorNative } from "@/lib/capacitor/platform";
 import { PRODUCTION_APEX_HOST } from "@/lib/runtime/appUrls";
-import MobileLoadingOverlay from "@/components/capacitor/MobileLoadingOverlay";
+import AuthLoadingOverlay from "@/components/auth/AuthLoadingOverlay";
+import { isOAuthInProgress } from "@/lib/auth/oauthInProgress";
+import { readNavAuthCache } from "@/lib/auth/navAuthCache";
 
 const HEALTH_PATH = "/api/health/mobile";
-const CHECK_TIMEOUT_MS = 12_000;
+const CHECK_TIMEOUT_MS = 8000;
 
 /**
- * Capacitor-only: verify production is reachable before auth flows start.
+ * Capacitor-only: verify production is reachable before first auth. Skips during OAuth or known session.
  */
 export default function MobileProductionHealthGate() {
   const native = isCapacitorNative();
   const [blocked, setBlocked] = useState(false);
-  const [checking, setChecking] = useState(native);
+  const [checking, setChecking] = useState(false);
   const [message, setMessage] = useState("");
 
   const runCheck = useCallback(async () => {
@@ -47,6 +49,12 @@ export default function MobileProductionHealthGate() {
 
   useEffect(() => {
     if (!native) return undefined;
+    if (isOAuthInProgress() || readNavAuthCache()?.authenticated) {
+      setChecking(false);
+      setBlocked(false);
+      return undefined;
+    }
+    setChecking(true);
     void runCheck();
     return undefined;
   }, [native, runCheck]);
@@ -54,11 +62,11 @@ export default function MobileProductionHealthGate() {
   if (!native || (!checking && !blocked)) return null;
 
   return (
-    <MobileLoadingOverlay
+    <AuthLoadingOverlay
       visible
+      variant="health"
       error={blocked}
       errorMessage={message}
-      loadingLabel="Checking connection to The Outreach Project…"
       onRetry={blocked ? () => void runCheck() : undefined}
     />
   );

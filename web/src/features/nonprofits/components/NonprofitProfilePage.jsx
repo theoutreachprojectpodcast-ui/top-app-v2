@@ -7,6 +7,7 @@ import NonprofitIcon from "@/features/nonprofits/components/NonprofitIcon";
 import NonprofitSocialLinks from "@/features/nonprofits/components/NonprofitSocialLinks";
 import { fetchNonprofitProfileDetail } from "@/features/directory/api";
 import { resolveFindInfoHref } from "@/features/nonprofits/domain/nonprofitCardActions";
+import { openExternalBrowserSheet } from "@/lib/capacitor/openExternalBrowserSheet";
 import { useProfileData } from "@/features/profile/ProfileDataProvider";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
@@ -166,6 +167,12 @@ export default function NonprofitProfilePage({ ein: einParam }) {
     }
   }
 
+  function openExternalLink(url, title) {
+    const href = String(url || "").trim();
+    if (!href) return;
+    void openExternalBrowserSheet(href, { title: title || card?.name || "Organization" }).catch(() => {});
+  }
+
   const socialLinks = card?.links?.filter((l) => l.type !== "website") || [];
   const websiteLinks = card?.links?.filter((l) => l.type === "website") || [];
   const heroUrl = sanitizeDisplayableImageUrl(String(card?.heroImageUrl || "").trim());
@@ -255,13 +262,22 @@ export default function NonprofitProfilePage({ ein: einParam }) {
               <div className="nonprofitProfileActions card">
                 <h2 className="nonprofitProfileSectionTitle">Connect</h2>
                 <div className="nonprofitProfileActionRow">
-                  <a className="btnBlack btnBlack--findInfo" href={resolveFindInfoHref(card)} target="_blank" rel="noopener noreferrer">
+                  <button
+                    className="btnBlack btnBlack--findInfo"
+                    type="button"
+                    onClick={() => openExternalLink(resolveFindInfoHref(card), "Find Info")}
+                  >
                     Find Info
-                  </a>
+                  </button>
                   {websiteLinks.map((l) => (
-                    <a key={l.url} className="btnPrimary" href={l.url} target="_blank" rel="noopener noreferrer">
+                    <button
+                      key={l.url}
+                      className="btnPrimary"
+                      type="button"
+                      onClick={() => openExternalLink(l.url, l.label || "Website")}
+                    >
                       Website
-                    </a>
+                    </button>
                   ))}
                   <NonprofitSocialLinks links={socialLinks} />
                 </div>

@@ -37,6 +37,7 @@ export default function HeaderAccountMenu({
   onSavedItems,
   onSignOut,
 }) {
+  const mobileShell = useMobileShell();
   const [open, setOpen] = useState(false);
   const wrapRef = useRef(null);
   const name = String(displayName || "").trim();
@@ -63,9 +64,17 @@ export default function HeaderAccountMenu({
 
   function closeAnd(fn) {
     return () => {
-      fn?.();
+      try {
+        fn?.();
+      } catch {
+        /* keep menu stable if a handler throws */
+      }
       setOpen(false);
     };
+  }
+
+  function toggleOpen() {
+    setOpen((v) => !v);
   }
 
   return (
@@ -76,7 +85,7 @@ export default function HeaderAccountMenu({
         aria-label={ariaLabel || "Account menu"}
         aria-expanded={open}
         aria-haspopup="true"
-        onClick={() => setOpen((v) => !v)}
+        onClick={toggleOpen}
       >
         <Avatar src={avatarSrc} alt="Account" className="headerAccountAvatar" sizes="40px" />
       </button>

@@ -74,7 +74,7 @@ export default function NonprofitCard({
     event.stopPropagation();
     const href = String(card.findInfoHref || "").trim();
     if (!href) return;
-    void openExternalBrowserSheet(href);
+    void openExternalBrowserSheet(href, { title: card.name || "Find Info" });
   }
 
   const metaRow = (
@@ -144,16 +144,19 @@ export default function NonprofitCard({
         ? card.links
             .filter((l) => l.type === "website")
             .map((l) => (
-              <a
+              <button
                 key={l.url}
                 className="btnSoft"
+                type="button"
                 data-torp-card-interactive
-                href={l.url}
-                target="_blank"
-                rel="noopener noreferrer"
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  void openExternalBrowserSheet(l.url, { title: l.label || card.name || "Website" });
+                }}
               >
                 Website
-              </a>
+              </button>
             ))
         : null}
       {actionMode === "saved" && !!favoriteKey && onToggleFavorite && (

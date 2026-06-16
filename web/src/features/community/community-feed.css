@@ -345,14 +345,31 @@ html[data-color-scheme="light"] .communityPostResource,
 
 /* —— Mobile (align with app shell @760px) —— */
 @media (max-width: 760px) {
+  main.topApp[data-page-atmosphere="community"] .appSiteHeader {
+    margin-bottom: 0;
+    padding-bottom: clamp(2px, 0.6vw, 6px);
+  }
+
+  main.topApp[data-page-atmosphere="community"] .headerBrandStack img.brandMarkImg--header:not(.podcastBrandLogo),
+  main.topApp[data-page-atmosphere="community"] .headerBrandStack .brandMarkImg--header {
+    margin-bottom: 0 !important;
+  }
+
+  main.topApp[data-page-atmosphere="community"] > .shell {
+    padding-top: 0;
+    margin-top: 0;
+  }
+
   .communityPage {
-    gap: var(--ds-space-5, 20px);
+    gap: var(--ds-space-4, 16px);
   }
 
   .communityHeroTop {
     grid-template-columns: auto minmax(0, 1fr);
     align-items: start;
-    column-gap: var(--ds-space-3, 12px);
+    column-gap: var(--ds-space-2, 8px);
+    row-gap: var(--ds-space-1, 4px);
+    margin-bottom: var(--ds-space-2, 8px);
   }
 
   .communityHeroTitles h2 {

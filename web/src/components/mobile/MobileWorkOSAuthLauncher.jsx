@@ -2,15 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import { launchWorkOSAuth } from "@/lib/auth/workosNativeAuthLaunch";
+import AuthLoadingOverlay from "@/components/auth/AuthLoadingOverlay";
 import "@/styles/mobile-splash-page.css";
 
 /**
- * Starts WorkOS sign-in/sign-up in the Capacitor WebView (no external browser sheet).
- * Used by `/mobile/sign-in` and `/mobile/sign-up` launcher routes.
+ * Auto-starts WorkOS in the Capacitor in-app browser. Shows a single branded loading overlay.
  *
  * @param {{ goPath: string, label?: string }} props
  */
-export default function MobileWorkOSAuthLauncher({ goPath, label = "Opening sign in…" }) {
+export default function MobileWorkOSAuthLauncher({ goPath, label }) {
   const [error, setError] = useState("");
   const startedRef = useRef(false);
 
@@ -51,11 +51,5 @@ export default function MobileWorkOSAuthLauncher({ goPath, label = "Opening sign
     );
   }
 
-  return (
-    <div className="mobileSplashPage mobileSplashPage--landing">
-      <div className="mobileSplashPage__inner">
-        <p className="mobileSplashPage__lead">{label}</p>
-      </div>
-    </div>
-  );
+  return <AuthLoadingOverlay visible variant="authLaunch" loadingLabel={label} />;
 }

@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useAuthSession } from "@/components/auth/AuthSessionProvider";
-import { readNavAuthCache } from "@/lib/auth/navAuthCache";
+import { useNavAuthState } from "@/hooks/useNavAuthState";
 import IconWrap from "@/components/shared/IconWrap";
 import HeaderNotificationBell from "@/components/layout/HeaderNotificationBell";
 import HeaderAccountMenu from "@/components/layout/HeaderAccountMenu";
@@ -31,7 +30,7 @@ export default function SubpageTopbarActions({ section = "all" }) {
   const pathname = usePathname();
   const router = useRouter();
   const isMobileShell = useMobileShell();
-  const { profile, loadingProfile, fullName, signOut, isAuthenticated, workOSAccountEmail } = useProfileData();
+  const { profile, loadingProfile, fullName, signOut, workOSAccountEmail } = useProfileData();
   /** Avoid useSearchParams here (static routes like /contact must not CSR-bailout without Suspense). */
   const rememberDevice = readRememberDevicePref();
   const signInReturnFallback = pathname?.startsWith("/podcasts") ? pathname : "/";
@@ -50,6 +49,16 @@ export default function SubpageTopbarActions({ section = "all" }) {
     pathname && pathname !== "/"
       ? `/?signin=1&returnTo=${encodeURIComponent(pathname)}`
       : "/?signin=1";
+
+  const { authed, workos: workosAuthed, authLoading: navAuthLoading } = useNavAuthState();
+  const authState =
+    section === "lead"
+      ? { loading: false, workos: false, authenticated: false }
+      : {
+          loading: navAuthLoading,
+          workos: workosAuthed,
+          authenticated: authed,
+        };
 
   function openCreateAccount() {
     if (authState.workos) {
@@ -75,18 +84,6 @@ export default function SubpageTopbarActions({ section = "all" }) {
     window.location.assign(workosSignInHereHref);
   }
 
-  const session = useAuthSession();
-  const cache = typeof window !== "undefined" ? readNavAuthCache() : null;
-  const optimisticAuthed = session.loading && cache?.authenticated;
-  const authState =
-    section === "lead"
-      ? { loading: false, workos: false, authenticated: false }
-      : {
-          loading: session.loading && !optimisticAuthed,
-          workos: session.workos || (!!cache?.workos && optimisticAuthed),
-          authenticated: session.authenticated || optimisticAuthed,
-        };
-
   const sponsorLink = (
     <Link className="btnSoft sponsorBtn" href="/sponsors">
       <IconWrap path={SPONSOR_ICON} />
@@ -94,9 +91,7 @@ export default function SubpageTopbarActions({ section = "all" }) {
     </Link>
   );
 
-  const authed = authState.authenticated || isAuthenticated;
-  const authLoading =
-    authState.loading || (authed && loadingProfile);
+  const authLoading = navAuthLoading || (authed && loadingProfile && !profile?.email);
   const accountMenuHint = membershipAccountMenuHint({
     isAuthenticated: authed,
     tierKey: profile?.membershipStatus,
