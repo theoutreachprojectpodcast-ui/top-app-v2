@@ -12,34 +12,25 @@ const SPONSOR_TABLE = "sponsors_catalog";
 /** Omitted from `/sponsors` tier roster and static fallback seed (slug unchanged in DB for history). */
 const HIDDEN_SPONSOR_HUB_ROSTER_SLUGS = new Set(["wars-end-merch"]);
 
+/** Slugs omitted from the `/podcasts` sponsor strip (retained in DB for history). */
+const PODCAST_SPONSOR_EXCLUDED_SLUGS = new Set(["wars-end-merch"]);
+
 /** QA / legacy podcast slugs that map to curated FEATURED_SPONSORS ids. */
 export const PODCAST_SPONSOR_SEED_SLUG_ALIASES = {
   "game-day-mens-health": "gameday-mens-health",
+  "wrecking-realty-group": "rucking-realty-group",
 };
 
-const WARS_END_MERCH_LOGO_URL =
-  "https://images.squarespace-cdn.com/content/v1/6959573fd567e738e7c613f3/cfd220a6-7daf-4845-8d83-fdb8c2ffa128/ChatGPT+Image+Jan+7%2C+2026%2C+08_37_51+PM.png?format=2500w";
+function podcastCatalogCanonicalSlug(slug) {
+  const key = sponsorCatalogRowKey({ slug });
+  if (!key) return "";
+  return PODCAST_SPONSOR_SEED_SLUG_ALIASES[key] || key;
+}
 
-/** Podcast-only seed rows not present in FEATURED_SPONSORS (hub-hidden or legacy slugs). */
-const PODCAST_SPONSOR_EXTRA_SEEDS = [
-  {
-    id: "wars-end-merch",
-    slug: "wars-end-merch",
-    name: "War's End",
-    logo_url: WARS_END_MERCH_LOGO_URL,
-    logo_status: "curated",
-    logo_review_status: "curated",
-    website_url: "https://warsendmerch.com/",
-    short_description: "Podcast sponsor",
-    tagline: "Supporting The Outreach Project podcast.",
-    featured: true,
-    is_active: true,
-    sponsor_scope: "podcast",
-    sponsor_type: "podcast_sponsor",
-    enrichment_status: "seed",
-    verified: true,
-  },
-];
+function isPodcastCatalogAliasSlug(slug) {
+  const key = sponsorCatalogRowKey({ slug });
+  return !!(key && PODCAST_SPONSOR_SEED_SLUG_ALIASES[key]);
+}
 
 /** Slugs hidden from /sponsors roster only (direct `/sponsors/[slug]` may still resolve when active in DB). */
 export function isHiddenFromSponsorHubRosterSlug(slug) {
@@ -207,11 +198,6 @@ function buildPodcastSeedBySlug() {
     const k = sponsorCatalogRowKey(r);
     if (k) bySlug.set(k, normalizeSponsorRecord({ ...r, sponsor_scope: "podcast" }));
   }
-  for (const extra of PODCAST_SPONSOR_EXTRA_SEEDS) {
-    const row = normalizeSponsorRecord(extra);
-    const k = sponsorCatalogRowKey(row);
-    if (k) bySlug.set(k, row);
-  }
   for (const [alias, canonical] of Object.entries(PODCAST_SPONSOR_SEED_SLUG_ALIASES)) {
     const seed = bySlug.get(canonical);
     if (seed) bySlug.set(alias, seed);
@@ -251,11 +237,31 @@ export function mergeLivePodcastCatalogWithStaticSeed(liveRows) {
 
   const bySlug = new Map();
   for (const r of live) {
-    const k = sponsorCatalogRowKey(r);
-    if (!k) continue;
-    const normalized = normalizeSponsorRecord({ ...r, sponsor_scope: "podcast" });
-    const seed = lookupPodcastSeedRow(seedBySlug, k);
-    bySlug.set(k, seed ? mergeSponsorHubSeedRowWithLive(seed, normalized) : normalized);
+    const rawKey = sponsorCatalogRowKey(r);
+    if (!rawKey || PODCAST_SPONSOR_EXCLUDED_SLUGS.has(rawKey)) continue;
+
+    const canonical = podcastCatalogCanonicalSlug(rawKey);
+    const alias = isPodcastCatalogAliasSlug(rawKey);
+    const normalized = normalizeSponsorRecord({
+      ...r,
+      slug: canonical,
+      id: canonical,
+      sponsor_scope: "podcast",
+    });
+    const seed = lookupPodcastSeedRow(seedBySlug, canonical) || lookupPodcastSeedRow(seedBySlug, rawKey);
+    let merged = seed ? mergeSponsorHubSeedRowWithLive(seed, normalized) : normalized;
+    if (alias && seed) {
+      merged = normalizeSponsorRecord({
+        ...merged,
+        slug: canonical,
+        id: canonical,
+        name: seed.name,
+        display_name: seed.display_name || seed.name,
+        website_url: nonEmptyTrim(seed.website_url) || merged.website_url,
+      });
+    }
+    const existing = bySlug.get(canonical);
+    bySlug.set(canonical, existing ? mergeSponsorHubSeedRowWithLive(merged, existing) : merged);
   }
   return sortSponsorsCatalogRows([...bySlug.values()]);
 }

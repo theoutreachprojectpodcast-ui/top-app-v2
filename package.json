@@ -11,7 +11,10 @@
       "undici": ">=6.24.0",
       "path-to-regexp": ">=8.4.0",
       "minimatch@>=9": ">=10.2.3",
-      "minimatch@<9": ">=3.1.4"
+      "minimatch@<9": ">=3.1.4",
+      "esbuild": ">=0.28.1",
+      "ws": ">=8.21.0",
+      "form-data": ">=4.0.6"
     }
   },
   "scripts": {

@@ -29,6 +29,9 @@ export const VET_NAV_SERVICES_LOGO_URL = "/sponsors/vetnav-services-logo.png";
 export const GREEN_GORILLA_LAND_MANAGEMENT_LOGO_URL =
   "/sponsors/green-gorilla-land-management-logo.png?v=2";
 
+/** Rucking Realty Group — circular wordmark (Mike & Natalie Evans, Texas). */
+export const RUCKING_REALTY_GROUP_LOGO_URL = "/sponsors/rucking-realty-group-logo.png";
+
 export const FEATURED_SPONSORS = [
   {
     id: "apex-global-outdoors",
@@ -145,7 +148,7 @@ export const FEATURED_SPONSORS = [
       "Rucking Realty Group is led by Mike and Natalie Evans, a husband-and-wife team based near San Antonio. Mike served as a United States Marine Corps infantry Marine (2005–2009) and carries that discipline into every transaction; Natalie brings a decade of HR leadership and a calm, people-first style that keeps complex deals on track. Together they serve Military City USA and communities statewide with honest pricing guidance, proactive communication, and extra care for military families, first-time buyers, and folks navigating life transitions.",
     ctaLabel: "Visit Website",
     ctaUrl: "https://ruckingrealtygroup.com/",
-    logoUrl: null,
+    logoUrl: RUCKING_REALTY_GROUP_LOGO_URL,
     warmVariant: "amber",
     backgroundImageUrl: "/sponsors/featured-bg-rucking-realty.png",
     missionPartner: true,

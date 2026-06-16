@@ -10,6 +10,7 @@ import {
   GREEN_GORILLA_LAND_MANAGEMENT_LOGO_URL,
   IRON_SOLDIERS_COFFEE_LOGO_URL,
   ROPE_SOLUTIONS_LOGO_URL,
+  RUCKING_REALTY_GROUP_LOGO_URL,
   THE_VETERANS_VETERAN_LOGO_URL,
   VET_NAV_SERVICES_LOGO_URL,
 } from "@/features/sponsors/data/featuredSponsors";
@@ -54,6 +55,8 @@ const BY_SLUG = {
       "linear-gradient(118deg, rgba(18, 12, 8, 0.95) 0%, rgba(28, 20, 12, 0.72) 45%, rgba(14, 10, 8, 0.52) 100%)",
     veteranOwnedDefault: true,
     locationChips: ["San Antonio, TX", "Texas"],
+    logoPanelMode: "dark",
+    logoFallbackUrls: [RUCKING_REALTY_GROUP_LOGO_URL],
   },
   "eduardo-pico-designs": {
     accentColor: "#7dd3fc",
