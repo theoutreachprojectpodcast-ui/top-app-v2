@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { safeAppReturnPath } from "@/lib/billing/stripeConfig";
+import { resolveMobileNativePostLoginPath } from "@/lib/capacitor/mobilePostLoginReturn";
 import {
   attachWorkOSSessionCookie,
   consumeMobileSessionTransferToken,
@@ -18,7 +19,9 @@ export async function GET(request) {
     return NextResponse.json({ ok: false, error: "invalid_or_expired_token" }, { status: 400 });
   }
 
-  const returnTo = safeAppReturnPath(requestedReturn || payload.returnTo, "/");
+  const returnTo = resolveMobileNativePostLoginPath(
+    safeAppReturnPath(requestedReturn || payload.returnTo, "/"),
+  );
   const response = NextResponse.json({ ok: true, returnTo });
   attachWorkOSSessionCookie(response, payload.cookieValue);
   return response;

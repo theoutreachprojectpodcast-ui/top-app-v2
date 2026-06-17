@@ -6,7 +6,9 @@ export const dynamic = "force-dynamic";
  * Android App Links verification for mobile auth deep return paths.
  */
 export async function GET() {
-  const packageName = String(process.env.ANDROID_PACKAGE_NAME || "org.theoutreachproject.torp").trim();
+  const packageName = String(
+    process.env.ANDROID_PACKAGE_NAME || "com.theoutreachproject.theoutreachproject",
+  ).trim();
   const fingerprints = String(process.env.ANDROID_APP_LINK_SHA256 || "")
     .split(",")
     .map((s) => s.trim())

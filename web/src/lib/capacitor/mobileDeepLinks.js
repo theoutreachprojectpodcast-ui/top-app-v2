@@ -108,6 +108,10 @@ export function parseMobileDeepLinkUrl(url) {
     if (path === "mobile-auth/callback" || path.endsWith("/mobile-auth/callback")) {
       return { kind: "auth-callback-web" };
     }
+    if (path === "api/mobile/oauth-handoff/complete" || path.endsWith("/api/mobile/oauth-handoff/complete")) {
+      const key = String(parsed.searchParams.get("key") || "").trim();
+      if (key) return { kind: "oauth-handoff-complete", key };
+    }
   }
 
   if (raw.includes("account/refresh")) {

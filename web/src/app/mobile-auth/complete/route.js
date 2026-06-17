@@ -10,6 +10,7 @@ import {
   buildMobileAuthCompleteUniversalLink,
 } from "@/lib/capacitor/mobileDeepLinks";
 import { resolvePostAuthReturnTarget } from "@/lib/auth/workosSafeReturn";
+import { resolveMobileNativePostLoginPath } from "@/lib/capacitor/mobilePostLoginReturn";
 import { MOBILE_POST_LOGIN_PATH, webBaseUrl } from "@/lib/runtime/appUrls";
 
 export const dynamic = "force-dynamic";
@@ -28,8 +29,9 @@ export async function GET(request) {
     if (!payload) {
       return NextResponse.redirect(new URL("/sign-in?oauth_error=Sign-in%20expired", request.url), 302);
     }
-    const destPath =
-      typeof returnTo === "string" && returnTo.startsWith("/") ? returnTo : MOBILE_POST_LOGIN_PATH;
+    const destPath = resolveMobileNativePostLoginPath(
+      typeof returnTo === "string" && returnTo.startsWith("/") ? returnTo : MOBILE_POST_LOGIN_PATH,
+    );
     const dest = new URL(destPath, request.url);
     dest.searchParams.set("oauth", "1");
     const res = NextResponse.redirect(dest, 302);

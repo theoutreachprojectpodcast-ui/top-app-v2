@@ -7,14 +7,15 @@ import { closeExternalBrowserIfOpen } from "@/lib/capacitor/openExternalUrl";
 import { appUrl } from "@/lib/capacitor/webAppOrigin";
 import { oauthCallbackQueryFromDeepLink } from "@/lib/auth/workosMobileRedirect";
 import { parseMobileDeepLinkUrl } from "@/lib/capacitor/mobileDeepLinks";
+import { resolveMobileNativePostLoginPath } from "@/lib/capacitor/mobilePostLoginReturn";
 import { TORP_OAUTH_RETURN_KEY } from "@/components/capacitor/MobileOAuthSessionResume";
 import { MOBILE_POST_LOGIN_PATH } from "@/lib/runtime/appUrls";
 
 async function exchangeMobileAuthTransferToken(token, returnTo) {
   const params = new URLSearchParams();
   params.set("token", String(token || "").trim());
-  const safeReturn = String(returnTo || "/").trim() || "/";
-  if (safeReturn !== "/") params.set("returnTo", safeReturn);
+  const safeReturn = resolveMobileNativePostLoginPath(String(returnTo || "/").trim() || "/");
+  if (safeReturn.startsWith("/onboarding")) params.set("returnTo", safeReturn);
 
   const res = await fetch(`/api/auth/mobile/complete?${params.toString()}`, {
     credentials: "include",
@@ -42,6 +43,17 @@ export default function MobileOAuthDeepLink() {
 
     const handleUrl = async (raw) => {
       const parsed = parseMobileDeepLinkUrl(raw);
+      if (parsed?.kind === "oauth-handoff-complete") {
+        await closeExternalBrowserIfOpen();
+        if (typeof sessionStorage !== "undefined") {
+          sessionStorage.setItem(TORP_OAUTH_RETURN_KEY, "1");
+        }
+        window.location.replace(
+          appUrl(`/api/mobile/oauth-handoff/complete?key=${encodeURIComponent(parsed.key)}`),
+        );
+        return;
+      }
+
       if (parsed?.kind === "auth-complete") {
         await closeExternalBrowserIfOpen();
         const ok = await exchangeMobileAuthTransferToken(parsed.token, parsed.returnTo);

@@ -1,5 +1,5 @@
 /**
- * Unified mobile bottom dock (Home · Trusted · Community · Profile · Contact) + header hamburger overflow.
+ * Unified mobile bottom dock (Home · Trusted · Community · Podcast · Contact) + header hamburger overflow.
  * Applies to main `TopApp` and all `AppShell` routes that use `.footerDock` + `.bottomNav--mobileDock`.
  */
 
@@ -253,7 +253,7 @@
     letter-spacing: 0.01em;
   }
 
-  /* Lock tab slots: Home (1) · Trusted (2) · Community (3) · Profile (4) · Contact (5) */
+  /* Lock tab slots: Home (1) · Trusted (2) · Community (3) · Podcast (4) · Contact (5) */
   .footerDock .bottomNav.bottomNav--withIcons.bottomNav--mobileDock .navItem[data-nav-key="home"] {
     grid-column: 1;
   }
@@ -266,7 +266,7 @@
     grid-column: 3;
   }
 
-  .footerDock .bottomNav.bottomNav--withIcons.bottomNav--mobileDock .navItem[data-nav-key="profile"] {
+  .footerDock .bottomNav.bottomNav--withIcons.bottomNav--mobileDock .navItem[data-nav-key="podcast"] {
     grid-column: 4;
   }
 

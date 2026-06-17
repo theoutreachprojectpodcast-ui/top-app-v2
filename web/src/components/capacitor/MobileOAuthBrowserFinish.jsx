@@ -12,6 +12,7 @@ import {
   TORP_OAUTH_STATE_KEY,
 } from "@/lib/auth/oauthMobileHandoff";
 import { parseOAuthBrowserDoneDeepLink } from "@/lib/auth/workosMobileRedirect";
+import { parseMobileDeepLinkUrl } from "@/lib/capacitor/mobileDeepLinks";
 import { TORP_OAUTH_RETURN_KEY } from "@/components/capacitor/MobileOAuthSessionResume";
 
 const POLL_MS = 400;
@@ -154,14 +155,21 @@ export default function MobileOAuthBrowserFinish() {
     };
 
     const handleBrowserDoneDeepLink = (raw) => {
+      const handoff = parseMobileDeepLinkUrl(raw);
+      if (handoff?.kind === "oauth-handoff-complete") {
+        primeOAuthHandoff(handoff.key);
+      }
+
       const parsed = parseOAuthBrowserDoneDeepLink(raw);
-      if (!parsed?.key) return;
-      primeOAuthHandoff(parsed.key);
+      if (!parsed?.key && handoff?.kind !== "oauth-handoff-complete") return;
+      if (parsed?.key) primeOAuthHandoff(parsed.key);
+
+      const pollKey = parsed?.key || handoff?.key || "";
       void (async () => {
         await closeExternalBrowserIfOpen();
         for (const delay of BROWSER_FINISHED_RETRIES_MS) {
           if (delay > 0) await new Promise((resolve) => setTimeout(resolve, delay));
-          if (await tryFinish(parsed.key)) return;
+          if (await tryFinish(pollKey)) return;
         }
         if (!claimedRef.current) {
           oauthErrorRedirect("Sign-in did not finish. Please try again.");

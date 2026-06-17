@@ -98,6 +98,7 @@ export function mobileOAuthBrowserDoneHtml(stateKey = "") {
     (function () {
       var link = ${JSON.stringify(deepLink)};
       var universal = ${JSON.stringify(universalLink || "")};
+      var android = /Android/i.test(navigator.userAgent || "");
       function openApp() {
         try { window.location.replace(link); } catch (e) {}
       }
@@ -105,9 +106,19 @@ export function mobileOAuthBrowserDoneHtml(stateKey = "") {
         if (!universal) return;
         try { window.location.replace(universal); } catch (e) {}
       }
-      openApp();
-      setTimeout(openApp, 120);
-      setTimeout(openUniversal, 650);
+      if (android && universal) {
+        openUniversal();
+        setTimeout(openApp, 180);
+      } else {
+        openApp();
+        setTimeout(openUniversal, 650);
+      }
+      [120, 350, 700, 1200, 2000, 3500].forEach(function (ms) {
+        setTimeout(function () {
+          if (android && universal) openUniversal();
+          openApp();
+        }, ms);
+      });
       setTimeout(function () { try { window.close(); } catch (e) {} }, 900);
     })();
   </script>`;

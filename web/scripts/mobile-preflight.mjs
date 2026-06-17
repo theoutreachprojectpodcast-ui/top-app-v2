@@ -113,6 +113,46 @@ if (
   ok("workosSignInUrl.js request parameter");
 }
 
+// --- Android App Links must cover AASA oauth return paths ---
+const ANDROID_APP_LINK_PATHS = [
+  "/callback",
+  "/mobile/auth/complete",
+  "/api/mobile/oauth-handoff/complete",
+  "/api/mobile/oauth-handoff/bridge",
+  "/mobile-auth",
+];
+const manifestXml = fs.readFileSync(
+  path.join(webRoot, "android/app/src/main/AndroidManifest.xml"),
+  "utf8",
+);
+for (const prefix of ANDROID_APP_LINK_PATHS) {
+  if (!manifestXml.includes(`android:pathPrefix="${prefix}"`)) {
+    fail(`AndroidManifest missing App Link pathPrefix ${prefix}`);
+  } else {
+    ok(`AndroidManifest App Link ${prefix}`);
+  }
+}
+
+// --- AASA paths must include oauth handoff complete ---
+const aasaRoute = fs.readFileSync(
+  path.join(webRoot, "src/app/.well-known/apple-app-site-association/route.js"),
+  "utf8",
+);
+for (const aasaPath of ["/api/mobile/oauth-handoff/complete", "/mobile/auth/complete", "/callback"]) {
+  if (!aasaRoute.includes(`"${aasaPath}"`)) {
+    fail(`AASA route missing path ${aasaPath}`);
+  } else {
+    ok(`AASA path ${aasaPath}`);
+  }
+}
+
+// --- Post-login funnel helper must exist ---
+if (!fs.existsSync(path.join(webRoot, "src/lib/capacitor/mobilePostLoginReturn.js"))) {
+  fail("missing mobilePostLoginReturn.js");
+} else {
+  ok("mobilePostLoginReturn.js");
+}
+
 // --- Live production auth endpoints ---
 if (typeof fetch === "function" && process.env.MOBILE_PREFLIGHT_SKIP_HTTP !== "1") {
   try {

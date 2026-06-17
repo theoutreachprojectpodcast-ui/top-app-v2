@@ -2,6 +2,7 @@
 
 import { closeExternalBrowserIfOpen } from "@/lib/capacitor/openExternalUrl";
 import { parseMobileDeepLinkUrl } from "@/lib/capacitor/mobileDeepLinks";
+import { resolveMobileNativePostLoginPath } from "@/lib/capacitor/mobilePostLoginReturn";
 import { safeAppReturnPath } from "@/lib/billing/stripeConfig";
 import { logMobileBootEvent } from "@/lib/capacitor/mobileBootDiagnostics";
 
@@ -30,8 +31,10 @@ export async function handleMobileAuthDeepLink(url, handlers) {
     await closeExternalBrowserIfOpen();
     const params = new URLSearchParams();
     params.set("token", parsed.token);
-    const returnTo = safeAppReturnPath(parsed.returnTo, "/");
-    if (returnTo !== "/") params.set("returnTo", returnTo);
+    const returnTo = resolveMobileNativePostLoginPath(
+      safeAppReturnPath(parsed.returnTo, "/"),
+    );
+    if (returnTo.startsWith("/onboarding")) params.set("returnTo", returnTo);
 
     const res = await fetch(`/api/auth/mobile/complete?${params.toString()}`, {
       credentials: "include",
@@ -45,7 +48,9 @@ export async function handleMobileAuthDeepLink(url, handlers) {
 
     logMobileBootEvent("mobile_auth_complete_ok");
     await handlers.refreshAccountStatus();
-    handlers.router.replace(String(body.returnTo || returnTo || "/"));
+    handlers.router.replace(
+      resolveMobileNativePostLoginPath(String(body.returnTo || returnTo || "/")),
+    );
     return { handled: true, kind: parsed.kind, ok: true };
   }
 

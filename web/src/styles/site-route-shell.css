@@ -273,6 +273,16 @@
   color: var(--color-text-primary);
 }
 
+.legalPageOrg {
+  margin: 0;
+  font-size: var(--text-body-sm, 0.9375rem);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
 .legalPageMeta {
   margin: 10px 0 0;
   font-size: var(--text-body-sm, 0.9375rem);
@@ -291,6 +301,19 @@
 .legalPage h2 + p,
 .legalPage h2 + ul {
   margin-top: 10px;
+}
+
+.legalPage h3 {
+  margin: 20px 0 0;
+  font-size: 0.98rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--color-text-primary);
+}
+
+.legalPage h3 + p,
+.legalPage h3 + ul {
+  margin-top: 8px;
 }
 
 .legalPage p {

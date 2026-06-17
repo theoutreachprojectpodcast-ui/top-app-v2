@@ -291,6 +291,13 @@ function TopAppInner({ initialNav = "home" }) {
   });
   const { trusted, trustedStatus, loadTrusted } = useTrustedResources(sb);
 
+  /** Auto-fetch roster when the in-shell Trusted tab opens (footer dock, ?nav=trusted, home CTA). */
+  useEffect(() => {
+    if (nav !== "trusted") return;
+    void loadTrusted(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- load when tab activates only
+  }, [nav]);
+
   /** Prefill contact form from profile / account email when fields are still empty. */
   useEffect(() => {
     if (nav !== "contact" || !isAuthenticated) return;
@@ -322,6 +329,12 @@ function TopAppInner({ initialNav = "home" }) {
     else setNav("home");
   }
 
+  function dockNavPodcast() {
+    if (pathname !== "/podcasts" && !pathname.startsWith("/podcasts/")) {
+      router.push("/podcasts");
+    }
+  }
+
   function dockNavProfile() {
     if (isCapacitorNative() && pathname === "/") {
       setNav("profile");
@@ -337,8 +350,8 @@ function TopAppInner({ initialNav = "home" }) {
       dockNavHome();
       return;
     }
-    if (key === "profile") {
-      dockNavProfile();
+    if (key === "podcast") {
+      dockNavPodcast();
       return;
     }
     if (pathname === "/" && SITE_TOP_APP_DOCK_TAB_KEYS.has(key)) {
@@ -697,8 +710,8 @@ function TopAppInner({ initialNav = "home" }) {
             <div className="topbarZone topbarLeft">
               <div className="topbarActionsCluster topbarActionsCluster--start">
                 <SiteMobileNavMoreMenu tone="app" align="start">
-                  <button type="button" className="siteMobileNavMore__entry" onClick={() => router.push("/podcasts")}>
-                    Podcast
+                  <button type="button" className="siteMobileNavMore__entry" onClick={dockNavProfile}>
+                    Profile
                   </button>
                   <button type="button" className="siteMobileNavMore__entry" onClick={goToSponsorsHub}>
                     Sponsors
@@ -782,10 +795,7 @@ function TopAppInner({ initialNav = "home" }) {
               onCreateAccount={openCreateAccountFlow}
               onSignIn={openSignInOverlay}
               onSponsors={goToSponsorsHub}
-              onTrusted={() => {
-                setNav("trusted");
-                loadTrusted(true);
-              }}
+              onTrusted={() => setNav("trusted")}
               onCommunity={openCommunity}
               onPodcasts={() => router.push("/podcasts")}
               directoryProps={{

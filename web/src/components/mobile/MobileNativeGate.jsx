@@ -42,6 +42,7 @@ const MOBILE_GATE_ALLOW = [
   /^\/privacy(\/|$)/,
   /^\/terms(\/|$)/,
   /^\/admin(\/|$)/,
+  /^\/admin-login(\/|$)/,
 ];
 
 const NATIVE_LOGIN_ALIASES = {

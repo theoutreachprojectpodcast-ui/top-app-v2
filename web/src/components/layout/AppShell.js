@@ -105,8 +105,8 @@ export default function AppShell({
                     <SubpageTopbarActions section="authMenu" />
                     {useFooterDockChrome ? (
                       <SiteMobileNavMoreMenu tone="podcast" align="end">
-                        <Link className="siteMobileNavMore__entry" href="/podcasts">
-                          Podcast
+                        <Link className="siteMobileNavMore__entry" href="/profile">
+                          Profile
                         </Link>
                         <Link className="siteMobileNavMore__entry" href="/sponsors">
                           Sponsors
@@ -142,8 +142,8 @@ export default function AppShell({
                   <div className="topbarActionsCluster topbarActionsCluster--start">
                     {useFooterDockChrome ? (
                       <SiteMobileNavMoreMenu tone="app" align="start">
-                        <Link className="siteMobileNavMore__entry" href="/podcasts">
-                          Podcast
+                        <Link className="siteMobileNavMore__entry" href="/profile">
+                          Profile
                         </Link>
                         <Link className="siteMobileNavMore__entry" href="/sponsors">
                           Sponsors
