@@ -1,6 +1,6 @@
 import { unstable_cache } from "next/cache";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { loadPublicPodcastLandingData } from "@/lib/podcast/publicPodcastRead";
+import { loadPublicPodcastGuestDirectory, loadPublicPodcastLandingData } from "@/lib/podcast/publicPodcastRead";
 
 export function podcastPublicCacheSeconds() {
   const raw = String(process.env.PODCAST_CACHE_TTL || "").trim();
@@ -28,6 +28,20 @@ export async function getCachedPodcastLandingBundle() {
     },
     ["podcast-public-landing-v8"],
     { revalidate: ttl, tags: ["podcast-public-landing"] }
+  );
+  return cached();
+}
+
+/** Cached guest directory for `/podcasts/guests` (episode-linked guests only). */
+export async function getCachedPodcastGuestDirectory() {
+  const ttl = podcastPublicCacheSeconds();
+  const cached = unstable_cache(
+    async () => {
+      const admin = createSupabaseAdminClient();
+      return loadPublicPodcastGuestDirectory(admin);
+    },
+    ["podcast-public-guest-directory-v1"],
+    { revalidate: ttl, tags: ["podcast-public-guest-directory"] },
   );
   return cached();
 }

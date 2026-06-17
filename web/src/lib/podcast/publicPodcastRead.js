@@ -338,6 +338,82 @@ export async function loadPublicPodcastLandingData(admin) {
 }
 
 /**
+ * Public guest directory — only guests linked to real, listed episodes (no demo placeholders).
+ * @param {import("@supabase/supabase-js").SupabaseClient | null} admin
+ * @returns {Promise<{ guests: object[] }>}
+ */
+export async function loadPublicPodcastGuestDirectory(admin) {
+  if (!admin) return { guests: [] };
+
+  const { data: epData } = await admin
+    .from("podcast_episodes")
+    .select(EPISODE_LIST_COLUMNS)
+    .order("published_at", { ascending: false })
+    .limit(DB_EPISODE_FETCH_LIMIT);
+
+  const publicEpisodes = sortByPublishedDesc((epData || []).filter((row) => episodeRowIsPublicListed(row)));
+  const episodeById = new Map(
+    publicEpisodes.map((ep) => [String(ep?.id || ""), ep]).filter(([id]) => id),
+  );
+  const episodeByVideoId = new Map(
+    publicEpisodes.map((ep) => [String(ep.youtube_video_id || "").trim(), ep]).filter(([id]) => id),
+  );
+
+  /** @type {Map<string, object>} */
+  const bySlug = new Map();
+
+  const addGuest = (card) => {
+    if (!card?.slug || !card?.name) return;
+    if (card.upcoming) return;
+    const watch = String(card.episodeWatchUrl || "").trim();
+    const vid = String(card.episodeYoutubeId || "").trim();
+    if (!watch && !vid) return;
+    const existing = bySlug.get(card.slug);
+    if (!existing || (watch && !existing.episodeWatchUrl)) {
+      bySlug.set(card.slug, card);
+    }
+  };
+
+  const activeCards = await listActiveGuestVoiceCards(admin, episodeById);
+  for (const card of activeCards) addGuest(card);
+
+  const { data: voiceRows } = await admin
+    .from("podcast_episode_featured_guest")
+    .select("*")
+    .eq("card_active", true)
+    .order("display_order", { ascending: true, nullsFirst: false })
+    .limit(80);
+
+  for (const row of voiceRows || []) {
+    const vid = String(row.youtube_video_id || "").trim();
+    const ep = episodeByVideoId.get(vid);
+    if (!ep) continue;
+    addGuest(featuredGuestToCardShape(row, ep));
+  }
+
+  const episodeIds = [...episodeById.keys()].slice(0, 200);
+  if (episodeIds.length) {
+    const { data: links } = await admin
+      .from("podcast_episode_guests")
+      .select("episode_id,guest_id,role_label,podcast_guests(*)")
+      .in("episode_id", episodeIds)
+      .limit(500);
+    for (const link of links || []) {
+      const ep = episodeById.get(String(link.episode_id || ""));
+      const guestRow = link.podcast_guests;
+      if (!ep || !guestRow || guestRow.upcoming) continue;
+      addGuest(guestCardFromPodcastGuestRow(guestRow, ep));
+    }
+  }
+
+  const guests = [...bySlug.values()].sort((a, b) =>
+    String(a.name || "").localeCompare(String(b.name || ""), undefined, { sensitivity: "base" }),
+  );
+
+  return { guests };
+}
+
+/**
  * @param {Record<string, unknown>} ep
  */
 function guestShapeFromEpisodeOnly(ep) {

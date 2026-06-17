@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 import { useAuthSession } from "@/components/auth/AuthSessionProvider";
 import { useProfileData } from "@/features/profile/ProfileDataProvider";
 import { isCapacitorNative } from "@/lib/capacitor/platform";
+import { MOBILE_POST_LOGIN_PATH } from "@/lib/runtime/appUrls";
 import {
   clearOAuthPollKeyCookie,
   TORP_OAUTH_BROWSER_PENDING,
@@ -13,9 +15,11 @@ import {
 export { TORP_OAUTH_RETURN_KEY };
 
 /**
- * After OAuth deep-link return, hard-refresh session + profile so the native shell is logged in.
+ * After OAuth return, clear handoff flags and refresh session on in-app routes.
+ * `/mobile/auth/complete` owns its own fast verify + redirect — flags only there.
  */
 export default function MobileOAuthSessionResume() {
+  const pathname = usePathname();
   const { refresh: refreshAuth } = useAuthSession();
   const { refreshWorkOSProfile } = useProfileData();
   const ranRef = useRef(false);
@@ -35,11 +39,13 @@ export default function MobileOAuthSessionResume() {
     sessionStorage.removeItem(TORP_OAUTH_STATE_KEY);
     clearOAuthPollKeyCookie();
 
+    if (pathname === MOBILE_POST_LOGIN_PATH) return;
+
     void (async () => {
       await refreshAuth({ soft: true });
       await refreshWorkOSProfile();
     })();
-  }, [refreshAuth, refreshWorkOSProfile]);
+  }, [pathname, refreshAuth, refreshWorkOSProfile]);
 
   return null;
 }
