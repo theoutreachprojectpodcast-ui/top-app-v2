@@ -6,7 +6,11 @@ import { isCapacitorNative } from "@/lib/capacitor/platform";
 import { isOAuthInProgress } from "@/lib/auth/oauthInProgress";
 import { MOBILE_POST_LOGIN_PATH } from "@/lib/runtime/appUrls";
 
-const DEDICATED_OAUTH_ROUTES = new Set([MOBILE_POST_LOGIN_PATH, "/callback"]);
+const DEDICATED_OAUTH_ROUTES = new Set([
+  MOBILE_POST_LOGIN_PATH,
+  "/callback",
+  "/api/mobile/oauth-handoff/complete",
+]);
 
 /**
  * Single branded overlay while native OAuth handoff is in flight (browser open or session resume).

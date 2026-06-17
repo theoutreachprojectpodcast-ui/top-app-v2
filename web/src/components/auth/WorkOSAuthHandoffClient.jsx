@@ -1,11 +1,12 @@
 "use client";
 
-import { Suspense, useEffect, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { isCapacitorNative } from "@/lib/capacitor/platform";
 import { launchWorkOSAuth } from "@/lib/auth/workosNativeAuthLaunch";
 import { workosGoUrl } from "@/lib/auth/workosGoUrl";
 import { MOBILE_POST_AUTH_COMPLETE_PATH } from "@/lib/auth/workosReturnTo";
+import { mobileOAuthSplashErrorMessage } from "@/lib/auth/workosCallbackErrors";
 import AuthLoadingOverlay from "@/components/auth/AuthLoadingOverlay";
 import WorkOSAuthShell from "@/components/auth/WorkOSAuthShell";
 
@@ -18,6 +19,7 @@ function paramsFromSearchParams(searchParams) {
 }
 
 function WorkOSAuthHandoffInner({ mode, backHref = "/", fallbackReturn }) {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [error, setError] = useState("");
   const startedRef = useRef(false);
@@ -25,10 +27,7 @@ function WorkOSAuthHandoffInner({ mode, backHref = "/", fallbackReturn }) {
 
   const paramKey = searchParams.toString();
 
-  useEffect(() => {
-    if (startedRef.current) return;
-    startedRef.current = true;
-
+  const startAuth = useCallback(() => {
     const params = paramsFromSearchParams(searchParams);
     if (!params.returnTo && fallbackReturn) {
       params.returnTo = fallbackReturn;
@@ -61,14 +60,46 @@ function WorkOSAuthHandoffInner({ mode, backHref = "/", fallbackReturn }) {
         loginHint: params.loginHint,
       }),
     );
-  }, [native, mode, paramKey, fallbackReturn, backHref, searchParams]);
+  }, [native, mode, searchParams, fallbackReturn]);
+
+  useEffect(() => {
+    if (startedRef.current) return;
+    startedRef.current = true;
+
+    const params = paramsFromSearchParams(searchParams);
+    const oauthErr = String(params.oauth_error || "").trim();
+    if (oauthErr) {
+      setError(mobileOAuthSplashErrorMessage(oauthErr) || oauthErr);
+      return;
+    }
+
+    startAuth();
+  }, [startAuth, paramKey, searchParams]);
 
   if (error) {
     return (
       <WorkOSAuthShell title="Sign in" error={error}>
-        <p className="workosAuthShell__lead">
-          <a href={backHref}>Back</a>
-        </p>
+        <div className="workosAuthShell__actions">
+          <button
+            type="button"
+            className="btnPrimary mobileSplashPage__btn"
+            onClick={() => {
+              setError("");
+              const params = new URLSearchParams(searchParams.toString());
+              params.delete("oauth_error");
+              const qs = params.toString();
+              router.replace(qs ? `${window.location.pathname}?${qs}` : window.location.pathname, {
+                scroll: false,
+              });
+              startAuth();
+            }}
+          >
+            Try again
+          </button>
+          <p className="workosAuthShell__lead">
+            <a href={backHref}>Back</a>
+          </p>
+        </div>
       </WorkOSAuthShell>
     );
   }

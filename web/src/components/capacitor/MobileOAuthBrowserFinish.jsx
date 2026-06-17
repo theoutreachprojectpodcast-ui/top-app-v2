@@ -7,6 +7,7 @@ import { nativeProductionAppOrigin } from "@/lib/capacitor/webAppOrigin";
 import { isCapacitorNative } from "@/lib/capacitor/platform";
 import { closeExternalBrowserIfOpen } from "@/lib/capacitor/openExternalUrl";
 import {
+  clearOAuthPollKeyCookie,
   readOAuthPollKeyFromDocumentCookie,
   TORP_OAUTH_BROWSER_PENDING,
   TORP_OAUTH_STATE_KEY,
@@ -41,8 +42,10 @@ function resolveOAuthPollKey() {
 }
 
 function primeOAuthPollKeyFromCookie() {
+  if (typeof sessionStorage === "undefined") return;
+  if (sessionStorage.getItem(TORP_OAUTH_BROWSER_PENDING) !== "1") return;
   const key = readOAuthPollKeyFromDocumentCookie();
-  if (key) primeOAuthHandoff(key);
+  if (key) sessionStorage.setItem(TORP_OAUTH_STATE_KEY, key);
 }
 
 async function pollOAuthPending(stateKey) {
@@ -77,6 +80,7 @@ function clearOAuthHandoffFlags() {
   if (typeof sessionStorage === "undefined") return;
   sessionStorage.removeItem(TORP_OAUTH_BROWSER_PENDING);
   sessionStorage.removeItem(TORP_OAUTH_STATE_KEY);
+  clearOAuthPollKeyCookie();
 }
 
 function completeInWebView(data) {
@@ -103,7 +107,7 @@ function completeInWebView(data) {
 function oauthErrorRedirect(message) {
   clearOAuthHandoffFlags();
   window.location.replace(
-    nativeOAuthUrl(`/sign-in?oauth_error=${encodeURIComponent(message || "Sign-in failed.")}`),
+    nativeOAuthUrl(`/mobile?oauth_error=${encodeURIComponent(message || "Sign-in failed.")}`),
   );
 }
 

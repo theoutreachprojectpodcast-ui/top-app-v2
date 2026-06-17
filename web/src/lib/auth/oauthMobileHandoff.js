@@ -18,3 +18,11 @@ export function readOAuthPollKeyFromDocumentCookie() {
   const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}=([^;]+)`));
   return match ? decodeURIComponent(match[1]) : "";
 }
+
+/** Drop stale poll-key cookie so a finished OAuth flow cannot re-arm sessionStorage. */
+export function clearOAuthPollKeyCookie() {
+  if (typeof document === "undefined") return;
+  const name = TORP_OAUTH_POLL_KEY_COOKIE;
+  const secure = typeof window !== "undefined" && window.location.protocol === "https:" ? "; Secure" : "";
+  document.cookie = `${name}=; Path=/; Max-Age=0; SameSite=Lax${secure}`;
+}

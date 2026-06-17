@@ -9,7 +9,6 @@ export function isOAuthInProgress() {
   if (typeof sessionStorage === "undefined") return false;
   return (
     sessionStorage.getItem(TORP_OAUTH_BROWSER_PENDING) === "1" ||
-    !!sessionStorage.getItem(TORP_OAUTH_STATE_KEY) ||
     sessionStorage.getItem(TORP_OAUTH_RETURN_KEY) === "1"
   );
 }

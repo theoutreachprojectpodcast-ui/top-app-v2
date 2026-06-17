@@ -1,18 +1,21 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { usePathname } from "next/navigation";
 import { useAuthSession } from "@/components/auth/AuthSessionProvider";
 import { useProfileData } from "@/features/profile/ProfileDataProvider";
 import { isCapacitorNative } from "@/lib/capacitor/platform";
-import { TORP_OAUTH_RETURN_KEY } from "@/lib/auth/oauthMobileHandoff";
+import {
+  clearOAuthPollKeyCookie,
+  TORP_OAUTH_BROWSER_PENDING,
+  TORP_OAUTH_RETURN_KEY,
+  TORP_OAUTH_STATE_KEY,
+} from "@/lib/auth/oauthMobileHandoff";
 export { TORP_OAUTH_RETURN_KEY };
 
 /**
  * After OAuth deep-link return, hard-refresh session + profile so the native shell is logged in.
  */
 export default function MobileOAuthSessionResume() {
-  const pathname = usePathname();
   const { refresh: refreshAuth } = useAuthSession();
   const { refreshWorkOSProfile } = useProfileData();
   const ranRef = useRef(false);
@@ -28,6 +31,9 @@ export default function MobileOAuthSessionResume() {
 
     ranRef.current = true;
     sessionStorage.removeItem(TORP_OAUTH_RETURN_KEY);
+    sessionStorage.removeItem(TORP_OAUTH_BROWSER_PENDING);
+    sessionStorage.removeItem(TORP_OAUTH_STATE_KEY);
+    clearOAuthPollKeyCookie();
 
     void (async () => {
       await refreshAuth({ soft: true });
