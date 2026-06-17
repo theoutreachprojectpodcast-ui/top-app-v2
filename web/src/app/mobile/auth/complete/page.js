@@ -1,11 +1,6 @@
-import MobileAuthCompleteClient from "@/components/mobile/MobileAuthCompleteClient";
+import { redirect } from "next/navigation";
 
-export const metadata = {
-  title: "Sign in complete — The Outreach Project",
-  robots: { index: false, follow: false },
-};
-
-/** Native WebView post-auth landing — session refresh then home or App Access paywall. */
+/** Legacy post-auth URL — land on home; `MobileOAuthSessionResume` handles session refresh. */
 export default function MobileAuthCompletePage() {
-  return <MobileAuthCompleteClient />;
+  redirect("/?oauth=1");
 }

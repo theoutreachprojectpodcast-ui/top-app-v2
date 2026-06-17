@@ -18,7 +18,7 @@ import { TORP_OAUTH_RETURN_KEY } from "@/components/capacitor/MobileOAuthSession
 
 const POLL_MS = 200;
 const POLL_MAX_MS = 30_000;
-const BROWSER_FINISHED_RETRIES_MS = [0, 200, 500, 1000, 2000, 3500, 5000, 8000, 12_000, 18_000, 25_000];
+const BROWSER_DISMISS_RETRIES_MS = [0, 100, 250, 500, 1000, 1800];
 
 async function closeOAuthBrowserSheet() {
   for (let attempt = 0; attempt < 4; attempt += 1) {
@@ -104,11 +104,11 @@ function completeInWebView(data) {
   );
 }
 
-function oauthErrorRedirect(message) {
+function oauthCancelSilently() {
   clearOAuthHandoffFlags();
-  window.location.replace(
-    nativeOAuthUrl(`/mobile?oauth_error=${encodeURIComponent(message || "Sign-in failed.")}`),
-  );
+  if (typeof sessionStorage !== "undefined") {
+    sessionStorage.removeItem(TORP_OAUTH_RETURN_KEY);
+  }
 }
 
 /**
@@ -144,9 +144,8 @@ export default function MobileOAuthBrowserFinish() {
 
       try {
         await completeInWebView(data);
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : "Could not complete sign in.";
-        oauthErrorRedirect(msg);
+      } catch {
+        oauthCancelSilently();
       }
       return true;
     };
@@ -180,13 +179,11 @@ export default function MobileOAuthBrowserFinish() {
       const pollKey = parsed?.key || handoff?.key || "";
       void (async () => {
         await closeOAuthBrowserSheet();
-        for (const delay of BROWSER_FINISHED_RETRIES_MS) {
+        for (const delay of BROWSER_DISMISS_RETRIES_MS) {
           if (delay > 0) await new Promise((resolve) => setTimeout(resolve, delay));
           if (await tryFinish(pollKey)) return;
         }
-        if (!claimedRef.current) {
-          oauthErrorRedirect("Sign-in did not finish. Please try again.");
-        }
+        if (!claimedRef.current) oauthCancelSilently();
       })();
     };
 
@@ -197,7 +194,7 @@ export default function MobileOAuthBrowserFinish() {
         if (Date.now() - pollStartedAtRef.current > POLL_MAX_MS) {
           stopPolling();
           if (!claimedRef.current && isOAuthPending()) {
-            oauthErrorRedirect("Sign-in timed out. Please try again.");
+            oauthCancelSilently();
           }
           return;
         }
@@ -206,20 +203,12 @@ export default function MobileOAuthBrowserFinish() {
       void tryFinish();
     };
 
-    const tryFinishWithRetries = async () => {
-      for (const delay of BROWSER_FINISHED_RETRIES_MS) {
+    const tryFinishAfterBrowserDismiss = async () => {
+      for (const delay of BROWSER_DISMISS_RETRIES_MS) {
         if (delay > 0) await new Promise((resolve) => setTimeout(resolve, delay));
         if (await tryFinish()) return;
       }
-
-      if (claimedRef.current) return;
-      if (isOAuthPending()) {
-        oauthErrorRedirect("Sign-in did not finish. Please try again.");
-        return;
-      }
-      if (sessionStorage.getItem(TORP_OAUTH_BROWSER_PENDING) === "1") {
-        clearOAuthHandoffFlags();
-      }
+      if (!claimedRef.current) oauthCancelSilently();
     };
 
     primeOAuthPollKeyFromCookie();
@@ -230,7 +219,7 @@ export default function MobileOAuthBrowserFinish() {
     });
 
     const browserListener = Browser.addListener("browserFinished", () => {
-      void tryFinishWithRetries();
+      void tryFinishAfterBrowserDismiss();
     });
 
     const appUrlListener = App.addListener("appUrlOpen", (event) => {

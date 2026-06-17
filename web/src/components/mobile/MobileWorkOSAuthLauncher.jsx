@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { launchWorkOSAuth } from "@/lib/auth/workosNativeAuthLaunch";
 import AuthLoadingOverlay from "@/components/auth/AuthLoadingOverlay";
 import "@/styles/mobile-splash-page.css";
@@ -11,16 +12,21 @@ import "@/styles/mobile-splash-page.css";
  * @param {{ goPath: string, label?: string }} props
  */
 export default function MobileWorkOSAuthLauncher({ goPath, label }) {
+  const router = useRouter();
   const [error, setError] = useState("");
   const startedRef = useRef(false);
 
   useEffect(() => {
     if (startedRef.current) return;
     startedRef.current = true;
-    void launchWorkOSAuth(goPath).catch((err) => {
-      setError(err instanceof Error ? err.message : "Could not start sign in.");
-    });
-  }, [goPath]);
+    void launchWorkOSAuth(goPath)
+      .then(() => {
+        router.replace("/");
+      })
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : "Could not start sign in.");
+      });
+  }, [goPath, router]);
 
   if (error) {
     return (
@@ -35,9 +41,13 @@ export default function MobileWorkOSAuthLauncher({ goPath, label }) {
               className="btnPrimary mobileSplashPage__btn"
               onClick={() => {
                 setError("");
-                void launchWorkOSAuth(goPath).catch((err) => {
-                  setError(err instanceof Error ? err.message : "Could not start sign in.");
-                });
+                void launchWorkOSAuth(goPath)
+                  .then(() => {
+                    router.replace("/");
+                  })
+                  .catch((err) => {
+                    setError(err instanceof Error ? err.message : "Could not start sign in.");
+                  });
               }}
             >
               Try again

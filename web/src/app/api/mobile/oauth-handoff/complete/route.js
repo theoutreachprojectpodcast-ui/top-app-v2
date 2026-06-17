@@ -10,20 +10,26 @@ export async function GET(request) {
   const url = new URL(request.url);
   const stateKey = String(url.searchParams.get("key") || "").trim();
   if (!stateKey) {
-    return NextResponse.redirect(new URL("/sign-in?oauth_error=Missing%20sign-in%20key", request.url), 302);
+    return NextResponse.redirect(
+      new URL("/mobile?oauth_error=Missing%20sign-in%20key", request.url),
+      302,
+    );
   }
 
   const handoff = await consumeOAuthMobileSessionHandoff(stateKey);
   if (!handoff?.setCookies?.length) {
-    return NextResponse.redirect(new URL("/sign-in?oauth_error=Sign-in%20expired", request.url), 302);
+    return NextResponse.redirect(
+      new URL("/mobile?oauth_error=Sign-in%20expired", request.url),
+      302,
+    );
   }
 
-  let redirectTo = String(handoff.redirectTo || MOBILE_POST_LOGIN_PATH).trim() || MOBILE_POST_LOGIN_PATH;
+  let redirectTo = String(handoff.redirectTo || "/").trim() || "/";
   if (!redirectTo.startsWith("/")) {
-    redirectTo = MOBILE_POST_LOGIN_PATH;
+    redirectTo = "/";
   }
-  if (redirectTo === "/") {
-    redirectTo = MOBILE_POST_LOGIN_PATH;
+  if (redirectTo === MOBILE_POST_LOGIN_PATH || redirectTo === "/mobile/auth/complete") {
+    redirectTo = "/";
   }
 
   const dest = new URL(redirectTo, request.url);

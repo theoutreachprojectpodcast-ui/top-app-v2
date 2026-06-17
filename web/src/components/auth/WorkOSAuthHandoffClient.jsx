@@ -45,9 +45,13 @@ function WorkOSAuthHandoffInner({ mode, backHref = "/", fallbackReturn }) {
         loginHint: params.loginHint,
         native: true,
       });
-      void launchWorkOSAuth(go).catch((err) => {
-        setError(err instanceof Error ? err.message : "Could not start secure sign in.");
-      });
+      void launchWorkOSAuth(go)
+        .then(() => {
+          router.replace("/");
+        })
+        .catch((err) => {
+          setError(err instanceof Error ? err.message : "Could not start secure sign in.");
+        });
       return;
     }
 
@@ -60,7 +64,7 @@ function WorkOSAuthHandoffInner({ mode, backHref = "/", fallbackReturn }) {
         loginHint: params.loginHint,
       }),
     );
-  }, [native, mode, searchParams, fallbackReturn]);
+  }, [native, mode, searchParams, fallbackReturn, router]);
 
   useEffect(() => {
     if (startedRef.current) return;

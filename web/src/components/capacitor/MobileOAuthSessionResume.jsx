@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { usePathname } from "next/navigation";
+import { useEffect, useLayoutEffect, useRef } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useAuthSession } from "@/components/auth/AuthSessionProvider";
 import { useProfileData } from "@/features/profile/ProfileDataProvider";
 import { isCapacitorNative } from "@/lib/capacitor/platform";
@@ -14,38 +14,52 @@ import {
 } from "@/lib/auth/oauthMobileHandoff";
 export { TORP_OAUTH_RETURN_KEY };
 
+function clearOAuthHandoffState() {
+  if (typeof sessionStorage === "undefined") return;
+  sessionStorage.removeItem(TORP_OAUTH_RETURN_KEY);
+  sessionStorage.removeItem(TORP_OAUTH_BROWSER_PENDING);
+  sessionStorage.removeItem(TORP_OAUTH_STATE_KEY);
+  clearOAuthPollKeyCookie();
+}
+
 /**
- * After OAuth return, clear handoff flags and refresh session on in-app routes.
- * `/mobile/auth/complete` owns its own fast verify + redirect — flags only there.
+ * After OAuth return, clear handoff flags immediately and refresh session in the background.
  */
 export default function MobileOAuthSessionResume() {
   const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { refresh: refreshAuth } = useAuthSession();
   const { refreshWorkOSProfile } = useProfileData();
   const ranRef = useRef(false);
 
+  const oauthReturn =
+    searchParams?.get("oauth") === "1" ||
+    (typeof sessionStorage !== "undefined" && sessionStorage.getItem(TORP_OAUTH_RETURN_KEY) === "1");
+
+  useLayoutEffect(() => {
+    if (!isCapacitorNative() || !oauthReturn) return;
+    clearOAuthHandoffState();
+  }, [oauthReturn]);
+
   useEffect(() => {
-    if (!isCapacitorNative() || ranRef.current) return;
-    if (typeof sessionStorage === "undefined") return;
-    const fromStorage = sessionStorage.getItem(TORP_OAUTH_RETURN_KEY) === "1";
-    const fromQuery =
-      typeof window !== "undefined" &&
-      new URLSearchParams(window.location.search).get("oauth") === "1";
-    if (!fromStorage && !fromQuery) return;
-
+    if (!isCapacitorNative() || ranRef.current || !oauthReturn) return;
     ranRef.current = true;
-    sessionStorage.removeItem(TORP_OAUTH_RETURN_KEY);
-    sessionStorage.removeItem(TORP_OAUTH_BROWSER_PENDING);
-    sessionStorage.removeItem(TORP_OAUTH_STATE_KEY);
-    clearOAuthPollKeyCookie();
 
-    if (pathname === MOBILE_POST_LOGIN_PATH) return;
+    if (pathname === MOBILE_POST_LOGIN_PATH) {
+      router.replace("/");
+      return;
+    }
 
-    void (async () => {
-      await refreshAuth({ soft: true });
-      await refreshWorkOSProfile();
-    })();
-  }, [pathname, refreshAuth, refreshWorkOSProfile]);
+    if (searchParams?.get("oauth") === "1") {
+      const next = new URLSearchParams(searchParams.toString());
+      next.delete("oauth");
+      const qs = next.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname || "/", { scroll: false });
+    }
+
+    void Promise.all([refreshAuth({ soft: true }), refreshWorkOSProfile()]);
+  }, [oauthReturn, pathname, refreshAuth, refreshWorkOSProfile, router, searchParams]);
 
   return null;
 }
