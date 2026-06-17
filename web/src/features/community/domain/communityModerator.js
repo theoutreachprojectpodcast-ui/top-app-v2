@@ -60,6 +60,8 @@ export function normalizeModeratorAuthorFields(row) {
  */
 export function isOutreachModeratorPost(post) {
   if (!post) return false;
+  const postType = String(post.postType || "").trim();
+  if (postType === "admin_update" || postType.startsWith("platform_guide")) return true;
   const authorId = String(post.authorId || "").trim();
   if (authorId === OUTREACH_MODERATOR_AUTHOR_ID) return true;
   const name = remapLegacyModeratorName(String(post.authorName || "").trim());

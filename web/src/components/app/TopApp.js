@@ -27,7 +27,7 @@ import {
   SITE_MOBILE_DOCK_ITEMS,
   SITE_TOP_APP_DOCK_TAB_KEYS,
 } from "@/components/navigation/siteBottomNavConfig";
-import SiteMobileNavMoreMenu from "@/components/navigation/SiteMobileNavMoreMenu";
+import { SiteHamburgerNavMenu } from "@/components/navigation/SiteMobileNavHamburgerEntries";
 import HomeScreen from "@/components/home/HomeScreen";
 import { SUPPORT_EMAIL } from "@/lib/runtime/brandContact";
 import ProfileCompletionPanel from "@/features/profile/components/ProfileCompletionPanel";
@@ -359,6 +359,38 @@ function TopAppInner({ initialNav = "home" }) {
       return;
     }
     const href = String(item?.href || "/").trim() || "/";
+    if (pathname !== href) router.push(href);
+    else if (SITE_TOP_APP_DOCK_TAB_KEYS.has(key)) setNav(key);
+  }
+
+  function hamburgerNavItem(item) {
+    const key = String(item?.key || "");
+    const href = String(item?.href || "").trim() || "/";
+    if (key === "sponsors") {
+      goToSponsorsHub();
+      return;
+    }
+    if (key === "home") {
+      dockNavHome();
+      return;
+    }
+    if (key === "podcast") {
+      dockNavPodcast();
+      return;
+    }
+    if (key === "profile") {
+      dockNavProfile();
+      return;
+    }
+    if (key === "settings") {
+      if (pathname === "/") setNav("settings");
+      else if (pathname !== "/settings") router.push("/settings");
+      return;
+    }
+    if (pathname === "/" && SITE_TOP_APP_DOCK_TAB_KEYS.has(key)) {
+      setNav(key);
+      return;
+    }
     if (pathname !== href) router.push(href);
     else if (SITE_TOP_APP_DOCK_TAB_KEYS.has(key)) setNav(key);
   }
@@ -709,17 +741,10 @@ function TopAppInner({ initialNav = "home" }) {
           <HeaderInner className="topbarInner">
             <div className="topbarZone topbarLeft">
               <div className="topbarActionsCluster topbarActionsCluster--start">
-                <SiteMobileNavMoreMenu tone="app" align="start">
-                  <button type="button" className="siteMobileNavMore__entry" onClick={dockNavProfile}>
-                    Profile
-                  </button>
-                  <button type="button" className="siteMobileNavMore__entry" onClick={goToSponsorsHub}>
-                    Sponsors
-                  </button>
-                  <button type="button" className="siteMobileNavMore__entry" onClick={goToSponsorsHub}>
-                    Become a Sponsor
-                  </button>
-                </SiteMobileNavMoreMenu>
+                <SiteHamburgerNavMenu
+                  shellClass="siteMobileNavMore--phoneOnly"
+                  onItemClick={hamburgerNavItem}
+                />
                 {isMobileShell && pageAtmosphere !== "podcast" ? <ColorSchemeToggle /> : null}
                 {isMobileShell && isLoggedIn ? <AdminConsoleLink /> : null}
               </div>
@@ -727,6 +752,11 @@ function TopAppInner({ initialNav = "home" }) {
             <div className="topbarZone topbarCenter" aria-hidden="true" />
             <div className="topbarZone topbarRight">
             <div className="topbarActionsCluster">
+              <SiteHamburgerNavMenu
+                shellClass="siteMobileNavMore--desktopOnly"
+                align="end"
+                onItemClick={hamburgerNavItem}
+              />
               {pageAtmosphere === "home" ? <DownloadMobileAppButton /> : null}
               {!isMobileShell && pageAtmosphere !== "podcast" ? <ColorSchemeToggle /> : null}
               {isLoggedIn ? (
@@ -823,32 +853,9 @@ function TopAppInner({ initialNav = "home" }) {
               isAuthenticated={isAuthenticated}
               authLoading={loadingProfile}
               authBackend={authBackend}
-              isMember={isMember}
-              canSubmitStory={!!entitlements?.communityStorySubmit}
+              canCreatePost={!!entitlements?.communityPostCreate}
               isPlatformAdmin={!!entitlements?.isPlatformAdmin}
-              fullName={fullName}
               profile={profile}
-              onRequestUpgrade={() => {
-                if (requiresExternalWebAccountFlow()) {
-                  if (!isAuthenticated) {
-                    void openWebSignup();
-                    return;
-                  }
-                  void openWebMembership();
-                  return;
-                }
-                if (!isAuthenticated) {
-                  if (authBackend.workos) {
-                    writeRememberDevicePref(rememberDevice);
-                    window.location.assign(workosSignUpHref("/community", { rememberDevice }));
-                    return;
-                  }
-                  setAuthMode("signup");
-                  setOverlay("signin");
-                  return;
-                }
-                setOverlay("upgrade");
-              }}
               onRequestSignIn={() => {
                 if (authBackend.workos) {
                   startWorkOSSignIn("/community");

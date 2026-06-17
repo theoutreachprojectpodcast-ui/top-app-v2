@@ -52,6 +52,7 @@ export function computeEntitlementsFromProfileRow(row) {
     return {
       podcastMemberContent: false,
       communityStorySubmit: false,
+      communityPostCreate: false,
       isPrivilegedStaff: false,
       isPlatformAdmin: false,
     };
@@ -67,7 +68,9 @@ export function computeEntitlementsFromProfileRow(row) {
   });
   return {
     podcastMemberContent: privilegedContent,
-    communityStorySubmit: privilegedStaff || tierAllowsCommunityStorySubmit(row),
+    /** V1: only staff/moderators create community posts; members comment and react. */
+    communityStorySubmit: privilegedStaff || isPlatformAdmin,
+    communityPostCreate: privilegedStaff || isPlatformAdmin,
     isPrivilegedStaff: privilegedStaff,
     isPlatformAdmin,
   };
@@ -81,4 +84,14 @@ export function profileMaySubmitCommunityStory(row) {
   if (!row) return false;
   const ent = computeEntitlementsFromProfileRow(row);
   return ent.communityStorySubmit === true;
+}
+
+/**
+ * V1 moderator-only post creation (admins + platform_role admin/moderator).
+ * @param {Record<string, unknown> | null | undefined} row
+ */
+export function profileMayCreateCommunityPost(row) {
+  if (!row) return false;
+  const ent = computeEntitlementsFromProfileRow(row);
+  return ent.communityPostCreate === true;
 }

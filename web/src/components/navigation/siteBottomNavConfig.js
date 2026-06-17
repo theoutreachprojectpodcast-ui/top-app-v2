@@ -16,6 +16,37 @@ export const SITE_MOBILE_DOCK_ITEMS = [
 
 export const SITE_MOBILE_DOCK_KEYS = new Set(SITE_MOBILE_DOCK_ITEMS.map((item) => item.key));
 
+/**
+ * Complete site map for the header hamburger (mobile + desktop web).
+ * Footer dock shows a subset; hamburger lists every primary destination.
+ */
+export const SITE_HAMBURGER_NAV_ITEMS = [
+  { key: "home", href: "/", label: "Home", linkTitle: "Home" },
+  { key: "trusted", href: "/trusted", label: "Trusted Resources", linkTitle: "Trusted Resources" },
+  { key: "community", href: "/community", label: "Community", linkTitle: "Community" },
+  { key: "sponsors", href: "/sponsors", label: "Sponsors", linkTitle: "Sponsors" },
+  { key: "sponsors-apply", href: "/sponsors/apply", label: "Become a Sponsor", linkTitle: "Become a Sponsor" },
+  { key: "podcast", href: "/podcasts", label: "Podcast", linkTitle: "Podcast" },
+  { key: "podcasts-guests", href: "/podcasts/guests", label: "Podcast Guests", linkTitle: "Podcast Guests" },
+  { key: "podcasts-apply", href: "/podcasts/apply", label: "Apply as Podcast Guest", linkTitle: "Apply as Podcast Guest" },
+  { key: "podcasts-members", href: "/podcasts/members", label: "Podcast Members", linkTitle: "Podcast Members" },
+  { key: "profile", href: "/profile", label: "Profile", linkTitle: "Profile" },
+  { key: "settings", href: "/settings", label: "Settings", linkTitle: "Settings" },
+  { key: "notifications", href: "/notifications", label: "Notifications", linkTitle: "Notifications" },
+  { key: "membership", href: "/membership", label: "Membership", linkTitle: "Membership" },
+  { key: "billing", href: "/billing", label: "Billing", linkTitle: "Billing" },
+  { key: "contact", href: "/contact", label: "Contact", linkTitle: "Contact" },
+  { key: "onboarding", href: "/onboarding", label: "Onboarding", linkTitle: "Onboarding" },
+  { key: "download", href: "/download", label: "Download App", linkTitle: "Download App" },
+  { key: "privacy", href: "/privacy", label: "Privacy Policy", linkTitle: "Privacy Policy" },
+  { key: "terms", href: "/terms", label: "Terms of Use", linkTitle: "Terms of Use" },
+];
+
+/** @deprecated Use SITE_HAMBURGER_NAV_ITEMS */
+export const SITE_MOBILE_HAMBURGER_ITEMS = SITE_HAMBURGER_NAV_ITEMS;
+
+export const SITE_HAMBURGER_NAV_KEYS = new Set(SITE_HAMBURGER_NAV_ITEMS.map((item) => item.key));
+
 /** TopApp in-tab keys that can switch via `setNav` when pathname is `/`. */
 export const SITE_TOP_APP_DOCK_TAB_KEYS = new Set(["home", "trusted", "community", "contact"]);
 

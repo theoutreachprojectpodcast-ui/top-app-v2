@@ -10,6 +10,8 @@ import CommunityPostMedia from "@/features/community/components/CommunityPostMed
 import CommunityPostCarousel from "@/features/community/components/CommunityPostCarousel";
 import CommunityPostPodcastBlock from "@/features/community/components/CommunityPostPodcastBlock";
 import CommunityPostResourceBlock from "@/features/community/components/CommunityPostResourceBlock";
+import CommunityPostVideoBlock from "@/features/community/components/CommunityPostVideoBlock";
+import CommunityPostComments from "@/features/community/components/CommunityPostComments";
 import { sharePostDemo } from "@/features/community/api/communityApi";
 import {
   isOutreachModeratorPost,
@@ -77,6 +79,8 @@ export default function CommunityPostCard({
   showModerationStatus = false,
   onOpenAuthor,
   onRequestAuthorEdit,
+  isAuthenticated = false,
+  canModerate = false,
 }) {
   const [shareBusy, setShareBusy] = useState(false);
   const isModerator = isOutreachModeratorPost(post);
@@ -112,7 +116,7 @@ export default function CommunityPostCard({
 
   return (
     <article
-      className={`communityPostCard${isGuide ? " communityPostCard--guide" : ""}${isModerator ? " communityPostCard--moderator" : ""} communityPostCard--layout-${layout}`}
+      className={`communityPostCard${isGuide ? " communityPostCard--guide" : ""}${isModerator ? " communityPostCard--moderator" : ""}${post.isPinned ? " communityPostCard--pinned" : ""} communityPostCard--layout-${layout}`}
     >
       <div className="communityPostTop">
         <Avatar
@@ -140,6 +144,7 @@ export default function CommunityPostCard({
               </div>
             )}
             {isModerator ? <span className="communityPostModeratorBadge">Outreach moderator</span> : null}
+            {post.isPinned ? <span className="communityPostPinnedBadge">Pinned</span> : null}
             {showModerationStatus && post.status && post.status !== "approved" ? (
               <span className="communityPostStatusBadge">{post.statusLabel || post.status}</span>
             ) : null}
@@ -161,6 +166,9 @@ export default function CommunityPostCard({
         {layout === "podcast" ? <CommunityPostPodcastBlock title={post.title} /> : null}
         {layout === "resource" && post.resourceHighlight ? (
           <CommunityPostResourceBlock resource={post.resourceHighlight} />
+        ) : null}
+        {layout === "video" && post.videoUrl ? (
+          <CommunityPostVideoBlock url={post.videoUrl} title={post.title} />
         ) : null}
         {layout === "image" && post.photoUrl ? (
           <>
@@ -205,6 +213,14 @@ export default function CommunityPostCard({
         onShare={onShare}
         shareBusy={shareBusy}
       />
+      {post.commentsEnabled !== false ? (
+        <CommunityPostComments
+          postId={post.id}
+          commentsEnabled={post.commentsEnabled}
+          isAuthenticated={isAuthenticated}
+          canModerate={canModerate}
+        />
+      ) : null}
     </article>
   );
 }

@@ -4,7 +4,8 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
 import { isCommunityModeratorServer } from "@/lib/community/moderatorServer";
 import { isPlatformAdminServer } from "@/lib/admin/platformAdminServer";
-import { profileMaySubmitCommunityStory } from "@/lib/account/entitlements";
+import { profileMayCreateCommunityPost } from "@/lib/account/entitlements";
+import { sortCommunityFeedRows } from "@/lib/community/adminCommunityPostPayload";
 import {
   createPlatformNotification,
   notifyStaffProfiles,
@@ -36,6 +37,7 @@ export async function GET(request) {
       .eq("status", "approved")
       .is("deleted_at", null)
       .in("visibility", ["community", "public"])
+      .order("is_pinned", { ascending: false, nullsFirst: false })
       .order("created_at", { ascending: false })
       .limit(80);
 
@@ -66,10 +68,12 @@ export async function GET(request) {
       viewer_has_liked: likedIds.has(row.id),
     }));
 
-    const posts = mergeFounderOnboardingPostRows(enriched).map((row) => ({
-      ...row,
-      viewer_has_liked: likedIds.has(row.id),
-    }));
+    const posts = sortCommunityFeedRows(
+      mergeFounderOnboardingPostRows(enriched).map((row) => ({
+        ...row,
+        viewer_has_liked: likedIds.has(row.id),
+      })),
+    );
 
     return Response.json({ posts });
   }
@@ -169,12 +173,12 @@ export async function POST(request) {
     );
   }
 
-  if (!profileMaySubmitCommunityStory(profileRow)) {
+  if (!profileMayCreateCommunityPost(profileRow)) {
     return Response.json(
       {
         ok: false,
         message:
-          "An active Pro membership is required to submit community stories. Upgrade from Profile or complete member checkout.",
+          "Community posting is moderator-led for launch. Members can comment, react, and participate in discussions now.",
       },
       { status: 403 },
     );

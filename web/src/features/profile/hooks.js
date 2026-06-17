@@ -112,6 +112,7 @@ export function useProfileDataState(supabase) {
   const [entitlements, setEntitlements] = useState({
     podcastMemberContent: false,
     communityStorySubmit: false,
+    communityPostCreate: false,
     isPrivilegedStaff: false,
     isPlatformAdmin: false,
   });
@@ -157,6 +158,7 @@ export function useProfileDataState(supabase) {
         setEntitlements({
           podcastMemberContent: !!data.entitlements.podcastMemberContent,
           communityStorySubmit: !!data.entitlements.communityStorySubmit,
+          communityPostCreate: !!data.entitlements.communityPostCreate,
           isPrivilegedStaff: !!data.entitlements.isPrivilegedStaff,
           isPlatformAdmin: !!data.entitlements.isPlatformAdmin,
         });
@@ -240,6 +242,7 @@ export function useProfileDataState(supabase) {
             setEntitlements({
               podcastMemberContent: !!me.entitlements.podcastMemberContent,
               communityStorySubmit: !!me.entitlements.communityStorySubmit,
+              communityPostCreate: !!me.entitlements.communityPostCreate,
               isPrivilegedStaff: !!me.entitlements.isPrivilegedStaff,
               isPlatformAdmin: !!me.entitlements.isPlatformAdmin,
             });
@@ -756,6 +759,7 @@ export function useProfileDataState(supabase) {
     setEntitlements({
       podcastMemberContent: false,
       communityStorySubmit: false,
+      communityPostCreate: false,
       isPrivilegedStaff: false,
       isPlatformAdmin: false,
     });
@@ -812,7 +816,7 @@ export function useProfileDataState(supabase) {
   const isMember = useMemo(() => {
     if (sessionKind === "workos") {
       return !!(
-        entitlements.communityStorySubmit ||
+        entitlements.podcastMemberContent ||
         entitlements.isPrivilegedStaff ||
         entitlements.isPlatformAdmin
       );
@@ -820,7 +824,7 @@ export function useProfileDataState(supabase) {
     return membership.isMember;
   }, [
     sessionKind,
-    entitlements.communityStorySubmit,
+    entitlements.podcastMemberContent,
     entitlements.isPrivilegedStaff,
     entitlements.isPlatformAdmin,
     membership.isMember,

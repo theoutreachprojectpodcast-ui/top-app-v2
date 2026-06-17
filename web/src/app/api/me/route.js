@@ -20,6 +20,7 @@ function entitlementsForSession(row, user) {
   return {
     podcastMemberContent: isPlatformAdmin,
     communityStorySubmit: isPlatformAdmin,
+    communityPostCreate: isPlatformAdmin,
     isPrivilegedStaff: false,
     isPlatformAdmin,
   };

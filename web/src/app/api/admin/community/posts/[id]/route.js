@@ -3,6 +3,10 @@ import { writeAdminAuditLog } from "@/lib/admin/adminAuditLog";
 import { sanitizeAdminHtml, htmlToPlainText } from "@/lib/admin/sanitizeHtml";
 import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
 import {
+  buildCommunityCtaLinkUrl,
+  buildCommunityFeedMediaJson,
+} from "@/lib/community/adminCommunityPostPayload";
+import {
   buildCommunityModerationPatch,
   notifyAuthorPostApproved,
 } from "@/lib/community/communityPostModeration";
@@ -74,6 +78,33 @@ export async function PATCH(request, context) {
     patch.moderation_notes = String(body.moderationNotes || body.moderation_notes || "").trim() || null;
     patch.reviewed_by = String(ctx.user?.id || "");
     patch.reviewed_at = now;
+    if (body.post_type !== undefined) patch.post_type = String(body.post_type || "").slice(0, 64);
+    if (body.photo_url !== undefined) {
+      patch.photo_url = typeof body.photo_url === "string" ? body.photo_url.trim().slice(0, 120000) : "";
+    }
+    if (body.video_url !== undefined) patch.video_url = String(body.video_url || "").trim().slice(0, 500);
+    if (body.podcast_url !== undefined) patch.podcast_url = String(body.podcast_url || "").trim().slice(0, 500);
+    if (body.resource_url !== undefined) patch.resource_url = String(body.resource_url || "").trim().slice(0, 500);
+    if (body.is_pinned !== undefined) patch.is_pinned = Boolean(body.is_pinned);
+    if (body.comments_enabled !== undefined) patch.comments_enabled = body.comments_enabled !== false;
+    if (body.featured !== undefined) patch.featured = Boolean(body.featured);
+    if (
+      body.cta_label !== undefined ||
+      body.cta_url !== undefined ||
+      body.link_url !== undefined
+    ) {
+      patch.link_url = buildCommunityCtaLinkUrl(body);
+    }
+    const feedMedia = buildCommunityFeedMediaJson(body);
+    if (feedMedia) patch.feed_media_json = feedMedia;
+    if (body.tags !== undefined) {
+      const tagsRaw = body.tags;
+      patch.tags = Array.isArray(tagsRaw)
+        ? tagsRaw.map((t) => String(t || "").trim()).filter(Boolean).slice(0, 12)
+        : typeof tagsRaw === "string"
+          ? tagsRaw.split(",").map((t) => t.trim()).filter(Boolean).slice(0, 12)
+          : null;
+    }
   } else if (action === "bookmark" || action === "unbookmark") {
     const bookmark = action === "bookmark";
     patch.admin_bookmark = bookmark;
@@ -111,6 +142,43 @@ export async function PATCH(request, context) {
     if (body.link_url !== undefined) patch.link_url = String(body.link_url || "").trim().slice(0, 500);
     if (body.photo_url !== undefined) {
       patch.photo_url = typeof body.photo_url === "string" ? body.photo_url.trim().slice(0, 120000) : "";
+    }
+    if (body.video_url !== undefined || body.videoUrl !== undefined) {
+      patch.video_url = String(body.video_url ?? body.videoUrl ?? "").trim().slice(0, 500);
+    }
+    if (body.podcast_url !== undefined || body.podcastUrl !== undefined) {
+      patch.podcast_url = String(body.podcast_url ?? body.podcastUrl ?? "").trim().slice(0, 500);
+    }
+    if (body.resource_url !== undefined || body.resourceUrl !== undefined) {
+      patch.resource_url = String(body.resource_url ?? body.resourceUrl ?? "").trim().slice(0, 500);
+    }
+    if (body.is_pinned !== undefined || body.isPinned !== undefined) {
+      patch.is_pinned = Boolean(body.is_pinned ?? body.isPinned);
+    }
+    if (body.comments_enabled !== undefined || body.commentsEnabled !== undefined) {
+      patch.comments_enabled = body.comments_enabled !== false && body.commentsEnabled !== false;
+    }
+    if (
+      body.cta_label !== undefined ||
+      body.ctaLabel !== undefined ||
+      body.cta_url !== undefined ||
+      body.ctaUrl !== undefined ||
+      body.link_url !== undefined
+    ) {
+      patch.link_url = buildCommunityCtaLinkUrl(body);
+    }
+    const feedMedia = buildCommunityFeedMediaJson(body);
+    if (feedMedia) patch.feed_media_json = feedMedia;
+    if (body.feed_layout !== undefined || body.feedLayout !== undefined) {
+      patch.feed_layout = String(body.feed_layout ?? body.feedLayout ?? "").trim().slice(0, 32) || null;
+    }
+    if (body.tags !== undefined) {
+      const tagsRaw = body.tags;
+      patch.tags = Array.isArray(tagsRaw)
+        ? tagsRaw.map((t) => String(t || "").trim()).filter(Boolean).slice(0, 12)
+        : typeof tagsRaw === "string"
+          ? tagsRaw.split(",").map((t) => t.trim()).filter(Boolean).slice(0, 12)
+          : null;
     }
     if (body.featured !== undefined) patch.featured = Boolean(body.featured);
     if (body.author_name !== undefined) patch.author_name = String(body.author_name || "").trim().slice(0, 120);

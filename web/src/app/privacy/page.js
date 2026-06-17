@@ -8,16 +8,16 @@ export default function PrivacyPage() {
     <div className="legalPageRoute">
       <section className="panel legalPage">
         <h1>Privacy Policy</h1>
-        <p className="legalPageMeta">Last updated: June 14, 2026</p>
+        <p className="legalPageMeta">Last Updated: June 14, 2026</p>
         <p>
-          The Outreach Project LLC (&ldquo;The Outreach Project,&rdquo; &ldquo;TOP,&rdquo; &ldquo;we,&rdquo; &ldquo;us,&rdquo;
-          or &ldquo;our&rdquo;) provides a resource network, media platform, nonprofit directory, and community features
-          for veterans, first responders, their families, and supporters.
+          The Outreach Project LLC (&quot;The Outreach Project,&quot; &quot;TOP,&quot; &quot;we,&quot; &quot;us,&quot; or
+          &quot;our&quot;) provides a resource network, media platform, nonprofit directory, and community features for
+          veterans, first responders, their families, and supporters.
         </p>
         <p>
           This Privacy Policy explains how we collect, use, disclose, and safeguard information when you access or use our
           website, mobile applications, podcast platforms, community features, nonprofit directory, and related services
-          (collectively, the &ldquo;Services&rdquo;).
+          (collectively, the &quot;Services&quot;).
         </p>
         <p>
           Our iOS and Android applications currently provide access to the same secure web-based platform through an
@@ -146,8 +146,8 @@ export default function PrivacyPage() {
         <h2>Security</h2>
         <p>
           We implement reasonable administrative, technical, and physical safeguards designed to protect information.
-          These measures include:
         </p>
+        <p>These measures include:</p>
         <ul>
           <li>HTTPS encryption in transit</li>
           <li>Access controls</li>
@@ -157,9 +157,7 @@ export default function PrivacyPage() {
         <p>No method of transmission or storage can be guaranteed to be completely secure.</p>
 
         <h2>User Content</h2>
-        <p>
-          Users are solely responsible for content they submit, publish, upload, or share through the Services.
-        </p>
+        <p>Users are solely responsible for content they submit, publish, upload, or share through the Services.</p>
         <p>
           We reserve the right, but not the obligation, to review, remove, restrict, or moderate content that violates our
           policies, applicable law, or the safety of our community.
@@ -189,17 +187,14 @@ export default function PrivacyPage() {
           and resource discovery tools.
         </p>
         <p>
-          Information available through the Services is provided for informational and educational purposes only and
-          should not be considered medical, mental health, legal, financial, tax, professional, or emergency-response
-          advice.
+          Information available through the Services is provided for informational and educational purposes only and should
+          not be considered medical, mental health, legal, financial, tax, professional, or emergency-response advice.
         </p>
         <p>
           The Outreach Project is not a healthcare provider, mental health treatment provider, legal services provider,
           emergency response provider, or crisis intervention service.
         </p>
-        <p>
-          If you are experiencing an emergency, call 911 or your local emergency services provider immediately.
-        </p>
+        <p>If you are experiencing an emergency, call 911 or your local emergency services provider immediately.</p>
         <p>
           If you are experiencing a mental health crisis or thoughts of self-harm, contact 988 or seek immediate
           professional assistance.
@@ -207,9 +202,7 @@ export default function PrivacyPage() {
 
         <h2>Changes to This Privacy Policy</h2>
         <p>We may update this Privacy Policy from time to time.</p>
-        <p>
-          Material changes will be reflected by updating the &ldquo;Last Updated&rdquo; date at the top of this page.
-        </p>
+        <p>Material changes will be reflected by updating the &quot;Last Updated&quot; date at the top of this page.</p>
         <p>
           Your continued use of the Services after changes become effective constitutes acceptance of the revised Privacy
           Policy.
@@ -217,14 +210,12 @@ export default function PrivacyPage() {
 
         <h2>Contact Us</h2>
         <p>
-          Questions regarding this Privacy Policy may be submitted through our{" "}
-          <a href="/contact">contact form</a> or by contacting:
+          Questions regarding this Privacy Policy may be submitted through our contact form or by contacting:
         </p>
         <p>
           The Outreach Project LLC
           <br />
-          Email:{" "}
-          <a href="mailto:inbox@theoutreach-project.com">inbox@theoutreach-project.com</a>
+          Email:inbox@theoutreach-project.com
         </p>
       </section>
     </div>

@@ -15,9 +15,18 @@ import { parseOAuthBrowserDoneDeepLink } from "@/lib/auth/workosMobileRedirect";
 import { parseMobileDeepLinkUrl } from "@/lib/capacitor/mobileDeepLinks";
 import { TORP_OAUTH_RETURN_KEY } from "@/components/capacitor/MobileOAuthSessionResume";
 
-const POLL_MS = 400;
+const POLL_MS = 200;
 const POLL_MAX_MS = 30_000;
 const BROWSER_FINISHED_RETRIES_MS = [0, 200, 500, 1000, 2000, 3500, 5000, 8000, 12_000, 18_000, 25_000];
+
+async function closeOAuthBrowserSheet() {
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    await closeExternalBrowserIfOpen();
+    if (attempt < 3) {
+      await new Promise((resolve) => setTimeout(resolve, 60));
+    }
+  }
+}
 
 function nativeOAuthUrl(path) {
   const normalized = String(path || "").trim().startsWith("/") ? String(path).trim() : `/${String(path).trim()}`;
@@ -127,7 +136,7 @@ export default function MobileOAuthBrowserFinish() {
       claimedRef.current = true;
       stopPolling();
 
-      await closeExternalBrowserIfOpen();
+      await closeOAuthBrowserSheet();
 
       try {
         await completeInWebView(data);
@@ -166,7 +175,7 @@ export default function MobileOAuthBrowserFinish() {
 
       const pollKey = parsed?.key || handoff?.key || "";
       void (async () => {
-        await closeExternalBrowserIfOpen();
+        await closeOAuthBrowserSheet();
         for (const delay of BROWSER_FINISHED_RETRIES_MS) {
           if (delay > 0) await new Promise((resolve) => setTimeout(resolve, delay));
           if (await tryFinish(pollKey)) return;

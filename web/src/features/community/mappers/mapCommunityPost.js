@@ -23,7 +23,13 @@ export function mapCommunityPostRow(row) {
   const status = String(row.status || "pending_review").toLowerCase();
   const postType = String(row.post_type || row.postType || "share_story");
   const feedMedia = parseCommunityFeedMedia(row);
-  const layout = resolveCommunityPostLayout(postType, row.feed_layout || row.feedLayout, feedMedia);
+  const videoUrl = String(row.video_url || row.videoUrl || "").trim();
+  const podcastUrl = String(row.podcast_url || row.podcastUrl || "").trim();
+  const resourceUrl = String(row.resource_url || row.resourceUrl || "").trim();
+  let layout = resolveCommunityPostLayout(postType, row.feed_layout || row.feedLayout, feedMedia);
+  if (videoUrl && layout === "step") layout = "video";
+  const tagsRaw = row.tags;
+  const tags = Array.isArray(tagsRaw) ? tagsRaw.map((t) => String(t || "").trim()).filter(Boolean) : [];
   return {
     id: String(row.id),
     createdAt: row.created_at || row.createdAt,
@@ -47,6 +53,12 @@ export function mapCommunityPostRow(row) {
     linkUrl: String(row.link_url || row.linkUrl || "").trim(),
     cta: parsePostCta(row.link_url || row.linkUrl || ""),
     photoUrl: String(row.photo_url || row.photoUrl || "").trim(),
+    videoUrl,
+    podcastUrl,
+    resourceUrl,
+    tags,
+    isPinned: !!row.is_pinned,
+    commentsEnabled: row.comments_enabled !== false,
     status,
     statusLabel: STATUS_LABELS[status] || status,
     visibility: String(row.visibility || "community"),

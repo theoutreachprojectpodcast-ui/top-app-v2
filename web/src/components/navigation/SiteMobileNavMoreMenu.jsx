@@ -3,12 +3,12 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 
 /**
- * Header overflow menu (hamburger). Mobile only — hidden from 720px up (`mobile-nav-dock.css`).
+ * Header overflow menu (hamburger). Shown on mobile and desktop web (`mobile-nav-dock.css`).
  * Children should be full-width links or buttons; panel closes on selection / Escape / outside click.
  *
- * @param {{ tone?: "app" | "podcast", children: import("react").ReactNode, align?: "start" | "end" }} props
+ * @param {{ tone?: "app" | "podcast", children: import("react").ReactNode, align?: "start" | "end", shellClass?: string }} props
  */
-export default function SiteMobileNavMoreMenu({ tone = "app", children, align = "start" }) {
+export default function SiteMobileNavMoreMenu({ tone = "app", children, align = "start", shellClass = "" }) {
   const menuId = useId();
   const [open, setOpen] = useState(false);
   const rootRef = useRef(null);
@@ -44,7 +44,7 @@ export default function SiteMobileNavMoreMenu({ tone = "app", children, align = 
   return (
     <div
       ref={rootRef}
-      className={`siteMobileNavMore siteMobileNavMore--${tone} siteMobileNavMore--align-${align}`}
+      className={`siteMobileNavMore siteMobileNavMore--${tone} siteMobileNavMore--align-${align}${shellClass ? ` ${shellClass}` : ""}`}
     >
       <button
         type="button"

@@ -9,7 +9,9 @@ import {
 } from "@/lib/auth/workosCallbackHandler";
 import { saveOAuthMobileSessionHandoff } from "@/lib/auth/oauthMobileHandoffServer";
 import { hashOAuthState, saveOAuthMobilePending } from "@/lib/auth/oauthMobileHandoffServer";
+import { TORP_OAUTH_POLL_KEY_COOKIE } from "@/lib/auth/oauthMobileHandoff";
 import { MOBILE_POST_AUTH_HOME } from "@/lib/auth/oauthMobileHandoff";
+import { requestHasWorkOSPkceCookie } from "@/lib/auth/workosAuthorizationRedirect";
 import {
   isMobileExternalBrowserUserAgent,
   mobileOAuthBrowserDoneHtml,
@@ -53,9 +55,11 @@ function callbackErrorResponse(message, request, status = 400) {
  * WorkOS Redirect URI — https://theoutreachproject.app/callback
  * Route Handler (not RSC page) so AuthKit can set session cookies.
  */
-/** OAuth ran in Capacitor in-app browser (cookie set by `/auth/workos-browser-start`). */
-function isCapacitorBrowserOAuthReturn(request) {
-  return request.cookies.get(BROWSER_OAUTH_COOKIE)?.value === "1";
+/** Capacitor in-app browser — finish OAuth here (PKCE cookie from `/auth/workos-browser-start`), hand session to WebView. */
+function isCapacitorBrowserOAuthReturn(request, oauthState = "") {
+  if (request.cookies.get(BROWSER_OAUTH_COOKIE)?.value === "1") return true;
+  if (String(request.cookies.get(TORP_OAUTH_POLL_KEY_COOKIE)?.value || "").trim()) return true;
+  return requestHasWorkOSPkceCookie(request, oauthState);
 }
 
 /** Capacitor in-app browser — finish OAuth here (PKCE cookie from `/auth/workos-browser-start`), hand session to WebView. */
@@ -115,10 +119,10 @@ export async function GET(request) {
     const oauthError = url.searchParams.get("error");
     const code = url.searchParams.get("code");
 
+    const oauthState = url.searchParams.get("state") || "";
     // Capacitor in-app browser (SFSafariViewController) — session cookies stay in the browser jar;
     // capture them and hand off to the WKWebView via Supabase + /api/mobile/oauth-handoff/complete.
-    // `torp-oauth-browser=1` is authoritative; do not gate on `torp-oauth-shell` (also set in browser).
-    if (inMobileBrowser && code && isCapacitorBrowserOAuthReturn(request)) {
+    if (inMobileBrowser && code && isCapacitorBrowserOAuthReturn(request, oauthState)) {
       return mobileBrowserOAuthPendingResponse(request, url);
     }
 

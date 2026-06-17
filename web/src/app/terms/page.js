@@ -6,24 +6,22 @@ export const metadata = {
 export default function TermsPage() {
   return (
     <div className="legalPageRoute">
-      <section className="panel legalPage">
-        <p className="legalPageOrg">The Outreach Project LLC</p>
-        <h1>Terms of Use</h1>
-        <p className="legalPageMeta">Last updated: June 2026</p>
+      <section className="panel legalPage legalPage--terms">
+        <p className="legalPageOrg">THE OUTREACH PROJECT LLC</p>
+        <h1>TERMS OF USE</h1>
+        <p className="legalPageMeta">Last Updated: June 2026</p>
 
         <h2>1. Acceptance of Terms</h2>
         <p>
           By accessing or using The Outreach Project website, mobile application, nonprofit directory, podcast content,
-          community features, memberships, and related services (collectively, the &ldquo;Services&rdquo;), you agree to
-          be bound by these Terms of Use.
+          community features, memberships, and related services (collectively, the &quot;Services&quot;), you agree to be
+          bound by these Terms of Use.
         </p>
         <p>If you do not agree to these Terms, do not use the Services.</p>
 
         <h2>2. Eligibility</h2>
         <p>You must be at least 13 years old to use the Services.</p>
-        <p>
-          If you are under 18, you represent that you have permission from a parent or legal guardian.
-        </p>
+        <p>If you are under 18, you represent that you have permission from a parent or legal guardian.</p>
 
         <h2>3. User Accounts</h2>
         <p>You are responsible for maintaining the confidentiality of your account credentials.</p>
@@ -37,15 +35,13 @@ export default function TermsPage() {
           Membership fees, billing schedules, cancellation terms, and renewal terms will be disclosed at the time of
           purchase.
         </p>
-        <p>
-          The Outreach Project reserves the right to modify membership features, pricing, or benefits at any time.
-        </p>
+        <p>The Outreach Project reserves the right to modify membership features, pricing, or benefits at any time.</p>
         <p>Unless otherwise stated, fees are non-refundable.</p>
 
         <h2>5. Nonprofit Directory Disclaimer</h2>
         <p>
-          The Outreach Project maintains a directory of nonprofit organizations, resources, sponsors, partners, and
-          related information.
+          The Outreach Project maintains a directory of nonprofit organizations, resources, sponsors, partners, and related
+          information.
         </p>
         <p>Directory listings and resource information are provided for informational purposes only.</p>
         <p>The Outreach Project LLC does not guarantee:</p>
@@ -65,8 +61,7 @@ export default function TermsPage() {
           verification by The Outreach Project.
         </p>
         <p>
-          Users are solely responsible for independently evaluating any organization or resource before engaging with
-          them.
+          Users are solely responsible for independently evaluating any organization or resource before engaging with them.
         </p>
 
         <h2>6. Community Content</h2>
@@ -94,21 +89,19 @@ export default function TermsPage() {
 
         <h2>8. Intellectual Property</h2>
         <p>
-          All platform content, software, graphics, logos, videos, audio recordings, text, trademarks, service marks,
-          and related materials are owned by The Outreach Project LLC or its licensors.
+          All platform content, software, graphics, logos, videos, audio recordings, text, trademarks, service marks, and
+          related materials are owned by The Outreach Project LLC or its licensors.
         </p>
         <p>
           No content may be copied, reproduced, distributed, modified, sold, or exploited without written permission.
         </p>
 
         <h2>9. Sponsors and Partners</h2>
-        <p>
-          Sponsors, advertisers, nonprofit partners, and featured organizations participate independently.
-        </p>
+        <p>Sponsors, advertisers, nonprofit partners, and featured organizations participate independently.</p>
         <p>Participation does not constitute endorsement by The Outreach Project LLC.</p>
         <p>
-          The Outreach Project retains sole editorial discretion regarding content, placement, visibility, and
-          sponsorship opportunities.
+          The Outreach Project retains sole editorial discretion regarding content, placement, visibility, and sponsorship
+          opportunities.
         </p>
         <p>
           No guarantees are made regarding audience size, impressions, leads, donations, sponsorship performance, or
@@ -116,9 +109,7 @@ export default function TermsPage() {
         </p>
 
         <h2>10. Professional Advice Disclaimer</h2>
-        <p>
-          Content available through the Services is provided for informational and educational purposes only.
-        </p>
+        <p>Content available through the Services is provided for informational and educational purposes only.</p>
         <p>Nothing contained within the Services constitutes:</p>
         <ul>
           <li>Medical advice</li>
@@ -149,18 +140,14 @@ export default function TermsPage() {
         </p>
 
         <h2>12. Third-Party Services</h2>
-        <p>
-          The Services may contain links to third-party organizations, websites, sponsors, or service providers.
-        </p>
-        <p>
-          The Outreach Project LLC is not responsible for third-party content, services, policies, or practices.
-        </p>
+        <p>The Services may contain links to third-party organizations, websites, sponsors, or service providers.</p>
+        <p>The Outreach Project LLC is not responsible for third-party content, services, policies, or practices.</p>
 
         <h2>13. Disclaimer of Warranties</h2>
-        <p>The Services are provided &ldquo;AS IS&rdquo; and &ldquo;AS AVAILABLE.&rdquo;</p>
+        <p>The Services are provided &quot;AS IS&quot; and &quot;AS AVAILABLE.&quot;</p>
         <p>
-          The Outreach Project LLC disclaims all warranties, express or implied, including warranties of
-          merchantability, fitness for a particular purpose, and non-infringement.
+          The Outreach Project LLC disclaims all warranties, express or implied, including warranties of merchantability,
+          fitness for a particular purpose, and non-infringement.
         </p>
 
         <h2>14. Limitation of Liability</h2>
@@ -182,9 +169,9 @@ export default function TermsPage() {
 
         <h2>15. Indemnification</h2>
         <p>
-          You agree to defend, indemnify, and hold harmless The Outreach Project LLC and its members, managers,
-          employees, volunteers, affiliates, sponsors, contractors, successors, and assigns from any claims,
-          liabilities, damages, losses, expenses, and attorneys&apos; fees arising from:
+          You agree to defend, indemnify, and hold harmless The Outreach Project LLC and its members, managers, employees,
+          volunteers, affiliates, sponsors, contractors, successors, and assigns from any claims, liabilities, damages,
+          losses, expenses, and attorneys&apos; fees arising from:
         </p>
         <ul>
           <li>Your use of the Services</li>
@@ -195,8 +182,8 @@ export default function TermsPage() {
 
         <h2>16. Account Suspension and Termination</h2>
         <p>
-          The Outreach Project LLC may suspend, restrict, or terminate any account at any time, with or without notice,
-          to protect users, the platform, or business operations.
+          The Outreach Project LLC may suspend, restrict, or terminate any account at any time, with or without notice, to
+          protect users, the platform, or business operations.
         </p>
 
         <h2>17. Governing Law</h2>
@@ -219,11 +206,7 @@ export default function TermsPage() {
         <p>
           The Outreach Project LLC
           <br />
-          Email:{" "}
-          <a href="mailto:Inbox@theoutreachproject.com">Inbox@theoutreachproject.com</a>
-        </p>
-        <p>
-          See also our <a href="/privacy">Privacy Policy</a>.
+          Inbox@theoutreachproject.com
         </p>
       </section>
     </div>

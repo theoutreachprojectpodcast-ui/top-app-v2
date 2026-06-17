@@ -7,27 +7,46 @@ import AdminPanelShell from "@/components/admin/AdminPanelShell";
 import { isLikelyHtml, sanitizeAdminHtml } from "@/lib/admin/sanitizeHtml";
 
 const POST_TYPES = [
-  { value: "admin_update", label: "Admin update / blog" },
-  { value: "share_story", label: "General story" },
-  { value: "step_by_step", label: "Step-by-step" },
-  { value: "carousel", label: "Carousel (image URL in photo_url)" },
-  { value: "video_link", label: "Video / podcast link" },
+  { value: "admin_update", label: "Text post" },
+  { value: "platform_guide_image", label: "Image post" },
+  { value: "platform_guide_carousel", label: "Carousel post" },
+  { value: "video_link", label: "Video link post" },
+  { value: "platform_guide_resource", label: "Resource link post" },
+  { value: "platform_guide_podcast", label: "Podcast post" },
 ];
 
 const SCOPES = [
-  { id: "pending", label: "Moderation queue" },
   { id: "published", label: "Published" },
   { id: "draft", label: "Drafts" },
+  { id: "pending", label: "Moderation queue" },
   { id: "rejected", label: "Denied" },
   { id: "bookmarked", label: "Bookmarked" },
   { id: "all", label: "All" },
 ];
 
+const EMPTY_DRAFT = {
+  title: "",
+  body: "",
+  post_type: "admin_update",
+  category: "admin_update",
+  photo_url: "",
+  carousel_images: [],
+  video_url: "",
+  podcast_url: "",
+  resource_url: "",
+  cta_label: "",
+  cta_url: "",
+  tags: "",
+  author_name: "The Outreach Project",
+  publish: false,
+  featured: false,
+  is_pinned: false,
+  comments_enabled: true,
+};
+
 function statusLabel(status) {
   const s = String(status || "").toLowerCase();
   if (s === "pending_review") return "Pending review";
-  if (s === "submitted") return "Submitted";
-  if (s === "under_review" || s === "in_review") return "In review";
   if (s === "approved") return "Published";
   if (s === "rejected") return "Denied";
   if (s === "hidden" || s === "archived") return "Archived";
@@ -44,28 +63,98 @@ function formatWhen(iso) {
   }
 }
 
+function AdminPostComments({ postId }) {
+  const [comments, setComments] = useState([]);
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  async function loadComments() {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/admin/community/posts/${encodeURIComponent(postId)}/comments`, {
+        credentials: "include",
+        cache: "no-store",
+      });
+      const data = await res.json().catch(() => ({}));
+      setComments(Array.isArray(data.comments) ? data.comments : []);
+    } catch {
+      setComments([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function modComment(commentId, action) {
+    await fetch(
+      `/api/community/posts/${encodeURIComponent(postId)}/comments/${encodeURIComponent(commentId)}`,
+      {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      },
+    );
+    await loadComments();
+  }
+
+  return (
+    <div className="adminMt4">
+      <button
+        type="button"
+        className="btnSoft"
+        onClick={() => {
+          setOpen((v) => !v);
+          if (!open) void loadComments();
+        }}
+      >
+        {open ? "Hide comments" : "Moderate comments"}
+      </button>
+      {open ? (
+        <div className="adminFieldStack adminMt4">
+          {loading ? <p className="adminMuted">Loading comments…</p> : null}
+          {!loading && comments.length === 0 ? <p className="adminMuted">No comments on this post.</p> : null}
+          {comments.map((c) => {
+            const prof = c.torp_profiles && typeof c.torp_profiles === "object" ? c.torp_profiles : {};
+            const name =
+              [prof.first_name, prof.last_name].filter(Boolean).join(" ").trim() ||
+              String(prof.display_name || "Member");
+            return (
+              <div key={c.id} className="adminEntityCard adminEntityCard--compact">
+                <div className="adminMuted adminEntityCard__meta">
+                  {name} · {statusLabel(c.status)} · {formatWhen(c.created_at)}
+                </div>
+                <p className="adminEntityCard__body--pre">{c.body}</p>
+                {c.status === "published" ? (
+                  <div className="adminToolbar">
+                    <button type="button" className="btnSoft" onClick={() => void modComment(c.id, "hide")}>
+                      Hide
+                    </button>
+                    <button type="button" className="btnSoft" onClick={() => void modComment(c.id, "delete")}>
+                      Remove
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+            );
+          })}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export default function AdminCommunityPostsSection() {
-  const [scope, setScope] = useState("pending");
+  const [scope, setScope] = useState("published");
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [statusMsg, setStatusMsg] = useState("");
   const [busy, setBusy] = useState("");
   const [editId, setEditId] = useState("");
-  const [editTitle, setEditTitle] = useState("");
-  const [editBody, setEditBody] = useState("");
+  const [editDraft, setEditDraft] = useState(null);
   const [showCreate, setShowCreate] = useState(false);
-  const [draft, setDraft] = useState({
-    title: "",
-    body: "",
-    post_type: "admin_update",
-    category: "admin_update",
-    link_url: "",
-    photo_url: "",
-    author_name: "The Outreach Project",
-    publish: false,
-    featured: false,
-  });
+  const [showPreview, setShowPreview] = useState(false);
+  const [draft, setDraft] = useState({ ...EMPTY_DRAFT });
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -110,10 +199,11 @@ export default function AdminCommunityPostsSection() {
         setError(data.error || "Action failed.");
         return;
       }
-      if (action === "approve") setStatusMsg("Post approved and published to the community feed.");
+      if (action === "approve" || action === "publish") setStatusMsg("Post published to the community feed.");
       else if (action === "reject") setStatusMsg("Post rejected.");
-      else if (action === "publish") setStatusMsg("Post published.");
+      else if (action === "unpublish") setStatusMsg("Post unpublished.");
       setEditId("");
+      setEditDraft(null);
       await load();
     } catch {
       setError("Action failed.");
@@ -123,22 +213,56 @@ export default function AdminCommunityPostsSection() {
   }
 
   function rejectWithReason(id) {
-    const reason = window.prompt(
-      "Rejection reason (shown to moderators; optional note for internal use):",
-      "Does not meet community guidelines.",
-    );
+    const reason = window.prompt("Rejection reason:", "Does not meet community guidelines.");
     if (reason === null) return;
     void act(id, "reject", { rejectionReason: reason });
   }
 
+  function openEdit(post) {
+    const slides = post.feed_media_json?.slides;
+    const carouselImages = Array.isArray(slides)
+      ? slides.map((s) => (typeof s === "string" ? s : s?.src || "")).filter(Boolean)
+      : [];
+    setEditId(post.id);
+    setEditDraft({
+      title: String(post.title || ""),
+      body: String(post.body || ""),
+      post_type: String(post.post_type || "admin_update"),
+      photo_url: String(post.photo_url || ""),
+      carousel_images: carouselImages,
+      video_url: String(post.video_url || ""),
+      podcast_url: String(post.podcast_url || ""),
+      resource_url: String(post.resource_url || ""),
+      tags: Array.isArray(post.tags) ? post.tags.join(", ") : "",
+      is_pinned: !!post.is_pinned,
+      comments_enabled: post.comments_enabled !== false,
+      featured: !!post.featured,
+    });
+  }
+
   async function saveEdit(id) {
-    await act(id, "edit", { title: editTitle, body: editBody });
+    if (!editDraft) return;
+    await act(id, "edit", {
+      title: editDraft.title,
+      body: editDraft.body,
+      post_type: editDraft.post_type,
+      photo_url: editDraft.photo_url,
+      carousel_images: editDraft.carousel_images,
+      video_url: editDraft.video_url,
+      podcast_url: editDraft.podcast_url,
+      resource_url: editDraft.resource_url,
+      tags: editDraft.tags,
+      is_pinned: editDraft.is_pinned,
+      comments_enabled: editDraft.comments_enabled,
+      featured: editDraft.featured,
+    });
   }
 
   async function createPost() {
     setBusy("create");
     setError("");
     setStatusMsg("");
+    const publish = draft.publish;
     try {
       const res = await fetch("/api/admin/community/posts", {
         method: "POST",
@@ -151,10 +275,11 @@ export default function AdminCommunityPostsSection() {
         setError(data.error || "Create failed.");
         return;
       }
-      setDraft((d) => ({ ...d, title: "", body: "", photo_url: "", link_url: "" }));
+      setDraft({ ...EMPTY_DRAFT });
       setShowCreate(false);
-      setStatusMsg(draft.publish ? "Staff post created and published." : "Staff post saved as draft.");
-      if (!draft.publish) setScope("draft");
+      setShowPreview(false);
+      setStatusMsg(publish ? "Post created and published." : "Post saved as draft.");
+      setScope(publish ? "published" : "draft");
       await load();
     } catch {
       setError("Create failed.");
@@ -163,8 +288,171 @@ export default function AdminCommunityPostsSection() {
     }
   }
 
+  function renderPostBuilderForm(state, setState, idPrefix = "create") {
+    return (
+      <>
+        <label className="fieldLabel" htmlFor={`${idPrefix}-title`}>
+          Title
+        </label>
+        <input
+          id={`${idPrefix}-title`}
+          className="adminConsoleInput"
+          value={state.title}
+          onChange={(e) => setState((d) => ({ ...d, title: e.target.value }))}
+        />
+        <label className="fieldLabel">Body</label>
+        <AdminRichTextEditor value={state.body} onChange={(html) => setState((d) => ({ ...d, body: html }))} />
+        <label className="fieldLabel" htmlFor={`${idPrefix}-type`}>
+          Post format
+        </label>
+        <select
+          id={`${idPrefix}-type`}
+          className="adminConsoleInput"
+          value={state.post_type}
+          onChange={(e) => setState((d) => ({ ...d, post_type: e.target.value }))}
+        >
+          {POST_TYPES.map((t) => (
+            <option key={t.value} value={t.value}>
+              {t.label}
+            </option>
+          ))}
+        </select>
+        <label className="fieldLabel" htmlFor={`${idPrefix}-author`}>
+          Moderator display name
+        </label>
+        <input
+          id={`${idPrefix}-author`}
+          className="adminConsoleInput"
+          value={state.author_name || ""}
+          onChange={(e) => setState((d) => ({ ...d, author_name: e.target.value }))}
+          placeholder="Josh, Hodge, or The Outreach Project"
+        />
+        <label className="fieldLabel" htmlFor={`${idPrefix}-photo`}>
+          Feature image URL
+        </label>
+        <input
+          id={`${idPrefix}-photo`}
+          className="adminConsoleInput"
+          value={state.photo_url || ""}
+          onChange={(e) => setState((d) => ({ ...d, photo_url: e.target.value }))}
+        />
+        <AdminMediaUploadField label="Upload feature image" onUploaded={(url) => setState((d) => ({ ...d, photo_url: url }))} />
+        <label className="fieldLabel">Carousel images (one URL per line)</label>
+        <textarea
+          className="adminConsoleInput"
+          rows={3}
+          value={(state.carousel_images || []).join("\n")}
+          onChange={(e) =>
+            setState((d) => ({
+              ...d,
+              carousel_images: e.target.value.split("\n").map((s) => s.trim()).filter(Boolean),
+            }))
+          }
+        />
+        <AdminMediaUploadField
+          label="Upload carousel image"
+          onUploaded={(url) => setState((d) => ({ ...d, carousel_images: [...(d.carousel_images || []), url] }))}
+        />
+        <label className="fieldLabel" htmlFor={`${idPrefix}-video`}>
+          Video URL
+        </label>
+        <input
+          id={`${idPrefix}-video`}
+          className="adminConsoleInput"
+          value={state.video_url || ""}
+          onChange={(e) => setState((d) => ({ ...d, video_url: e.target.value }))}
+        />
+        <label className="fieldLabel" htmlFor={`${idPrefix}-podcast`}>
+          Podcast episode URL
+        </label>
+        <input
+          id={`${idPrefix}-podcast`}
+          className="adminConsoleInput"
+          value={state.podcast_url || ""}
+          onChange={(e) => setState((d) => ({ ...d, podcast_url: e.target.value }))}
+        />
+        <label className="fieldLabel" htmlFor={`${idPrefix}-resource`}>
+          Resource / external link URL
+        </label>
+        <input
+          id={`${idPrefix}-resource`}
+          className="adminConsoleInput"
+          value={state.resource_url || ""}
+          onChange={(e) => setState((d) => ({ ...d, resource_url: e.target.value }))}
+        />
+        <label className="fieldLabel" htmlFor={`${idPrefix}-cta-label`}>
+          CTA button label (optional)
+        </label>
+        <input
+          id={`${idPrefix}-cta-label`}
+          className="adminConsoleInput"
+          value={state.cta_label || ""}
+          onChange={(e) => setState((d) => ({ ...d, cta_label: e.target.value }))}
+        />
+        <label className="fieldLabel" htmlFor={`${idPrefix}-cta-url`}>
+          CTA URL (optional)
+        </label>
+        <input
+          id={`${idPrefix}-cta-url`}
+          className="adminConsoleInput"
+          value={state.cta_url || ""}
+          onChange={(e) => setState((d) => ({ ...d, cta_url: e.target.value }))}
+        />
+        <label className="fieldLabel" htmlFor={`${idPrefix}-tags`}>
+          Tags (comma-separated)
+        </label>
+        <input
+          id={`${idPrefix}-tags`}
+          className="adminConsoleInput"
+          value={state.tags || ""}
+          onChange={(e) => setState((d) => ({ ...d, tags: e.target.value }))}
+        />
+        <div className="adminCheckboxRow">
+          <label className="fieldLabel">
+            <input
+              type="checkbox"
+              checked={!!state.is_pinned}
+              onChange={(e) => setState((d) => ({ ...d, is_pinned: e.target.checked }))}
+            />{" "}
+            Pin to top of feed
+          </label>
+          <label className="fieldLabel">
+            <input
+              type="checkbox"
+              checked={state.comments_enabled !== false}
+              onChange={(e) => setState((d) => ({ ...d, comments_enabled: e.target.checked }))}
+            />{" "}
+            Comments enabled
+          </label>
+          <label className="fieldLabel">
+            <input
+              type="checkbox"
+              checked={!!state.featured}
+              onChange={(e) => setState((d) => ({ ...d, featured: e.target.checked }))}
+            />{" "}
+            Featured
+          </label>
+          {idPrefix === "create" ? (
+            <label className="fieldLabel">
+              <input
+                type="checkbox"
+                checked={!!state.publish}
+                onChange={(e) => setState((d) => ({ ...d, publish: e.target.checked }))}
+              />{" "}
+              Publish immediately
+            </label>
+          ) : null}
+        </div>
+      </>
+    );
+  }
+
   return (
     <AdminPanelShell panelId="community" error={error} message={statusMsg}>
+      <p className="adminMuted adminMb4">
+        Community Management — create and publish moderator-led posts for the public feed. Member posting is disabled in
+        V1; use this builder for all community content.
+      </p>
       <div className="adminToolbar">
         {SCOPES.map((s) => (
           <button
@@ -179,36 +467,40 @@ export default function AdminCommunityPostsSection() {
         <button type="button" className="btnSoft" onClick={() => void load()} disabled={loading}>
           Refresh
         </button>
-        <button type="button" className="btnSoft" onClick={() => setShowCreate((v) => !v)}>
-          {showCreate ? "Close create form" : "New staff post"}
+        <button type="button" className="btnPrimary" onClick={() => setShowCreate((v) => !v)}>
+          {showCreate ? "Close builder" : "New post"}
         </button>
       </div>
 
       {showCreate ? (
-        <div className="adminFieldStack adminFieldStack--bordered">
-          <h3 className="adminBlockTitle">Create staff post</h3>
-          <label className="fieldLabel">Title</label>
-          <input className="adminConsoleInput" value={draft.title} onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))} />
-          <label className="fieldLabel">Body</label>
-          <AdminRichTextEditor value={draft.body} onChange={(html) => setDraft((d) => ({ ...d, body: html }))} />
-          <label className="fieldLabel">Post type</label>
-          <select className="adminConsoleInput" value={draft.post_type} onChange={(e) => setDraft((d) => ({ ...d, post_type: e.target.value }))}>
-            {POST_TYPES.map((t) => (
-              <option key={t.value} value={t.value}>
-                {t.label}
-              </option>
-            ))}
-          </select>
-          <label className="fieldLabel">Image URL (optional)</label>
-          <input className="adminConsoleInput" value={draft.photo_url} onChange={(e) => setDraft((d) => ({ ...d, photo_url: e.target.value }))} />
-          <label className="fieldLabel">Link URL (video / CTA)</label>
-          <input className="adminConsoleInput" value={draft.link_url} onChange={(e) => setDraft((d) => ({ ...d, link_url: e.target.value }))} />
-          <label className="fieldLabel">
-            <input type="checkbox" checked={draft.publish} onChange={(e) => setDraft((d) => ({ ...d, publish: e.target.checked }))} /> Publish immediately (skip review queue)
-          </label>
-          <button type="button" className="btnPrimary" disabled={busy === "create"} onClick={() => void createPost()}>
-            Create post
-          </button>
+        <div className="adminFieldStack adminFieldStack--bordered adminCommunityBuilder">
+          <h3 className="adminBlockTitle">Post builder</h3>
+          {renderPostBuilderForm(draft, setDraft, "create")}
+          <div className="adminToolbar">
+            <button type="button" className="btnSoft" onClick={() => setShowPreview((v) => !v)}>
+              {showPreview ? "Hide preview" : "Preview"}
+            </button>
+            <button type="button" className="btnPrimary" disabled={busy === "create"} onClick={() => void createPost()}>
+              {draft.publish ? "Publish post" : "Save draft"}
+            </button>
+          </div>
+          {showPreview ? (
+            <div className="adminCommunityPreview card">
+              <h4>{draft.title || "Untitled post"}</h4>
+              {isLikelyHtml(draft.body) ? (
+                <div
+                  className="communityPostBody communityPostBody--rich"
+                  dangerouslySetInnerHTML={{ __html: sanitizeAdminHtml(draft.body) }}
+                />
+              ) : (
+                <p>{draft.body}</p>
+              )}
+              {draft.photo_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={draft.photo_url} alt="" className="adminCommunityPreviewImage" />
+              ) : null}
+            </div>
+          ) : null}
         </div>
       ) : null}
 
@@ -219,11 +511,7 @@ export default function AdminCommunityPostsSection() {
 
       {loading ? <p className="adminMuted">Loading…</p> : null}
       {!loading && posts.length === 0 ? (
-        <p className="adminMuted">
-          {scope === "pending"
-            ? "No posts awaiting review. Member submissions will appear here."
-            : "No posts in this view."}
-        </p>
+        <p className="adminMuted">No posts in this view. Create a draft or publish a post to get started.</p>
       ) : null}
 
       <div className="adminPanelBody adminPanelBody--loose">
@@ -240,21 +528,11 @@ export default function AdminCommunityPostsSection() {
                     {statusLabel(p.status)}
                     {p.author_name ? ` · ${p.author_name}` : ""}
                     {p.post_type ? ` · ${p.post_type}` : ""}
-                    {p.admin_bookmark ? " · bookmarked" : ""}
+                    {p.is_pinned ? " · pinned" : ""}
+                    {p.comments_enabled === false ? " · comments off" : ""}
                   </div>
                   <div className="adminPostMeta">
-                    <span>Submitted: {formatWhen(p.created_at)}</span>
-                    {p.author_profile_id ? <span>Profile id: {String(p.author_profile_id).slice(0, 8)}…</span> : null}
-                    {p.author_id ? <span>Author id: {String(p.author_id).slice(0, 12)}…</span> : null}
-                    {p.link_url ? (
-                      <span>
-                        Link:{" "}
-                        <a href={p.link_url} target="_blank" rel="noopener noreferrer">
-                          {p.link_url}
-                        </a>
-                      </span>
-                    ) : null}
-                    {p.moderation_notes ? <span>Notes: {p.moderation_notes}</span> : null}
+                    <span>Updated: {formatWhen(p.updated_at || p.created_at)}</span>
                   </div>
                 </div>
                 <div className="adminEntityCard__actions">
@@ -278,28 +556,28 @@ export default function AdminCommunityPostsSection() {
                       Unpublish
                     </button>
                   ) : null}
-                  <button type="button" className="btnSoft" disabled={!!busy} onClick={() => void act(p.id, "hide")}>
-                    Hide
+                  <button
+                    type="button"
+                    className="btnSoft"
+                    disabled={!!busy}
+                    onClick={() => void act(p.id, "update", { is_pinned: !p.is_pinned })}
+                  >
+                    {p.is_pinned ? "Unpin" : "Pin"}
                   </button>
                   <button
                     type="button"
                     className="btnSoft"
                     disabled={!!busy}
                     onClick={() =>
-                      void act(p.id, p.admin_bookmark ? "unbookmark" : "bookmark", p.admin_bookmark ? {} : { note: "" })
+                      void act(p.id, "update", { comments_enabled: p.comments_enabled === false })
                     }
                   >
-                    {p.admin_bookmark ? "Unbookmark" : "Bookmark"}
+                    {p.comments_enabled === false ? "Enable comments" : "Disable comments"}
                   </button>
-                  <button
-                    type="button"
-                    className="btnSoft"
-                    onClick={() => {
-                      setEditId(p.id);
-                      setEditTitle(String(p.title || ""));
-                      setEditBody(String(p.body || ""));
-                    }}
-                  >
+                  <button type="button" className="btnSoft" disabled={!!busy} onClick={() => void act(p.id, "hide")}>
+                    Archive
+                  </button>
+                  <button type="button" className="btnSoft" onClick={() => openEdit(p)}>
                     Edit
                   </button>
                   <button type="button" className="btnSoft" disabled={!!busy} onClick={() => void act(p.id, "delete")}>
@@ -313,40 +591,29 @@ export default function AdminCommunityPostsSection() {
                   dangerouslySetInnerHTML={{ __html: sanitizeAdminHtml(p.body) }}
                 />
               ) : (
-                <p className="adminEntityCard__body adminEntityCard__body--pre">
-                  {p.body}
-                </p>
+                <p className="adminEntityCard__body adminEntityCard__body--pre">{p.body}</p>
               )}
-              {p.rejection_reason ? (
-                <p className="adminMuted adminMuted--sm adminMt4">
-                  Rejection: {p.rejection_reason}
-                </p>
-              ) : null}
-              {editId === p.id ? (
+              {editId === p.id && editDraft ? (
                 <div className="adminFieldStack adminMt4">
-                  <label className="fieldLabel" htmlFor={`edit-t-${p.id}`}>
-                    Title
-                  </label>
-                  <input
-                    id={`edit-t-${p.id}`}
-                    className="adminConsoleInput"
-                    value={editTitle}
-                    onChange={(e) => setEditTitle(e.target.value)}
-                  />
-                  <label className="fieldLabel" htmlFor={`edit-b-${p.id}`}>
-                    Body
-                  </label>
-                  <AdminRichTextEditor value={editBody} onChange={setEditBody} minHeight={120} />
+                  {renderPostBuilderForm(editDraft, setEditDraft, `edit-${p.id}`)}
                   <div className="adminToolbar">
                     <button type="button" className="btnPrimary" disabled={!!busy} onClick={() => void saveEdit(p.id)}>
-                      Save edit
+                      Save changes
                     </button>
-                    <button type="button" className="btnSoft" onClick={() => setEditId("")}>
+                    <button
+                      type="button"
+                      className="btnSoft"
+                      onClick={() => {
+                        setEditId("");
+                        setEditDraft(null);
+                      }}
+                    >
                       Cancel
                     </button>
                   </div>
                 </div>
               ) : null}
+              {isPublished ? <AdminPostComments postId={p.id} /> : null}
             </article>
           );
         })}

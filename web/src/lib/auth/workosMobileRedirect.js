@@ -1,6 +1,4 @@
 import { workosAuthBrandedHtmlPage } from "@/lib/auth/workosAuthBrand";
-import { webBaseUrl } from "@/lib/runtime/appUrls";
-import { buildOAuthHandoffCompleteUniversalLink } from "@/lib/capacitor/mobileDeepLinks";
 
 /** Deep link WorkOS uses to return OAuth results into the Capacitor shell (register in WorkOS dashboard). */
 export const WORKOS_MOBILE_CALLBACK_SCHEME = "com.theoutreachproject.theoutreachproject://callback";
@@ -80,64 +78,18 @@ export function parseOAuthBrowserDoneDeepLink(url) {
 }
 
 /**
- * OAuth finished in Capacitor's in-app browser — auto-return to the native shell via custom URL scheme.
- * @param {string} [stateKey]
- * @param {string} [bridgeToken]
+ * OAuth finished in Capacitor's in-app browser — show a static wait page only.
+ * Do not navigate to custom URL schemes here; iOS Safari shows "server cannot be found"
+ * for scheme URLs. The main WebView polls `/api/mobile/oauth-handoff` and closes this sheet.
+ * @param {string} [_stateKey] retained for call-site compatibility
  */
-export function mobileOAuthBrowserDoneHtml(stateKey = "") {
-  const deepLink = buildOAuthBrowserDoneDeepLink(stateKey);
-  const escaped = deepLink.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
-  const universalLink = buildOAuthHandoffCompleteUniversalLink(stateKey, webBaseUrl());
-  const universalEscaped = universalLink
-    ? universalLink.replace(/&/g, "&amp;").replace(/"/g, "&quot;")
-    : "";
-  const headExtra = universalLink
-    ? `<meta http-equiv="refresh" content="1;url=${universalEscaped}" />`
-    : `<meta http-equiv="refresh" content="0;url=${escaped}" />`;
-  const bodyEnd = `<script>
-    (function () {
-      var link = ${JSON.stringify(deepLink)};
-      var universal = ${JSON.stringify(universalLink || "")};
-      var android = /Android/i.test(navigator.userAgent || "");
-      function openApp() {
-        try { window.location.replace(link); } catch (e) {}
-      }
-      function openUniversal() {
-        if (!universal) return;
-        try { window.location.replace(universal); } catch (e) {}
-      }
-      if (android && universal) {
-        openUniversal();
-        setTimeout(openApp, 180);
-      } else {
-        openApp();
-        setTimeout(openUniversal, 650);
-      }
-      [120, 350, 700, 1200, 2000, 3500].forEach(function (ms) {
-        setTimeout(function () {
-          if (android && universal) openUniversal();
-          openApp();
-        }, ms);
-      });
-      setTimeout(function () { try { window.close(); } catch (e) {} }, 900);
-    })();
-  </script>`;
+export function mobileOAuthBrowserDoneHtml(_stateKey = "") {
   return workosAuthBrandedHtmlPage({
     title: "Returning to app — The Outreach Project",
     heading: "Sign in complete",
     showSpinner: true,
-    headExtra,
-    bodyEnd,
     bodyHtml: `<p class="torpAuth__lead">Returning to The Outreach Project…</p>
-      <p class="torpAuth__lead">Your account will open automatically.</p>
-      <div class="torpAuth__actions">
-        <a class="torpAuth__btn torpAuth__btn--primary" href="${escaped}">Open app</a>
-        ${
-          universalEscaped
-            ? `<a class="torpAuth__btn torpAuth__btn--soft" href="${universalEscaped}">Continue in app</a>`
-            : ""
-        }
-      </div>`,
+      <p class="torpAuth__lead">This window will close automatically.</p>`,
   });
 }
 

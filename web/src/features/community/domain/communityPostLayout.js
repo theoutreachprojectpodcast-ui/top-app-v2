@@ -1,4 +1,4 @@
-/** @typedef {'step' | 'carousel' | 'image' | 'podcast' | 'resource'} CommunityPostLayout */
+/** @typedef {'step' | 'carousel' | 'image' | 'podcast' | 'resource' | 'video'} CommunityPostLayout */
 
 const LAYOUT_BY_POST_TYPE = {
   platform_guide: "image",
@@ -17,7 +17,7 @@ const LAYOUT_BY_POST_TYPE = {
 export function resolveCommunityPostLayout(postType, feedLayout, feedMedia) {
   const explicit = String(feedLayout || "").trim().toLowerCase();
   if (explicit === "step") return "image";
-  if (explicit && ["carousel", "image", "podcast", "resource"].includes(explicit)) {
+  if (explicit && ["carousel", "image", "podcast", "resource", "video"].includes(explicit)) {
     return /** @type {CommunityPostLayout} */ (explicit);
   }
   const pt = String(postType || "").trim();
@@ -28,6 +28,7 @@ export function resolveCommunityPostLayout(postType, feedLayout, feedMedia) {
   if (Array.isArray(media.slides) && media.slides.length) return "carousel";
   if (media.resource && typeof media.resource === "object") return "resource";
   if (pt.includes("podcast")) return "podcast";
+  if (pt.includes("video")) return "video";
   if (pt.includes("image")) return "image";
   if (pt.includes("carousel")) return "carousel";
   if (pt.includes("resource")) return "resource";

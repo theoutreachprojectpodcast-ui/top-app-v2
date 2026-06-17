@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import AppHeaderBrand from "@/components/layout/AppHeaderBrand";
 import ColorSchemeToggle from "@/components/app/ColorSchemeToggle";
 import SiteBottomNavGlyph from "@/components/navigation/SiteBottomNavGlyph";
-import SiteMobileNavMoreMenu from "@/components/navigation/SiteMobileNavMoreMenu";
+import { SiteHamburgerNavMenu } from "@/components/navigation/SiteMobileNavHamburgerEntries";
 import HeaderInner from "@/components/layout/HeaderInner";
 import SubpageTopbarActions from "@/components/layout/SubpageTopbarActions";
 import AdminConsoleLink from "@/components/admin/AdminConsoleLink";
@@ -104,20 +104,7 @@ export default function AppShell({
                   <div className="topbarActionsCluster">
                     <SubpageTopbarActions section="authMenu" />
                     {useFooterDockChrome ? (
-                      <SiteMobileNavMoreMenu tone="podcast" align="end">
-                        <Link className="siteMobileNavMore__entry" href="/profile">
-                          Profile
-                        </Link>
-                        <Link className="siteMobileNavMore__entry" href="/sponsors">
-                          Sponsors
-                        </Link>
-                        <Link className="siteMobileNavMore__entry" href="/">
-                          Main app home
-                        </Link>
-                        <Link className="siteMobileNavMore__entry" href="/sponsors">
-                          Become a Sponsor
-                        </Link>
-                      </SiteMobileNavMoreMenu>
+                      <SiteHamburgerNavMenu tone="podcast" align="end" />
                     ) : null}
                   </div>
                 </div>
@@ -141,17 +128,7 @@ export default function AppShell({
                 <div className="topbarZone topbarLeft">
                   <div className="topbarActionsCluster topbarActionsCluster--start">
                     {useFooterDockChrome ? (
-                      <SiteMobileNavMoreMenu tone="app" align="start">
-                        <Link className="siteMobileNavMore__entry" href="/profile">
-                          Profile
-                        </Link>
-                        <Link className="siteMobileNavMore__entry" href="/sponsors">
-                          Sponsors
-                        </Link>
-                        <Link className="siteMobileNavMore__entry" href="/sponsors">
-                          Become a Sponsor
-                        </Link>
-                      </SiteMobileNavMoreMenu>
+                      <SiteHamburgerNavMenu shellClass="siteMobileNavMore--phoneOnly" />
                     ) : null}
                     {isMobileShell && !podcastThemeShell && showThemeToggle ? <ColorSchemeToggle /> : null}
                     {isMobileShell && isLoggedIn ? <AdminConsoleLink /> : null}
@@ -162,6 +139,9 @@ export default function AppShell({
                 <div className="topbarZone topbarRight">
                   <div className="topbarActionsCluster">
                     {!isMobileShell && !podcastThemeShell && showThemeToggle ? <ColorSchemeToggle /> : null}
+                    {useFooterDockChrome ? (
+                      <SiteHamburgerNavMenu align="end" shellClass="siteMobileNavMore--desktopOnly" />
+                    ) : null}
                     <SubpageTopbarActions section="auth" />
                   </div>
                 </div>

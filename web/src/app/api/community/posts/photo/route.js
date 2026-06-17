@@ -2,7 +2,7 @@ import { guardMutation, guardFailureResponse } from "@/lib/security/secureRoute"
 import { authFailureJson, resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
-import { profileMaySubmitCommunityStory } from "@/lib/account/entitlements";
+import { profileMayCreateCommunityPost } from "@/lib/account/entitlements";
 import { safeUploadObjectPath, validateImageUpload } from "@/lib/security/uploadPolicy";
 
 const BUCKET = "profile-photos";
@@ -28,12 +28,11 @@ export async function POST(request) {
     );
   }
 
-  if (!profileMaySubmitCommunityStory(profileRow)) {
+  if (!profileMayCreateCommunityPost(profileRow)) {
     return Response.json(
       {
         ok: false,
-        message:
-          "An active Pro membership is required to upload story images. Upgrade from Profile or complete member checkout.",
+        message: "Only moderators can upload images for new community posts in V1.",
       },
       { status: 403 },
     );

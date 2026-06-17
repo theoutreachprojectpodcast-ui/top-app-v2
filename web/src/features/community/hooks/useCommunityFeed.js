@@ -55,7 +55,13 @@ export function useCommunityFeed(supabase, userId, options = {}) {
   }, [refresh]);
 
   const postsWithMeta = useMemo(() => {
-    return posts.map((p) => ({
+    const sorted = [...posts].sort((a, b) => {
+      const pinA = a.isPinned ? 1 : 0;
+      const pinB = b.isPinned ? 1 : 0;
+      if (pinB !== pinA) return pinB - pinA;
+      return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+    });
+    return sorted.map((p) => ({
       ...p,
       relativeTime: getRelativeTime(p.createdAt),
       likeDisplay: likeUi[p.id]?.count ?? (Number(p.likeCount) || 0),

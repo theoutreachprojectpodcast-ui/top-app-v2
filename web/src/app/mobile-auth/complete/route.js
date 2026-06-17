@@ -6,7 +6,6 @@ import {
   createMobileSessionTransferToken,
 } from "@/lib/auth/mobileSessionTransfer";
 import {
-  buildMobileAuthCompleteDeepLink,
   buildMobileAuthCompleteUniversalLink,
 } from "@/lib/capacitor/mobileDeepLinks";
 import { resolvePostAuthReturnTarget } from "@/lib/auth/workosSafeReturn";
@@ -60,9 +59,7 @@ export async function GET(request) {
   }
 
   const safeReturn = typeof returnTo === "string" && returnTo.startsWith("/") ? returnTo : "/";
-  const deepLink = buildMobileAuthCompleteDeepLink(token, safeReturn);
   const universalLink = buildMobileAuthCompleteUniversalLink(token, safeReturn, webBaseUrl());
-  const safeDeepLink = deepLink.replace(/"/g, "&quot;");
   const safeUniversal = universalLink.replace(/"/g, "&quot;");
 
   const html = `<!doctype html>
@@ -70,7 +67,6 @@ export async function GET(request) {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta http-equiv="refresh" content="1;url=${safeUniversal}" />
   <title>Returning to The Outreach Project…</title>
   <style>
     body { margin:0; min-height:100vh; display:grid; place-items:center; font-family:system-ui,sans-serif;
@@ -85,22 +81,9 @@ export async function GET(request) {
   <div>
     <div class="spinner" aria-hidden="true"></div>
     <p>Returning to The Outreach Project app…</p>
-    <p>
-      <a href="${safeDeepLink}">Open app</a>
-      ${universalLink ? `<a href="${safeUniversal}">Continue in app</a>` : ""}
-    </p>
+    <p>This window will close automatically.</p>
+    ${universalLink ? `<p><a href="${safeUniversal}">Continue in app</a></p>` : ""}
   </div>
-  <script>
-    (function () {
-      var deep = ${JSON.stringify(deepLink)};
-      var universal = ${JSON.stringify(universalLink || "")};
-      function openDeep() { try { window.location.replace(deep); } catch (e) {} }
-      function openUniversal() { if (universal) try { window.location.replace(universal); } catch (e) {} }
-      openDeep();
-      setTimeout(openDeep, 120);
-      setTimeout(openUniversal, 650);
-    })();
-  </script>
 </body>
 </html>`;
 

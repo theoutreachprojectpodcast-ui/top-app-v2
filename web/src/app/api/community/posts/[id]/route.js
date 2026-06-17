@@ -4,7 +4,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
 import { isCommunityModeratorServer } from "@/lib/community/moderatorServer";
 import { isPlatformAdminServer } from "@/lib/admin/platformAdminServer";
-import { profileMaySubmitCommunityStory } from "@/lib/account/entitlements";
+import { profileMayCreateCommunityPost } from "@/lib/account/entitlements";
 import { createPlatformNotification, notifyStaffProfiles } from "@/server/notifications/notificationService";
 import {
   buildCommunityModerationPatch,
@@ -75,12 +75,12 @@ export async function PATCH(request, context) {
     if (!isAuthor) {
       return Response.json({ ok: false, message: "You can only edit your own posts." }, { status: 403 });
     }
-    if (!profileMaySubmitCommunityStory(profileRow)) {
+    if (!profileMayCreateCommunityPost(profileRow)) {
       return Response.json(
         {
           ok: false,
           message:
-            "An active Pro membership is required to edit community stories. Upgrade from Profile or complete member checkout.",
+            "Community posting is moderator-led for launch. Member story editing is not available in V1.",
         },
         { status: 403 },
       );

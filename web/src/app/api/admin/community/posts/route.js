@@ -2,6 +2,7 @@ import { requirePlatformAdminRouteContext, requirePlatformAdminMutation } from "
 import { writeAdminAuditLog } from "@/lib/admin/adminAuditLog";
 import { sanitizeAdminHtml, htmlToPlainText } from "@/lib/admin/sanitizeHtml";
 import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
+import { buildAdminCommunityPostFields } from "@/lib/community/adminCommunityPostPayload";
 
 export const runtime = "nodejs";
 
@@ -47,9 +48,13 @@ export async function POST(request) {
     return Response.json({ ok: false, error: "invalid_json" }, { status: 400 });
   }
 
-  const title = String(body?.title || "").trim().slice(0, 200);
-  const rawBody = String(body?.body || "").trim();
-  const text = sanitizeAdminHtml(rawBody);
+  const profileRow = await getProfileRowByWorkOSId(ctx.admin, ctx.user.id);
+  const authorName = String(body?.author_name || profileRow?.display_name || ctx.user.email || "The Outreach Project").trim();
+  const publish = body?.publish === true || String(body?.status || "").toLowerCase() === "approved";
+  const now = new Date().toISOString();
+
+  const built = buildAdminCommunityPostFields({ ...body, title: String(body?.title || "").trim().slice(0, 200) }, { publish, now });
+  const text = sanitizeAdminHtml(built.body);
   const plainLen = htmlToPlainText(text).length;
   if (plainLen < 10) {
     return Response.json({ ok: false, error: "body_too_short" }, { status: 400 });
@@ -58,30 +63,15 @@ export async function POST(request) {
     return Response.json({ ok: false, error: "body_too_long" }, { status: 400 });
   }
 
-  const profileRow = await getProfileRowByWorkOSId(ctx.admin, ctx.user.id);
-  const authorName = String(body?.author_name || profileRow?.display_name || ctx.user.email || "The Outreach Project").trim();
-  const publish = body?.publish === true || String(body?.status || "").toLowerCase() === "approved";
-  const now = new Date().toISOString();
-
   const row = {
     author_id: String(ctx.user.id),
     author_profile_id: profileRow?.id || null,
     author_name: authorName,
     author_avatar_url: String(profileRow?.profile_photo_url || "").trim(),
-    title,
+    ...built,
     body: text,
-    category: String(body?.category || "admin_update").slice(0, 64),
-    post_type: String(body?.post_type || "admin_update").slice(0, 64),
-    link_url: String(body?.link_url || "").trim().slice(0, 500),
-    photo_url: typeof body?.photo_url === "string" ? body.photo_url.trim().slice(0, 120000) : "",
-    show_author_name: body?.show_author_name !== false,
-    visibility: "community",
-    status: publish ? "approved" : "draft",
-    published_at: publish ? now : null,
-    featured: Boolean(body?.featured),
     is_edited: false,
     created_at: now,
-    updated_at: now,
   };
 
   const { data, error } = await ctx.admin.from(TABLE).insert(row).select("*").maybeSingle();
