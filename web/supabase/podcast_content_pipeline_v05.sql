@@ -86,6 +86,7 @@ create index if not exists podcast_episode_featured_guest_episode_idx
 -- Deny direct PostgREST reads; podcast data via Next.js API + service role.
 alter table public.podcast_episodes enable row level security;
 alter table public.podcast_episode_featured_guest enable row level security;
+alter table public.podcast_sync_logs enable row level security;
 
 drop policy if exists "Public read podcast episodes" on public.podcast_episodes;
 drop policy if exists "Public read featured guest rows" on public.podcast_episode_featured_guest;

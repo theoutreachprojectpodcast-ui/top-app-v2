@@ -43,8 +43,26 @@ if (vercelProduction) {
     );
     process.exit(1);
   }
+  if (
+    appUrlCheck.includes("localhost") ||
+    appUrlCheck.includes("127.0.0.1") ||
+    (appUrlCheck.includes("vercel.app") && !appUrlCheck.includes("theoutreachproject.app"))
+  ) {
+    console.error("[validate-production-env] APP_BASE_URL must not use localhost or preview hostname in production");
+    process.exit(1);
+  }
+  if (appUrlCheck.includes("qa.")) {
+    console.error("[validate-production-env] APP_BASE_URL must not use QA hostname in production");
+    process.exit(1);
+  }
   if (!String(process.env.NEXT_PUBLIC_WORKOS_REDIRECT_URI || process.env.WORKOS_REDIRECT_URI || "").includes("/callback")) {
     missing.push("WORKOS redirect URI must end with /callback");
+  }
+  const redirectCheck = String(
+    process.env.NEXT_PUBLIC_WORKOS_REDIRECT_URI || process.env.WORKOS_REDIRECT_URI || "",
+  ).toLowerCase();
+  if (redirectCheck && !redirectCheck.includes("theoutreachproject.app")) {
+    missing.push("WORKOS redirect URI must use theoutreachproject.app in production");
   }
 }
 

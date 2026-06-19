@@ -1417,6 +1417,60 @@ span.headerBrandMarkFallback {
   max-width: 62ch;
 }
 
+.accountSettingsDangerZone {
+  border-color: var(--color-danger-border);
+  background: color-mix(in srgb, var(--color-danger-surface) 55%, var(--color-surface) 45%);
+}
+
+.accountSettingsDangerZone h3 {
+  color: var(--color-danger-text);
+}
+
+.accountSettingsDangerZone__ack {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 12px 0 0;
+  font-size: var(--text-body-sm);
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.accountSettingsDangerZone__ack input {
+  margin-top: 3px;
+}
+
+.accountSettingsDangerZone__confirmLabel {
+  display: block;
+  margin-top: 12px;
+}
+
+.accountSettingsDangerZone__confirmInput {
+  display: block;
+  margin-top: 8px;
+  width: 100%;
+  max-width: 220px;
+}
+
+.accountSettingsDangerZone__deleteBtn {
+  color: var(--color-danger-text);
+  border-color: var(--color-danger-border);
+  background: var(--color-danger-surface);
+}
+
+.accountSettingsDangerZone__deleteBtn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-danger-surface) 70%, var(--color-error) 30%);
+}
+
+.accountSettingsDangerZone__deleteBtn:disabled {
+  opacity: 0.55;
+}
+
+.accountSettingsDangerZone__support {
+  margin-top: 12px;
+  margin-bottom: 0;
+}
+
 /* Guest / signed-out membership card: even vertical rhythm, title → copy → CTA */
 .membershipAtAGlance--profileCompact:not(:has(.membershipCurrentProfileRow)) {
   display: grid;

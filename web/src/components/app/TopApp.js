@@ -203,6 +203,7 @@ function TopAppInner({ initialNav = "home" }) {
     createAccount,
     signInWithCredentials,
     signOut,
+    deleteAccount,
     refreshWorkOSProfile,
     entitlements,
   } = useProfileData();
@@ -1137,6 +1138,7 @@ function TopAppInner({ initialNav = "home" }) {
           setMembershipStatus={setMembershipStatus}
           openSignInForMembership={openSignInForMembership}
           favoriteEins={favoriteEins}
+          deleteAccount={deleteAccount}
         />
       ) : null}
 

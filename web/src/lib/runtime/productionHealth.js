@@ -1,11 +1,13 @@
 import { isWorkOSConfigured, workOSEnvironmentIssues } from "@/lib/auth/workosConfigured";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { stripeSecretConfigured } from "@/lib/billing/stripeConfig";
+import {
+  buildStripeHealthSummary,
+  environmentValidationIssues,
+} from "@/lib/runtime/environmentConfig";
 import {
   authCallbackUrl,
   deploymentProfile,
   mobileWebEntryUrl,
-  productionUrlEnvIssues,
   webBaseUrl,
 } from "@/lib/runtime/appUrls";
 
@@ -37,7 +39,7 @@ export async function buildDbHealth() {
 }
 
 export function buildEnvHealth() {
-  const issues = productionUrlEnvIssues();
+  const issues = environmentValidationIssues();
   return {
     ok: issues.length === 0,
     profile: deploymentProfile(),
@@ -45,6 +47,10 @@ export function buildEnvHealth() {
     issues,
     vercelEnv: String(process.env.VERCEL_ENV || "").trim() || null,
   };
+}
+
+export function buildStripeHealth() {
+  return buildStripeHealthSummary();
 }
 
 export function buildMobileHealth() {
@@ -63,8 +69,9 @@ export async function buildFullProductionHealth() {
   const db = await buildDbHealth();
   const env = buildEnvHealth();
   const mobile = buildMobileHealth();
+  const stripe = buildStripeHealth();
 
-  const ok = auth.ok && db.ok && env.ok && mobile.ok;
+  const ok = auth.ok && db.ok && env.ok && mobile.ok && stripe.ok;
 
   return {
     ok,
@@ -73,10 +80,11 @@ export async function buildFullProductionHealth() {
     profile: deploymentProfile(),
     workos: auth.workos,
     workosIssues: auth.issues,
-    stripe: stripeSecretConfigured(),
+    stripe: stripe.ok,
+    stripeMode: stripe.mode,
     supabaseAdmin: db.supabaseAdmin,
     oauthHandoffTable: db.oauthHandoffTable,
     timestamp: new Date().toISOString(),
-    checks: { auth, db, env, mobile },
+    checks: { auth, db, env, mobile, stripe },
   };
 }

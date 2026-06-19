@@ -1,99 +1,101 @@
 /**
- * HTTP smoke against a deployed TopApp URL (QA preview, stable QA hostname, etc.).
+ * QA HTTP smoke — parity with production smoke for QA validation before merge to main.
  *
- * If Vercel **Deployment Protection** is enabled, unauthenticated requests return **401**.
- * Use **Protection Bypass for Automation** (Project → Deployment Protection) and pass the secret:
- *
- *   QA_BASE_URL=https://….vercel.app VERCEL_AUTOMATION_BYPASS_SECRET=… node scripts/qa-http-smoke.mjs
- *
- * @see https://vercel.com/docs/deployment-protection/methods-to-bypass-deployment-protection/protection-bypass-automation
+ *   QA_BASE_URL=https://qa-the-outreach-project.vercel.app pnpm --dir web run smoke:qa:http
  */
-const baseRaw = process.env.QA_BASE_URL || process.argv[2] || "";
+const baseRaw =
+  process.env.QA_BASE_URL ||
+  process.argv[2] ||
+  "https://qa-the-outreach-project.vercel.app";
 const base = String(baseRaw).replace(/\/$/, "");
 const bypass = String(process.env.VERCEL_AUTOMATION_BYPASS_SECRET || "").trim();
 
-if (!base) {
-  console.error(
-    "[qa-http-smoke] Missing base URL. Usage:\n" +
-      "  QA_BASE_URL=https://<host> [VERCEL_AUTOMATION_BYPASS_SECRET=…] node scripts/qa-http-smoke.mjs\n" +
-      "  node scripts/qa-http-smoke.mjs https://<host>"
-  );
-  process.exit(1);
-}
-
-const routes = [
-  { path: "/", kind: "html" },
-  { path: "/contact", kind: "html" },
-  { path: "/privacy", kind: "html" },
-  { path: "/terms", kind: "html" },
-  { path: "/community", kind: "html" },
-  { path: "/api/me", kind: "json" },
-  { path: "/api/auth/status", kind: "json" },
-];
-
-function headersFor(path) {
-  const h = {
-    Accept: path.startsWith("/api/") ? "application/json, */*" : "text/html, */*",
-  };
-  if (bypass) {
-    h["x-vercel-protection-bypass"] = bypass;
-  }
+function headers(extra = {}) {
+  const h = { ...extra };
+  if (bypass) h["x-vercel-protection-bypass"] = bypass;
   return h;
 }
 
-async function one(path, kind) {
-  const url = `${base}${path}`;
-  const res = await fetch(url, {
-    redirect: "follow",
-    headers: headersFor(path),
-  });
-  const text = await res.text();
-  let jsonOk = true;
-  if (kind === "json" && res.status === 200) {
-    try {
-      JSON.parse(text);
-    } catch {
-      jsonOk = false;
-    }
-  }
-  return { path, status: res.status, jsonOk, snippet: text.slice(0, 120) };
-}
+const checks = [
+  { name: "homepage", path: "/", kind: "html", expect: [200] },
+  { name: "sign-in", path: "/sign-in", kind: "html", expect: [200] },
+  { name: "sign-up", path: "/sign-up", kind: "html", expect: [200] },
+  { name: "community", path: "/community", kind: "html", expect: [200] },
+  { name: "trusted resources", path: "/trusted", kind: "html", expect: [200] },
+  { name: "nonprofit directory", path: "/directory", kind: "html", expect: [200, 404] },
+  { name: "podcasts", path: "/podcasts", kind: "html", expect: [200] },
+  { name: "privacy", path: "/privacy", kind: "html", expect: [200] },
+  { name: "terms", path: "/terms", kind: "html", expect: [200] },
+  { name: "contact", path: "/contact", kind: "html", expect: [200] },
+  { name: "mobile auth start", path: "/mobile/auth/start", kind: "html", expect: [200] },
+  { name: "health aggregate", path: "/api/health", kind: "json", expect: [200] },
+  { name: "health auth", path: "/api/health/auth", kind: "json", expect: [200] },
+  { name: "health db", path: "/api/health/db", kind: "json", expect: [200] },
+  { name: "health env", path: "/api/health/env", kind: "json", expect: [200] },
+  { name: "health mobile", path: "/api/health/mobile", kind: "json", expect: [200] },
+  { name: "health stripe", path: "/api/health/stripe", kind: "json", expect: [200] },
+  { name: "auth status", path: "/api/auth/status", kind: "json", expect: [200] },
+  { name: "api me", path: "/api/me", kind: "json", expect: [200] },
+  { name: "billing capabilities", path: "/api/billing/capabilities", kind: "json", expect: [200] },
+  {
+    name: "callback guard",
+    path: "/callback",
+    kind: "html",
+    expect: [400],
+    redirect: "manual",
+  },
+  {
+    name: "mobile callback alias",
+    path: "/mobile/auth/callback",
+    kind: "html",
+    expect: [302, 307, 400],
+    redirect: "manual",
+  },
+];
 
 let failed = false;
 
-for (const { path, kind } of routes) {
+for (const check of checks) {
+  const url = `${base}${check.path}`;
   try {
-    const r = await one(path, kind);
-    if (r.status === 401 && !bypass) {
-      console.error(
-        `[qa-http-smoke] FAIL ${path} -> ${r.status} (set VERCEL_AUTOMATION_BYPASS_SECRET if Deployment Protection is on)`
-      );
+    const res = await fetch(url, {
+      redirect: check.redirect || "follow",
+      headers: headers({
+        Accept: check.kind === "json" ? "application/json, */*" : "text/html, */*",
+      }),
+    });
+    const text = await res.text();
+
+    if (res.status === 401 && !bypass) {
+      console.error(`[smoke:qa] FAIL ${check.name} -> 401 (set VERCEL_AUTOMATION_BYPASS_SECRET)`);
       failed = true;
       continue;
     }
-    if (r.status === 404) {
-      console.error(`[qa-http-smoke] FAIL ${path} -> ${r.status} (wrong host, removed deployment, or domain not attached)`);
+    if (!check.expect.includes(res.status)) {
+      console.error(`[smoke:qa] FAIL ${check.name} -> HTTP ${res.status} (expected ${check.expect.join("|")})`);
       failed = true;
       continue;
     }
-    if (r.status < 200 || r.status >= 400) {
-      console.error(`[qa-http-smoke] FAIL ${path} -> ${r.status}`);
+    if (res.status >= 500) {
+      console.error(`[smoke:qa] FAIL ${check.name} -> HTTP ${res.status}`);
       failed = true;
       continue;
     }
-    if (kind === "json" && !r.jsonOk) {
-      console.error(`[qa-http-smoke] FAIL ${path} -> ${r.status} (expected JSON body)`);
-      failed = true;
-      continue;
+    if (check.kind === "json" && res.status === 200) {
+      try {
+        JSON.parse(text);
+      } catch {
+        console.error(`[smoke:qa] FAIL ${check.name} -> invalid JSON`);
+        failed = true;
+        continue;
+      }
     }
-    console.log(`[qa-http-smoke] OK ${path} -> ${r.status}`);
+    console.log(`[smoke:qa] OK ${check.name} -> ${res.status}`);
   } catch (e) {
-    console.error(`[qa-http-smoke] FAIL ${path} -> ${e?.message || e}`);
+    console.error(`[smoke:qa] FAIL ${check.name} -> ${e?.message || e}`);
     failed = true;
   }
 }
 
-if (failed) {
-  process.exit(1);
-}
-console.log(`[qa-http-smoke] All checks passed for ${base}`);
+if (failed) process.exit(1);
+console.log(`[smoke:qa] All QA parity checks passed for ${base}`);

@@ -765,6 +765,44 @@ export function useProfileDataState(supabase) {
     });
   }
 
+  async function deleteAccount({ confirmPhrase = "" } = {}) {
+    if (workosRef.current && typeof window !== "undefined") {
+      try {
+        const res = await fetch("/api/me/account", {
+          method: "DELETE",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ confirmPhrase }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          return {
+            ok: false,
+            message:
+              String(data?.message || "").trim() ||
+              (data?.error === "confirmation_required"
+                ? 'Type DELETE in the confirmation field to permanently delete your account.'
+                : "Could not delete your account. Try again or contact support."),
+          };
+        }
+        clearNavAuthCache();
+        setWorkOSAccountEmail("");
+        const signOutPath = String(data?.signOutPath || "/sign-out?returnTo=/").trim();
+        const publicBase = String(process.env.NEXT_PUBLIC_APP_URL || "").trim().replace(/\/$/, "");
+        window.location.assign(publicBase ? `${publicBase}${signOutPath}` : signOutPath);
+        return { ok: true };
+      } catch {
+        return { ok: false, message: "Could not delete your account. Check your connection and try again." };
+      }
+    }
+
+    if (!demoModeEnabled) {
+      return { ok: false, message: "Account deletion is only available for signed-in accounts." };
+    }
+    await resetDemo();
+    return { ok: true };
+  }
+
   async function uploadAvatarFile(file) {
     if (!file || !workosRef.current) return { ok: false, message: "Avatar upload requires a signed-in cloud account." };
     const fd = new FormData();
@@ -858,6 +896,7 @@ export function useProfileDataState(supabase) {
       createAccount,
       signInWithCredentials,
       signOut,
+      deleteAccount,
       refreshWorkOSProfile,
       uploadAvatarFile,
       entitlements,
@@ -889,6 +928,7 @@ export function useProfileDataState(supabase) {
       createAccount,
       signInWithCredentials,
       signOut,
+      deleteAccount,
       refreshWorkOSProfile,
       uploadAvatarFile,
       entitlements,

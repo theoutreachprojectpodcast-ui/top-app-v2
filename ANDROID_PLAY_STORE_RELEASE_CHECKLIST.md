@@ -3,7 +3,7 @@
 Android / Capacitor release guide for **`org.theoutreachproject.torp`**.  
 The native shell loads the **live production web app** at `https://theoutreachproject.app/mobile` — no bundled Next.js build inside the AAB.
 
-**Related:** [docs/MOBILE_LAUNCH_CHECKLIST.md](docs/MOBILE_LAUNCH_CHECKLIST.md) · [docs/ANDROID_STUDIO_SETUP.md](docs/ANDROID_STUDIO_SETUP.md) · [IOS_APP_STORE_RELEASE_CHECKLIST.md](IOS_APP_STORE_RELEASE_CHECKLIST.md)
+**Related:** [docs/ANDROID_PLAY_STORE_STATUS.md](docs/ANDROID_PLAY_STORE_STATUS.md) (done vs. todo) · [docs/MOBILE_LAUNCH_CHECKLIST.md](docs/MOBILE_LAUNCH_CHECKLIST.md) · [docs/ANDROID_STUDIO_SETUP.md](docs/ANDROID_STUDIO_SETUP.md) · [IOS_APP_STORE_RELEASE_CHECKLIST.md](IOS_APP_STORE_RELEASE_CHECKLIST.md)
 
 **Last updated:** 2026-06-09
 

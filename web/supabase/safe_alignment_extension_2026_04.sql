@@ -262,3 +262,7 @@ begin
       for all to authenticated using (false) with check (false);
   end if;
 end $$;
+
+alter table public.trusted_resource_nonprofit_links enable row level security;
+alter table public.entity_social_links enable row level security;
+alter table public.sponsor_enrichment enable row level security;

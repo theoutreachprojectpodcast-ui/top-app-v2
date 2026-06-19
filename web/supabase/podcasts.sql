@@ -104,6 +104,13 @@ alter table if exists public.podcast_guest_applications
 create index if not exists podcast_guest_applications_status_idx
   on public.podcast_guest_applications (status, created_at desc);
 
+-- Deny direct PostgREST access; podcast data via /api/podcasts/* + service role.
+alter table public.podcast_episodes enable row level security;
+alter table public.podcast_guests enable row level security;
+alter table public.podcast_episode_guests enable row level security;
+alter table public.podcast_guest_applications enable row level security;
+alter table public.podcast_member_content enable row level security;
+
 create table if not exists public.podcast_member_content (
   id uuid primary key default gen_random_uuid(),
   title text not null,

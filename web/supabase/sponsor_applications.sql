@@ -86,3 +86,6 @@ end $$;
 create index if not exists sponsor_applications_program_type_idx
   on public.sponsor_applications (sponsor_program_type);
 
+-- Deny direct PostgREST access; applications via /api/sponsors/* + service role.
+alter table public.sponsor_applications enable row level security;
+

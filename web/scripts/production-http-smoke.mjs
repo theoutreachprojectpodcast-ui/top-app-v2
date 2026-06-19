@@ -74,6 +74,11 @@ const extendedChecks = [
   { name: "health db", path: "/api/health/db", kind: "json", expect: [200], requireOk: true },
   { name: "health env", path: "/api/health/env", kind: "json", expect: [200], requireOk: true },
   { name: "health mobile", path: "/api/health/mobile", kind: "json", expect: [200], requireOk: true },
+  { name: "health stripe", path: "/api/health/stripe", kind: "json", expect: [200], requireOk: true },
+  { name: "community page", path: "/community", expect: [200] },
+  { name: "trusted resources", path: "/trusted", expect: [200] },
+  { name: "podcasts", path: "/podcasts", expect: [200] },
+  { name: "billing capabilities", path: "/api/billing/capabilities", kind: "json", expect: [200] },
   {
     name: "mobile callback alias",
     path: "/mobile/auth/callback",

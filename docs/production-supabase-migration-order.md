@@ -89,6 +89,7 @@ where platform_role is null
 | 37 | `admin_enrichment_diagnostics.sql` | Admin diagnostics (optional) |
 | 38 | `platform_future_hooks.sql` | Future hooks (optional) |
 | 39 | `safe_alignment_extension_2026_04.sql` | Safe alignment patch |
+| **40** | `supabase_public_rls_hardening_2026_06.sql` | **Required** — RLS on all public tables + `security_invoker` on all views (fixes Supabase linter 0013 + 0010) |
 
 ## Sponsor display / branding (apply after catalog exists)
 
@@ -97,6 +98,9 @@ Run the `sponsor_v*.sql` files in version order (`sponsor_v06` … `sponsor_v17`
 ## Post-migration verification
 
 ```sql
+-- Security audit (expect zero rows)
+select * from public._torp_rls_security_audit() where status <> 'OK' order by 1, 2;
+
 -- Profiles + RLS
 select count(*) from public.torp_profiles limit 1;
 

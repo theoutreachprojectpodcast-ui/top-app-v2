@@ -1,5 +1,6 @@
 import { requirePlatformAdminRouteContext, requirePlatformAdminMutation } from "@/lib/admin/adminRouteContext";
 import { writeAdminAuditLog } from "@/lib/admin/adminAuditLog";
+import { validateBlockForPublish } from "@/lib/admin/contentPublishValidation";
 import { normalizeBlockPayload, TABLE } from "@/lib/admin/pageContentBlocks";
 import { htmlToPlainText } from "@/lib/admin/sanitizeHtml";
 
@@ -42,6 +43,11 @@ export async function POST(request) {
   }
   if (!payload.body_text && payload.body_html) {
     payload.body_text = htmlToPlainText(payload.body_html).slice(0, 20000);
+  }
+
+  const publishCheck = validateBlockForPublish(payload);
+  if (!publishCheck.ok) {
+    return Response.json({ ok: false, error: "publish_validation_failed", details: publishCheck.errors }, { status: 400 });
   }
 
   payload.created_by = String(ctx.user?.id || "").trim() || null;

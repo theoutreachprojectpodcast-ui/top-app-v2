@@ -1,15 +1,15 @@
--- =============================================================================
--- Supabase Database Linter — security fixes (0010 + 0013)
+﻿-- =============================================================================
+-- Supabase Database Linter ΓÇö security fixes (0010 + 0013)
 -- =============================================================================
 -- Resolves:
---   • security_definer_view — legacy directory/trusted views
---   • rls_disabled_in_public — legacy ETL / staging tables in public schema
+--   ΓÇó security_definer_view ΓÇö legacy directory/trusted views
+--   ΓÇó rls_disabled_in_public ΓÇö legacy ETL / staging tables in public schema
 --
 -- Safe to re-run (idempotent). Run in Supabase SQL Editor as postgres.
 -- App impact: Next.js uses SUPABASE_SERVICE_ROLE_KEY for server routes (bypasses RLS).
 -- Anon/authenticated PostgREST clients lose direct access to locked tables (intended).
 --
--- After run: Database → Linter → refresh. Optional check:
+-- After run: Database ΓåÆ Linter ΓåÆ refresh. Optional check:
 --   select * from public._torp_linter_security_status() order by 1, 2;
 -- =============================================================================
 
@@ -17,7 +17,7 @@ begin;
 
 -- ---------------------------------------------------------------------------
 -- 1) Views: SECURITY INVOKER (lint 0010)
---    PG15+: alter view … set (security_invoker = true)
+--    PG15+: alter view ΓÇª set (security_invoker = true)
 -- ---------------------------------------------------------------------------
 
 do $$
@@ -107,7 +107,7 @@ declare
   pol_auth text := short_name || '_linter_block_authenticated';
 begin
   if to_regclass(tbl_name) is null then
-    raise notice 'linter_fix: table % not found — skipped', tbl_name;
+    raise notice 'linter_fix: table % not found ΓÇö skipped', tbl_name;
     return;
   end if;
 
@@ -170,7 +170,7 @@ begin
 end $$;
 
 -- ---------------------------------------------------------------------------
--- 3) Diagnostic — re-run after linter refresh
+-- 3) Diagnostic ΓÇö re-run after linter refresh
 -- ---------------------------------------------------------------------------
 
 create or replace function public._torp_linter_security_status()

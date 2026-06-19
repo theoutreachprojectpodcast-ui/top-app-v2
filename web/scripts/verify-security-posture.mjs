@@ -42,6 +42,11 @@ assert(
 );
 
 assert(
+  fs.existsSync(path.join(webRoot, "supabase/_torp_rls_helpers.sql")),
+  "_torp_rls_helpers.sql must exist",
+);
+
+assert(
   fs.existsSync(path.join(webRoot, "supabase/supabase_public_rls_hardening_2026_06.sql")),
   "supabase_public_rls_hardening_2026_06.sql must exist",
 );

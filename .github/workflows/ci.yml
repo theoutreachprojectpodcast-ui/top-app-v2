@@ -83,6 +83,24 @@ jobs:
       - name: Validate Capacitor config
         run: pnpm run validate:capacitor
 
+      - name: Production env structure (strict)
+        run: pnpm --dir web exec node scripts/validate-environment.mjs --profile=production --strict
+        env:
+          APP_BASE_URL: https://theoutreachproject.app
+          NEXT_PUBLIC_APP_URL: https://theoutreachproject.app
+          NEXT_PUBLIC_WORKOS_REDIRECT_URI: https://theoutreachproject.app/callback
+          WORKOS_COOKIE_DOMAIN: theoutreachproject.app
+          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy-anon-key
+          SUPABASE_SERVICE_ROLE_KEY: dummy-service-role-key
+          WORKOS_API_KEY: sk_live_dummy
+          WORKOS_CLIENT_ID: client_dummy
+          WORKOS_COOKIE_PASSWORD: this-is-a-dummy-cookie-password-at-least-32
+          STRIPE_SECRET_KEY: sk_live_dummy
+          STRIPE_WEBHOOK_LIVE_SECRET: whsec_dummy
+          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: pk_live_dummy
+          STRIPE_PRICE_ACCESS_YEARLY: price_dummy
+
   production-smoke:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'

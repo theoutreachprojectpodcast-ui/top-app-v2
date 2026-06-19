@@ -16,3 +16,6 @@ create index if not exists podcast_sponsor_checkout_events_workos_idx
   on public.podcast_sponsor_checkout_events (workos_user_id, created_at desc);
 
 comment on table public.podcast_sponsor_checkout_events is 'Stripe podcast one-time checkout completions; source of truth with webhook + optional application row.';
+
+alter table public.podcast_sponsor_checkout_events enable row level security;
+

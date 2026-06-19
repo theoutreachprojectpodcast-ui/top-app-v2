@@ -123,7 +123,9 @@ See also: [web/docs/CAPACITOR_MOBILE.md](../web/docs/CAPACITOR_MOBILE.md), [MOBI
 ## 6. Checklist
 
 - [x] Android Studio first-run wizard completed (this machine)
-- [x] `adb` works via `%LOCALAPPDATA%\Android\Sdk\platform-tools\adb.exe` (add platform-tools to user Path for convenience)
+- [x] `adb` works via `%LOCALAPPDATA%\Android\Sdk\platform-tools\adb.exe` (user Path + `ANDROID_HOME` set 2026-06-19)
+- [x] `JAVA_HOME` set to Android Studio `jbr` (2026-06-19)
+- [x] SDK Command-line Tools installed — `sdkmanager` on PATH (2026-06-19)
 - [x] `pnpm exec cap sync android` / `mobile:prep:prod` succeeds in `web/`
 - [x] `gradlew assembleDebug` succeeds (set `JAVA_HOME` to Android Studio `jbr`)
 - [ ] App runs on **physical device** against production URL (§9.3 device smoke)

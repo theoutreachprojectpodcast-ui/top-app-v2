@@ -102,14 +102,28 @@ Run at least one base enrichment definition; both are safe together if both use 
 
 ---
 
-## 9. Diagnostics / optional
+## 9. Security hardening (required on every environment)
+
+| Order | File | Purpose |
+|------:|------|---------|
+| — | `_torp_rls_helpers.sql` | Optional early install of RLS helper functions |
+| **40** | `supabase_public_rls_hardening_2026_06.sql` | **Run on every environment** — enables + forces RLS on all `public` tables; sets `security_invoker` on all views; drops permissive client policies. Fixes Supabase linter **0013** (RLS disabled) and **0010** (security definer views). |
+
+After run:
+
+```sql
+select * from public._torp_rls_security_audit() where status <> 'OK' order by 1, 2;
+```
+
+Supabase Dashboard → Database → Linter → **Refresh**.
+
+## 10. Diagnostics / optional
 
 | File | Purpose |
 |------|---------|
 | `admin_enrichment_diagnostics.sql` | Read-only / operational checks (see comments inside) |
 | `supabase_schema_repair_2026_06.sql` | **Run when verify:supabase fails** — QA profile parity, community FK shadow sync, missing columns |
-| `supabase_linter_security_fix_2026_06.sql` | Legacy views (`security_invoker`) + RLS on known ETL tables (superseded by hardening below if both run) |
-| `supabase_public_rls_hardening_2026_06.sql` | **Run on every environment** — deny-all RLS for anon/authenticated on all `public` tables; views → `security_invoker`. App + admin use service role only. |
+| `supabase_linter_security_fix_2026_06.sql` | Legacy partial fix (superseded by hardening above) |
 | `platform_future_hooks.sql` | Commented placeholders — **do not** run as-is |
 
 After SQL changes, validate locally:

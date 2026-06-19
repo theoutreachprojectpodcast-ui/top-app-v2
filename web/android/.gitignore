@@ -58,6 +58,7 @@ captures/
 #*.keystore
 keystore.properties
 keystores/
+KEYSTORE_BACKUP_README.txt
 
 # External native build folder generated in Android Studio 2.2 and later
 .externalNativeBuild

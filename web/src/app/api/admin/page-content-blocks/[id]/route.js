@@ -1,5 +1,6 @@
 import { requirePlatformAdminMutation } from "@/lib/admin/adminRouteContext";
 import { writeAdminAuditLog } from "@/lib/admin/adminAuditLog";
+import { validateContentPublishTransition } from "@/lib/admin/contentPublishValidation";
 import { patchBlockPayload, TABLE } from "@/lib/admin/pageContentBlocks";
 import { htmlToPlainText } from "@/lib/admin/sanitizeHtml";
 
@@ -22,6 +23,12 @@ export async function PATCH(request, { params }) {
   const payload = patchBlockPayload(body, ctx.user?.id);
   if (payload.body_html && !payload.body_text) {
     payload.body_text = htmlToPlainText(payload.body_html).slice(0, 20000);
+  }
+
+  const { data: existing } = await ctx.admin.from(TABLE).select("*").eq("id", id).maybeSingle();
+  const publishCheck = validateContentPublishTransition(existing, payload);
+  if (!publishCheck.ok) {
+    return Response.json({ ok: false, error: "publish_validation_failed", details: publishCheck.errors }, { status: 400 });
   }
 
   const { data, error } = await ctx.admin.from(TABLE).update(payload).eq("id", id).select("*").single();

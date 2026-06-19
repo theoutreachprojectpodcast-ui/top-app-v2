@@ -39,6 +39,7 @@ const requiredRouteFiles = [
   "src/app/api/health/db/route.js",
   "src/app/api/health/env/route.js",
   "src/app/api/health/mobile/route.js",
+  "src/app/api/health/stripe/route.js",
   "public/manifest.webmanifest",
   "public/apple-touch-icon.png",
   "public/icon-512.png",

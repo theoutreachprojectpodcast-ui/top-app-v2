@@ -1,0 +1,110 @@
+name: Release Gates
+
+on:
+  pull_request:
+    branches: [QA, main]
+  push:
+    branches: [QA, main]
+  workflow_dispatch:
+    inputs:
+      run_production_smoke:
+        description: "Run live production HTTP smoke (main only)"
+        type: boolean
+        default: false
+
+jobs:
+  qa-gates:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/QA' || (github.event_name == 'pull_request' && github.base_ref == 'main')
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: QA env validation (structure)
+        run: pnpm --dir web exec node scripts/validate-environment.mjs --profile=qa --strict
+        env:
+          APP_BASE_URL: https://qa-the-outreach-project.vercel.app
+          NEXT_PUBLIC_APP_URL: https://qa-the-outreach-project.vercel.app
+          NEXT_PUBLIC_WORKOS_REDIRECT_URI: https://qa-the-outreach-project.vercel.app/callback
+          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy-anon
+          SUPABASE_SERVICE_ROLE_KEY: dummy-service
+          WORKOS_API_KEY: sk_test_dummy
+          WORKOS_CLIENT_ID: client_dummy
+          WORKOS_COOKIE_PASSWORD: this-is-a-dummy-cookie-password-at-least-32
+          STRIPE_SECRET_KEY: sk_test_dummy
+          STRIPE_WEBHOOK_TEST_SECRET: whsec_dummy
+
+      - name: QA HTTP smoke (live)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/QA'
+        run: pnpm --dir web run smoke:qa:http
+        env:
+          QA_BASE_URL: https://qa-the-outreach-project.vercel.app
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+
+  production-gates:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Production pre-deploy gate (static)
+        run: pnpm --dir web run gate:production
+        env:
+          SKIP_HTTP_SMOKE: "1"
+          APP_BASE_URL: https://theoutreachproject.app
+          NEXT_PUBLIC_APP_URL: https://theoutreachproject.app
+          NEXT_PUBLIC_WORKOS_REDIRECT_URI: https://theoutreachproject.app/callback
+          WORKOS_COOKIE_DOMAIN: theoutreachproject.app
+          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy-anon
+          SUPABASE_SERVICE_ROLE_KEY: dummy-service
+          WORKOS_API_KEY: sk_live_dummy
+          WORKOS_CLIENT_ID: client_dummy
+          WORKOS_COOKIE_PASSWORD: this-is-a-dummy-cookie-password-at-least-32
+          STRIPE_SECRET_KEY: sk_live_dummy
+          STRIPE_WEBHOOK_LIVE_SECRET: whsec_dummy
+          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: pk_live_dummy
+          STRIPE_PRICE_ACCESS_YEARLY: price_dummy
+          CAP_SERVER_URL: https://theoutreachproject.app
+
+      - name: Production HTTP smoke (live)
+        run: pnpm --dir web run smoke:production:http
+        env:
+          PRODUCTION_BASE_URL: https://theoutreachproject.app
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+
+  production-smoke-manual:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && inputs.run_production_smoke
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Production HTTP smoke (live)
+        run: node web/scripts/production-http-smoke.mjs
+        env:
+          PRODUCTION_BASE_URL: https://theoutreachproject.app
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
