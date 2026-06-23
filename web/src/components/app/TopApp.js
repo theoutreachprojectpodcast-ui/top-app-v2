@@ -1464,10 +1464,10 @@ function TopAppInner({ initialNav = "home" }) {
                       ) : null}
                     </div>
                   </div>
-                  <label className="demoAuthModal__field" htmlFor="torp-demo-auth-given">
+                  <label className="demoAuthModal__field" htmlFor="top-demo-auth-given">
                     <span className="fieldLabel">First name</span>
                     <input
-                      id="torp-demo-auth-given"
+                      id="top-demo-auth-given"
                       name="given-name"
                       value={authDraft.firstName}
                       onChange={(e) => setAuthDraft((d) => ({ ...d, firstName: e.target.value }))}
@@ -1475,10 +1475,10 @@ function TopAppInner({ initialNav = "home" }) {
                       autoComplete="given-name"
                     />
                   </label>
-                  <label className="demoAuthModal__field" htmlFor="torp-demo-auth-family">
+                  <label className="demoAuthModal__field" htmlFor="top-demo-auth-family">
                     <span className="fieldLabel">Last name</span>
                     <input
-                      id="torp-demo-auth-family"
+                      id="top-demo-auth-family"
                       name="family-name"
                       value={authDraft.lastName}
                       onChange={(e) => setAuthDraft((d) => ({ ...d, lastName: e.target.value }))}
@@ -1488,11 +1488,11 @@ function TopAppInner({ initialNav = "home" }) {
                   </label>
                 </>
               ) : null}
-              <label className="demoAuthModal__field" htmlFor="torp-demo-auth-email">
+              <label className="demoAuthModal__field" htmlFor="top-demo-auth-email">
                 <span className="fieldLabel">Email</span>
                 <input
                   name="email"
-                  id="torp-demo-auth-email"
+                  id="top-demo-auth-email"
                   value={authDraft.email}
                   onChange={(e) => setAuthDraft((d) => ({ ...d, email: e.target.value }))}
                   placeholder="Email"
@@ -1502,11 +1502,11 @@ function TopAppInner({ initialNav = "home" }) {
                 />
               </label>
               {!authBackend.workos ? (
-                <label className="demoAuthModal__field" htmlFor="torp-demo-auth-password">
+                <label className="demoAuthModal__field" htmlFor="top-demo-auth-password">
                   <span className="fieldLabel">Password</span>
                   <div className="demoAuthModal__passwordWrap">
                     <input
-                      id="torp-demo-auth-password"
+                      id="top-demo-auth-password"
                       name="password"
                       value={authDraft.password}
                       onChange={(e) => setAuthDraft((d) => ({ ...d, password: e.target.value }))}

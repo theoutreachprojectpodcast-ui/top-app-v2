@@ -1,7 +1,7 @@
 -- Shared RLS helpers — run once before other migrations (or via supabase_public_rls_hardening).
 -- Idempotent. Safe to re-run.
 
-create or replace function public._torp_ensure_client_deny_rls(p_table regclass)
+create or replace function public._top_ensure_client_deny_rls(p_table regclass)
 returns void
 language plpgsql
 security definer
@@ -35,11 +35,11 @@ begin
 end;
 $$;
 
-comment on function public._torp_ensure_client_deny_rls(regclass) is
+comment on function public._top_ensure_client_deny_rls(regclass) is
   'Enable RLS + restrictive deny-all policies for anon/authenticated PostgREST roles.';
 
 -- Apply to one table when helper exists; otherwise enable RLS only (policies added by hardening).
-create or replace function public._torp_apply_table_rls_if_exists(p_table_name text)
+create or replace function public._top_apply_table_rls_if_exists(p_table_name text)
 returns void
 language plpgsql
 security definer
@@ -52,6 +52,6 @@ begin
   if reg is null then
     return;
   end if;
-  perform public._torp_ensure_client_deny_rls(reg);
+  perform public._top_ensure_client_deny_rls(reg);
 end;
 $$;

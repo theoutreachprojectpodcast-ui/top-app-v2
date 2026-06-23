@@ -1,5 +1,5 @@
 -- =============================================================================
--- tORP — Admin enrichment: runbook + diagnostics (Supabase SQL editor)
+-- TOP — Admin enrichment: runbook + diagnostics (Supabase SQL editor)
 -- =============================================================================
 -- Non-destructive: read-only metrics only. Creates/replaces a diagnostic helper
 -- function (no DROP POLICY / DROP TABLE / DROP FUNCTION / row deletes).
@@ -35,11 +35,11 @@
 -- -----------------------------------------------------------------------------
 -- 1) One-screen summary (single result set)
 -- -----------------------------------------------------------------------------
--- Defines public._torp_admin_enrichment_metrics() (CREATE OR REPLACE; left in place for reuse).
+-- Defines public._top_admin_enrichment_metrics() (CREATE OR REPLACE; left in place for reuse).
 -- nonprofit_directory_enrichment and trusted_resources metrics are skipped until those
 -- tables exist (information_schema check). sponsors_catalog must exist.
 
-create or replace function public._torp_admin_enrichment_metrics()
+create or replace function public._top_admin_enrichment_metrics()
 returns table(metric text, value text)
 language plpgsql
 security invoker
@@ -118,10 +118,10 @@ end;
 $$;
 
 select m.metric, m.value
-from public._torp_admin_enrichment_metrics() as m
+from public._top_admin_enrichment_metrics() as m
 order by m.metric;
 
--- Re-run anytime: select * from public._torp_admin_enrichment_metrics() order by 1;
+-- Re-run anytime: select * from public._top_admin_enrichment_metrics() order by 1;
 
 -- -----------------------------------------------------------------------------
 -- 2) Detail samples (uncomment to inspect specific rows; limit keeps output small)

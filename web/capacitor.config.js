@@ -1,7 +1,7 @@
 const { CAPACITOR_ALLOW_NAVIGATION_HOSTS } = require("./src/lib/capacitor/allowNavigationHosts.js");
 
 /**
- * tORP — Capacitor wraps the existing Next.js product (remote WebView architecture).
+ * TOP — Capacitor wraps the existing Next.js product (remote WebView architecture).
  *
  * Production `server.url` is ALWAYS embedded so TestFlight/Xcode archives connect without
  * remembering `CAP_SERVER_URL`. Override only for QA/local: CAP_SERVER_URL at `cap sync` time.

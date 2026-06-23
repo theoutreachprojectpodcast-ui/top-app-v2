@@ -3,11 +3,11 @@
 ## Source of truth
 
 - Identity provider: WorkOS (session + user id)
-- App account/profile storage: Supabase table `torp_profiles`
+- App account/profile storage: Supabase table `top_profiles`
 
 ## User mapping
 
-- Primary key for identity mapping: `torp_profiles.workos_user_id`
+- Primary key for identity mapping: `top_profiles.workos_user_id`
 - First login/callback:
   - `upsertProfileFromWorkOSUser()` inserts/updates profile shell
 - Returning login:

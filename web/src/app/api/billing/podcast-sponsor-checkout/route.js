@@ -58,7 +58,7 @@ export async function POST(request) {
     }
     return Response.json({ error: "no_checkout_url" }, { status: 500 });
   } catch (e) {
-    console.error("[torp] podcast sponsor checkout", e);
+    console.error("[top] podcast sponsor checkout", e);
     return Response.json({ error: "stripe_error", message: e.message }, { status: 500 });
   }
 }

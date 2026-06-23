@@ -17,7 +17,7 @@ export async function GET(request) {
         { status: 503 },
       );
     }
-    console.error("[torp] WorkOS signin-url failed:", e);
+    console.error("[top] WorkOS signin-url failed:", e);
     return NextResponse.json(
       { error: "workos_signin_failed", message: "Could not start sign-in." },
       { status: 503 },

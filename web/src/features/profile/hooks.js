@@ -605,9 +605,9 @@ export function useProfileDataState(supabase) {
       "top_community_local_approved_posts",
       "top_community_liked_posts",
       "top_community_connection_requests",
-      "torp-color-scheme",
+      "top-color-scheme",
     ];
-    const sessionKeysToClear = ["torp-directory-session-v1"];
+    const sessionKeysToClear = ["top-directory-session-v1", "torp-directory-session-v1"];
 
     if (typeof window !== "undefined") {
       for (const key of localKeysToClear) {

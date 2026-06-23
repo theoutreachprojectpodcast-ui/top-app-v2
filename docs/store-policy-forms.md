@@ -2,7 +2,7 @@
 
 Use with [store-listing-copy.md](./store-listing-copy.md) and [legal/privacy-policy.md](./legal/privacy-policy.md) when completing **App Store Connect → App Privacy** and **Google Play Console → Data safety**.
 
-**App ID:** `org.theoutreachproject.torp`  
+**App ID:** `org.theoutreachproject.top`  
 **Privacy URL:** https://theoutreachproject.app/privacy  
 **Support:** support@theoutreachproject.app
 

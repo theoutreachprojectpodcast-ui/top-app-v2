@@ -33,7 +33,7 @@ html[data-capacitor-native] .siteMobileNavMore__trigger {
   position: fixed;
   left: 12px;
   right: 12px;
-  bottom: calc(var(--torp-bottom-nav-reserve, 96px) + 8px);
+  bottom: calc(var(--top-bottom-nav-reserve, 96px) + 8px);
   z-index: 30;
   pointer-events: none;
 }

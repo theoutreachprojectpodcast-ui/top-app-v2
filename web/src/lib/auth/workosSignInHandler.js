@@ -24,7 +24,7 @@ export async function workOSSignInResponse(request) {
     if (message === "workos_not_configured") {
       return NextResponse.json({ error: "workos_not_configured" }, { status: 503 });
     }
-    console.error("[torp] WorkOS sign-in redirect failed:", e);
+    console.error("[top] WorkOS sign-in redirect failed:", e);
     return NextResponse.json(
       { error: "workos_signin_failed", message: "Could not start sign-in. Check WorkOS env and redirect URIs." },
       { status: 503 },

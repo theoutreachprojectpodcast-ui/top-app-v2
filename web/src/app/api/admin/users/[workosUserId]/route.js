@@ -146,7 +146,7 @@ export async function PATCH(request, context) {
     actorWorkosUserId: String(ctx.user?.id || ""),
     actorEmail: String(ctx.user?.email || ""),
     action: "admin.users.patch",
-    resourceType: "torp_profiles",
+    resourceType: "top_profiles",
     resourceId: String(data.id || workosUserId),
     metadata: { targetWorkosUserId: workosUserId, changedFields: Object.keys(patch) },
   });

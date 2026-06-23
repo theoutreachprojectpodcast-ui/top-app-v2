@@ -1,6 +1,6 @@
-# tORP v0.3 — UI / UX refinement (stacked on auth / onboarding / billing)
+# TOP v0.3 — UI / UX refinement (stacked on auth / onboarding / billing)
 
-Checkpoint commit (before this work): `checkpoint: pre-ui-refinement-pass (tORP v0.3 stacked)`.
+Checkpoint commit (before this work): `checkpoint: pre-ui-refinement-pass (TOP v0.3 stacked)`.
 
 ## Home membership CTA (unified)
 

@@ -29,7 +29,7 @@ export async function startWorkOSAuthHandoff(rawParams, options = {}) {
         : await resolveWorkOSSignInFromSearchParams(params, fallbackReturn);
     return { ok: true, url };
   } catch (err) {
-    console.error("[torp] WorkOS auth handoff failed:", err);
+    console.error("[top] WorkOS auth handoff failed:", err);
     return { ok: false, message: handoffErrorMessage(err) };
   }
 }

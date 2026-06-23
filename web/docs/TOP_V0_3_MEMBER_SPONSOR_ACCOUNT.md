@@ -1,4 +1,4 @@
-# tORP v0.3 — Member billing, sponsor reconciliation, account continuity
+# TOP v0.3 — Member billing, sponsor reconciliation, account continuity
 
 Concise implementation notes for the stacked pass (member recurring billing, sponsor surfaces, session/profile persistence, autofill).
 
@@ -11,7 +11,7 @@ Concise implementation notes for the stacked pass (member recurring billing, spo
 ## 2. Direct profile-page billing
 
 - WorkOS-authenticated users call `POST /api/billing/checkout` with `{ tier: "support" | "member" | "sponsor", returnPath?: "/profile" }`.
-- Server loads `torp_profiles` by WorkOS id, reuses `stripe_customer_id` when present, creates a **subscription** Checkout Session.
+- Server loads `top_profiles` by WorkOS id, reuses `stripe_customer_id` when present, creates a **subscription** Checkout Session.
 - Success/cancel return to `returnPath` with `?checkout=success|cancel`; the profile shell refreshes WorkOS-backed profile after success (WorkOS session only).
 - Tier/status in DB are updated by **webhooks**, not by the client.
 
@@ -29,9 +29,9 @@ Concise implementation notes for the stacked pass (member recurring billing, spo
 ## 5. WorkOS → Supabase profile
 
 - `upsertProfileFromWorkOSUser` (and related server helpers) ensure one row per WorkOS user.
-- `torp_profile_id` and `workos_user_id` in Stripe metadata link payments to that row.
+- `top_profile_id` and `workos_user_id` in Stripe metadata link payments to that row.
 
-## 6. Profile fields in Supabase (`torp_profiles`)
+## 6. Profile fields in Supabase (`top_profiles`)
 
 - Identity and display: `first_name`, `last_name`, `display_name`, `email` (synced from WorkOS where applicable), `bio`, `profile_photo_url`, `mission_statement`, etc. (see `serverProfile` field lists).
 - Billing: `membership_tier`, `membership_status`, `membership_source`, `stripe_customer_id`, `stripe_subscription_id`.
@@ -59,4 +59,4 @@ For **podcast pay now**:
 
 - All three: `STRIPE_PRICE_PODCAST_SPONSOR_COMMUNITY`, `STRIPE_PRICE_PODCAST_SPONSOR_IMPACT`, `STRIPE_PRICE_PODCAST_SPONSOR_FOUNDATIONAL`
 
-Also set `APP_BASE_URL` (or `NEXT_PUBLIC_APP_URL`) for return URLs. Apply `web/supabase/torp_profiles_membership_source.sql` before relying on `membership_source` updates.
+Also set `APP_BASE_URL` (or `NEXT_PUBLIC_APP_URL`) for return URLs. Apply `web/supabase/top_profiles_membership_source.sql` before relying on `membership_source` updates.

@@ -43,6 +43,6 @@ export async function shareCommunityPostNative(ctx) {
  */
 export function trackCommunityShareEvent(payload) {
   if (typeof window !== "undefined" && window.dispatchEvent) {
-    window.dispatchEvent(new CustomEvent("torp:community-share", { detail: payload }));
+    window.dispatchEvent(new CustomEvent("top:community-share", { detail: payload }));
   }
 }

@@ -10,7 +10,7 @@
 -- Anon/authenticated PostgREST clients lose direct access to locked tables (intended).
 --
 -- After run: Database ΓåÆ Linter ΓåÆ refresh. Optional check:
---   select * from public._torp_linter_security_status() order by 1, 2;
+--   select * from public._top_linter_security_status() order by 1, 2;
 -- =============================================================================
 
 begin;
@@ -94,7 +94,7 @@ end $$;
 -- 2) Tables: enable RLS + deny anon/authenticated (lint 0013)
 -- ---------------------------------------------------------------------------
 
-create or replace function public._torp_enable_deny_public_rls(p_table regclass)
+create or replace function public._top_enable_deny_public_rls(p_table regclass)
 returns void
 language plpgsql
 security definer
@@ -165,7 +165,7 @@ declare
   ];
 begin
   foreach t in array tables loop
-    perform public._torp_enable_deny_public_rls(format('public.%I', t)::regclass);
+    perform public._top_enable_deny_public_rls(format('public.%I', t)::regclass);
   end loop;
 end $$;
 
@@ -173,7 +173,7 @@ end $$;
 -- 3) Diagnostic ΓÇö re-run after linter refresh
 -- ---------------------------------------------------------------------------
 
-create or replace function public._torp_linter_security_status()
+create or replace function public._top_linter_security_status()
 returns table(object_type text, object_name text, status text, detail text)
 language plpgsql
 security invoker
@@ -240,4 +240,4 @@ $$;
 commit;
 
 -- Quick verify (optional):
--- select * from public._torp_linter_security_status() where status <> 'OK';
+-- select * from public._top_linter_security_status() where status <> 'OK';

@@ -55,17 +55,17 @@ export function workosAuthBrandedPageCss() {
   return `
     :root {
       color-scheme: dark;
-      --torp-page: ${c.pageBg};
-      --torp-card: ${c.cardBg};
-      --torp-border: ${c.border};
-      --torp-text: ${c.text};
-      --torp-muted: ${c.textMuted};
-      --torp-accent: ${c.accent};
-      --torp-accent-hover: ${c.accentHover};
-      --torp-on-accent: ${c.onAccent};
-      --torp-link: ${c.link};
-      --torp-warn: ${c.warn};
-      --torp-soft: ${c.softBtnBg};
+      --top-page: ${c.pageBg};
+      --top-card: ${c.cardBg};
+      --top-border: ${c.border};
+      --top-text: ${c.text};
+      --top-muted: ${c.textMuted};
+      --top-accent: ${c.accent};
+      --top-accent-hover: ${c.accentHover};
+      --top-on-accent: ${c.onAccent};
+      --top-link: ${c.link};
+      --top-warn: ${c.warn};
+      --top-soft: ${c.softBtnBg};
     }
     * { box-sizing: border-box; }
     html, body {
@@ -75,10 +75,10 @@ export function workosAuthBrandedPageCss() {
       font-family: ${WORKOS_AUTH_BRAND.fontFamily};
       background:
         radial-gradient(120% 80% at 50% 0%, rgba(34, 165, 43, 0.16), transparent 58%),
-        linear-gradient(168deg, #1a241c 0%, var(--torp-page) 42%, var(--torp-page) 100%);
-      color: var(--torp-text);
+        linear-gradient(168deg, #1a241c 0%, var(--top-page) 42%, var(--top-page) 100%);
+      color: var(--top-text);
     }
-    .torpAuth {
+    .topAuth {
       min-height: 100dvh;
       display: flex;
       align-items: center;
@@ -86,58 +86,58 @@ export function workosAuthBrandedPageCss() {
       padding: max(24px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right))
         max(24px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
     }
-    .torpAuth__card {
+    .topAuth__card {
       width: 100%;
       max-width: 22rem;
       padding: clamp(18px, 4vw, 24px);
       border-radius: 16px;
-      background: color-mix(in srgb, var(--torp-card) 92%, transparent);
-      border: 1px solid var(--torp-border);
+      background: color-mix(in srgb, var(--top-card) 92%, transparent);
+      border: 1px solid var(--top-border);
       box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
       text-align: center;
     }
-    .torpAuth__brand {
+    .topAuth__brand {
       margin: 0 auto 16px;
       max-width: min(72vw, 200px);
     }
-    .torpAuth__brand img {
+    .topAuth__brand img {
       display: block;
       width: 100%;
       height: auto;
       max-height: 72px;
       object-fit: contain;
     }
-    .torpAuth__title {
+    .topAuth__title {
       margin: 0 0 8px;
       font-size: 1.05rem;
       font-weight: 600;
       letter-spacing: -0.01em;
     }
-    .torpAuth__lead {
+    .topAuth__lead {
       margin: 0 0 16px;
       line-height: 1.45;
       font-size: 0.95rem;
-      color: var(--torp-muted);
+      color: var(--top-muted);
     }
-    .torpAuth__lead--warn {
-      color: var(--torp-warn);
+    .topAuth__lead--warn {
+      color: var(--top-warn);
     }
-    .torpAuth__spinner {
+    .topAuth__spinner {
       width: 40px;
       height: 40px;
       margin: 0 auto 14px;
       border: 3px solid rgba(34, 165, 43, 0.22);
-      border-top-color: var(--torp-accent);
+      border-top-color: var(--top-accent);
       border-radius: 50%;
-      animation: torpSpin 0.85s linear infinite;
+      animation: topSpin 0.85s linear infinite;
     }
-    @keyframes torpSpin { to { transform: rotate(360deg); } }
-    .torpAuth__actions {
+    @keyframes topSpin { to { transform: rotate(360deg); } }
+    .topAuth__actions {
       display: flex;
       flex-direction: column;
       gap: 10px;
     }
-    .torpAuth__btn {
+    .topAuth__btn {
       display: block;
       padding: 12px 20px;
       border-radius: 999px;
@@ -147,22 +147,22 @@ export function workosAuthBrandedPageCss() {
       border: none;
       cursor: pointer;
     }
-    .torpAuth__btn--primary {
-      background: var(--torp-accent);
-      color: var(--torp-on-accent);
+    .topAuth__btn--primary {
+      background: var(--top-accent);
+      color: var(--top-on-accent);
     }
-    .torpAuth__btn--primary:hover { background: var(--torp-accent-hover); }
-    .torpAuth__btn--soft {
-      background: var(--torp-soft);
-      color: var(--torp-text);
-      border: 1px solid var(--torp-border);
+    .topAuth__btn--primary:hover { background: var(--top-accent-hover); }
+    .topAuth__btn--soft {
+      background: var(--top-soft);
+      color: var(--top-text);
+      border: 1px solid var(--top-border);
     }
-    .torpAuth__link {
-      color: var(--torp-link);
+    .topAuth__link {
+      color: var(--top-link);
       font-weight: 600;
       text-decoration: none;
     }
-    .torpAuth__link:hover { text-decoration: underline; }
+    .topAuth__link:hover { text-decoration: underline; }
   `.trim();
 }
 
@@ -190,9 +190,9 @@ export function workosAuthBrandedHtmlPage({
   const safeHeading = String(heading).replace(/</g, "&lt;");
   const logoUrl = workosAuthBrandAssetUrl(WORKOS_AUTH_BRAND.markPath).replace(/"/g, "&quot;");
   const logoBlock = showLogo
-    ? `<div class="torpAuth__brand" aria-hidden="true"><img src="${logoUrl}" alt="" /></div>`
+    ? `<div class="topAuth__brand" aria-hidden="true"><img src="${logoUrl}" alt="" /></div>`
     : "";
-  const spinnerBlock = showSpinner ? `<div class="torpAuth__spinner" aria-hidden="true"></div>` : "";
+  const spinnerBlock = showSpinner ? `<div class="topAuth__spinner" aria-hidden="true"></div>` : "";
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -206,11 +206,11 @@ export function workosAuthBrandedHtmlPage({
   ${headExtra}
 </head>
 <body>
-  <main class="torpAuth" role="main">
-    <div class="torpAuth__card">
+  <main class="topAuth" role="main">
+    <div class="topAuth__card">
       ${logoBlock}
       ${spinnerBlock}
-      <h1 class="torpAuth__title">${safeHeading}</h1>
+      <h1 class="topAuth__title">${safeHeading}</h1>
       ${bodyHtml}
     </div>
   </main>

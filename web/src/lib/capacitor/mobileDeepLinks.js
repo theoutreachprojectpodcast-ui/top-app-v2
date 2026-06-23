@@ -5,7 +5,8 @@ export const NATIVE_APP_URL_SCHEME = "com.theoutreachproject.theoutreachproject"
 export const MOBILE_AUTH_DEEP_LINK_SCHEMES = [
   NATIVE_APP_URL_SCHEME,
   "theoutreachproject",
-  "org.theoutreachproject.torp",
+  "org.theoutreachproject.top",
+  "org.theoutreachproject.torp", // legacy installs / WorkOS redirect URIs
 ];
 
 /** @deprecated Prefer auth/complete deep links; kept for billing return sync. */

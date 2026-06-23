@@ -1,7 +1,7 @@
 # Apple App Store — App Routing & Coverage
 
 **App:** The Outreach Project  
-**Bundle ID:** `org.theoutreachproject.torp`  
+**Bundle ID:** `org.theoutreachproject.top`  
 **Platform:** iOS (Capacitor native shell + remote WebView)  
 **Production origin:** `https://theoutreachproject.app`  
 **Last updated:** 2026-06-09  
@@ -167,12 +167,12 @@ QA `{origin}` = `https://qa.theoutreachproject.app` (TestFlight/internal builds 
 
 | Mechanism | Value | When used |
 |-----------|-------|-----------|
-| Custom URL scheme | `org.theoutreachproject.torp://account/refresh` | Web success pages → reopen app |
+| Custom URL scheme | `org.theoutreachproject.top://account/refresh` | Web success pages → reopen app |
 | Query flag | `?mobileReturn=account` | After web signup/billing; triggers in-app refresh |
 | Checkout return | `?checkout=success` / `?checkout=cancel` | Stripe return URLs |
 | In-app control | **Refresh account status** | `MobileAccountReturnBridge` after Safari closes |
 
-Registered in `Info.plist` → `CFBundleURLSchemes`: `org.theoutreachproject.torp`
+Registered in `Info.plist` → `CFBundleURLSchemes`: `org.theoutreachproject.top`
 
 ---
 
@@ -243,7 +243,7 @@ Use a Production WorkOS test account (credentials in App Store Connect Review No
 Copy the block below into **App Store Connect → App → App Review Information → Notes**.
 
 ```
-APP ROUTING & COVERAGE (The Outreach Project — org.theoutreachproject.torp)
+APP ROUTING & COVERAGE (The Outreach Project — org.theoutreachproject.top)
 
 NOT A MAPS ROUTING APP: No MKDirectionsApplicationSupportedModes, no .geojson routing coverage file. This is a Capacitor WebView loading https://theoutreachproject.app.
 
@@ -251,7 +251,7 @@ NAVIGATION: Bottom tabs — Home (directory), Trusted, Community, Profile, Conta
 
 AUTH: Sign-in uses WorkOS AuthKit inside the WebView. Sign-up, membership purchase, sponsor packages, and billing open in Safari on the website — not in-app. No Apple IAP. No in-app payment forms.
 
-ACCOUNT SYNC: Shared WorkOS account with the website. After web signup/payment, user returns via org.theoutreachproject.torp://account/refresh or taps Refresh account status in the app.
+ACCOUNT SYNC: Shared WorkOS account with the website. After web signup/payment, user returns via org.theoutreachproject.top://account/refresh or taps Refresh account status in the app.
 
 EXTERNAL DOMAINS IN WEBVIEW: theoutreachproject.app, WorkOS (*.workos.com), Supabase (*.supabase.co). Stripe is NOT loaded in the WebView.
 
@@ -274,7 +274,7 @@ Terms: https://theoutreachproject.app/terms
 |--------------|---------------------|
 | Routing App Coverage File (.geojson) | **Leave empty** — not a routing app |
 | Maps routing capability in Xcode | **Off** |
-| URL schemes | `org.theoutreachproject.torp` (account refresh) |
+| URL schemes | `org.theoutreachproject.top` (account refresh) |
 | Associated Domains / Universal Links | Optional future enhancement; v1 uses custom scheme |
 | Sign in with Apple | Not used — WorkOS AuthKit |
 | In-App Purchase | Not configured — billing on web |

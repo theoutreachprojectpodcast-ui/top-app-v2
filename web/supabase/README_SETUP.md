@@ -16,10 +16,10 @@ All paths below are under `web/supabase/`.
 
 | Order | File |
 |------:|------|
-| 1 | `torp_v03_profiles.sql` |
-| 2 | `torp_account_access_model_v03.sql` |
-| 3 | `torp_profiles_membership_source.sql` |
-| 4 | `torp_profiles_stripe_customer_idx.sql` |
+| 1 | `top_v03_profiles.sql` |
+| 2 | `top_account_access_model_v03.sql` |
+| 3 | `top_profiles_membership_source.sql` |
+| 4 | `top_profiles_stripe_customer_idx.sql` |
 
 ---
 
@@ -28,7 +28,7 @@ All paths below are under `web/supabase/`.
 | Order | File |
 |------:|------|
 | 5 | `top_app_saved_org_eins.sql` |
-| 6 | `torp_platform_notifications.sql` |
+| 6 | `top_platform_notifications.sql` |
 
 ---
 
@@ -79,7 +79,7 @@ Run at least one base enrichment definition; both are safe together if both use 
 | Order | File |
 |------:|------|
 | 20 | `community.sql` |
-| 21 | `community_v03_data_model.sql` | Requires `torp_profiles` (step 1) |
+| 21 | `community_v03_data_model.sql` | Requires `top_profiles` (step 1) |
 
 **Optional seed data:** `community_seed_stories.sql` (only if you want demo stories)
 
@@ -89,7 +89,7 @@ Run at least one base enrichment definition; both are safe together if both use 
 
 | Order | File |
 |------:|------|
-| 22 | `admin_platform_rbac_v04.sql` | Run after `torp_account_access_model_v03.sql`; community section runs only if `community_posts` exists (run steps 20–21 first) |
+| 22 | `admin_platform_rbac_v04.sql` | Run after `top_account_access_model_v03.sql`; community section runs only if `community_posts` exists (run steps 20–21 first) |
 
 ---
 
@@ -106,13 +106,13 @@ Run at least one base enrichment definition; both are safe together if both use 
 
 | Order | File | Purpose |
 |------:|------|---------|
-| — | `_torp_rls_helpers.sql` | Optional early install of RLS helper functions |
+| — | `_top_rls_helpers.sql` | Optional early install of RLS helper functions |
 | **40** | `supabase_public_rls_hardening_2026_06.sql` | **Run on every environment** — enables + forces RLS on all `public` tables; sets `security_invoker` on all views; drops permissive client policies. Fixes Supabase linter **0013** (RLS disabled) and **0010** (security definer views). |
 
 After run:
 
 ```sql
-select * from public._torp_rls_security_audit() where status <> 'OK' order by 1, 2;
+select * from public._top_rls_security_audit() where status <> 'OK' order by 1, 2;
 ```
 
 Supabase Dashboard → Database → Linter → **Refresh**.
@@ -150,12 +150,12 @@ In Vercel (and local `web/.env.local`), set at least:
 
 If you want the shortest path to a working app shell + profiles + admin bootstrap:
 
-1. `torp_v03_profiles.sql`  
-2. `torp_account_access_model_v03.sql`  
-3. `torp_profiles_membership_source.sql`  
-4. `torp_profiles_stripe_customer_idx.sql`  
+1. `top_v03_profiles.sql`  
+2. `top_account_access_model_v03.sql`  
+3. `top_profiles_membership_source.sql`  
+4. `top_profiles_stripe_customer_idx.sql`  
 5. `top_app_saved_org_eins.sql`  
-6. `torp_platform_notifications.sql`  
+6. `top_platform_notifications.sql`  
 7. `nonprofit_directory_enrichment.sql`  
 8. `trusted_resources.sql`  
 9. `sponsors_catalog.sql` + `sponsor_applications.sql` + checkout/invite columns + `sponsor_logo_enrichment.sql` + `safe_alignment_extension_2026_04.sql` (as needed)  

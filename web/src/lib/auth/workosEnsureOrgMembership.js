@@ -24,10 +24,10 @@ export async function ensureWorkOSOrganizationMembership(userId) {
     if (res.ok) return { ok: true, created: true };
     if (res.status === 409) return { ok: true, created: false };
     const body = await res.text().catch(() => "");
-    console.warn("[torp] WorkOS org membership:", res.status, body.slice(0, 200));
+    console.warn("[top] WorkOS org membership:", res.status, body.slice(0, 200));
     return { ok: false, status: res.status };
   } catch (e) {
-    console.error("[torp] WorkOS org membership failed:", e);
+    console.error("[top] WorkOS org membership failed:", e);
     return { ok: false, error: e };
   }
 }

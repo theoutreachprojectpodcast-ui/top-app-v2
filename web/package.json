@@ -14,6 +14,8 @@
     "verify:stripe-env": "node scripts/verify-stripe-env.mjs",
     "smoke:qa:http": "node scripts/qa-http-smoke.mjs",
     "smoke:production:http": "node scripts/production-http-smoke.mjs",
+    "apply:production:schema": "node scripts/apply-top-production-align.mjs",
+    "apply:production:schema:apply": "node scripts/apply-top-production-align.mjs --apply",
     "verify:auth-freeze": "node scripts/auth-production-guards.mjs",
     "verify:entity-names": "node scripts/verify-entity-display-names.mjs",
     "verify:trusted-titles": "node scripts/verify-trusted-resources-titles.mjs",

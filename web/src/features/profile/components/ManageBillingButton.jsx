@@ -4,7 +4,7 @@ import { useState } from "react";
 import { navigateToStripePortal } from "@/lib/capacitor/billingNavigation";
 
 /**
- * Opens Stripe Customer Portal for the signed-in WorkOS user (server uses torp_profiles.stripe_customer_id).
+ * Opens Stripe Customer Portal for the signed-in WorkOS user (server uses top_profiles.stripe_customer_id).
  */
 export default function ManageBillingButton({ stripeReady, hasStripeCustomer, variant = "soft" }) {
   const [busy, setBusy] = useState(false);

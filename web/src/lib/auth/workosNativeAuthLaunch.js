@@ -3,7 +3,7 @@
 import { Browser } from "@capacitor/browser";
 import { appUrl, nativeProductionAppOrigin } from "@/lib/capacitor/webAppOrigin";
 import { isCapacitorNative } from "@/lib/capacitor/platform";
-import { TORP_OAUTH_BROWSER_PENDING, TORP_OAUTH_STATE_KEY } from "@/lib/auth/oauthMobileHandoff";
+import { TOP_OAUTH_BROWSER_PENDING, TOP_OAUTH_STATE_KEY } from "@/lib/auth/oauthMobileHandoff";
 
 /**
  * @param {string} goPath e.g. `/auth/workos-go?mode=signin&returnTo=…`
@@ -35,7 +35,7 @@ export async function launchWorkOSAuth(goPath) {
   }
 
   if (typeof sessionStorage !== "undefined") {
-    sessionStorage.setItem(TORP_OAUTH_BROWSER_PENDING, "1");
+    sessionStorage.setItem(TOP_OAUTH_BROWSER_PENDING, "1");
   }
 
   const origin = nativeProductionAppOrigin();
@@ -51,8 +51,8 @@ export async function launchWorkOSAuth(goPath) {
     });
   } catch {
     if (typeof sessionStorage !== "undefined") {
-      sessionStorage.removeItem(TORP_OAUTH_BROWSER_PENDING);
-      sessionStorage.removeItem(TORP_OAUTH_STATE_KEY);
+      sessionStorage.removeItem(TOP_OAUTH_BROWSER_PENDING);
+      sessionStorage.removeItem(TOP_OAUTH_STATE_KEY);
     }
     throw new Error("Could not reach the sign-in service. Check your connection and try again.");
   }
@@ -60,8 +60,8 @@ export async function launchWorkOSAuth(goPath) {
   const data = await res.json().catch(() => ({}));
   if (!res.ok || !data?.ok) {
     if (typeof sessionStorage !== "undefined") {
-      sessionStorage.removeItem(TORP_OAUTH_BROWSER_PENDING);
-      sessionStorage.removeItem(TORP_OAUTH_STATE_KEY);
+      sessionStorage.removeItem(TOP_OAUTH_BROWSER_PENDING);
+      sessionStorage.removeItem(TOP_OAUTH_STATE_KEY);
     }
     const msg = String(data?.message || "").trim();
     throw new Error(msg || "Could not start secure sign in.");
@@ -70,13 +70,13 @@ export async function launchWorkOSAuth(goPath) {
   const stateKey = String(data.stateKey || data.key || "").trim();
   if (!stateKey) {
     if (typeof sessionStorage !== "undefined") {
-      sessionStorage.removeItem(TORP_OAUTH_BROWSER_PENDING);
+      sessionStorage.removeItem(TOP_OAUTH_BROWSER_PENDING);
     }
     throw new Error("Could not start secure sign in.");
   }
 
   if (typeof sessionStorage !== "undefined") {
-    sessionStorage.setItem(TORP_OAUTH_STATE_KEY, stateKey);
+    sessionStorage.setItem(TOP_OAUTH_STATE_KEY, stateKey);
   }
 
   const browserStart = String(data.browserStart || "").trim();

@@ -84,7 +84,7 @@ Audit of **The Outreach Project** for App Store and Google Play readiness. Compl
 | Admin console (`admin.*` host) | ✅ | 🟡 | 🟡 | Separate host; optional for mobile v1 |
 | In-app notifications list | ✅ | 🟡 | 🟡 | Poll/API — not push |
 | Share link (native sheet) | ✅ | ✅ | ✅ | `shareContent()` — wire in UI when needed |
-| Deep links (`torp://`, universal links) | ⛔ | ⛔ | ⛔ | Not configured |
+| Deep links (`top://`, universal links) | ⛔ | ⛔ | ⛔ | Not configured |
 | Push notifications | ⛔ | ⛔ | ⛔ | Documented only |
 | Offline mode | ⛔ | ⛔ | ⛔ | Requires network for Next remote URL |
 | Demo flows | Off prod | ✅ off | ✅ off | `demoFlowsEnabled: false` on prod API |

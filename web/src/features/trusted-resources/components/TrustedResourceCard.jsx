@@ -135,12 +135,12 @@ export default function TrustedResourceCard({ resource }) {
             <NonprofitSocialLinks className="trustedResourceCard__socialLinks" links={socialLinksForRow} />
           ) : null}
           {resourceHref ? (
-            <Link className="trustedResourceCard__viewLink" href={resourceHref} data-torp-card-interactive>
+            <Link className="trustedResourceCard__viewLink" href={resourceHref} data-top-card-interactive>
               View resource profile
             </Link>
           ) : null}
           {profilePath && einIdentityVerified && profilePath !== resourceHref ? (
-            <Link className="trustedResourceCard__profileLink" href={profilePath} data-torp-card-interactive>
+            <Link className="trustedResourceCard__profileLink" href={profilePath} data-top-card-interactive>
               Directory profile
             </Link>
           ) : null}

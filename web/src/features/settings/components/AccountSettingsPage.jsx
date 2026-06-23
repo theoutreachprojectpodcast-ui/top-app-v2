@@ -152,10 +152,10 @@ export default function AccountSettingsPage({
             <strong>WorkOS sign-in email:</strong> {workOSAccountEmail}
           </p>
         ) : null}
-        <label className="sponsorSectionLead" style={{ display: "block" }} htmlFor="torp-settings-profile-email">
+        <label className="sponsorSectionLead" style={{ display: "block" }} htmlFor="top-settings-profile-email">
           Profile email
           <input
-            id="torp-settings-profile-email"
+            id="top-settings-profile-email"
             name="email"
             type="email"
             inputMode="email"
@@ -289,10 +289,10 @@ export default function AccountSettingsPage({
           />
           <span>I understand this permanently deletes my account and personal data.</span>
         </label>
-        <label className="sponsorSectionLead accountSettingsDangerZone__confirmLabel" htmlFor="torp-delete-confirm">
+        <label className="sponsorSectionLead accountSettingsDangerZone__confirmLabel" htmlFor="top-delete-confirm">
           Type <strong>{DELETE_CONFIRM_PHRASE}</strong> to confirm
           <input
-            id="torp-delete-confirm"
+            id="top-delete-confirm"
             name="deleteConfirm"
             type="text"
             autoComplete="off"

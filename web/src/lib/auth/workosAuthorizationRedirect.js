@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { getWorkOS } from "@workos-inc/authkit-nextjs";
 import { workOSAuthRedirectBridge } from "@/lib/auth/workosAuthRedirectBridge";
 import { workosMobileRedirectUri } from "@/lib/auth/workosMobileRedirect";
-import { TORP_OAUTH_SHELL_COOKIE, TORP_OAUTH_SHELL_NATIVE } from "@/lib/auth/workosOAuthShell";
+import { TOP_OAUTH_SHELL_COOKIE, TOP_OAUTH_SHELL_NATIVE } from "@/lib/auth/workosOAuthShell";
 
 /** AuthKit callback expects this exact cookie name (`handleAuth` in @workos-inc/authkit-nextjs). */
 export const WORKOS_PKCE_COOKIE_NAME = "wos-auth-verifier";
@@ -31,7 +31,7 @@ export function attachWorkOSAuthorizeCookies(response, sealedState, markNativeSh
   const opts = workosPkceCookieOptions();
   response.cookies.set(WORKOS_PKCE_COOKIE_NAME, state, opts);
   if (markNativeShell) {
-    response.cookies.set(TORP_OAUTH_SHELL_COOKIE, TORP_OAUTH_SHELL_NATIVE, opts);
+    response.cookies.set(TOP_OAUTH_SHELL_COOKIE, TOP_OAUTH_SHELL_NATIVE, opts);
   }
   return response;
 }
@@ -160,7 +160,7 @@ export async function getWorkOSAuthKitAuthorizeBundle(options = {}) {
   const cookieOpts = workosPkceCookieOptions();
   cookieStore.set(WORKOS_PKCE_COOKIE_NAME, sealedState, cookieOpts);
   if (options.markNativeShell) {
-    cookieStore.set(TORP_OAUTH_SHELL_COOKIE, TORP_OAUTH_SHELL_NATIVE, cookieOpts);
+    cookieStore.set(TOP_OAUTH_SHELL_COOKIE, TOP_OAUTH_SHELL_NATIVE, cookieOpts);
   }
 
   const url = workos.userManagement.getAuthorizationUrl({

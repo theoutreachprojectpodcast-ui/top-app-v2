@@ -32,7 +32,7 @@ async function resolveWorkosUserId(admin, sub, customerId) {
     if (byCustomer?.workos_user_id) return String(byCustomer.workos_user_id);
   }
 
-  const profileId = meta.torp_profile_id;
+  const profileId = meta.top_profile_id || meta.torp_profile_id;
   if (profileId) {
     const { data, error } = await admin
       .from(profileTableName())
@@ -66,7 +66,7 @@ export async function POST(request) {
   try {
     event = stripe.webhooks.constructEvent(body, sig, secret);
   } catch (err) {
-    console.error("[torp] Stripe webhook verify", err.message);
+    console.error("[top] Stripe webhook verify", err.message);
     return Response.json({ error: "invalid_signature" }, { status: 400 });
   }
 
@@ -81,7 +81,7 @@ export async function POST(request) {
         const session = event.data.object;
         const workos = session.metadata?.workos_user_id;
         const cust = typeof session.customer === "string" ? session.customer : session.customer?.id;
-        const profileId = session.metadata?.torp_profile_id;
+        const profileId = session.metadata?.top_profile_id || session.metadata?.torp_profile_id;
 
         if (cust && workos) {
           await admin
@@ -125,13 +125,13 @@ export async function POST(request) {
               },
               { onConflict: "stripe_checkout_session_id" },
             );
-            if (pe) console.warn("[torp] podcast checkout audit upsert", pe.message);
+            if (pe) console.warn("[top] podcast checkout audit upsert", pe.message);
             const merge = await mergeProfileMetadataByWorkOSId(admin, String(w), {
               podcastSponsorLastTierId: String(session.metadata?.podcast_tier_id || ""),
               podcastSponsorLastCheckoutAt: new Date().toISOString(),
               podcastSponsorLastSessionId: session.id,
             });
-            if (!merge.ok) console.warn("[torp] podcast profile metadata merge", merge.reason);
+            if (!merge.ok) console.warn("[top] podcast profile metadata merge", merge.reason);
             await admin
               .from(profileTableName())
               .update({
@@ -188,7 +188,7 @@ export async function POST(request) {
           try {
             await notifyMembershipFromStripeInvoice(admin, profileForNotify, inv, event.type);
           } catch (e) {
-            console.warn("[torp] membership notification", e?.message || e);
+            console.warn("[top] membership notification", e?.message || e);
           }
         }
         break;
@@ -207,7 +207,7 @@ export async function POST(request) {
         break;
     }
   } catch (e) {
-    console.error("[torp] webhook handler", e);
+    console.error("[top] webhook handler", e);
     return Response.json({ error: "handler_failed", type: event?.type || "unknown" }, { status: 500 });
   }
 

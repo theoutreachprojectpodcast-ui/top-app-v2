@@ -5,7 +5,7 @@
 @import "../components/app/top-app.css";
 @import "../components/app/home-sponsor-banner.css";
 @import "../styles/page-atmosphere.css";
-@import "../styles/torp-listing-cards.css";
+@import "../styles/top-listing-cards.css";
 @import "../styles/mobile-shell.css";
 @import "../styles/mobile-design-system.css";
 @import "../styles/mobile-nav-dock.css";
@@ -32,7 +32,7 @@ a {
 
 .appShell {
   min-height: 100vh;
-  padding-bottom: var(--torp-bottom-nav-reserve, calc(96px + env(safe-area-inset-bottom, 0px)));
+  padding-bottom: var(--top-bottom-nav-reserve, calc(96px + env(safe-area-inset-bottom, 0px)));
 }
 
 .topBar {
@@ -63,7 +63,7 @@ a {
 
 .appShell--subpage {
   min-height: 100vh;
-  padding-bottom: var(--torp-bottom-nav-reserve, calc(96px + env(safe-area-inset-bottom, 0px)));
+  padding-bottom: var(--top-bottom-nav-reserve, calc(96px + env(safe-area-inset-bottom, 0px)));
 }
 
 .brandTitle {
@@ -79,7 +79,7 @@ a {
 }
 
 .content {
-  width: min(1100px, calc(100% - var(--torp-page-gutter-x, clamp(16px, 5vw, 40px))));
+  width: min(1100px, calc(100% - var(--top-page-gutter-x, clamp(16px, 5vw, 40px))));
   margin: 0 auto;
   padding: var(--ds-space-5, 20px) var(--ds-space-4, 16px);
   box-sizing: border-box;

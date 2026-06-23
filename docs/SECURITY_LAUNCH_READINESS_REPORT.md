@@ -87,7 +87,7 @@ All `/api/admin/**` routes use `requirePlatformAdminRouteContext` / `requirePlat
 **Ops required:** Run hardening SQL in Supabase SQL Editor, then:
 
 ```sql
-select * from public._torp_rls_security_audit() where status <> 'OK';
+select * from public._top_rls_security_audit() where status <> 'OK';
 ```
 
 ### Mobile security
@@ -96,7 +96,7 @@ select * from public._torp_rls_security_audit() where status <> 'OK';
 |---------|--------|
 | Billing externalized (no Stripe in WebView) | ✅ `billingNavigation.js` |
 | `allowNavigation` restricted | ✅ `capacitor.config.js` |
-| Deep link return | ✅ `org.theoutreachproject.torp://account/refresh` |
+| Deep link return | ✅ `org.theoutreachproject.top://account/refresh` |
 | External URL allowlist | ✅ **Added** `externalUrlPolicy.js` |
 | Tokens in plaintext local storage | ✅ N/A — WorkOS httpOnly cookies on app origin |
 

@@ -1,7 +1,7 @@
 # App Encryption — Apple App Store Connect (paste fields)
 
 **App:** The Outreach Project  
-**Bundle ID:** `org.theoutreachproject.torp`  
+**Bundle ID:** `org.theoutreachproject.top`  
 **Last updated:** June 9, 2026  
 
 Copy the block that matches the **character counter** on your App Store Connect field. Counts below are plain-text length (each character in the paste block counts as 1).
@@ -23,13 +23,13 @@ python docs/legal/verify-encryption-fields.py
 ### If your counter shows **300** — use **299/300**
 
 ```
-The Outreach Project (org.theoutreachproject.torp) helps veterans, first responders, and supporters find nonprofits, trusted resources, community, podcasts, and membership. Capacitor loads https://theoutreachproject.app in WKWebView. Consumer app; not for military or surveillance. No custom crypto.
+The Outreach Project (org.theoutreachproject.top) helps veterans, first responders, and supporters find nonprofits, trusted resources, community, podcasts, and membership. Capacitor loads https://theoutreachproject.app in WKWebView. Consumer app; not for military or surveillance. No custom crypto.
 ```
 
 ### If your counter shows **500** — use **485/500**
 
 ```
-The Outreach Project (org.theoutreachproject.torp) is a consumer iOS app for veterans, first responders, and supporters. Users sign in to search nonprofits, browse trusted resources, read community posts, access podcasts, save organizations, and manage optional membership. Capacitor shell loads https://theoutreachproject.app in WKWebView. Not for military, intelligence, or surveillance. Membership billing uses Stripe on the web. Profile and saved orgs sync via Supabase over HTTPS.
+The Outreach Project (org.theoutreachproject.top) is a consumer iOS app for veterans, first responders, and supporters. Users sign in to search nonprofits, browse trusted resources, read community posts, access podcasts, save organizations, and manage optional membership. Capacitor shell loads https://theoutreachproject.app in WKWebView. Not for military, intelligence, or surveillance. Membership billing uses Stripe on the web. Profile and saved orgs sync via Supabase over HTTPS.
 ```
 
 ---
@@ -75,7 +75,7 @@ WorkOS, Supabase, and Stripe are reached only via HTTPS inside WKWebView. Capaci
 If App Store Connect shows **one** description field (or you use the App Encryption Declaration API), paste this combined block (**872/4,000**):
 
 ```
-The Outreach Project (org.theoutreachproject.torp) is a consumer iOS app for veterans, first responders, and supporters (nonprofit directory, trusted resources, community, podcasts, membership). Capacitor/WKWebView loads https://theoutreachproject.app. Encryption: HTTPS (TLS 1.2+) only via Apple WebKit and iOS networking to WorkOS, Supabase, and Stripe. No proprietary, custom, or non-standard crypto in the iOS binary. No VPN, E2E chat, encrypted vault, or user-managed keys. Mass-market consumer app; exempt under EAR Category 5 Part 2. No CCATS, ERN, or proprietary cryptography. Capacitor links @capacitor/core and @capacitor/share only; TLS from Apple OS/WebKit. Not for military, intelligence, or surveillance use. Server encryption at rest is provider-managed (Vercel, Supabase), not client-side crypto. Optional photo upload for profile or community images only.
+The Outreach Project (org.theoutreachproject.top) is a consumer iOS app for veterans, first responders, and supporters (nonprofit directory, trusted resources, community, podcasts, membership). Capacitor/WKWebView loads https://theoutreachproject.app. Encryption: HTTPS (TLS 1.2+) only via Apple WebKit and iOS networking to WorkOS, Supabase, and Stripe. No proprietary, custom, or non-standard crypto in the iOS binary. No VPN, E2E chat, encrypted vault, or user-managed keys. Mass-market consumer app; exempt under EAR Category 5 Part 2. No CCATS, ERN, or proprietary cryptography. Capacitor links @capacitor/core and @capacitor/share only; TLS from Apple OS/WebKit. Not for military, intelligence, or surveillance use. Server encryption at rest is provider-managed (Vercel, Supabase), not client-side crypto. Optional photo upload for profile or community images only.
 ```
 
 ---

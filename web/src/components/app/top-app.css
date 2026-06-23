@@ -18,7 +18,7 @@
   min-height: 100svh;
   background: transparent;
   color: var(--color-text-primary);
-  padding-bottom: var(--torp-bottom-nav-reserve);
+  padding-bottom: var(--top-bottom-nav-reserve);
 }
 
 /* Home desktop: wordmark +75% vs prior compact home sizing. */
@@ -2356,7 +2356,7 @@ span.headerBrandMarkFallback {
   font-size: 1rem;
 }
 /* Nonprofit directory result cards: category / org header strip (default listing hero is 92px). */
-#home-directory .torpListingCardHeroWrap {
+#home-directory .topListingCardHeroWrap {
   height: 184px;
 }
 .directoryCategoryHeader__eyebrow {
@@ -3866,7 +3866,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 }
 
 /* Cards in tier grids: stretch with the grid cell and push footer to the bottom of the card */
-.sponsorFeaturedShowcase > .sponsorPremiumCard.torpListingCard {
+.sponsorFeaturedShowcase > .sponsorPremiumCard.topListingCard {
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -7646,7 +7646,7 @@ html.dark .communityPostBodyGuideSteps li {
   line-height: 1.35;
   max-width: 60ch;
 }
-.nonprofitProfileNameOnSite .torpEntityNameInline {
+.nonprofitProfileNameOnSite .topEntityNameInline {
   text-transform: uppercase;
   letter-spacing: 0.055em;
   font-weight: 700;
@@ -7783,7 +7783,7 @@ html.dark .communityPostBodyGuideSteps li {
 }
 
 /* Reusable: organization / sponsor title all-caps (admin lists, etc.) */
-.torpEntityNameDisplay {
+.topEntityNameDisplay {
   text-transform: uppercase;
   letter-spacing: 0.055em;
 }

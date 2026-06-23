@@ -47,7 +47,7 @@ export async function GET(request) {
     }));
     return Response.json({ invoices });
   } catch (e) {
-    console.error("[torp] billing invoices", e);
+    console.error("[top] billing invoices", e);
     return Response.json({ error: "stripe_error", message: e.message }, { status: 500 });
   }
 }

@@ -6,7 +6,9 @@ const MAX_STALE_MS = 1000 * 60 * 45;
 export function readNavAuthCache() {
   if (typeof sessionStorage === "undefined") return null;
   try {
-    const raw = sessionStorage.getItem(TOP_NAV_AUTH_CACHE_KEY);
+    const raw =
+      sessionStorage.getItem(TOP_NAV_AUTH_CACHE_KEY) ||
+      sessionStorage.getItem("torp_nav_auth_v1");
     if (!raw) return null;
     const o = JSON.parse(raw);
     if (!o || typeof o.t !== "number") return null;
@@ -51,6 +53,7 @@ export function clearNavAuthCache() {
   if (typeof sessionStorage === "undefined") return;
   try {
     sessionStorage.removeItem(TOP_NAV_AUTH_CACHE_KEY);
+    sessionStorage.removeItem("torp_nav_auth_v1");
   } catch {
     /* ignore */
   }

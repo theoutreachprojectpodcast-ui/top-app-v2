@@ -1,4 +1,4 @@
-# Capacitor (tORP v0.3) — stacked web + Android + iOS
+# Capacitor (TOP v0.3) — stacked web + Android + iOS
 
 This document describes how Capacitor is integrated **without** forking the Next.js app. The **browser and `next dev` / `next start` experience remains primary**.
 
@@ -6,7 +6,7 @@ This document describes how Capacitor is integrated **without** forking the Next
 
 Before Capacitor files were added, a checkpoint commit was created and pushed:
 
-- **Commit:** `checkpoint: pre-capacitor-integration (tORP v0.3)` (e.g. `de69e85` on branch `tORP_Volente_v0.3`)
+- **Commit:** `checkpoint: pre-capacitor-integration (TOP v0.3)` (e.g. `de69e85` on branch `TOP_Volente_v0.3`)
 - **Remote:** `origin` → `https://github.com/theoutreachprojectpodcast-ui/top-app-v2.git`
 
 Restore that point if needed: `git checkout <commit>`.
@@ -41,7 +41,7 @@ Inside **`web/`** (the Next app root):
 
 **App identity (update when branding is final):**
 
-- **appId / bundle id:** `org.theoutreachproject.torp`
+- **appId / bundle id:** `org.theoutreachproject.top`
 - **appName:** `The Outreach Project`
 
 ## Phase 5 — Scripts (`web/package.json`)

@@ -31,7 +31,7 @@ export async function GET() {
   const profileTable = profileTableName();
   const qaIsolatedProfiles =
     String(process.env.VERCEL_ENV || "").toLowerCase() === "preview"
-      ? profileTable !== "torp_profiles"
+      ? profileTable !== "top_profiles"
       : true;
   const orgId = expectedWorkOSOrganizationId();
   const idleMs = sessionIdleTimeoutMs();

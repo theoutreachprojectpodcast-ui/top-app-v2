@@ -113,9 +113,9 @@
   --shadow-bottom-nav: 0 -8px 32px color-mix(in srgb, var(--color-text-primary) 15%, transparent);
 
   /* Fixed bottom nav + iOS home indicator — use for `padding-bottom` on shells with docked nav */
-  --torp-bottom-nav-reserve: calc(68px + env(safe-area-inset-bottom, 0px));
+  --top-bottom-nav-reserve: calc(68px + env(safe-area-inset-bottom, 0px));
   /* Horizontal page gutter on phones (avoid hard-coded 40px-only gutters) */
-  --torp-page-gutter-x: clamp(12px, 4.2vw, 48px);
+  --top-page-gutter-x: clamp(12px, 4.2vw, 48px);
 
   --color-scrollbar-track: color-mix(in srgb, var(--color-bg-subtle) 96%, var(--color-bg-app) 4%);
   --color-scrollbar-thumb: color-mix(in srgb, var(--color-border-strong) 55%, var(--color-bg-muted) 45%);
@@ -415,11 +415,11 @@ html {
 }
 
 /* Optional: extra topo depth on large bands (not for cards/forms — opt-in per section) */
-.torp-band-texture {
+.top-band-texture {
   position: relative;
   isolation: isolate;
 }
-.torp-band-texture::before {
+.top-band-texture::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -433,12 +433,12 @@ html {
   mix-blend-mode: multiply;
   filter: contrast(1.12) brightness(1.04);
 }
-:root[data-color-scheme="dark"] .torp-band-texture::before,
-.dark .torp-band-texture::before {
+:root[data-color-scheme="dark"] .top-band-texture::before,
+.dark .top-band-texture::before {
   mix-blend-mode: overlay;
   filter: grayscale(1) contrast(1.12) brightness(0.88);
 }
-.torp-band-texture > * {
+.top-band-texture > * {
   position: relative;
   z-index: 1;
 }

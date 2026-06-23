@@ -114,7 +114,7 @@ function AdminPostComments({ postId }) {
           {loading ? <p className="adminMuted">Loading comments…</p> : null}
           {!loading && comments.length === 0 ? <p className="adminMuted">No comments on this post.</p> : null}
           {comments.map((c) => {
-            const prof = c.torp_profiles && typeof c.torp_profiles === "object" ? c.torp_profiles : {};
+            const prof = c.top_profiles && typeof c.top_profiles === "object" ? c.top_profiles : {};
             const name =
               [prof.first_name, prof.last_name].filter(Boolean).join(" ").trim() ||
               String(prof.display_name || "Member");

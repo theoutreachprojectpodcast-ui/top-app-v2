@@ -4,18 +4,20 @@ Run in the **Production** Supabase project SQL editor (or CLI). Skip files prefi
 
 Apply in order. If a migration was already applied, Postgres will error on duplicate objects — note which step failed and continue from the next file.
 
-**Also run (not numbered in table):** `torp_profiles_membership_billing_v04.sql` after #5 or #6 — required for Membership & billing on profile.
+**Also run (not numbered in table):** `top_profiles_membership_billing_v04.sql` after #5 or #6 — required for Membership & billing on profile.
+
+**Existing production (tables still named `torp_*`):** run **`top_production_align_2026_06.sql`** once before or immediately after deploying app code that expects `top_*` table names. Greenfield installs use `top_v03_profiles.sql` directly (skip align).
 
 ## Troubleshooting
 
 | Step | File | Common error | Fix |
 |------|------|--------------|-----|
-| 1 | `torp_v03_profiles.sql` | (none if greenfield) | Creates `torp_profiles` + `membership_source` |
-| 2 | `torp_account_access_model_v03.sql` | `relation "torp_profiles" does not exist` | Run **#1** first |
-| 2 | `torp_account_access_model_v03.sql` | `check constraint` violation on `platform_role` | Backfill invalid rows, then re-run (see below) |
-| 3 | `torp_profiles_membership_source.sql` | PowerShell: `Missing statement body in do loop` / `Missing '(' after 'if'` | **Not Postgres** — you ran SQL in a shell. Use **Supabase → SQL Editor** only |
-| 3 | `torp_profiles_membership_source.sql` | `torp_profiles missing` / relation does not exist | Run **#1** first |
-| 3 | `torp_profiles_membership_source.sql` | (no error — success) | **Skip** if #1 already ran; column already exists |
+| 1 | `top_v03_profiles.sql` | (none if greenfield) | Creates `top_profiles` + `membership_source` |
+| 2 | `top_account_access_model_v03.sql` | `relation "top_profiles" does not exist` | Run **#1** first |
+| 2 | `top_account_access_model_v03.sql` | `check constraint` violation on `platform_role` | Backfill invalid rows, then re-run (see below) |
+| 3 | `top_profiles_membership_source.sql` | PowerShell: `Missing statement body in do loop` / `Missing '(' after 'if'` | **Not Postgres** — you ran SQL in a shell. Use **Supabase → SQL Editor** only |
+| 3 | `top_profiles_membership_source.sql` | `top_profiles missing` / relation does not exist | Run **#1** first |
+| 3 | `top_profiles_membership_source.sql` | (no error — success) | **Skip** if #1 already ran; column already exists |
 | 34 | `admin_backend_v06_access_control.sql` | `column "admin_access_enabled" does not exist` | You are on an old file order — run **#34** before admin `UPDATE` |
 | Admin grant | manual `UPDATE` | `admin_access_enabled` missing | Run **#34** `admin_backend_v06_access_control.sql` first |
 
@@ -24,21 +26,21 @@ Apply in order. If a migration was already applied, Postgres will error on dupli
 ```sql
 select exists (
   select 1 from information_schema.tables
-  where table_schema = 'public' and table_name = 'torp_profiles'
-) as torp_profiles_exists;
+  where table_schema = 'public' and table_name = 'top_profiles'
+) as top_profiles_exists;
 
 select exists (
   select 1 from information_schema.columns
-  where table_schema = 'public' and table_name = 'torp_profiles' and column_name = 'membership_source'
+  where table_schema = 'public' and table_name = 'top_profiles' and column_name = 'membership_source'
 ) as membership_source_exists;
 ```
 
-If `torp_profiles_exists` is false → run #1. If `membership_source_exists` is true → #3 is already done; continue to #4.
+If `top_profiles_exists` is false → run #1. If `membership_source_exists` is true → #3 is already done; continue to #4.
 
 **Backfill before #2** (only if `platform_role` check constraint fails):
 
 ```sql
-update public.torp_profiles
+update public.top_profiles
 set platform_role = 'user'
 where platform_role is null
    or platform_role not in ('user', 'support', 'member', 'sponsor', 'moderator', 'admin');
@@ -48,17 +50,17 @@ where platform_role is null
 
 | # | File | Purpose |
 |---|------|---------|
-| 1 | `torp_v03_profiles.sql` | Profiles table |
-| 2 | `torp_account_access_model_v03.sql` | Access model |
-| 3 | `torp_profiles_membership_source.sql` | Membership source column |
-| 4 | `torp_profiles_stripe_customer_idx.sql` | Stripe customer index |
-| 5 | `torp_profiles_last_login_v06.sql` | Last login tracking |
+| 1 | `top_v03_profiles.sql` | Profiles table |
+| 2 | `top_account_access_model_v03.sql` | Access model |
+| 3 | `top_profiles_membership_source.sql` | Membership source column |
+| 4 | `top_profiles_stripe_customer_idx.sql` | Stripe customer index |
+| 5 | `top_profiles_last_login_v06.sql` | Last login tracking |
 | 6 | `profile_onboarding_v06_questionnaire.sql` | Onboarding fields |
-| 6.5 | `torp_profiles_membership_billing_v04.sql` | Billing columns on profile (Stripe UI) |
+| 6.5 | `top_profiles_membership_billing_v04.sql` | Billing columns on profile (Stripe UI) |
 | 7 | `community.sql` | Community posts |
 | 8 | `community_v03_data_model.sql` | Community v3 extensions |
 | 9 | `top_app_saved_org_eins.sql` | Saved organizations |
-| 10 | `torp_platform_notifications.sql` | Notifications |
+| 10 | `top_platform_notifications.sql` | Notifications |
 | 11 | `trusted_resources.sql` | Trusted resources catalog |
 | 12 | `trusted_resource_applications.sql` | Trusted resource applications |
 | 13 | `trusted_resources_detail_v01.sql` | Trusted detail v1 |
@@ -99,16 +101,16 @@ Run the `sponsor_v*.sql` files in version order (`sponsor_v06` … `sponsor_v17`
 
 ```sql
 -- Security audit (expect zero rows)
-select * from public._torp_rls_security_audit() where status <> 'OK' order by 1, 2;
+select * from public._top_rls_security_audit() where status <> 'OK' order by 1, 2;
 
 -- Profiles + RLS
-select count(*) from public.torp_profiles limit 1;
+select count(*) from public.top_profiles limit 1;
 
 -- Sponsors seeded
 select count(*) from public.sponsors_catalog;
 
 -- Admin columns present
-select platform_role, admin_access_enabled from public.torp_profiles limit 1;
+select platform_role, admin_access_enabled from public.top_profiles limit 1;
 ```
 
 Confirm **RLS enabled** on user-facing tables in Supabase Dashboard → Database → Tables.

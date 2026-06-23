@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
-export const COLOR_SCHEME_STORAGE_KEY = "torp-color-scheme";
+export const COLOR_SCHEME_STORAGE_KEY = "top-color-scheme";
 
 const ColorSchemeContext = createContext({
   colorScheme: "light",
@@ -65,7 +65,9 @@ export function usePodcastDarkSchemeLock(enabled) {
     return () => {
       delete document.documentElement.dataset.usePodcastTheme;
       try {
-        const stored = localStorage.getItem(COLOR_SCHEME_STORAGE_KEY);
+        const stored =
+          localStorage.getItem(COLOR_SCHEME_STORAGE_KEY) ||
+          localStorage.getItem("torp-color-scheme");
         if (stored === "dark" || stored === "light") {
           setColorScheme(stored, { persist: false });
           return;

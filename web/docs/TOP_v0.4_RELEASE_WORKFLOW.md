@@ -107,7 +107,7 @@ Vercel is still treating the project like a **static “Other”** preset with d
 
 Use this as the single review URL instead of bookmarking per-deployment preview hostnames.
 
-**Evidence-based QA runs:** [TORP_v0.4_QA_VALIDATION_REPORT.md](./TORP_v0.4_QA_VALIDATION_REPORT.md) (HTTP probes, env names, blockers). After Deployment Protection is configured, use `pnpm --dir web run smoke:qa:http` with `QA_BASE_URL` and optional `VERCEL_AUTOMATION_BYPASS_SECRET`.
+**Evidence-based QA runs:** [TOP_v0.4_QA_VALIDATION_REPORT.md](./TOP_v0.4_QA_VALIDATION_REPORT.md) (HTTP probes, env names, blockers). After Deployment Protection is configured, use `pnpm --dir web run smoke:qa:http` with `QA_BASE_URL` and optional `VERCEL_AUTOMATION_BYPASS_SECRET`.
 
 ### One-time setup (Vercel dashboard — project owner)
 

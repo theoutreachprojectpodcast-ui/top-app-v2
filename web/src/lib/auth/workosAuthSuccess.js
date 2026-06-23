@@ -41,7 +41,7 @@ async function syncWorkOSUserAfterAuth(user) {
       });
     }
   } catch (e) {
-    console.error("[torp] WorkOS onSuccess profile sync failed:", e);
+    console.error("[top] WorkOS onSuccess profile sync failed:", e);
   }
 }
 

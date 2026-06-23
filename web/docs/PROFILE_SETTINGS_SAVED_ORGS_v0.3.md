@@ -1,8 +1,8 @@
-# Profile follow-up: settings page, saved orgs, membership card (tORP v0.3)
+# Profile follow-up: settings page, saved orgs, membership card (TOP v0.3)
 
 ## Checkpoint
 
-Before this pass: commit `checkpoint: profile-completion-followup-settings-and-saved-org-fixes (tORP v0.3)`.
+Before this pass: commit `checkpoint: profile-completion-followup-settings-and-saved-org-fixes (TOP v0.3)`.
 
 ## Home hero / gray bar
 

@@ -6,7 +6,7 @@ Single checklist for store submission. **Web production launch** ([mvp-productio
 
 **Status snapshot:** 2026-06-09 — Production login verified on iOS; Capacitor synced to `https://theoutreachproject.app/mobile`. **Next:** iOS Archive → TestFlight; Android keystore + signed AAB → Play internal testing.
 
-**App ID:** `org.theoutreachproject.torp` · **Production WebView URL:** `https://theoutreachproject.app/mobile`
+**App ID:** `org.theoutreachproject.top` · **Production WebView URL:** `https://theoutreachproject.app/mobile`
 
 **Store checklists:** [IOS_APP_STORE_RELEASE_CHECKLIST.md](../IOS_APP_STORE_RELEASE_CHECKLIST.md) · [ANDROID_PLAY_STORE_RELEASE_CHECKLIST.md](../ANDROID_PLAY_STORE_RELEASE_CHECKLIST.md)
 
@@ -140,8 +140,8 @@ Test on **physical devices** after native builds run.
 
 ### E.1 App Store Connect
 
-- [ ] Create app — **The Outreach Project**, bundle `org.theoutreachproject.torp`
-- [ ] SKU (e.g. `torp-ios-001`)
+- [ ] Create app — **The Outreach Project**, bundle `org.theoutreachproject.top`
+- [ ] SKU (e.g. `top-ios-001`)
 - [ ] Bundle ID exists in Apple Developer → Identifiers
 
 ### E.2 Build & TestFlight

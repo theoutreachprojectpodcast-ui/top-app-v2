@@ -1,4 +1,4 @@
-# Sponsor logo enrichment (tORP v0.3)
+# Sponsor logo enrichment (TOP v0.3)
 
 ## How it works
 

@@ -101,7 +101,7 @@ pnpm --dir web run mobile:preflight
 | Mobile | `/api/health/mobile` | TestFlight pre-release |
 | Full smoke | `smoke:production:http` | CI on push to `main` |
 
-**Log safely:** auth callback errors (`[torp] WorkOS callback failed`), health 503s. Never log tokens/cookies.
+**Log safely:** auth callback errors (`[top] WorkOS callback failed`), health 503s. Never log tokens/cookies.
 
 ---
 

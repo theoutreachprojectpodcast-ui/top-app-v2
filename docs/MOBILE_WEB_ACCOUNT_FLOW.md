@@ -11,9 +11,9 @@ The Outreach Project native apps (Capacitor iOS/Android) share accounts with **h
 
 After external signup or payment, users return via:
 
-- Deep link (auth): `org.theoutreachproject.torp://auth/complete?token=…` (also `theoutreachproject://`)
+- Deep link (auth): `org.theoutreachproject.top://auth/complete?token=…` (also `theoutreachproject://`)
 - Universal link (optional): `https://theoutreachproject.app/mobile-auth/complete`
-- Deep link (billing refresh): `org.theoutreachproject.torp://account/refresh`
+- Deep link (billing refresh): `org.theoutreachproject.top://account/refresh`
 - Web query: `?mobileReturn=account` on success/cancel/profile URLs
 - In-app **Refresh account status** (fixed footer control via `MobileAccountReturnBridge`)
 

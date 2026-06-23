@@ -10,7 +10,7 @@ Step-by-step guide for building and submitting **The Outreach Project** iOS app 
 
 | Field | Value |
 |-------|--------|
-| Bundle ID | `org.theoutreachproject.torp` |
+| Bundle ID | `org.theoutreachproject.top` |
 | Display name | The Outreach Project |
 | WebView URL | `https://theoutreachproject.app` |
 | Xcode project | `web/ios/App/App.xcodeproj` |
@@ -106,7 +106,7 @@ At [developer.apple.com/account](https://developer.apple.com/account).
 1. **Certificates, Identifiers & Profiles → Identifiers → +**
 2. **App IDs → App** → Continue
 3. Description: `The Outreach Project`
-4. Bundle ID: **Explicit** → `org.theoutreachproject.torp`
+4. Bundle ID: **Explicit** → `org.theoutreachproject.top`
 5. Capabilities: defaults for v1 (no push, no IAP). Photo/camera usage strings are in `web/ios/App/App/Info.plist`.
 6. Register
 
@@ -116,8 +116,8 @@ At [developer.apple.com/account](https://developer.apple.com/account).
 2. Platform: **iOS**
 3. Name: **The Outreach Project**
 4. Primary language: English (U.S.)
-5. Bundle ID: **`org.theoutreachproject.torp`**
-6. SKU: e.g. `torp-ios-001` (internal only)
+5. Bundle ID: **`org.theoutreachproject.top`**
+6. SKU: e.g. `top-ios-001` (internal only)
 7. User Access: per your org (typically Full Access)
 
 ---
@@ -129,7 +129,7 @@ At [developer.apple.com/account](https://developer.apple.com/account).
 1. Select **App** project → target **App** → **Signing & Capabilities**
 2. **Team:** your Apple Developer team
 3. **Automatically manage signing:** ON
-4. **Bundle Identifier:** `org.theoutreachproject.torp`
+4. **Bundle Identifier:** `org.theoutreachproject.top`
 
 Resolve any red errors (team, agreements, Bundle ID) before continuing.
 

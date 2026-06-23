@@ -29,7 +29,7 @@ async function classifyRouteSession(session) {
   const admin = createSupabaseAdminClient();
   if (s.user?.id) {
     void ensureWorkOSOrganizationMembership(s.user.id).catch((e) => {
-      console.warn("[torp] background org membership sync failed:", e);
+      console.warn("[top] background org membership sync failed:", e);
     });
   }
 
@@ -39,7 +39,7 @@ async function classifyRouteSession(session) {
       await upsertProfileFromWorkOSUser(admin, s.user);
       profileRow = await getProfileRowByWorkOSId(admin, s.user.id);
     } catch (e) {
-      console.error("[torp] classifyRouteSession profile upsert failed:", e);
+      console.error("[top] classifyRouteSession profile upsert failed:", e);
     }
   }
 

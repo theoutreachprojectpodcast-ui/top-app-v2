@@ -144,7 +144,7 @@ export default function FeaturedSponsorCard({
 
   return (
     <article
-      className={`torpListingCard sponsorPremiumCard sponsorPremiumCard--${warm}${tierClass}`}
+      className={`topListingCard sponsorPremiumCard sponsorPremiumCard--${warm}${tierClass}`}
       data-sponsor-slug={String(sponsor.slug || sponsor.id || "").trim().toLowerCase() || undefined}
       style={accentStyle}
       role="button"
@@ -159,7 +159,7 @@ export default function FeaturedSponsorCard({
       aria-label={`Open ${displayName} sponsor profile`}
     >
       <div
-        className={`sponsorPremiumCardBg torpListingCardHero ${hasListingBg ? "torpListingCardHero--photo" : `torpListingCardHero--sponsorTone torpListingCardHero--sponsorTone-${warm}`}`}
+        className={`sponsorPremiumCardBg topListingCardHero ${hasListingBg ? "topListingCardHero--photo" : `topListingCardHero--sponsorTone topListingCardHero--sponsorTone-${warm}`}`}
         style={hasListingBg ? { backgroundImage: `url('${safeBg.replace(/'/g, "%27")}')` } : undefined}
         aria-hidden
       />

@@ -28,7 +28,7 @@ These fixes restored live sign-in at https://theoutreachproject.app. **Do not ch
 
 - Capacitor WebView uses HTTPS redirect URI `https://theoutreachproject.app/callback` (not custom scheme) for in-app sign-in.
 - Post-auth landing: `/mobile/auth/complete` — refreshes session before routing home.
-- Native shell marker cookie: `torp-oauth-shell=native` during OAuth.
+- Native shell marker cookie: `top-oauth-shell=native` during OAuth.
 
 ## Required production env (Vercel)
 

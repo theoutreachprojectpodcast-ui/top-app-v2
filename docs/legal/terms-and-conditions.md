@@ -3,7 +3,7 @@
 **Last updated:** June 8, 2026  
 **Effective date:** June 8, 2026  
 **Published URL:** https://theoutreachproject.app/terms  
-**Applies to:** theoutreachproject.app website, The Outreach Project mobile applications on Apple App Store and Google Play (Bundle ID / Application ID: `org.theoutreachproject.torp`), and related services (collectively, the **“Service”**).
+**Applies to:** theoutreachproject.app website, The Outreach Project mobile applications on Apple App Store and Google Play (Bundle ID / Application ID: `org.theoutreachproject.top`), and related services (collectively, the **“Service”**).
 
 ---
 

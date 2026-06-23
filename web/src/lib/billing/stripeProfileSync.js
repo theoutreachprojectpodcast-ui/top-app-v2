@@ -54,7 +54,7 @@ export async function fetchDefaultPaymentMethodSummary(stripe, customerId) {
 }
 
 /**
- * Sync torp_profiles billing columns from a Stripe subscription.
+ * Sync top_profiles billing columns from a Stripe subscription.
  * @param {import('@supabase/supabase-js').SupabaseClient} admin
  * @param {import('stripe').Stripe} stripe
  * @param {string} workosUserId

@@ -88,7 +88,7 @@ export async function POST(request) {
   if (!customerId) {
     const customer = await stripe.customers.create({
       email: auth.user.email || undefined,
-      metadata: { workos_user_id: auth.user.id, torp_profile_id: row.id ? String(row.id) : "" },
+      metadata: { workos_user_id: auth.user.id, top_profile_id: row.id ? String(row.id) : "" },
     });
     customerId = customer.id;
     await admin

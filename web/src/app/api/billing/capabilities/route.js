@@ -12,7 +12,7 @@ export async function GET() {
       },
     });
   } catch (e) {
-    console.error("[torp] billing capabilities", e);
+    console.error("[top] billing capabilities", e);
     return Response.json(
       { ok: false, error: "capabilities_failed", message: e?.message || "Unknown error" },
       { status: 500 },

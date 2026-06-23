@@ -88,8 +88,8 @@ export function mobileOAuthBrowserDoneHtml(_stateKey = "") {
     title: "Returning to app — The Outreach Project",
     heading: "Sign in complete",
     showSpinner: true,
-    bodyHtml: `<p class="torpAuth__lead">Returning to The Outreach Project…</p>
-      <p class="torpAuth__lead">This window will close automatically.</p>`,
+    bodyHtml: `<p class="topAuth__lead">Returning to The Outreach Project…</p>
+      <p class="topAuth__lead">This window will close automatically.</p>`,
   });
 }
 
@@ -103,15 +103,15 @@ export function mobileOAuthReturnBridgeHtml(deepLinkUrl) {
   return workosAuthBrandedHtmlPage({
     title: "Returning to app — The Outreach Project",
     heading: "Sign in complete",
-    bodyHtml: `<p class="torpAuth__lead">Open The Outreach Project to continue.</p>
-      <div class="torpAuth__actions">
-        <a class="torpAuth__btn torpAuth__btn--primary" href="${escaped}">Open app</a>
+    bodyHtml: `<p class="topAuth__lead">Open The Outreach Project to continue.</p>
+      <div class="topAuth__actions">
+        <a class="topAuth__btn topAuth__btn--primary" href="${escaped}">Open app</a>
       </div>`,
   });
 }
 
 /**
- * Parse `org.theoutreachproject.torp://callback?code=…&state=…` → `?code=…&state=…`
+ * Parse `org.theoutreachproject.top://callback?code=…&state=…` → `?code=…&state=…`
  * @param {string} url
  */
 export function oauthCallbackQueryFromDeepLink(url) {

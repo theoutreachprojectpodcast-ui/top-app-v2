@@ -3,7 +3,7 @@
 ## Current admin user view
 
 - Endpoint: `GET /api/admin/users`
-- Source table: `torp_profiles`
+- Source table: `top_profiles`
 - Exposes account records with:
   - name/display/email
   - role fields

@@ -39,7 +39,7 @@ html[data-capacitor-native] main.topApp:not(.appShell--podcast):not([data-page-a
 /* One dock reserve on scrollable content — not on main + footer. */
 html[data-capacitor-native] main.topApp > .shell,
 html[data-capacitor-native] main.topApp > section.shell {
-  padding-bottom: var(--torp-bottom-nav-reserve);
+  padding-bottom: var(--top-bottom-nav-reserve);
   box-sizing: border-box;
 }
 

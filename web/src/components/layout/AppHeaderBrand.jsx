@@ -46,7 +46,7 @@ export default function AppHeaderBrand({
   return (
     <div
       className={`headerBrandStack${useMobileFullWordmark ? " headerBrandStack--mobileWordmark" : ""}${compactMark ? " headerBrandStack--compactMark" : ""}`.trim()}
-      data-torp-header-brand="1"
+      data-top-header-brand="1"
     >
       <Link href={homeHref} aria-label={ariaLabel}>
         <BrandMark

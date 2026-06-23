@@ -19,7 +19,7 @@ const DESTRUCTIVE = [
   /\bdrop\s+table\b/i,
   /\bdrop\s+column\b/i,
   /\btruncate\s+table\b/i,
-  /\bdelete\s+from\s+public\.torp_profiles\b/i,
+  /\bdelete\s+from\s+public\.top_profiles\b/i,
   /\bdelete\s+from\s+auth\./i,
 ];
 
@@ -58,7 +58,7 @@ for (const file of files) {
     }
   }
 
-  if (/seed|insert\s+into\s+public\.torp_profiles/i.test(sql) && /production/i.test(name)) {
+  if (/seed|insert\s+into\s+public\.top_profiles/i.test(sql) && /production/i.test(name)) {
     console.warn(`[validate-migration-safety] WARN ${name}: seed/insert into profiles — must not overwrite production users`);
   }
 

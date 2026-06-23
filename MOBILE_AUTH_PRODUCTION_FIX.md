@@ -74,7 +74,7 @@ Ensure these **Redirect URIs** are registered:
 ### Supabase (run once if not applied)
 
 ```sql
--- web/supabase/torp_oauth_mobile_handoffs.sql
+-- web/supabase/top_oauth_mobile_handoffs.sql
 ```
 
 ## Production URLs (current)
@@ -95,7 +95,7 @@ Ensure these **Redirect URIs** are registered:
 2. WebView `fetch` → `/auth/workos-go?format=json` (sets PKCE cookie)
 3. Capacitor **Browser** opens `/auth/workos-browser-start` → WorkOS AuthKit (Turnstile OK)
 4. WorkOS redirects → `https://theoutreachproject.app/callback`
-5. Server saves code/state to `torp_oauth_mobile_handoffs`
+5. Server saves code/state to `top_oauth_mobile_handoffs`
 6. Browser page redirects → `://oauth/browser-done?key=…`
 7. `MobileOAuthBrowserFinish` polls handoff, completes session in WebView
 8. User lands on `/` logged in
@@ -145,4 +145,4 @@ In Xcode: **Product → Clean Build Folder**, Archive, upload to App Store Conne
 
 1. Confirm Vercel production deploy includes this fix
 2. Run `pnpm run mobile:preflight` against production
-3. Apply `torp_oauth_mobile_handoffs.sql` in Supabase if `oauthHandoffTable: false` on `/api/mobile/auth-health`
+3. Apply `top_oauth_mobile_handoffs.sql` in Supabase if `oauthHandoffTable: false` on `/api/mobile/auth-health`

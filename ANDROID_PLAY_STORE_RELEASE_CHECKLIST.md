@@ -1,6 +1,6 @@
 # Google Play Store release checklist — The Outreach Project
 
-Android / Capacitor release guide for **`org.theoutreachproject.torp`**.  
+Android / Capacitor release guide for **`org.theoutreachproject.top`**.  
 The native shell loads the **live production web app** at `https://theoutreachproject.app/mobile` — no bundled Next.js build inside the AAB.
 
 **Related:** [docs/ANDROID_PLAY_STORE_STATUS.md](docs/ANDROID_PLAY_STORE_STATUS.md) (done vs. todo) · [docs/MOBILE_LAUNCH_CHECKLIST.md](docs/MOBILE_LAUNCH_CHECKLIST.md) · [docs/ANDROID_STUDIO_SETUP.md](docs/ANDROID_STUDIO_SETUP.md) · [IOS_APP_STORE_RELEASE_CHECKLIST.md](IOS_APP_STORE_RELEASE_CHECKLIST.md)
@@ -48,8 +48,8 @@ This runs `validate:capacitor`, production Next build, splash/icons sync, `cap s
 mkdir -p web/android/keystores
 keytool -genkeypair -v \
   -storetype PKCS12 \
-  -keystore web/android/keystores/torp-upload.keystore \
-  -alias torp-upload \
+  -keystore web/android/keystores/top-upload.keystore \
+  -alias top-upload \
   -keyalg RSA -keysize 2048 -validity 10000
 ```
 
@@ -91,7 +91,7 @@ Alternative: Android Studio → **Build → Generate Signed Bundle / APK** → A
 
 1. [Google Play Console](https://play.google.com/console) → **Create app**
 2. **The Outreach Project**
-3. Package name: **`org.theoutreachproject.torp`** (must match `applicationId`)
+3. Package name: **`org.theoutreachproject.top`** (must match `applicationId`)
 4. Complete dashboard setup tasks
 
 ### 4.2 Internal testing track

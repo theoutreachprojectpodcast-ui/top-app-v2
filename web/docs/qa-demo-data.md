@@ -24,7 +24,7 @@ Command: `pnpm run seed:qa-community-demo`
 **Required env**
 
 - `NEXT_PUBLIC_SUPABASE_URL` / `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`
-- `TOP_QA_COMMUNITY_AUTHOR_PROFILE_IDS` — comma-separated `torp_profiles.id` UUIDs (demo or test accounts)
+- `TOP_QA_COMMUNITY_AUTHOR_PROFILE_IDS` — comma-separated `top_profiles.id` UUIDs (demo or test accounts)
 - One of: `TOP_QA_SEED=1`, `NEXT_PUBLIC_TOP_QA=1`, `VERCEL_ENV=preview`, or local `ALLOW_QA_COMMUNITY_SEED=1`
 
 The script inserts a few **approved** stories with `is_demo_seed: true`. Production traffic with `shouldHideDemoCommunitySeeds()` true will not return them in the public feed.

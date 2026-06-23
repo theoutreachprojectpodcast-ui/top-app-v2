@@ -1,12 +1,12 @@
--- tORP v0.3 — Community posts: profile linkage, moderation states, visibility, reactions scaffold.
--- Run after torp_profiles exists (torp_v03_profiles.sql). Safe to re-run.
+-- TOP v0.3 — Community posts: profile linkage, moderation states, visibility, reactions scaffold.
+-- Run after top_profiles exists (top_v03_profiles.sql). Safe to re-run.
 -- Idempotent: no DROP POLICY / DROP CONSTRAINT — policies and check constraints are created only when missing.
 
 -- ---------------------------------------------------------------------------
 -- Extend community_posts
 -- ---------------------------------------------------------------------------
 alter table public.community_posts
-  add column if not exists author_profile_id uuid references public.torp_profiles (id) on delete set null;
+  add column if not exists author_profile_id uuid references public.top_profiles (id) on delete set null;
 
 alter table public.community_posts
   add column if not exists visibility text;
@@ -95,7 +95,7 @@ create index if not exists community_posts_public_feed_idx
   on public.community_posts (status, visibility, created_at desc)
   where deleted_at is null;
 
-comment on column public.community_posts.author_profile_id is 'FK to torp_profiles.id; authoritative attribution.';
+comment on column public.community_posts.author_profile_id is 'FK to top_profiles.id; authoritative attribution.';
 comment on column public.community_posts.visibility is 'community | private | public';
 comment on column public.community_posts.status is 'draft | pending_review | approved | rejected | hidden';
 
@@ -105,7 +105,7 @@ comment on column public.community_posts.status is 'draft | pending_review | app
 create table if not exists public.community_post_reactions (
   id uuid primary key default gen_random_uuid (),
   post_id uuid not null references public.community_posts (id) on delete cascade,
-  profile_id uuid not null references public.torp_profiles (id) on delete cascade,
+  profile_id uuid not null references public.top_profiles (id) on delete cascade,
   reaction_type text not null default 'like',
   created_at timestamptz not null default now (),
   constraint community_post_reactions_unique unique (post_id, profile_id, reaction_type),

@@ -1,5 +1,5 @@
 /**
- * tORP v0.8 — global mobile / small-viewport polish.
+ * TOP v0.8 — global mobile / small-viewport polish.
  * Loaded after `top-app.css` so these rules can complement (not fight) existing breakpoints.
  */
 
@@ -42,13 +42,13 @@ html {
 .podcastEpisodeCard,
 .sponsorPremiumCardBg,
 .resultCard.resultCard--listingHero,
-.torpListingCard,
+.topListingCard,
 .sponsorFeaturedShowcase {
   min-width: 0;
 }
 
 /* In-flow images: never spill past the card (logos use object-fit in component CSS) */
-.torpListingCard img,
+.topListingCard img,
 .podcastEpisodeCard img,
 .communityPostCard img,
 .nonprofitCard img,
@@ -385,7 +385,7 @@ html {
 
   main.topApp.appShell--withMobileNavDock > .shell,
   main.topApp.appShell--withMobileNavDock > section.shell {
-    padding-bottom: var(--torp-bottom-nav-reserve);
+    padding-bottom: var(--top-bottom-nav-reserve);
     box-sizing: border-box;
   }
 

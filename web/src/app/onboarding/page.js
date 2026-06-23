@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 
-/** Always read the latest `torp_profiles` row for this session (avoid stale RSC cache emptying onboarding fields). */
+/** Always read the latest `top_profiles` row for this session (avoid stale RSC cache emptying onboarding fields). */
 export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { getWorkOSUserFromCookies } from "@/lib/auth/workosSessionFromCookies";

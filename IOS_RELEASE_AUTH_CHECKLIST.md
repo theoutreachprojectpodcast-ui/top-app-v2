@@ -57,7 +57,7 @@ On **physical iPhone** (not simulator only):
 
 ## 6. Supabase
 
-- [ ] Table `torp_oauth_mobile_handoffs` exists (see `web/supabase/torp_oauth_mobile_handoffs.sql`)
+- [ ] Table `top_oauth_mobile_handoffs` exists (see `web/supabase/top_oauth_mobile_handoffs.sql`)
 
 ## Environment matrix
 
@@ -76,5 +76,5 @@ On **physical iPhone** (not simulator only):
 ## Logs
 
 - Safari **Develop → [device] → WKWebView** for WebView errors
-- Xcode **Console** filter `torp` or `Capacitor`
+- Xcode **Console** filter `top` or `Capacitor`
 - Vercel function logs for `/auth/workos-go`, `/callback`, `/api/mobile/oauth-handoff`

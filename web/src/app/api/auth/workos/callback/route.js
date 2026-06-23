@@ -12,7 +12,7 @@ export async function GET(request) {
   try {
     return await runWorkOSCallback(request);
   } catch (err) {
-    console.error("[torp] WorkOS callback route failed:", err);
+    console.error("[top] WorkOS callback route failed:", err);
     const message = err instanceof Error ? err.message : "Could not complete sign in.";
     if (request.headers.get("x-top-callback-fetch") === "1") {
       return NextResponse.json(

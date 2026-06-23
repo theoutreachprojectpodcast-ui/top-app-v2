@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { isWorkOSConfigured, workOSEnvironmentIssues } from "@/lib/auth/workosConfigured";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-
-const HANDOFF_TABLE = "torp_oauth_mobile_handoffs";
+import { resolveOauthHandoffTable } from "@/lib/supabase/tableNames";
 
 /**
  * GET — mobile auth readiness (no secrets). Used by mobile:preflight and release checklists.
@@ -27,29 +26,31 @@ export async function GET() {
 
   const admin = createSupabaseAdminClient();
   if (admin) {
-    const { error } = await admin.from(HANDOFF_TABLE).select("state_key").limit(1);
+    const handoffTable = await resolveOauthHandoffTable(admin);
+    checks.oauthHandoffTableName = handoffTable;
+    const { error } = await admin.from(handoffTable).select("state_key").limit(1);
     checks.oauthHandoffTable = !error;
     if (error) {
       checks.oauthHandoffError = error.message;
     } else {
-      const sessionCol = await admin.from(HANDOFF_TABLE).select("set_cookies").limit(0);
+      const sessionCol = await admin.from(handoffTable).select("set_cookies").limit(0);
       checks.oauthHandoffSessionCookies = !sessionCol.error;
       if (sessionCol.error) {
         checks.oauthHandoffMigration =
-          "Run: alter table public.torp_oauth_mobile_handoffs add column if not exists set_cookies text[] not null default '{}';";
+          "Run: alter table public.top_oauth_mobile_handoffs add column if not exists set_cookies text[] not null default '{}';";
       }
-      const redirectCol = await admin.from(HANDOFF_TABLE).select("redirect_to").limit(0);
+      const redirectCol = await admin.from(handoffTable).select("redirect_to").limit(0);
       checks.oauthHandoffRedirectTo = !redirectCol.error;
       if (redirectCol.error) {
         checks.oauthHandoffMigration =
-          "Run: alter table public.torp_oauth_mobile_handoffs add column if not exists redirect_to text not null default '/';";
+          "Run: alter table public.top_oauth_mobile_handoffs add column if not exists redirect_to text not null default '/';";
       }
       const probeKey = `__health_probe_${Date.now()}`;
       const probeExpires = new Date(Date.now() + 60_000).toISOString();
-      const { error: probeErr } = await admin.from(HANDOFF_TABLE).upsert(
+      const { error: probeErr } = await admin.from(handoffTable).upsert(
         {
           state_key: probeKey,
-          set_cookies: ["__torp_authorize:probe"],
+          set_cookies: ["__top_authorize:probe"],
           redirect_to: "/",
           expires_at: probeExpires,
         },
@@ -59,7 +60,7 @@ export async function GET() {
       if (probeErr) {
         checks.oauthHandoffAuthorizeUpsertError = probeErr.message;
       } else {
-        await admin.from(HANDOFF_TABLE).delete().eq("state_key", probeKey);
+        await admin.from(handoffTable).delete().eq("state_key", probeKey);
       }
     }
   } else {

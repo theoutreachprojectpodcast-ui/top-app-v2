@@ -24,7 +24,7 @@ pnpm --dir web run validate:migrations path/to/new_migration.sql
 Flags:
 
 - `DROP TABLE`, `DROP COLUMN`, `TRUNCATE`
-- Deletes from `torp_profiles` or `auth.*`
+- Deletes from `top_profiles` or `auth.*`
 - Warns on `ALTER NOT NULL`, renames, missing rollback notes
 
 ## Workflow
@@ -70,5 +70,5 @@ Document in each migration file:
 For destructive changes, keep a copy of pre-migration row counts:
 
 ```sql
-select count(*) from public.torp_profiles;
+select count(*) from public.top_profiles;
 ```

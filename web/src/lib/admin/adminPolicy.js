@@ -43,7 +43,7 @@ export function isDefaultApprovedAdminEmail(email) {
 
 /**
  * Manual admin grant: existing admin promoted this account later.
- * Required fields are additive migration columns on `torp_profiles`.
+ * Required fields are additive migration columns on `top_profiles`.
  */
 export function hasManualAdminGrant(profileRow = null) {
   if (!profileRow || typeof profileRow !== "object") return false;

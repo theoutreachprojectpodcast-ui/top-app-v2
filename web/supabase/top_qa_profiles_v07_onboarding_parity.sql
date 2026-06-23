@@ -1,4 +1,4 @@
--- QA profile table: onboarding questionnaire columns + checks (parity with torp_profiles v0.6).
+-- QA profile table: onboarding questionnaire columns + checks (parity with top_profiles v0.6).
 -- Safe to re-run. Apply on the Supabase project backing qa-the-outreach-project.vercel.app.
 
 begin;

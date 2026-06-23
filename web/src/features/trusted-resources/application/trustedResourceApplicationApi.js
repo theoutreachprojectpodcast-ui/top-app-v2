@@ -94,7 +94,7 @@ export async function submitTrustedResourceApplication(supabase, payload) {
       ok: true,
       localOnly: true,
       applicationId: null,
-      crmLead: buildTrustedResourceCrmLeadPayload(payload, { submissionId: null, source: "torp_offline_queue" }),
+      crmLead: buildTrustedResourceCrmLeadPayload(payload, { submissionId: null, source: "top_offline_queue" }),
     };
   }
 
@@ -125,16 +125,16 @@ export async function submitTrustedResourceApplication(supabase, payload) {
       localOnly: true,
       applicationId: null,
       warning: "Application saved locally because the Supabase applications table is not yet deployed.",
-      crmLead: buildTrustedResourceCrmLeadPayload(payload, { submissionId: null, source: "torp_local_fallback" }),
+      crmLead: buildTrustedResourceCrmLeadPayload(payload, { submissionId: null, source: "top_local_fallback" }),
     };
   }
 
   const crmLead = buildTrustedResourceCrmLeadPayload(
     { ...payload, review_status: application.review_status },
-    { submissionId: inserted?.id ?? null, source: "torp_web_trusted_resource_form" }
+    { submissionId: inserted?.id ?? null, source: "top_web_trusted_resource_form" }
   );
   if (typeof process !== "undefined" && process.env.NODE_ENV === "development") {
-    console.info("[torp:crm:trusted-resource-lead]", crmLead);
+    console.info("[top:crm:trusted-resource-lead]", crmLead);
   }
 
   const pendingRow = buildPendingTrustedResourceRowFromApplication(payload, inserted?.id);

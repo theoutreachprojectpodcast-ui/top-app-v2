@@ -1,5 +1,5 @@
 -- Optional future-facing columns (run manually when ready; app works without them).
--- Keeps tORP domains separable for admin / CRM / billing / media.
+-- Keeps TOP domains separable for admin / CRM / billing / media.
 
 -- User profiles: membership + tagline + CRM correlation
 -- alter table public.top_app_user_profiles

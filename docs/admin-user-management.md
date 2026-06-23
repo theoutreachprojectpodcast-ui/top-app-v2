@@ -9,7 +9,7 @@
 
 - **UI:** `web/src/features/admin/AdminUsersPanel.jsx`
 - **API:** `GET /api/admin/users`, `PATCH /api/admin/users/[workosUserId]`
-- **Capabilities:** Search by email/name; update **`platform_role`**, **`membership_tier`**, **`membership_status`** (persists to `torp_profiles` / QA table name).
+- **Capabilities:** Search by email/name; update **`platform_role`**, **`membership_tier`**, **`membership_status`** (persists to `top_profiles` / QA table name).
 
 ## Billing / invoices
 

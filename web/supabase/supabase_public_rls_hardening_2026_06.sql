@@ -10,10 +10,10 @@
 --
 -- Safe to re-run (idempotent). Run in Supabase SQL Editor as postgres.
 --
--- Prerequisites: none (includes _torp_rls_helpers.sql logic inline on first run)
+-- Prerequisites: none (includes _top_rls_helpers.sql logic inline on first run)
 --
 -- After run:
---   select * from public._torp_rls_security_audit() where status <> 'OK' order by 1, 2;
+--   select * from public._top_rls_security_audit() where status <> 'OK' order by 1, 2;
 --
 -- Re-run after any migration that re-adds permissive policies.
 -- =============================================================================
@@ -21,10 +21,10 @@
 begin;
 
 -- ---------------------------------------------------------------------------
--- Helpers (also in _torp_rls_helpers.sql — inlined for Supabase SQL Editor)
+-- Helpers (also in _top_rls_helpers.sql — inlined for Supabase SQL Editor)
 -- ---------------------------------------------------------------------------
 
-create or replace function public._torp_ensure_client_deny_rls(p_table regclass)
+create or replace function public._top_ensure_client_deny_rls(p_table regclass)
 returns void
 language plpgsql
 security definer
@@ -58,10 +58,10 @@ begin
 end;
 $$;
 
-comment on function public._torp_ensure_client_deny_rls(regclass) is
+comment on function public._top_ensure_client_deny_rls(regclass) is
   'Enable RLS + restrictive deny-all policies for anon/authenticated PostgREST roles.';
 
-create or replace function public._torp_apply_table_rls_if_exists(p_table_name text)
+create or replace function public._top_apply_table_rls_if_exists(p_table_name text)
 returns void
 language plpgsql
 security definer
@@ -74,7 +74,7 @@ begin
   if reg is null then
     return;
   end if;
-  perform public._torp_ensure_client_deny_rls(reg);
+  perform public._top_ensure_client_deny_rls(reg);
 end;
 $$;
 
@@ -132,7 +132,7 @@ begin
       and not c.relispartition
     order by c.relname
   loop
-    perform public._torp_ensure_client_deny_rls(format('public.%I', t.relname)::regclass);
+    perform public._top_ensure_client_deny_rls(format('public.%I', t.relname)::regclass);
     raise notice 'rls_harden: hardened public.%', t.relname;
   end loop;
 end $$;
@@ -206,7 +206,7 @@ end $$;
 -- ---------------------------------------------------------------------------
 -- Audit helper
 -- ---------------------------------------------------------------------------
-create or replace function public._torp_rls_security_audit()
+create or replace function public._top_rls_security_audit()
 returns table(
   object_type text,
   object_name text,
@@ -295,4 +295,4 @@ $$;
 
 commit;
 
--- select * from public._torp_rls_security_audit() where status <> 'OK' order by 1, 2;
+-- select * from public._top_rls_security_audit() where status <> 'OK' order by 1, 2;

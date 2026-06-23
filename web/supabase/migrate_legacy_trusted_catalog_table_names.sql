@@ -31,7 +31,7 @@ begin
   if to_regclass('public.trusted_resources') is null then
     return;
   end if;
-  perform public._torp_ensure_client_deny_rls('public.trusted_resources'::regclass);
+  perform public._top_ensure_client_deny_rls('public.trusted_resources'::regclass);
 exception
   when undefined_function then
     alter table public.trusted_resources enable row level security;

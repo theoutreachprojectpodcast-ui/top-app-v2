@@ -15,7 +15,7 @@ QA runs the **same codebase** as production (branch flow: `qa` → `QA` → `mai
 | Pages & routing | Same Next.js app — `/`, `/community`, `/trusted`, `/podcasts`, `/profile`, `/admin/*` |
 | Auth flow | WorkOS AuthKit (staging keys on QA) |
 | Account types / membership logic | Same code paths; Stripe test checkout |
-| Profile storage | QA Supabase `top_qa_profiles` (preview/QA profile; prod uses `torp_profiles`) |
+| Profile storage | QA Supabase `top_qa_profiles` (preview/QA profile; prod uses `top_profiles`) |
 | Community features | Same APIs; demo seeds visible on QA (`launchMode.js`) |
 | Trusted resources | Same catalog APIs |
 | Nonprofit directory | Same search/enrichment routes |

@@ -1,4 +1,4 @@
-package org.theoutreachproject.torp;
+package org.theoutreachproject.top;
 
 import com.getcapacitor.BridgeActivity;
 

@@ -27,8 +27,8 @@ export function workOSAuthRedirectBridge(workosUrl, options = {}) {
     heading: "Secure sign in",
     showSpinner: true,
     headExtra: `<meta http-equiv="refresh" content="0;url=${escaped}" />`,
-    bodyHtml: `<p class="torpAuth__lead">Redirecting to secure sign in…</p>
-      <p class="torpAuth__lead"><a class="torpAuth__link" href="${escaped}">Continue</a></p>`,
+    bodyHtml: `<p class="topAuth__lead">Redirecting to secure sign in…</p>
+      <p class="topAuth__lead"><a class="topAuth__link" href="${escaped}">Continue</a></p>`,
     bodyEnd: `<script>location.replace(${JSON.stringify(safe)});</script>`,
   });
 

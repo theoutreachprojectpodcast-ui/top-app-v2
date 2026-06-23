@@ -33,7 +33,7 @@ Redeploy after setting. Without this, `/mobile/access` shows a friendly “check
 
 ## 3. Supabase migration
 
-Run `web/supabase/torp_profiles_membership_access_tier.sql` in Supabase SQL editor (prod + QA).
+Run `web/supabase/top_profiles_membership_access_tier.sql` in Supabase SQL editor (prod + QA).
 
 This adds `'access'` to the `membership_tier` check constraint. Webhooks will fail profile updates until this runs.
 
@@ -42,8 +42,8 @@ This adds `'access'` to the `membership_tier` check constraint. Webhooks will fa
 After a test App Access checkout:
 
 1. Stripe subscription metadata should include `membership_tier: access`.
-2. `torp_profiles.membership_tier` → `access`
-3. `torp_profiles.membership_status` → `active`
+2. `top_profiles.membership_tier` → `access`
+3. `top_profiles.membership_status` → `active`
 4. Capacitor app should pass `MobileNativeGate` and land on `/` (home).
 
 Use Stripe CLI locally:

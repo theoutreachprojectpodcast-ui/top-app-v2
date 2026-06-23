@@ -1,6 +1,6 @@
 /**
- * Unified account model (tORP v0.3): intent vs platform role vs billing tier.
- * Authoritative storage: Supabase `torp_profiles` (+ Stripe for paid lifecycle).
+ * Unified account model (TOP v0.3): intent vs platform role vs billing tier.
+ * Authoritative storage: Supabase `top_profiles` (+ Stripe for paid lifecycle).
  */
 
 /** @type {readonly string[]} */

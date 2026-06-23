@@ -1,14 +1,14 @@
 import { createHash } from "crypto";
 import { sealData } from "iron-session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { resolveOauthHandoffTable } from "@/lib/supabase/tableNames";
 import { MOBILE_POST_AUTH_HOME } from "@/lib/auth/oauthMobileHandoff";
 
-const HANDOFF_TABLE = "torp_oauth_mobile_handoffs";
 const HANDOFF_TTL_MS = 10 * 60 * 1000;
 const SESSION_PLACEHOLDER = "__session__";
 const AUTHORIZE_PLACEHOLDER = "__authorize__";
-const COOKIE_AUTHORIZE = "__torp_authorize:";
-const COOKIE_OAUTH = "__torp_oauth:";
+const COOKIE_AUTHORIZE = "__top_authorize:";
+const COOKIE_OAUTH = "__top_oauth:";
 
 /** Production Supabase column for handoff payload cookies. */
 const HANDOFF_COOKIE_COLUMN = "set_cookies";
@@ -25,10 +25,10 @@ function handoffPassword() {
 
 /** @returns {Map<string, object>} */
 function memoryHandoffStore() {
-  if (!globalThis.__torpOAuthHandoffs) {
-    globalThis.__torpOAuthHandoffs = new Map();
+  if (!globalThis.__topOAuthHandoffs) {
+    globalThis.__topOAuthHandoffs = new Map();
   }
-  return globalThis.__torpOAuthHandoffs;
+  return globalThis.__topOAuthHandoffs;
 }
 
 async function sealAuthorizeBundle(url, sealedState) {
@@ -125,13 +125,14 @@ function parseHandoffPayload(data) {
 async function upsertHandoffRow(row) {
   const admin = createSupabaseAdminClient();
   if (admin) {
-    const { error } = await admin.from(HANDOFF_TABLE).upsert(row, { onConflict: "state_key" });
+    const table = await resolveOauthHandoffTable(admin);
+    const { error } = await admin.from(table).upsert(row, { onConflict: "state_key" });
     if (!error) return { ok: true, via: "supabase" };
-    console.error("[torp] oauth mobile handoff upsert failed:", error.message, error.code || "", error.details || "");
+    console.error("[top] oauth mobile handoff upsert failed:", error.message, error.code || "", error.details || "");
     return { ok: false, error, reason: error.message };
   }
   if (isProdLike()) {
-    console.warn("[torp] oauth mobile handoff: Supabase admin unavailable");
+    console.warn("[top] oauth mobile handoff: Supabase admin unavailable");
     return { ok: false, reason: "supabase_admin_unavailable" };
   }
   return { ok: false, via: "memory" };
@@ -142,7 +143,8 @@ async function deleteHandoffRow(stateKey) {
   if (!key) return;
   const admin = createSupabaseAdminClient();
   if (admin) {
-    await admin.from(HANDOFF_TABLE).delete().eq("state_key", key);
+    const table = await resolveOauthHandoffTable(admin);
+    await admin.from(table).delete().eq("state_key", key);
     return;
   }
   memoryHandoffStore().delete(key);
@@ -174,7 +176,7 @@ export async function saveOAuthAuthorizePending(stateKey, url, sealedState, redi
   if (saved.ok) return { ok: true };
 
   if (isProdLike()) {
-    console.error("[torp] oauth authorize pending save failed:", saved.reason || saved.error?.message || "unknown");
+    console.error("[top] oauth authorize pending save failed:", saved.reason || saved.error?.message || "unknown");
     return { ok: false, reason: saved.reason || "handoff_storage_unavailable" };
   }
 
@@ -272,20 +274,21 @@ async function readHandoffRow(stateKey, { consume = true } = {}) {
 
   const admin = createSupabaseAdminClient();
   if (admin) {
+    const table = await resolveOauthHandoffTable(admin);
     const { data, error } = await admin
-      .from(HANDOFF_TABLE)
+      .from(table)
       .select(HANDOFF_SELECT)
       .eq("state_key", key)
       .maybeSingle();
     if (!error && data) {
       if (consume) {
-        await admin.from(HANDOFF_TABLE).delete().eq("state_key", key);
+        await admin.from(table).delete().eq("state_key", key);
       }
       if (new Date(data.expires_at).getTime() < Date.now()) return null;
       return data;
     }
     if (error) {
-      console.error("[torp] oauth mobile handoff read failed:", error.message);
+      console.error("[top] oauth mobile handoff read failed:", error.message);
     }
   }
 

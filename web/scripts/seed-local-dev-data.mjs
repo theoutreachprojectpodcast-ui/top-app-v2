@@ -1,5 +1,5 @@
 /**
- * Local-only rich data seed. Every torp_profiles row and community author_id uses real WorkOS user ids.
+ * Local-only rich data seed. Every top_profiles row and community author_id uses real WorkOS user ids.
  *
  * Required:
  *   - NODE_ENV !== "production"
@@ -35,7 +35,7 @@ function mapFounderRowsForLocalSeed(rows) {
   });
 }
 
-const SEED_TAG = "torp_local_data_seed_v1";
+const SEED_TAG = "top_local_data_seed_v1";
 
 const POST_IDS = {
   pending1: "b2000000-0000-4000-8000-000000000101",
@@ -71,11 +71,11 @@ loadDotEnvLocal();
 
 function assertLocalOnly() {
   if (process.env.NODE_ENV === "production") {
-    console.error("[torp-seed] Refusing: NODE_ENV is production.");
+    console.error("[top-seed] Refusing: NODE_ENV is production.");
     process.exit(1);
   }
   if (process.env.TOP_LOCAL_DATA_SEED !== "1") {
-    console.error("[torp-seed] Refusing: set TOP_LOCAL_DATA_SEED=1 to run this seed.");
+    console.error("[top-seed] Refusing: set TOP_LOCAL_DATA_SEED=1 to run this seed.");
     process.exit(1);
   }
 }
@@ -85,7 +85,7 @@ function assertWorkOSUserId(id, label) {
   const s = String(id || "").trim();
   if (!/^user_[a-zA-Z0-9]+$/.test(s)) {
     console.error(
-      `[torp-seed] Invalid ${label}: "${id}". Expected a WorkOS user id (form user_… from the WorkOS dashboard).`,
+      `[top-seed] Invalid ${label}: "${id}". Expected a WorkOS user id (form user_… from the WorkOS dashboard).`,
     );
     process.exit(1);
   }
@@ -108,7 +108,7 @@ function parseCommunityAuthorWorkOSIds() {
   if (parts.length < 1) return [];
   for (const p of parts) assertWorkOSUserId(p, "TOP_SEED_COMMUNITY_AUTHOR_WORKOS_USER_IDS entry");
   if (parts.length > 3) {
-    console.warn("[torp-seed] More than 3 author ids provided; using the first 3.");
+    console.warn("[top-seed] More than 3 author ids provided; using the first 3.");
   }
   const three = parts.slice(0, 3);
   while (three.length < 3) three.push(three[three.length - 1]);
@@ -116,18 +116,18 @@ function parseCommunityAuthorWorkOSIds() {
 }
 
 /**
- * Localhost fallback when env ids are not provided: pick recent WorkOS users from torp_profiles.
+ * Localhost fallback when env ids are not provided: pick recent WorkOS users from top_profiles.
  * @param {import("@supabase/supabase-js").SupabaseClient} admin
  * @returns {Promise<string[]>} exactly three WorkOS user ids (pads by repeating last)
  */
 async function pickAuthorIdsFromProfiles(admin) {
   const { data, error } = await admin
-    .from("torp_profiles")
+    .from("top_profiles")
     .select("workos_user_id,updated_at")
     .not("workos_user_id", "is", null)
     .order("updated_at", { ascending: false })
     .limit(12);
-  if (error) throw new Error(`torp_profiles fallback author lookup: ${error.message}`);
+  if (error) throw new Error(`top_profiles fallback author lookup: ${error.message}`);
 
   const ids = [];
   const seen = new Set();
@@ -140,7 +140,7 @@ async function pickAuthorIdsFromProfiles(admin) {
   }
   if (!ids.length) {
     throw new Error(
-      "No WorkOS users found in torp_profiles. Sign in once with WorkOS or set TOP_SEED_COMMUNITY_AUTHOR_WORKOS_USER_IDS.",
+      "No WorkOS users found in top_profiles. Sign in once with WorkOS or set TOP_SEED_COMMUNITY_AUTHOR_WORKOS_USER_IDS.",
     );
   }
   while (ids.length < 3) ids.push(ids[ids.length - 1]);
@@ -221,7 +221,7 @@ function personaRow(workosUserId, personaIndex) {
     theme: "clean",
     stripe_customer_id: p.stripe_customer_id,
     metadata: {
-      torp_local_data_seed: SEED_TAG,
+      top_local_data_seed: SEED_TAG,
       ...p.metadataExtra,
     },
   };
@@ -242,7 +242,7 @@ function targetProfileUpsert(workosUserId) {
     theme: "clean",
     stripe_customer_id: "cus_localSeedTarget",
     metadata: {
-      torp_local_data_seed: SEED_TAG,
+      top_local_data_seed: SEED_TAG,
       identityRole: "Supporter",
       missionStatement: "Testing the full profile + membership + community stack locally.",
       city: "Austin",
@@ -282,14 +282,14 @@ function buildProfileUpsertRows(authorIds, targetWorkosId) {
 
 async function upsertProfiles(admin, authorIds, targetWorkosId) {
   const rows = buildProfileUpsertRows(authorIds, targetWorkosId);
-  const { error } = await admin.from("torp_profiles").upsert(rows, { onConflict: "workos_user_id" });
-  if (error) throw new Error(`torp_profiles: ${error.message}`);
+  const { error } = await admin.from("top_profiles").upsert(rows, { onConflict: "workos_user_id" });
+  if (error) throw new Error(`top_profiles: ${error.message}`);
 
   const ids = {};
   const allWids = [...new Set([...authorIds, ...(targetWorkosId ? [targetWorkosId] : [])])];
   for (const wid of allWids) {
-    const { data, error: qe } = await admin.from("torp_profiles").select("id").eq("workos_user_id", wid).maybeSingle();
-    if (qe) throw new Error(`torp_profiles lookup ${wid}: ${qe.message}`);
+    const { data, error: qe } = await admin.from("top_profiles").select("id").eq("workos_user_id", wid).maybeSingle();
+    if (qe) throw new Error(`top_profiles lookup ${wid}: ${qe.message}`);
     if (data?.id) ids[wid] = data.id;
   }
   return ids;
@@ -373,12 +373,12 @@ async function seedCommunity(admin, profileIds, authorIds) {
   const { error } = await admin.from("community_posts").upsert(posts, { onConflict: "id" });
   if (error) {
     if (String(error.message || "").includes("community_posts")) {
-      console.warn("[torp-seed] skip community_posts:", error.message);
+      console.warn("[top-seed] skip community_posts:", error.message);
       return;
     }
     throw error;
   }
-  console.log(`[torp-seed] community_posts upserted: ${posts.length} (author_id = WorkOS user id)`);
+  console.log(`[top-seed] community_posts upserted: ${posts.length} (author_id = WorkOS user id)`);
 
   const a1 = profileIds[authorIds[0]];
   const a2 = profileIds[authorIds[1]];
@@ -395,10 +395,10 @@ async function seedCommunity(admin, profileIds, authorIds) {
     onConflict: "post_id,profile_id,reaction_type",
   });
   if (re) {
-    console.warn("[torp-seed] skip community_post_reactions:", re.message);
+    console.warn("[top-seed] skip community_post_reactions:", re.message);
     return;
   }
-  console.log(`[torp-seed] community_post_reactions upserted: ${reactions.length}`);
+  console.log(`[top-seed] community_post_reactions upserted: ${reactions.length}`);
 
   await admin.from("community_posts").update({ like_count: 3 }).eq("id", POST_IDS.founderWelcome);
   await admin.from("community_posts").update({ like_count: 1 }).eq("id", POST_IDS.founderHowToProfile);
@@ -413,14 +413,14 @@ async function seedSavedOrgs(admin, workosUserId) {
   ];
   const { error: del } = await admin.from(SAVED_TABLE).delete().eq("user_id", workosUserId);
   if (del && !String(del.message || "").includes("does not exist")) {
-    console.warn("[torp-seed] saved orgs delete:", del.message);
+    console.warn("[top-seed] saved orgs delete:", del.message);
   }
   const { error } = await admin.from(SAVED_TABLE).insert(rows);
   if (error) {
-    console.warn("[torp-seed] skip saved orgs:", error.message);
+    console.warn("[top-seed] skip saved orgs:", error.message);
     return;
   }
-  console.log(`[torp-seed] ${SAVED_TABLE} inserted: ${rows.length} (user_id = WorkOS user id)`);
+  console.log(`[top-seed] ${SAVED_TABLE} inserted: ${rows.length} (user_id = WorkOS user id)`);
 }
 
 async function seedSponsorApplications(admin) {
@@ -488,10 +488,10 @@ async function seedSponsorApplications(admin) {
   ];
   const { error } = await admin.from("sponsor_applications").upsert(rows, { onConflict: "id" });
   if (error) {
-    console.warn("[torp-seed] skip sponsor_applications:", error.message);
+    console.warn("[top-seed] skip sponsor_applications:", error.message);
     return;
   }
-  console.log(`[torp-seed] sponsor_applications upserted: ${rows.length}`);
+  console.log(`[top-seed] sponsor_applications upserted: ${rows.length}`);
 }
 
 async function seedTrustedResourceApplications(admin) {
@@ -524,10 +524,10 @@ async function seedTrustedResourceApplications(admin) {
   };
   const { error } = await admin.from("trusted_resource_applications").upsert([row], { onConflict: "id" });
   if (error) {
-    console.warn("[torp-seed] skip trusted_resource_applications:", error.message);
+    console.warn("[top-seed] skip trusted_resource_applications:", error.message);
     return;
   }
-  console.log("[torp-seed] trusted_resource_applications upserted: 1");
+  console.log("[top-seed] trusted_resource_applications upserted: 1");
 }
 
 async function seedOrgUpdate(admin) {
@@ -538,25 +538,25 @@ async function seedOrgUpdate(admin) {
     link_path: `/nonprofit/13-1234567`,
     source_type: "local_dev_seed",
   };
-  const { error } = await admin.from("torp_org_public_updates").insert(row);
+  const { error } = await admin.from("top_org_public_updates").insert(row);
   if (error) {
     if (String(error.code) === "23505" || String(error.message || "").includes("duplicate")) {
-      console.log("[torp-seed] torp_org_public_updates: duplicate skipped");
+      console.log("[top-seed] top_org_public_updates: duplicate skipped");
       return;
     }
-    console.warn("[torp-seed] skip torp_org_public_updates:", error.message);
+    console.warn("[top-seed] skip top_org_public_updates:", error.message);
     return;
   }
-  console.log("[torp-seed] torp_org_public_updates inserted: 1");
+  console.log("[top-seed] top_org_public_updates inserted: 1");
 }
 
 async function clearSeedNotifications(admin, profileId) {
   const { error } = await admin
-    .from("torp_platform_notifications")
+    .from("top_platform_notifications")
     .delete()
     .eq("recipient_profile_id", profileId)
-    .contains("metadata", { torp_local_data_seed: SEED_TAG });
-  if (error) console.warn("[torp-seed] notification cleanup:", error.message);
+    .contains("metadata", { top_local_data_seed: SEED_TAG });
+  if (error) console.warn("[top-seed] notification cleanup:", error.message);
 }
 
 async function seedNotifications(admin, targetProfileId) {
@@ -579,7 +579,7 @@ async function seedNotifications(admin, targetProfileId) {
       priority: "normal",
       delivered_in_app_at: now,
       delivered_email_at: null,
-      metadata: { torp_local_data_seed: SEED_TAG },
+      metadata: { top_local_data_seed: SEED_TAG },
       created_at: now,
       updated_at: now,
     },
@@ -596,7 +596,7 @@ async function seedNotifications(admin, targetProfileId) {
       priority: "normal",
       delivered_in_app_at: now,
       delivered_email_at: null,
-      metadata: { torp_local_data_seed: SEED_TAG, ein: SAMPLE_EIN },
+      metadata: { top_local_data_seed: SEED_TAG, ein: SAMPLE_EIN },
       created_at: now,
       updated_at: now,
     },
@@ -614,18 +614,18 @@ async function seedNotifications(admin, targetProfileId) {
       read_at: now,
       delivered_in_app_at: now,
       delivered_email_at: null,
-      metadata: { torp_local_data_seed: SEED_TAG },
+      metadata: { top_local_data_seed: SEED_TAG },
       created_at: now,
       updated_at: now,
     },
   ];
 
-  const { error } = await admin.from("torp_platform_notifications").insert(rows);
+  const { error } = await admin.from("top_platform_notifications").insert(rows);
   if (error) {
-    console.warn("[torp-seed] skip torp_platform_notifications:", error.message);
+    console.warn("[top-seed] skip top_platform_notifications:", error.message);
     return;
   }
-  console.log(`[torp-seed] torp_platform_notifications inserted: ${rows.length} (target user)`);
+  console.log(`[top-seed] top_platform_notifications inserted: ${rows.length} (target user)`);
 }
 
 async function main() {
@@ -634,7 +634,7 @@ async function main() {
   const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!SUPABASE_URL || !SERVICE_KEY) {
-    console.error("[torp-seed] Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env.local");
+    console.error("[top-seed] Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env.local");
     process.exit(1);
   }
 
@@ -642,7 +642,7 @@ async function main() {
   let authorIds = parseCommunityAuthorWorkOSIds();
   if (!authorIds.length) {
     console.warn(
-      "[torp-seed] TOP_SEED_COMMUNITY_AUTHOR_WORKOS_USER_IDS not set; using recent WorkOS users from torp_profiles.",
+      "[top-seed] TOP_SEED_COMMUNITY_AUTHOR_WORKOS_USER_IDS not set; using recent WorkOS users from top_profiles.",
     );
     authorIds = await pickAuthorIdsFromProfiles(admin);
   }
@@ -650,13 +650,13 @@ async function main() {
   const targetWorkos = targetExplicit || authorIds[0];
   if (targetExplicit) assertWorkOSUserId(targetExplicit, "TOP_SEED_TARGET_WORKOS_USER_ID");
 
-  console.log("[torp-seed] Community authors (WorkOS user ids):", authorIds.join(", "));
-  console.log("[torp-seed] Target for saved orgs + notifications:", targetWorkos);
+  console.log("[top-seed] Community authors (WorkOS user ids):", authorIds.join(", "));
+  console.log("[top-seed] Target for saved orgs + notifications:", targetWorkos);
 
-  console.log("[torp-seed] Upserting torp_profiles…");
+  console.log("[top-seed] Upserting top_profiles…");
   const profileIds = await upsertProfiles(admin, authorIds, targetWorkos);
 
-  console.log("[torp-seed] Seeding community…");
+  console.log("[top-seed] Seeding community…");
   await seedCommunity(admin, profileIds, authorIds);
 
   await seedSponsorApplications(admin);
@@ -668,10 +668,10 @@ async function main() {
     await seedNotifications(admin, profileIds[targetWorkos]);
   }
 
-  console.log("[torp-seed] Done.");
+  console.log("[top-seed] Done.");
 }
 
 main().catch((e) => {
-  console.error("[torp-seed] Failed:", e.message || e);
+  console.error("[top-seed] Failed:", e.message || e);
   process.exit(1);
 });

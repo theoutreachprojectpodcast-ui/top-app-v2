@@ -1,5 +1,6 @@
 import { isWorkOSConfigured, workOSEnvironmentIssues } from "@/lib/auth/workosConfigured";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { resolveOauthHandoffTable } from "@/lib/supabase/tableNames";
 import {
   buildStripeHealthSummary,
   environmentValidationIssues,
@@ -10,8 +11,6 @@ import {
   mobileWebEntryUrl,
   webBaseUrl,
 } from "@/lib/runtime/appUrls";
-
-const HANDOFF_TABLE = "torp_oauth_mobile_handoffs";
 
 export function buildAuthHealth() {
   const issues = workOSEnvironmentIssues();
@@ -29,11 +28,12 @@ export async function buildDbHealth() {
   if (!admin) {
     return { ok: false, supabaseAdmin: false, error: "supabase_admin_unavailable" };
   }
-  const { error } = await admin.from(HANDOFF_TABLE).select("state_key").limit(1);
+  const { error } = await admin.from(await resolveOauthHandoffTable(admin)).select("state_key").limit(1);
   return {
     ok: !error,
     supabaseAdmin: true,
     oauthHandoffTable: !error,
+    oauthHandoffTableName: await resolveOauthHandoffTable(admin),
     error: error?.message || null,
   };
 }
@@ -61,6 +61,7 @@ export function buildMobileHealth() {
     authStartPath: "/mobile/auth/start",
     postLoginPath: "/mobile/auth/complete",
     bundleId: "com.theoutreachproject.theoutreachproject",
+    androidPackageName: "com.theoutreachproject",
   };
 }
 

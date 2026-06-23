@@ -22,4 +22,4 @@ See **[deployment-domains.md](./deployment-domains.md)** for Vercel/DNS, `WORKOS
 ## References
 
 - `web/docs/qa-demo-data.md`
-- `web/docs/TORP_v0.4_RELEASE_WORKFLOW.md`
+- `web/docs/TOP_v0.4_RELEASE_WORKFLOW.md`

@@ -17,9 +17,9 @@ export function workosGoErrorHtml(message, backHref = "/") {
   return workosAuthBrandedHtmlPage({
     title: "Sign in — The Outreach Project",
     heading: "Sign in",
-    bodyHtml: `<p class="torpAuth__lead torpAuth__lead--warn" role="alert">${safeMsg}</p>
-      <div class="torpAuth__actions">
-        <a class="torpAuth__btn torpAuth__btn--primary" href="${safeBack}">Try again</a>
+    bodyHtml: `<p class="topAuth__lead topAuth__lead--warn" role="alert">${safeMsg}</p>
+      <div class="topAuth__actions">
+        <a class="topAuth__btn topAuth__btn--primary" href="${safeBack}">Try again</a>
       </div>`,
   });
 }
@@ -39,10 +39,10 @@ export function workosCallbackErrorHtml(
   return workosAuthBrandedHtmlPage({
     title: "Sign in — The Outreach Project",
     heading: "Sign in",
-    bodyHtml: `<p class="torpAuth__lead torpAuth__lead--warn" role="alert">${safeMsg}</p>
-      <div class="torpAuth__actions">
-        <a class="torpAuth__btn torpAuth__btn--primary" href="${safeTry}">Try again</a>
-        <a class="torpAuth__btn torpAuth__btn--soft" href="${safeHome}">Home</a>
+    bodyHtml: `<p class="topAuth__lead topAuth__lead--warn" role="alert">${safeMsg}</p>
+      <div class="topAuth__actions">
+        <a class="topAuth__btn topAuth__btn--primary" href="${safeTry}">Try again</a>
+        <a class="topAuth__btn topAuth__btn--soft" href="${safeHome}">Home</a>
       </div>`,
   });
 }
@@ -119,7 +119,7 @@ export async function workOSGoJsonResponse(requestUrl, request) {
           { headers: { "Cache-Control": "no-store" } },
         );
       }
-      console.warn("[torp] WorkOS authorize pending save failed, using inline URL fallback:", saved.reason);
+      console.warn("[top] WorkOS authorize pending save failed, using inline URL fallback:", saved.reason);
     }
     return NextResponse.json(
       {
@@ -140,7 +140,7 @@ export async function workOSGoJsonResponse(requestUrl, request) {
         { status: 503, headers: { "Cache-Control": "no-store" } },
       );
     }
-    console.error("[torp] WorkOS go JSON failed:", e);
+    console.error("[top] WorkOS go JSON failed:", e);
     const userMessage =
       message && message !== "Error"
         ? message.replace(/</g, "")
@@ -168,7 +168,7 @@ export async function workOSGoResponse(requestUrl, request) {
     if (message === "authentication_not_configured" || message === "workos_not_configured") {
       return workOSGoErrorResponse("Sign-in is not configured yet.", backHref);
     }
-    console.error("[torp] WorkOS go route failed:", e);
+    console.error("[top] WorkOS go route failed:", e);
     const userMessage =
       message && message !== "Error"
         ? message.replace(/</g, "")

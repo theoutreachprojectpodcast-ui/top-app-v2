@@ -25,7 +25,7 @@ Example: `https://theoutreachproject.app/api/billing/webhook`
 ## Behavior (summary)
 
 - Verifies **`Stripe-Signature`** with `STRIPE_WEBHOOK_SECRET`.
-- Resolves **`workos_user_id`** from subscription metadata and/or Stripe customer id mapped to `torp_profiles`.
+- Resolves **`workos_user_id`** from subscription metadata and/or Stripe customer id mapped to `top_profiles`.
 - Updates **`membership_tier`**, **`membership_status`**, **`billing_status`**, **`renewal_date`**, **`sponsor_tier`**, **`payment_method_summary`** (masked), **`stripe_subscription_id`**, **`membership_source: stripe`**, and **`platform_role`** on subscription state changes.
 
 ## Local testing

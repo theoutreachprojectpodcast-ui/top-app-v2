@@ -146,7 +146,7 @@ export default function SponsorAdminEditorSection({ showAdmin = false, supabase,
                   setStep("edit");
                 }}
               >
-                <strong className="torpEntityNameDisplay">{item.name}</strong>
+                <strong className="topEntityNameDisplay">{item.name}</strong>
                 <span>{item.sponsor_type || "Partner"}</span>
               </button>
             ))}
@@ -159,7 +159,7 @@ export default function SponsorAdminEditorSection({ showAdmin = false, supabase,
             <button className="btnSoft" type="button" onClick={onEnrich} disabled={busy}>Run Enrichment</button>
           </div>
           <p className="sponsorAdminMeta">
-            Editing: <strong className="torpEntityNameDisplay">{draft.name || "New sponsor"}</strong> ({draft.slug || "new"})
+            Editing: <strong className="topEntityNameDisplay">{draft.name || "New sponsor"}</strong> ({draft.slug || "new"})
           </p>
           <details className="sponsorDetailCard" open>
             <summary>Basic Info</summary>

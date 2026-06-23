@@ -1,5 +1,5 @@
 /**
- * DB-backed entitlements (tORP v0.3). Do not grant member-only capabilities from UI alone.
+ * DB-backed entitlements (TOP v0.3). Do not grant member-only capabilities from UI alone.
  */
 
 import { isPlatformAdminServer } from "@/lib/admin/platformAdminServer";

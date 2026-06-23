@@ -8,17 +8,17 @@ import { isCapacitorNative } from "@/lib/capacitor/platform";
 import { MOBILE_POST_LOGIN_PATH } from "@/lib/runtime/appUrls";
 import {
   clearOAuthPollKeyCookie,
-  TORP_OAUTH_BROWSER_PENDING,
-  TORP_OAUTH_RETURN_KEY,
-  TORP_OAUTH_STATE_KEY,
+  TOP_OAUTH_BROWSER_PENDING,
+  TOP_OAUTH_RETURN_KEY,
+  TOP_OAUTH_STATE_KEY,
 } from "@/lib/auth/oauthMobileHandoff";
-export { TORP_OAUTH_RETURN_KEY };
+export { TOP_OAUTH_RETURN_KEY };
 
 function clearOAuthHandoffState() {
   if (typeof sessionStorage === "undefined") return;
-  sessionStorage.removeItem(TORP_OAUTH_RETURN_KEY);
-  sessionStorage.removeItem(TORP_OAUTH_BROWSER_PENDING);
-  sessionStorage.removeItem(TORP_OAUTH_STATE_KEY);
+  sessionStorage.removeItem(TOP_OAUTH_RETURN_KEY);
+  sessionStorage.removeItem(TOP_OAUTH_BROWSER_PENDING);
+  sessionStorage.removeItem(TOP_OAUTH_STATE_KEY);
   clearOAuthPollKeyCookie();
 }
 
@@ -35,7 +35,7 @@ export default function MobileOAuthSessionResume() {
 
   const oauthReturn =
     searchParams?.get("oauth") === "1" ||
-    (typeof sessionStorage !== "undefined" && sessionStorage.getItem(TORP_OAUTH_RETURN_KEY) === "1");
+    (typeof sessionStorage !== "undefined" && sessionStorage.getItem(TOP_OAUTH_RETURN_KEY) === "1");
 
   useLayoutEffect(() => {
     if (!isCapacitorNative() || !oauthReturn) return;

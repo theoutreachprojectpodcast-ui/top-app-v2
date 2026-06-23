@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
  */
 export async function GET() {
   const packageName = String(
-    process.env.ANDROID_PACKAGE_NAME || "com.theoutreachproject.theoutreachproject",
+    process.env.ANDROID_PACKAGE_NAME || "com.theoutreachproject",
   ).trim();
   const fingerprints = String(process.env.ANDROID_APP_LINK_SHA256 || "")
     .split(",")

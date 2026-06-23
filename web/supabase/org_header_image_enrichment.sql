@@ -1,4 +1,4 @@
--- tORP v0.3 — Organization listing header images (directory + trusted resources).
+-- TOP v0.3 — Organization listing header images (directory + trusted resources).
 -- Non-destructive: only creates objects that are missing; never drops policies, tables, or columns;
 -- does not modify existing row data. Run in Supabase SQL editor or your migration runner.
 

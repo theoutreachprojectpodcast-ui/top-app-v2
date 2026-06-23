@@ -10,7 +10,7 @@ android {
     namespace = "com.theoutreachproject.theoutreachproject"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.theoutreachproject.theoutreachproject"
+        applicationId "com.theoutreachproject"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

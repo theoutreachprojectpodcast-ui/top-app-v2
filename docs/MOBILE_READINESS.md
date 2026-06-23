@@ -12,7 +12,7 @@ Production-oriented guide for shipping **The Outreach Project** as native shells
 |-------|------------|
 | Web app | **Next.js 16** (App Router), React 19, API routes (`/api/*`) |
 | Auth | **WorkOS AuthKit** (`/callback`, cookies on `theoutreachproject.app`) |
-| Data | **Supabase** (server + client); profile table `torp_profiles` in Production |
+| Data | **Supabase** (server + client); profile table `top_profiles` in Production |
 | Payments | **Stripe** hosted Checkout + Customer Portal (web); webhooks on Vercel |
 | Deploy | **Vercel** — Production `https://theoutreachproject.app` |
 | Mobile | **Capacitor 8** — `web/ios`, `web/android`, remote `server.url` |
@@ -25,7 +25,7 @@ Production-oriented guide for shipping **The Outreach Project** as native shells
 
 | Field | Value |
 |-------|--------|
-| appId / bundle ID | `org.theoutreachproject.torp` |
+| appId / bundle ID | `org.theoutreachproject.top` |
 | Display name | The Outreach Project |
 | Config file | `web/capacitor.config.js` |
 | Fallback web assets | `web/capacitor-www/` |

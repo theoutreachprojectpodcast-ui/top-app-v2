@@ -3,7 +3,7 @@ import {
   WORKOS_PKCE_COOKIE_NAME,
   workosPkceCookieOptions,
 } from "@/lib/auth/workosAuthorizationRedirect";
-import { TORP_OAUTH_POLL_KEY_COOKIE } from "@/lib/auth/oauthMobileHandoff";
+import { TOP_OAUTH_POLL_KEY_COOKIE } from "@/lib/auth/oauthMobileHandoff";
 import { hashOAuthState } from "@/lib/auth/oauthMobileHandoffServer";
 import {
   resolveWorkOSAuthorizeBundleFromGoUrl,
@@ -12,7 +12,7 @@ import {
 } from "@/lib/auth/workosGoRoute";
 import { workOSAuthRedirectBridge } from "@/lib/auth/workosAuthRedirectBridge";
 
-const BROWSER_OAUTH_COOKIE = "torp-oauth-browser";
+const BROWSER_OAUTH_COOKIE = "top-oauth-browser";
 const BROWSER_OAUTH_MAX_AGE = 600;
 
 function browserOAuthCookieOptions() {
@@ -58,7 +58,7 @@ export async function GET(request) {
     const response = workOSAuthRedirectBridge(authorizeUrl);
     response.cookies.set(BROWSER_OAUTH_COOKIE, "1", browserOAuthCookieOptions());
     response.cookies.set(WORKOS_PKCE_COOKIE_NAME, sealedState, workosPkceCookieOptions());
-    response.cookies.set(TORP_OAUTH_POLL_KEY_COOKIE, stateKey, pollKeyCookieOptions());
+    response.cookies.set(TOP_OAUTH_POLL_KEY_COOKIE, stateKey, pollKeyCookieOptions());
     response.headers.set("Cache-Control", "no-store");
     return response;
   } catch (e) {
@@ -69,7 +69,7 @@ export async function GET(request) {
         headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" },
       });
     }
-    console.error("[torp] WorkOS native browser launch failed:", e);
+    console.error("[top] WorkOS native browser launch failed:", e);
     const userMessage =
       message && message !== "Error"
         ? message.replace(/</g, "")

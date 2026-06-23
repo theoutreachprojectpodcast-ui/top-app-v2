@@ -134,7 +134,7 @@ export async function POST(request) {
     membership_tier: tier,
     checkout_kind: "membership_subscription",
     ...(sponsorPackageId ? { sponsor_package_id: sponsorPackageId } : {}),
-    ...(profileId ? { torp_profile_id: profileId } : {}),
+    ...(profileId ? { top_profile_id: profileId } : {}),
   };
 
   try {
@@ -157,7 +157,7 @@ export async function POST(request) {
     }
     return Response.json({ error: "no_checkout_url" }, { status: 500 });
   } catch (e) {
-    console.error("[torp] Stripe checkout", e);
+    console.error("[top] Stripe checkout", e);
     return Response.json({ error: "stripe_error", message: e.message }, { status: 500 });
   }
 }

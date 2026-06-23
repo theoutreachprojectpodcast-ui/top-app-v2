@@ -1,4 +1,4 @@
-# tORP v0.3 — Directory reset, session persistence, media enrichment
+# TOP v0.3 — Directory reset, session persistence, media enrichment
 
 ## 1. Directory reset (`useDirectorySearch`)
 
@@ -6,7 +6,7 @@
 
 **Fix:**
 
-- Restore from `torp-directory-session-v1` **once** when the Supabase client is ready (`useEffect` depends only on `supabase`).
+- Restore from `top-directory-session-v1` **once** when the Supabase client is ready (`useEffect` depends only on `supabase`).
 - **Clear** still resets filters to defaults (`state`, `q`, `service`, `audience`), clears results/status/meta/page/total, and removes session storage.
 - **Race safety:** each `runSearch` uses a generation counter; **Clear** bumps the generation so in-flight responses are ignored.
 
@@ -18,7 +18,7 @@ Outcome: **Clear** is a full slate; typing after a search is not overwritten by 
 
 **Flicker reduction:**
 
-- `useLayoutEffect` applies `readNavAuthCache()` before paint so the first client frame can show the last known signed-in state (≤45m stale, `torp_nav_auth_v1`).
+- `useLayoutEffect` applies `readNavAuthCache()` before paint so the first client frame can show the last known signed-in state (≤45m stale, `top_nav_auth_v1`).
 - Route changes still call `refresh({ soft: true })` so a transient network error does not clear auth; explicit sign-out clears the cache (`profile` hooks + `/sign-out` flow).
 
 **Subpage header:** `SubpageTopbarActions` treats **loading + cached authenticated** as signed-in for the auth cluster so the bar does not flash empty while `/api/me` completes.

@@ -1,10 +1,10 @@
 -- v0.6 — Last login timestamp (throttled updates from GET /api/me).
 -- Safe additive migration.
 
-alter table public.torp_profiles
+alter table public.top_profiles
   add column if not exists last_login_at timestamptz;
 
-comment on column public.torp_profiles.last_login_at is 'Updated on authenticated /api/me (throttled, e.g. 5m).';
+comment on column public.top_profiles.last_login_at is 'Updated on authenticated /api/me (throttled, e.g. 5m).';
 
 -- QA table may not exist on all projects; skip if missing.
 do $$

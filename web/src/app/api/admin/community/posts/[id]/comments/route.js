@@ -24,7 +24,7 @@ export async function GET(request, context) {
       status,
       created_at,
       updated_at,
-      torp_profiles:profile_id (
+      top_profiles:profile_id (
         display_name,
         first_name,
         last_name

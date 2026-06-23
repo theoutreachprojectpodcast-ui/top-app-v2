@@ -1,4 +1,4 @@
-# tORP v0.3 — Account types, onboarding, billing, and gating
+# TOP v0.3 — Account types, onboarding, billing, and gating
 
 This note describes how **account intent**, **platform roles**, **billing (Stripe)**, and **entitlements** work together after the unified onboarding pass.
 
@@ -7,7 +7,7 @@ This note describes how **account intent**, **platform roles**, **billing (Strip
 | Area | What exists | Notes |
 |------|-------------|--------|
 | Sign-up / sign-in | WorkOS AuthKit links (`/api/auth/workos/signup`, `signin`) | No app-hosted password fields; sessions are cookie-based. |
-| Profile creation | First `PATCH /api/me/profile` inserts `torp_profiles` | Checkout requires an existing profile row. |
+| Profile creation | First `PATCH /api/me/profile` inserts `top_profiles` | Checkout requires an existing profile row. |
 | Canonical onboarding | Single route: `/onboarding` + `OnboardingFlow.jsx` | Three steps: intent → profile → plan/billing (sponsor has sub-branch). |
 | Account-type selection | Step 0 → `account_intent` in Supabase | Admin/moderator not shown publicly. |
 | Stripe Checkout | `POST /api/billing/checkout` (mode `subscription`) | **Success/cancel URLs** use `requestOriginForStripeRedirects(request)` so port **3000** (`pnpm dev:alt`) matches return URLs without changing `APP_BASE_URL`. |
@@ -33,8 +33,8 @@ This note describes how **account intent**, **platform roles**, **billing (Strip
 
 | Concept | Storage | Notes |
 |--------|---------|--------|
-| **Account intent** (`account_intent`) | `torp_profiles.account_intent` | Public self-serve: `free_user`, `support_user`, `member_user`, `sponsor_user`. Internal: `admin_user`, `moderator_user` — **set only in the database** (or future admin tool), never from the public onboarding UI. |
-| **Platform role** (`platform_role`) | `torp_profiles.platform_role` | Permission layer: `user`, `support`, `member`, `sponsor`, `moderator`, `admin`. Synced from paid tier via onboarding + Stripe webhooks, except **staff roles are preserved** when subscriptions change. |
+| **Account intent** (`account_intent`) | `top_profiles.account_intent` | Public self-serve: `free_user`, `support_user`, `member_user`, `sponsor_user`. Internal: `admin_user`, `moderator_user` — **set only in the database** (or future admin tool), never from the public onboarding UI. |
+| **Platform role** (`platform_role`) | `top_profiles.platform_role` | Permission layer: `user`, `support`, `member`, `sponsor`, `moderator`, `admin`. Synced from paid tier via onboarding + Stripe webhooks, except **staff roles are preserved** when subscriptions change. |
 | **Billing tier** | `membership_tier` + `membership_status` | `free`, `support`, `member`, `sponsor` with Stripe-driven `membership_status` (`none`, `pending`, `active`, etc.). Stripe remains the billing authority; webhooks update these fields. |
 | **Onboarding lifecycle** | `onboarding_status` | `not_started` → `in_progress` (client may set via profile PATCH) → `completed` or `needs_review` (sponsor **application** path). |
 
@@ -46,11 +46,11 @@ This note describes how **account intent**, **platform roles**, **billing (Strip
 
 Completing the wizard calls `POST /api/me/onboarding/complete`, which sets `onboarding_completed`, final `onboarding_status`, `platform_role` (unless staff), and returns `redirectPath` for a role-aware landing.
 
-## Data in Supabase (`torp_profiles`)
+## Data in Supabase (`top_profiles`)
 
 Core profile fields, `metadata` JSON (sponsor notes, `sponsorOnboardingPath`, `sponsorApplicationStatus`, etc.), Stripe IDs, and the columns above. **No passwords** are stored (WorkOS handles credentials).
 
-**Migration:** run `web/supabase/torp_account_access_model_v03.sql` after `torp_v03_profiles.sql` so `platform_role`, `account_intent`, and `onboarding_status` exist. Without this, API writes to those columns will fail until the migration is applied.
+**Migration:** run `web/supabase/top_account_access_model_v03.sql` after `top_v03_profiles.sql` so `platform_role`, `account_intent`, and `onboarding_status` exist. Without this, API writes to those columns will fail until the migration is applied.
 
 ## WorkOS → durable account
 
@@ -74,7 +74,7 @@ Each WorkOS user maps to **one** row keyed by `workos_user_id` (unique). Session
 - **No** public self-signup. Grant access by setting `platform_role` (and optionally `account_intent`) in SQL, e.g.:
 
 ```sql
-update public.torp_profiles
+update public.top_profiles
 set platform_role = 'moderator', account_intent = 'moderator_user', updated_at = now()
 where lower(email) = lower('you@example.com');
 ```
@@ -95,7 +95,7 @@ where lower(email) = lower('you@example.com');
 | `STRIPE_PRICE_SUPPORT_MONTHLY` | Support with $1 ($1/mo recurring in Stripe) |
 | `STRIPE_PRICE_PRO_MONTHLY` or `STRIPE_PRICE_MEMBER_MONTHLY` | Pro subscription ($5.99/mo product) |
 | `STRIPE_PRICE_SPONSOR_MONTHLY` | Optional sponsor subscription tier |
-| `SUPABASE_SERVICE_ROLE_KEY` | Profile + webhook writes to `torp_profiles` |
+| `SUPABASE_SERVICE_ROLE_KEY` | Profile + webhook writes to `top_profiles` |
 | `APP_BASE_URL` / `NEXT_PUBLIC_APP_URL` | WorkOS callback and any non-request-based redirects; optional for membership checkout returns if the app is opened on the same host that calls the API |
 | `WORKOS_*` | AuthKit (see `.env.local.example`) |
 

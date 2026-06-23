@@ -37,7 +37,7 @@ const usingAnon = !serviceKey && !!anonKey;
 
 /** @type {Record<string, string[]>} */
 const REQUIRED = {
-  torp_profiles: [
+  top_profiles: [
     "workos_user_id",
     "email",
     "membership_tier",
@@ -115,7 +115,7 @@ const REQUIRED = {
 /** Tables probed with select head (may be views). */
 const TABLE_PROBE = [
   "nonprofits_search_app_v1",
-  "torp_profiles",
+  "top_profiles",
   "top_qa_profiles",
   "sponsors_catalog",
   "trusted_resources",
@@ -132,7 +132,7 @@ const TABLE_PROBE = [
   "entity_social_links",
   "trusted_resource_nonprofit_links",
   "podcast_sponsor_checkout_events",
-  "torp_platform_notifications",
+  "top_platform_notifications",
   "top_app_saved_org_eins",
 ];
 

@@ -18,7 +18,7 @@ Access is **platform admin**, not a generic “logged-in user” flag.
 
 1. **Bootstrap emails** — addresses in `adminPolicy.js` defaults plus comma-separated `PLATFORM_ADMIN_EMAILS` (and `QA_PLATFORM_ADMIN_EMAILS` on QA). No DB change required.
 2. **Manual grant** — after migration `admin_backend_v06_access_control.sql`:
-   - Set `torp_profiles.platform_role = 'admin'`
+   - Set `top_profiles.platform_role = 'admin'`
    - Set `admin_access_enabled = true`
    - Set `admin_access_granted_by` to the granting admin’s WorkOS user id (non-empty)
 
@@ -32,7 +32,7 @@ Client hint: `/api/me` → `entitlements.isPlatformAdmin` (must not be trusted f
 Run after `admin_backend_v06_access_control.sql`:
 
 ```sql
-update public.torp_profiles
+update public.top_profiles
 set
   platform_role = 'admin',
   admin_access_enabled = true,
@@ -141,7 +141,7 @@ Published public feed uses `status = 'approved'` only. Drafts, `pending_review`,
 | Homepage carousel settings | `admin_settings.setting_key = 'homepage.sponsors'` | JSON: `carouselLimit`, `carouselIntervalMs` |
 | Community posts | `community_posts` | status, post_type, body, media URL fields, published_at |
 | Admin settings (other) | `admin_settings` | contact, etc. |
-| Platform admin grant | `torp_profiles` | platform_role, admin_access_* columns |
+| Platform admin grant | `top_profiles` | platform_role, admin_access_* columns |
 | Audit | `admin_audit_logs` | optional actions logged |
 
 No new tables were required for this pass; uses existing CMS migrations.

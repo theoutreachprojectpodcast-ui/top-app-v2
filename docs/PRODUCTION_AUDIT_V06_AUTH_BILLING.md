@@ -11,11 +11,11 @@
 |------|--------|--------|
 | WorkOS AuthKit (sign-in/up, callback) | **Exists** | `@workos-inc/authkit-nextjs`, `/api/auth/workos/signin`, `/signup`, `/callback`, `src/proxy.js` |
 | Session / cookies / idle | **Exists** | `WORKOS_COOKIE_DOMAIN`, idle cookies in `proxy.js`, `POST /api/auth/activity`, `AuthSessionProvider` soft retries |
-| Profile storage | **Exists** | `torp_profiles` (or `top_qa_profiles` in QA), `PATCH /api/me/profile`, callback upsert |
-| Membership + Stripe | **Partial** | Checkout + portal routes exist; webhooks update `torp_profiles`; tiers `free`/`support`/`member`/`sponsor` |
+| Profile storage | **Exists** | `top_profiles` (or `top_qa_profiles` in QA), `PATCH /api/me/profile`, callback upsert |
+| Membership + Stripe | **Partial** | Checkout + portal routes exist; webhooks update `top_profiles`; tiers `free`/`support`/`member`/`sponsor` |
 | Entitlements (server) | **Fixed in v0.6** | Previously only `member` + active unlocked paid surfaces; now **support** and **sponsor** with active billing too; `trialing` treated as active for gates |
 | Last login | **Added in v0.6** | Column + throttled `PATCH` from `GET /api/me` |
-| Separate `users` / `memberships` / `billing_events` tables | **Missing** | Single **`torp_profiles`** row is the canonical account; **`billing_records`** for admin invoice log |
+| Separate `users` / `memberships` / `billing_events` tables | **Missing** | Single **`top_profiles`** row is the canonical account; **`billing_records`** for admin invoice log |
 | Members-only content | **Partial** | Entitlements drive API/UI in places; not a global middleware gate for every route |
 | Admin user CRM | **Partial** | `AdminUsersPanel` + `/api/admin/users` PATCH role/tier; no full “billing history” UI |
 | Demo mode | **Exists** | `NEXT_PUBLIC_ENABLE_DEMO_FLOWS`, local demo auth — must stay off in production |
@@ -34,9 +34,9 @@
 
 ## 3. Database model
 
-**Canonical account:** `public.torp_profiles` — `workos_user_id` (unique), email, names, `membership_tier`, `membership_status`, `membership_source`, Stripe IDs, `platform_role`, `account_intent`, `onboarding_status`, `metadata` jsonb, timestamps. **QA mirror:** `top_qa_profiles` when `PROFILE_TABLE` / env selects QA.
+**Canonical account:** `public.top_profiles` — `workos_user_id` (unique), email, names, `membership_tier`, `membership_status`, `membership_source`, Stripe IDs, `platform_role`, `account_intent`, `onboarding_status`, `metadata` jsonb, timestamps. **QA mirror:** `top_qa_profiles` when `PROFILE_TABLE` / env selects QA.
 
-**Missing vs idealized spec:** Dedicated `users`, `user_profiles`, `memberships`, `billing_customers`, `billing_events` tables are **not** present as separate entities; behavior is **intentionally consolidated** in `torp_profiles` + Stripe + `billing_records` to avoid duplicate sources of truth. A future migration could normalize if required.
+**Missing vs idealized spec:** Dedicated `users`, `user_profiles`, `memberships`, `billing_customers`, `billing_events` tables are **not** present as separate entities; behavior is **intentionally consolidated** in `top_profiles` + Stripe + `billing_records` to avoid duplicate sources of truth. A future migration could normalize if required.
 
 **Non-destructive:** New columns use `ADD COLUMN IF NOT EXISTS` in additive SQL files.
 
@@ -52,7 +52,7 @@
 
 ## 5. Billing & Stripe
 
-**Exists:** `POST /api/billing/webhook` (subscription lifecycle → `torp_profiles`), checkout + portal routes under `api/billing/`, Stripe env validation in scripts.
+**Exists:** `POST /api/billing/webhook` (subscription lifecycle → `top_profiles`), checkout + portal routes under `api/billing/`, Stripe env validation in scripts.
 
 **Trust model:** Correct — webhooks mutate billing authority; client cannot set WorkOS tier directly (`setMembershipStatus` no-op for WorkOS).
 
@@ -87,4 +87,4 @@
 
 ## 9. Validation commands
 
-From repo root: `pnpm install`, `pnpm --filter web build`, `pnpm --filter web lint` (if configured). Apply new SQL in Supabase SQL editor: `web/supabase/torp_profiles_last_login_v06.sql`.
+From repo root: `pnpm install`, `pnpm --filter web build`, `pnpm --filter web lint` (if configured). Apply new SQL in Supabase SQL editor: `web/supabase/top_profiles_last_login_v06.sql`.

@@ -1,13 +1,13 @@
-# tORP v0.3 — In-app notifications
+# TOP v0.3 — In-app notifications
 
 ## Schema (Supabase)
 
-Run `web/supabase/torp_platform_notifications.sql` in the Supabase SQL editor (or your migration pipeline).
+Run `web/supabase/top_platform_notifications.sql` in the Supabase SQL editor (or your migration pipeline).
 
-- **`torp_platform_notifications`** — one row per recipient (`recipient_profile_id` → `torp_profiles.id`). Columns include `audience_scope` (`user` | `staff`), `notification_type`, `title`, `message`, `link_path`, `entity_type`, `entity_id`, `status` (`unread` | `read` | `archived`), `priority`, timestamps, `metadata` jsonb, `delivered_email_at` (reserved).
-- **`torp_org_public_updates`** — append-only org “update” events used to drive `favorite_org_updated` fan-out.
+- **`top_platform_notifications`** — one row per recipient (`recipient_profile_id` → `top_profiles.id`). Columns include `audience_scope` (`user` | `staff`), `notification_type`, `title`, `message`, `link_path`, `entity_type`, `entity_id`, `status` (`unread` | `read` | `archived`), `priority`, timestamps, `metadata` jsonb, `delivered_email_at` (reserved).
+- **`top_org_public_updates`** — append-only org “update” events used to drive `favorite_org_updated` fan-out.
 
-RLS: **anon** and **authenticated** roles have **no** direct access (same pattern as `torp_profiles`). The Next.js app reads/writes via **service role** in route handlers.
+RLS: **anon** and **authenticated** roles have **no** direct access (same pattern as `top_profiles`). The Next.js app reads/writes via **service role** in route handlers.
 
 ## How notifications are created
 
@@ -16,7 +16,7 @@ Central helper: `web/src/server/notifications/notificationService.js`.
 - **`createPlatformNotification(admin, payload)`** — insert one row.
 - **`createNotificationDeduped(...)`** — skips insert if the same recipient/type/entity has a recent **unread** row (window from `dedupeHours`).
 - **`notifyStaffProfiles(admin, payload)`** — resolves moderator profile IDs from `COMMUNITY_MODERATOR_*` / `NEXT_PUBLIC_COMMUNITY_MODERATOR_*` and inserts **staff**-scoped rows (deduped per recipient).
-- **`publishOrgPublicUpdateAndNotifyFans(admin, params)`** — inserts `torp_org_public_updates`, then notifies users who saved that EIN (`NEXT_PUBLIC_SAVED_ORG_TABLE`, default `top_app_saved_org_eins`).
+- **`publishOrgPublicUpdateAndNotifyFans(admin, params)`** — inserts `top_org_public_updates`, then notifies users who saved that EIN (`NEXT_PUBLIC_SAVED_ORG_TABLE`, default `top_app_saved_org_eins`).
 
 Email/push: **`scheduleOutboundEmailNotification`** is a no-op stub; set `delivered_email_at` when a worker exists.
 
@@ -53,7 +53,7 @@ Email/push: **`scheduleOutboundEmailNotification`** is a no-op stub; set `delive
 
 `web/src/app/api/billing/webhook/route.js` calls **`notifyMembershipFromStripeInvoice`** for `invoice.paid`, `invoice.payment_failed`, and **`invoice.upcoming`**.
 
-- Requires `stripe_customer_id` on `torp_profiles` matching the invoice customer (set during checkout/subscription sync).
+- Requires `stripe_customer_id` on `top_profiles` matching the invoice customer (set during checkout/subscription sync).
 - **Upcoming charge**: enable the **`invoice.upcoming`** event for your Stripe webhook (Dashboard → Developers → Webhooks). Without it, only paid/failed invoices generate notices.
 
 ## Read / unread
@@ -76,5 +76,5 @@ Styling: `web/src/components/app/top-app.css` (`.headerNotification*`).
 
 1. Apply SQL migration for notifications tables.
 2. Stripe webhook: add **`invoice.upcoming`** if you want renewal reminders.
-3. Moderators: `COMMUNITY_MODERATOR_EMAILS` / `COMMUNITY_MODERATOR_WORKOS_USER_IDS` (and/or `NEXT_PUBLIC_*`) so staff rows resolve to real `torp_profiles` rows.
+3. Moderators: `COMMUNITY_MODERATOR_EMAILS` / `COMMUNITY_MODERATOR_WORKOS_USER_IDS` (and/or `NEXT_PUBLIC_*`) so staff rows resolve to real `top_profiles` rows.
 4. Outbound email: implement `scheduleOutboundEmailNotification` + optional `notification_preferences` table when ready.

@@ -43,7 +43,7 @@ export default function NonprofitCard({
   function onCardClick(event) {
     if (isDirectory || !activationTarget || useProfileLink) return;
     const interactiveTarget = event.target?.closest?.(
-      "a,button,input,select,textarea,label,[data-torp-card-interactive]"
+      "a,button,input,select,textarea,label,[data-top-card-interactive]"
     );
     if (interactiveTarget) return;
     onCardActivate();
@@ -95,7 +95,7 @@ export default function NonprofitCard({
           <button
             className={`favBtn${isFavorite ? " favBtn--on" : ""}`}
             type="button"
-            data-torp-card-interactive
+            data-top-card-interactive
             onClick={onFavoriteClick}
             aria-pressed={isFavorite}
             aria-label={isFavorite ? "Remove from saved" : "Save organization"}
@@ -107,7 +107,7 @@ export default function NonprofitCard({
           <button
             className="favBtn favBtn--muted"
             type="button"
-            data-torp-card-interactive
+            data-top-card-interactive
             onClick={onGuestFavoriteClick}
             aria-label="Sign in to save organizations"
           >
@@ -129,12 +129,12 @@ export default function NonprofitCard({
   );
 
   const actionRow = (
-    <div className="nonprofitActionRow nonprofitActionRow--cardFooter" data-torp-card-interactive>
+    <div className="nonprofitActionRow nonprofitActionRow--cardFooter" data-top-card-interactive>
       {actionMode === "directory" && (
         <button
           className="btnBlack btnBlack--findInfo"
           type="button"
-          data-torp-card-interactive
+          data-top-card-interactive
           onClick={onFindInfoClick}
         >
           Find Info
@@ -148,7 +148,7 @@ export default function NonprofitCard({
                 key={l.url}
                 className="btnSoft"
                 type="button"
-                data-torp-card-interactive
+                data-top-card-interactive
                 onClick={(event) => {
                   event.preventDefault();
                   event.stopPropagation();
@@ -160,7 +160,7 @@ export default function NonprofitCard({
             ))
         : null}
       {actionMode === "saved" && !!favoriteKey && onToggleFavorite && (
-        <button className="btnSoft" type="button" data-torp-card-interactive onClick={onFavoriteClick}>
+        <button className="btnSoft" type="button" data-top-card-interactive onClick={onFavoriteClick}>
           Unfavorite
         </button>
       )}
@@ -170,22 +170,22 @@ export default function NonprofitCard({
 
   return (
     <article
-      className={`resultCard torpListingCard tier-${card.tier} category-${categoryKey} resultCard--listingHero ${!isDirectory && activationTarget ? "resultCard--clickable" : ""} ${isDirectory ? "resultCard--directoryListing" : ""} ${isTrustedResourcesCard ? "resultCard--trustedResource" : ""} ${useProfileLink ? "resultCard--profileLink" : ""}`}
+      className={`resultCard topListingCard tier-${card.tier} category-${categoryKey} resultCard--listingHero ${!isDirectory && activationTarget ? "resultCard--clickable" : ""} ${isDirectory ? "resultCard--directoryListing" : ""} ${isTrustedResourcesCard ? "resultCard--trustedResource" : ""} ${useProfileLink ? "resultCard--profileLink" : ""}`}
       onClick={useProfileLink ? undefined : onCardClick}
       onKeyDown={useProfileLink ? undefined : onCardKeyDown}
       role={activationTarget && !useProfileLink ? "link" : undefined}
       tabIndex={activationTarget && !useProfileLink ? 0 : undefined}
       aria-label={activationTarget && !useProfileLink ? `View profile: ${card.name}` : undefined}
     >
-      <div className="torpListingCardHeroWrap" aria-hidden>
+      <div className="topListingCardHeroWrap" aria-hidden>
         <div
-          className={`torpListingCardHero ${listingPhoto ? "torpListingCardHero--photo" : "torpListingCardHero--category"}`}
-          data-torp-listing-category={categoryKey}
+          className={`topListingCardHero ${listingPhoto ? "topListingCardHero--photo" : "topListingCardHero--category"}`}
+          data-top-listing-category={categoryKey}
           style={listingPhoto ? { backgroundImage: `url(${JSON.stringify(listingPhoto)})` } : undefined}
         />
-        <div className="torpListingCardHeroScrim torpListingCardHeroScrim--resource torpListingCardHeroScrim--orgListing" />
+        <div className="topListingCardHeroScrim topListingCardHeroScrim--resource topListingCardHeroScrim--orgListing" />
       </div>
-      <div className="torpListingCardBody">
+      <div className="topListingCardBody">
         <div
           className={`nonprofitCardMain${isTrustedResourcesCard ? " nonprofitCardMain--trustedResource" : " nonprofitCardMain--directoryBalance"}${useProfileLink ? " nonprofitCardMain--hitStack" : ""}`}
         >

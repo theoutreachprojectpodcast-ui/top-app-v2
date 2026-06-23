@@ -36,7 +36,7 @@ Secondary tools (linked from Advanced): settings, forms, applications, contact, 
 
 ## Data models (existing tables)
 
-- `sponsors_catalog`, `community_posts`, `trusted_resources`, `podcast_guest_applications`, `form_submissions`, `admin_settings`, page images, `torp_profiles` (users).
+- `sponsors_catalog`, `community_posts`, `trusted_resources`, `podcast_guest_applications`, `form_submissions`, `admin_settings`, page images, `top_profiles` (users).
 - Community post `status` values used in app: `draft`, `submitted`, `pending_review`, `under_review`, `in_review`, `approved`, `rejected`, hidden/archived via admin actions.
 - User submissions: `POST /api/community/posts` (member, WorkOS session) → moderation queue; public feed `GET` scope `public` only `approved`.
 

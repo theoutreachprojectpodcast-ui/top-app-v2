@@ -92,7 +92,7 @@ export async function workOSAuthBridgePost(request, options = {}) {
     if (message === "authentication_not_configured" || message === "workos_not_configured") {
       return bridgeErrorResponse("WorkOS AuthKit is not configured yet.", backHref, 503);
     }
-    console.error(`[torp] WorkOS ${mode} bridge failed:`, e);
+    console.error(`[top] WorkOS ${mode} bridge failed:`, e);
     return bridgeErrorResponse("Could not start secure sign in.", backHref, 503);
   }
 }

@@ -137,7 +137,7 @@ export async function POST(request) {
         return Response.json({ error: "payment_not_completed" }, { status: 400 });
       }
     } catch (e) {
-      console.error("[torp] sponsor application stripe verify", e);
+      console.error("[top] sponsor application stripe verify", e);
       return Response.json({ error: "stripe_verify_failed", message: e.message }, { status: 400 });
     }
   }

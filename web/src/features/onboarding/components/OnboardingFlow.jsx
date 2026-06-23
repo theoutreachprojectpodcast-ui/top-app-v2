@@ -600,15 +600,15 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
               </label>
             </div>
             {initialProfile?.email ? (
-              <label className="fieldLabel" htmlFor="torp-onboarding-email">
+              <label className="fieldLabel" htmlFor="top-onboarding-email">
                 Email (from your sign-in provider)
-                <input id="torp-onboarding-email" type="email" readOnly value={initialProfile.email} />
+                <input id="top-onboarding-email" type="email" readOnly value={initialProfile.email} />
               </label>
             ) : null}
-            <label className="fieldLabel" htmlFor="torp-onboarding-display">
+            <label className="fieldLabel" htmlFor="top-onboarding-display">
               Display name <span className="applyError">*</span>
               <input
-                id="torp-onboarding-display"
+                id="top-onboarding-display"
                 autoComplete="nickname"
                 value={draft.displayName}
                 onChange={(e) => setDraft((d) => ({ ...d, displayName: e.target.value }))}
@@ -616,20 +616,20 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
               />
             </label>
             <div className="form">
-              <label className="fieldLabel" htmlFor="torp-onboarding-given">
+              <label className="fieldLabel" htmlFor="top-onboarding-given">
                 First name <span className="applyError">*</span>
                 <input
-                  id="torp-onboarding-given"
+                  id="top-onboarding-given"
                   autoComplete="given-name"
                   value={draft.firstName}
                   onChange={(e) => setDraft((d) => ({ ...d, firstName: e.target.value }))}
                   required
                 />
               </label>
-              <label className="fieldLabel" htmlFor="torp-onboarding-family">
+              <label className="fieldLabel" htmlFor="top-onboarding-family">
                 Last name <span className="applyError">*</span>
                 <input
-                  id="torp-onboarding-family"
+                  id="top-onboarding-family"
                   autoComplete="family-name"
                   value={draft.lastName}
                   onChange={(e) => setDraft((d) => ({ ...d, lastName: e.target.value }))}
@@ -637,10 +637,10 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
                 />
               </label>
             </div>
-            <label className="fieldLabel" htmlFor="torp-onboarding-phone">
+            <label className="fieldLabel" htmlFor="top-onboarding-phone">
               Phone number (optional)
               <input
-                id="torp-onboarding-phone"
+                id="top-onboarding-phone"
                 type="tel"
                 autoComplete="tel"
                 value={draft.phoneNumber}
@@ -648,19 +648,19 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
               />
             </label>
             <div className="form">
-              <label className="fieldLabel" htmlFor="torp-onboarding-city">
+              <label className="fieldLabel" htmlFor="top-onboarding-city">
                 City (optional)
                 <input
-                  id="torp-onboarding-city"
+                  id="top-onboarding-city"
                   autoComplete="address-level2"
                   value={draft.city}
                   onChange={(e) => setDraft((d) => ({ ...d, city: e.target.value }))}
                 />
               </label>
-              <label className="fieldLabel" htmlFor="torp-onboarding-state">
+              <label className="fieldLabel" htmlFor="top-onboarding-state">
                 State / region <span className="applyError">*</span>
                 <input
-                  id="torp-onboarding-state"
+                  id="top-onboarding-state"
                   autoComplete="address-level1"
                   value={draft.state}
                   onChange={(e) => setDraft((d) => ({ ...d, state: e.target.value }))}
@@ -668,19 +668,19 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
                 />
               </label>
             </div>
-            <label className="fieldLabel" htmlFor="torp-onboarding-zip">
+            <label className="fieldLabel" htmlFor="top-onboarding-zip">
               ZIP / postal code (optional)
               <input
-                id="torp-onboarding-zip"
+                id="top-onboarding-zip"
                 autoComplete="postal-code"
                 value={draft.postalCode}
                 onChange={(e) => setDraft((d) => ({ ...d, postalCode: e.target.value }))}
               />
             </label>
-            <label className="fieldLabel" htmlFor="torp-onboarding-contactpref">
+            <label className="fieldLabel" htmlFor="top-onboarding-contactpref">
               Preferred contact method <span className="applyError">*</span>
               <select
-                id="torp-onboarding-contactpref"
+                id="top-onboarding-contactpref"
                 value={draft.preferredContactMethod}
                 onChange={(e) => setDraft((d) => ({ ...d, preferredContactMethod: e.target.value }))}
                 required
@@ -723,10 +723,10 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
             <h3 className="introTagline" style={{ marginBottom: 10 }}>
               Identity
             </h3>
-            <label className="fieldLabel" htmlFor="torp-id-seg">
+            <label className="fieldLabel" htmlFor="top-id-seg">
               How do you identify with this community? <span className="applyError">*</span>
               <select
-                id="torp-id-seg"
+                id="top-id-seg"
                 value={draft.identitySegment}
                 onChange={(e) => setDraft((d) => ({ ...d, identitySegment: e.target.value }))}
                 required
@@ -739,69 +739,69 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
                 ))}
               </select>
             </label>
-            <label className="fieldLabel" htmlFor="torp-org-affil">
+            <label className="fieldLabel" htmlFor="top-org-affil">
               Organization name {["organization_representative", "sponsor", "resource_partner"].includes(draft.identitySegment) ? <span className="applyError">*</span> : <span>(if applicable)</span>}
               <input
-                id="torp-org-affil"
+                id="top-org-affil"
                 value={draft.organizationAffiliation}
                 onChange={(e) => setDraft((d) => ({ ...d, organizationAffiliation: e.target.value }))}
               />
             </label>
-            <label className="fieldLabel" htmlFor="torp-job">
+            <label className="fieldLabel" htmlFor="top-job">
               Role / title (optional)
-              <input id="torp-job" value={draft.jobTitle} onChange={(e) => setDraft((d) => ({ ...d, jobTitle: e.target.value }))} />
+              <input id="top-job" value={draft.jobTitle} onChange={(e) => setDraft((d) => ({ ...d, jobTitle: e.target.value }))} />
             </label>
-            <label className="fieldLabel" htmlFor="torp-service">
+            <label className="fieldLabel" htmlFor="top-service">
               Branch or service affiliation{" "}
               {["veteran", "first_responder"].includes(draft.identitySegment) ? <span className="applyError">*</span> : <span>(if applicable)</span>}
               <input
-                id="torp-service"
+                id="top-service"
                 value={draft.serviceBackground}
                 onChange={(e) => setDraft((d) => ({ ...d, serviceBackground: e.target.value }))}
               />
             </label>
-            <label className="fieldLabel" htmlFor="torp-bio">
+            <label className="fieldLabel" htmlFor="top-bio">
               Short bio (optional)
               <textarea
-                id="torp-bio"
+                id="top-bio"
                 rows={3}
                 value={draft.bio}
                 onChange={(e) => setDraft((d) => ({ ...d, bio: e.target.value }))}
               />
             </label>
-            <label className="fieldLabel" htmlFor="torp-why">
+            <label className="fieldLabel" htmlFor="top-why">
               Why are you joining The Outreach Project? <span className="applyError">*</span>
               <textarea
-                id="torp-why"
+                id="top-why"
                 rows={3}
                 value={draft.reasonForJoining}
                 onChange={(e) => setDraft((d) => ({ ...d, reasonForJoining: e.target.value }))}
                 required
               />
             </label>
-            <label className="fieldLabel" htmlFor="torp-causes">
+            <label className="fieldLabel" htmlFor="top-causes">
               Interests / categories you care about (optional)
               <textarea
-                id="torp-causes"
+                id="top-causes"
                 rows={2}
                 value={draft.causes}
                 onChange={(e) => setDraft((d) => ({ ...d, causes: e.target.value }))}
                 placeholder="Topics, causes, or communities you follow"
               />
             </label>
-            <label className="fieldLabel" htmlFor="torp-support-needs">
+            <label className="fieldLabel" htmlFor="top-support-needs">
               Support needs (optional)
               <textarea
-                id="torp-support-needs"
+                id="top-support-needs"
                 rows={2}
                 value={draft.supportNeeds}
                 onChange={(e) => setDraft((d) => ({ ...d, supportNeeds: e.target.value }))}
               />
             </label>
-            <label className="fieldLabel" htmlFor="torp-communities">
+            <label className="fieldLabel" htmlFor="top-communities">
               Communities you identify with on the platform (optional)
               <textarea
-                id="torp-communities"
+                id="top-communities"
                 rows={2}
                 value={draft.communities}
                 onChange={(e) => setDraft((d) => ({ ...d, communities: e.target.value }))}
@@ -849,37 +849,37 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
                 ))}
               </div>
             </fieldset>
-            <label className="fieldLabel" htmlFor="torp-skills">
+            <label className="fieldLabel" htmlFor="top-skills">
               Skills or services you can offer (optional)
               <textarea
-                id="torp-skills"
+                id="top-skills"
                 rows={2}
                 value={draft.skills}
                 onChange={(e) => setDraft((d) => ({ ...d, skills: e.target.value }))}
               />
             </label>
-            <label className="fieldLabel" htmlFor="torp-volunteer">
+            <label className="fieldLabel" htmlFor="top-volunteer">
               Volunteer interests (optional)
               <textarea
-                id="torp-volunteer"
+                id="top-volunteer"
                 rows={2}
                 value={draft.volunteerInterests}
                 onChange={(e) => setDraft((d) => ({ ...d, volunteerInterests: e.target.value }))}
               />
             </label>
-            <label className="fieldLabel" htmlFor="torp-contrib-sum">
+            <label className="fieldLabel" htmlFor="top-contrib-sum">
               How you want to contribute (summary, optional)
               <textarea
-                id="torp-contrib-sum"
+                id="top-contrib-sum"
                 rows={2}
                 value={draft.contributionSummary}
                 onChange={(e) => setDraft((d) => ({ ...d, contributionSummary: e.target.value }))}
               />
             </label>
-            <label className="fieldLabel" htmlFor="torp-pref-contrib-contact">
+            <label className="fieldLabel" htmlFor="top-pref-contrib-contact">
               Preferred ways to be contacted about opportunities (optional)
               <input
-                id="torp-pref-contrib-contact"
+                id="top-pref-contrib-contact"
                 value={draft.preferredContributionContact}
                 onChange={(e) => setDraft((d) => ({ ...d, preferredContributionContact: e.target.value }))}
                 placeholder="e.g. Email weekdays, text for events"
@@ -971,10 +971,10 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
                     </div>
                     {sponsorSubPath === "application" ? (
                       <>
-                        <label className="fieldLabel" htmlFor="torp-sponsor-app-notes">
+                        <label className="fieldLabel" htmlFor="top-sponsor-app-notes">
                           Partnership notes (optional)
                           <textarea
-                            id="torp-sponsor-app-notes"
+                            id="top-sponsor-app-notes"
                             rows={4}
                             autoComplete="off"
                             value={draft.sponsorApplicationNotes}

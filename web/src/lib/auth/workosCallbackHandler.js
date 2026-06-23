@@ -44,7 +44,7 @@ export function createWorkOSCallbackHandler(request) {
     baseURL,
     onSuccess: onWorkOSSuccess,
     onError: async ({ error, request: req }) => {
-      console.error("[torp] WorkOS callback failed:", error?.message || error);
+      console.error("[top] WorkOS callback failed:", error?.message || error);
       const description = workosCallbackErrorMessage(error);
       if (req && oauthStartedInNativeShell(req) && !isCapacitorCallbackRequest(req)) {
         const signIn = new URL("/sign-in", req.url);
@@ -173,7 +173,7 @@ export async function runWorkOSCallbackForFetch(request) {
   try {
     inner = await handler(request);
   } catch (err) {
-    console.error("[torp] WorkOS callback handler threw:", err);
+    console.error("[top] WorkOS callback handler threw:", err);
     return NextResponse.json(
       {
         ok: false,

@@ -13,11 +13,11 @@ DOC = Path(__file__).with_name("app-encryption-apple.md")
 FIELDS: dict[str, tuple[int, str]] = {
     "purpose_300": (
         300,
-        "The Outreach Project (org.theoutreachproject.torp) helps veterans, first responders, and supporters find nonprofits, trusted resources, community, podcasts, and membership. Capacitor loads https://theoutreachproject.app in WKWebView. Consumer app; not for military or surveillance. No custom crypto.",
+        "The Outreach Project (org.theoutreachproject.top) helps veterans, first responders, and supporters find nonprofits, trusted resources, community, podcasts, and membership. Capacitor loads https://theoutreachproject.app in WKWebView. Consumer app; not for military or surveillance. No custom crypto.",
     ),
     "purpose_500": (
         500,
-        "The Outreach Project (org.theoutreachproject.torp) is a consumer iOS app for veterans, first responders, and supporters. Users sign in to search nonprofits, browse trusted resources, read community posts, access podcasts, save organizations, and manage optional membership. Capacitor shell loads https://theoutreachproject.app in WKWebView. Not for military, intelligence, or surveillance. Membership billing uses Stripe on the web. Profile and saved orgs sync via Supabase over HTTPS.",
+        "The Outreach Project (org.theoutreachproject.top) is a consumer iOS app for veterans, first responders, and supporters. Users sign in to search nonprofits, browse trusted resources, read community posts, access podcasts, save organizations, and manage optional membership. Capacitor shell loads https://theoutreachproject.app in WKWebView. Not for military, intelligence, or surveillance. Membership billing uses Stripe on the web. Profile and saved orgs sync via Supabase over HTTPS.",
     ),
     "encryption_500": (
         500,
@@ -37,7 +37,7 @@ FIELDS: dict[str, tuple[int, str]] = {
     ),
     "combined_appDescription": (
         4000,
-        "The Outreach Project (org.theoutreachproject.torp) is a consumer iOS app for veterans, first responders, and supporters (nonprofit directory, trusted resources, community, podcasts, membership). Capacitor/WKWebView loads https://theoutreachproject.app. Encryption: HTTPS (TLS 1.2+) only via Apple WebKit and iOS networking to WorkOS, Supabase, and Stripe. No proprietary, custom, or non-standard crypto in the iOS binary. No VPN, E2E chat, encrypted vault, or user-managed keys. Mass-market consumer app; exempt under EAR Category 5 Part 2. No CCATS, ERN, or proprietary cryptography. Capacitor links @capacitor/core and @capacitor/share only; TLS from Apple OS/WebKit. Not for military, intelligence, or surveillance use. Server encryption at rest is provider-managed (Vercel, Supabase), not client-side crypto. Optional photo upload for profile or community images only.",
+        "The Outreach Project (org.theoutreachproject.top) is a consumer iOS app for veterans, first responders, and supporters (nonprofit directory, trusted resources, community, podcasts, membership). Capacitor/WKWebView loads https://theoutreachproject.app. Encryption: HTTPS (TLS 1.2+) only via Apple WebKit and iOS networking to WorkOS, Supabase, and Stripe. No proprietary, custom, or non-standard crypto in the iOS binary. No VPN, E2E chat, encrypted vault, or user-managed keys. Mass-market consumer app; exempt under EAR Category 5 Part 2. No CCATS, ERN, or proprietary cryptography. Capacitor links @capacitor/core and @capacitor/share only; TLS from Apple OS/WebKit. Not for military, intelligence, or surveillance use. Server encryption at rest is provider-managed (Vercel, Supabase), not client-side crypto. Optional photo upload for profile or community images only.",
     ),
 }
 

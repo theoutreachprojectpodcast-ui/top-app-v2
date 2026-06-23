@@ -7,8 +7,8 @@ import { profileTableName } from "@/lib/supabase/admin";
 import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
 import { isPlatformAdminServer } from "@/lib/admin/platformAdminServer";
 
-const NOTIFICATIONS_TABLE = "torp_platform_notifications";
-const ORG_UPDATES_TABLE = "torp_org_public_updates";
+const NOTIFICATIONS_TABLE = "top_platform_notifications";
+const ORG_UPDATES_TABLE = "top_org_public_updates";
 const SAVED_ORG_TABLE = process.env.NEXT_PUBLIC_SAVED_ORG_TABLE || "top_app_saved_org_eins";
 
 function parseList(raw) {

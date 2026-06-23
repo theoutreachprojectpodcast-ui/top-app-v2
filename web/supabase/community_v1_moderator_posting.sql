@@ -42,7 +42,7 @@ comment on column public.community_posts.feed_media_json is 'Carousel slides, re
 create table if not exists public.community_post_comments (
   id uuid primary key default gen_random_uuid (),
   post_id uuid not null references public.community_posts (id) on delete cascade,
-  profile_id uuid not null references public.torp_profiles (id) on delete cascade,
+  profile_id uuid not null references public.top_profiles (id) on delete cascade,
   body text not null,
   status text not null default 'published',
   created_at timestamptz not null default now (),

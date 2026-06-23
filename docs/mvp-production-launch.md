@@ -90,8 +90,8 @@ pnpm --dir web run security:guards
 
 - [x] Use the **Production** Supabase project (not QA/dev).
 - [x] Apply core migrations **#1–#36** in order: [production-supabase-migration-order.md](./production-supabase-migration-order.md).
-- [x] **#3** `torp_profiles_membership_source.sql` — Supabase SQL Editor only; skip if `membership_source` already exists from #1.
-- [x] **#6.5** `torp_profiles_membership_billing_v04.sql` — billing columns on profile (`renewal_date`, `billing_status`, etc.).
+- [x] **#3** `top_profiles_membership_source.sql` — Supabase SQL Editor only; skip if `membership_source` already exists from #1.
+- [x] **#6.5** `top_profiles_membership_billing_v04.sql` — billing columns on profile (`renewal_date`, `billing_status`, etc.).
 - [x] **SQL idempotency fixes (repo)** — removed Supabase “destructive” warnings from: `top_app_saved_org_eins.sql`, `trusted_resources.sql`, `nonprofit_directory_enrichment.sql`, `admin_audit_logs_v01.sql`, `admin_enrichment_diagnostics.sql`; fixed `podcast_v06_production.sql` and `safe_alignment_extension_2026_04.sql` for production apply.
 - [x] **#37** `page_content_blocks_admin_v10.sql` — page copy blocks + `admin-media` bucket.
 - [x] Optional **#37** `admin_enrichment_diagnostics.sql` — enrichment metrics helper (read-only).
@@ -106,12 +106,12 @@ pnpm --dir web run security:guards
 **Post-migration verification (SQL editor):**
 
 ```sql
-select count(*) from public.torp_profiles;
+select count(*) from public.top_profiles;
 select count(*) from public.sponsors_catalog;
-select platform_role, admin_access_enabled from public.torp_profiles limit 5;
+select platform_role, admin_access_enabled from public.top_profiles limit 5;
 
 -- After admin_enrichment_diagnostics.sql:
-select * from public._torp_admin_enrichment_metrics() order by 1;
+select * from public._top_admin_enrichment_metrics() order by 1;
 ```
 
 **Live check (2026-06-03):** `GET https://theoutreachproject.app/api/billing/capabilities` → `ok: true`, `membershipCheckout: true`, `stripeWebhook: true`.
@@ -222,7 +222,7 @@ Code is on **`main`** (`/api/billing/*`, profile Membership & billing center, `/
 
 Run in **Supabase SQL editor** for the database QA uses (often same project as prod with `top_qa_profiles` on Preview):
 
-1. `web/supabase/torp_profiles_membership_billing_v04.sql` on **`torp_profiles`**
+1. `web/supabase/top_profiles_membership_billing_v04.sql` on **`top_profiles`**
 2. `web/supabase/top_qa_profiles_membership_billing_v04.sql` if Preview uses **`top_qa_profiles`** (`PROFILE_TABLE` / `VERCEL_ENV=preview`)
 
 Confirm columns exist: `renewal_date`, `billing_status`, `sponsor_tier`, `payment_method_summary`.
@@ -368,7 +368,7 @@ For how web + mobile relate to the **legacy App Store client** (direct Supabase 
 
 | Field | Value |
 |-------|--------|
-| Bundle / application ID | `org.theoutreachproject.torp` |
+| Bundle / application ID | `org.theoutreachproject.top` |
 | Display name | The Outreach Project |
 | Config | `web/capacitor.config.js` |
 | Native projects | `web/ios/`, `web/android/` |
@@ -453,8 +453,8 @@ The app loads the same WorkOS AuthKit flow as the browser (see §5):
 #### A. App Store Connect setup
 
 1. [ ] [App Store Connect](https://appstoreconnect.apple.com) → **Apps** → **+** → **New App**.
-2. [ ] Platform: **iOS**. Name: **The Outreach Project**. Primary language. Bundle ID: **`org.theoutreachproject.torp`** (must exist in [Certificates, Identifiers & Profiles](https://developer.apple.com/account/resources/identifiers/list)).
-3. [ ] SKU: internal id (e.g. `torp-ios-001`). User Access as needed.
+2. [ ] Platform: **iOS**. Name: **The Outreach Project**. Primary language. Bundle ID: **`org.theoutreachproject.top`** (must exist in [Certificates, Identifiers & Profiles](https://developer.apple.com/account/resources/identifiers/list)).
+3. [ ] SKU: internal id (e.g. `top-ios-001`). User Access as needed.
 
 #### B. Xcode signing & archive
 
@@ -510,7 +510,7 @@ In App Store Connect → your app → **App Store** tab:
 2. [ ] Generate **upload keystore** (store securely — loss blocks updates):
 
    ```bash
-   keytool -genkey -v -keystore torp-upload.keystore -alias torp -keyalg RSA -keysize 2048 -validity 10000
+   keytool -genkey -v -keystore top-upload.keystore -alias top-upload -keyalg RSA -keysize 2048 -validity 10000
    ```
 
 3. [ ] Android Studio → **Build → Generate Signed Bundle / APK** → **Android App Bundle (AAB)** recommended.

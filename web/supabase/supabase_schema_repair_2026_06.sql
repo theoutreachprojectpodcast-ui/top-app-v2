@@ -1,5 +1,5 @@
 -- =============================================================================
--- tORP — Supabase schema repair (additive, idempotent)
+-- TOP — Supabase schema repair (additive, idempotent)
 -- =============================================================================
 -- Run in Supabase SQL Editor when:
 --   • Profile PATCH returns column errors (especially on QA / top_qa_profiles)
@@ -14,10 +14,10 @@
 begin;
 
 -- ---------------------------------------------------------------------------
--- 1) torp_profiles — ensure all columns the Next.js app reads/writes exist
+-- 1) top_profiles — ensure all columns the Next.js app reads/writes exist
 -- ---------------------------------------------------------------------------
 
-alter table if exists public.torp_profiles
+alter table if exists public.top_profiles
   add column if not exists membership_source text not null default 'manual',
   add column if not exists platform_role text not null default 'user',
   add column if not exists account_intent text,
@@ -56,13 +56,13 @@ do $$
 begin
   if exists (
     select 1 from pg_constraint
-    where conname = 'torp_profiles_membership_status_chk'
-      and conrelid = 'public.torp_profiles'::regclass
+    where conname = 'top_profiles_membership_status_chk'
+      and conrelid = 'public.top_profiles'::regclass
   ) then
-    alter table public.torp_profiles drop constraint torp_profiles_membership_status_chk;
+    alter table public.top_profiles drop constraint top_profiles_membership_status_chk;
   end if;
-  alter table public.torp_profiles
-    add constraint torp_profiles_membership_status_chk check (
+  alter table public.top_profiles
+    add constraint top_profiles_membership_status_chk check (
       membership_status in ('none', 'pending', 'active', 'past_due', 'canceled', 'incomplete', 'trialing')
     );
 exception
@@ -126,22 +126,22 @@ exception
 end $$;
 
 -- ---------------------------------------------------------------------------
--- 3) QA: mirror top_qa_profiles → torp_profiles (same UUID) for community FK
---    community_posts.author_profile_id references torp_profiles(id)
+-- 3) QA: mirror top_qa_profiles → top_profiles (same UUID) for community FK
+--    community_posts.author_profile_id references top_profiles(id)
 -- ---------------------------------------------------------------------------
 
-create or replace function public._sync_top_qa_profile_shadow_to_torp()
+create or replace function public._sync_top_qa_profile_shadow_to_top()
 returns trigger
 language plpgsql
 security definer
 set search_path = public
 as $$
 begin
-  if to_regclass('public.torp_profiles') is null then
+  if to_regclass('public.top_profiles') is null then
     return new;
   end if;
 
-  insert into public.torp_profiles (
+  insert into public.top_profiles (
     id,
     workos_user_id,
     email,
@@ -230,14 +230,14 @@ begin
     return;
   end if;
 
-  drop trigger if exists top_qa_profiles_shadow_torp_trg on public.top_qa_profiles;
-  create trigger top_qa_profiles_shadow_torp_trg
+  drop trigger if exists top_qa_profiles_shadow_top_trg on public.top_qa_profiles;
+  create trigger top_qa_profiles_shadow_top_trg
     after insert or update on public.top_qa_profiles
     for each row
-    execute function public._sync_top_qa_profile_shadow_to_torp();
+    execute function public._sync_top_qa_profile_shadow_to_top();
 
   -- Backfill existing QA rows
-  insert into public.torp_profiles (
+  insert into public.top_profiles (
     id, workos_user_id, email, display_name, first_name, last_name,
     membership_tier, membership_status, membership_source, platform_role,
     onboarding_status, onboarding_completed, created_at, updated_at
@@ -247,7 +247,7 @@ begin
     q.membership_tier, q.membership_status, q.membership_source, q.platform_role,
     q.onboarding_status, q.onboarding_completed, q.created_at, q.updated_at
   from public.top_qa_profiles q
-  where not exists (select 1 from public.torp_profiles t where t.id = q.id)
+  where not exists (select 1 from public.top_profiles t where t.id = q.id)
   on conflict (id) do nothing;
 end $$;
 
@@ -291,10 +291,10 @@ alter table if exists public.sponsor_applications
   add column if not exists sponsor_catalog_id uuid;
 
 -- ---------------------------------------------------------------------------
--- 6) Schema health diagnostic (run: select * from public._torp_schema_health())
+-- 6) Schema health diagnostic (run: select * from public._top_schema_health())
 -- ---------------------------------------------------------------------------
 
-create or replace function public._torp_schema_health()
+create or replace function public._top_schema_health()
 returns table(check_id text, status text, detail text)
 language plpgsql
 security invoker
@@ -304,7 +304,7 @@ declare
   tbl text;
   col text;
   required_tables text[] := array[
-    'torp_profiles', 'sponsors_catalog', 'trusted_resources', 'community_posts',
+    'top_profiles', 'sponsors_catalog', 'trusted_resources', 'community_posts',
     'admin_settings', 'billing_records', 'page_content_blocks', 'page_images'
   ];
   profile_cols text[] := array[
@@ -319,13 +319,13 @@ begin
     end if;
   end loop;
 
-  if to_regclass('public.torp_profiles') is not null then
+  if to_regclass('public.top_profiles') is not null then
     foreach col in array profile_cols loop
       if not exists (
         select 1 from information_schema.columns
-        where table_schema = 'public' and table_name = 'torp_profiles' and column_name = col
+        where table_schema = 'public' and table_name = 'top_profiles' and column_name = col
       ) then
-        return query select 'torp_profiles.' || col, 'MISSING_COLUMN', 'Re-run this repair file';
+        return query select 'top_profiles.' || col, 'MISSING_COLUMN', 'Re-run this repair file';
       end if;
     end loop;
   end if;
@@ -354,4 +354,4 @@ $$;
 commit;
 
 -- Quick check (optional):
--- select * from public._torp_schema_health() order by 1;
+-- select * from public._top_schema_health() order by 1;

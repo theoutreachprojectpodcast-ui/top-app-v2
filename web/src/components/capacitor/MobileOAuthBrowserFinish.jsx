@@ -9,12 +9,12 @@ import { closeExternalBrowserIfOpen } from "@/lib/capacitor/openExternalUrl";
 import {
   clearOAuthPollKeyCookie,
   readOAuthPollKeyFromDocumentCookie,
-  TORP_OAUTH_BROWSER_PENDING,
-  TORP_OAUTH_STATE_KEY,
+  TOP_OAUTH_BROWSER_PENDING,
+  TOP_OAUTH_STATE_KEY,
 } from "@/lib/auth/oauthMobileHandoff";
 import { parseOAuthBrowserDoneDeepLink } from "@/lib/auth/workosMobileRedirect";
 import { parseMobileDeepLinkUrl } from "@/lib/capacitor/mobileDeepLinks";
-import { TORP_OAUTH_RETURN_KEY } from "@/components/capacitor/MobileOAuthSessionResume";
+import { TOP_OAUTH_RETURN_KEY } from "@/components/capacitor/MobileOAuthSessionResume";
 
 const POLL_MS = 200;
 const POLL_MAX_MS = 30_000;
@@ -36,16 +36,16 @@ function nativeOAuthUrl(path) {
 
 function resolveOAuthPollKey() {
   if (typeof sessionStorage === "undefined") return "";
-  const fromSession = String(sessionStorage.getItem(TORP_OAUTH_STATE_KEY) || "").trim();
+  const fromSession = String(sessionStorage.getItem(TOP_OAUTH_STATE_KEY) || "").trim();
   if (fromSession) return fromSession;
   return readOAuthPollKeyFromDocumentCookie();
 }
 
 function primeOAuthPollKeyFromCookie() {
   if (typeof sessionStorage === "undefined") return;
-  if (sessionStorage.getItem(TORP_OAUTH_BROWSER_PENDING) !== "1") return;
+  if (sessionStorage.getItem(TOP_OAUTH_BROWSER_PENDING) !== "1") return;
   const key = readOAuthPollKeyFromDocumentCookie();
-  if (key) sessionStorage.setItem(TORP_OAUTH_STATE_KEY, key);
+  if (key) sessionStorage.setItem(TOP_OAUTH_STATE_KEY, key);
 }
 
 async function pollOAuthPending(stateKey) {
@@ -63,7 +63,7 @@ async function pollOAuthPending(stateKey) {
 function isOAuthPending() {
   return (
     typeof sessionStorage !== "undefined" &&
-    sessionStorage.getItem(TORP_OAUTH_BROWSER_PENDING) === "1" &&
+    sessionStorage.getItem(TOP_OAUTH_BROWSER_PENDING) === "1" &&
     !!resolveOAuthPollKey()
   );
 }
@@ -72,20 +72,20 @@ function primeOAuthHandoff(stateKey) {
   if (typeof sessionStorage === "undefined") return;
   const key = String(stateKey || "").trim();
   if (!key) return;
-  sessionStorage.setItem(TORP_OAUTH_STATE_KEY, key);
-  sessionStorage.setItem(TORP_OAUTH_BROWSER_PENDING, "1");
+  sessionStorage.setItem(TOP_OAUTH_STATE_KEY, key);
+  sessionStorage.setItem(TOP_OAUTH_BROWSER_PENDING, "1");
 }
 
 function clearOAuthHandoffFlags() {
   if (typeof sessionStorage === "undefined") return;
-  sessionStorage.removeItem(TORP_OAUTH_BROWSER_PENDING);
-  sessionStorage.removeItem(TORP_OAUTH_STATE_KEY);
+  sessionStorage.removeItem(TOP_OAUTH_BROWSER_PENDING);
+  sessionStorage.removeItem(TOP_OAUTH_STATE_KEY);
   clearOAuthPollKeyCookie();
 }
 
 function completeInWebView(data) {
   clearOAuthHandoffFlags();
-  sessionStorage.setItem(TORP_OAUTH_RETURN_KEY, "1");
+  sessionStorage.setItem(TOP_OAUTH_RETURN_KEY, "1");
 
   if (data?.complete) {
     const dest = String(data.complete);
@@ -107,7 +107,7 @@ function completeInWebView(data) {
 function oauthCancelSilently() {
   clearOAuthHandoffFlags();
   if (typeof sessionStorage !== "undefined") {
-    sessionStorage.removeItem(TORP_OAUTH_RETURN_KEY);
+    sessionStorage.removeItem(TOP_OAUTH_RETURN_KEY);
   }
 }
 

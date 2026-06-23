@@ -52,7 +52,7 @@ export async function GET(_request, context) {
       status,
       created_at,
       updated_at,
-      torp_profiles:profile_id (
+      top_profiles:profile_id (
         display_name,
         first_name,
         last_name,
@@ -70,7 +70,7 @@ export async function GET(_request, context) {
   }
 
   const comments = (data || []).map((row) => {
-    const prof = row.torp_profiles && typeof row.torp_profiles === "object" ? row.torp_profiles : {};
+    const prof = row.top_profiles && typeof row.top_profiles === "object" ? row.top_profiles : {};
     const name =
       [prof.first_name, prof.last_name].filter(Boolean).join(" ").trim() ||
       String(prof.display_name || "").trim() ||

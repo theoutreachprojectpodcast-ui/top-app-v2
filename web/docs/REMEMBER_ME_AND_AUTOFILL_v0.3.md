@@ -1,4 +1,4 @@
-# Remember Me, email memory, and autofill (tORP v0.3)
+# Remember Me, email memory, and autofill (TOP v0.3)
 
 ## Stay signed in (“Remember Me”)
 
@@ -9,7 +9,7 @@
 
 ## Email memory
 
-- **Storage:** Only the email string is stored in `localStorage` under `torp_last_used_email` (see `web/src/lib/auth/lastUsedEmail.js`).
+- **Storage:** Only the email string is stored in `localStorage` under `top_last_used_email` (see `web/src/lib/auth/lastUsedEmail.js`).
 - **Passwords:** Never stored in the database, `localStorage`, or `sessionStorage` for this feature.
 - **Clearing:** Unchecking “Remember email on this device” before a WorkOS redirect clears the saved email; the modal also offers “Clear saved email”.
 

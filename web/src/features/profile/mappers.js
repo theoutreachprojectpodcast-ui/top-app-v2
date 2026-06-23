@@ -135,7 +135,7 @@ export function toLocalShape(profile) {
 }
 
 /**
- * When `torp_profiles` fields are empty, fill from the WorkOS session (`GET /api/me` `user`) so UI and
+ * When `top_profiles` fields are empty, fill from the WorkOS session (`GET /api/me` `user`) so UI and
  * profile completion match sign-in identity without flashing incomplete name/email.
  * @param {Record<string, unknown> | null | undefined} dto
  * @param {{ email?: string, firstName?: string, lastName?: string } | null | undefined} sessionUser — `user` from `GET /api/me`

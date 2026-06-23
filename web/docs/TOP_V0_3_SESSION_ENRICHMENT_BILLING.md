@@ -1,10 +1,10 @@
-# tORP v0.3 — Persistent sessions, card enrichment, podcast Stripe
+# TOP v0.3 — Persistent sessions, card enrichment, podcast Stripe
 
 ## Signed-in state across navigation
 
 - **Root `AuthSessionProvider`** (`src/components/auth/AuthSessionProvider.jsx`) wraps the app in `app/layout.js` (inside `ColorSchemeRoot`).
 - It calls `/api/auth/status` and `/api/me` with `credentials: "include"` once on **mount**, again on **route changes** (soft refresh: keeps prior auth flags if the request fails so the header does not flash signed-out), and when the tab becomes **visible** again.
-- A **sessionStorage** snapshot (`torp_nav_auth_v1` via `src/lib/auth/navAuthCache.js`) stores the last known `authenticated` / `workos` flags so the UI can recover quickly after refresh (revalidated immediately by the next fetch).
+- A **sessionStorage** snapshot (`top_nav_auth_v1` via `src/lib/auth/navAuthCache.js`) stores the last known `authenticated` / `workos` flags so the UI can recover quickly after refresh (revalidated immediately by the next fetch).
 - **`SubpageTopbarActions`** reads `useAuthSession()` instead of running its own fetch per mount, so moving between `/sponsors`, `/trusted`, `/contact`, etc. does not reset the header to a long-lived “loading” or false signed-out state.
 - **Sign out** (`profile/hooks.js`) calls `clearNavAuthCache()` before redirecting to WorkOS sign-out or clearing demo state.
 

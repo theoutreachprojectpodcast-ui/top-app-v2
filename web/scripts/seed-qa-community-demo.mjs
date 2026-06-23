@@ -3,7 +3,7 @@
  *
  * Requirements:
  * - Run only when TOP_QA_SEED=1 or NEXT_PUBLIC_TOP_QA=1 or VERCEL_ENV=preview (or local dev with ALLOW_QA_COMMUNITY_SEED=1).
- * - Set TOP_QA_COMMUNITY_AUTHOR_PROFILE_IDS to one or more torp_profiles.id (uuid) values — demo or staff test profiles.
+ * - Set TOP_QA_COMMUNITY_AUTHOR_PROFILE_IDS to one or more top_profiles.id (uuid) values — demo or staff test profiles.
  *
  * Production: do not run. Public API hides is_demo_seed when shouldHideDemoCommunitySeeds() is true.
  */
@@ -55,13 +55,13 @@ async function main() {
     process.exit(1);
   }
   if (!authorIds.length) {
-    console.error("Set TOP_QA_COMMUNITY_AUTHOR_PROFILE_IDS to comma-separated torp_profiles.id UUIDs.");
+    console.error("Set TOP_QA_COMMUNITY_AUTHOR_PROFILE_IDS to comma-separated top_profiles.id UUIDs.");
     process.exit(1);
   }
 
   const admin = createClient(url, key, { auth: { persistSession: false } });
   const { data: profiles, error: pErr } = await admin
-    .from("torp_profiles")
+    .from("top_profiles")
     .select("id,first_name,last_name,display_name,profile_photo_url,workos_user_id")
     .in("id", authorIds);
   if (pErr) {
@@ -69,7 +69,7 @@ async function main() {
     process.exit(1);
   }
   if (!profiles?.length) {
-    console.error("No torp_profiles rows matched TOP_QA_COMMUNITY_AUTHOR_PROFILE_IDS.");
+    console.error("No top_profiles rows matched TOP_QA_COMMUNITY_AUTHOR_PROFILE_IDS.");
     process.exit(1);
   }
 

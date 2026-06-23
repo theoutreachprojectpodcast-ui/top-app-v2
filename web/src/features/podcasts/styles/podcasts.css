@@ -854,7 +854,7 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
   justify-items: stretch;
 }
 
-.podcastSponsorsCardGrid > .sponsorPremiumCard.torpListingCard {
+.podcastSponsorsCardGrid > .sponsorPremiumCard.topListingCard {
   height: 100%;
   width: 100%;
   min-height: 0;

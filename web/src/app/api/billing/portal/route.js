@@ -43,7 +43,7 @@ export async function POST(request) {
     }
     return Response.json({ error: "no_portal_url" }, { status: 500 });
   } catch (e) {
-    console.error("[torp] Stripe portal", e);
+    console.error("[top] Stripe portal", e);
     return Response.json({ error: "stripe_error", message: e.message }, { status: 500 });
   }
 }

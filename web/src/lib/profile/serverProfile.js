@@ -159,7 +159,7 @@ export async function upsertProfileFromWorkOSUser(admin, user) {
 }
 
 /**
- * Persist WorkOS session (login) email to `torp_profiles.email` when missing or changed.
+ * Persist WorkOS session (login) email to `top_profiles.email` when missing or changed.
  * Creates the profile row via the same upsert as `/callback` when none exists.
  *
  * @param {import('@supabase/supabase-js').SupabaseClient} admin
@@ -200,7 +200,7 @@ export async function patchProfileByWorkOSId(admin, workosUserId, patch) {
 }
 
 /**
- * Shallow-merge keys into torp_profiles.metadata for one user (service role).
+ * Shallow-merge keys into top_profiles.metadata for one user (service role).
  * @param {import('@supabase/supabase-js').SupabaseClient} admin
  */
 export async function mergeProfileMetadataByWorkOSId(admin, workosUserId, partialMeta) {

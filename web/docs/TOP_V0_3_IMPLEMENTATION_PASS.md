@@ -1,4 +1,4 @@
-# tORP v0.3 — Membership, sponsors, community seed (implementation pass)
+# TOP v0.3 — Membership, sponsors, community seed (implementation pass)
 
 See also: **`docs/TOP_V0_3_SESSION_ENRICHMENT_BILLING.md`** (persistent nav auth snapshot, enrichment batch script, podcast Stripe env + APIs).
 
@@ -44,10 +44,10 @@ See also: **`docs/TOP_V0_3_SESSION_ENRICHMENT_BILLING.md`** (persistent nav auth
 
 ## Shared listing cards (Trusted Resources + Sponsors)
 
-- **Styles**: `src/styles/torp-listing-cards.css` (imported after `top-app.css` in `app/globals.css`).
-- **Trusted / directory cards**: `NonprofitCard.jsx` uses `resultCard--listingHero` with a top **hero strip** — photo from `heroImageUrl` or `thumbnailUrl` when set; otherwise a **category gradient** from `data-torp-listing-category` + `--np-*` tokens (same keys as `categoryMapper`).
-- **Featured sponsor cards**: `FeaturedSponsorCard.jsx` adds `torpListingCard` + `torpListingCardHero` on the existing premium shell; **DB** `background_image_url` when present; otherwise a **deterministic warm-tone placeholder** (`torpListingCardHero--sponsorTone-{gold|copper|…}`), not a random stock pick.
-- **Logo framing**: sponsor logo shell aligned to **64px** to match nonprofit listing plates (`torp-listing-cards.css` overrides `sponsorPremiumLogoShell`).
+- **Styles**: `src/styles/top-listing-cards.css` (imported after `top-app.css` in `app/globals.css`).
+- **Trusted / directory cards**: `NonprofitCard.jsx` uses `resultCard--listingHero` with a top **hero strip** — photo from `heroImageUrl` or `thumbnailUrl` when set; otherwise a **category gradient** from `data-top-listing-category` + `--np-*` tokens (same keys as `categoryMapper`).
+- **Featured sponsor cards**: `FeaturedSponsorCard.jsx` adds `topListingCard` + `topListingCardHero` on the existing premium shell; **DB** `background_image_url` when present; otherwise a **deterministic warm-tone placeholder** (`topListingCardHero--sponsorTone-{gold|copper|…}`), not a random stock pick.
+- **Logo framing**: sponsor logo shell aligned to **64px** to match nonprofit listing plates (`top-listing-cards.css` overrides `sponsorPremiumLogoShell`).
 - **Manual review**: enrich `hero_image_url` / `background_image_url` in Supabase when moderators approve imagery; keep logo discovery behind `/api/admin/sponsors/logo-candidates` as documented below.
 
 ## Sponsor applications & invites

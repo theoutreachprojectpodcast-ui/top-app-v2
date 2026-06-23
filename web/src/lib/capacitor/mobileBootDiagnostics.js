@@ -13,7 +13,7 @@ export function logMobileBootEvent(event, meta = {}) {
     ts: new Date().toISOString(),
     ...meta,
   };
-  console.info("[torp-mobile]", payload);
+  console.info("[top-mobile]", payload);
 }
 
 /**

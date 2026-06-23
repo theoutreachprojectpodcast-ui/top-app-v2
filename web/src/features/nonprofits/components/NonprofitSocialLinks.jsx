@@ -23,7 +23,7 @@ export default function NonprofitSocialLinks({ links = [], className = "" }) {
           <a
             key={`${link.type}-${link.url}`}
             className="nonprofitSocialLink"
-            data-torp-card-interactive
+            data-top-card-interactive
             href={link.url}
             target={isMail ? undefined : "_blank"}
             rel={isMail ? undefined : "noopener noreferrer"}

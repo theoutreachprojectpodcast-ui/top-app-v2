@@ -141,7 +141,7 @@ No broken internal admin links found in navigation config.
 
 ## Data models used (no new SQL in this pass)
 
-Existing tables: `torp_profiles`, `community_posts`, `sponsors_catalog`, `trusted_resources`, `podcast_guest_applications`, `sponsor_applications`, `form_submissions`, `billing_records`, `page_images`, `admin_settings`, `admin_audit_logs`.
+Existing tables: `top_profiles`, `community_posts`, `sponsors_catalog`, `trusted_resources`, `podcast_guest_applications`, `sponsor_applications`, `form_submissions`, `billing_records`, `page_images`, `admin_settings`, `admin_audit_logs`.
 
 **API additions (read/compute only):**
 

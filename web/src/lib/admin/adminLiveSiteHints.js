@@ -42,7 +42,7 @@ export const ADMIN_LIVE_SITE_HINTS = {
   membership: {
     title: "Membership content",
     description: "Membership tier analytics; per-user tier changes are on Users admin.",
-    liveHint: "Membership checkout and tier copy on https://theoutreachproject.app/profile and onboarding flows (Stripe + torp_profiles).",
+    liveHint: "Membership checkout and tier copy on https://theoutreachproject.app/profile and onboarding flows (Stripe + top_profiles).",
   },
   users: {
     title: "Users & profiles",

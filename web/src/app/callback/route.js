@@ -9,7 +9,7 @@ import {
 } from "@/lib/auth/workosCallbackHandler";
 import { saveOAuthMobileSessionHandoff } from "@/lib/auth/oauthMobileHandoffServer";
 import { hashOAuthState, saveOAuthMobilePending } from "@/lib/auth/oauthMobileHandoffServer";
-import { TORP_OAUTH_POLL_KEY_COOKIE } from "@/lib/auth/oauthMobileHandoff";
+import { TOP_OAUTH_POLL_KEY_COOKIE } from "@/lib/auth/oauthMobileHandoff";
 import { MOBILE_POST_AUTH_HOME } from "@/lib/auth/oauthMobileHandoff";
 import {
   isMobileExternalBrowserUserAgent,
@@ -20,7 +20,7 @@ import { oauthStartedInNativeShell } from "@/lib/auth/workosOAuthShell";
 export const maxDuration = 60;
 export const runtime = "nodejs";
 
-const BROWSER_OAUTH_COOKIE = "torp-oauth-browser";
+const BROWSER_OAUTH_COOKIE = "top-oauth-browser";
 
 /** @param {Request} request */
 function callbackNavHrefs(request) {
@@ -57,7 +57,7 @@ function callbackErrorResponse(message, request, status = 400) {
 /** Capacitor in-app browser — markers from `/auth/workos-browser-start` only (not generic PKCE). */
 function isCapacitorBrowserOAuthReturn(request) {
   if (request.cookies.get(BROWSER_OAUTH_COOKIE)?.value === "1") return true;
-  return !!String(request.cookies.get(TORP_OAUTH_POLL_KEY_COOKIE)?.value || "").trim();
+  return !!String(request.cookies.get(TOP_OAUTH_POLL_KEY_COOKIE)?.value || "").trim();
 }
 
 /** Capacitor in-app browser — finish OAuth here (PKCE cookie from `/auth/workos-browser-start`), hand session to WebView. */
@@ -84,9 +84,9 @@ async function mobileBrowserOAuthPendingResponse(request, url) {
           },
         });
       }
-      console.error("[torp] oauth session handoff save failed after capture");
+      console.error("[top] oauth session handoff save failed after capture");
     } else if (!captured.ok) {
-      console.error("[torp] oauth in-app browser capture failed:", captured.message);
+      console.error("[top] oauth in-app browser capture failed:", captured.message);
       return callbackErrorResponse(captured.message, request);
     }
 
@@ -104,7 +104,7 @@ async function mobileBrowserOAuthPendingResponse(request, url) {
       },
     });
   } catch (err) {
-    console.error("[torp] mobile browser oauth callback failed:", err);
+    console.error("[top] mobile browser oauth callback failed:", err);
     return callbackErrorResponse(workosCallbackErrorMessage(err), request);
   }
 }
@@ -140,7 +140,7 @@ export async function GET(request) {
 
     return await runWorkOSCallbackDocument(request);
   } catch (err) {
-    console.error("[torp] WorkOS callback failed:", err);
+    console.error("[top] WorkOS callback failed:", err);
     return callbackErrorResponse(workosCallbackErrorMessage(err), request);
   }
 }
