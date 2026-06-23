@@ -8,7 +8,7 @@ overrides:
   tar: '>=7.5.11'
   basic-ftp: '>=5.3.1'
   '@xmldom/xmldom': '>=0.8.13'
-  undici: '>=6.24.0'
+  undici: '>=7.28.0'
   path-to-regexp: '>=8.4.0'
   minimatch@>=9: '>=10.2.3'
   minimatch@<9: '>=3.1.4'
@@ -4376,9 +4376,9 @@ packages:
   undici-types@7.18.2:
     resolution: {integrity: sha512-AsuCzffGHJybSaRrmr5eHr81mwJU3kjw6M+uprWvCXiNeN9SOGwQ3Jn8jb8m3Z6izVgknn1R0FTCEAP2QrLY/w==}
 
-  undici@7.25.0:
-    resolution: {integrity: sha512-xXnp4kTyor2Zq+J1FfPI6Eq3ew5h6Vl0F/8d9XU5zZQf1tX9s2Su1/3PiMmUANFULpmksxkClamIZcaUqryHsQ==}
-    engines: {node: '>=20.18.1'}
+  undici@8.5.0:
+    resolution: {integrity: sha512-xamtWoB1EshgjpmlXd7GGm2VfdDtw1+rD8uhry8pSNW3If6S8E0m2T2+orSKeZXEn/aPJMviCpDBA65WJt8zhg==}
+    engines: {node: '>=22.19.0'}
 
   unique-string@3.0.0:
     resolution: {integrity: sha512-VGXBUVwxKMBUznyffQweQABPRRW1vHZAbadFZud4pLFAqRGvv/96vafgjWFqzourzr8YonlQiPgH0YCJfawoGQ==}
@@ -5874,7 +5874,7 @@ snapshots:
       is-buffer: 2.0.5
       is-node-process: 1.2.0
       throttleit: 2.1.0
-      undici: 7.25.0
+      undici: 8.5.0
 
   '@vercel/build-utils@13.30.0':
     dependencies:
@@ -6078,7 +6078,7 @@ snapshots:
       ts-morph: 12.0.0
       tsx: 4.21.0
       typescript: 5.9.3
-      undici: 7.25.0
+      undici: 8.5.0
     transitivePeerDependencies:
       - encoding
       - rollup
@@ -6143,7 +6143,7 @@ snapshots:
       ms: 2.1.3
       picocolors: 1.1.1
       tar-stream: 3.1.7
-      undici: 7.25.0
+      undici: 8.5.0
       xdg-app-paths: 5.1.0
       zod: 3.24.4
     transitivePeerDependencies:
@@ -9264,7 +9264,7 @@ snapshots:
 
   undici-types@7.18.2: {}
 
-  undici@7.25.0: {}
+  undici@8.5.0: {}
 
   unique-string@3.0.0:
     dependencies:
