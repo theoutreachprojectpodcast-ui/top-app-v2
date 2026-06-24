@@ -14,10 +14,11 @@ export function stripePublishableConfigured() {
   return !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.trim();
 }
 
-/** Support tier yearly price — prefer STRIPE_PRICE_SUPPORT_YEARLY, then monthly, then legacy access yearly. */
+/** Support tier yearly price — prefer yearly/annual env names, then monthly, then legacy access yearly. */
 export function supportSubscriptionPriceId() {
   return (
     process.env.STRIPE_PRICE_SUPPORT_YEARLY?.trim() ||
+    process.env.STRIPE_PRICE_SUPPORT_ANNUAL?.trim() ||
     process.env.STRIPE_PRICE_SUPPORT_MONTHLY?.trim() ||
     process.env.STRIPE_PRICE_ACCESS_YEARLY?.trim() ||
     ""
