@@ -95,7 +95,7 @@ function workOSGoErrorResponse(message, backHref, status = 503) {
  * @param {Request} [request]
  */
 export async function workOSGoJsonResponse(requestUrl, request) {
-  const { backHref, params } = workOSGoContext(requestUrl);
+  const { backHref, fallbackReturn, params } = workOSGoContext(requestUrl);
   try {
     const bundle = await resolveWorkOSAuthorizeBundleFromGoUrl(requestUrl, request);
     const stateKey = bundle.sealedState ? hashOAuthState(bundle.sealedState) : "";
@@ -104,7 +104,7 @@ export async function workOSGoJsonResponse(requestUrl, request) {
       params.get("return_pathname") ||
       params.get("returnPathname") ||
       "";
-    const returnTo = resolvePostAuthReturnTarget(rawReturn || "/mobile/access", "/mobile/access");
+    const returnTo = resolvePostAuthReturnTarget(rawReturn || fallbackReturn, fallbackReturn);
     if (stateKey && bundle.url && bundle.sealedState) {
       const saved = await saveOAuthAuthorizePending(stateKey, bundle.url, bundle.sealedState, returnTo);
       if (saved.ok) {

@@ -47,7 +47,7 @@ export default function MobileOAuthSessionResume() {
     ranRef.current = true;
 
     if (pathname === MOBILE_POST_LOGIN_PATH) {
-      router.replace("/");
+      router.replace("/?oauth=1");
       return;
     }
 
@@ -58,7 +58,14 @@ export default function MobileOAuthSessionResume() {
       router.replace(qs ? `${pathname}?${qs}` : pathname || "/", { scroll: false });
     }
 
-    void Promise.all([refreshAuth({ soft: true }), refreshWorkOSProfile()]);
+    void (async () => {
+      await refreshAuth({ soft: true });
+      await refreshWorkOSProfile();
+      for (const delay of [200, 500, 1200]) {
+        await new Promise((r) => setTimeout(r, delay));
+        await Promise.all([refreshAuth({ soft: true }), refreshWorkOSProfile()]);
+      }
+    })();
   }, [oauthReturn, pathname, refreshAuth, refreshWorkOSProfile, router, searchParams]);
 
   return null;

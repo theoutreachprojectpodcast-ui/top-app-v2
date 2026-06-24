@@ -34,10 +34,12 @@ function WorkOSAuthHandoffInner({ mode, backHref = "/", fallbackReturn }) {
     }
 
     if (native) {
+      const defaultNativeReturn =
+        mode === "signup" ? "/onboarding" : MOBILE_POST_AUTH_COMPLETE_PATH;
       const returnTo =
         params.returnTo ||
         fallbackReturn ||
-        MOBILE_POST_AUTH_COMPLETE_PATH;
+        defaultNativeReturn;
       const go = workosGoUrl({
         mode: mode === "signup" ? "signup" : "signin",
         returnTo,

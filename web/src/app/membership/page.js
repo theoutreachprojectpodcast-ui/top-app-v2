@@ -19,7 +19,7 @@ function MembershipHubInner() {
 
   const lead = useMemo(() => {
     if (!isAuthenticated) {
-      return "Sign in or create an account to activate Support Membership ($0.99/yr) or upgrade to Pro ($5.99/yr).";
+      return "Sign in or create an account to activate Support Annual ($99/yr) or upgrade to Pro ($5.99/yr).";
     }
     return "Manage Support and Pro memberships. All billing is handled securely through Stripe in the app.";
   }, [isAuthenticated]);

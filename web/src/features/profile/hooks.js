@@ -38,6 +38,7 @@ import { mapNonprofitCardRow } from "@/features/nonprofits/mappers/nonprofitCard
 import { profileToApiPatch } from "@/lib/profile/profileApiPatch";
 
 const SESSION_FETCH_TIMEOUT_MS = 12_000;
+const PROFILE_LOAD_SAFETY_MS = 15_000;
 
 async function fetchWithTimeout(url, options = {}, timeoutMs = SESSION_FETCH_TIMEOUT_MS) {
   const controller = new AbortController();
@@ -352,6 +353,16 @@ export function useProfileDataState(supabase) {
       cancelled = true;
     };
   }, [supabase, userId]);
+
+  /** Never block native gates on an infinite profile load. */
+  useEffect(() => {
+    if (!loadingProfile) return undefined;
+    const timer = window.setTimeout(() => {
+      setLoadingProfile(false);
+      setProfileError((prev) => prev || "Profile load timed out. You can continue and retry from Settings.");
+    }, PROFILE_LOAD_SAFETY_MS);
+    return () => window.clearTimeout(timer);
+  }, [loadingProfile]);
 
   useEffect(() => {
     async function bootstrapDemoCloud() {

@@ -2,6 +2,8 @@
 export const TOP_OAUTH_STATE_KEY = "top-oauth-state-key";
 export const TOP_OAUTH_BROWSER_PENDING = "top-oauth-browser-pending";
 export const TOP_OAUTH_RETURN_KEY = "top-oauth-return";
+/** Set when in-app browser handoff times out — surfaced on next route. */
+export const TOP_OAUTH_HANDOFF_ERROR = "top-oauth-handoff-error";
 
 /** Set by `/auth/workos-native-browser` / `/auth/workos-browser-start` for WebView polling. */
 export const TOP_OAUTH_POLL_KEY_COOKIE = "top-oauth-poll-key";

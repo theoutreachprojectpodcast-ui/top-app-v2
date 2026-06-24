@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { isCapacitorNative } from "@/lib/capacitor/platform";
 import { hasMobileAppAccess } from "@/lib/membership/appAccess";
 import { readNavAuthCache } from "@/lib/auth/navAuthCache";
 import { isOAuthInProgress } from "@/lib/auth/oauthInProgress";
 import { useProfileData } from "@/features/profile/ProfileDataProvider";
+
+const PROFILE_PENDING_MAX_MS = 8_000;
 
 const MOBILE_GATE_ALLOW = [
   /^\/$/,
@@ -61,14 +63,30 @@ function accessOpts(entitlements) {
 }
 
 /** @returns {"granted" | "denied" | "pending"} */
-function resolveNativeAppAccess({ loadingProfile, profile, opts, isAuthenticated, sessionHint }) {
+function resolveNativeAppAccess({
+  loadingProfile,
+  profile,
+  opts,
+  isAuthenticated,
+  sessionHint,
+  profilePendingTimedOut,
+}) {
   const cache = readNavAuthCache();
   if (cache?.hasFreeAccess) return "granted";
   if (opts.isPlatformAdmin || opts.isPrivilegedStaff) return "granted";
   if (hasMobileAppAccess(profile, opts)) return "granted";
   const signedIn = isAuthenticated || sessionHint;
-  if (signedIn && loadingProfile) return "pending";
+  if (signedIn && loadingProfile && !profilePendingTimedOut) return "pending";
   return "denied";
+}
+
+/**
+ * Where signed-in users without App Access should land for membership selection.
+ * First-time accounts use full onboarding; returning users use the mobile paywall.
+ */
+function nativeMembershipPath(profile) {
+  if (!profile?.onboardingCompleted) return "/onboarding";
+  return "/mobile/access";
 }
 
 /**
@@ -82,6 +100,7 @@ export default function MobileNativeGate() {
   const navQuery = searchParams?.get("nav") ?? "";
   const { isAuthenticated, loadingProfile, profile, entitlements } = useProfileData();
   const lastRedirectRef = useRef("");
+  const [profilePendingTimedOut, setProfilePendingTimedOut] = useState(false);
 
   const opts = accessOpts(entitlements);
   const sessionHint = !!readNavAuthCache()?.authenticated;
@@ -89,10 +108,21 @@ export default function MobileNativeGate() {
   const oauthBusy = isOAuthInProgress();
 
   useEffect(() => {
+    if (!isCapacitorNative()) return undefined;
+    if (!loadingProfile || guest) {
+      setProfilePendingTimedOut(false);
+      return undefined;
+    }
+    const timer = window.setTimeout(() => setProfilePendingTimedOut(true), PROFILE_PENDING_MAX_MS);
+    return () => window.clearTimeout(timer);
+  }, [loadingProfile, guest]);
+
+  useEffect(() => {
     if (!isCapacitorNative()) return;
     if (oauthBusy) return;
 
     const path = pathname || "/";
+    const membershipTarget = nativeMembershipPath(profile);
 
     const loginAlias = NATIVE_LOGIN_ALIASES[path];
     if (loginAlias) {
@@ -111,6 +141,7 @@ export default function MobileNativeGate() {
       opts,
       isAuthenticated,
       sessionHint,
+      profilePendingTimedOut,
     });
 
     if (
@@ -118,7 +149,7 @@ export default function MobileNativeGate() {
       (path === "/sign-in" || path === "/sign-up" || path === "/auth/sign-in" || path === "/auth/sign-up")
     ) {
       if (access === "pending") return;
-      const target = access === "denied" ? "/access" : "/";
+      const target = access === "denied" ? membershipTarget : "/";
       if (lastRedirectRef.current !== target) {
         lastRedirectRef.current = target;
         router.replace(target);
@@ -151,7 +182,7 @@ export default function MobileNativeGate() {
         goHome();
         return;
       }
-      const target = "/access";
+      const target = membershipTarget;
       if (lastRedirectRef.current !== target) {
         lastRedirectRef.current = target;
         router.replace(target);
@@ -167,7 +198,7 @@ export default function MobileNativeGate() {
       if (path === "/mobile" && !guest) {
         if (access === "pending") return;
         if (access === "denied") {
-          const target = "/access";
+          const target = membershipTarget;
           if (lastRedirectRef.current !== target) {
             lastRedirectRef.current = target;
             router.replace(target);
@@ -183,7 +214,7 @@ export default function MobileNativeGate() {
         if (guest) return;
         if (access === "pending") return;
         if (access === "denied") {
-          const target = "/access";
+          const target = membershipTarget;
           if (lastRedirectRef.current !== target) {
             lastRedirectRef.current = target;
             router.replace(target);
@@ -198,7 +229,7 @@ export default function MobileNativeGate() {
     if (access === "pending") return;
 
     if (access === "denied") {
-      const target = "/access";
+      const target = membershipTarget;
       if (lastRedirectRef.current !== target) {
         lastRedirectRef.current = target;
         router.replace(target);
@@ -212,6 +243,7 @@ export default function MobileNativeGate() {
     loadingProfile,
     guest,
     sessionHint,
+    profilePendingTimedOut,
     opts.isPlatformAdmin,
     opts.isPrivilegedStaff,
     profile?.membershipStatus,
@@ -219,6 +251,7 @@ export default function MobileNativeGate() {
     profile?.membershipTier,
     profile?.platformRole,
     profile?.email,
+    profile?.onboardingCompleted,
     router,
     oauthBusy,
   ]);

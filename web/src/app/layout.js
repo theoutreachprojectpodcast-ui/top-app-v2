@@ -10,6 +10,7 @@ import MobileAccountReturnBridge from "@/components/capacitor/MobileAccountRetur
 import MobileOAuthBrowserFinish from "@/components/capacitor/MobileOAuthBrowserFinish";
 import MobileOAuthDeepLink from "@/components/capacitor/MobileOAuthDeepLink";
 import MobileOAuthSessionResume from "@/components/capacitor/MobileOAuthSessionResume";
+import MobileOAuthHandoffError from "@/components/capacitor/MobileOAuthHandoffError";
 import MobileOAuthProgressOverlay from "@/components/capacitor/MobileOAuthProgressOverlay";
 import ExternalBrowserSheetHost from "@/components/capacitor/ExternalBrowserSheetHost";
 import MobileNativeGate from "@/components/mobile/MobileNativeGate";
@@ -107,6 +108,7 @@ html[data-capacitor-native], html[data-capacitor-native] body {
                   <MobileOAuthBrowserFinish />
                   <MobileOAuthDeepLink />
                   <MobileOAuthSessionResume />
+                  <MobileOAuthHandoffError />
                   <MobileAccountReturnBridge />
                   <MobileNativeGate />
                 </Suspense>

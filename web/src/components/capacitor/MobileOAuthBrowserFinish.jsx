@@ -10,6 +10,7 @@ import {
   clearOAuthPollKeyCookie,
   readOAuthPollKeyFromDocumentCookie,
   TOP_OAUTH_BROWSER_PENDING,
+  TOP_OAUTH_HANDOFF_ERROR,
   TOP_OAUTH_STATE_KEY,
 } from "@/lib/auth/oauthMobileHandoff";
 import { parseOAuthBrowserDoneDeepLink } from "@/lib/auth/workosMobileRedirect";
@@ -104,11 +105,20 @@ function completeInWebView(data) {
   );
 }
 
-function oauthCancelSilently() {
+function oauthCancelWithError(message) {
   clearOAuthHandoffFlags();
   if (typeof sessionStorage !== "undefined") {
     sessionStorage.removeItem(TOP_OAUTH_RETURN_KEY);
+    if (message) {
+      sessionStorage.setItem(TOP_OAUTH_HANDOFF_ERROR, message);
+    } else {
+      sessionStorage.removeItem(TOP_OAUTH_HANDOFF_ERROR);
+    }
   }
+}
+
+function oauthCancelSilently() {
+  oauthCancelWithError("");
 }
 
 /**
@@ -194,7 +204,9 @@ export default function MobileOAuthBrowserFinish() {
         if (Date.now() - pollStartedAtRef.current > POLL_MAX_MS) {
           stopPolling();
           if (!claimedRef.current && isOAuthPending()) {
-            oauthCancelSilently();
+            oauthCancelWithError(
+              "Sign-in timed out before the app could finish. Tap Sign in to try again.",
+            );
           }
           return;
         }

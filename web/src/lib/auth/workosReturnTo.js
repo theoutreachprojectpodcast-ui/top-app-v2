@@ -56,10 +56,10 @@ export function workosMobileSignInHref(returnTo = MOBILE_POST_AUTH_COMPLETE_PATH
 }
 
 /** @param {string} returnTo @param {WorkOSSignInLinkOptions} [options] */
-export function workosMobileSignUpHref(returnTo = MOBILE_POST_AUTH_COMPLETE_PATH, options = {}) {
+export function workosMobileSignUpHref(returnTo = "/onboarding", options = {}) {
   return workosGoUrl({
     mode: "signup",
-    returnTo: returnTo || MOBILE_POST_AUTH_COMPLETE_PATH,
+    returnTo: returnTo || "/onboarding",
     rememberDevice: options.rememberDevice,
     loginHint: options.loginHint,
     native: true,

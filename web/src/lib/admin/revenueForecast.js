@@ -1,7 +1,7 @@
-/** Display monthly prices (USD) — align with membershipTiers / Stripe products. */
+/** Display annual prices (USD) amortized monthly for admin MRR forecast. */
 export const TIER_MRR_USD = {
-  support: 1,
-  member: 5.99,
+  support: 99 / 12,
+  member: 5.99 / 12,
   sponsor: 0,
   free: 0,
 };

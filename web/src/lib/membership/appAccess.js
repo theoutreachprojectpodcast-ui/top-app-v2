@@ -3,8 +3,8 @@ import { isDefaultApprovedAdminEmail } from "@/lib/admin/adminPolicy";
 import { normalizeDbMembershipTier } from "@/lib/billing/membershipTierOrder";
 
 /** Canonical Support membership product (required on web and mobile). */
-export const APP_ACCESS_MEMBERSHIP_DISPLAY_NAME = "Support Membership";
-export const APP_ACCESS_MEMBERSHIP_PRICE_LABEL = "$0.99/yr";
+export const APP_ACCESS_MEMBERSHIP_DISPLAY_NAME = "Support Annual";
+export const APP_ACCESS_MEMBERSHIP_PRICE_LABEL = "$99/yr";
 
 const PAID_ACCESS_TIERS = new Set(["access", "support", "member", "sponsor"]);
 

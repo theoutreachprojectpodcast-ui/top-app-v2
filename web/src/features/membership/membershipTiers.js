@@ -2,13 +2,13 @@
  * Membership domain — tier definitions for UI and billing/entitlements.
  * Storage: profile.membershipStatus uses normalized keys from normalizeMembershipTierKey().
  *
- * User billing offers Support ($0.99/yr) and Pro ($5.99/yr) only.
+ * User billing offers Support Annual ($99/yr) and Pro ($5.99/yr) only.
  * Legacy `access` tier remains in DB for existing subscribers.
  */
 
 /** Advanced optional tier — Stripe `STRIPE_PRICE_SUPPORT_YEARLY` (fallback: monthly / legacy access yearly). */
-export const SUPPORT_MEMBERSHIP_DISPLAY_NAME = "Support Membership";
-export const SUPPORT_MEMBERSHIP_PRICE_LABEL = "$0.99/yr";
+export const SUPPORT_MEMBERSHIP_DISPLAY_NAME = "Support Annual";
+export const SUPPORT_MEMBERSHIP_PRICE_LABEL = "$99/yr";
 
 /** Pro tier — Stripe `STRIPE_PRICE_PRO_YEARLY` (fallback: monthly). Stored as `member` in DB. */
 export const PRO_MEMBERSHIP_DISPLAY_NAME = "Pro Membership";
@@ -39,7 +39,7 @@ export const MEMBERSHIP_TIER_DEFINITIONS = [
       "Browse public previews until you activate Support Membership",
     ],
     isMember: false,
-    hint: "Support Membership ($0.99/year) unlocks the full platform.",
+    hint: "Support Annual ($99/year) unlocks the full platform.",
   },
   {
     id: MEMBERSHIP_TIER_KEYS.SUPPORT,
@@ -54,7 +54,7 @@ export const MEMBERSHIP_TIER_DEFINITIONS = [
       "Basic platform participation",
     ],
     isMember: false,
-    hint: "Entry-level paid membership — billed annually at $0.99/year.",
+    hint: "Entry-level paid membership — billed annually at $99/year.",
   },
   {
     id: MEMBERSHIP_TIER_KEYS.MEMBER,
