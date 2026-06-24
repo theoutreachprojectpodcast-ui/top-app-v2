@@ -28,7 +28,11 @@ export async function GET(request) {
   if (!redirectTo.startsWith("/")) {
     redirectTo = "/";
   }
-  if (redirectTo === MOBILE_POST_LOGIN_PATH || redirectTo === "/mobile/auth/complete") {
+  if (
+    redirectTo === MOBILE_POST_LOGIN_PATH ||
+    redirectTo === "/mobile/auth/complete" ||
+    redirectTo === "/?oauth=1"
+  ) {
     redirectTo = "/";
   }
 

@@ -72,6 +72,7 @@ export function authCallbackUrl() {
 export const MOBILE_AUTH_START_PATH = "/mobile/auth/start";
 export const MOBILE_AUTH_CALLBACK_PATH = "/mobile/auth/callback";
 export const MOBILE_POST_LOGIN_PATH = "/mobile/auth/complete";
+export const MOBILE_OAUTH_HOME_PATH = "/?oauth=1";
 export const MOBILE_HOME_PATH = "/mobile/home";
 
 /** @param {string} path */

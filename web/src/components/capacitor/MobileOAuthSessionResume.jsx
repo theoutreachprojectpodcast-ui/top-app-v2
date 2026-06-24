@@ -5,22 +5,14 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useAuthSession } from "@/components/auth/AuthSessionProvider";
 import { useProfileData } from "@/features/profile/ProfileDataProvider";
 import { isCapacitorNative } from "@/lib/capacitor/platform";
-import { MOBILE_POST_LOGIN_PATH } from "@/lib/runtime/appUrls";
 import {
-  clearOAuthPollKeyCookie,
-  TOP_OAUTH_BROWSER_PENDING,
-  TOP_OAUTH_RETURN_KEY,
-  TOP_OAUTH_STATE_KEY,
-} from "@/lib/auth/oauthMobileHandoff";
+  clearMobileOAuthHandoffState,
+  isMobileAuthCompletePath,
+  isMobileOAuthReturnSearch,
+  navigateToMobileAppHomeAfterOAuth,
+} from "@/lib/auth/mobileOAuthReturn";
+import { TOP_OAUTH_RETURN_KEY } from "@/lib/auth/oauthMobileHandoff";
 export { TOP_OAUTH_RETURN_KEY };
-
-function clearOAuthHandoffState() {
-  if (typeof sessionStorage === "undefined") return;
-  sessionStorage.removeItem(TOP_OAUTH_RETURN_KEY);
-  sessionStorage.removeItem(TOP_OAUTH_BROWSER_PENDING);
-  sessionStorage.removeItem(TOP_OAUTH_STATE_KEY);
-  clearOAuthPollKeyCookie();
-}
 
 /**
  * After OAuth return, clear handoff flags immediately and refresh session in the background.
@@ -38,18 +30,20 @@ export default function MobileOAuthSessionResume() {
     (typeof sessionStorage !== "undefined" && sessionStorage.getItem(TOP_OAUTH_RETURN_KEY) === "1");
 
   useLayoutEffect(() => {
-    if (!isCapacitorNative() || !oauthReturn) return;
-    clearOAuthHandoffState();
-  }, [oauthReturn]);
+    if (!isCapacitorNative()) return;
+    if (isMobileAuthCompletePath(pathname)) {
+      navigateToMobileAppHomeAfterOAuth();
+      return;
+    }
+    if (oauthReturn) {
+      clearMobileOAuthHandoffState();
+    }
+  }, [oauthReturn, pathname]);
 
   useEffect(() => {
     if (!isCapacitorNative() || ranRef.current || !oauthReturn) return;
+    if (isMobileAuthCompletePath(pathname)) return;
     ranRef.current = true;
-
-    if (pathname === MOBILE_POST_LOGIN_PATH) {
-      router.replace("/?oauth=1");
-      return;
-    }
 
     if (searchParams?.get("oauth") === "1") {
       const next = new URLSearchParams(searchParams.toString());

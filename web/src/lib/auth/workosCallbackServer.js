@@ -1,3 +1,4 @@
+import { MOBILE_OAUTH_HOME_PATH } from "@/lib/runtime/appUrls";
 import { MOBILE_POST_LOGIN_PATH } from "@/lib/runtime/appUrls";
 
 function isCapacitorUserAgent(ua) {
@@ -15,6 +16,10 @@ export function resolveMobileAppPostAuthPath(returnPathname, userAgent, startedI
   const inApp = isCapacitorUserAgent(userAgent) || startedInNativeShell;
   if (!inApp) return path;
   if (path.startsWith("/onboarding")) return path;
+  if (path.startsWith("/mobile/access") || path.startsWith("/access")) return path;
+  if (path === MOBILE_POST_LOGIN_PATH || path.startsWith("/mobile/auth/complete")) {
+    return MOBILE_OAUTH_HOME_PATH;
+  }
   if (path.startsWith("/mobile")) return path;
-  return MOBILE_POST_LOGIN_PATH;
+  return MOBILE_OAUTH_HOME_PATH;
 }

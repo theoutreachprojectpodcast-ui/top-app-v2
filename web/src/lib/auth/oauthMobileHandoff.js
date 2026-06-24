@@ -8,10 +8,10 @@ export const TOP_OAUTH_HANDOFF_ERROR = "top-oauth-handoff-error";
 /** Set by `/auth/workos-native-browser` / `/auth/workos-browser-start` for WebView polling. */
 export const TOP_OAUTH_POLL_KEY_COOKIE = "top-oauth-poll-key";
 
-import { MOBILE_POST_LOGIN_PATH } from "@/lib/runtime/appUrls";
+import { MOBILE_OAUTH_HOME_PATH } from "@/lib/runtime/appUrls";
 
 /** Default post-login destination in the native shell. */
-export const MOBILE_POST_AUTH_HOME = MOBILE_POST_LOGIN_PATH;
+export const MOBILE_POST_AUTH_HOME = MOBILE_OAUTH_HOME_PATH;
 
 /** @returns {string} */
 export function readOAuthPollKeyFromDocumentCookie() {

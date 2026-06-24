@@ -1,6 +1,6 @@
-import { redirect } from "next/navigation";
+import MobileAuthCompleteClient from "@/components/mobile/MobileAuthCompleteClient";
 
-/** Legacy post-auth URL — land on home; `MobileOAuthSessionResume` handles session refresh. */
+/** Capacitor post-OAuth — client hard-navigates to `/?oauth=1` (server redirect stalls in WKWebView). */
 export default function MobileAuthCompletePage() {
-  redirect("/?oauth=1");
+  return <MobileAuthCompleteClient />;
 }

@@ -8,7 +8,7 @@ import { isCapacitorNative } from "@/lib/capacitor/platform";
 import AuthLoadingOverlay from "@/components/auth/AuthLoadingOverlay";
 import { isOAuthInProgress } from "@/lib/auth/oauthInProgress";
 import { readNavAuthCache } from "@/lib/auth/navAuthCache";
-import { MOBILE_POST_LOGIN_PATH } from "@/lib/runtime/appUrls";
+import { isMobileAuthCompletePath, isMobileOAuthReturnSearch } from "@/lib/auth/mobileOAuthReturn";
 
 const BOOT_OVERLAY_MAX_MS = 2000;
 const BOOT_STALL_MS = 12000;
@@ -27,7 +27,10 @@ export default function MobileBootLoader() {
   const native = isCapacitorNative();
 
   const oauthBusy = isOAuthInProgress();
-  const onAuthCompleteRoute = pathname === MOBILE_POST_LOGIN_PATH;
+  const oauthReturn =
+    typeof window !== "undefined" && isMobileOAuthReturnSearch(window.location.search);
+  const onAuthCompleteRoute =
+    isMobileAuthCompletePath(pathname) || oauthReturn;
   const sessionHint = !!readNavAuthCache()?.authenticated;
 
   const bootReady =
