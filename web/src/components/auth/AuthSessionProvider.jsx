@@ -29,7 +29,7 @@ import { clearNavAuthCache, readNavAuthCache, writeNavAuthCache } from "@/lib/au
 import { profileFromApiDto } from "@/features/profile/mappers";
 import { navCacheHasFreeAccess } from "@/lib/membership/appAccess";
 import { isCapacitorNative } from "@/lib/capacitor/platform";
-import { TOP_OAUTH_BROWSER_PENDING } from "@/lib/auth/oauthMobileHandoff";
+import { isInMobileOAuthResumeGrace } from "@/lib/auth/mobileOAuthReturn";
 
 const AuthSessionContext = createContext({
   loading: true,
@@ -129,7 +129,8 @@ export default function AuthSessionProvider({ children }) {
       return;
     }
     if (isCapacitorNative()) {
-      if (typeof sessionStorage !== "undefined" && sessionStorage.getItem(TOP_OAUTH_BROWSER_PENDING) === "1") {
+      if (isInMobileOAuthResumeGrace()) {
+        void refresh({ soft: true });
         return;
       }
       const now = Date.now();

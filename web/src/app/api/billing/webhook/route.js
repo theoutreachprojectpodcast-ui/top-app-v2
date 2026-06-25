@@ -76,6 +76,7 @@ export async function POST(request) {
   }
 
   try {
+    console.info("[top] Stripe webhook received", { type: event.type, id: event.id });
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object;
@@ -106,6 +107,12 @@ export async function POST(request) {
           if (workosUserId) {
             await syncProfileFromSubscription(admin, stripe, workosUserId, sub, {
               sponsorTierId: session.metadata?.sponsor_package_id || sub.metadata?.sponsor_package_id,
+            });
+            console.info("[top] Stripe webhook membership sync", {
+              type: event.type,
+              workosUserId,
+              subscriptionId: subId,
+              status: sub.status,
             });
           }
         }

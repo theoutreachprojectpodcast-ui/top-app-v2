@@ -52,7 +52,7 @@ export function workosCallbackErrorHtml(
  */
 export function workOSGoContext(requestUrl) {
   const mode = requestUrl.searchParams.get("mode") === "signup" ? "signup" : "signin";
-  const fallbackReturn = mode === "signup" ? "/onboarding" : "/";
+  const fallbackReturn = mode === "signup" ? "/access" : "/";
   const backHref =
     String(requestUrl.searchParams.get("back") || "").trim() ||
     (fallbackReturn.startsWith("/mobile") ? "/" : "/");

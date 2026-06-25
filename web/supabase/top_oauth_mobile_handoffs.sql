@@ -13,6 +13,14 @@ create index if not exists top_oauth_mobile_handoffs_expires_idx
 
 alter table public.top_oauth_mobile_handoffs enable row level security;
 
+drop policy if exists top_oauth_mobile_handoffs_block_anon on public.top_oauth_mobile_handoffs;
+drop policy if exists top_oauth_mobile_handoffs_block_authenticated on public.top_oauth_mobile_handoffs;
+alter table public.top_oauth_mobile_handoffs force row level security;
+create policy top_oauth_mobile_handoffs_block_anon on public.top_oauth_mobile_handoffs
+  as restrictive for all to anon using (false) with check (false);
+create policy top_oauth_mobile_handoffs_block_authenticated on public.top_oauth_mobile_handoffs
+  as restrictive for all to authenticated using (false) with check (false);
+
 -- Legacy upgrades (safe to run):
 -- alter table public.top_oauth_mobile_handoffs add column if not exists set_cookies text[] not null default '{}';
 -- alter table public.top_oauth_mobile_handoffs add column if not exists redirect_to text not null default '/';

@@ -8,6 +8,12 @@ export const TOP_OAUTH_HANDOFF_ERROR = "top-oauth-handoff-error";
 /** Set by `/auth/workos-native-browser` / `/auth/workos-browser-start` for WebView polling. */
 export const TOP_OAUTH_POLL_KEY_COOKIE = "top-oauth-poll-key";
 
+/** Durable poll key if sessionStorage is cleared while the in-app browser is open. */
+export const TOP_OAUTH_STATE_LOCAL_KEY = "top-oauth-state-key-local";
+
+/** sessionStorage — suppress OAuth handoff overlays while session/profile hydrate after return. */
+export const TOP_OAUTH_RESUME_GRACE_KEY = "top-oauth-resume-grace-until";
+
 import { MOBILE_OAUTH_HOME_PATH } from "@/lib/runtime/appUrls";
 
 /** Default post-login destination in the native shell. */

@@ -20,6 +20,8 @@ import {
   stripeSponsorSubscriptionConfigured,
 } from "@/lib/billing/stripeConfig";
 import { postOnboardingDestination } from "@/lib/account/postOnboardingDestination";
+import { computeEntitlementsFromProfileRow } from "@/lib/account/entitlements";
+import { hasActiveMembership } from "@/lib/membership/membershipAccess";
 
 async function OnboardingServer({ searchParams }) {
   const sp = await searchParams;
@@ -83,6 +85,16 @@ async function OnboardingServer({ searchParams }) {
         sponsorOnboardingPath: dto.sponsorOnboardingPath,
       }),
     );
+  }
+
+  const entitlements = computeEntitlementsFromProfileRow(row);
+  if (
+    !hasActiveMembership(dto, {
+      isPlatformAdmin: entitlements.isPlatformAdmin,
+      isPrivilegedStaff: entitlements.isPrivilegedStaff,
+    })
+  ) {
+    redirect("/access");
   }
 
   const authBackend = {

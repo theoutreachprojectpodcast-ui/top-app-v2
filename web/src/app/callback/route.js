@@ -8,14 +8,15 @@ import {
   runWorkOSCallbackForFetch,
 } from "@/lib/auth/workosCallbackHandler";
 import { saveOAuthMobileSessionHandoff } from "@/lib/auth/oauthMobileHandoffServer";
-import { hashOAuthState, saveOAuthMobilePending } from "@/lib/auth/oauthMobileHandoffServer";
+import { resolveOAuthHandoffPollKey, saveOAuthMobilePending } from "@/lib/auth/oauthMobileHandoffServer";
+import { oauthStateFromAuthorizeUrl } from "@/lib/auth/workosAuthorizationRedirect";
 import { TOP_OAUTH_POLL_KEY_COOKIE } from "@/lib/auth/oauthMobileHandoff";
 import { MOBILE_POST_AUTH_HOME } from "@/lib/auth/oauthMobileHandoff";
 import {
   isMobileExternalBrowserUserAgent,
   mobileOAuthBrowserDoneHtml,
 } from "@/lib/auth/workosMobileRedirect";
-import { oauthStartedInNativeShell } from "@/lib/auth/workosOAuthShell";
+import { oauthStartedInNativeShell, isNativeWorkOSShellRequest } from "@/lib/auth/workosOAuthShell";
 
 export const maxDuration = 60;
 export const runtime = "nodejs";
@@ -62,15 +63,19 @@ function isCapacitorBrowserOAuthReturn(request) {
 
 /** Capacitor in-app browser — finish OAuth here (PKCE cookie from `/auth/workos-browser-start`), hand session to WebView. */
 async function mobileBrowserOAuthPendingResponse(request, url) {
-  const state = url.searchParams.get("state");
   const code = url.searchParams.get("code");
-  if (!state || !code) {
+  const stateRaw =
+    oauthStateFromAuthorizeUrl(url.toString()) || String(url.searchParams.get("state") || "").trim();
+  if (!stateRaw || !code) {
     return callbackErrorResponse("Missing sign-in response. Please try again.", request);
   }
 
-  try {
-    const stateKey = hashOAuthState(state);
+  const stateKey = resolveOAuthHandoffPollKey(request, url.toString());
+  if (!stateKey) {
+    return callbackErrorResponse("Could not verify sign-in session. Please try again.", request);
+  }
 
+  try {
     const captured = await runWorkOSCallbackCapture(request);
     if (captured.ok && captured.setCookies?.length) {
       const saved = await saveOAuthMobileSessionHandoff(stateKey, captured.setCookies, captured.redirectTo);
@@ -90,7 +95,7 @@ async function mobileBrowserOAuthPendingResponse(request, url) {
       return callbackErrorResponse(captured.message, request);
     }
 
-    const saved = await saveOAuthMobilePending(stateKey, code, state, MOBILE_POST_AUTH_HOME);
+    const saved = await saveOAuthMobilePending(stateKey, code, stateRaw, MOBILE_POST_AUTH_HOME);
     if (!saved.ok) {
       return callbackErrorResponse("Could not prepare sign-in for the app. Please try again.", request);
     }
@@ -114,14 +119,9 @@ export async function GET(request) {
     const url = new URL(request.url);
     const ua = request.headers.get("user-agent") || "";
     const inMobileBrowser = isMobileExternalBrowserUserAgent(ua);
+    const nativeShell = isNativeWorkOSShellRequest(request);
     const oauthError = url.searchParams.get("error");
     const code = url.searchParams.get("code");
-
-    // Capacitor in-app browser (SFSafariViewController) — session cookies stay in the browser jar;
-    // capture them and hand off to the WKWebView via Supabase + /api/mobile/oauth-handoff/complete.
-    if (inMobileBrowser && code && isCapacitorBrowserOAuthReturn(request)) {
-      return mobileBrowserOAuthPendingResponse(request, url);
-    }
 
     if (oauthError) {
       return callbackErrorResponse(
@@ -132,6 +132,16 @@ export async function GET(request) {
 
     if (!code) {
       return callbackErrorResponse("Missing sign-in response. Please try again.", request);
+    }
+
+    // Capacitor main WebView — complete OAuth here (session cookies stay in the shell).
+    if (nativeShell && !isCapacitorCallbackRequest(request)) {
+      return await runWorkOSCallbackDocument(request);
+    }
+
+    // Legacy in-app browser sheet only (external Safari UA without native shell cookies).
+    if (inMobileBrowser && isCapacitorBrowserOAuthReturn(request)) {
+      return mobileBrowserOAuthPendingResponse(request, url);
     }
 
     if (isCapacitorCallbackRequest(request)) {

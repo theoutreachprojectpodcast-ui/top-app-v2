@@ -135,6 +135,16 @@ export async function POST(request) {
   }
   const safeTier = TIERS.has(requestedTier) ? requestedTier : "free";
 
+  if (safeTier === "free") {
+    return Response.json(
+      {
+        error: "membership_required",
+        message: "An active Support or Pro membership is required. Complete checkout before finishing onboarding.",
+      },
+      { status: 403 },
+    );
+  }
+
   const requestedBillingStatus =
     safeTier === "free" ? "none" : typeof body.membershipStatus === "string" ? body.membershipStatus : "pending";
 

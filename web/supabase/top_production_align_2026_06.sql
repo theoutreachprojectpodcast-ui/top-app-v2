@@ -39,6 +39,22 @@ create index if not exists top_oauth_mobile_handoffs_expires_idx
 
 alter table public.top_oauth_mobile_handoffs enable row level security;
 
+-- Full client deny (service role bypasses RLS). Inline if helpers not deployed yet.
+do $$
+begin
+  if to_regprocedure('public._top_ensure_client_deny_rls(regclass)') is not null then
+    perform public._top_ensure_client_deny_rls('public.top_oauth_mobile_handoffs'::regclass);
+  else
+    alter table public.top_oauth_mobile_handoffs force row level security;
+    drop policy if exists top_oauth_mobile_handoffs_block_anon on public.top_oauth_mobile_handoffs;
+    drop policy if exists top_oauth_mobile_handoffs_block_authenticated on public.top_oauth_mobile_handoffs;
+    create policy top_oauth_mobile_handoffs_block_anon on public.top_oauth_mobile_handoffs
+      as restrictive for all to anon using (false) with check (false);
+    create policy top_oauth_mobile_handoffs_block_authenticated on public.top_oauth_mobile_handoffs
+      as restrictive for all to authenticated using (false) with check (false);
+  end if;
+end $$;
+
 alter table public.top_oauth_mobile_handoffs
   add column if not exists set_cookies text[] not null default '{}';
 

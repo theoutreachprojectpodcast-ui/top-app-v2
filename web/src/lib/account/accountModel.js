@@ -44,7 +44,7 @@ export function defaultMembershipTierForIntent(intent) {
       return "sponsor";
     case "free_user":
     default:
-      return "free";
+      return "support";
   }
 }
 

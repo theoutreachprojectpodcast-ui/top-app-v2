@@ -19,7 +19,7 @@ function handoffErrorMessage(err) {
  */
 export async function startWorkOSAuthHandoff(rawParams, options = {}) {
   const mode = options.mode === "signup" ? "signup" : "signin";
-  const fallbackReturn = options.fallbackReturn || (mode === "signup" ? "/onboarding" : "/");
+  const fallbackReturn = options.fallbackReturn || (mode === "signup" ? "/access" : "/");
   const params = toWorkOSUrlSearchParams(rawParams || {});
 
   try {

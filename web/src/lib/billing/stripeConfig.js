@@ -1,7 +1,7 @@
 /**
  * Stripe configuration — env vars only, no hardcoded keys or price IDs.
  *
- * User memberships: Support Annual ($99/yr) + Pro ($5.99/yr).
+ * User memberships: Support Membership ($0.99/yr) + Pro ($5.99/yr).
  * Legacy: STRIPE_PRICE_ACCESS_YEARLY for existing access subscribers.
  * Sponsor subscriptions use STRIPE_PRICE_SPONSOR_MONTHLY (Sponsors page only).
  */

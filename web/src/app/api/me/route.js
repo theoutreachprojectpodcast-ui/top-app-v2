@@ -7,6 +7,7 @@ import {
   syncProfileEmailWithWorkOSUser,
 } from "@/lib/profile/serverProfile";
 import { computeEntitlementsFromProfileRow } from "@/lib/account/entitlements";
+import { getCurrentUserMembershipTier, hasActiveMembership } from "@/lib/membership/membershipAccess";
 import { isPlatformAdminServer } from "@/lib/admin/platformAdminServer";
 import { computeProfileCompletion } from "@/lib/profile/profileCompletion";
 
@@ -21,6 +22,10 @@ function entitlementsForSession(row, user) {
     podcastMemberContent: isPlatformAdmin,
     communityStorySubmit: isPlatformAdmin,
     communityPostCreate: isPlatformAdmin,
+    directoryAccess: isPlatformAdmin,
+    saveOrganizationsAccess: isPlatformAdmin,
+    fullPlatformAccess: isPlatformAdmin,
+    communityViewAccess: isPlatformAdmin,
     isPrivilegedStaff: false,
     isPlatformAdmin,
   };
@@ -78,6 +83,14 @@ export async function GET() {
     profile: profileDto,
     profileCompletion,
     entitlements,
+    membership: {
+      tier: getCurrentUserMembershipTier(profileDto),
+      status: profileDto?.membershipBillingStatus || "none",
+      hasActiveMembership: hasActiveMembership(profileDto, {
+        isPlatformAdmin: !!entitlements?.isPlatformAdmin,
+        isPrivilegedStaff: !!entitlements?.isPrivilegedStaff,
+      }),
+    },
     user: {
       email: user.email ?? "",
       firstName: user.firstName ?? "",

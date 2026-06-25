@@ -39,8 +39,8 @@ export default function SubpageTopbarActions({ section = "all" }) {
     ? workosMobileSignInHref(signInReturnFallback)
     : workosSignInLink(pathname, null, signInReturnFallback, { rememberDevice });
   const workosOnboardingSignUpHref = isNative
-    ? workosMobileSignUpHref("/onboarding")
-    : workosSignUpHref("/onboarding", { rememberDevice });
+    ? workosMobileSignUpHref("/mobile/access")
+    : workosSignUpHref("/access", { rememberDevice });
   const legacySignUpHref =
     pathname && pathname !== "/"
       ? `/?signin=1&signup=1&returnTo=${encodeURIComponent(pathname)}`

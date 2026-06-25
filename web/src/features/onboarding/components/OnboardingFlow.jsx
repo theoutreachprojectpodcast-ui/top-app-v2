@@ -20,14 +20,9 @@ import {
 
 const INTENT_CARDS = [
   {
-    id: "free_user",
-    title: "Browse for Free",
-    blurb: "Explore the directory, trusted resources, and public community content. No card required.",
-  },
-  {
     id: "support_user",
     title: "Support the Mission",
-    blurb: "Back the work with annual Support Membership. Profile and saves stay in sync.",
+    blurb: "Back the work with Support Membership ($0.99/year). Directory and community viewing included.",
   },
   {
     id: "member_user",
@@ -42,13 +37,6 @@ const INTENT_CARDS = [
 ];
 
 const PLANS = [
-  {
-    id: "free",
-    title: "Free Membership",
-    price: "$0",
-    cadence: "",
-    blurb: "Explore the directory, trusted resources, and public community content. No card required.",
-  },
   {
     id: "support",
     title: SUPPORT_MEMBERSHIP_DISPLAY_NAME,
@@ -174,7 +162,7 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
   const [error, setError] = useState("");
   const [draft, setDraft] = useState(() => draftFromProfile(initialProfile));
   const [selectedTier, setSelectedTier] = useState(() =>
-    normalizedInitialIntent ? defaultMembershipTierForIntent(normalizedInitialIntent) : "free",
+    normalizedInitialIntent ? defaultMembershipTierForIntent(normalizedInitialIntent) : "support",
   );
   const [autoFinalizing, setAutoFinalizing] = useState(false);
   const autoFinalizeRanRef = useRef(false);
@@ -446,7 +434,6 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
   }, [accountIntent]);
 
   async function startPaidCheckout() {
-    if (selectedTier === "free") return;
     if (selectedTier === "sponsor" && !authBackend?.stripeSponsorSubscription) {
       setError("Sponsor subscription checkout requires STRIPE_PRICE_SPONSOR_MONTHLY in the server environment.");
       return;
@@ -468,7 +455,7 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
       });
       const data = await res.json().catch(() => ({}));
       if (res.status === 503) {
-        setMessage("Billing is not fully connected yet. Choose Free to continue, or configure Stripe in your environment.");
+        setMessage("Billing is not fully connected yet. Configure Stripe in your environment or try again later.");
         setSaving(false);
         return;
       }
@@ -551,7 +538,7 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
           ? "Optional: tell us how you would like to contribute. You can skip individual items and finish later in Profile."
           : accountIntent === "sponsor_user"
             ? "Finish sponsor onboarding: subscribe in Stripe or submit a partnership application for staff review."
-            : "Confirm your membership. Free browsing always stays available.";
+            : "Confirm your membership. Support or Pro is required to use the platform.";
 
   return (
     <div className="shell onboardingShell">
@@ -578,7 +565,7 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
             and tap <strong>Finish onboarding</strong>.
           </p>
         ) : null}
-        {checkoutFlash === "cancel" ? <p className="applyError">Checkout canceled. You can choose Free or try again.</p> : null}
+        {checkoutFlash === "cancel" ? <p className="applyError">Checkout canceled. Choose a membership to continue.</p> : null}
         {message ? <p className="applyStatus">{message}</p> : null}
         {error ? <p className="applyError">{error}</p> : null}
 
@@ -1046,13 +1033,8 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
                       ))}
                     </div>
                     <div className="row wrap">
-                      {selectedTier !== "free" ? (
-                        <button className="btnSoft" type="button" disabled={busy} onClick={startPaidCheckout}>
-                          Continue to secure checkout
-                        </button>
-                      ) : null}
-                      <button className="btnPrimary" type="button" disabled={busy} onClick={() => void finishOnboarding()}>
-                        {selectedTier === "free" ? "Finish with Free" : "Finish onboarding"}
+                      <button className="btnPrimary" type="button" disabled={busy} onClick={startPaidCheckout}>
+                        Continue to secure checkout
                       </button>
                     </div>
                   </div>

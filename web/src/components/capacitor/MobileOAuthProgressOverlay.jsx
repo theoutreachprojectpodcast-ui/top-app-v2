@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import AuthLoadingOverlay from "@/components/auth/AuthLoadingOverlay";
 import { isCapacitorNative } from "@/lib/capacitor/platform";
 import { isOAuthInProgress } from "@/lib/auth/oauthInProgress";
-import { isMobileAuthCompletePath, isMobileOAuthReturnSearch } from "@/lib/auth/mobileOAuthReturn";
+import { isMobileAuthCompletePath, isMobileOAuthReturnSearch, isInMobileOAuthResumeGrace } from "@/lib/auth/mobileOAuthReturn";
 import { MOBILE_POST_LOGIN_PATH } from "@/lib/runtime/appUrls";
 
 const DEDICATED_OAUTH_ROUTES = new Set([
@@ -24,7 +24,11 @@ export default function MobileOAuthProgressOverlay() {
     return null;
   }
 
-  if (DEDICATED_OAUTH_ROUTES.has(pathname) || isMobileAuthCompletePath(pathname)) {
+  if (
+    DEDICATED_OAUTH_ROUTES.has(pathname) ||
+    isMobileAuthCompletePath(pathname) ||
+    isInMobileOAuthResumeGrace()
+  ) {
     return null;
   }
 

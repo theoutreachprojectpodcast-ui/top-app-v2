@@ -5,6 +5,10 @@ import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
 import { isCommunityModeratorServer } from "@/lib/community/moderatorServer";
 import { isPlatformAdminServer } from "@/lib/admin/platformAdminServer";
 import { profileMayCreateCommunityPost } from "@/lib/account/entitlements";
+import {
+  membershipDeniedResponse,
+  profilePassesMembershipScope,
+} from "@/lib/membership/membershipRouteGuard";
 import { sortCommunityFeedRows } from "@/lib/community/adminCommunityPostPayload";
 import {
   createPlatformNotification,
@@ -31,6 +35,15 @@ export async function GET(request) {
   }
 
   if (scope === "public") {
+    const auth = await resolveWorkOSRouteUser();
+    if (!auth.ok) {
+      return Response.json({ posts: [], error: "sign_in_required" }, { status: 401 });
+    }
+    const profileRow = await getProfileRowByWorkOSId(admin, auth.user.id);
+    if (!profileRow?.id || !profilePassesMembershipScope(profileRow, "community_view")) {
+      return membershipDeniedResponse("community_view");
+    }
+
     const { data, error } = await admin
       .from(TABLE)
       .select("*")
@@ -49,18 +62,14 @@ export async function GET(request) {
     if (shouldHideDemoCommunitySeeds()) {
       rows = rows.filter((r) => !r?.is_demo_seed);
     }
-    const auth = await resolveWorkOSRouteUser();
     let likedIds = new Set();
-    if (auth.ok && auth.user) {
-      const profileRow = await getProfileRowByWorkOSId(admin, auth.user.id);
-      if (profileRow?.id) {
-        const { data: likes } = await admin
-          .from(REACTIONS)
-          .select("post_id")
-          .eq("profile_id", profileRow.id)
-          .eq("reaction_type", "like");
-        likedIds = new Set((likes || []).map((r) => r.post_id));
-      }
+    if (profileRow?.id) {
+      const { data: likes } = await admin
+        .from(REACTIONS)
+        .select("post_id")
+        .eq("profile_id", profileRow.id)
+        .eq("reaction_type", "like");
+      likedIds = new Set((likes || []).map((r) => r.post_id));
     }
 
     const enriched = rows.map((row) => ({
@@ -174,11 +183,13 @@ export async function POST(request) {
   }
 
   if (!profileMayCreateCommunityPost(profileRow)) {
+    if (!profilePassesMembershipScope(profileRow, "community_post")) {
+      return membershipDeniedResponse("community_post");
+    }
     return Response.json(
       {
         ok: false,
-        message:
-          "Community posting is moderator-led for launch. Members can comment, react, and participate in discussions now.",
+        message: "Community posting requires Pro Membership.",
       },
       { status: 403 },
     );

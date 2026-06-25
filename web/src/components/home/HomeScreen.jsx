@@ -17,6 +17,8 @@ export default function HomeScreen({
   onTrusted,
   onCommunity,
   onPodcasts,
+  onProUpgrade,
+  hasProAccess = true,
   directoryProps,
   favoriteEinSet,
   onToggleFavorite,
@@ -40,6 +42,8 @@ export default function HomeScreen({
           onTrusted={onTrusted}
           onCommunity={onCommunity}
           onPodcasts={onPodcasts}
+          onProUpgrade={onProUpgrade}
+          hasProAccess={hasProAccess}
         />
 
         <HomeDirectoryPanel

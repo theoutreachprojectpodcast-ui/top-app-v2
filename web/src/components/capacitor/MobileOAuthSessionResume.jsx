@@ -5,10 +5,13 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useAuthSession } from "@/components/auth/AuthSessionProvider";
 import { useProfileData } from "@/features/profile/ProfileDataProvider";
 import { isCapacitorNative } from "@/lib/capacitor/platform";
+import { closeExternalBrowserIfOpen } from "@/lib/capacitor/openExternalUrl";
+import { hideCapacitorSplash } from "@/lib/capacitor/splashScreen";
 import {
   clearMobileOAuthHandoffState,
   isMobileAuthCompletePath,
   isMobileOAuthReturnSearch,
+  markMobileOAuthResumeGrace,
   navigateToMobileAppHomeAfterOAuth,
 } from "@/lib/auth/mobileOAuthReturn";
 import { TOP_OAUTH_RETURN_KEY } from "@/lib/auth/oauthMobileHandoff";
@@ -35,10 +38,13 @@ export default function MobileOAuthSessionResume() {
       navigateToMobileAppHomeAfterOAuth();
       return;
     }
-    if (oauthReturn) {
+    if (searchParams?.get("oauth") === "1") {
+      markMobileOAuthResumeGrace();
       clearMobileOAuthHandoffState();
+      void hideCapacitorSplash();
+      void closeExternalBrowserIfOpen();
     }
-  }, [oauthReturn, pathname]);
+  }, [pathname, searchParams]);
 
   useEffect(() => {
     if (!isCapacitorNative() || ranRef.current || !oauthReturn) return;

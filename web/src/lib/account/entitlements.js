@@ -3,6 +3,16 @@
  */
 
 import { isPlatformAdminServer } from "@/lib/admin/platformAdminServer";
+import {
+  canAccessFullPlatform,
+  canAccessPremiumPodcast,
+  canAccessTrustedPartnerOffers,
+  canCreateCommunityContent,
+  canSaveOrganizations,
+  canViewCommunity,
+  canViewDirectory,
+  hasActiveMembership,
+} from "@/lib/membership/membershipAccess";
 
 /**
  * Active paid subscription states we treat as entitled for member-only product surfaces.
@@ -18,30 +28,22 @@ function isPrivilegedStaff(row) {
   return platformRole === "admin" || platformRole === "moderator";
 }
 
-function paidTierWithActiveBilling(tier, membershipStatus) {
-  const t = String(tier || "").toLowerCase();
-  if (!["access", "support", "member", "sponsor"].includes(t)) return false;
-  return hasActiveMemberBilling(membershipStatus);
-}
-
-/**
- * Pro (DB: membership_tier = member) — community story submission.
- * @param {Record<string, unknown> | null | undefined} row
- */
-export function tierAllowsCommunityStorySubmit(row) {
-  const tier = String(row?.membership_tier || "free").toLowerCase();
-  if (tier !== "member") return false;
-
-  const status = String(row?.membership_status || "none").toLowerCase();
-  if (hasActiveMemberBilling(status)) return true;
-
-  // Webhook may lag behind checkout; subscription id means Pro was purchased.
-  if (String(row?.stripe_subscription_id || "").trim()) return true;
-
-  // Admin-granted Pro in dashboard (membership_source manual).
-  if (String(row?.membership_source || "").toLowerCase() === "manual") return true;
-
-  return false;
+function profileShapeFromRow(row) {
+  if (!row) return null;
+  return {
+    membershipTier: row.membership_tier,
+    membership_tier: row.membership_tier,
+    membershipBillingStatus: row.membership_status,
+    membership_status: row.membership_status,
+    billing_status: row.membership_status,
+    membershipSource: row.membership_source,
+    membership_source: row.membership_source,
+    stripeSubscriptionId: row.stripe_subscription_id,
+    stripe_subscription_id: row.stripe_subscription_id,
+    platformRole: row.platform_role,
+    platform_role: row.platform_role,
+    email: row.email,
+  };
 }
 
 /**
@@ -53,26 +55,47 @@ export function computeEntitlementsFromProfileRow(row) {
       podcastMemberContent: false,
       communityStorySubmit: false,
       communityPostCreate: false,
+      directoryAccess: false,
+      saveOrganizationsAccess: false,
+      fullPlatformAccess: false,
+      communityViewAccess: false,
+      trustedPartnerOffers: false,
       isPrivilegedStaff: false,
       isPlatformAdmin: false,
+      hasActiveMembership: false,
+      membershipTier: "none",
     };
   }
-  const tier = String(row.membership_tier || "free").toLowerCase();
-  const status = String(row.membership_status || "none").toLowerCase();
+
   const privilegedStaff = isPrivilegedStaff(row);
-  const privilegedContent = privilegedStaff || paidTierWithActiveBilling(tier, status);
   const isPlatformAdmin = isPlatformAdminServer({
     email: String(row.email || ""),
     workosUserId: String(row.workos_user_id || ""),
     profileRow: row,
   });
+  const profile = profileShapeFromRow(row);
+  const opts = { isPlatformAdmin, isPrivilegedStaff: privilegedStaff };
+  const activeMembership = hasActiveMembership(profile, opts);
+
   return {
-    podcastMemberContent: privilegedContent,
-    /** V1: only staff/moderators create community posts; members comment and react. */
-    communityStorySubmit: privilegedStaff || isPlatformAdmin,
-    communityPostCreate: privilegedStaff || isPlatformAdmin,
+    directoryAccess: canViewDirectory(profile, opts),
+    saveOrganizationsAccess: canSaveOrganizations(profile, opts),
+    fullPlatformAccess: canAccessFullPlatform(profile, opts),
+    communityViewAccess: canViewCommunity(profile, opts),
+    trustedPartnerOffers: canAccessTrustedPartnerOffers(profile, opts),
+    podcastMemberContent: canAccessPremiumPodcast(profile, opts),
+    communityStorySubmit: canCreateCommunityContent(profile, opts),
+    communityPostCreate: canCreateCommunityContent(profile, opts),
     isPrivilegedStaff: privilegedStaff,
     isPlatformAdmin,
+    hasActiveMembership: activeMembership,
+    membershipTier: activeMembership
+      ? String(row.membership_tier || "free").toLowerCase() === "member"
+        ? "pro"
+        : ["support", "access"].includes(String(row.membership_tier || "").toLowerCase())
+          ? "support"
+          : String(row.membership_tier || "free").toLowerCase()
+      : "none",
   };
 }
 
@@ -87,11 +110,16 @@ export function profileMaySubmitCommunityStory(row) {
 }
 
 /**
- * V1 moderator-only post creation (admins + platform_role admin/moderator).
+ * Pro members (and staff) may create community posts.
  * @param {Record<string, unknown> | null | undefined} row
  */
 export function profileMayCreateCommunityPost(row) {
   if (!row) return false;
   const ent = computeEntitlementsFromProfileRow(row);
   return ent.communityPostCreate === true;
+}
+
+/** @deprecated Use membershipAccess.requirePro via computeEntitlementsFromProfileRow */
+export function tierAllowsCommunityStorySubmit(row) {
+  return profileMaySubmitCommunityStory(row);
 }

@@ -13,6 +13,7 @@ import {
   PRO_MEMBERSHIP_PRICE_LABEL,
 } from "@/features/membership/membershipTiers";
 import { hasMobileAppAccess, navCacheHasFreeAccess } from "@/lib/membership/appAccess";
+import { sanitizeAuthReturnPath } from "@/lib/auth/authReturnPath";
 import { useProfileData } from "@/features/profile/ProfileDataProvider";
 
 const SESSION_WAIT_MAX_MS = 10_000;
@@ -65,12 +66,12 @@ export default function AppAccessPaywall({
     const sessionHint = !!cache?.authenticated;
     const signedIn = isAuthenticated || authAuthenticated || sessionHint;
     if (!signedIn) {
-      router.replace(backHref === "/mobile" ? "/mobile" : `/login?returnTo=${encodeURIComponent(checkoutReturnPath)}`);
+      const loginReturn = sanitizeAuthReturnPath(checkoutReturnPath, "/");
+      router.replace(backHref === "/mobile" ? "/mobile" : `/sign-in?returnTo=${encodeURIComponent(loginReturn)}`);
       return;
     }
 
     const hasAccess =
-      cache?.hasFreeAccess ||
       navCacheHasFreeAccess(profile, entitlements) ||
       hasMobileAppAccess(profile, {
         isPlatformAdmin: !!entitlements?.isPlatformAdmin,
@@ -163,15 +164,9 @@ export default function AppAccessPaywall({
   const cache = readNavAuthCache();
   const sessionHint = !!cache?.authenticated;
   const signedInHint = isAuthenticated || authAuthenticated || sessionHint;
-  const hasAccessHint =
-    cache?.hasFreeAccess ||
-    navCacheHasFreeAccess(profile, entitlements) ||
-    !!entitlements?.isPlatformAdmin ||
-    !!entitlements?.isPrivilegedStaff;
   const waitingForSession =
     !clientReady ||
     (signedInHint && (loadingProfile || authLoading) && !sessionWaitTimedOut) ||
-    (hasAccessHint && checkoutResult !== "cancel") ||
     checkoutPolling;
 
   if (waitingForSession) {
@@ -206,16 +201,33 @@ export default function AppAccessPaywall({
         </div>
         <h1 className="mobileSplashPage__title">Choose your membership</h1>
         <p className="mobileSplashPage__lead">
-          Select Support Annual or Pro Membership to use The Outreach Project on the web and in the mobile app.
+          The Outreach Project requires an active membership. Select Support or Pro to continue.
         </p>
-        <ul className="mobileSplashPage__benefits">
-          <li>
-            <strong>{SUPPORT_MEMBERSHIP_DISPLAY_NAME}</strong> ({SUPPORT_MEMBERSHIP_PRICE_LABEL}) — full platform access
-          </li>
-          <li>
-            <strong>{PRO_MEMBERSHIP_DISPLAY_NAME}</strong> ({PRO_MEMBERSHIP_PRICE_LABEL}) — community posting and premium tools
-          </li>
-        </ul>
+        <div className="mobileSplashPage__tierGrid">
+          <section className="mobileSplashPage__tierCard" aria-labelledby="support-tier-heading">
+            <h2 id="support-tier-heading" className="mobileSplashPage__tierTitle">
+              {SUPPORT_MEMBERSHIP_DISPLAY_NAME}
+            </h2>
+            <p className="mobileSplashPage__tierPrice">{SUPPORT_MEMBERSHIP_PRICE_LABEL}</p>
+            <ul className="mobileSplashPage__benefits">
+              <li>Nonprofit directory search and exploration</li>
+              <li>Save favorite nonprofits</li>
+              <li>Community, podcast, and trusted resources are Pro-only</li>
+            </ul>
+          </section>
+          <section className="mobileSplashPage__tierCard mobileSplashPage__tierCard--pro" aria-labelledby="pro-tier-heading">
+            <h2 id="pro-tier-heading" className="mobileSplashPage__tierTitle">
+              {PRO_MEMBERSHIP_DISPLAY_NAME}
+            </h2>
+            <p className="mobileSplashPage__tierPrice">{PRO_MEMBERSHIP_PRICE_LABEL}</p>
+            <ul className="mobileSplashPage__benefits">
+              <li>Everything in Support</li>
+              <li>Create and submit community posts</li>
+              <li>Premium podcast content</li>
+              <li>Trusted resource discounts and partner offers</li>
+            </ul>
+          </section>
+        </div>
         {checkoutResult === "success" ? (
           <p className="mobileSplashPage__notice" role="status">
             Payment received — finishing setup…

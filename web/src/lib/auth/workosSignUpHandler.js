@@ -11,7 +11,7 @@ export async function workOSSignUpResponse(request) {
   try {
     const bundle = await resolveWorkOSSignUpBundleFromSearchParams(
       request.nextUrl.searchParams,
-      "/onboarding",
+      "/access",
       request,
     );
     return workOSAuthorizeBridgeFromBundle(bundle, false);

@@ -24,6 +24,33 @@ import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
 import { clearNavAuthCache, readNavAuthCache, writeNavAuthCache } from "@/lib/auth/navAuthCache";
 import { useAuthSession } from "@/components/auth/AuthSessionProvider";
 import { navCacheHasFreeAccess } from "@/lib/membership/appAccess";
+
+function entitlementsFromApi(raw) {
+  if (!raw || typeof raw !== "object") {
+    return {
+      podcastMemberContent: false,
+      communityStorySubmit: false,
+      communityPostCreate: false,
+      directoryAccess: false,
+      saveOrganizationsAccess: false,
+      fullPlatformAccess: false,
+      communityViewAccess: false,
+      isPrivilegedStaff: false,
+      isPlatformAdmin: false,
+    };
+  }
+  return {
+    podcastMemberContent: !!raw.podcastMemberContent,
+    communityStorySubmit: !!raw.communityStorySubmit,
+    communityPostCreate: !!raw.communityPostCreate,
+    directoryAccess: !!raw.directoryAccess,
+    saveOrganizationsAccess: !!raw.saveOrganizationsAccess,
+    fullPlatformAccess: !!raw.fullPlatformAccess,
+    communityViewAccess: !!raw.communityViewAccess,
+    isPrivilegedStaff: !!raw.isPrivilegedStaff,
+    isPlatformAdmin: !!raw.isPlatformAdmin,
+  };
+}
 import { isDemoModeEnabled } from "@/lib/runtime/launchMode";
 import {
   fetchProfileByUserId,
@@ -105,18 +132,12 @@ export function useProfileDataState(supabase) {
     sessionKindRef.current = sessionKind;
   }, [sessionKind]);
   const [authBackend, setAuthBackend] = useState({
-    workos: false,
+    workos: !isDemoModeEnabled(),
     workosMissingEnv: [],
     stripe: false,
     supabaseServiceRole: false,
   });
-  const [entitlements, setEntitlements] = useState({
-    podcastMemberContent: false,
-    communityStorySubmit: false,
-    communityPostCreate: false,
-    isPrivilegedStaff: false,
-    isPlatformAdmin: false,
-  });
+  const [entitlements, setEntitlements] = useState(() => entitlementsFromApi(null));
   /** WorkOS session email from `GET /api/me` `user.email` (sign-in identity); may differ from `profile.email` after a settings change. */
   const [workOSAccountEmail, setWorkOSAccountEmail] = useState("");
 
@@ -156,13 +177,7 @@ export function useProfileDataState(supabase) {
       const data = await res.json();
       if (!data?.authenticated) return;
       if (data.entitlements && typeof data.entitlements === "object") {
-        setEntitlements({
-          podcastMemberContent: !!data.entitlements.podcastMemberContent,
-          communityStorySubmit: !!data.entitlements.communityStorySubmit,
-          communityPostCreate: !!data.entitlements.communityPostCreate,
-          isPrivilegedStaff: !!data.entitlements.isPrivilegedStaff,
-          isPlatformAdmin: !!data.entitlements.isPlatformAdmin,
-        });
+        setEntitlements(entitlementsFromApi(data.entitlements));
         writeNavAuthCache(true, true, {
           hasFreeAccess: navCacheHasFreeAccess(
             data.profile ? profileFromApiDto(mergeAccountEmailIntoProfileDto(data.profile, data.user)) : null,
@@ -239,21 +254,6 @@ export function useProfileDataState(supabase) {
           setSessionKind("workos");
           setIsAuthenticated(true);
           setAuthProvider(AUTH_PROVIDER.WORKOS);
-          if (me.entitlements && typeof me.entitlements === "object") {
-            setEntitlements({
-              podcastMemberContent: !!me.entitlements.podcastMemberContent,
-              communityStorySubmit: !!me.entitlements.communityStorySubmit,
-              communityPostCreate: !!me.entitlements.communityPostCreate,
-              isPrivilegedStaff: !!me.entitlements.isPrivilegedStaff,
-              isPlatformAdmin: !!me.entitlements.isPlatformAdmin,
-            });
-            writeNavAuthCache(true, !!status.workos, {
-              hasFreeAccess: navCacheHasFreeAccess(
-                me.profile ? profileFromApiDto(mergeAccountEmailIntoProfileDto(me.profile, me.user)) : null,
-                me.entitlements,
-              ),
-            });
-          }
           const raw =
             me.profile ||
             {
@@ -265,23 +265,39 @@ export function useProfileDataState(supabase) {
               onboardingCompleted: false,
             };
           const dto = mergeAccountEmailIntoProfileDto(raw, me.user);
-          setProfile(profileFromApiDto(dto));
+          const profileDto = profileFromApiDto(dto);
+          if (me.entitlements && typeof me.entitlements === "object") {
+            setEntitlements(entitlementsFromApi(me.entitlements));
+          }
+          writeNavAuthCache(true, !!status.workos, {
+            hasFreeAccess: navCacheHasFreeAccess(
+              profileDto,
+              me.entitlements && typeof me.entitlements === "object" ? me.entitlements : null,
+            ),
+          });
+          setProfile(profileDto);
           setWorkOSAccountEmail(String(me.user?.email || "").trim());
           setProfileSource("cloud");
-          const favRes = await fetch("/api/me/saved-orgs", { credentials: "include" });
-          const favJson = await favRes.json().catch(() => ({}));
-          if (Array.isArray(favJson.eins)) {
-            setFavoriteEins(favJson.eins);
-          }
-          const entityFavRes = await fetch("/api/me/favorites", { credentials: "include" });
-          const entityFavJson = await entityFavRes.json().catch(() => ({}));
-          if (Array.isArray(entityFavJson.keys)) {
-            setFavoriteEntityKeys(
-              [...new Set(entityFavJson.keys.map((k) => String(k || "").trim().toLowerCase()).filter(Boolean))].slice(0, 500),
-            );
-          }
           hydratedRef.current = true;
           setLoadingProfile(false);
+          void (async () => {
+            try {
+              const favRes = await fetch("/api/me/saved-orgs", { credentials: "include" });
+              const favJson = await favRes.json().catch(() => ({}));
+              if (Array.isArray(favJson.eins)) {
+                setFavoriteEins(favJson.eins);
+              }
+              const entityFavRes = await fetch("/api/me/favorites", { credentials: "include" });
+              const entityFavJson = await entityFavRes.json().catch(() => ({}));
+              if (Array.isArray(entityFavJson.keys)) {
+                setFavoriteEntityKeys(
+                  [...new Set(entityFavJson.keys.map((k) => String(k || "").trim().toLowerCase()).filter(Boolean))].slice(0, 500),
+                );
+              }
+            } catch {
+              /* membership-gated favorites — never block session */
+            }
+          })();
           return;
         }
 
@@ -294,6 +310,7 @@ export function useProfileDataState(supabase) {
           setSessionKind("workos");
           setIsAuthenticated(true);
           setAuthProvider(AUTH_PROVIDER.WORKOS);
+          writeNavAuthCache(true, true, { hasFreeAccess: false });
           hydratedRef.current = true;
           setLoadingProfile(false);
           return;
@@ -342,6 +359,10 @@ export function useProfileDataState(supabase) {
         setLoadingProfile(false);
       } catch {
         if (!cancelled) {
+          setAuthBackend((prev) => ({
+            ...prev,
+            workos: prev.workos || !isDemoModeEnabled(),
+          }));
           setProfileError("Could not initialize session.");
           hydratedRef.current = true;
           setLoadingProfile(false);
@@ -767,13 +788,7 @@ export function useProfileDataState(supabase) {
     setFavoriteEntityKeys([]);
     setSavedOrganizations([]);
     setSessionKind("none");
-    setEntitlements({
-      podcastMemberContent: false,
-      communityStorySubmit: false,
-      communityPostCreate: false,
-      isPrivilegedStaff: false,
-      isPlatformAdmin: false,
-    });
+    setEntitlements(entitlementsFromApi(null));
   }
 
   async function deleteAccount({ confirmPhrase = "" } = {}) {
@@ -853,6 +868,9 @@ export function useProfileDataState(supabase) {
   function toggleFavoriteEntityKey(key) {
     const id = String(key || "").trim().toLowerCase();
     if (!(id.startsWith("sponsor:") || id.startsWith("trusted:"))) return;
+    if (!entitlements.fullPlatformAccess && !entitlements.isPlatformAdmin && !entitlements.isPrivilegedStaff) {
+      return;
+    }
     const next = favoriteEntityKeys.includes(id)
       ? favoriteEntityKeys.filter((x) => x !== id)
       : [id, ...favoriteEntityKeys];

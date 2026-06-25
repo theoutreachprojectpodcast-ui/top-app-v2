@@ -5,6 +5,7 @@ import {
   workosPkceCookieOptions,
 } from "@/lib/auth/workosAuthorizationRedirect";
 import { TOP_OAUTH_POLL_KEY_COOKIE } from "@/lib/auth/oauthMobileHandoff";
+import { TOP_OAUTH_SHELL_COOKIE, TOP_OAUTH_SHELL_NATIVE } from "@/lib/auth/workosOAuthShell";
 import { hashOAuthState } from "@/lib/auth/oauthMobileHandoffServer";
 import { workOSAuthRedirectBridge } from "@/lib/auth/workosAuthRedirectBridge";
 import { peekOAuthAuthorizePending } from "@/lib/auth/oauthMobileHandoffServer";
@@ -75,6 +76,7 @@ export async function GET(request) {
   const response = workOSAuthRedirectBridge(authorizeUrl);
   response.cookies.set(BROWSER_OAUTH_COOKIE, "1", browserOAuthCookieOptions());
   response.cookies.set(WORKOS_PKCE_COOKIE_NAME, sealedState, workosPkceCookieOptions());
+  response.cookies.set(TOP_OAUTH_SHELL_COOKIE, TOP_OAUTH_SHELL_NATIVE, browserOAuthCookieOptions());
   response.cookies.set(TOP_OAUTH_POLL_KEY_COOKIE, pollKey, pollKeyCookieOptions());
   return response;
 }

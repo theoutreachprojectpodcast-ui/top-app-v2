@@ -1,9 +1,9 @@
 import { safeAppReturnPath } from "@/lib/billing/stripeConfig";
 import { workosGoUrl } from "@/lib/auth/workosGoUrl";
-import { MOBILE_POST_LOGIN_PATH } from "@/lib/runtime/appUrls";
+import { isAuthEntryReturnPath, sanitizeAuthReturnPath } from "@/lib/auth/authReturnPath";
 
-/** Capacitor WebView post-OAuth landing — refreshes session before routing home. */
-export const MOBILE_POST_AUTH_COMPLETE_PATH = MOBILE_POST_LOGIN_PATH;
+/** Native post-OAuth destination — use `/` (patched to `/?oauth=1` on callback). */
+export const MOBILE_POST_AUTH_COMPLETE_PATH = "/";
 /**
  * Build a safe same-origin return path for WorkOS sign-in (current route, without auth-overlay query flags).
  * @param {string} [pathname]
@@ -15,8 +15,9 @@ export function workosReturnPathFromRouter(pathname, searchParams) {
   next.delete("signup");
   const q = next.toString();
   const path = typeof pathname === "string" && pathname.startsWith("/") ? pathname : "/";
+  if (isAuthEntryReturnPath(path)) return "/";
   const combined = `${path}${q ? `?${q}` : ""}`;
-  return safeAppReturnPath(combined, "/");
+  return sanitizeAuthReturnPath(safeAppReturnPath(combined, "/"), "/");
 }
 
 /**
@@ -56,10 +57,10 @@ export function workosMobileSignInHref(returnTo = MOBILE_POST_AUTH_COMPLETE_PATH
 }
 
 /** @param {string} returnTo @param {WorkOSSignInLinkOptions} [options] */
-export function workosMobileSignUpHref(returnTo = "/onboarding", options = {}) {
+export function workosMobileSignUpHref(returnTo = "/mobile/access", options = {}) {
   return workosGoUrl({
     mode: "signup",
-    returnTo: returnTo || "/onboarding",
+    returnTo: returnTo || "/mobile/access",
     rememberDevice: options.rememberDevice,
     loginHint: options.loginHint,
     native: true,
@@ -68,11 +69,11 @@ export function workosMobileSignUpHref(returnTo = "/onboarding", options = {}) {
 
 /**
  * Sign-up URL with optional email hint for AuthKit (does not store credentials).
- * @param {string} returnTo — safe path (e.g. /onboarding)
+ * @param {string} returnTo — safe path (e.g. /access)
  * @param {{ rememberDevice?: boolean, loginHint?: string }} [options]
  */
 export function workosSignUpHref(returnTo, options = {}) {
-  const safe = safeAppReturnPath(returnTo, "/onboarding");
+  const safe = safeAppReturnPath(returnTo, "/access");
   const params = new URLSearchParams();
   params.set("returnTo", safe);
   const rememberDevice = options.rememberDevice !== false;

@@ -10,6 +10,11 @@
 --
 -- Safe to re-run (idempotent). Run in Supabase SQL Editor as postgres.
 --
+-- ⚠️  Supabase "destructive operation" warning?
+--     Use supabase_public_rls_hardening_nondestructive_2026_06.sql instead.
+--     This file DROPs legacy client policies (lines 84–117) then re-hardens.
+--     The nondestructive variant adds deny policies without DROP — fixes linter 0013.
+--
 -- Prerequisites: none (includes _top_rls_helpers.sql logic inline on first run)
 --
 -- After run:

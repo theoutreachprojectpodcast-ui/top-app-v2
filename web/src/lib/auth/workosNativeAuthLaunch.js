@@ -1,94 +1,39 @@
 "use client";
 
-import { Browser } from "@capacitor/browser";
 import { appUrl, nativeProductionAppOrigin } from "@/lib/capacitor/webAppOrigin";
 import { isCapacitorNative } from "@/lib/capacitor/platform";
-import { TOP_OAUTH_BROWSER_PENDING, TOP_OAUTH_STATE_KEY } from "@/lib/auth/oauthMobileHandoff";
+import { clearMobileOAuthHandoffState } from "@/lib/auth/mobileOAuthReturn";
 
 /**
  * @param {string} goPath e.g. `/auth/workos-go?mode=signin&returnTo=…`
  */
-function buildWorkOSGoJsonPath(goPath) {
+function normalizeWorkOSGoPath(goPath) {
   const path = String(goPath || "").trim();
+  if (!path.startsWith("/auth/workos-go")) {
+    throw new Error("Invalid WorkOS handoff path.");
+  }
   const qIdx = path.indexOf("?");
   const params = new URLSearchParams(qIdx >= 0 ? path.slice(qIdx + 1) : "");
-  params.set("format", "json");
   if (!params.has("native")) params.set("native", "1");
   return `/auth/workos-go?${params.toString()}`;
 }
 
 /**
- * Native: mint PKCE server-side, store poll key in WebView, open short `browser-start?key=` URL.
- * Web: navigate to `/auth/workos-go` HTML bridge (AuthKit-compatible PKCE on response).
+ * Native: GET `/auth/workos-go` HTML bridge in the main WebView (PKCE cookies + redirect to WorkOS).
+ * OAuth completes on `/callback` in the same WebView — no in-app browser handoff sheet.
+ *
+ * Web: same `/auth/workos-go` bridge or direct navigation.
  *
  * @param {string} goPath
  */
 export async function launchWorkOSAuth(goPath) {
-  const path = String(goPath || "").trim();
-  if (!path.startsWith("/auth/workos-go")) {
-    throw new Error("Invalid WorkOS handoff path.");
-  }
+  const go = normalizeWorkOSGoPath(goPath);
 
   if (!isCapacitorNative()) {
-    window.location.assign(appUrl(path));
+    window.location.assign(appUrl(go));
     return;
   }
 
-  if (typeof sessionStorage !== "undefined") {
-    sessionStorage.setItem(TOP_OAUTH_BROWSER_PENDING, "1");
-  }
-
-  const origin = nativeProductionAppOrigin();
-  const jsonUrl = `${origin}${buildWorkOSGoJsonPath(path)}`;
-
-  let res;
-  try {
-    res = await fetch(jsonUrl, {
-      method: "GET",
-      credentials: "include",
-      cache: "no-store",
-      headers: { Accept: "application/json" },
-    });
-  } catch {
-    if (typeof sessionStorage !== "undefined") {
-      sessionStorage.removeItem(TOP_OAUTH_BROWSER_PENDING);
-      sessionStorage.removeItem(TOP_OAUTH_STATE_KEY);
-    }
-    throw new Error("Could not reach the sign-in service. Check your connection and try again.");
-  }
-
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok || !data?.ok) {
-    if (typeof sessionStorage !== "undefined") {
-      sessionStorage.removeItem(TOP_OAUTH_BROWSER_PENDING);
-      sessionStorage.removeItem(TOP_OAUTH_STATE_KEY);
-    }
-    const msg = String(data?.message || "").trim();
-    throw new Error(msg || "Could not start secure sign in.");
-  }
-
-  const stateKey = String(data.stateKey || data.key || "").trim();
-  if (!stateKey) {
-    if (typeof sessionStorage !== "undefined") {
-      sessionStorage.removeItem(TOP_OAUTH_BROWSER_PENDING);
-    }
-    throw new Error("Could not start secure sign in.");
-  }
-
-  if (typeof sessionStorage !== "undefined") {
-    sessionStorage.setItem(TOP_OAUTH_STATE_KEY, stateKey);
-  }
-
-  const browserStart = String(data.browserStart || "").trim();
-  const browserUrl = browserStart.startsWith("http")
-    ? browserStart
-    : browserStart
-      ? `${origin}${browserStart.startsWith("/") ? browserStart : `/${browserStart}`}`
-      : `${origin}/auth/workos-browser-start?key=${encodeURIComponent(stateKey)}`;
-
-  await Browser.open({
-    url: browserUrl,
-    presentationStyle: "fullscreen",
-    toolbarColor: "#101814",
-  });
+  clearMobileOAuthHandoffState();
+  window.location.assign(`${nativeProductionAppOrigin()}${go}`);
 }

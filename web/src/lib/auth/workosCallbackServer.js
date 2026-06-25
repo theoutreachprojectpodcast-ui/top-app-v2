@@ -1,5 +1,16 @@
-import { MOBILE_OAUTH_HOME_PATH } from "@/lib/runtime/appUrls";
-import { MOBILE_POST_LOGIN_PATH } from "@/lib/runtime/appUrls";
+import { MOBILE_OAUTH_HOME_PATH, MOBILE_POST_LOGIN_PATH } from "@/lib/runtime/appUrls";
+
+/** Append `oauth=1` so `MobileOAuthSessionResume` refreshes session after native OAuth. */
+export function withMobileOAuthReturnFlag(pathAndQuery) {
+  const raw = String(pathAndQuery || "/").trim() || "/";
+  if (/[?&]oauth=1(?:&|$)/.test(raw)) return raw;
+  const q = raw.indexOf("?");
+  const pathname = q === -1 ? raw : raw.slice(0, q);
+  const params = new URLSearchParams(q === -1 ? "" : raw.slice(q + 1));
+  params.set("oauth", "1");
+  const qs = params.toString();
+  return qs ? `${pathname}?${qs}` : `${pathname}?oauth=1`;
+}
 
 function isCapacitorUserAgent(ua) {
   const agent = String(ua || "");
@@ -15,11 +26,12 @@ export function resolveMobileAppPostAuthPath(returnPathname, userAgent, startedI
   const path = String(returnPathname || "").trim() || "/";
   const inApp = isCapacitorUserAgent(userAgent) || startedInNativeShell;
   if (!inApp) return path;
-  if (path.startsWith("/onboarding")) return path;
-  if (path.startsWith("/mobile/access") || path.startsWith("/access")) return path;
-  if (path === MOBILE_POST_LOGIN_PATH || path.startsWith("/mobile/auth/complete")) {
-    return MOBILE_OAUTH_HOME_PATH;
-  }
-  if (path.startsWith("/mobile")) return path;
-  return MOBILE_OAUTH_HOME_PATH;
+  let resolved = path;
+  if (path.startsWith("/onboarding")) resolved = path;
+  else if (path.startsWith("/mobile/access") || path.startsWith("/access")) resolved = path;
+  else if (path === MOBILE_POST_LOGIN_PATH || path.startsWith("/mobile/auth/complete")) {
+    resolved = MOBILE_OAUTH_HOME_PATH;
+  } else if (path.startsWith("/mobile")) resolved = path;
+  else resolved = MOBILE_OAUTH_HOME_PATH;
+  return withMobileOAuthReturnFlag(resolved);
 }

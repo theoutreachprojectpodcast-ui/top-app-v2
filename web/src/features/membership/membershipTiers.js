@@ -2,13 +2,13 @@
  * Membership domain — tier definitions for UI and billing/entitlements.
  * Storage: profile.membershipStatus uses normalized keys from normalizeMembershipTierKey().
  *
- * User billing offers Support Annual ($99/yr) and Pro ($5.99/yr) only.
+ * User billing offers Support Membership ($0.99/yr) and Pro ($5.99/yr) only.
  * Legacy `access` tier remains in DB for existing subscribers.
  */
 
 /** Advanced optional tier — Stripe `STRIPE_PRICE_SUPPORT_YEARLY` (fallback: monthly / legacy access yearly). */
-export const SUPPORT_MEMBERSHIP_DISPLAY_NAME = "Support Annual";
-export const SUPPORT_MEMBERSHIP_PRICE_LABEL = "$99/yr";
+export const SUPPORT_MEMBERSHIP_DISPLAY_NAME = "Support Membership";
+export const SUPPORT_MEMBERSHIP_PRICE_LABEL = "$0.99/yr";
 
 /** Pro tier — Stripe `STRIPE_PRICE_PRO_YEARLY` (fallback: monthly). Stored as `member` in DB. */
 export const PRO_MEMBERSHIP_DISPLAY_NAME = "Pro Membership";
@@ -36,10 +36,10 @@ export const MEMBERSHIP_TIER_DEFINITIONS = [
     label: "No membership",
     shortLabel: "Free",
     benefits: [
-      "Browse public previews until you activate Support Membership",
+      "Sign in and choose Support or Pro to access the platform",
     ],
     isMember: false,
-    hint: "Support Annual ($99/year) unlocks the full platform.",
+    hint: "Support Membership ($0.99/year) unlocks the nonprofit directory and saved organizations.",
   },
   {
     id: MEMBERSHIP_TIER_KEYS.SUPPORT,
@@ -47,14 +47,12 @@ export const MEMBERSHIP_TIER_DEFINITIONS = [
     shortLabel: "Support",
     priceLabel: SUPPORT_MEMBERSHIP_PRICE_LABEL,
     benefits: [
-      "User account access and profile creation",
-      "Trusted Resources and nonprofit directory",
-      "Basic community viewing and podcast browsing",
-      "Save and favorite supported content",
-      "Basic platform participation",
+      "Nonprofit directory search and exploration",
+      "Save favorite nonprofits to your profile",
+      "Upgrade anytime to unlock community, podcast, and trusted resources",
     ],
     isMember: false,
-    hint: "Entry-level paid membership — billed annually at $99/year.",
+    hint: "Entry-level paid membership — billed annually at $0.99/year.",
   },
   {
     id: MEMBERSHIP_TIER_KEYS.MEMBER,
@@ -63,10 +61,10 @@ export const MEMBERSHIP_TIER_DEFINITIONS = [
     priceLabel: PRO_MEMBERSHIP_PRICE_LABEL,
     benefits: [
       "Everything in Support Membership",
-      "Full community participation and story submission",
-      "Enhanced community interactions",
-      "Advanced podcast and premium resource tools",
-      "Priority access to future Pro-exclusive features",
+      "Create and submit community posts",
+      "Premium podcast content",
+      "Trusted resource discounts and partner offers",
+      "All current and future Pro-only features",
     ],
     isMember: true,
     hint: "Premium membership — billed annually at $5.99/year.",

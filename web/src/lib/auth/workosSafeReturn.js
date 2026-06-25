@@ -1,5 +1,6 @@
 import { appBaseUrl } from "@/lib/billing/stripeConfig";
 import { adminBaseUrl, adminHostnameFromEnv, hasDedicatedAdminHost } from "@/lib/runtime/deploymentHosts";
+import { sanitizeAuthReturnPath } from "@/lib/auth/authReturnPath";
 
 /**
  * WorkOS `returnTo` after hosted auth: same-origin path, or absolute URL only when it targets
@@ -39,7 +40,7 @@ export function safeWorkOSReturnTarget(raw, fallback = "/") {
  * @param {string} fallback
  */
 export function resolvePostAuthReturnTarget(raw, fallback = "/") {
-  const path = safeWorkOSReturnTarget(raw, fallback);
+  const path = sanitizeAuthReturnPath(safeWorkOSReturnTarget(raw, fallback), fallback);
   if (path.startsWith("http")) return path;
   if (!hasDedicatedAdminHost() || !path.startsWith("/admin")) {
     return path;

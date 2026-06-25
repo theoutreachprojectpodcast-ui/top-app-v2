@@ -32,9 +32,8 @@ export function readNavAuthCache() {
 export function writeNavAuthCache(authenticated, workos, extra = {}) {
   if (typeof sessionStorage === "undefined") return;
   try {
-    const prev = readNavAuthCache();
     const hasFreeAccess =
-      extra.hasFreeAccess !== undefined ? !!extra.hasFreeAccess : !!(prev?.hasFreeAccess && authenticated);
+      extra.hasFreeAccess !== undefined ? !!extra.hasFreeAccess : false;
     sessionStorage.setItem(
       TOP_NAV_AUTH_CACHE_KEY,
       JSON.stringify({

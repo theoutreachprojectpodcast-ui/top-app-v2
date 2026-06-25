@@ -2,6 +2,7 @@ import { authFailureJson, resolveWorkOSRouteUser } from "@/lib/auth/workosRouteA
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
 import { resolveSavedOrganizationDirectoryRows } from "@/lib/savedOrganizations/resolveSavedOrganizations";
+import { requireMembershipApi } from "@/lib/membership/membershipRouteGuard";
 
 const SAVED_TABLE = process.env.NEXT_PUBLIC_SAVED_ORG_TABLE || "top_app_saved_org_eins";
 
@@ -25,6 +26,8 @@ export async function GET() {
   if (!admin) {
     return Response.json({ rows: [] });
   }
+  const membership = await requireMembershipApi(admin, "save_organizations");
+  if (!membership.ok) return membership.response;
   const { data, error } = await admin
     .from(SAVED_TABLE)
     .select("ein,sort_order")

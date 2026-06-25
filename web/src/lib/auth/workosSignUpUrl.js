@@ -7,7 +7,7 @@ import {
 } from "@/lib/auth/workosAuthorizationRedirect";
 import { workOSAuthKitAuthorizeOptions } from "@/lib/auth/workosOrganizationScope";
 import { shouldMarkOAuthNativeShell } from "@/lib/auth/workosOAuthShell";
-function readReturnTo(searchParams, fallback = "/onboarding") {
+function readReturnTo(searchParams, fallback = "/access") {
   const raw =
     searchParams.get("returnTo") ||
     searchParams.get("return_pathname") ||
@@ -24,7 +24,7 @@ function readReturnTo(searchParams, fallback = "/onboarding") {
  */
 export async function resolveWorkOSSignUpBundleFromSearchParams(
   searchParams,
-  fallbackReturn = "/onboarding",
+  fallbackReturn = "/access",
   request,
 ) {
   if (!isWorkOSConfigured()) {
@@ -64,5 +64,5 @@ export async function resolveWorkOSSignUpFromSearchParams(searchParams, fallback
  * @returns {Promise<string>}
  */
 export async function resolveWorkOSSignUpUrl(request) {
-  return resolveWorkOSSignUpFromSearchParams(request.nextUrl.searchParams, "/onboarding", request);
+  return resolveWorkOSSignUpFromSearchParams(request.nextUrl.searchParams, "/access", request);
 }

@@ -1,5 +1,4 @@
 import { workosAuthBrandedHtmlPage } from "@/lib/auth/workosAuthBrand";
-
 /** Deep link WorkOS uses to return OAuth results into the Capacitor shell (register in WorkOS dashboard). */
 export const WORKOS_MOBILE_CALLBACK_SCHEME = "com.theoutreachproject.theoutreachproject://callback";
 
@@ -78,9 +77,8 @@ export function parseOAuthBrowserDoneDeepLink(url) {
 }
 
 /**
- * OAuth finished in Capacitor's in-app browser — show a static wait page only.
- * Do not navigate to custom URL schemes here; iOS Safari shows "server cannot be found"
- * for scheme URLs. The main WebView polls `/api/mobile/oauth-handoff` and closes this sheet.
+ * OAuth finished in Capacitor's legacy in-app browser — static wait page only.
+ * Native sign-in now completes in the main WebView; this page is not shown in the App Store flow.
  * @param {string} [_stateKey] retained for call-site compatibility
  */
 export function mobileOAuthBrowserDoneHtml(_stateKey = "") {
@@ -88,8 +86,7 @@ export function mobileOAuthBrowserDoneHtml(_stateKey = "") {
     title: "Returning to app — The Outreach Project",
     heading: "Sign in complete",
     showSpinner: true,
-    bodyHtml: `<p class="topAuth__lead">Returning to The Outreach Project…</p>
-      <p class="topAuth__lead">This window will close automatically.</p>`,
+    bodyHtml: `<p class="topAuth__lead">Returning to The Outreach Project…</p>`,
   });
 }
 

@@ -12,6 +12,7 @@ import { isModeratorUser } from "@/features/community/api/communityApi";
 import { useCommunityFeed } from "@/features/community/hooks/useCommunityFeed";
 import { readRememberDevicePref } from "@/lib/auth/lastUsedEmail";
 import { workosSignUpHref } from "@/lib/auth/workosReturnTo";
+import { shouldUseHostedWorkOSAuth } from "@/lib/auth/hostedWorkOSAuth";
 import {
   openWebLogin,
   openWebSignup,
@@ -50,13 +51,14 @@ export default function CommunityPage({
   });
   const canModerate = isAuthenticated && isModeratorUser({ userId, profile });
   const workosCommunitySignUpHref = workosSignUpHref("/community", { rememberDevice: readRememberDevicePref() });
+  const hostedAuth = shouldUseHostedWorkOSAuth(authBackend);
 
   function handleCreateAccount() {
-    if (requiresExternalWebAccountFlow() && authBackend.workos) {
+    if (requiresExternalWebAccountFlow() && hostedAuth) {
       void openWebSignup({ returnPath: "/membership/success" });
       return;
     }
-    if (authBackend.workos) {
+    if (hostedAuth) {
       window.location.assign(workosCommunitySignUpHref);
       return;
     }
@@ -92,7 +94,7 @@ export default function CommunityPage({
         </p>
         {!isAuthenticated ? (
           <div className="row wrap">
-            {authBackend.workos ? (
+            {hostedAuth ? (
               <>
                 <button className="btnPrimary" type="button" onClick={handleCreateAccount}>
                   Create account

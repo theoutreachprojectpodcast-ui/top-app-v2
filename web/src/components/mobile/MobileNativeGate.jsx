@@ -4,8 +4,15 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { isCapacitorNative } from "@/lib/capacitor/platform";
 import { hasMobileAppAccess } from "@/lib/membership/appAccess";
+import {
+  isMembershipExemptPath,
+  MOBILE_MEMBERSHIP_PAYWALL_PATH,
+  requiresActiveMembershipPath,
+} from "@/lib/membership/protectedRoutes";
 import { readNavAuthCache } from "@/lib/auth/navAuthCache";
 import { isOAuthInProgress } from "@/lib/auth/oauthInProgress";
+import { isInMobileOAuthResumeGrace } from "@/lib/auth/mobileOAuthReturn";
+import { useAuthSession } from "@/components/auth/AuthSessionProvider";
 import { useProfileData } from "@/features/profile/ProfileDataProvider";
 
 const PROFILE_PENDING_MAX_MS = 8_000;
@@ -71,8 +78,6 @@ function resolveNativeAppAccess({
   sessionHint,
   profilePendingTimedOut,
 }) {
-  const cache = readNavAuthCache();
-  if (cache?.hasFreeAccess) return "granted";
   if (opts.isPlatformAdmin || opts.isPrivilegedStaff) return "granted";
   if (hasMobileAppAccess(profile, opts)) return "granted";
   const signedIn = isAuthenticated || sessionHint;
@@ -81,12 +86,10 @@ function resolveNativeAppAccess({
 }
 
 /**
- * Where signed-in users without App Access should land for membership selection.
- * First-time accounts use full onboarding; returning users use the mobile paywall.
+ * Signed-in users without membership always land on the mobile paywall (no free onboarding bypass).
  */
-function nativeMembershipPath(profile) {
-  if (!profile?.onboardingCompleted) return "/onboarding";
-  return "/mobile/access";
+function nativeMembershipPath() {
+  return MOBILE_MEMBERSHIP_PAYWALL_PATH;
 }
 
 /**
@@ -99,6 +102,7 @@ export default function MobileNativeGate() {
   const searchParams = useSearchParams();
   const navQuery = searchParams?.get("nav") ?? "";
   const { isAuthenticated, loadingProfile, profile, entitlements } = useProfileData();
+  const { loading: authLoading } = useAuthSession();
   const lastRedirectRef = useRef("");
   const [profilePendingTimedOut, setProfilePendingTimedOut] = useState(false);
 
@@ -119,10 +123,23 @@ export default function MobileNativeGate() {
 
   useEffect(() => {
     if (!isCapacitorNative()) return;
-    if (oauthBusy) return;
+    if (oauthBusy || isInMobileOAuthResumeGrace()) return;
 
     const path = pathname || "/";
-    const membershipTarget = nativeMembershipPath(profile);
+    const membershipTarget = nativeMembershipPath();
+
+    if (loadingProfile || authLoading) {
+      if (!sessionHint) return;
+    }
+
+    if (guest && requiresActiveMembershipPath(path) && !isMembershipExemptPath(path)) {
+      const target = `/sign-in?returnTo=${encodeURIComponent(path)}`;
+      if (lastRedirectRef.current !== target) {
+        lastRedirectRef.current = target;
+        router.replace(target);
+      }
+      return;
+    }
 
     const loginAlias = NATIVE_LOGIN_ALIASES[path];
     if (loginAlias) {
@@ -241,6 +258,7 @@ export default function MobileNativeGate() {
     searchParams,
     isAuthenticated,
     loadingProfile,
+    authLoading,
     guest,
     sessionHint,
     profilePendingTimedOut,

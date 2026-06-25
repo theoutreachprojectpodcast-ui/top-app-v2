@@ -12,13 +12,14 @@ import {
   TOP_OAUTH_BROWSER_PENDING,
   TOP_OAUTH_HANDOFF_ERROR,
   TOP_OAUTH_STATE_KEY,
+  TOP_OAUTH_STATE_LOCAL_KEY,
 } from "@/lib/auth/oauthMobileHandoff";
 import { parseOAuthBrowserDoneDeepLink } from "@/lib/auth/workosMobileRedirect";
 import { parseMobileDeepLinkUrl } from "@/lib/capacitor/mobileDeepLinks";
 import { TOP_OAUTH_RETURN_KEY } from "@/components/capacitor/MobileOAuthSessionResume";
 
 const POLL_MS = 200;
-const POLL_MAX_MS = 30_000;
+const POLL_MAX_MS = 60_000;
 const BROWSER_DISMISS_RETRIES_MS = [0, 100, 250, 500, 1000, 1800];
 
 async function closeOAuthBrowserSheet() {
@@ -39,7 +40,21 @@ function resolveOAuthPollKey() {
   if (typeof sessionStorage === "undefined") return "";
   const fromSession = String(sessionStorage.getItem(TOP_OAUTH_STATE_KEY) || "").trim();
   if (fromSession) return fromSession;
-  return readOAuthPollKeyFromDocumentCookie();
+  const fromCookie = readOAuthPollKeyFromDocumentCookie();
+  if (fromCookie) return fromCookie;
+  if (typeof localStorage !== "undefined") {
+    return String(localStorage.getItem(TOP_OAUTH_STATE_LOCAL_KEY) || "").trim();
+  }
+  return "";
+}
+
+function hasOAuthHandoffInProgress() {
+  const key = resolveOAuthPollKey();
+  if (!key) return false;
+  if (typeof sessionStorage !== "undefined" && sessionStorage.getItem(TOP_OAUTH_BROWSER_PENDING) === "1") {
+    return true;
+  }
+  return typeof localStorage !== "undefined" && !!localStorage.getItem(TOP_OAUTH_STATE_LOCAL_KEY);
 }
 
 function primeOAuthPollKeyFromCookie() {
@@ -62,11 +77,7 @@ async function pollOAuthPending(stateKey) {
 }
 
 function isOAuthPending() {
-  return (
-    typeof sessionStorage !== "undefined" &&
-    sessionStorage.getItem(TOP_OAUTH_BROWSER_PENDING) === "1" &&
-    !!resolveOAuthPollKey()
-  );
+  return hasOAuthHandoffInProgress();
 }
 
 function primeOAuthHandoff(stateKey) {
@@ -75,12 +86,18 @@ function primeOAuthHandoff(stateKey) {
   if (!key) return;
   sessionStorage.setItem(TOP_OAUTH_STATE_KEY, key);
   sessionStorage.setItem(TOP_OAUTH_BROWSER_PENDING, "1");
+  if (typeof localStorage !== "undefined") {
+    localStorage.setItem(TOP_OAUTH_STATE_LOCAL_KEY, key);
+  }
 }
 
 function clearOAuthHandoffFlags() {
   if (typeof sessionStorage === "undefined") return;
   sessionStorage.removeItem(TOP_OAUTH_BROWSER_PENDING);
   sessionStorage.removeItem(TOP_OAUTH_STATE_KEY);
+  if (typeof localStorage !== "undefined") {
+    localStorage.removeItem(TOP_OAUTH_STATE_LOCAL_KEY);
+  }
   clearOAuthPollKeyCookie();
 }
 
@@ -168,7 +185,7 @@ export default function MobileOAuthBrowserFinish() {
 
       const stateKey = String(forcedKey || resolveOAuthPollKey() || "").trim();
       if (!stateKey) return false;
-      if (!forcedKey && !isOAuthPending()) {
+      if (!forcedKey && !hasOAuthHandoffInProgress()) {
         stopPolling();
         return false;
       }
@@ -216,11 +233,17 @@ export default function MobileOAuthBrowserFinish() {
     };
 
     const tryFinishAfterBrowserDismiss = async () => {
+      const pollKey = resolveOAuthPollKey();
+      if (!pollKey && !hasOAuthHandoffInProgress()) return;
       for (const delay of BROWSER_DISMISS_RETRIES_MS) {
         if (delay > 0) await new Promise((resolve) => setTimeout(resolve, delay));
-        if (await tryFinish()) return;
+        if (await tryFinish(pollKey)) return;
       }
-      if (!claimedRef.current) oauthCancelSilently();
+      if (!claimedRef.current && hasOAuthHandoffInProgress()) {
+        oauthCancelWithError(
+          "Sign-in timed out before the app could finish. Tap Sign in to try again.",
+        );
+      }
     };
 
     primeOAuthPollKeyFromCookie();

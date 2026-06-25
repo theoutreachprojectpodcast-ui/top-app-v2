@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { Roboto } from "next/font/google";
 import ColorSchemeRoot from "@/components/app/ColorSchemeRoot";
 import CapacitorNativeShell from "@/components/capacitor/CapacitorNativeShell";
+import MobileCapacitorSplashDismiss from "@/components/capacitor/MobileCapacitorSplashDismiss";
 import CapacitorRemoteBootstrap from "@/components/capacitor/CapacitorRemoteBootstrap";
 import MobileBootLoader from "@/components/capacitor/MobileBootLoader";
 import MobileProductionHealthGate from "@/components/capacitor/MobileProductionHealthGate";
@@ -10,11 +11,14 @@ import MobileAccountReturnBridge from "@/components/capacitor/MobileAccountRetur
 import MobileOAuthBrowserFinish from "@/components/capacitor/MobileOAuthBrowserFinish";
 import MobileOAuthDeepLink from "@/components/capacitor/MobileOAuthDeepLink";
 import MobileOAuthSessionResume from "@/components/capacitor/MobileOAuthSessionResume";
+import MobileOAuthCallbackStallRecovery from "@/components/capacitor/MobileOAuthCallbackStallRecovery";
+import MobileOAuthStaleFlagCleanup from "@/components/capacitor/MobileOAuthStaleFlagCleanup";
 import MobileOAuthHandoffError from "@/components/capacitor/MobileOAuthHandoffError";
 import MobileOAuthProgressOverlay from "@/components/capacitor/MobileOAuthProgressOverlay";
 import ExternalBrowserSheetHost from "@/components/capacitor/ExternalBrowserSheetHost";
 import MobileNativeGate from "@/components/mobile/MobileNativeGate";
 import WebAppAccessGate from "@/components/membership/WebAppAccessGate";
+import ProMembershipGate from "@/components/membership/ProMembershipGate";
 import AuthSessionProvider from "@/components/auth/AuthSessionProvider";
 import { ProfileDataProvider } from "@/features/profile/ProfileDataProvider";
 import { ProfileEditProvider } from "@/features/profile/ProfileEditProvider";
@@ -94,8 +98,9 @@ html[data-capacitor-native], html[data-capacitor-native] body {
         />
       </head>
       <body suppressHydrationWarning>
-        <CapacitorRemoteBootstrap />
-        <CapacitorNativeShell />
+                <CapacitorRemoteBootstrap />
+                <CapacitorNativeShell />
+                <MobileCapacitorSplashDismiss />
         <ColorSchemeRoot>
           <AuthSessionProvider>
             <ProfileDataProvider>
@@ -108,11 +113,14 @@ html[data-capacitor-native], html[data-capacitor-native] body {
                   <MobileOAuthBrowserFinish />
                   <MobileOAuthDeepLink />
                   <MobileOAuthSessionResume />
+                  <MobileOAuthCallbackStallRecovery />
+                  <MobileOAuthStaleFlagCleanup />
                   <MobileOAuthHandoffError />
                   <MobileAccountReturnBridge />
                   <MobileNativeGate />
                 </Suspense>
                 <WebAppAccessGate />
+                <ProMembershipGate />
                 {children}
               </ProfileEditProvider>
             </ProfileDataProvider>

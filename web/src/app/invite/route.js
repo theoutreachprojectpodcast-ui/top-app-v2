@@ -25,8 +25,8 @@ export async function GET(request) {
   }
 
   const returnTo = safeWorkOSReturnTarget(
-    request.nextUrl.searchParams.get("returnTo") || "/onboarding",
-    "/onboarding",
+    request.nextUrl.searchParams.get("returnTo") || "/access",
+    "/access",
   );
 
   try {

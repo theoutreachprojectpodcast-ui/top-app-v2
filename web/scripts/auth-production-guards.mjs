@@ -51,4 +51,25 @@ assert.match(
   "JSON callback must use x-top-callback-fetch header (not Accept sniffing)",
 );
 
+const hostedAuth = await read("src/lib/auth/hostedWorkOSAuth.js");
+assert.match(
+  hostedAuth,
+  /if \(!isDemoModeEnabled\(\)\) return true/,
+  "Production must always prefer hosted WorkOS auth (never demo fallback)",
+);
+
+const webGate = await read("src/components/membership/WebAppAccessGate.jsx");
+assert.match(
+  webGate,
+  /loadingProfile \|\| authLoading/,
+  "Web gate must wait for session hydration before redirecting guests to sign-in",
+);
+
+const handoff = await read("src/components/auth/WorkOSAuthHandoffClient.jsx");
+assert.match(
+  handoff,
+  /sanitizeAuthReturnPath/,
+  "WorkOS handoff must sanitize returnTo to prevent sign-in loops",
+);
+
 console.log("[verify:auth-freeze] OK — production web auth invariants intact");

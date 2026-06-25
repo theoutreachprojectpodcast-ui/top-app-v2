@@ -2,7 +2,8 @@ import { createHash } from "crypto";
 import { sealData } from "iron-session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { resolveOauthHandoffTable } from "@/lib/supabase/tableNames";
-import { MOBILE_POST_AUTH_HOME } from "@/lib/auth/oauthMobileHandoff";
+import { MOBILE_POST_AUTH_HOME, TOP_OAUTH_POLL_KEY_COOKIE } from "@/lib/auth/oauthMobileHandoff";
+import { oauthStateFromAuthorizeUrl } from "@/lib/auth/workosAuthorizationRedirect";
 
 const HANDOFF_TTL_MS = 10 * 60 * 1000;
 const SESSION_PLACEHOLDER = "__session__";
@@ -17,6 +18,21 @@ const HANDOFF_SELECT = `${HANDOFF_COOKIE_COLUMN}, redirect_to, expires_at`;
 /** @param {string} state */
 export function hashOAuthState(state) {
   return createHash("sha256").update(String(state)).digest("hex");
+}
+
+/**
+ * Poll key for `/api/mobile/oauth-handoff` — must match the WebView `TOP_OAUTH_STATE_KEY`.
+ * The poll-key cookie from `/auth/workos-browser-start` is authoritative; URL `state` is
+ * mangled by `URLSearchParams` (`+` → space) when sealed state is returned on the callback.
+ *
+ * @param {Request} request
+ * @param {string} callbackUrl
+ */
+export function resolveOAuthHandoffPollKey(request, callbackUrl) {
+  const fromCookie = String(request.cookies.get(TOP_OAUTH_POLL_KEY_COOKIE)?.value || "").trim();
+  if (fromCookie) return fromCookie;
+  const raw = oauthStateFromAuthorizeUrl(callbackUrl) || "";
+  return raw ? hashOAuthState(raw) : "";
 }
 
 function handoffPassword() {

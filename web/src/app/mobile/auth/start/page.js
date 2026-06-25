@@ -10,7 +10,7 @@ export const metadata = {
 export default async function MobileAuthStartPage({ searchParams }) {
   const params = await searchParams;
   const mode = params?.mode === "signup" ? "signup" : "signin";
-  const defaultReturn = mode === "signup" ? "/onboarding" : MOBILE_POST_LOGIN_PATH;
+  const defaultReturn = mode === "signup" ? "/mobile/access" : MOBILE_POST_LOGIN_PATH;
   const returnTo =
     typeof params?.returnTo === "string" ? params.returnTo : defaultReturn;
   const goPath = workosGoUrl({

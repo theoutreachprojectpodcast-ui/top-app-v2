@@ -138,6 +138,13 @@ export async function POST(request) {
   };
 
   try {
+    console.info("[top] Stripe checkout create", {
+      workosUserId: user.id,
+      tier,
+      priceId,
+      returnPath,
+      profileId: profileId || null,
+    });
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       customer: customerId || undefined,
@@ -153,6 +160,11 @@ export async function POST(request) {
     });
 
     if (session.url) {
+      console.info("[top] Stripe checkout session", {
+        workosUserId: user.id,
+        tier,
+        sessionId: session.id,
+      });
       return Response.json({ url: session.url });
     }
     return Response.json({ error: "no_checkout_url" }, { status: 500 });

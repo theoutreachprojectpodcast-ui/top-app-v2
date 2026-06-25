@@ -70,7 +70,7 @@ export async function workOSAuthBridgePost(request, options = {}) {
   const modeFromForm = String(formData.get("_mode") || "").trim();
   const mode =
     options.mode === "signup" || modeFromForm === "signup" ? "signup" : "signin";
-  const defaultFallback = mode === "signup" ? "/onboarding" : "/";
+  const defaultFallback = mode === "signup" ? "/access" : "/";
   const fallbackReturn = String(formData.get("_fallbackReturn") || defaultFallback).trim() || defaultFallback;
   const backHref = String(formData.get("_backHref") || (fallbackReturn.startsWith("/mobile") ? "/mobile" : "/")).trim();
   const params = paramsFromFormData(formData);
