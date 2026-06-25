@@ -28,7 +28,7 @@ export default function AppAccessPaywall({
   checkoutReturnPath,
   postAccessPath,
   backHref = "/",
-  backLabel = "Back",
+  backLabel = "Not now",
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -161,6 +161,18 @@ export default function AppAccessPaywall({
     }
   }
 
+  function handleDecline() {
+    const dest = sanitizeAuthReturnPath(backHref, "/");
+    const cache = readNavAuthCache();
+    const sessionHint = !!cache?.authenticated;
+    const signedIn = isAuthenticated || authAuthenticated || sessionHint;
+    if (signedIn) {
+      window.location.assign(`/sign-out?returnTo=${encodeURIComponent(dest)}`);
+      return;
+    }
+    router.push(dest);
+  }
+
   const cache = readNavAuthCache();
   const sessionHint = !!cache?.authenticated;
   const signedInHint = isAuthenticated || authAuthenticated || sessionHint;
@@ -195,6 +207,11 @@ export default function AppAccessPaywall({
 
   return (
     <div className="mobileSplashPage mobileSplashPage--access">
+      <div className="mobileSplashPage__topBar">
+        <button type="button" className="mobileSplashPage__backBtn" onClick={handleDecline}>
+          ← {backLabel}
+        </button>
+      </div>
       <div className="mobileSplashPage__inner">
         <div className="mobileSplashPage__brand mobileSplashPage__brand--small">
           <BrandMark variant="mark" size="splash" alt="The Outreach Project" />
@@ -260,7 +277,7 @@ export default function AppAccessPaywall({
           >
             {busyTier === "member" ? "Redirecting to checkout…" : `${PRO_MEMBERSHIP_DISPLAY_NAME} — ${PRO_MEMBERSHIP_PRICE_LABEL}`}
           </button>
-          <button type="button" className="btnSoft mobileSplashPage__btn" onClick={() => router.push(backHref)}>
+          <button type="button" className="btnSoft mobileSplashPage__btn" onClick={handleDecline}>
             {backLabel}
           </button>
         </div>

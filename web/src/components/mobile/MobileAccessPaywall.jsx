@@ -10,7 +10,7 @@ function MobileAccessPaywallInner() {
       checkoutReturnPath="/mobile/access"
       postAccessPath="/"
       backHref="/"
-      backLabel="Back"
+      backLabel="Not now"
     />
   );
 }

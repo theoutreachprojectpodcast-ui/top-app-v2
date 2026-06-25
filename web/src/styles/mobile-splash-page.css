@@ -61,10 +61,39 @@ html:not(.dark) .mobileRouteShell::before {
 .mobileSplashPage {
   flex: 1;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
   justify-content: center;
   width: 100%;
   min-width: 0;
+}
+
+.mobileSplashPage__topBar {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto var(--ds-space-2, 8px);
+  padding: 0 clamp(16px, 4vw, 24px);
+  box-sizing: border-box;
+}
+
+.mobileSplashPage__backBtn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary, #b8c4bc);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: var(--ds-space-2, 8px) 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.mobileSplashPage__backBtn:hover,
+.mobileSplashPage__backBtn:focus-visible {
+  color: var(--color-text-primary, #f8fcfa);
+  outline: 2px solid var(--color-focus-ring, #3d9e5a);
+  outline-offset: 2px;
 }
 
 .mobileSplashPage__inner {

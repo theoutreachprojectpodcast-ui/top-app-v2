@@ -10,8 +10,8 @@ function WebAccessPaywallInner() {
     <AppAccessPaywall
       checkoutReturnPath="/access"
       postAccessPath="/"
-      backHref="/login?returnTo=%2Faccess"
-      backLabel="Sign in"
+      backHref="/"
+      backLabel="Not now"
     />
   );
 }
