@@ -16,7 +16,12 @@
     "test:membership-pricing": "node scripts/test-membership-pricing.mjs",
     "billing:remediation:scan": "node scripts/billing-remediation.mjs --scan",
     "billing:remediation:apply": "node scripts/billing-remediation.mjs --apply-refunds --send-emails",
+    "billing:remediation:email": "node scripts/send-billing-remediation-emails.mjs --env-file=.env.vercel.production",
     "stripe:create-support-yearly": "node scripts/create-support-yearly-price.mjs",
+    "apply:billing-remediation-log": "node scripts/apply-billing-remediation-log.mjs",
+    "apply:billing-remediation-log:apply": "node scripts/apply-billing-remediation-log.mjs --apply",
+    "seed:billing-remediation-audit": "node scripts/seed-billing-remediation-audit.mjs",
+    "setup:qa-support-yearly": "node scripts/setup-qa-support-yearly-price.mjs",
     "smoke:qa:http": "node scripts/qa-http-smoke.mjs",
     "smoke:production:http": "node scripts/production-http-smoke.mjs",
     "apply:production:schema": "node scripts/apply-top-production-align.mjs",
@@ -59,7 +64,6 @@
     "mobile:preflight": "node scripts/mobile-preflight.mjs",
     "build:app-icon": "node scripts/build-app-icon.mjs",
     "mobile:assets": "capacitor-assets generate --assetPath resources --ios --android",
-    "mobile:icons": "node scripts/generate-mobile-icons.mjs",
     "mobile:splash": "node scripts/sync-native-splash.mjs",
     "validate:capacitor": "node scripts/validate-capacitor-config.mjs",
     "lint": "eslint",
@@ -118,6 +122,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
     "playwright": "^1.60.0",
+    "postgres": "^3.4.9",
     "sharp": "0.32.6",
     "tailwindcss": "^4"
   }
