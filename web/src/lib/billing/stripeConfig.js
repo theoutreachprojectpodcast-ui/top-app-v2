@@ -2,8 +2,7 @@
  * Stripe configuration — env vars only, no hardcoded keys or price IDs.
  *
  * User memberships: Support Membership ($0.99/yr) + Pro ($5.99/yr).
- * Legacy: STRIPE_PRICE_ACCESS_YEARLY for existing access subscribers.
- * Sponsor subscriptions use STRIPE_PRICE_SPONSOR_MONTHLY (Sponsors page only).
+ * Legacy STRIPE_PRICE_ACCESS_YEARLY is for existing subscribers only — never used for new Support checkout.
  */
 
 export function stripeSecretConfigured() {
@@ -14,18 +13,16 @@ export function stripePublishableConfigured() {
   return !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.trim();
 }
 
-/** Support tier yearly price — prefer yearly/annual env names, then monthly, then legacy access yearly. */
+/** Support tier yearly price — STRIPE_PRICE_SUPPORT_YEARLY / ANNUAL only (no legacy or monthly fallback). */
 export function supportSubscriptionPriceId() {
   return (
     process.env.STRIPE_PRICE_SUPPORT_YEARLY?.trim() ||
     process.env.STRIPE_PRICE_SUPPORT_ANNUAL?.trim() ||
-    process.env.STRIPE_PRICE_SUPPORT_MONTHLY?.trim() ||
-    process.env.STRIPE_PRICE_ACCESS_YEARLY?.trim() ||
     ""
   );
 }
 
-/** Pro / “member” tier yearly price — prefer STRIPE_PRICE_PRO_YEARLY, else monthly / legacy member monthly. */
+/** Pro tier yearly price — prefer STRIPE_PRICE_PRO_YEARLY. */
 export function proSubscriptionPriceId() {
   return (
     process.env.STRIPE_PRICE_PRO_YEARLY?.trim() ||
@@ -45,7 +42,7 @@ export function stripeAccessYearlyMissingEnvKeys() {
   const missing = [];
   if (!stripeSecretConfigured()) missing.push("STRIPE_SECRET_KEY");
   if (!supportSubscriptionPriceId()) {
-    missing.push("STRIPE_PRICE_SUPPORT_YEARLY (or STRIPE_PRICE_SUPPORT_MONTHLY / STRIPE_PRICE_ACCESS_YEARLY)");
+    missing.push("STRIPE_PRICE_SUPPORT_YEARLY (or STRIPE_PRICE_SUPPORT_ANNUAL)");
   }
   return missing;
 }
@@ -73,7 +70,7 @@ export function stripeMemberRecurringMissingEnvKeys() {
   const missing = [];
   if (!stripeSecretConfigured()) missing.push("STRIPE_SECRET_KEY");
   if (!supportSubscriptionPriceId()) {
-    missing.push("STRIPE_PRICE_SUPPORT_YEARLY (or STRIPE_PRICE_SUPPORT_MONTHLY)");
+    missing.push("STRIPE_PRICE_SUPPORT_YEARLY (or STRIPE_PRICE_SUPPORT_ANNUAL)");
   }
   if (!proSubscriptionPriceId()) {
     missing.push("STRIPE_PRICE_PRO_YEARLY (or STRIPE_PRICE_PRO_MONTHLY / STRIPE_PRICE_MEMBER_MONTHLY)");
@@ -103,7 +100,7 @@ export function stripeWebhookConfigured() {
 
 export function priceIdForTier(tier) {
   const t = String(tier || "").toLowerCase();
-  if (t === "access") return process.env.STRIPE_PRICE_ACCESS_YEARLY?.trim() || supportSubscriptionPriceId();
+  if (t === "access") return supportSubscriptionPriceId();
   if (t === "support") return supportSubscriptionPriceId();
   if (t === "member") return proSubscriptionPriceId();
   if (t === "sponsor") return process.env.STRIPE_PRICE_SPONSOR_MONTHLY?.trim() || "";

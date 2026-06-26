@@ -39,13 +39,39 @@ export default function AppAccessPaywall({
   const [busyTier, setBusyTier] = useState("");
   const [error, setError] = useState("");
   const [checkoutPolling, setCheckoutPolling] = useState(false);
+  const [billingCapabilities, setBillingCapabilities] = useState(null);
   const checkoutPollStartedRef = useRef(0);
+
+  const supportCheckoutEnabled = billingCapabilities?.tierCheckout?.support?.enabled === true;
+  const proCheckoutEnabled = billingCapabilities?.tierCheckout?.member?.enabled === true;
+  const supportCheckoutMessage =
+    billingCapabilities?.tierCheckout?.support?.message ||
+    (billingCapabilities?.supportCheckoutDisabled
+      ? "Support Membership checkout is temporarily disabled while pricing is verified."
+      : "");
 
   const checkoutResult = searchParams.get("checkout");
 
   useEffect(() => {
     setClientReady(true);
   }, []);
+
+  useEffect(() => {
+    if (!clientReady) return undefined;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/billing/capabilities", { credentials: "include", cache: "no-store" });
+        const data = await res.json().catch(() => ({}));
+        if (!cancelled) setBillingCapabilities(data);
+      } catch {
+        if (!cancelled) setBillingCapabilities({ ok: false });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [clientReady]);
 
   useEffect(() => {
     if (!clientReady) return undefined;
@@ -147,9 +173,19 @@ export default function AppAccessPaywall({
         window.location.assign(data.url);
         return;
       }
-      if (data.error === "access_billing_not_configured" || data.error === "billing_not_configured" || data.error === "price_not_configured") {
+      if (
+        data.error === "access_billing_not_configured" ||
+        data.error === "billing_not_configured" ||
+        data.error === "price_not_configured" ||
+        data.error === "price_validation_failed" ||
+        data.error === "blocked_price_id" ||
+        data.error === "amount_mismatch" ||
+        data.error === "support_checkout_disabled" ||
+        data.error === "checkout_disabled"
+      ) {
         setError(
-          "Membership checkout is being configured in Stripe. Please try again shortly or contact support@theoutreachproject.app.",
+          data.message ||
+            "Membership checkout is temporarily unavailable while we verify billing. Please try again shortly or contact support@theoutreachproject.app.",
         );
         return;
       }
@@ -255,6 +291,11 @@ export default function AppAccessPaywall({
             Checkout was canceled. Choose a membership to continue.
           </p>
         ) : null}
+        {supportCheckoutMessage && !supportCheckoutEnabled ? (
+          <p className="mobileSplashPage__notice mobileSplashPage__notice--warn" role="status">
+            {supportCheckoutMessage}
+          </p>
+        ) : null}
         {error ? (
           <p className="mobileSplashPage__notice mobileSplashPage__notice--warn" role="alert">
             {error}
@@ -265,17 +306,27 @@ export default function AppAccessPaywall({
             type="button"
             className="btnPrimary mobileSplashPage__btn"
             onClick={() => startCheckout("support")}
-            disabled={!!busyTier}
+            disabled={!!busyTier || billingCapabilities === null || !supportCheckoutEnabled}
+            title={!supportCheckoutEnabled ? supportCheckoutMessage || "Support checkout unavailable" : undefined}
           >
-            {busyTier === "support" ? "Redirecting to checkout…" : `${SUPPORT_MEMBERSHIP_DISPLAY_NAME} — ${SUPPORT_MEMBERSHIP_PRICE_LABEL}`}
+            {busyTier === "support"
+              ? "Redirecting to checkout…"
+              : billingCapabilities === null
+                ? "Loading checkout…"
+                : `${SUPPORT_MEMBERSHIP_DISPLAY_NAME} — ${SUPPORT_MEMBERSHIP_PRICE_LABEL}`}
           </button>
           <button
             type="button"
             className="btnSoft mobileSplashPage__btn"
             onClick={() => startCheckout("member")}
-            disabled={!!busyTier}
+            disabled={!!busyTier || billingCapabilities === null || !proCheckoutEnabled}
+            title={!proCheckoutEnabled ? "Pro checkout unavailable" : undefined}
           >
-            {busyTier === "member" ? "Redirecting to checkout…" : `${PRO_MEMBERSHIP_DISPLAY_NAME} — ${PRO_MEMBERSHIP_PRICE_LABEL}`}
+            {busyTier === "member"
+              ? "Redirecting to checkout…"
+              : billingCapabilities === null
+                ? "Loading checkout…"
+                : `${PRO_MEMBERSHIP_DISPLAY_NAME} — ${PRO_MEMBERSHIP_PRICE_LABEL}`}
           </button>
           <button type="button" className="btnSoft mobileSplashPage__btn" onClick={handleDecline}>
             {backLabel}

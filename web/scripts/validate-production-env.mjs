@@ -76,6 +76,18 @@ if (vercelProduction) {
   if (!hasWebhook) {
     missing.push("STRIPE_WEBHOOK_LIVE_SECRET or STRIPE_WEBHOOK_SECRET");
   }
+  const supportPrice =
+    String(process.env.STRIPE_PRICE_SUPPORT_YEARLY || "").trim() ||
+    String(process.env.STRIPE_PRICE_SUPPORT_ANNUAL || "").trim();
+  if (!supportPrice) {
+    missing.push("STRIPE_PRICE_SUPPORT_YEARLY");
+  }
+  if (supportPrice === "price_1TlqQ9CiwOqAGcUDuZkKPlJ2") {
+    console.error(
+      "[validate-production-env] STRIPE_PRICE_SUPPORT_YEARLY points at blocked $99/year price — update before deploy.",
+    );
+    process.exit(1);
+  }
   if (adminEmailLoginProd) {
     console.warn(
       "[validate-production-env] WARNING: ENABLE_ADMIN_EMAIL_LOGIN=1 on production — prefer WorkOS-only admin auth.",

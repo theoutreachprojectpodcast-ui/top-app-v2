@@ -7,11 +7,16 @@
     "node": ">=20.20.0"
   },
   "scripts": {
-    "prebuild": "node scripts/sync-public-assets.mjs && node scripts/sync-pwa-icons.mjs && node scripts/validate-production-env.mjs && node scripts/verify-trusted-resources-registry.mjs && node scripts/verify-entity-display-names.mjs && node scripts/verify-trusted-resources-titles.mjs",
+    "prebuild": "node scripts/sync-public-assets.mjs && node scripts/sync-pwa-icons.mjs && node scripts/validate-production-env.mjs && node scripts/test-membership-pricing.mjs && node scripts/verify-trusted-resources-registry.mjs && node scripts/verify-entity-display-names.mjs && node scripts/verify-trusted-resources-titles.mjs",
     "verify:trusted-resources": "node scripts/verify-trusted-resources-registry.mjs",
     "smoke:routes": "node scripts/smoke-routes.mjs",
     "verify:workos-auth": "node scripts/verify-workos-auth.mjs",
     "verify:stripe-env": "node scripts/verify-stripe-env.mjs",
+    "verify:membership-pricing": "node scripts/verify-membership-pricing.mjs",
+    "test:membership-pricing": "node scripts/test-membership-pricing.mjs",
+    "billing:remediation:scan": "node scripts/billing-remediation.mjs --scan",
+    "billing:remediation:apply": "node scripts/billing-remediation.mjs --apply-refunds --send-emails",
+    "stripe:create-support-yearly": "node scripts/create-support-yearly-price.mjs",
     "smoke:qa:http": "node scripts/qa-http-smoke.mjs",
     "smoke:production:http": "node scripts/production-http-smoke.mjs",
     "apply:production:schema": "node scripts/apply-top-production-align.mjs",

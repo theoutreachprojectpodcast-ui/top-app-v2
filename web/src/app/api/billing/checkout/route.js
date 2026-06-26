@@ -20,6 +20,7 @@ import {
 import { getSponsorOpportunityById } from "@/lib/billing/sponsorOpportunities";
 import { isUpgrade, membershipTierRank } from "@/lib/billing/membershipTierOrder";
 import { tierFromProfileRow } from "@/lib/billing/stripeProfileSync";
+import { validateMembershipStripePrice } from "@/lib/billing/stripePriceValidation";
 
 export async function POST(request) {
   const guard = guardMutation(request, { rateKey: "billing-checkout", limit: 20 });
@@ -102,6 +103,20 @@ export async function POST(request) {
   }
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+  const priceValidation = await validateMembershipStripePrice(stripe, tier, priceId);
+  if (!priceValidation.ok) {
+    console.error("[top] CRITICAL checkout blocked — membership price validation failed", priceValidation);
+    return Response.json(
+      {
+        error: priceValidation.code || "price_validation_failed",
+        message: priceValidation.message || "Membership checkout is unavailable due to a pricing configuration error.",
+        tier,
+      },
+      { status: 503 },
+    );
+  }
+
   const base = requestOriginForStripeRedirects(request);
   const returnPath = safeAppReturnPath(body.returnPath || "", "/profile");
   const customerId = profileRow.stripe_customer_id ? String(profileRow.stripe_customer_id).trim() : null;

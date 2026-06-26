@@ -1,6 +1,6 @@
 /**
  * Verify Stripe env vars for membership billing (no secret values printed).
- * Loads web/.env.local when present.
+ * Loads web/.env.local when present. Validates yearly Support ($0.99) + Pro ($5.99) price IDs.
  *
  * Usage: pnpm --dir web run verify:stripe-env
  */
@@ -10,6 +10,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+const SUPPORT_ANNUAL_CENTS = 99;
+const PRO_ANNUAL_CENTS = 599;
+const BLOCKED = new Set(["price_1TlqQ9CiwOqAGcUDuZkKPlJ2"]);
 
 function loadDotEnvLocal() {
   const envPath = path.join(__dirname, "../.env.local");
@@ -87,14 +91,21 @@ function checkKey(name, { required = true, prefixes = [] } = {}) {
 const hadLocal = loadDotEnvLocal();
 console.log(`[verify:stripe-env] ${hadLocal ? "Loaded .env.local" : "No .env.local — using process env only"}\n`);
 
+const supportYearly =
+  String(process.env.STRIPE_PRICE_SUPPORT_YEARLY || "").trim() ||
+  String(process.env.STRIPE_PRICE_SUPPORT_ANNUAL || "").trim();
+const proYearly =
+  String(process.env.STRIPE_PRICE_PRO_YEARLY || "").trim() ||
+  String(process.env.STRIPE_PRICE_PRO_MONTHLY || "").trim() ||
+  String(process.env.STRIPE_PRICE_MEMBER_MONTHLY || "").trim();
+
 const checks = [
   checkKey("STRIPE_SECRET_KEY", { required: true, prefixes: ["sk_test_", "sk_live_", "rk_test_", "rk_live_"] }),
   checkKey("STRIPE_WEBHOOK_SECRET", { required: false, prefixes: ["whsec_"] }),
   checkKey("STRIPE_WEBHOOK_TEST_SECRET", { required: false, prefixes: ["whsec_"] }),
   checkKey("STRIPE_WEBHOOK_LIVE_SECRET", { required: false, prefixes: ["whsec_"] }),
-  checkKey("STRIPE_PRICE_SUPPORT_MONTHLY", { required: true, prefixes: ["price_"] }),
-  checkKey("STRIPE_PRICE_PRO_MONTHLY", { required: false, prefixes: ["price_"] }),
-  checkKey("STRIPE_PRICE_MEMBER_MONTHLY", { required: false, prefixes: ["price_"] }),
+  checkKey("STRIPE_PRICE_SUPPORT_YEARLY", { required: !!supportYearly, prefixes: ["price_"] }),
+  checkKey("STRIPE_PRICE_PRO_YEARLY", { required: !!proYearly, prefixes: ["price_"] }),
   checkKey("NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY", { required: false, prefixes: ["pk_test_", "pk_live_"] }),
   checkKey("STRIPE_PRICE_SPONSOR_MONTHLY", { required: false, prefixes: ["price_"] }),
   checkKey("STRIPE_PRICE_PODCAST_SPONSOR_COMMUNITY", { required: false, prefixes: ["price_"] }),
@@ -104,15 +115,29 @@ const checks = [
   checkKey("NEXT_PUBLIC_APP_URL", { required: false }),
 ];
 
-const proPrice =
-  String(process.env.STRIPE_PRICE_PRO_MONTHLY || "").trim() ||
-  String(process.env.STRIPE_PRICE_MEMBER_MONTHLY || "").trim();
-if (!proPrice) {
+if (!supportYearly) {
   checks.push({
-    name: "STRIPE_PRICE_PRO_MONTHLY or STRIPE_PRICE_MEMBER_MONTHLY",
+    name: "STRIPE_PRICE_SUPPORT_YEARLY (or STRIPE_PRICE_SUPPORT_ANNUAL)",
+    ok: false,
+    issues: ["missing Support yearly price ID"],
+    mask: "(not set)",
+  });
+}
+if (!proYearly) {
+  checks.push({
+    name: "STRIPE_PRICE_PRO_YEARLY (or monthly fallback)",
     ok: false,
     issues: ["missing Pro price ID"],
     mask: "(not set)",
+  });
+}
+
+if (supportYearly && BLOCKED.has(supportYearly)) {
+  checks.push({
+    name: "STRIPE_PRICE_SUPPORT_YEARLY",
+    ok: false,
+    issues: ["blocked — known $99/year mischarge price"],
+    mask: mask(supportYearly),
   });
 }
 
@@ -131,9 +156,7 @@ for (const c of checks) {
 
 const secret = String(process.env.STRIPE_SECRET_KEY || "").trim();
 const membershipCheckout =
-  secret.startsWith("sk_") || secret.startsWith("rk_")
-    ? !!String(process.env.STRIPE_PRICE_SUPPORT_MONTHLY || "").trim() && !!proPrice
-    : false;
+  secret.startsWith("sk_") || secret.startsWith("rk_") ? !!supportYearly && !!proYearly : false;
 const webhookSecret =
   String(process.env.STRIPE_WEBHOOK_SECRET || "").trim() ||
   String(process.env.STRIPE_WEBHOOK_TEST_SECRET || "").trim() ||
@@ -152,9 +175,54 @@ console.log(`  membershipCheckout: ${membershipCheckout}`);
 console.log(`  sponsorSubscriptionCheckout: ${!!String(process.env.STRIPE_PRICE_SPONSOR_MONTHLY || "").trim() && !!secret}`);
 console.log(`  podcastSponsorCheckout: ${podcastCheckout}`);
 console.log(`  stripeWebhook: ${stripeWebhook}`);
-console.log(
-  "\n[verify:stripe-env] Mission partner one-time products (Supporting/Growth/Strategic) are apply-only in the app today — Stripe products are for invoicing/manual use until checkout is wired.",
-);
+console.log(`  expectedSupport: $${(SUPPORT_ANNUAL_CENTS / 100).toFixed(2)}/year`);
+console.log(`  expectedPro: $${(PRO_ANNUAL_CENTS / 100).toFixed(2)}/year`);
+
+if (secret && supportYearly && !BLOCKED.has(supportYearly)) {
+  try {
+    const res = await fetch(`https://api.stripe.com/v1/prices/${supportYearly}`, {
+      headers: { Authorization: `Bearer ${secret}` },
+    });
+    const price = await res.json();
+    if (price.error) {
+      console.error(`\nFAIL Support price lookup: ${price.error.message}`);
+      failed += 1;
+    } else if (price.unit_amount !== SUPPORT_ANNUAL_CENTS || price.recurring?.interval !== "year") {
+      console.error(
+        `\nFAIL Support price ${supportYearly} is $${((price.unit_amount ?? 0) / 100).toFixed(2)}/${price.recurring?.interval || "?"} — must be $0.99/year`,
+      );
+      failed += 1;
+    } else {
+      console.log(`\nOK   Live Support price validated: $0.99/year`);
+    }
+  } catch (e) {
+    console.error(`\nFAIL Support price lookup: ${e.message}`);
+    failed += 1;
+  }
+}
+
+if (secret && proYearly) {
+  try {
+    const res = await fetch(`https://api.stripe.com/v1/prices/${proYearly}`, {
+      headers: { Authorization: `Bearer ${secret}` },
+    });
+    const price = await res.json();
+    if (price.error) {
+      console.error(`FAIL Pro price lookup: ${price.error.message}`);
+      failed += 1;
+    } else if (price.unit_amount !== PRO_ANNUAL_CENTS || price.recurring?.interval !== "year") {
+      console.error(
+        `FAIL Pro price ${proYearly} is $${((price.unit_amount ?? 0) / 100).toFixed(2)}/${price.recurring?.interval || "?"} — expected $5.99/year`,
+      );
+      failed += 1;
+    } else {
+      console.log(`OK   Live Pro price validated: $5.99/year`);
+    }
+  } catch (e) {
+    console.error(`FAIL Pro price lookup: ${e.message}`);
+    failed += 1;
+  }
+}
 
 if (!webhookSecret) {
   console.error(
@@ -165,22 +233,22 @@ if (!webhookSecret) {
 
 if (failed > 0) {
   const requiredFails = failures.filter((c) =>
-    ["STRIPE_SECRET_KEY", "STRIPE_PRICE_SUPPORT_MONTHLY"].includes(c.name) ||
-    c.name.includes("PRO_MONTHLY or MEMBER"),
+    ["STRIPE_SECRET_KEY", "STRIPE_PRICE_SUPPORT_YEARLY"].includes(c.name) ||
+    c.name.includes("SUPPORT_YEARLY") ||
+    c.name.includes("PRO_YEARLY"),
   );
-  console.error(`\n[verify:stripe-env] ${failed} check(s) failed. See web/.env.local.example and docs/mvp-production-launch.md §5b.`);
+  console.error(`\n[verify:stripe-env] ${failed} check(s) failed. See web/.env.local.example.`);
   if (requiredFails.length) {
-    console.error("\n[verify:stripe-env] Minimum for membership checkout (QA = Test mode):");
-    console.error("  1. Stripe Dashboard → toggle Test mode (top right)");
-    console.error("  2. Developers → API keys → Secret key → sk_test_… → STRIPE_SECRET_KEY");
-    console.error("  3. Same page → Publishable key → pk_test_… → NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY");
-    console.error("  4. Product catalog → Support ($1/mo) + Pro ($5.99/mo) → each recurring Price → price_… IDs");
-    console.error("  5. Developers → Webhooks → Add endpoint → signing secret whsec_… → STRIPE_WEBHOOK_SECRET (or STRIPE_WEBHOOK_TEST_SECRET)");
-    console.error("  Optional podcast/sponsor price_* vars: comment out or fix — or leave unset if not testing those flows.");
+    console.error("\n[verify:stripe-env] Minimum for membership checkout:");
+    console.error("  1. Stripe Dashboard → correct mode (Test vs Live)");
+    console.error("  2. STRIPE_SECRET_KEY=sk_…");
+    console.error("  3. STRIPE_PRICE_SUPPORT_YEARLY=price_… ($0.99/year recurring)");
+    console.error("  4. STRIPE_PRICE_PRO_YEARLY=price_… ($5.99/year recurring)");
+    console.error("  5. Webhook signing secret whsec_…");
+    console.error("  Run: pnpm run stripe:create-support-yearly  (creates $0.99/year Support price)");
   }
   process.exit(1);
 }
 
 console.log("\n[verify:stripe-env] All required Stripe env vars look valid locally.");
-console.log("  On QA: redeploy Preview after Vercel env changes, then confirm in the signed-in app or:");
-console.log("  GET /api/billing/capabilities → membershipCheckout: true, stripeWebhook: true");
+console.log("  Also run: pnpm run verify:membership-pricing");

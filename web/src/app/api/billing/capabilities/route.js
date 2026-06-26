@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    return Response.json(billingCapabilitiesPayload(), {
+    return Response.json(await billingCapabilitiesPayload(), {
       headers: {
         "Cache-Control": "no-store",
         "Content-Type": "application/json; charset=utf-8",
