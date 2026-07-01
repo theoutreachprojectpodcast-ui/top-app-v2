@@ -6,7 +6,38 @@ This environment wraps the **production web app** at `https://theoutreachproject
 
 **Related:** [docs/MOBILE_READINESS.md](docs/MOBILE_READINESS.md) · [docs/MOBILE_LAUNCH_CHECKLIST.md](docs/MOBILE_LAUNCH_CHECKLIST.md) · [docs/MOBILE_ARCHITECTURE_GAPS.md](docs/MOBILE_ARCHITECTURE_GAPS.md)
 
-**Last updated:** 2026-06-09 (login verified on device)
+**Last updated:** 2026-06-23 (1.0 approved; availability cleared — release to App Store)
+
+---
+
+## Release now (1.0 already approved)
+
+Your build passed App Review. **No new Xcode archive is required** unless you want to ship native changes since approval.
+
+| Step | Where | Action |
+|------|--------|--------|
+| 1 | Version **1.0** page — read the **exact status** | See decision tree below (button only appears for **Pending Developer Release**) |
+| 2 | **Distribution → Pricing and Availability** | Price **Free**; territories on; **not** “Remove from sale” |
+| 3 | Wait for **Ready for Sale** / **Available** per country | Up to 24 hours after availability is fixed |
+| 4 | **App Information** | Copy numeric **Apple ID** → `https://apps.apple.com/app/idYOUR_APP_ID` |
+| 5 | **Vercel production** | Set `NEXT_PUBLIC_IOS_APP_STORE_URL` → redeploy |
+| 6 | Verify | App Store search on iPhone; `theoutreachproject.app/download` |
+
+### No “Release This Version” button?
+
+That button **only** appears when version status is **Pending Developer Release** (you chose “Manually release this version” at submit time). It does **not** appear on **Ready for Distribution**.
+
+| Version status | Meaning | What to do |
+|----------------|---------|------------|
+| **Pending Developer Release** | Approved; waiting for you to tap release | **Release This Version** (top right of version page) |
+| **Ready for Distribution** | Approved; Apple considers it releasable | Fix **Pricing and Availability** — no manual release button |
+| **Processing for Distribution** | Apple still processing | Wait up to 24 hours |
+| **Pending Apple Release** | Held for an OS release date | Check deployment target / Apple schedule |
+| **Ready for Sale** | Live (or going live) | Search App Store; set Vercel URL |
+
+If you previously saw **“This app was removed from sale”**, the fix is **Distribution → Pricing and Availability** (turn territories back on), not a release button on the version page.
+
+**Review note (already submitted):** subscriptions via Stripe on the website, not Apple IAP.
 
 ---
 
@@ -15,14 +46,13 @@ This environment wraps the **production web app** at `https://theoutreachproject
 | Area | Status |
 |------|--------|
 | App icon (1024×1024, dark bg, no alpha) | ✅ Generated and installed |
-| Capacitor production config | ✅ `CAP_SERVER_URL` → `https://theoutreachproject.app/mobile` |
+| Capacitor production config | ✅ `https://theoutreachproject.app` embedded |
 | Xcode project / bundle ID | ✅ `com.theoutreachproject.theoutreachproject` v**1.0** build **1** |
-| Production URL smoke (HTTP) | ✅ Home, privacy, terms, sponsors, community, trusted → 200 |
-| Production auth flags | ✅ `demoFlowsEnabled: false`, WorkOS + Stripe configured |
+| Production URL smoke (HTTP) | ✅ Passes |
 | WorkOS login on device | ✅ Working (2026-06-09) |
-| `cap sync ios` | ✅ Passed |
-| iOS Release build (CLI) | ✅ `xcodebuild` Release succeeded (2026-06-10) |
-| Archive / upload | ⏳ Manual in Xcode — signing + App Store Connect |
+| App Review | ✅ **1.0 approved** |
+| Pricing & availability | ✅ Cleared (2026-06-23) |
+| **Public App Store release** | ⏳ **Release version + set store URL on Vercel** |
 
 ---
 

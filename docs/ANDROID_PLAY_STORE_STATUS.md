@@ -10,24 +10,20 @@ Update checkboxes as items are completed.
 
 **Related guides:** [ANDROID_PLAY_STORE_RELEASE_CHECKLIST.md](../ANDROID_PLAY_STORE_RELEASE_CHECKLIST.md) · [ANDROID_STUDIO_SETUP.md](./ANDROID_STUDIO_SETUP.md) · [MOBILE_LAUNCH_CHECKLIST.md](./MOBILE_LAUNCH_CHECKLIST.md) · [store-listing-copy.md](./store-listing-copy.md) · [store-policy-forms.md](./store-policy-forms.md)
 
-**Last updated:** 2026-06-19 (post–production push `6a96afc`)
+**Last updated:** 2026-06-23 (iOS **live** on App Store; Android internal testing next)
 
 ---
 
-## Recent activity (2026-06-19)
+## Recent activity
 
-| Action | Result |
-|--------|--------|
-| Set `JAVA_HOME`, `ANDROID_HOME`, and user PATH (`jbr`, `platform-tools`, `emulator`) | Done — OpenJDK 21, `adb` works in new terminals |
-| Installed Android SDK Command-line Tools (`commandlinetools-win-14742923`) | Done — `sdkmanager` v20.0 on PATH |
-| Generated upload keystore + `keystore.properties` | Already present locally (gitignored) |
-| Built signed AAB (`pnpm run mobile:android:bundle`) | Done — `app-release.aab` ~30 MB |
-| Fixed `mobile:store:prep` failures | Done — `generate-mobile-icons.mjs` uses `python` on Windows; iOS/Android configs aligned |
-| Verified `pnpm run mobile:store:prep` end-to-end | Passes (validate, build, icons, cap sync, `mobile:verify:prod`) |
-| Production smoke (`smoke:production:http`, `smoke:routes`) | Passes — 2026-06-19 |
-| Pushed release branch to production (`main` → `6a96afc`) | Done — Vercel production deploy + CI/Release Gates triggered |
-| Play Console AAB upload blocked (package mismatch) | Fixed — `applicationId` → `com.theoutreachproject` to match Play app |
-| Play Console internal testing upload | **Next** — rebuild AAB locally, then upload |
+| Date | Action | Result |
+|------|--------|--------|
+| 2026-06-19 | Local tooling, keystore, first AAB, production push `6a96afc` | Done |
+| 2026-06-19 | Play package mismatch fix — `applicationId` → `com.theoutreachproject` | Done |
+| 2026-06-19 | Store listing assets + copy entered in Play Console | Done |
+| 2026-06-23 | Production torp→top deploy + health monitor green (`929b530`) | Done |
+| 2026-06-23 | Play upload blocked — `versionCode 3` already used (production) | Bumped → **4**, rebuild |
+| **Next** | Upload **versionCode 4** AAB to production (or promote from testing) | **You are here** |
 
 ---
 
@@ -36,12 +32,15 @@ Update checkboxes as items are completed.
 | Area | Status |
 |------|--------|
 | Accounts & local tooling | **Done** |
-| Codebase & Capacitor | Done |
-| Web production prerequisite | Done (latest deploy `6a96afc`) |
-| Signing & release build | **Done** — signed AAB ready; rebuild before upload if native assets changed |
-| Play Console app record | **Created** — package `com.theoutreachproject` |
-| Store listing & policy forms | Drafted in repo; not entered in console |
-| Device smoke testing | Partial — login verified; most flows unchecked |
+| Codebase & Capacitor | **Done** |
+| Web production prerequisite | **Done** (latest `main` — health + mobile OAuth OK) |
+| Signing & release build | **Done** — AAB `versionCode` **4** on disk |
+| Play Console app record | **Done** — package `com.theoutreachproject` |
+| Store listing (console) | **Done** |
+| iOS App Store | **Done** — live (2026-06-23) |
+| Policy & compliance forms (Play) | **Open** |
+| Internal testing upload | **Open** — upload v3 AAB, add testers |
+| Device smoke testing | **Partial** — login verified 2026-06-09; full checklist open |
 | Production release | **Not started** |
 
 ---
@@ -75,7 +74,7 @@ _(none in this section)_
 - [x] Native Android project at `web/android/`
 - [x] `web/capacitor.config.js` — `appId`, `webDir`, server URL, `allowNavigation`
 - [x] `applicationId` = `com.theoutreachproject` (aligned with Play Console 2026-06-19)
-- [x] Version **1.0** / `versionCode` **1** in `web/android/app/build.gradle`
+- [x] Version **1.0** / `versionCode` **4** in `web/android/app/build.gradle` (increment before each Play upload)
 - [x] Release signing wired in `build.gradle` (reads `keystore.properties` when present)
 - [x] `keystore.properties.example` committed; real keystore gitignored
 - [x] Launcher icons in `mipmap-*` densities
@@ -109,8 +108,8 @@ Must be stable before Play review — the app is a WebView shell over production
 - [x] `demoFlowsEnabled: false` on production
 - [x] `/privacy`, `/terms`, `/contact` live (store-required URLs)
 - [x] HTTP smoke passes (`smoke:qa:http` against production)
-- [x] Latest production deploy from `main` (`6a96afc`, 2026-06-19) — includes self-service account deletion in Settings
-- [x] Pre–Play Console production smoke (2026-06-19) — `smoke:production:http` all core + extended checks pass; `smoke:routes` OK (36 routes)
+- [x] Latest production deploy from `main` — torp→top rename, health monitor green, mobile OAuth handoff OK (2026-06-23)
+- [x] Pre–Play Console production smoke — `smoke:production:http` all checks pass (re-run after major prod changes)
 
 ### Still to do
 
@@ -126,34 +125,32 @@ _(none — re-run before each new Play upload if production changed)_
 - [x] Gradle `signingConfigs.release` configured
 - [x] Upload keystore generated (`web/android/keystores/top-upload.keystore`)
 - [x] `keystore.properties` configured (gitignored)
-- [x] `pnpm run mobile:android:bundle` — signed AAB built 2026-06-19 (~30 MB)
+- [x] `pnpm run mobile:android:bundle` — signed AAB built; **current build: `versionCode` 3** (~30 MB, 2026-06-23)
 - [x] Output confirmed: `web/android/app/build/outputs/bundle/release/app-release.aab`
-- [x] Android Capacitor config synced to `https://theoutreachproject.app` (2026-06-19)
+- [x] Bundle script verifies package + `versionCode` via bundletool after each build
+- [x] Android Capacitor config synced to `https://theoutreachproject.app`
 
 ### Still to do
 
-- [x] Store keystore passwords in team password manager (loss blocks updates) — **your action below**
-- [x] Rebuild AAB after latest `mobile:store:prep` — done 2026-06-19 (`app-release.aab`, ~29.6 MB)
-- [ ] Enroll in **Google Play App Signing** on first AAB upload (Play Console prompt) — **during Step 3 upload**
+- [ ] Enroll in **Google Play App Signing** on first successful AAB upload (Play Console prompt — accept Google-managed signing key)
+- [ ] After each Play upload attempt, increment `versionCode` in `build.gradle` before rebuilding (Play never reuses a version code)
 
-**Rebuild AAB before upload (recommended after 2026-06-19 prep):**
+**Current upload file (use this one):**
+
+| Field | Value |
+|-------|--------|
+| Path | `web\android\app\build\outputs\bundle\release\app-release.aab` |
+| Package | `com.theoutreachproject` |
+| versionCode | **4** |
+| versionName | 1.0 |
+
+**Rebuild before next upload (bumps require editing `build.gradle` first):**
 
 ```powershell
+# 1. Edit web/android/app/build.gradle → increment versionCode (e.g. 3 → 4)
 pnpm run mobile:store:prep
 pnpm run mobile:android:bundle
-```
-
-**First-time keystore (already done locally):**
-
-```powershell
-New-Item -ItemType Directory -Force -Path web\android\keystores
-keytool -genkeypair -v -storetype PKCS12 `
-  -keystore web\android\keystores\top-upload.keystore `
-  -alias top-upload -keyalg RSA -keysize 2048 -validity 10000
-Copy-Item web\android\keystore.properties.example web\android\keystore.properties
-# Edit keystore.properties with real passwords, then:
-pnpm run mobile:store:prep
-pnpm run mobile:android:bundle
+# Script prints "Verified AAB: package=… versionCode=…" — confirm before uploading
 ```
 
 ---
@@ -175,30 +172,18 @@ pnpm run mobile:android:bundle
 
 ## 6. Store listing & assets
 
-Copy is drafted in repo; assets exist but are not yet uploaded to Play Console.
-
 ### Done
 
-- [x] App name, short description, full description drafted — [store-listing-copy.md](./store-listing-copy.md)
-- [x] App icon source (`web/public/icon-512.png`, `icon-1024.png`)
-- [x] Screenshot assets in `docs/store-screenshots/` (SVG + some PNG exports)
-- [x] Privacy policy URL: `https://theoutreachproject.app/privacy`
-- [x] Support email documented: `support@theoutreachproject.app`
+- [x] App name, short description, full description — [store-listing-copy.md](./store-listing-copy.md) + entered in Play Console
+- [x] **512×512** app icon uploaded
+- [x] **Feature graphic** 1024×500 uploaded
+- [x] **Phone screenshots** uploaded (minimum 2)
+- [x] Contact email + privacy policy URL in listing (`https://theoutreachproject.app/privacy`)
+- [x] Support email: `support@theoutreachproject.app`
 
 ### Still to do
 
-- [x] Enter main store listing in Play Console (title, short + full description)
-- [x] Upload **512×512** app icon
-- [x] Upload **feature graphic** 1024×500 (recommended)
-- [x] Upload **phone screenshots** (minimum 2; export final PNGs from `docs/store-screenshots/` if needed)
-- [x] Optional: tablet screenshots, promo video
-- [x] Set contact email and privacy policy URL in listing
-
-**Screenshot export (if needed):**
-
-```powershell
-pnpm --dir web run export:store-screenshots
-```
+_(none required for first internal test — optional tablet screenshots / promo video)_
 
 ---
 
@@ -235,9 +220,11 @@ Answers are drafted in repo; forms must be completed in Play Console.
 
 #### Internal testing (do this first)
 
-- [ ] Upload `app-release.aab` to **Testing → Internal testing**
-- [ ] Add team tester emails
-- [ ] Install from internal testing link on physical device
+- [ ] Upload **`versionCode` 3** AAB to **Testing → Internal testing → Create new release**
+- [ ] Confirm Play shows **version code 3** before saving (see **Release → App bundle explorer** if unsure what’s already uploaded)
+- [ ] Accept **Play App Signing** enrollment when prompted (recommended)
+- [ ] Add team tester emails (or Google Group)
+- [ ] Install from internal testing opt-in link on a physical device
 - [ ] Complete device smoke (section 9)
 
 #### Optional before production
@@ -293,7 +280,7 @@ Run on a **physical Android device** with the internal-testing build.
 
 ### Still to do
 
-- [ ] Increment `versionCode` (and `versionName` if user-visible) before each upload
+- [x] `versionCode` workflow documented — increment in `build.gradle` before each upload (currently **4**)
 - [ ] Google review approved
 - [ ] Start **100% rollout** to production
 - [ ] Set `NEXT_PUBLIC_ANDROID_PLAY_STORE_URL` on Vercel (enables `/download` store badge)
@@ -308,7 +295,8 @@ Run on a **physical Android device** with the internal-testing build.
 |------|---------|
 | Full prep | `pnpm run mobile:store:prep` |
 | Open Android Studio | `pnpm --dir web run cap:open:android` |
-| Signed AAB | `pnpm run mobile:android:bundle` |
+| Signed AAB | `pnpm run mobile:android:bundle` (clean build + bundletool verify) |
+| Production smoke | `pnpm --dir web run smoke:production:http` |
 | Validate Capacitor config | `pnpm run validate:capacitor` |
 | Store screenshots | `pnpm --dir web run export:store-screenshots` |
 
@@ -320,25 +308,79 @@ Run on a **physical Android device** with the internal-testing build.
 
 | # | Blocker | Status |
 |---|---------|--------|
-| 1 | Production web stable | Done |
-| 2 | Upload keystore + signed AAB | Done |
-| 3 | Play Console app created | **Open** |
-| 4 | Store listing + policy forms in console | **Open** |
-| 5 | Reviewer test account in App access | **Open** |
+| 1 | Production web stable | **Done** |
+| 2 | Upload keystore + signed AAB (`versionCode` 4) | **Done** |
+| 3 | Play Console app + store listing | **Done** |
+| 4 | Internal testing AAB uploaded | **Open** ← current |
+| 5 | Policy forms (Data safety, content rating, App access) | **Open** |
 | 6 | Device smoke (section 9) | **Open** |
 
 ---
 
-## Suggested next steps (in order)
+## Next steps (walkthrough)
 
-1. Save keystore passwords from `web/android/keystore.properties` to your password manager
-2. Rebuild AAB: `pnpm run mobile:store:prep` then `pnpm run mobile:android:bundle`
-3. Rebuild AAB (`pnpm run mobile:store:prep` then `pnpm run mobile:android:bundle`) and upload to Play Console internal testing
-4. Upload `web/android/app/build/outputs/bundle/release/app-release.aab` to **Internal testing**
-5. Enroll in Play App Signing when prompted
-6. Complete device smoke (section 9)
-7. Enter store listing, Data safety, content rating, App access
-8. Promote to Production and submit for review
+You are past setup. Follow this order:
+
+### Step 1 — Upload internal testing build (~10 min)
+
+1. Open [Google Play Console](https://play.google.com/console) → **The Outreach Project**
+2. **Testing → Internal testing → Create new release** (do not reuse an old draft)
+3. Upload:
+   ```
+   web\android\app\build\outputs\bundle\release\app-release.aab
+   ```
+4. Confirm the release shows **version code 3** / **1.0**
+5. If prompted, enroll in **Play App Signing** (let Google manage the app signing key; you keep the upload keystore)
+6. Add release notes (e.g. “Initial internal test build.”)
+7. **Save** → **Review release** → **Start rollout to Internal testing**
+
+**If upload fails with “version code already used”:** check **Release → App bundle explorer** for the highest version code, bump `versionCode` in `web/android/app/build.gradle`, run `pnpm run mobile:android:bundle`, upload again.
+
+### Step 2 — Add testers & install (~5 min)
+
+1. **Internal testing → Testers** tab → create an email list (or use a Google Group)
+2. Copy the **opt-in URL** and open it on your Android phone (signed into a tester Google account)
+3. Install **The Outreach Project** from the Play Store tester link
+
+### Step 3 — Device smoke on real hardware (~30–60 min)
+
+Work through [section 9](#9-device-smoke-before-production) on the installed build. Priority checks:
+
+- Sign in / sign out (WorkOS)
+- Cold start — session persists
+- Home, Directory, Community, Profile load
+- Profile photo upload
+- Stripe membership checkout (web billing — not Play Billing)
+- Safe areas + keyboard on forms
+
+### Step 4 — Policy & compliance forms (~30 min)
+
+In Play Console → **Policy → App content**, complete:
+
+| Form | What to enter |
+|------|----------------|
+| **App access** | WorkOS test account credentials (create a reviewer-only login; never commit to git) |
+| **Ads** | No |
+| **Content rating** | IARC questionnaire — disclose community / user-generated content |
+| **Data safety** | Use [store-policy-forms.md](./store-policy-forms.md); cite in-app delete at `/settings` |
+| **Target audience** | Not directed at children under 13 |
+
+**Review note for Google:** Membership and sponsors bill via **Stripe on the website**, not Google Play Billing.
+
+### Step 5 — Pre-launch report & production (~1–3 days review)
+
+1. After internal testing is stable, open **Release → Production → Create new release**
+2. Promote the tested bundle (or upload a new AAB with a higher `versionCode`)
+3. Review **Pre-launch report** (automated tests)
+4. **Send for review** → when approved, **Start rollout** (staged or 100%)
+5. Copy the public Play Store URL → set `NEXT_PUBLIC_ANDROID_PLAY_STORE_URL` in Vercel production
+6. Confirm `https://theoutreachproject.app/download` shows the live badge
+
+### Step 6 — Ongoing
+
+- Product changes → deploy via **Vercel** (no store update needed for most web changes)
+- Native changes (Capacitor, permissions, icons) → bump `versionCode`, rebuild AAB, new Play release
+- Re-run `pnpm --dir web run smoke:production:http` before each store submission
 
 ---
 

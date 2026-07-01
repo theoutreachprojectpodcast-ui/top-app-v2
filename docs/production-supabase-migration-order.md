@@ -1,5 +1,31 @@
 # Production Supabase migration order
 
+## URGENT — Supabase security linter (`rls_disabled_in_public`)
+
+If Supabase emails **“Table publicly accessible”** / linter **0013**:
+
+1. Open [Supabase Dashboard](https://supabase.com/dashboard) → project **The Outreach Project Directory** (`xbtfoundwmhrqrbcuqcw`)
+2. **SQL Editor** → New query → paste entire file **`web/supabase/supabase_public_rls_hardening_nondestructive_2026_06.sql`** → **Run**  
+   (Use this one — **no destructive warning**. The full `supabase_public_rls_hardening_2026_06.sql` DROPs legacy policies; only use that if you want a clean policy slate.)
+3. Verify:
+   ```sql
+   select * from public._top_rls_security_audit() where status = 'FAIL' order by 1, 2;
+   ```
+   (expect **0 rows**; `WARN` / `legacy_permissive_policy_present` is OK — anon is still blocked)
+4. **Database → Linter** → Refresh
+
+Safe to re-run (idempotent). Production app uses **service role** on the server — RLS deny policies block only direct `anon`/`authenticated` PostgREST access.
+
+CLI apply (pick one credential):
+
+- **Management API** (no DB password): create a token at [Account → Access Tokens](https://supabase.com/dashboard/account/tokens), then  
+  `set SUPABASE_ACCESS_TOKEN=sbp_...` and `pnpm --dir web run apply:production:rls:apply`
+- **Direct Postgres**: `set DATABASE_URL=postgresql://...` and `pnpm --dir web run apply:production:rls:apply`
+
+Verify: `cmd /c "cd web && vercel env run -e production -- pnpm run verify:production-rls"`
+
+---
+
 Run in the **Production** Supabase project SQL editor (or CLI). Skip files prefixed `qa_` unless you intentionally want QA seed data in prod.
 
 Apply in order. If a migration was already applied, Postgres will error on duplicate objects — note which step failed and continue from the next file.

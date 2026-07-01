@@ -2,10 +2,14 @@
  * Apply production RLS hardening (Supabase linter 0013 + 0010).
  *
  * Usage:
- *   node scripts/apply-production-rls-hardening.mjs              # probe audit RPC
- *   DATABASE_URL=postgresql://... node scripts/apply-production-rls-hardening.mjs --apply
+ *   node scripts/apply-production-rls-hardening.mjs
+ *   node scripts/apply-production-rls-hardening.mjs --apply
  *
- * Without DATABASE_URL, prints SQL path for Supabase SQL editor.
+ * Apply modes (first match wins):
+ *   1. SUPABASE_ACCESS_TOKEN + project ref (Management API — no DB password)
+ *   2. DATABASE_URL or SUPABASE_DB_URL (direct postgres)
+ *
+ * Without credentials, prints SQL path for Supabase SQL editor.
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -18,6 +22,7 @@ const sqlPath = path.join(
   "supabase/supabase_public_rls_hardening_nondestructive_2026_06.sql",
 );
 const apply = process.argv.includes("--apply");
+const PROJECT_REF = "xbtfoundwmhrqrbcuqcw";
 
 function loadEnvFile(rel) {
   const envPath = path.join(webRoot, rel);
@@ -40,9 +45,19 @@ function loadEnvFile(rel) {
 loadEnvFile(".env.local");
 loadEnvFile(".env.production.local");
 
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-const databaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_DB_URL || "";
+function env(name) {
+  return String(process.env[name] || "").replace(/[\r\n]+/g, "").trim();
+}
+
+const url = env("NEXT_PUBLIC_SUPABASE_URL");
+const serviceKey = env("SUPABASE_SERVICE_ROLE_KEY");
+const databaseUrl = env("DATABASE_URL") || env("SUPABASE_DB_URL");
+const accessToken = env("SUPABASE_ACCESS_TOKEN");
+
+function projectRefFromUrl(supabaseUrl) {
+  const m = String(supabaseUrl || "").match(/https:\/\/([^.]+)\.supabase\.co/);
+  return m?.[1] || env("SUPABASE_PROJECT_REF") || PROJECT_REF;
+}
 
 async function runAudit() {
   if (!url || !serviceKey) {
@@ -60,50 +75,74 @@ async function runAudit() {
   return null;
 }
 
-async function probePublicTables() {
-  if (!url || !serviceKey) return;
-  const admin = createClient(url, serviceKey, { auth: { persistSession: false } });
-  const candidates = [
-    "top_oauth_mobile_handoffs",
-    "torp_oauth_mobile_handoffs",
-    "top_profiles",
-    "community_posts",
-    "podcast_episodes",
-    "sponsors_catalog",
-    "trusted_resources",
-    "page_content_blocks",
-    "admin_audit_logs",
-  ];
-  for (const table of candidates) {
-    const { error } = await admin.from(table).select("*").limit(1);
-    if (!error) {
-      console.log(`[apply-production-rls] anon/service probe ${table}: readable (${error ? error.message : "OK"})`);
-    } else if (error.code === "42501" || /permission|policy|RLS/i.test(error.message)) {
-      console.log(`[apply-production-rls] ${table}: blocked by RLS (good for anon if using anon key)`);
-    } else if (error.code === "PGRST116" || /does not exist/i.test(error.message)) {
-      /* missing */
-    } else {
-      console.log(`[apply-production-rls] ${table}: ${error.message}`);
-    }
+async function applyViaManagementApi(sql) {
+  const ref = projectRefFromUrl(url);
+  if (!accessToken) return { ok: false, reason: "no_access_token" };
+
+  const res = await fetch(`https://api.supabase.com/v1/projects/${ref}/database/query`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ query: sql }),
+  });
+
+  const bodyText = await res.text();
+  let body;
+  try {
+    body = JSON.parse(bodyText);
+  } catch {
+    body = { message: bodyText };
   }
+
+  if (!res.ok) {
+    throw new Error(body.message || body.error || `Management API ${res.status}`);
+  }
+
+  console.log(`[apply-production-rls] SQL applied via Management API (project ${ref})`);
+  return { ok: true, body };
 }
 
-async function applySql() {
-  if (!databaseUrl) {
-    console.log("[apply-production-rls] No DATABASE_URL — run in Production Supabase SQL editor:");
-    console.log(`  ${sqlPath}`);
-    return false;
-  }
-  const sql = fs.readFileSync(sqlPath, "utf8");
+async function applyViaPostgres(sql) {
+  if (!databaseUrl) return { ok: false, reason: "no_database_url" };
   const { default: postgres } = await import("postgres");
   const sqlClient = postgres(databaseUrl, { max: 1 });
   try {
     await sqlClient.unsafe(sql);
     console.log("[apply-production-rls] SQL applied via DATABASE_URL");
-    return true;
+    return { ok: true };
   } finally {
     await sqlClient.end({ timeout: 5 });
   }
+}
+
+async function applySql() {
+  const sql = fs.readFileSync(sqlPath, "utf8");
+
+  if (accessToken) {
+    try {
+      return (await applyViaManagementApi(sql)).ok;
+    } catch (e) {
+      console.error("[apply-production-rls] Management API apply failed:", e.message);
+    }
+  }
+
+  if (databaseUrl) {
+    try {
+      return (await applyViaPostgres(sql)).ok;
+    } catch (e) {
+      console.error("[apply-production-rls] Postgres apply failed:", e.message);
+    }
+  }
+
+  console.log("[apply-production-rls] No apply credentials — run in Production Supabase SQL editor:");
+  console.log(`  https://supabase.com/dashboard/project/${PROJECT_REF}/sql/new`);
+  console.log(`  File: ${sqlPath}`);
+  console.log("\nOr set one of:");
+  console.log("  SUPABASE_ACCESS_TOKEN  (from https://supabase.com/dashboard/account/tokens)");
+  console.log("  DATABASE_URL           (Postgres connection string from project Settings → Database)");
+  return false;
 }
 
 let success = true;
@@ -116,25 +155,30 @@ if (apply) {
     success = false;
   }
 } else {
-  console.log("[apply-production-rls] Probe mode (pass --apply with DATABASE_URL to run SQL)");
+  console.log("[apply-production-rls] Probe mode (pass --apply to run SQL)");
 }
 
 const audit = await runAudit();
 if (audit) {
-  const fails = audit.rows.filter((r) => r.status !== "OK");
-  console.log(`[apply-production-rls] ${audit.fn}: ${fails.length} issue(s)`);
+  const fails = audit.rows.filter((r) => r.status === "FAIL");
+  const warns = audit.rows.filter((r) => r.status === "WARN");
+  console.log(`[apply-production-rls] ${audit.fn}: ${fails.length} FAIL, ${warns.length} WARN`);
   for (const row of fails.slice(0, 30)) {
-    console.log(`  ${row.status} ${row.object_type} ${row.object_name}: ${row.detail}`);
+    console.log(`  FAIL ${row.object_type} ${row.object_name}: ${row.detail}`);
   }
-  if (fails.length > 30) console.log(`  ... and ${fails.length - 30} more`);
+  for (const row of warns.slice(0, 10)) {
+    console.log(`  WARN ${row.object_type} ${row.object_name}: ${row.detail}`);
+  }
+  if (fails.length > 30) console.log(`  ... and ${fails.length - 30} more FAIL`);
   if (fails.length === 0) {
-    console.log("[apply-production-rls] All audited objects OK");
+    console.log("[apply-production-rls] All audited objects OK (FAIL=0)");
   }
 }
 
-if (!apply && audit && audit.rows.some((r) => r.status !== "OK")) {
+if (!apply && audit && audit.rows.some((r) => r.status === "FAIL")) {
   console.log("\n[apply-production-rls] Fix: run this file in Production Supabase SQL editor:");
   console.log("  web/supabase/supabase_public_rls_hardening_nondestructive_2026_06.sql");
 }
 
-process.exit(success && (!audit || audit.rows.every((r) => r.status === "OK")) ? 0 : 1);
+const auditOk = !audit || audit.rows.every((r) => r.status !== "FAIL");
+process.exit(success && auditOk ? 0 : 1);

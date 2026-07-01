@@ -28,6 +28,7 @@
     "apply:production:schema:apply": "node scripts/apply-top-production-align.mjs --apply",
     "apply:production:rls": "node scripts/apply-production-rls-hardening.mjs",
     "apply:production:rls:apply": "node scripts/apply-production-rls-hardening.mjs --apply",
+    "verify:production-rls": "node scripts/verify-production-rls.mjs",
     "verify:auth-freeze": "node scripts/auth-production-guards.mjs",
     "verify:production-auth": "node scripts/verify-production-auth-flow.mjs",
     "verify:membership-access": "node scripts/verify-membership-access.mjs",

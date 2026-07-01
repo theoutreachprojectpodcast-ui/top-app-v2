@@ -626,6 +626,14 @@ html[data-color-scheme="light"] .communityPostResource,
   align-items: start;
 }
 
+.profileAvatarShell.communityPostCommentAvatar {
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px;
+  min-height: 36px;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-bg-app) 92%, var(--color-text-primary) 8%);
+}
+
 .communityPostCommentMeta {
   display: flex;
   flex-wrap: wrap;

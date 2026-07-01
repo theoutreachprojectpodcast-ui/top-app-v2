@@ -45,7 +45,7 @@ export const FEATURED_SPONSORS = [
     subtitle:
       "Curated gear and global outdoor brands for people who train, travel, and serve in demanding environments.",
     longDescription:
-      "Apex Global Outdoors is building a mission-aligned outdoor retail experience—pairing trusted equipment with education on preparedness, fieldcraft, and responsible land use. The team partners with The Outreach Project to expand outdoor access for veterans, first responders, and families who rely on dependable kit when conditions turn serious. Official site: apexglobaloutdoors.com.",
+      "Our mission is simple: To deliver expertly planned trips, exceptional accommodations, harvests lead by the world's leading outfitters, and vacations that will become core memories for you and your family.",
     ctaLabel: "Visit Website",
     ctaUrl: "https://apexglobaloutdoors.com/",
     logoUrl: APEX_GLOBAL_OUTDOORS_LOGO_URL,

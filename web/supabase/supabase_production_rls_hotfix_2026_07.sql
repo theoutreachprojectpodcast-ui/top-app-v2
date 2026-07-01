@@ -1,0 +1,19 @@
+-- =============================================================================
+-- PRODUCTION RLS HOTFIX — pointer (do not run this file)
+-- =============================================================================
+-- Supabase SQL Editor does not support \i includes.
+-- Paste and run the FULL contents of:
+--   web/supabase/supabase_public_rls_hardening_nondestructive_2026_06.sql
+--
+-- Dashboard: https://supabase.com/dashboard/project/xbtfoundwmhrqrbcuqcw/sql/new
+--
+-- Closes anon leaks on top_app_saved_org_eins (68 user favorites), community_posts,
+-- sponsors_catalog, trusted_resources, and all other public tables.
+--
+-- CLI (no DB password): set SUPABASE_ACCESS_TOKEN then:
+--   pnpm --dir web run apply:production:rls:apply
+--
+-- Verify:
+--   select * from public._top_rls_security_audit() where status = 'FAIL';
+--   pnpm --dir web run verify:production-rls
+-- =============================================================================
