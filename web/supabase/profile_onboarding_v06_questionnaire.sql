@@ -3,7 +3,7 @@
 
 begin;
 
-alter table if exists public.torp_profiles
+alter table if exists public.top_profiles
   add column if not exists phone_number text,
   add column if not exists postal_code text,
   add column if not exists preferred_contact_method text,
@@ -25,11 +25,11 @@ do $$
 begin
   if not exists (
     select 1 from pg_constraint
-    where conname = 'torp_profiles_preferred_contact_method_chk'
-      and conrelid = 'public.torp_profiles'::regclass
+    where conname = 'top_profiles_preferred_contact_method_chk'
+      and conrelid = 'public.top_profiles'::regclass
   ) then
-    alter table public.torp_profiles
-      add constraint torp_profiles_preferred_contact_method_chk check (
+    alter table public.top_profiles
+      add constraint top_profiles_preferred_contact_method_chk check (
         preferred_contact_method is null
         or preferred_contact_method in ('email', 'phone', 'sms', 'in_app')
       );
@@ -40,11 +40,11 @@ do $$
 begin
   if not exists (
     select 1 from pg_constraint
-    where conname = 'torp_profiles_identity_segment_chk'
-      and conrelid = 'public.torp_profiles'::regclass
+    where conname = 'top_profiles_identity_segment_chk'
+      and conrelid = 'public.top_profiles'::regclass
   ) then
-    alter table public.torp_profiles
-      add constraint torp_profiles_identity_segment_chk check (
+    alter table public.top_profiles
+      add constraint top_profiles_identity_segment_chk check (
         identity_segment is null
         or identity_segment in (
           'veteran',
@@ -59,8 +59,8 @@ begin
   end if;
 end $$;
 
-create index if not exists torp_profiles_identity_segment_idx on public.torp_profiles (identity_segment);
-create index if not exists torp_profiles_onboarding_skipped_idx on public.torp_profiles (onboarding_skipped);
+create index if not exists top_profiles_identity_segment_idx on public.top_profiles (identity_segment);
+create index if not exists top_profiles_onboarding_skipped_idx on public.top_profiles (onboarding_skipped);
 
 -- QA mirror table when present
 do $$

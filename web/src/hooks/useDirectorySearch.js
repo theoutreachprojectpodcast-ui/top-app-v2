@@ -5,12 +5,14 @@ import { PAGE_SIZE } from "@/lib/constants";
 import { fetchDirectorySearch } from "@/features/directory/api";
 import { resolveStateFilterCode, stateLabel } from "@/lib/utils";
 
-const DIR_STORAGE = "torp-directory-session-v1";
+const DIR_STORAGE = "top-directory-session-v1";
 
 function readDirSession() {
   if (typeof window === "undefined") return null;
   try {
-    const raw = sessionStorage.getItem(DIR_STORAGE);
+    const raw =
+      sessionStorage.getItem(DIR_STORAGE) ||
+      sessionStorage.getItem("torp-directory-session-v1");
     if (!raw) return null;
     const o = JSON.parse(raw);
     if (!o || typeof o !== "object") return null;

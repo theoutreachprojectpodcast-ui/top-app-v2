@@ -4,6 +4,9 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { resolvePostAuthReturnTarget } from "@/lib/auth/workosSafeReturn";
+import { isCapacitorNative } from "@/lib/capacitor/platform";
+import { launchWorkOSAuth } from "@/lib/auth/workosNativeAuthLaunch";
+import { MOBILE_POST_LOGIN_PATH } from "@/lib/runtime/appUrls";
 
 function AdminLoginForm() {
   const sp = useSearchParams();
@@ -34,11 +37,36 @@ function AdminLoginForm() {
   }, []);
 
   const workosAdminSignInHref = useMemo(() => {
-    const params = new URLSearchParams({ returnTo, remember: "1" });
+    const params = new URLSearchParams({ returnTo, remember: "1", bootstrap: "1" });
     const hint = String(email || "").trim();
     if (hint) params.set("loginHint", hint);
     return `/api/auth/workos/signin?${params.toString()}`;
   }, [email, returnTo]);
+
+  const workosAdminGoPath = useMemo(() => {
+    const nativeReturn = isCapacitorNative() ? MOBILE_POST_LOGIN_PATH : returnTo;
+    const params = new URLSearchParams({ mode: "signin", returnTo: nativeReturn, bootstrap: "1" });
+    const hint = String(email || "").trim();
+    if (hint) params.set("loginHint", hint);
+    return `/auth/workos-go?${params.toString()}`;
+  }, [email, returnTo]);
+
+  async function onWorkOSAdminSignIn(e) {
+    e.preventDefault();
+    if (!isCapacitorNative()) {
+      window.location.assign(workosAdminSignInHref);
+      return;
+    }
+    setBusy(true);
+    setError("");
+    try {
+      await launchWorkOSAuth(workosAdminGoPath);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not start admin sign in.");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function onSendMagicLink(e) {
     e.preventDefault();
@@ -95,9 +123,15 @@ function AdminLoginForm() {
               {adminEmailLogin ? "Continue with email" : "Send Magic Link"}
             </button>
             {workosReady ? (
-              <a className="btnSoft" href={workosAdminSignInHref}>
-                Sign in with WorkOS (SSO)
-              </a>
+              isCapacitorNative() ? (
+                <button type="button" className="btnSoft" disabled={busy} onClick={onWorkOSAdminSignIn}>
+                  Sign in with WorkOS (SSO)
+                </button>
+              ) : (
+                <a className="btnSoft" href={workosAdminSignInHref}>
+                  Sign in with WorkOS (SSO)
+                </a>
+              )
             ) : null}
             <Link className="btnSoft" href="/">
               Back to app

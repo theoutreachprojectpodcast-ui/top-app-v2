@@ -1,5 +1,6 @@
 "use client";
 
+import AdminPanelShell from "@/components/admin/AdminPanelShell";
 import { useCallback, useEffect, useState } from "react";
 
 export default function AdminStatusPanel() {
@@ -33,10 +34,7 @@ export default function AdminStatusPanel() {
   }, [load]);
 
   return (
-    <div className="adminPanel">
-      <h2 style={{ marginTop: 0 }}>QA / admin status panel</h2>
-      <p className="adminMuted">Live high-level counters from admin-managed tables.</p>
-      {error ? <p role="alert" style={{ color: "var(--color-danger, #b42318)" }}>{error}</p> : null}
+    <AdminPanelShell panelId="status" error={error}>
       {loading ? <p className="adminMuted">Loading…</p> : null}
       {!loading ? (
         <div className="adminTableWrap">
@@ -44,7 +42,7 @@ export default function AdminStatusPanel() {
             <tbody>
               {Object.entries(stats).map(([key, value]) => (
                 <tr key={key}>
-                  <td data-label="Metric" style={{ textTransform: "capitalize" }}>{key}</td>
+                  <td data-label="Metric" className="adminTable__cell--capitalize">{key}</td>
                   <td data-label="Value">{String(value ?? 0)}</td>
                 </tr>
               ))}
@@ -52,9 +50,11 @@ export default function AdminStatusPanel() {
           </table>
         </div>
       ) : null}
-      <button type="button" className="btnSoft" onClick={() => void load()} style={{ marginTop: 12 }}>
-        Refresh status
-      </button>
-    </div>
+      <div className="adminActions">
+        <button type="button" className="btnSoft" onClick={() => void load()}>
+          Refresh status
+        </button>
+      </div>
+    </AdminPanelShell>
   );
 }

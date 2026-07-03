@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-color-scheme="dark">
   <head>
     <meta charset="utf-8" />
     <title>The Outreach Project</title>
@@ -7,36 +7,61 @@
     <meta name="application-name" content="TOP" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="TOP" />
-    <meta name="theme-color" content="#1a5c3e" />
-    <link rel="manifest" href="/manifest.webmanifest" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <link rel="apple-touch-icon-precomposed" href="/apple-touch-icon-precomposed.png" />
+    <meta name="theme-color" content="#121212" />
+    <meta http-equiv="refresh" content="0;url=https://theoutreachproject.app/mobile" />
     <style>
+      html,
       body {
-        font-family: system-ui, sans-serif;
         margin: 0;
-        padding: 1.5rem;
-        line-height: 1.5;
-        background: #0f1419;
+        min-height: 100%;
+        min-height: 100dvh;
+        background: #121212;
         color: #e8eef6;
+        font-family: system-ui, -apple-system, sans-serif;
       }
-      code {
-        background: #1c2430;
-        padding: 0.15rem 0.35rem;
-        border-radius: 4px;
+      .boot {
+        min-height: 100dvh;
+        display: grid;
+        place-items: center;
+        padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+          env(safe-area-inset-left);
+      }
+      .boot__spinner {
+        width: 44px;
+        height: 44px;
+        border: 3px solid rgba(34, 165, 43, 0.25);
+        border-top-color: #22a52b;
+        border-radius: 50%;
+        animation: spin 0.85s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
       }
     </style>
+    <script>
+      (function () {
+        var PROD = "https://theoutreachproject.app/mobile";
+        function go() {
+          try {
+            window.location.replace(PROD);
+          } catch (e) {
+            try {
+              window.location.href = PROD;
+            } catch (e2) {}
+          }
+        }
+        go();
+        setTimeout(go, 120);
+        setTimeout(go, 600);
+        setTimeout(go, 1500);
+      })();
+    </script>
   </head>
   <body>
-    <h1>The Outreach Project</h1>
-    <p>
-      Native wrapper is active. When <code>CAP_SERVER_URL</code> is set during
-      <code>pnpm run cap:sync</code>, the app loads your Next.js deployment from that URL.
-    </p>
-    <p>
-      If you see this page in production, set <code>CAP_SERVER_URL</code> to your HTTPS app
-      origin and run sync again (see <code>web/docs/CAPACITOR_MOBILE.md</code>).
-    </p>
+    <div class="boot" role="status" aria-live="polite">
+      <div class="boot__spinner" aria-hidden="true"></div>
+    </div>
   </body>
 </html>

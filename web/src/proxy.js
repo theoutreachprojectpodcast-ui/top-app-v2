@@ -67,6 +67,32 @@ function rewriteAdminSubdomainRequest(request, host) {
   return new NextRequest(url, request);
 }
 
+/** AuthKit proxy mints a PKCE cookie on every unauthenticated hit — skip OAuth handoff routes. */
+function isWorkOSAuthHandoffPath(pathname) {
+  const p = pathname || "/";
+  if (p === "/callback" || p.startsWith("/callback/")) return true;
+  if (p === "/sign-in" || p.startsWith("/sign-in")) return true;
+  if (p === "/login" || p.startsWith("/login")) return true;
+  if (p === "/sign-up" || p.startsWith("/sign-up")) return true;
+  if (p === "/invite" || p.startsWith("/invite")) return true;
+  if (p === "/sign-out" || p.startsWith("/sign-out")) return true;
+  if (p.startsWith("/auth/sign-in") || p.startsWith("/auth/sign-up") || p.startsWith("/auth/logout")) return true;
+  if (p === "/auth/workos-continue" || p.startsWith("/auth/workos-continue/")) return true;
+  if (p === "/auth/workos-handoff" || p.startsWith("/auth/workos-handoff/")) return true;
+  if (p === "/auth/workos-go" || p.startsWith("/auth/workos-go/")) return true;
+  if (p === "/auth/workos-browser-start" || p.startsWith("/auth/workos-browser-start/")) return true;
+  if (p === "/auth/workos-native-browser" || p.startsWith("/auth/workos-native-browser/")) return true;
+  if (p.startsWith("/mobile/sign-in") || p.startsWith("/mobile/sign-up")) return true;
+  if (p.startsWith("/mobile/auth")) return true;
+  if (p === "/mobile/home" || p.startsWith("/mobile/home/")) return true;
+  if (p.startsWith("/api/health")) return true;
+  if (p === "/mobile-auth/callback" || p.startsWith("/mobile-auth/callback/")) return true;
+  if (p === "/mobile-auth/complete" || p.startsWith("/mobile-auth/complete/")) return true;
+  if (p.startsWith("/api/auth/workos/")) return true;
+  if (p.startsWith("/api/mobile/oauth-handoff")) return true;
+  return false;
+}
+
 export default async function proxy(request) {
   const host = requestHost(request);
 
@@ -82,9 +108,10 @@ export default async function proxy(request) {
     return applySecurityHeaders(NextResponse.next({ request: incoming }), incoming);
   }
 
-  if (!workosProxy) {
-    const res = await updateSession(incoming);
-    return applySecurityHeaders(res, incoming);
+  const pathname = incoming.nextUrl.pathname || "/";
+
+  if (workosProxy && isWorkOSAuthHandoffPath(pathname)) {
+    return applySecurityHeaders(NextResponse.next({ request: incoming }), incoming);
   }
 
   const idleMs = sessionIdleTimeoutMs();
@@ -92,7 +119,19 @@ export default async function proxy(request) {
   const sessionVal = incoming.cookies.get(sessionName)?.value;
   const hasWorkosSession = Boolean(sessionVal);
 
-  if (idleMs > 0 && hasWorkosSession) {
+  /** Unauthenticated page loads: skip AuthKit proxy so it does not mint spurious PKCE cookies. */
+  if (workosProxy && !hasWorkosSession) {
+    return applySecurityHeaders(NextResponse.next({ request: incoming }), incoming);
+  }
+
+  if (!workosProxy) {
+    const res = await updateSession(incoming);
+    return applySecurityHeaders(res, incoming);
+  }
+
+  const skipIdleSignOutRedirect = isWorkOSAuthHandoffPath(pathname);
+
+  if (idleMs > 0 && hasWorkosSession && !skipIdleSignOutRedirect) {
     const fpNow = fingerprintFromSessionCookieValue(sessionVal);
     const fpCookie = incoming.cookies.get(sessionFingerprintCookieName())?.value || "";
     const lastRaw = incoming.cookies.get(lastActiveCookieName())?.value;

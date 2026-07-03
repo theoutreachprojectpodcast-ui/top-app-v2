@@ -1,35 +1,190 @@
 /**
- * Unified mobile bottom dock (Home · Profile · Contact) + header hamburger overflow.
- * Applies to main `TopApp` and all `AppShell` routes that use `.footerDock` + `.bottomNav--mobileDock`.
+ * Bottom dock (mobile) + header hamburger (mobile + desktop web).
+ * Applies to `TopApp` and `AppShell` routes with `.footerDock` + `.bottomNav--mobileDock`.
  */
 
-@media (min-width: 720px) {
-  .siteMobileNavMore {
+/* —— Hamburger: all viewports —— */
+.siteMobileNavMore {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  z-index: 120;
+}
+
+.siteMobileNavMore--align-end {
+  margin-left: auto;
+}
+
+.topbarRight .topbarActionsCluster .siteMobileNavMore {
+  flex-shrink: 0;
+}
+
+.siteMobileNavMore__trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-bg-card) 92%, var(--color-bg-muted) 8%);
+  color: var(--color-text-primary);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--color-text-primary) 6%, transparent);
+}
+
+.siteMobileNavMore__trigger:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-accent) 70%, transparent);
+  outline-offset: 2px;
+}
+
+.siteMobileNavMore__bars {
+  width: 18px;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+  box-shadow:
+    0 -6px 0 currentColor,
+    0 6px 0 currentColor;
+  flex-shrink: 0;
+}
+
+.siteMobileNavMore__label {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.siteMobileNavMore__panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: min(280px, calc(100vw - 32px));
+  max-width: min(340px, calc(100vw - 24px));
+  border-radius: 14px;
+  border: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-bg-card) 96%, var(--color-bg-muted) 4%);
+  box-shadow:
+    0 18px 48px color-mix(in srgb, var(--color-text-primary) 18%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--color-text-primary) 5%, transparent);
+  padding: 8px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  z-index: 400;
+}
+
+.siteMobileNavMore--align-end .siteMobileNavMore__panel {
+  left: auto;
+  right: 0;
+}
+
+.siteMobileNavMore__panelInner {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: min(70vh, 560px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.siteMobileNavMore__entry {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  padding: 12px 12px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  cursor: pointer;
+  min-height: 44px;
+  box-sizing: border-box;
+}
+
+.siteMobileNavMore__entry:hover {
+  background: color-mix(in srgb, var(--color-accent-soft) 55%, transparent);
+  border-color: color-mix(in srgb, var(--color-border) 80%, transparent);
+}
+
+.siteMobileNavMore__entry:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-accent) 65%, transparent);
+  outline-offset: 1px;
+}
+
+/* Podcast shell: dark panel tokens */
+.appShell--podcast .siteMobileNavMore__trigger,
+main.topApp.appShell--podcast .siteMobileNavMore__trigger,
+main.topApp[data-page-atmosphere="podcast"] .siteMobileNavMore__trigger {
+  border-color: rgba(111, 194, 255, 0.38);
+  background: linear-gradient(180deg, rgba(24, 41, 66, 0.88), rgba(15, 28, 47, 0.9));
+  color: #e8f0ff;
+  box-shadow: inset 0 0 0 1px rgba(111, 194, 255, 0.12);
+}
+
+.appShell--podcast .siteMobileNavMore__panel,
+main.topApp.appShell--podcast .siteMobileNavMore__panel,
+main.topApp[data-page-atmosphere="podcast"] .siteMobileNavMore__panel {
+  border-color: rgba(111, 194, 255, 0.28);
+  background: linear-gradient(180deg, rgba(15, 26, 42, 0.98), rgba(10, 18, 30, 0.98));
+  color: #e8f0ff;
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.45),
+    inset 0 0 0 1px rgba(111, 194, 255, 0.12);
+}
+
+.appShell--podcast .siteMobileNavMore__entry,
+main.topApp.appShell--podcast .siteMobileNavMore__entry,
+main.topApp[data-page-atmosphere="podcast"] .siteMobileNavMore__entry {
+  color: #e8f0ff;
+}
+
+.appShell--podcast .siteMobileNavMore__entry:hover,
+main.topApp.appShell--podcast .siteMobileNavMore__entry:hover,
+main.topApp[data-page-atmosphere="podcast"] .siteMobileNavMore__entry:hover {
+  background: color-mix(in srgb, rgba(111, 194, 255, 0.18) 100%, transparent);
+  border-color: rgba(111, 194, 255, 0.35);
+}
+
+@media (min-width: 761px) {
+  .siteMobileNavMore--phoneOnly {
     display: none !important;
+  }
+
+  .topbarRight .topbarActionsCluster .siteMobileNavMore--desktopOnly {
+    order: 5;
   }
 }
 
-@media (max-width: 719px) {
-  .siteMobileNavMore {
-    position: relative;
-    display: flex;
-    align-items: center;
-    flex-shrink: 0;
-    z-index: 95;
-  }
-
-  .siteMobileNavMore--align-end {
-    margin-left: auto;
+@media (max-width: 760px) {
+  .siteMobileNavMore--desktopOnly {
+    display: none !important;
   }
 
   .topbarRight .topbarActionsCluster .siteMobileNavMore {
-    flex-shrink: 0;
     order: 10;
+  }
+
+  .topbarRight .topbarActionsCluster,
+  .topbarLeft .topbarActionsCluster {
+    gap: 12px;
+    align-items: center;
   }
 
   .topbarRight .topbarActionsCluster {
     justify-content: flex-end;
-    align-items: center;
   }
 
   .topbarLeft .topbarActionsCluster--start {
@@ -38,38 +193,27 @@
     max-width: 100%;
   }
 
+  .topbarRight .topbarActionsCluster .siteMobileNavMore {
+    margin-left: 0;
+  }
+
+  .headerNotificationBellBtn,
+  .headerAccountTrigger,
+  .headerAccountAvatar.profileAvatarShell,
+  .siteMobileNavMore__trigger,
+  .themeToggle {
+    box-sizing: border-box;
+    width: var(--mobile-site-header-control-size, 44px);
+    height: var(--mobile-site-header-control-size, 44px);
+    min-width: var(--mobile-site-header-control-size, 44px);
+    min-height: var(--mobile-site-header-control-size, 44px);
+    padding: 0;
+    flex-shrink: 0;
+  }
+
   .siteMobileNavMore__trigger {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    min-width: 44px;
-    min-height: 44px;
-    padding: 0 12px;
-    border-radius: 12px;
-    border: 1px solid var(--color-border);
-    background: color-mix(in srgb, var(--color-bg-card) 92%, var(--color-bg-muted) 8%);
-    color: var(--color-text-primary);
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    cursor: pointer;
-    box-shadow: 0 1px 0 color-mix(in srgb, var(--color-text-primary) 6%, transparent);
-  }
-
-  .siteMobileNavMore__trigger:focus-visible {
-    outline: 2px solid color-mix(in srgb, var(--color-accent) 70%, transparent);
-    outline-offset: 2px;
-  }
-
-  .siteMobileNavMore__bars {
-    width: 18px;
-    height: 2px;
-    border-radius: 2px;
-    background: currentColor;
-    box-shadow:
-      0 -6px 0 currentColor,
-      0 6px 0 currentColor;
+    gap: 0;
+    padding: 0;
   }
 
   .siteMobileNavMore__label {
@@ -84,99 +228,44 @@
     border: 0;
   }
 
-  .siteMobileNavMore__panel {
-    position: absolute;
-    top: calc(100% + 8px);
-    left: 0;
-    min-width: min(280px, calc(100vw - 32px));
-    max-width: min(320px, calc(100vw - 24px));
-    border-radius: 14px;
-    border: 1px solid var(--color-border);
-    background: color-mix(in srgb, var(--color-bg-card) 96%, var(--color-bg-muted) 4%);
-    box-shadow:
-      0 18px 48px color-mix(in srgb, var(--color-text-primary) 18%, transparent),
-      0 0 0 1px color-mix(in srgb, var(--color-text-primary) 5%, transparent);
-    padding: 8px;
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+  .headerNotificationBellBtn {
+    border-width: 1px;
+    border-color: var(--color-border);
+    border-radius: 12px;
   }
 
-  .siteMobileNavMore--align-end .siteMobileNavMore__panel {
-    left: auto;
-    right: 0;
+  .headerAccountTrigger {
+    border-width: 1px;
+    border-color: var(--color-border);
+    border-radius: 999px;
   }
 
-  .siteMobileNavMore__panelInner {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .siteMobileNavMore__entry {
+  .headerNotificationWrap {
     display: flex;
     align-items: center;
-    gap: 10px;
-    width: 100%;
-    text-align: left;
-    padding: 12px 12px;
-    border-radius: 10px;
-    border: 1px solid transparent;
-    background: transparent;
-    color: var(--color-text-primary);
-    font-size: 14px;
-    font-weight: 650;
-    letter-spacing: 0.02em;
-    text-decoration: none;
-    cursor: pointer;
-    min-height: 44px;
-    box-sizing: border-box;
+    flex-shrink: 0;
   }
 
-  .siteMobileNavMore__entry:hover {
-    background: color-mix(in srgb, var(--color-accent-soft) 55%, transparent);
-    border-color: color-mix(in srgb, var(--color-border) 80%, transparent);
+  .headerAccountWrap {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
   }
 
-  .siteMobileNavMore__entry:focus-visible {
-    outline: 2px solid color-mix(in srgb, var(--color-accent) 65%, transparent);
-    outline-offset: 1px;
+  .themeToggle {
+    border-radius: 12px;
+    padding: 0;
   }
 
-  /* Podcast shell: dark panel tokens (page keeps `data-use-podcast-theme`) */
-  .appShell--podcast .siteMobileNavMore__trigger {
-    border-color: rgba(111, 194, 255, 0.38);
-    background: linear-gradient(180deg, rgba(24, 41, 66, 0.88), rgba(15, 28, 47, 0.9));
-    color: #e8f0ff;
-    box-shadow: inset 0 0 0 1px rgba(111, 194, 255, 0.12);
-  }
-
-  .appShell--podcast .siteMobileNavMore__panel {
-    border-color: rgba(111, 194, 255, 0.28);
-    background: linear-gradient(180deg, rgba(15, 26, 42, 0.98), rgba(10, 18, 30, 0.98));
-    color: #e8f0ff;
-    box-shadow:
-      0 20px 50px rgba(0, 0, 0, 0.45),
-      inset 0 0 0 1px rgba(111, 194, 255, 0.12);
-  }
-
-  .appShell--podcast .siteMobileNavMore__entry {
-    color: #e8f0ff;
-  }
-
-  .appShell--podcast .siteMobileNavMore__entry:hover {
-    background: color-mix(in srgb, rgba(111, 194, 255, 0.18) 100%, transparent);
-    border-color: rgba(111, 194, 255, 0.35);
-  }
-
-  /* Three-tile bottom dock: hide overflow destinations; keep Home, Profile, Contact */
+  /* Five-tile bottom dock */
   .footerDock .bottomNav.bottomNav--withIcons.bottomNav--mobileDock {
     display: grid !important;
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-    gap: 8px;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 4px;
     width: 100%;
     max-width: 100%;
     flex-wrap: nowrap !important;
-    padding: 8px 10px;
+    padding: 8px 6px;
     align-items: stretch;
   }
 
@@ -193,18 +282,45 @@
     min-width: 0;
     max-width: none;
     min-height: 48px;
-    padding: 8px 6px;
+    padding: 6px 2px;
     white-space: normal;
     line-height: 1.15;
     text-align: center;
   }
 
-  .footerDockBackdrop {
+  .footerDock .bottomNav.bottomNav--withIcons.bottomNav--mobileDock .navItemLabel {
+    font-size: clamp(9px, 2.4vw, 11px);
+    letter-spacing: 0.01em;
+  }
+
+  .footerDock .bottomNav.bottomNav--withIcons.bottomNav--mobileDock .navItem[data-nav-key="home"] {
+    grid-column: 1;
+  }
+
+  .footerDock .bottomNav.bottomNav--withIcons.bottomNav--mobileDock .navItem[data-nav-key="trusted"] {
+    grid-column: 2;
+  }
+
+  .footerDock .bottomNav.bottomNav--withIcons.bottomNav--mobileDock .navItem[data-nav-key="community"] {
+    grid-column: 3;
+  }
+
+  .footerDock .bottomNav.bottomNav--withIcons.bottomNav--mobileDock .navItem[data-nav-key="podcast"] {
+    grid-column: 4;
+  }
+
+  .footerDock .bottomNav.bottomNav--withIcons.bottomNav--mobileDock .navItem[data-nav-key="contact"] {
+    grid-column: 5;
+  }
+
+  main.topApp .footerDockBackdrop,
+  .appShell .footerDockBackdrop {
     height: calc(92px + env(safe-area-inset-bottom, 0px)) !important;
     background: transparent !important;
   }
 
-  .appShell--podcast .footerDockBackdrop {
+  .appShell--podcast .footerDockBackdrop,
+  html[data-use-podcast-theme="true"] .footerDockBackdrop {
     background: linear-gradient(
       180deg,
       transparent,
@@ -212,11 +328,11 @@
     ) !important;
   }
 
-  .footerNavInner {
+  main.topApp .footerNavInner,
+  .appShell .footerNavInner {
     padding: 8px 10px calc(10px + env(safe-area-inset-bottom, 0px)) !important;
   }
 
-  /* Move duplicate CTAs into the overflow menu on narrow headers (shells with mobile dock + hamburger) */
   .appShell--withMobileNavDock .topbarLeft .topbarActionsCluster--start > .sponsorBtn,
   .appShell--withMobileNavDock .topbarLeft .topbarActionsCluster--start > a.sponsorBtn {
     display: none !important;

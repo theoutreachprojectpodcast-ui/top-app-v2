@@ -1,12 +1,21 @@
 import { guardMutation, guardFailureResponse } from "@/lib/security/secureRoute";
 import { createSupabaseReadClient } from "@/lib/supabase/readServiceClient";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { fetchDirectorySearchWithSupabase } from "@/features/directory/api";
+import { requireMembershipApi } from "@/lib/membership/membershipRouteGuard";
 
 export const runtime = "nodejs";
 
 export async function POST(request) {
   const __guard = guardMutation(request, { rateKey: "directory-search", limit: 60 });
   if (!__guard.ok) return guardFailureResponse(__guard);
+
+  const admin = createSupabaseAdminClient();
+  if (admin) {
+    const membership = await requireMembershipApi(admin, "directory");
+    if (!membership.ok) return membership.response;
+  }
+
   const supabase = createSupabaseReadClient();
   if (!supabase) {
     return Response.json(

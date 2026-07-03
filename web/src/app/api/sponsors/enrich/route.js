@@ -131,7 +131,7 @@ export async function POST(request) {
 
   const { error: enrichErr } = await supabase.from("sponsor_enrichment").upsert(enrichmentRow, { onConflict: "sponsor_id" });
   if (enrichErr) {
-    console.warn("[torp] sponsor_enrichment upsert", enrichErr.message);
+    console.warn("[top] sponsor_enrichment upsert", enrichErr.message);
   }
 
   const patch = {

@@ -1,23 +1,92 @@
 # Production Supabase migration order
 
+## URGENT — Supabase security linter (`rls_disabled_in_public`)
+
+If Supabase emails **“Table publicly accessible”** / linter **0013**:
+
+1. Open [Supabase Dashboard](https://supabase.com/dashboard) → project **The Outreach Project Directory** (`xbtfoundwmhrqrbcuqcw`)
+2. **SQL Editor** → New query → paste entire file **`web/supabase/supabase_public_rls_hardening_nondestructive_2026_06.sql`** → **Run**  
+   (Use this one — **no destructive warning**. The full `supabase_public_rls_hardening_2026_06.sql` DROPs legacy policies; only use that if you want a clean policy slate.)
+3. Verify:
+   ```sql
+   select * from public._top_rls_security_audit() where status = 'FAIL' order by 1, 2;
+   ```
+   (expect **0 rows**; `WARN` / `legacy_permissive_policy_present` is OK — anon is still blocked)
+4. **Database → Linter** → Refresh
+
+Safe to re-run (idempotent). Production app uses **service role** on the server — RLS deny policies block only direct `anon`/`authenticated` PostgREST access.
+
+CLI apply (pick one credential):
+
+- **Management API** (no DB password): create a token at [Account → Access Tokens](https://supabase.com/dashboard/account/tokens), then  
+  `set SUPABASE_ACCESS_TOKEN=sbp_...` and `pnpm --dir web run apply:production:rls:apply`
+- **Direct Postgres**: `set DATABASE_URL=postgresql://...` and `pnpm --dir web run apply:production:rls:apply`
+
+Verify: `cmd /c "cd web && vercel env run -e production -- pnpm run verify:production-rls"`
+
+---
+
 Run in the **Production** Supabase project SQL editor (or CLI). Skip files prefixed `qa_` unless you intentionally want QA seed data in prod.
 
 Apply in order. If a migration was already applied, Postgres will error on duplicate objects — note which step failed and continue from the next file.
+
+**Also run (not numbered in table):** `top_profiles_membership_billing_v04.sql` after #5 or #6 — required for Membership & billing on profile.
+
+**Existing production (tables still named `torp_*`):** run **`top_production_align_2026_06.sql`** once before or immediately after deploying app code that expects `top_*` table names. Greenfield installs use `top_v03_profiles.sql` directly (skip align).
+
+## Troubleshooting
+
+| Step | File | Common error | Fix |
+|------|------|--------------|-----|
+| 1 | `top_v03_profiles.sql` | (none if greenfield) | Creates `top_profiles` + `membership_source` |
+| 2 | `top_account_access_model_v03.sql` | `relation "top_profiles" does not exist` | Run **#1** first |
+| 2 | `top_account_access_model_v03.sql` | `check constraint` violation on `platform_role` | Backfill invalid rows, then re-run (see below) |
+| 3 | `top_profiles_membership_source.sql` | PowerShell: `Missing statement body in do loop` / `Missing '(' after 'if'` | **Not Postgres** — you ran SQL in a shell. Use **Supabase → SQL Editor** only |
+| 3 | `top_profiles_membership_source.sql` | `top_profiles missing` / relation does not exist | Run **#1** first |
+| 3 | `top_profiles_membership_source.sql` | (no error — success) | **Skip** if #1 already ran; column already exists |
+| 34 | `admin_backend_v06_access_control.sql` | `column "admin_access_enabled" does not exist` | You are on an old file order — run **#34** before admin `UPDATE` |
+| Admin grant | manual `UPDATE` | `admin_access_enabled` missing | Run **#34** `admin_backend_v06_access_control.sql` first |
+
+**Check before #3:**
+
+```sql
+select exists (
+  select 1 from information_schema.tables
+  where table_schema = 'public' and table_name = 'top_profiles'
+) as top_profiles_exists;
+
+select exists (
+  select 1 from information_schema.columns
+  where table_schema = 'public' and table_name = 'top_profiles' and column_name = 'membership_source'
+) as membership_source_exists;
+```
+
+If `top_profiles_exists` is false → run #1. If `membership_source_exists` is true → #3 is already done; continue to #4.
+
+**Backfill before #2** (only if `platform_role` check constraint fails):
+
+```sql
+update public.top_profiles
+set platform_role = 'user'
+where platform_role is null
+   or platform_role not in ('user', 'support', 'member', 'sponsor', 'moderator', 'admin');
+```
 
 ## Core (required for MVP)
 
 | # | File | Purpose |
 |---|------|---------|
-| 1 | `torp_v03_profiles.sql` | Profiles table |
-| 2 | `torp_account_access_model_v03.sql` | Access model |
-| 3 | `torp_profiles_membership_source.sql` | Membership source column |
-| 4 | `torp_profiles_stripe_customer_idx.sql` | Stripe customer index |
-| 5 | `torp_profiles_last_login_v06.sql` | Last login tracking |
+| 1 | `top_v03_profiles.sql` | Profiles table |
+| 2 | `top_account_access_model_v03.sql` | Access model |
+| 3 | `top_profiles_membership_source.sql` | Membership source column |
+| 4 | `top_profiles_stripe_customer_idx.sql` | Stripe customer index |
+| 5 | `top_profiles_last_login_v06.sql` | Last login tracking |
 | 6 | `profile_onboarding_v06_questionnaire.sql` | Onboarding fields |
+| 6.5 | `top_profiles_membership_billing_v04.sql` | Billing columns on profile (Stripe UI) |
 | 7 | `community.sql` | Community posts |
 | 8 | `community_v03_data_model.sql` | Community v3 extensions |
 | 9 | `top_app_saved_org_eins.sql` | Saved organizations |
-| 10 | `torp_platform_notifications.sql` | Notifications |
+| 10 | `top_platform_notifications.sql` | Notifications |
 | 11 | `trusted_resources.sql` | Trusted resources catalog |
 | 12 | `trusted_resource_applications.sql` | Trusted resource applications |
 | 13 | `trusted_resources_detail_v01.sql` | Trusted detail v1 |
@@ -44,9 +113,11 @@ Apply in order. If a migration was already applied, Postgres will error on dupli
 | 34 | `admin_backend_v06_access_control.sql` | Admin access control |
 | 35 | `admin_cms_v05_all_in_one.sql` | Admin CMS |
 | 36 | `admin_audit_logs_v01.sql` | Admin audit logs |
+| 37 | `page_content_blocks_admin_v10.sql` | Universal page copy blocks + `admin-media` bucket + media asset registry |
 | 37 | `admin_enrichment_diagnostics.sql` | Admin diagnostics (optional) |
 | 38 | `platform_future_hooks.sql` | Future hooks (optional) |
 | 39 | `safe_alignment_extension_2026_04.sql` | Safe alignment patch |
+| **40** | `supabase_public_rls_hardening_2026_06.sql` | **Required** — RLS on all public tables + `security_invoker` on all views (fixes Supabase linter 0013 + 0010) |
 
 ## Sponsor display / branding (apply after catalog exists)
 
@@ -55,14 +126,17 @@ Run the `sponsor_v*.sql` files in version order (`sponsor_v06` … `sponsor_v17`
 ## Post-migration verification
 
 ```sql
+-- Security audit (expect zero rows)
+select * from public._top_rls_security_audit() where status <> 'OK' order by 1, 2;
+
 -- Profiles + RLS
-select count(*) from public.torp_profiles limit 1;
+select count(*) from public.top_profiles limit 1;
 
 -- Sponsors seeded
 select count(*) from public.sponsors_catalog;
 
 -- Admin columns present
-select platform_role, admin_access_enabled from public.torp_profiles limit 1;
+select platform_role, admin_access_enabled from public.top_profiles limit 1;
 ```
 
 Confirm **RLS enabled** on user-facing tables in Supabase Dashboard → Database → Tables.

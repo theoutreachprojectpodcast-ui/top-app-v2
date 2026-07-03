@@ -1,5 +1,7 @@
 # Production domains (The Outreach Project)
 
+**Owned domain:** `theoutreachproject.app` (`.app` only). Do not use `theoutreachproject.com` in Vercel, DNS, WorkOS, Stripe, or env vars. Support email: `support@theoutreachproject.app`.
+
 Single Vercel deployment; apex, `www`, and `admin` all point at the same app.
 
 ## DNS (summary)

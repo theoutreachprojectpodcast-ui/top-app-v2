@@ -29,7 +29,7 @@ export default function PodcastGuestProfilePage({ slug }) {
   return (
     <div className="podcastScope">
         <section className="podcastSection">
-          <Link className="btnSoft" href="/podcasts/guests">Back to Guests</Link>
+          <Link className="btnSoft" href="/podcasts">Back to Podcast</Link>
           <article className="podcastGuestProfile">
             <div className="podcastGuestAvatar podcastGuestAvatar--large">
               {guest?.avatar_url ? (

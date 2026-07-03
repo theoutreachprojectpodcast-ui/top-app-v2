@@ -1,4 +1,4 @@
-# Organization header image enrichment (tORP v0.3)
+# Organization header image enrichment (TOP v0.3)
 
 ## Card types
 
@@ -20,7 +20,7 @@
 
 ## Overlay / filters
 
-- Nonprofit/trusted heroes use `.torpListingCardHero--photo` (mild saturation/contrast) plus `.torpListingCardHeroScrim--resource.torpListingCardHeroScrim--orgListing` for a slightly deeper gradient than the base resource strip.
+- Nonprofit/trusted heroes use `.topListingCardHero--photo` (mild saturation/contrast) plus `.topListingCardHeroScrim--resource.topListingCardHeroScrim--orgListing` for a slightly deeper gradient than the base resource strip.
 - Sponsor cards remain on their own background/gradient treatment in `FeaturedSponsorCard.jsx` and related CSS.
 
 ## Moderator review

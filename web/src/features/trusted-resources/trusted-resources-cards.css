@@ -1,21 +1,5 @@
 /* Trusted Resources branded listing — `/trusted` route + TopApp trusted tab (see TopApp.js import). */
 
-.trustedRouteCard .trustedListingIntro {
-  margin: 10px 0 0;
-  padding: 10px 12px;
-  border-radius: 12px;
-  border: 1px solid var(--color-border-subtle);
-  background: color-mix(in srgb, var(--color-bg-subtle) 88%, var(--color-accent) 6%);
-  color: var(--color-text-secondary);
-  font-size: 0.9rem;
-  line-height: 1.45;
-}
-
-:root[data-color-scheme="dark"] .trustedRouteCard .trustedListingIntro,
-.dark .trustedRouteCard .trustedListingIntro {
-  background: color-mix(in srgb, var(--color-bg-subtle) 92%, var(--color-accent) 8%);
-}
-
 .trustedRouteCard .results.results--trustedBranded {
   display: grid;
   /* Web: fixed 3 columns × N rows (`minmax(0,1fr)` keeps equal-width tracks in the shell). */
@@ -197,49 +181,9 @@
   align-items: start;
 }
 
-/* Circular brand mark: distinct from wide header frame (no visible “logo” / “header” labels). */
-.trustedResourceCard__logoFrame {
-  width: 96px;
-  height: 96px;
-  border-radius: 50%;
-  /* Dark plate so letterboxing never reads as white gaps inside the ring. */
-  background: #0a100e;
-  border: 2px solid var(--color-border-strong);
-  overflow: hidden;
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, #ffffff 45%, transparent),
-    0 10px 22px var(--color-shadow);
-  margin-top: -52px;
-  position: relative;
-  z-index: 3;
-}
-
-:root[data-color-scheme="dark"] .trustedResourceCard__logoFrame,
-.dark .trustedResourceCard__logoFrame {
-  border-color: color-mix(in srgb, var(--color-border-strong) 90%, #ffffff 10%);
-  box-shadow:
-    inset 0 1px 0 color-mix(in srgb, #ffffff 8%, transparent),
-    0 10px 24px color-mix(in srgb, #000 45%, transparent);
-}
-
-.trustedResourceCard__logoImg {
-  position: absolute;
-  inset: 0;
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-  /* Slight overscan hides sub-pixel gaps at the circular clip edge. */
-  transform: scale(1.05);
-}
-
-.trustedResourceCard__logoFallback {
-  display: grid;
-  place-items: center;
-  width: 100%;
-  height: 100%;
-  background: color-mix(in srgb, var(--color-bg-muted) 72%, var(--color-bg-elevated) 28%);
+/* Circular brand mark — layout only; frame styles live in organization-logo.css */
+.trustedResourceCard__logoSlot {
+  flex-shrink: 0;
 }
 
 .trustedResourceCard__titleBlock {
@@ -372,10 +316,12 @@
     grid-template-columns: 84px minmax(0, 1fr);
   }
 
-  .trustedResourceCard__logoFrame {
-    width: 84px;
-    height: 84px;
+  .trustedResourceCard__logoSlot {
     margin-top: -48px;
+  }
+
+  .trustedResourceCard__logoSlot .organizationLogo {
+    --org-logo-size: 84px;
   }
 
   .trustedResourceCard__titleBlock {

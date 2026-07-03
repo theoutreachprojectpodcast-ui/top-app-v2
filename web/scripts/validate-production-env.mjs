@@ -35,6 +35,66 @@ if (vercelProduction && adminEmailLoginProd && !cookieDomain) {
   missing.push("WORKOS_COOKIE_DOMAIN (required for admin email login on apex + admin host)");
 }
 
+if (vercelProduction) {
+  const appUrlCheck = String(process.env.APP_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || "").toLowerCase();
+  if (appUrlCheck.includes("outreachproject.app") && !appUrlCheck.includes("theoutreachproject.app")) {
+    console.error(
+      "[validate-production-env] APP_BASE_URL uses outreachproject.app — production domain is theoutreachproject.app",
+    );
+    process.exit(1);
+  }
+  if (
+    appUrlCheck.includes("localhost") ||
+    appUrlCheck.includes("127.0.0.1") ||
+    (appUrlCheck.includes("vercel.app") && !appUrlCheck.includes("theoutreachproject.app"))
+  ) {
+    console.error("[validate-production-env] APP_BASE_URL must not use localhost or preview hostname in production");
+    process.exit(1);
+  }
+  if (appUrlCheck.includes("qa.")) {
+    console.error("[validate-production-env] APP_BASE_URL must not use QA hostname in production");
+    process.exit(1);
+  }
+  if (!String(process.env.NEXT_PUBLIC_WORKOS_REDIRECT_URI || process.env.WORKOS_REDIRECT_URI || "").includes("/callback")) {
+    missing.push("WORKOS redirect URI must end with /callback");
+  }
+  const redirectCheck = String(
+    process.env.NEXT_PUBLIC_WORKOS_REDIRECT_URI || process.env.WORKOS_REDIRECT_URI || "",
+  ).toLowerCase();
+  if (redirectCheck && !redirectCheck.includes("theoutreachproject.app")) {
+    missing.push("WORKOS redirect URI must use theoutreachproject.app in production");
+  }
+}
+
+if (vercelProduction) {
+  if (!String(process.env.STRIPE_SECRET_KEY || "").trim()) {
+    missing.push("STRIPE_SECRET_KEY");
+  }
+  const hasWebhook =
+    String(process.env.STRIPE_WEBHOOK_LIVE_SECRET || "").trim() ||
+    String(process.env.STRIPE_WEBHOOK_SECRET || "").trim();
+  if (!hasWebhook) {
+    missing.push("STRIPE_WEBHOOK_LIVE_SECRET or STRIPE_WEBHOOK_SECRET");
+  }
+  const supportPrice =
+    String(process.env.STRIPE_PRICE_SUPPORT_YEARLY || "").trim() ||
+    String(process.env.STRIPE_PRICE_SUPPORT_ANNUAL || "").trim();
+  if (!supportPrice) {
+    missing.push("STRIPE_PRICE_SUPPORT_YEARLY");
+  }
+  if (supportPrice === "price_1TlqQ9CiwOqAGcUDuZkKPlJ2") {
+    console.error(
+      "[validate-production-env] STRIPE_PRICE_SUPPORT_YEARLY points at blocked $99/year price — update before deploy.",
+    );
+    process.exit(1);
+  }
+  if (adminEmailLoginProd) {
+    console.warn(
+      "[validate-production-env] WARNING: ENABLE_ADMIN_EMAIL_LOGIN=1 on production — prefer WorkOS-only admin auth.",
+    );
+  }
+}
+
 const privateRedirect = String(process.env.WORKOS_REDIRECT_URI || "").trim();
 const publicRedirect = String(process.env.NEXT_PUBLIC_WORKOS_REDIRECT_URI || "").trim();
 if (!privateRedirect && !publicRedirect) {

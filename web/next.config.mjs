@@ -17,6 +17,11 @@ const nextConfig = {
   async headers() {
     return [
       {
+        source: "/:path((?!_next|api|.*\\..*).*)",
+        has: [{ type: "header", key: "user-agent", value: ".*TheOutreachProject/Capacitor.*" }],
+        headers: [{ key: "Cache-Control", value: "no-store, must-revalidate" }],
+      },
+      {
         source: "/manifest.webmanifest",
         headers: [
           { key: "Content-Type", value: "application/manifest+json; charset=utf-8" },

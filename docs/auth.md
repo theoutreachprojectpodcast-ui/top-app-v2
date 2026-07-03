@@ -17,5 +17,5 @@ Sliding idle expiry is enforced server-side (see `web/src/lib/auth/sessionIdle.j
 ## Further reading
 
 - [WorkOS auth setup](./workos-auth-setup.md)
-- [TORP v0.3 auth implementation](./torp-v03-auth-implementation.md)
+- [TOP v0.3 auth implementation](./top-v03-auth-implementation.md)
 - `web/docs/profile-auth-data-sync.md`

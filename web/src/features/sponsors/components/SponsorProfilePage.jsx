@@ -13,6 +13,8 @@ import {
   Youtube,
 } from "lucide-react";
 import { sanitizeDisplayableImageUrl } from "@/lib/media/safeImageUrl";
+import OrganizationLogo from "@/components/shared/OrganizationLogo";
+import SponsorOutboundLink from "@/features/sponsors/components/SponsorOutboundLink";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { getSponsorBySlug } from "@/features/sponsors/api/sponsorCatalogApi";
 import { sponsorBlurbsRedundant } from "@/features/sponsors/domain/sponsorViewModels";
@@ -23,7 +25,7 @@ function formatTierLabel(key) {
   return k.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-function SocialIconLink({ item, brandName }) {
+function SocialIconLink({ item, brandName, sponsorSlug, pageSource }) {
   const Icon =
     item.key === "website"
       ? Globe
@@ -40,16 +42,18 @@ function SocialIconLink({ item, brandName }) {
                 : Globe;
   const label = `${brandName} — ${item.label}`;
   return (
-    <a
+    <SponsorOutboundLink
       className="sponsorProfileIconLink"
       href={item.url}
-      target="_blank"
-      rel="noopener noreferrer"
+      sponsorSlug={sponsorSlug}
+      sponsorName={brandName}
+      pageSource={pageSource}
+      ctaType={item.key === "website" ? "website" : "social"}
       aria-label={label}
       title={item.label}
     >
       <Icon className="sponsorProfileIconLinkSvg" aria-hidden strokeWidth={2} />
-    </a>
+    </SponsorOutboundLink>
   );
 }
 
@@ -86,6 +90,7 @@ export default function SponsorProfilePage({ slug }) {
   const logoSrc = logoCandidates[logoIndex] || "";
 
   const brandName = profile ? String(profile.name || "").trim() || "Sponsor" : "Sponsor";
+  const pageSource = profile?.isPodcastSponsor ? "podcast_sponsor_page" : "sponsor_profile";
 
   return (
     <div className="sponsorProfilePageRoot">
@@ -95,6 +100,15 @@ export default function SponsorProfilePage({ slug }) {
         </div>
       ) : (
         <>
+          {profile.isPodcastSponsor ? (
+            <div className="sponsorProfileContextBanner card" role="note">
+              <p className="sponsorProfileContextBannerText">
+                This organization sponsors The Outreach Project podcast.{" "}
+                <Link href="/podcasts">View podcast page</Link>
+              </p>
+            </div>
+          ) : null}
+
           <div className="card sponsorProfileIntro">
             {heroSrc ? (
               <div className="sponsorProfileHeroMedia">
@@ -104,26 +118,27 @@ export default function SponsorProfilePage({ slug }) {
             ) : null}
             <div className="sponsorProfileIntroBody">
               <div className="sponsorProfileIdentityRow">
-                <div
-                  className={`sponsorPremiumLogoShell sponsorProfileLogoShell${
-                    profile.logoPanelMode === "light" ? " sponsorPremiumLogoShell--panel-light" : ""
-                  }`}
-                >
-                  {logoSrc ? (
-                    <img
-                      className="sponsorPremiumLogoImg"
-                      src={logoSrc}
-                      alt=""
-                      loading="lazy"
-                      decoding="async"
-                      onError={() => {
-                        if (logoIndex < logoCandidates.length - 1) setLogoIndex((i) => i + 1);
-                      }}
-                    />
-                  ) : (
-                    <span className="sponsorPremiumWordmark">{brandName}</span>
-                  )}
-                </div>
+                <OrganizationLogo
+                  className="sponsorProfileLogoShell"
+                  src={logoSrc}
+                  alt=""
+                  name={brandName}
+                  entityKey={slug}
+                  size="profile"
+                  surface="page"
+                  panel={
+                    profile.logoPanelMode === "light"
+                      ? "light"
+                      : profile.logoPanelMode === "dark"
+                        ? "dark"
+                        : profile.logoPanelMode === "neutral"
+                          ? "neutral"
+                          : "auto"
+                  }
+                  onError={() => {
+                    if (logoIndex < logoCandidates.length - 1) setLogoIndex((i) => i + 1);
+                  }}
+                />
                 <div className="sponsorProfileTitleBlock">
                   <h1 className="sponsorProfileTitle">{brandName}</h1>
                   <p className="sponsorProfileTypeLine">
@@ -147,13 +162,55 @@ export default function SponsorProfilePage({ slug }) {
                       </span>
                     ) : null}
                     {profile.veteran_owned ? <span className="sponsorProfileMetaChip">Veteran-owned</span> : null}
+                    {profile.promoCode ? (
+                      <span className="sponsorProfileMetaChip sponsorProfileMetaChip--promo">Code: {profile.promoCode}</span>
+                    ) : null}
                   </div>
+                  {profile.lastUpdatedLabel ? (
+                    <p className="sponsorProfileUpdated">Last updated {profile.lastUpdatedLabel}</p>
+                  ) : null}
                 </div>
               </div>
+
+              {profile.ctaUrl || profile.inquiryUrl ? (
+                <div className="sponsorProfileCtaRow">
+                  {profile.ctaUrl ? (
+                    <SponsorOutboundLink
+                      className="btnPrimary sponsorProfileCtaBtn"
+                      href={profile.ctaUrl}
+                      sponsorSlug={profile.slug}
+                      sponsorName={brandName}
+                      pageSource={pageSource}
+                      ctaType="website"
+                    >
+                      {profile.ctaLabel || "Visit Website"}
+                    </SponsorOutboundLink>
+                  ) : null}
+                  {profile.inquiryUrl ? (
+                    <SponsorOutboundLink
+                      className="btnSoft sponsorProfileCtaBtn"
+                      href={profile.inquiryUrl}
+                      sponsorSlug={profile.slug}
+                      sponsorName={brandName}
+                      pageSource={pageSource}
+                      ctaType="inquiry"
+                    >
+                      Contact / inquire
+                    </SponsorOutboundLink>
+                  ) : null}
+                </div>
+              ) : null}
+
               {profile.socialLinks?.length ? (
                 <div className="sponsorProfileIconRow" aria-label="External links">
                   {profile.socialLinks.map((item) => (
-                    <SocialIconLink key={item.key} item={item} brandName={brandName} />
+                    <SocialIconLink
+                      key={item.key}
+                      item={item}
+                      brandName={brandName}
+                      sponsorSlug={profile.slug}
+                      pageSource={pageSource}
+                    />
                   ))}
                 </div>
               ) : null}
@@ -185,6 +242,42 @@ export default function SponsorProfilePage({ slug }) {
             })()}
           </div>
 
+          {Array.isArray(profile.featuredItems) && profile.featuredItems.length ? (
+            <div className="card sponsorProfileCard sponsorProfileFeatured">
+              <h2 className="sponsorProfileSectionTitle">Featured</h2>
+              <ul className="sponsorProfileFeaturedList">
+                {profile.featuredItems.map((item, index) => {
+                  const title = String(item.title || "").trim() || "Learn more";
+                  const href = String(item.url || "").trim();
+                  const desc = String(item.description || "").trim();
+                  return (
+                    <li key={`${title}-${index}`} className="sponsorProfileFeaturedItem">
+                      {href ? (
+                        <SponsorOutboundLink
+                          className="sponsorProfileFeaturedLink"
+                          href={href}
+                          sponsorSlug={profile.slug}
+                          sponsorName={brandName}
+                          pageSource={pageSource}
+                          ctaType="featured_item"
+                        >
+                          <span className="sponsorProfileFeaturedTitle">{title}</span>
+                          {desc ? <span className="sponsorProfileFeaturedDesc">{desc}</span> : null}
+                          <ExternalLink className="sponsorProfileFeaturedIcon" aria-hidden strokeWidth={2} />
+                        </SponsorOutboundLink>
+                      ) : (
+                        <div className="sponsorProfileFeaturedStatic">
+                          <span className="sponsorProfileFeaturedTitle">{title}</span>
+                          {desc ? <span className="sponsorProfileFeaturedDesc">{desc}</span> : null}
+                        </div>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ) : null}
+
           {(profile.additional_links || []).length ? (
             <div className="card sponsorProfileCard sponsorProfileMore">
               <h2 className="sponsorProfileSectionTitle">More links</h2>
@@ -194,19 +287,32 @@ export default function SponsorProfilePage({ slug }) {
                   const isMail = href.toLowerCase().startsWith("mailto:");
                   return (
                     <li key={href}>
-                      <a
-                        className="sponsorProfileMoreLink"
-                        href={href}
-                        {...(isMail
-                          ? { rel: "noopener noreferrer" }
-                          : { target: "_blank", rel: "noopener noreferrer" })}
-                        aria-label={`${brandName} — ${item.label || href}`}
-                        title={item.label || href}
-                      >
-                        {isMail ? <Mail className="sponsorProfileMoreLinkIcon" aria-hidden strokeWidth={2} /> : null}
-                        {!isMail ? <ExternalLink className="sponsorProfileMoreLinkIcon" aria-hidden strokeWidth={2} /> : null}
-                        <span className="sponsorProfileMoreLinkText">{item.label || href}</span>
-                      </a>
+                      {isMail ? (
+                        <a
+                          className="sponsorProfileMoreLink"
+                          href={href}
+                          rel="noopener noreferrer"
+                          aria-label={`${brandName} — ${item.label || href}`}
+                          title={item.label || href}
+                        >
+                          <Mail className="sponsorProfileMoreLinkIcon" aria-hidden strokeWidth={2} />
+                          <span className="sponsorProfileMoreLinkText">{item.label || href}</span>
+                        </a>
+                      ) : (
+                        <SponsorOutboundLink
+                          className="sponsorProfileMoreLink"
+                          href={href}
+                          sponsorSlug={profile.slug}
+                          sponsorName={brandName}
+                          pageSource={pageSource}
+                          ctaType="social"
+                          aria-label={`${brandName} — ${item.label || href}`}
+                          title={item.label || href}
+                        >
+                          <ExternalLink className="sponsorProfileMoreLinkIcon" aria-hidden strokeWidth={2} />
+                          <span className="sponsorProfileMoreLinkText">{item.label || href}</span>
+                        </SponsorOutboundLink>
+                      )}
                     </li>
                   );
                 })}
@@ -215,8 +321,8 @@ export default function SponsorProfilePage({ slug }) {
           ) : null}
 
           <p className="sponsorProfileBackRow">
-            <Link className="sponsorProfileBackLink" href="/sponsors">
-              ← All sponsors
+            <Link className="sponsorProfileBackLink" href={profile.profileBackHref || "/sponsors"}>
+              {profile.profileBackLabel || "← All sponsors"}
             </Link>
           </p>
         </>

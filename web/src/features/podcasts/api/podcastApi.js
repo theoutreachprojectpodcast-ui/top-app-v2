@@ -103,12 +103,15 @@ export function humanizePodcastBundleError(code = "") {
   return "Episodes could not be loaded right now. Please try again shortly.";
 }
 
-export async function fetchPodcastRecentBundle() {
+export async function fetchPodcastRecentBundle({ background = false } = {}) {
   if (typeof window === "undefined") {
     return { ok: false, episodes: [], featuredGuests: [], degraded: false };
   }
   try {
-    const res = await fetch("/api/podcasts/recent", { credentials: "include", cache: "no-store" });
+    const res = await fetch("/api/podcasts/recent", {
+      credentials: "include",
+      ...(background ? {} : { cache: "default" }),
+    });
     const payload = await res.json().catch(() => ({}));
     if (!res.ok) {
       return { ok: false, episodes: [], featuredGuests: [], degraded: true, error: payload?.error };

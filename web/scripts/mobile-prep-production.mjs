@@ -19,6 +19,12 @@ function run(cmd, args) {
 }
 
 run("pnpm", ["run", "build"]);
+run("pnpm", ["run", "mobile:splash"]);
+run("pnpm", ["run", "mobile:icons"]);
+run("pnpm", ["run", "verify:ios-icon"]);
 run("pnpm", ["exec", "cap", "sync"]);
+run("pnpm", ["run", "mobile:verify:prod"]);
+
+console.log("[mobile:prep:prod] Run mobile:preflight after Vercel production deploy (validates live /auth/workos-go).");
 
 console.log("[mobile:prep:prod] Done. Open Android Studio or Xcode and create a signed release build.");

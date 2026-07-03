@@ -7,6 +7,7 @@ import {
   stripeCheckoutConfigured,
   stripeMemberRecurringConfigured,
   stripeMemberRecurringMissingEnvKeys,
+  stripePortalConfigured,
   stripePublishableConfigured,
   stripeSponsorSubscriptionConfigured,
   stripeWebhookConfigured,
@@ -15,11 +16,24 @@ import { isDemoModeEnabled } from "@/lib/runtime/launchMode";
 import { isAdminEmailLoginEnabled, isAdminEmailLoginProductionEnabled } from "@/lib/auth/adminEmailLogin";
 
 export async function GET() {
+  const isProduction =
+    String(process.env.VERCEL_ENV || "").toLowerCase() === "production" ||
+    String(process.env.NODE_ENV || "").toLowerCase() === "production";
+
+  if (isProduction) {
+    return Response.json({
+      workos: isWorkOSConfigured(),
+      stripe: stripeMemberRecurringConfigured(),
+      stripePortal: stripePortalConfigured(),
+      sessionIdleTimeoutMs: sessionIdleTimeoutMs(),
+    });
+  }
+
   const workos = isWorkOSConfigured();
   const profileTable = profileTableName();
   const qaIsolatedProfiles =
     String(process.env.VERCEL_ENV || "").toLowerCase() === "preview"
-      ? profileTable !== "torp_profiles"
+      ? profileTable !== "top_profiles"
       : true;
   const orgId = expectedWorkOSOrganizationId();
   const idleMs = sessionIdleTimeoutMs();
@@ -45,6 +59,8 @@ export async function GET() {
     stripe: stripeMemberRecurringConfigured(),
     stripeMemberRecurring: stripeMemberRecurringConfigured(),
     stripeMemberRecurringMissingEnv: stripeMemberRecurringConfigured() ? [] : stripeMemberRecurringMissingEnvKeys(),
+    /** Customer Portal (manage payment method, invoices, plan changes) — secret key only. */
+    stripePortal: stripePortalConfigured(),
     stripeSponsorSubscription: stripeSponsorSubscriptionConfigured(),
     /** All onboarding paid tiers including sponsor subscription price. */
     stripeFullOnboarding: stripeCheckoutConfigured(),

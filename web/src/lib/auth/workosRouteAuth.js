@@ -3,7 +3,7 @@ import { getWorkOSUserFromCookies } from "@/lib/auth/workosSessionFromCookies";
 import { isWorkOSConfigured } from "@/lib/auth/workosConfigured";
 import { sessionAuthorizedForWorkOS } from "@/lib/auth/workosOrganizationScope";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
+import { getProfileRowByWorkOSId, upsertProfileFromWorkOSUser } from "@/lib/profile/serverProfile";
 import { ensureWorkOSOrganizationMembership } from "@/lib/auth/workosEnsureOrgMembership";
 
 const ORG_DENIED = Object.freeze({
@@ -27,7 +27,21 @@ async function classifyRouteSession(session) {
   );
 
   const admin = createSupabaseAdminClient();
-  const profileRow = admin && s.user?.id ? await getProfileRowByWorkOSId(admin, s.user.id) : null;
+  if (s.user?.id) {
+    void ensureWorkOSOrganizationMembership(s.user.id).catch((e) => {
+      console.warn("[top] background org membership sync failed:", e);
+    });
+  }
+
+  let profileRow = admin && s.user?.id ? await getProfileRowByWorkOSId(admin, s.user.id) : null;
+  if (!profileRow && admin && s.user?.id) {
+    try {
+      await upsertProfileFromWorkOSUser(admin, s.user);
+      profileRow = await getProfileRowByWorkOSId(admin, s.user.id);
+    } catch (e) {
+      console.error("[top] classifyRouteSession profile upsert failed:", e);
+    }
+  }
 
   if (
     sessionAuthorizedForWorkOS(
@@ -35,12 +49,6 @@ async function classifyRouteSession(session) {
       { email: s.user?.email, profileRow, workosUserId: s.user?.id },
     )
   ) {
-    if (s.user?.id) await ensureWorkOSOrganizationMembership(s.user.id);
-    return { kind: "ok", user: s.user };
-  }
-
-  if (profileRow) {
-    if (s.user?.id) await ensureWorkOSOrganizationMembership(s.user.id);
     return { kind: "ok", user: s.user };
   }
 

@@ -1,0 +1,7 @@
+/* Paste into WorkOS Dashboard → AuthKit → Branding → Custom CSS (global). */
+
+.ak-Background {
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgba(34, 165, 43, 0.14), transparent 58%),
+    light-dark(linear-gradient(168deg, #eef3ef, #e8ece8), linear-gradient(168deg, #1a241c, #101814));
+}

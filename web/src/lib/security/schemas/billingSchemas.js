@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const membershipCheckoutSchema = z.object({
-  tier: z.enum(["support", "member", "sponsor"]),
+  tier: z.enum(["access", "support", "member", "sponsor"]),
   returnPath: z.string().max(500).optional(),
   sponsorPackageId: z.string().max(120).optional(),
 });

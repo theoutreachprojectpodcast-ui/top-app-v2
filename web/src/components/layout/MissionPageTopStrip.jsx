@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  MISSION_STRIP_BADGE,
+  MISSION_STRIP_MISSION_NOTE,
+} from "@/lib/constants";
+
 /**
  * Brand + mission strip for main app shells.
  * @param {"top" | "bottom"} [placement="top"] — Home hero: `top` (under the bar). Other tabs / site routes: `bottom` (end of main content).
@@ -9,11 +14,11 @@ export default function MissionPageTopStrip({ placement = "top" }) {
   return (
     <footer className={`siteFooter ${positionClass} siteFooter--inMainShell`} aria-label="The Outreach Project">
       <div className="footerInner">
-        <div>
-          <div className="brandName">THE OUTREACH PROJECT</div>
-          <p className="footerNote">Mission-first resource navigation for veterans, first responders, and supporters.</p>
+        <div className="brandName">THE OUTREACH PROJECT</div>
+        <span className="footerInner__badge">{MISSION_STRIP_BADGE}</span>
+        <div className="footerNote footerNote--mission">
+          <p>{MISSION_STRIP_MISSION_NOTE}</p>
         </div>
-        <p className="footerNote">Trust-driven support, built for clarity under pressure.</p>
         <nav className="footerLegalNav" aria-label="Legal">
           <a href="/privacy">Privacy</a>
           <span aria-hidden="true"> · </span>

@@ -1,6 +1,6 @@
-# Community — tORP v0.3 (data + moderation)
+# Community — TOP v0.3 (data + moderation)
 
-This note describes the first production-oriented community pass: Supabase-backed posts, moderation-first statuses, RLS, and trusted API routes. It stacks on WorkOS auth, `torp_profiles`, and member billing checks.
+This note describes the first production-oriented community pass: Supabase-backed posts, moderation-first statuses, RLS, and trusted API routes. It stacks on WorkOS auth, `top_profiles`, and member billing checks.
 
 ## Schema
 
@@ -13,7 +13,7 @@ Apply SQL in order after base community + profiles exist:
 
 | Area | Fields |
 |------|--------|
-| Identity | `author_profile_id` → `torp_profiles.id`, denormalized `author_id` (WorkOS), `author_name`, `author_avatar_url` |
+| Identity | `author_profile_id` → `top_profiles.id`, denormalized `author_id` (WorkOS), `author_name`, `author_avatar_url` |
 | Content | `title`, `body`, optional `photo_url`, `link_url`, nonprofit fields, `category`, `post_type` |
 | Moderation | `status`, `reviewed_by`, `reviewed_at`, `rejection_reason`, `moderation_notes` |
 | Lifecycle | `created_at`, `updated_at`, `published_at`, `deleted_at` (soft delete), `is_edited`, `visibility` |
@@ -52,7 +52,7 @@ Trusted API handlers use `createSupabaseAdminClient()` after WorkOS session chec
 | GET | `/api/community/posts?scope=public` | Approved public feed; optional `viewer_has_liked` when signed in |
 | GET | `/api/community/posts?scope=mine` | Current user’s posts (all statuses they own), requires profile |
 | GET | `/api/community/posts?scope=pending` | `pending_review` queue; **moderators only** (server-side allow list) |
-| POST | `/api/community/posts` | Create story; requires WorkOS user, `torp_profiles` row, **`membership_tier === 'member'`**; status `pending_review` |
+| POST | `/api/community/posts` | Create story; requires WorkOS user, `top_profiles` row, **`membership_tier === 'member'`**; status `pending_review` |
 | PATCH | `/api/community/posts/[id]` | `approve` \| `reject` \| `hide`; **moderators only** |
 | POST | `/api/community/posts/[id]/like` | Toggle like; syncs `like_count` |
 
@@ -71,7 +71,7 @@ Optional **client** mirrors exist for UI gating only (`NEXT_PUBLIC_COMMUNITY_MOD
 - **My posts** (signed-in WorkOS): all of the current user’s posts with moderation badges where appropriate.
 - **Composer**: WorkOS path submits via POST; confirmation copy reflects review workflow.
 - **Moderation panel** (moderators): cloud queue loaded via `fetchPendingFeedFromApi` (`scope=pending`); Approve/Reject call PATCH (with optional Supabase client fallback in `reviewSubmission` for local dev).
-- **Member profile modal**: click an author name on a post to open a profile sheet. **Seed/demo members** resolve from `COMMUNITY_MEMBERS_SEED` by id; **real authors** use `torp_profiles.id` (`author_profile_id` on the post). Approved posts for that author load via the Supabase client using RLS-safe public read (`fetchApprovedPostsByMember` chooses `author_profile_id` vs `author_id` using `isAuthorProfileLookupKey`).
+- **Member profile modal**: click an author name on a post to open a profile sheet. **Seed/demo members** resolve from `COMMUNITY_MEMBERS_SEED` by id; **real authors** use `top_profiles.id` (`author_profile_id` on the post). Approved posts for that author load via the Supabase client using RLS-safe public read (`fetchApprovedPostsByMember` chooses `author_profile_id` vs `author_id` using `isAuthorProfileLookupKey`).
 - **Author edits** (signed-in, same entitlements as submit): on **My posts**, members can edit posts in `pending_review` or `approved` via `PATCH /api/community/posts/[id]` with `action: "author_edit"`. Editing a **published** story sets status back to `pending_review` and clears `published_at` until moderators approve again.
 
 ## Not in this pass (future)

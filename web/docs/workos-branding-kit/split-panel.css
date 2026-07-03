@@ -1,0 +1,12 @@
+h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem;
+  color: light-dark(#111714, #f8fcfa);
+}
+
+p {
+  margin: 0;
+  line-height: 1.5;
+  color: light-dark(#4f5d55, rgba(232, 238, 246, 0.82));
+}

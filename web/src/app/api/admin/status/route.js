@@ -18,7 +18,7 @@ export async function GET() {
     countRows(ctx.admin, "sponsors_catalog", [["is_active", true]]),
     countRows(ctx.admin, "sponsors_catalog", [["sponsor_scope", "podcast"], ["is_active", true]]),
     countRows(ctx.admin, "trusted_resources", [["is_active", true]]),
-    countRows(ctx.admin, "community_posts", [["status", "pending"]]),
+    countRows(ctx.admin, "community_posts", [["status", "pending_review"]]),
     countRows(ctx.admin, profileTableName()),
     countRows(ctx.admin, "podcast_guest_applications"),
     countRows(ctx.admin, "sponsor_applications"),

@@ -1,0 +1,70 @@
+{
+  "generatedAt": "2026-06-12T02:22:42.383Z",
+  "workosDocs": "https://workos.com/docs/authkit/branding",
+  "dashboardPath": "Authentication → Branding (or AuthKit → Branding)",
+  "maxAssetBytes": 102400,
+  "assets": {
+    "logo": {
+      "file": "assets/logo.png",
+      "bytes": 14014,
+      "width": 640,
+      "height": 427,
+      "workosRole": "Logo",
+      "source": "web/public/brand-logo-site-dark.png",
+      "formats": "PNG",
+      "notes": "Full wordmark for AuthKit header"
+    },
+    "logoIcon": {
+      "file": "assets/logo-icon.png",
+      "bytes": 44396,
+      "width": 512,
+      "height": 512,
+      "workosRole": "Logo icon",
+      "source": "web/public/brand-logo-mark-dark.png",
+      "formats": "PNG",
+      "aspectRatio": "1:1",
+      "notes": "Square logomark; select in AuthKit preview for mobile-friendly header"
+    },
+    "favicon": {
+      "file": "assets/favicon.png",
+      "bytes": 5169,
+      "width": 180,
+      "height": 180,
+      "workosRole": "Favicon",
+      "source": "web/public/apple-touch-icon.png",
+      "formats": "PNG",
+      "aspectRatio": "1:1",
+      "notes": "Browser tab icon"
+    }
+  },
+  "appearance": {
+    "fontFamily": "Roboto",
+    "cornerRadiusPx": 16,
+    "mode": "System default"
+  },
+  "colors": {
+    "light": {
+      "pageBackground": "#e8ece8",
+      "buttonBackground": "#22a52b",
+      "buttonText": "#ffffff",
+      "link": "#188a20"
+    },
+    "dark": {
+      "pageBackground": "#101814",
+      "buttonBackground": "#22a52b",
+      "buttonText": "#ffffff",
+      "link": "#9fd4b0"
+    }
+  },
+  "pageSettings": {
+    "privacyPolicyUrl": "https://theoutreachproject.app/privacy",
+    "termsOfServiceUrl": "https://theoutreachproject.app/terms",
+    "signInTitle": "Sign in to The Outreach Project",
+    "signUpTitle": "Create your Outreach Project account"
+  },
+  "files": {
+    "customCss": "custom.css",
+    "splitPanelHtml": "split-panel.html",
+    "splitPanelCss": "split-panel.css"
+  }
+}

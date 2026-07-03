@@ -1,8 +1,9 @@
 import { Suspense } from "react";
 import PodcastsLandingPage from "@/features/podcasts/components/PodcastsLandingPage";
-import { getCachedPodcastLandingBundle } from "@/lib/podcast/getCachedPodcastLanding";
+import { getCachedPodcastLandingPageData } from "@/lib/podcast/podcastLandingPageData";
 
-export const dynamic = "force-dynamic";
+/** ISR for /podcasts (default 900s; unstable_cache honors PODCAST_CACHE_TTL). */
+export const revalidate = 900;
 
 function PodcastsFallback() {
   return (
@@ -13,16 +14,20 @@ function PodcastsFallback() {
 }
 
 export default async function PodcastsPageRoute() {
-  const bundle = await getCachedPodcastLandingBundle();
+  const data = await getCachedPodcastLandingPageData();
   return (
     <Suspense fallback={<PodcastsFallback />}>
       <PodcastsLandingPage
-        initialEpisodes={bundle.episodes || []}
-        initialFeaturedGuests={bundle.featuredGuests || []}
+        initialEpisodes={data.episodes || []}
+        initialFeaturedGuests={data.featuredGuests || []}
+        initialSponsors={data.sponsors || []}
+        initialUpcomingGuests={data.upcomingGuests || []}
+        initialEpisodeGuests={data.episodeGuests || []}
+        initialHeroBandImageUrl={data.heroBandImageUrl || ""}
         initialBundleMeta={{
-          degraded: !!bundle.degraded,
-          source: bundle.source || "",
-          error: bundle.episodes?.length ? "" : bundle.error || "",
+          degraded: !!data.degraded,
+          source: data.source || "",
+          error: data.episodes?.length ? "" : data.error || "",
         }}
       />
     </Suspense>

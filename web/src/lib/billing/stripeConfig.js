@@ -1,34 +1,65 @@
 /**
  * Stripe configuration — env vars only, no hardcoded keys or price IDs.
- * Server routes should import from here; never expose STRIPE_SECRET_KEY to the client.
  *
- * Member recurring: STRIPE_PRICE_SUPPORT_MONTHLY + STRIPE_PRICE_PRO_MONTHLY (preferred)
- *   or legacy STRIPE_PRICE_MEMBER_MONTHLY for Pro.
- * Optional sponsor subscription: STRIPE_PRICE_SPONSOR_MONTHLY (onboarding “Sponsor Membership” tier).
+ * User memberships: Support Membership ($0.99/yr) + Pro ($5.99/yr).
+ * Legacy STRIPE_PRICE_ACCESS_YEARLY is for existing subscribers only — never used for new Support checkout.
  */
 
 export function stripeSecretConfigured() {
   return !!process.env.STRIPE_SECRET_KEY?.trim();
 }
 
+/** Customer Portal — only requires secret key (price IDs not required). */
+export function stripePortalConfigured() {
+  return stripeSecretConfigured();
+}
+
+/** Optional Stripe Billing Portal configuration id (`bpc_*`). */
+export function stripeBillingPortalConfigurationId() {
+  return process.env.STRIPE_BILLING_PORTAL_CONFIGURATION?.trim() || "";
+}
+
 export function stripePublishableConfigured() {
   return !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.trim();
 }
 
-/** Pro / “member” tier recurring price — prefer STRIPE_PRICE_PRO_MONTHLY, else legacy MEMBER. */
-export function proSubscriptionPriceId() {
+/** Support tier yearly price — STRIPE_PRICE_SUPPORT_YEARLY / ANNUAL only (no legacy or monthly fallback). */
+export function supportSubscriptionPriceId() {
   return (
-    process.env.STRIPE_PRICE_PRO_MONTHLY?.trim() || process.env.STRIPE_PRICE_MEMBER_MONTHLY?.trim() || ""
+    process.env.STRIPE_PRICE_SUPPORT_YEARLY?.trim() ||
+    process.env.STRIPE_PRICE_SUPPORT_ANNUAL?.trim() ||
+    ""
   );
 }
 
-/** True when Support + Pro recurring checkouts can be created (does not require sponsor subscription price). */
-export function stripeMemberRecurringConfigured() {
+/** Pro tier yearly price — prefer STRIPE_PRICE_PRO_YEARLY. */
+export function proSubscriptionPriceId() {
   return (
-    stripeSecretConfigured() &&
-    !!process.env.STRIPE_PRICE_SUPPORT_MONTHLY?.trim() &&
-    !!proSubscriptionPriceId()
+    process.env.STRIPE_PRICE_PRO_YEARLY?.trim() ||
+    process.env.STRIPE_PRICE_PRO_MONTHLY?.trim() ||
+    process.env.STRIPE_PRICE_MEMBER_MONTHLY?.trim() ||
+    ""
   );
+}
+
+/** @deprecated Use supportSubscriptionPriceId — legacy App Access yearly checkout. */
+export function stripeAccessYearlyConfigured() {
+  return stripeSecretConfigured() && !!process.env.STRIPE_PRICE_ACCESS_YEARLY?.trim();
+}
+
+/** @returns {string[]} */
+export function stripeAccessYearlyMissingEnvKeys() {
+  const missing = [];
+  if (!stripeSecretConfigured()) missing.push("STRIPE_SECRET_KEY");
+  if (!supportSubscriptionPriceId()) {
+    missing.push("STRIPE_PRICE_SUPPORT_YEARLY (or STRIPE_PRICE_SUPPORT_ANNUAL)");
+  }
+  return missing;
+}
+
+/** True when Support + Pro recurring checkouts can be created. */
+export function stripeMemberRecurringConfigured() {
+  return stripeSecretConfigured() && !!supportSubscriptionPriceId() && !!proSubscriptionPriceId();
 }
 
 /** True when sponsor *subscription* tier checkout is available (optional). */
@@ -48,8 +79,12 @@ export function stripeCheckoutConfigured() {
 export function stripeMemberRecurringMissingEnvKeys() {
   const missing = [];
   if (!stripeSecretConfigured()) missing.push("STRIPE_SECRET_KEY");
-  if (!process.env.STRIPE_PRICE_SUPPORT_MONTHLY?.trim()) missing.push("STRIPE_PRICE_SUPPORT_MONTHLY");
-  if (!proSubscriptionPriceId()) missing.push("STRIPE_PRICE_PRO_MONTHLY or STRIPE_PRICE_MEMBER_MONTHLY");
+  if (!supportSubscriptionPriceId()) {
+    missing.push("STRIPE_PRICE_SUPPORT_YEARLY (or STRIPE_PRICE_SUPPORT_ANNUAL)");
+  }
+  if (!proSubscriptionPriceId()) {
+    missing.push("STRIPE_PRICE_PRO_YEARLY (or STRIPE_PRICE_PRO_MONTHLY / STRIPE_PRICE_MEMBER_MONTHLY)");
+  }
   return missing;
 }
 
@@ -75,7 +110,8 @@ export function stripeWebhookConfigured() {
 
 export function priceIdForTier(tier) {
   const t = String(tier || "").toLowerCase();
-  if (t === "support") return process.env.STRIPE_PRICE_SUPPORT_MONTHLY?.trim() || "";
+  if (t === "access") return supportSubscriptionPriceId();
+  if (t === "support") return supportSubscriptionPriceId();
   if (t === "member") return proSubscriptionPriceId();
   if (t === "sponsor") return process.env.STRIPE_PRICE_SPONSOR_MONTHLY?.trim() || "";
   return "";

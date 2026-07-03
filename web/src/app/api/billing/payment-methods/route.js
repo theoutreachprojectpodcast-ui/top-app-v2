@@ -6,18 +6,15 @@ import {
 } from "@/lib/security/secureRoute";
 import { authFailureJson, resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
 import Stripe from "stripe";
-import { createSupabaseAdminClient, profileTableName } from "@/lib/supabase/admin";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
 import {
   requestOriginForStripeRedirects,
   safeAppReturnPath,
   stripeSecretConfigured,
 } from "@/lib/billing/stripeConfig";
-import {
-  fetchDefaultPaymentMethodSummary,
-  paymentMethodToSummary,
-  syncPaymentMethodSummaryOnly,
-} from "@/lib/billing/stripeProfileSync";
+import { resolveStripeCustomerForProfile } from "@/lib/billing/stripeCustomerResolve";
+import { paymentMethodToSummary } from "@/lib/billing/stripeProfileSync";
 import { z } from "zod";
 
 const setDefaultSchema = z.object({
@@ -84,18 +81,14 @@ export async function POST(request) {
   }
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-  let customerId = row.stripe_customer_id ? String(row.stripe_customer_id).trim() : "";
-  if (!customerId) {
-    const customer = await stripe.customers.create({
-      email: auth.user.email || undefined,
-      metadata: { workos_user_id: auth.user.id, torp_profile_id: row.id ? String(row.id) : "" },
-    });
-    customerId = customer.id;
-    await admin
-      .from(profileTableName())
-      .update({ stripe_customer_id: customerId, updated_at: new Date().toISOString() })
-      .eq("workos_user_id", auth.user.id);
+  const resolved = await resolveStripeCustomerForProfile(admin, stripe, auth.user, row);
+  if (!resolved.ok) {
+    return Response.json(
+      { error: resolved.error, message: resolved.message || "Could not add payment method." },
+      { status: 500 },
+    );
   }
+  const customerId = resolved.customerId;
 
   const base = requestOriginForStripeRedirects(request);
   const returnPath = safeAppReturnPath(body.returnPath || "", "/profile");

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Heart, MapPin, ShieldCheck } from "lucide-react";
 import NonprofitIcon from "@/features/nonprofits/components/NonprofitIcon";
+import OrganizationLogo from "@/components/shared/OrganizationLogo";
 import { formatEinDashed } from "@/features/nonprofits/lib/einUtils";
 import TrustedResourceLinkCard from "@/features/trusted-resources/components/TrustedResourceLinkCard";
 import TrustedResourceProgramCard from "@/features/trusted-resources/components/TrustedResourceProgramCard";
@@ -141,18 +142,18 @@ export default function TrustedResourceDetailPage({ slug }) {
                 <div className="trustedDetailHero__banner trustedDetailHero__banner--empty" aria-hidden="true" />
               )}
               <div className="trustedDetailHero__bannerScrim" aria-hidden="true" />
-              <div className="trustedDetailHero__logoBadge card">
-                {resource.logoImage ? (
-                  <img
-                    className="trustedDetailHero__logo"
-                    src={resource.logoImage}
-                    alt=""
-                    loading="eager"
-                    decoding="async"
-                  />
-                ) : (
-                  <NonprofitIcon category={cat} size={48} variant="default" />
-                )}
+              <div className="trustedDetailHero__logoSlot">
+                <OrganizationLogo
+                  src={resource.logoImage || ""}
+                  alt=""
+                  name={resource.name}
+                  entityKey={resource.trustedResourceSlug || resource.id}
+                  size="card"
+                  surface="page"
+                  panel="auto"
+                  fallback="icon"
+                  fallbackIcon={<NonprofitIcon category={cat} size={48} variant="default" />}
+                />
               </div>
             </div>
 

@@ -202,12 +202,12 @@ export default function ProfileEditModal({
         className="modalCard modalCard--profileEdit profileEditModal"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="torp-profile-edit-title"
+        aria-labelledby="top-profile-edit-title"
         onClick={(e) => e.stopPropagation()}
       >
         <header className="profileEditModal__head">
           <div>
-            <h3 id="torp-profile-edit-title">Edit profile</h3>
+            <h3 id="top-profile-edit-title">Edit profile</h3>
             <p className="profileEditModal__intro">
               A photo and a few basics are enough to get started. Membership and billing live in{" "}
               <button type="button" className="accountSettingsInlineLink" onClick={onSettings}>
@@ -257,9 +257,9 @@ export default function ProfileEditModal({
             </div>
 
             <div className={`profileEditModal__nameRow${fieldClass("name")}`} data-profile-edit-focus="name">
-              <Field id="torp-edit-given" label="First name" requiredMark>
+              <Field id="top-edit-given" label="First name" requiredMark>
                 <input
-                  id="torp-edit-given"
+                  id="top-edit-given"
                   name="given-name"
                   autoComplete="given-name"
                   value={editDraft.firstName || ""}
@@ -267,9 +267,9 @@ export default function ProfileEditModal({
                   required
                 />
               </Field>
-              <Field id="torp-edit-family" label="Last name" requiredMark>
+              <Field id="top-edit-family" label="Last name" requiredMark>
                 <input
-                  id="torp-edit-family"
+                  id="top-edit-family"
                   name="family-name"
                   autoComplete="family-name"
                   value={editDraft.lastName || ""}
@@ -281,13 +281,13 @@ export default function ProfileEditModal({
 
             <div className={fieldClass("displayName")} data-profile-edit-focus="displayName">
               <Field
-                id="torp-edit-display"
+                id="top-edit-display"
                 label="Display name"
                 requiredMark
                 hint="Shown on your profile. We suggest your first and last name if you leave this blank."
               >
                 <input
-                  id="torp-edit-display"
+                  id="top-edit-display"
                   name="nickname"
                   autoComplete="nickname"
                   value={editDraft.displayName || ""}
@@ -298,7 +298,7 @@ export default function ProfileEditModal({
 
             <div className={fieldClass("email")} data-profile-edit-focus="email">
               <Field
-                id="torp-edit-email"
+                id="top-edit-email"
                 label="Email"
                 requiredMark
                 hint={
@@ -308,7 +308,7 @@ export default function ProfileEditModal({
                 }
               >
                 <input
-                  id="torp-edit-email"
+                  id="top-edit-email"
                   name="email"
                   type="email"
                   autoComplete="email"
@@ -319,9 +319,9 @@ export default function ProfileEditModal({
             </div>
 
             <div className={fieldClass("identitySegment")} data-profile-edit-focus="identitySegment">
-              <Field id="torp-edit-id-seg" label="I am a…" requiredMark>
+              <Field id="top-edit-id-seg" label="I am a…" requiredMark>
                 <select
-                  id="torp-edit-id-seg"
+                  id="top-edit-id-seg"
                   value={editDraft.identitySegment || ""}
                   onChange={(e) => patchDraft({ identitySegment: e.target.value })}
                 >
@@ -337,9 +337,9 @@ export default function ProfileEditModal({
 
             {showService ? (
               <div className={fieldClass("serviceBackground")} data-profile-edit-focus="serviceBackground">
-                <Field id="torp-edit-service" label="Branch or service" requiredMark>
+                <Field id="top-edit-service" label="Branch or service" requiredMark>
                   <input
-                    id="torp-edit-service"
+                    id="top-edit-service"
                     value={editDraft.serviceBackground || ""}
                     onChange={(e) => patchDraft({ serviceBackground: e.target.value })}
                     placeholder="e.g. Army, Fire, EMS"
@@ -350,9 +350,9 @@ export default function ProfileEditModal({
 
             {showOrg ? (
               <div className={fieldClass("organizationName")} data-profile-edit-focus="organizationName">
-                <Field id="torp-edit-org" label="Organization" requiredMark>
+                <Field id="top-edit-org" label="Organization" requiredMark>
                   <input
-                    id="torp-edit-org"
+                    id="top-edit-org"
                     value={editDraft.organizationAffiliation || ""}
                     onChange={(e) => patchDraft({ organizationAffiliation: e.target.value })}
                   />
@@ -361,18 +361,18 @@ export default function ProfileEditModal({
             ) : null}
 
             <div className={`profileEditModal__locationRow${fieldClass("location")}`} data-profile-edit-focus="location">
-              <Field id="torp-edit-state" label="State" requiredMark>
+              <Field id="top-edit-state" label="State" requiredMark>
                 <input
-                  id="torp-edit-state"
+                  id="top-edit-state"
                   autoComplete="address-level1"
                   value={editDraft.state || ""}
                   onChange={(e) => patchDraft({ state: e.target.value })}
                   placeholder="e.g. TX"
                 />
               </Field>
-              <Field id="torp-edit-city" label="City" optional>
+              <Field id="top-edit-city" label="City" optional>
                 <input
-                  id="torp-edit-city"
+                  id="top-edit-city"
                   autoComplete="address-level2"
                   value={editDraft.city || ""}
                   onChange={(e) => patchDraft({ city: e.target.value })}
@@ -381,9 +381,9 @@ export default function ProfileEditModal({
             </div>
 
             <div className={fieldClass("reasonForJoining")} data-profile-edit-focus="reasonForJoining">
-              <Field id="torp-edit-reason" label="Why you joined" requiredMark>
+              <Field id="top-edit-reason" label="Why you joined" requiredMark>
                 <textarea
-                  id="torp-edit-reason"
+                  id="top-edit-reason"
                   rows={2}
                   value={editDraft.reasonForJoining || ""}
                   onChange={(e) => patchDraft({ reasonForJoining: e.target.value })}
@@ -394,13 +394,13 @@ export default function ProfileEditModal({
 
             <div className={fieldClass("supportNeeds")} data-profile-edit-focus="supportNeeds">
               <Field
-                id="torp-edit-support"
+                id="top-edit-support"
                 label="Support needs"
                 optional
                 suggested={suggestedFocusKeys.has("supportNeeds")}
               >
                 <textarea
-                  id="torp-edit-support"
+                  id="top-edit-support"
                   rows={2}
                   value={editDraft.supportNeeds || ""}
                   onChange={(e) => patchDraft({ supportNeeds: e.target.value })}
@@ -411,13 +411,13 @@ export default function ProfileEditModal({
 
             <div className={fieldClass("communities")} data-profile-edit-focus="communities">
               <Field
-                id="torp-edit-communities"
+                id="top-edit-communities"
                 label="Communities you identify with"
                 optional
                 suggested={suggestedFocusKeys.has("communities")}
               >
                 <textarea
-                  id="torp-edit-communities"
+                  id="top-edit-communities"
                   rows={2}
                   value={editDraft.communities || ""}
                   onChange={(e) => patchDraft({ communities: e.target.value })}
@@ -427,9 +427,9 @@ export default function ProfileEditModal({
             </div>
 
             <div className={fieldClass("preferences")} data-profile-edit-focus="preferences">
-              <Field id="torp-edit-contact-pref" label="Best way to reach you" requiredMark>
+              <Field id="top-edit-contact-pref" label="Best way to reach you" requiredMark>
                 <select
-                  id="torp-edit-contact-pref"
+                  id="top-edit-contact-pref"
                   value={editDraft.preferredContactMethod || ""}
                   onChange={(e) => patchDraft({ preferredContactMethod: e.target.value })}
                 >
@@ -450,9 +450,9 @@ export default function ProfileEditModal({
             >
               <summary className="profileEditModal__moreSummary">More details (optional)</summary>
               <div className="profileEditModal__moreBody">
-                <Field id="torp-edit-phone" label="Phone" optional>
+                <Field id="top-edit-phone" label="Phone" optional>
                   <input
-                    id="torp-edit-phone"
+                    id="top-edit-phone"
                     type="tel"
                     autoComplete="tel"
                     value={editDraft.phoneNumber || ""}
@@ -460,18 +460,18 @@ export default function ProfileEditModal({
                   />
                 </Field>
 
-                <Field id="torp-edit-tagline" label="Short tagline" optional>
+                <Field id="top-edit-tagline" label="Short tagline" optional>
                   <input
-                    id="torp-edit-tagline"
+                    id="top-edit-tagline"
                     value={editDraft.banner || ""}
                     onChange={(e) => patchDraft({ banner: e.target.value })}
                     placeholder="Shown under your name"
                   />
                 </Field>
 
-                <Field id="torp-edit-bio" label="Bio" optional>
+                <Field id="top-edit-bio" label="Bio" optional>
                   <textarea
-                    id="torp-edit-bio"
+                    id="top-edit-bio"
                     rows={2}
                     value={editDraft.bio || ""}
                     onChange={(e) => patchDraft({ bio: e.target.value })}
@@ -479,17 +479,17 @@ export default function ProfileEditModal({
                   />
                 </Field>
 
-                <Field id="torp-edit-title" label="Role / title" optional>
+                <Field id="top-edit-title" label="Role / title" optional>
                   <input
-                    id="torp-edit-title"
+                    id="top-edit-title"
                     value={editDraft.jobTitle || ""}
                     onChange={(e) => patchDraft({ jobTitle: e.target.value })}
                   />
                 </Field>
 
-                <Field id="torp-edit-interests" label="Interests" optional>
+                <Field id="top-edit-interests" label="Interests" optional>
                   <input
-                    id="torp-edit-interests"
+                    id="top-edit-interests"
                     value={editDraft.causes || ""}
                     onChange={(e) => patchDraft({ causes: e.target.value })}
                     placeholder="Topics you care about"
@@ -532,16 +532,16 @@ export default function ProfileEditModal({
 
                 {isSponsorIntent ? (
                   <>
-                    <Field id="torp-edit-sponsor-org" label="Sponsor organization" optional>
+                    <Field id="top-edit-sponsor-org" label="Sponsor organization" optional>
                       <input
-                        id="torp-edit-sponsor-org"
+                        id="top-edit-sponsor-org"
                         value={editDraft.sponsorOrgName || ""}
                         onChange={(e) => patchDraft({ sponsorOrgName: e.target.value })}
                       />
                     </Field>
-                    <Field id="torp-edit-sponsor-site" label="Organization website" optional>
+                    <Field id="top-edit-sponsor-site" label="Organization website" optional>
                       <input
-                        id="torp-edit-sponsor-site"
+                        id="top-edit-sponsor-site"
                         type="url"
                         value={editDraft.sponsorWebsite || ""}
                         onChange={(e) => patchDraft({ sponsorWebsite: e.target.value })}

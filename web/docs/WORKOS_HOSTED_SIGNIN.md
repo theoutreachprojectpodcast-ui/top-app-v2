@@ -11,7 +11,8 @@ The app uses **WorkOS AuthKit** for production sign-in: users are sent to WorkOS
    - Default in `web/.env.local.example`: `http://localhost:3000/callback` for `pnpm dev`.
    - If you use `pnpm dev:alt` (port 3001), add `http://localhost:3001/callback` and set both vars accordingly.
 3. Configure **Sign-in** / **AuthKit** and any social connections (e.g. Google) you want on the hosted screen.
-4. Set a **Logout redirect** URI if you use sign-out (see AuthKit docs).
+4. Brand AuthKit (logo, colors, Roboto): **`web/docs/WORKOS_AUTHKIT_BRANDING.md`**
+5. Set a **Logout redirect** URI if you use sign-out (see AuthKit docs).
 
 ## 2. Environment variables (`web/.env.local`)
 

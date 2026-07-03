@@ -8,6 +8,7 @@ import FooterInner from "@/components/layout/FooterInner";
 import Avatar from "@/components/shared/Avatar";
 import AppIcon from "@/components/shared/AppIcon";
 import AppHeaderBrand from "@/components/layout/AppHeaderBrand";
+import DownloadMobileAppButton from "@/components/layout/DownloadMobileAppButton";
 import ColorSchemeToggle from "@/components/app/ColorSchemeToggle";
 import AccountInfoCard from "@/features/profile/components/AccountInfoCard";
 import ManageBillingButton from "@/features/profile/components/ManageBillingButton";
@@ -21,13 +22,22 @@ import ProfileIdentitySection from "@/features/profile/components/ProfileIdentit
 import ProfileQuickStats from "@/features/profile/components/ProfileQuickStats";
 import SavedOrganizationsList from "@/features/profile/components/SavedOrganizationsList";
 import SiteBottomNavGlyph from "@/components/navigation/SiteBottomNavGlyph";
-import SiteMobileNavMoreMenu from "@/components/navigation/SiteMobileNavMoreMenu";
+import {
+  isSiteDockNavActive,
+  SITE_MOBILE_DOCK_ITEMS,
+  SITE_TOP_APP_DOCK_TAB_KEYS,
+} from "@/components/navigation/siteBottomNavConfig";
+import { SiteHamburgerNavMenu } from "@/components/navigation/SiteMobileNavHamburgerEntries";
 import HomeScreen from "@/components/home/HomeScreen";
+import { SUPPORT_EMAIL } from "@/lib/runtime/brandContact";
 import ProfileCompletionPanel from "@/features/profile/components/ProfileCompletionPanel";
 import HeaderAccountMenu from "@/components/layout/HeaderAccountMenu";
+import AdminConsoleLink from "@/components/admin/AdminConsoleLink";
 import HeaderNotificationBell from "@/components/layout/HeaderNotificationBell";
 import { useDirectorySearch } from "@/hooks/useDirectorySearch";
+import { useMobileShell } from "@/hooks/useMobileShell";
 import { useProfileData } from "@/features/profile/ProfileDataProvider";
+import { useAuthSession } from "@/components/auth/AuthSessionProvider";
 import { useTrustedResources } from "@/hooks/useTrustedResources";
 import { showLocalDemoChrome } from "@/lib/runtime/demoUiVisibility";
 import { adminConsoleHref } from "@/lib/runtime/deploymentHosts";
@@ -41,10 +51,12 @@ import {
 } from "@/features/membership/membershipTiers";
 import {
   membershipAccountMenuHint,
-  shouldShowMembershipPickerOnHome,
+  shouldShowMembershipPickerModal,
   shouldShowMembershipPickerOnProfile,
 } from "@/features/membership/membershipAccountDisplay";
 import HomeMembershipSection from "@/components/home/HomeMembershipSection";
+import MembershipPlansModal from "@/components/membership/MembershipPlansModal";
+import MembershipUpgradePrompt from "@/components/membership/MembershipUpgradePrompt";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { emptyProfileAvatarUrl } from "@/lib/avatarFallback";
 import { rowEin } from "@/lib/utils";
@@ -58,7 +70,9 @@ import {
   writeRememberDevicePref,
   writeRememberEmailPref,
 } from "@/lib/auth/lastUsedEmail";
-import { workosSignInLink, workosSignUpHref } from "@/lib/auth/workosReturnTo";
+import { workosSignInLink, workosSignUpHref, MOBILE_POST_AUTH_COMPLETE_PATH } from "@/lib/auth/workosReturnTo";
+import { workosGoUrl } from "@/lib/auth/workosGoUrl";
+import { launchWorkOSAuth } from "@/lib/auth/workosNativeAuthLaunch";
 import { computeProfileCompletion } from "@/lib/profile/profileCompletion";
 import { markPendingProfileEdit } from "@/features/profile/lib/pendingProfileEdit";
 import { useProfileEdit } from "@/features/profile/ProfileEditProvider";
@@ -66,6 +80,20 @@ import AccountSettingsPage from "@/features/settings/components/AccountSettingsP
 import { FormCheckbox } from "@/components/forms/FormChoice";
 import { resolvePageAtmosphere } from "@/lib/design/pageAtmosphere";
 import MissionPageTopStrip from "@/components/layout/MissionPageTopStrip";
+import NativeAccountBillingNotice from "@/components/capacitor/NativeAccountBillingNotice";
+import CapacitorFooterPortal from "@/components/capacitor/CapacitorFooterPortal";
+import {
+  openWebBilling,
+  openWebMembership,
+  openWebSignup,
+  openWebLogin,
+  openWebSponsorMembership,
+  requiresExternalWebAccountFlow,
+} from "@/lib/capacitor/webAccountRedirects";
+import { isCapacitorNative } from "@/lib/capacitor/platform";
+import { useNavAuthState } from "@/hooks/useNavAuthState";
+import { workosReturnPathFromRouter } from "@/lib/auth/workosReturnTo";
+import { shouldUseHostedWorkOSAuth } from "@/lib/auth/hostedWorkOSAuth";
 
 function DemoAuthPasswordVisibilityIcon({ revealed }) {
   return (
@@ -95,6 +123,8 @@ function TopAppInner({ initialNav = "home" }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const isMobileShell = useMobileShell();
+  const { authed: isLoggedIn } = useNavAuthState();
   const sb = useMemo(() => getSupabaseClient(), []);
   const [nav, setNav] = useState(initialNav);
   const [overlay, setOverlay] = useState(null);
@@ -104,6 +134,7 @@ function TopAppInner({ initialNav = "home" }) {
   const [authError, setAuthError] = useState("");
   const [authStatus, setAuthStatus] = useState("");
   const [signupAvatarDataUrl, setSignupAvatarDataUrl] = useState("");
+  const signinQueryHandledRef = useRef(false);
   const [contactDraft, setContactDraft] = useState({ firstName: "", lastName: "", email: "", phone: "", message: "" });
   const [contactStatus, setContactStatus] = useState("");
   const [contactError, setContactError] = useState("");
@@ -128,10 +159,9 @@ function TopAppInner({ initialNav = "home" }) {
   }, [pathname]);
 
   useEffect(() => {
-    if (searchParams.get("signin") === "1") {
-      setAuthMode(searchParams.get("signup") === "1" ? "signup" : "signin");
-      setOverlay("signin");
-    }
+    const tab = String(searchParams.get("nav") || "").trim().toLowerCase();
+    const allowed = new Set(["home", "community", "trusted", "profile", "contact", "sponsors"]);
+    if (allowed.has(tab)) setNav(tab);
   }, [searchParams]);
 
   useEffect(() => {
@@ -176,9 +206,12 @@ function TopAppInner({ initialNav = "home" }) {
     createAccount,
     signInWithCredentials,
     signOut,
+    deleteAccount,
     refreshWorkOSProfile,
     entitlements,
   } = useProfileData();
+  const { loading: authLoading } = useAuthSession();
+  const hostedAuth = shouldUseHostedWorkOSAuth(authBackend);
   const { openProfileEdit } = useProfileEdit();
 
   const profileCompletion = useMemo(() => {
@@ -191,20 +224,55 @@ function TopAppInner({ initialNav = "home" }) {
     });
   }, [isAuthenticated, profile, sessionKind, workOSAccountEmail]);
 
-  const showMembershipOnHome = useMemo(
-    () => shouldShowMembershipPickerOnHome({ isAuthenticated, profile }),
-    [isAuthenticated, profile],
+  const hasProAccess = useMemo(
+    () =>
+      !!(
+        entitlements?.fullPlatformAccess ||
+        entitlements?.communityViewAccess ||
+        entitlements?.isPlatformAdmin ||
+        entitlements?.isPrivilegedStaff
+      ),
+    [entitlements],
   );
+
+  function goToProUpgrade() {
+    router.push(isCapacitorNative() ? "/mobile/access?upgrade=pro" : "/access?upgrade=pro");
+  }
+
   const showMembershipOnProfile = useMemo(
-    () => shouldShowMembershipPickerOnProfile({ isAuthenticated, profile }),
+    () =>
+      shouldShowMembershipPickerOnProfile({
+        isAuthenticated,
+        profile,
+        tierKey: profile.membershipStatus,
+        billingStatus: profile.membershipBillingStatus,
+      }),
     [isAuthenticated, profile],
   );
+  const showMembershipModal = useMemo(
+    () => shouldShowMembershipPickerModal({ isAuthenticated, profile, sessionKind }),
+    [isAuthenticated, profile, sessionKind],
+  );
+
+  useEffect(() => {
+    if (!showMembershipModal || loadingProfile) return;
+    setOverlay((current) => {
+      if (current === "signin" || current === "membership") return current;
+      return "membership";
+    });
+  }, [showMembershipModal, loadingProfile]);
 
   useEffect(() => {
     const c = searchParams.get("checkout");
     const pm = searchParams.get("payment_method");
+    const mobileReturn = searchParams.get("mobileReturn");
     const billingRefresh =
-      (c === "success" || c === "cancel" || pm === "success" || pm === "cancel") && sessionKind === "workos";
+      (c === "success" ||
+        c === "cancel" ||
+        pm === "success" ||
+        pm === "cancel" ||
+        mobileReturn === "account") &&
+      sessionKind === "workos";
     if (!billingRefresh) return;
     let cancelled = false;
     (async () => {
@@ -227,9 +295,11 @@ function TopAppInner({ initialNav = "home" }) {
     [pathname, searchParams, rememberDevice, authDraft.email],
   );
 
+  const postAuthMembershipPath = isCapacitorNative() ? "/mobile/access" : "/access";
+
   const workosSignUpModalHref = useMemo(
-    () => workosSignUpHref("/onboarding", { rememberDevice, loginHint: authDraft.email }),
-    [rememberDevice, authDraft.email],
+    () => workosSignUpHref(postAuthMembershipPath, { rememberDevice, loginHint: authDraft.email }),
+    [postAuthMembershipPath, rememberDevice, authDraft.email],
   );
 
   function persistAuthPrefsBeforeWorkOSRedirect() {
@@ -243,6 +313,13 @@ function TopAppInner({ initialNav = "home" }) {
     preferredState: profile.state,
   });
   const { trusted, trustedStatus, loadTrusted } = useTrustedResources(sb);
+
+  /** Auto-fetch roster when the in-shell Trusted tab opens (footer dock, ?nav=trusted, home CTA). */
+  useEffect(() => {
+    if (nav !== "trusted") return;
+    void loadTrusted(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- load when tab activates only
+  }, [nav]);
 
   /** Prefill contact form from profile / account email when fields are still empty. */
   useEffect(() => {
@@ -267,13 +344,102 @@ function TopAppInner({ initialNav = "home" }) {
   }
 
   function dockNavHome() {
+    if (isCapacitorNative() && pathname === "/") {
+      setNav("home");
+      return;
+    }
     if (pathname && pathname !== "/") router.push("/");
     else setNav("home");
   }
 
+  function dockNavPodcast() {
+    if (!hasProAccess) {
+      if (!isAuthenticated) {
+        openSignInOverlay();
+        return;
+      }
+      goToProUpgrade();
+      return;
+    }
+    if (pathname !== "/podcasts" && !pathname.startsWith("/podcasts/")) {
+      router.push("/podcasts");
+    }
+  }
+
   function dockNavProfile() {
+    if (isCapacitorNative() && pathname === "/") {
+      setNav("profile");
+      return;
+    }
     if (pathname !== "/profile") router.push("/profile");
     else setNav("profile");
+  }
+
+  function dockNavItem(item) {
+    const key = String(item?.key || "");
+    if (["community", "trusted", "contact", "settings"].includes(key) && !hasProAccess) {
+      if (!isAuthenticated) {
+        openSignInOverlay();
+        return;
+      }
+      goToProUpgrade();
+      return;
+    }
+    if (key === "home") {
+      dockNavHome();
+      return;
+    }
+    if (key === "podcast") {
+      dockNavPodcast();
+      return;
+    }
+    if (pathname === "/" && SITE_TOP_APP_DOCK_TAB_KEYS.has(key)) {
+      setNav(key);
+      return;
+    }
+    const href = String(item?.href || "/").trim() || "/";
+    if (pathname !== href) router.push(href);
+    else if (SITE_TOP_APP_DOCK_TAB_KEYS.has(key)) setNav(key);
+  }
+
+  function hamburgerNavItem(item) {
+    const key = String(item?.key || "");
+    const href = String(item?.href || "").trim() || "/";
+    if (["community", "trusted", "podcast", "contact", "settings"].includes(key) && !hasProAccess) {
+      if (!isAuthenticated) {
+        openSignInOverlay();
+        return;
+      }
+      goToProUpgrade();
+      return;
+    }
+    if (key === "sponsors") {
+      goToSponsorsHub();
+      return;
+    }
+    if (key === "home") {
+      dockNavHome();
+      return;
+    }
+    if (key === "podcast") {
+      dockNavPodcast();
+      return;
+    }
+    if (key === "profile") {
+      dockNavProfile();
+      return;
+    }
+    if (key === "settings") {
+      if (pathname === "/") setNav("settings");
+      else if (pathname !== "/settings") router.push("/settings");
+      return;
+    }
+    if (pathname === "/" && SITE_TOP_APP_DOCK_TAB_KEYS.has(key)) {
+      setNav(key);
+      return;
+    }
+    if (pathname !== href) router.push(href);
+    else if (SITE_TOP_APP_DOCK_TAB_KEYS.has(key)) setNav(key);
   }
 
   async function fileToCompressedDataUrl(file) {
@@ -320,14 +486,26 @@ function TopAppInner({ initialNav = "home" }) {
   }
 
   function goToSponsorsHub() {
+    if (requiresExternalWebAccountFlow()) {
+      void openWebSponsorMembership();
+      return;
+    }
     router.push("/sponsors");
   }
 
   function openMembershipJourney() {
+    if (requiresExternalWebAccountFlow()) {
+      if (!isAuthenticated) {
+        void openWebSignup();
+        return;
+      }
+      void openWebMembership();
+      return;
+    }
     if (!isAuthenticated) {
-      if (authBackend.workos) {
+      if (hostedAuth) {
         writeRememberDevicePref(rememberDevice);
-        window.location.assign(workosSignUpHref("/onboarding", { rememberDevice }));
+        window.location.assign(workosSignUpHref(postAuthMembershipPath, { rememberDevice }));
         return;
       }
       setAuthMode("signup");
@@ -338,10 +516,22 @@ function TopAppInner({ initialNav = "home" }) {
       router.push("/onboarding");
       return;
     }
-    setOverlay("upgrade");
+    setOverlay(sessionKind === "workos" ? "upgrade" : "membership");
   }
 
   async function startMembershipCheckoutFromHome(tier) {
+    if (requiresExternalWebAccountFlow()) {
+      if (!isAuthenticated) {
+        void openWebSignup();
+        return;
+      }
+      if (tier === "sponsor") {
+        void openWebSponsorMembership();
+        return;
+      }
+      void openWebMembership({ tier });
+      return;
+    }
     if (!isAuthenticated) {
       openMembershipJourney();
       return;
@@ -381,6 +571,14 @@ function TopAppInner({ initialNav = "home" }) {
   }
 
   function openCommunity() {
+    if (!hasProAccess) {
+      if (!isAuthenticated) {
+        openSignInOverlay();
+        return;
+      }
+      goToProUpgrade();
+      return;
+    }
     setNav("community");
   }
   const fallbackSavedOrganizations = useMemo(() => {
@@ -392,7 +590,6 @@ function TopAppInner({ initialNav = "home" }) {
     if (isAuthenticated && favoriteEins.length) return [];
     return fallbackSavedOrganizations.map((raw) => mapNonprofitCardRow(raw, "saved"));
   }, [savedOrganizations, isAuthenticated, favoriteEins, fallbackSavedOrganizations]);
-  const isLoggedIn = isAuthenticated;
   const favoriteEinSet = useMemo(
     () => new Set((favoriteEins || []).map((e) => normalizeEinDigits(e)).filter((e) => e.length === 9)),
     [favoriteEins]
@@ -402,14 +599,133 @@ function TopAppInner({ initialNav = "home" }) {
     [favoriteEntityKeys],
   );
 
+  function buildWorkOSGoPath(returnPathOverride, mode = "signin") {
+    const defaultReturn = isCapacitorNative()
+      ? mode === "signup"
+        ? "/mobile/access"
+        : MOBILE_POST_AUTH_COMPLETE_PATH
+      : mode === "signup"
+        ? "/access"
+        : "/";
+    const returnPath =
+      returnPathOverride ||
+      workosReturnPathFromRouter(pathname, searchParams) ||
+      defaultReturn;
+    return workosGoUrl({
+      mode: mode === "signup" ? "signup" : "signin",
+      returnTo: returnPath,
+      rememberDevice,
+      loginHint: authDraft.email,
+      native: isCapacitorNative(),
+    });
+  }
+
+  async function startWorkOSSignIn(returnPathOverride) {
+    writeRememberDevicePref(rememberDevice);
+    const defaultReturn = isCapacitorNative() ? MOBILE_POST_AUTH_COMPLETE_PATH : "/";
+    const returnPath =
+      returnPathOverride ||
+      workosReturnPathFromRouter(pathname, searchParams) ||
+      defaultReturn;
+    if (requiresExternalWebAccountFlow()) {
+      void openWebLogin({
+        returnPath,
+        rememberDevice,
+        loginHint: authDraft.email,
+      });
+      return;
+    }
+    persistAuthPrefsBeforeWorkOSRedirect();
+    if (isCapacitorNative()) {
+      await launchWorkOSAuth(buildWorkOSGoPath(returnPath, "signin"));
+      return;
+    }
+    window.location.assign(buildWorkOSGoPath(returnPath, "signin"));
+  }
+
   function openSignInOverlay() {
-    if (authBackend.workos) {
-      writeRememberDevicePref(rememberDevice);
-      window.location.assign(workosSignInHereHref);
+    if (hostedAuth) {
+      startWorkOSSignIn();
       return;
     }
     setAuthMode("signin");
     setOverlay("signin");
+  }
+
+  function openCreateAccountFlow() {
+    if (requiresExternalWebAccountFlow() && hostedAuth) {
+      writeRememberDevicePref(rememberDevice);
+      void openWebSignup();
+      return;
+    }
+    if (hostedAuth) {
+      writeRememberDevicePref(rememberDevice);
+      if (isCapacitorNative()) {
+        void launchWorkOSAuth(buildWorkOSGoPath(postAuthMembershipPath, "signup"));
+        return;
+      }
+      window.location.assign(workosSignUpModalHref);
+      return;
+    }
+    setAuthMode("signup");
+    setOverlay("signin");
+  }
+
+  useEffect(() => {
+    if (searchParams.get("signin") !== "1" || signinQueryHandledRef.current) return;
+    if (loadingProfile || authLoading) return;
+    signinQueryHandledRef.current = true;
+    if (hostedAuth) {
+      if (searchParams.get("signup") === "1") {
+        void openCreateAccountFlow();
+      } else {
+        void startWorkOSSignIn();
+      }
+      return;
+    }
+    setAuthMode(searchParams.get("signup") === "1" ? "signup" : "signin");
+    setOverlay("signin");
+    // Handlers are stable within render; ref prevents duplicate launches.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- signinQueryHandledRef
+  }, [searchParams, hostedAuth, loadingProfile, authLoading]);
+
+  async function completeInitialMembershipChoice(tierKey = "none") {
+    const normalizedTier = String(tierKey || "none").toLowerCase();
+    if (sessionKind === "workos") {
+      try {
+        const res = await fetch("/api/me/onboarding/complete", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            accountIntent:
+              normalizedTier === "sponsor"
+                ? "sponsor_user"
+                : normalizedTier === "member"
+                  ? "member_user"
+                  : normalizedTier === "support"
+                    ? "support_user"
+                    : "free_user",
+          }),
+        });
+        if (res.ok) await refreshWorkOSProfile();
+      } catch {
+        /* modal can be reopened */
+      }
+      return;
+    }
+    await persistProfile({
+      ...profile,
+      membershipStatus: normalizedTier === "none" ? "none" : normalizedTier,
+      membershipTier: normalizedTier === "none" ? "none" : normalizedTier,
+      membershipBillingStatus: "none",
+      onboardingCompleted: true,
+    });
+  }
+
+  async function dismissMembershipModalAsFree() {
+    await completeInitialMembershipChoice("none");
+    setOverlay(null);
   }
 
   async function onAuthSubmit() {
@@ -423,7 +739,7 @@ function TopAppInner({ initialNav = "home" }) {
       setAuthError(result?.message || "Unable to continue right now.");
       return;
     }
-    if (!authBackend.workos) {
+    if (!hostedAuth) {
       writeRememberEmailPref(rememberEmail);
       if (rememberEmail && String(authDraft.email || "").trim()) writeLastUsedEmail(authDraft.email.trim());
       else clearLastUsedEmail();
@@ -431,13 +747,12 @@ function TopAppInner({ initialNav = "home" }) {
     setAuthStatus(authMode === "signup" ? "Account created. Welcome in." : "Signed in successfully.");
     setAuthDraft((d) => ({ ...d, password: "" }));
     setSignupAvatarDataUrl("");
-    setOverlay(null);
+    setOverlay("membership");
   }
 
   function openSignInForMembership() {
-    if (authBackend.workos) {
-      writeRememberDevicePref(rememberDevice);
-      window.location.assign(workosSignInHereHref);
+    if (hostedAuth) {
+      startWorkOSSignIn("/profile");
       return;
     }
     setAuthMode("signin");
@@ -468,7 +783,7 @@ function TopAppInner({ initialNav = "home" }) {
     const body = encodeURIComponent(
       `Name: ${contactDraft.firstName} ${contactDraft.lastName}\nEmail: ${contactDraft.email}\nPhone: ${contactDraft.phone || "Not provided"}\n\nMessage:\n${contactDraft.message}`
     );
-    window.location.href = `mailto:hello@theoutreach-project.com?subject=${subject}&body=${body}`;
+    window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${subject}&body=${body}`;
     setContactStatus("Your email draft is ready to send.");
   }
 
@@ -484,14 +799,27 @@ function TopAppInner({ initialNav = "home" }) {
           <HeaderInner className="topbarInner">
             <div className="topbarZone topbarLeft">
               <div className="topbarActionsCluster topbarActionsCluster--start">
-                {pageAtmosphere !== "podcast" ? <ColorSchemeToggle /> : null}
+                <SiteHamburgerNavMenu
+                  shellClass="siteMobileNavMore--phoneOnly"
+                  onItemClick={hamburgerNavItem}
+                />
+                {isMobileShell && pageAtmosphere !== "podcast" ? <ColorSchemeToggle /> : null}
+                {isMobileShell && isLoggedIn ? <AdminConsoleLink /> : null}
               </div>
             </div>
             <div className="topbarZone topbarCenter" aria-hidden="true" />
             <div className="topbarZone topbarRight">
             <div className="topbarActionsCluster">
+              <SiteHamburgerNavMenu
+                shellClass="siteMobileNavMore--desktopOnly"
+                align="end"
+                onItemClick={hamburgerNavItem}
+              />
+              {pageAtmosphere === "home" ? <DownloadMobileAppButton /> : null}
+              {!isMobileShell && pageAtmosphere !== "podcast" ? <ColorSchemeToggle /> : null}
               {isLoggedIn ? (
                 <>
+                  {!isMobileShell ? <AdminConsoleLink /> : null}
                   <HeaderNotificationBell skipSessionGate />
                   <HeaderAccountMenu
                     avatarSrc={profile.avatarUrl || emptyProfileAvatarUrl()}
@@ -516,16 +844,16 @@ function TopAppInner({ initialNav = "home" }) {
                     onSignOut={signOut}
                   />
                 </>
-              ) : authBackend.workos ? (
+              ) : hostedAuth ? (
                 <>
-                  <a className="btnSoft sponsorBtn" href="/api/auth/workos/signup?returnTo=/onboarding">
+                  <button className="btnSoft sponsorBtn" type="button" onClick={openCreateAccountFlow}>
                     <AppIcon name="profile" />
                     Create account
-                  </a>
-                  <a className="btnSoft sponsorBtn" href={workosSignInHereHref}>
+                  </button>
+                  <button className="btnSoft sponsorBtn" type="button" onClick={openSignInOverlay}>
                     <AppIcon name="profile" />
                     Sign in
-                  </a>
+                  </button>
                 </>
               ) : (
                 <>
@@ -539,30 +867,6 @@ function TopAppInner({ initialNav = "home" }) {
                   </button>
                 </>
               )}
-              <SiteMobileNavMoreMenu tone="app" align="end">
-                <button
-                  type="button"
-                  className="siteMobileNavMore__entry"
-                  onClick={() => {
-                    setNav("trusted");
-                    if (!trusted.length) loadTrusted(true);
-                  }}
-                >
-                  Trusted Resources
-                </button>
-                <button type="button" className="siteMobileNavMore__entry" onClick={openCommunity}>
-                  Community
-                </button>
-                <button type="button" className="siteMobileNavMore__entry" onClick={goToSponsorsHub}>
-                  Sponsors
-                </button>
-                <button type="button" className="siteMobileNavMore__entry" onClick={() => router.push("/podcasts")}>
-                  Podcast
-                </button>
-                <button type="button" className="siteMobileNavMore__entry" onClick={goToSponsorsHub}>
-                  Become a Sponsor
-                </button>
-              </SiteMobileNavMoreMenu>
             </div>
           </div>
         </HeaderInner>
@@ -582,31 +886,34 @@ function TopAppInner({ initialNav = "home" }) {
               membershipBillingStatus={profile.membershipBillingStatus}
               onGoToProfile={() => router.push("/profile")}
               onActivateMembership={openMembershipJourney}
-              onUpgradeTier={startMembershipCheckoutFromHome}
-              onJoinFree={() => {
-                if (!isAuthenticated) {
-                  openMembershipJourney();
-                  return;
-                }
-                setNav("profile");
-              }}
-              onCreateAccount={() => {
-                if (authBackend.workos) {
-                  writeRememberDevicePref(rememberDevice);
-                  window.location.assign(workosSignUpHref("/onboarding", { rememberDevice }));
-                  return;
-                }
-                setAuthMode("signup");
-                setOverlay("signin");
-              }}
+              onCreateAccount={openCreateAccountFlow}
               onSignIn={openSignInOverlay}
               onSponsors={goToSponsorsHub}
               onTrusted={() => {
+                if (!hasProAccess) {
+                  if (!isAuthenticated) {
+                    openSignInOverlay();
+                    return;
+                  }
+                  goToProUpgrade();
+                  return;
+                }
                 setNav("trusted");
-                loadTrusted(true);
               }}
               onCommunity={openCommunity}
-              onPodcasts={() => router.push("/podcasts")}
+              onPodcasts={() => {
+                if (!hasProAccess) {
+                  if (!isAuthenticated) {
+                    openSignInOverlay();
+                    return;
+                  }
+                  goToProUpgrade();
+                  return;
+                }
+                router.push("/podcasts");
+              }}
+              onProUpgrade={goToProUpgrade}
+              hasProAccess={hasProAccess}
               directoryProps={{
                 filters,
                 setFilters,
@@ -626,6 +933,7 @@ function TopAppInner({ initialNav = "home" }) {
           )}
 
           {nav === "community" && (
+            hasProAccess ? (
             <CommunityPage
               supabase={sb}
               userId={userId}
@@ -633,34 +941,25 @@ function TopAppInner({ initialNav = "home" }) {
               isAuthenticated={isAuthenticated}
               authLoading={loadingProfile}
               authBackend={authBackend}
-              isMember={isMember}
-              fullName={fullName}
+              canCreatePost={!!entitlements?.communityPostCreate}
+              isPlatformAdmin={!!entitlements?.isPlatformAdmin}
               profile={profile}
-              onRequestUpgrade={() => {
-                if (!isAuthenticated) {
-                  if (authBackend.workos) {
-                    writeRememberDevicePref(rememberDevice);
-                    window.location.assign(workosSignUpHref("/community", { rememberDevice }));
-                    return;
-                  }
-                  setAuthMode("signup");
-                  setOverlay("signin");
-                  return;
-                }
-                setOverlay("upgrade");
-              }}
               onRequestSignIn={() => {
-                if (authBackend.workos) {
-                  writeRememberDevicePref(rememberDevice);
-                  window.location.assign(
-                    workosSignInLink("/community", null, "/community", { rememberDevice }),
-                  );
+                if (hostedAuth) {
+                  startWorkOSSignIn("/community");
                   return;
                 }
                 setAuthMode("signin");
                 setOverlay("signin");
               }}
             />
+            ) : (
+              <MembershipUpgradePrompt
+                title="Community is a Pro feature"
+                message="Upgrade to Pro to view and participate in community discussions."
+                feature="Community"
+              />
+            )
           )}
           {nav === "community" ? <MissionPageTopStrip placement="bottom" /> : null}
         </section>
@@ -668,6 +967,7 @@ function TopAppInner({ initialNav = "home" }) {
 
       {nav === "trusted" && (
         <section className="shell">
+          {hasProAccess ? (
           <div className="card trustedRouteCard">
             <div className="ds-page-intro" style={{ borderBottom: "none", marginBottom: 0, paddingBottom: 0 }}>
               <h2>
@@ -728,6 +1028,13 @@ function TopAppInner({ initialNav = "home" }) {
               })}
             </div>
           </div>
+          ) : (
+            <MembershipUpgradePrompt
+              title="Trusted Resources are a Pro feature"
+              message="Upgrade to Pro to browse trusted partner offers and discounts."
+              feature="Trusted Resources"
+            />
+          )}
           <MissionPageTopStrip placement="bottom" />
         </section>
       )}
@@ -752,9 +1059,8 @@ function TopAppInner({ initialNav = "home" }) {
                     className="btnPrimary"
                     type="button"
                     onClick={() => {
-                      if (authBackend.workos) {
-                        writeRememberDevicePref(rememberDevice);
-                        window.location.assign(workosSignInHereHref);
+                      if (hostedAuth) {
+                        startWorkOSSignIn("/profile");
                         return;
                       }
                       setAuthMode("signin");
@@ -766,15 +1072,7 @@ function TopAppInner({ initialNav = "home" }) {
                   <button
                     className="btnSoft"
                     type="button"
-                    onClick={() => {
-                      if (authBackend.workos) {
-                        writeRememberDevicePref(rememberDevice);
-                        window.location.assign(workosSignUpHref("/onboarding", { rememberDevice }));
-                        return;
-                      }
-                      setAuthMode("signup");
-                      setOverlay("signin");
-                    }}
+                    onClick={openCreateAccountFlow}
                   >
                     Create an account
                   </button>
@@ -797,11 +1095,12 @@ function TopAppInner({ initialNav = "home" }) {
                 onRequestSignIn={openSignInForMembership}
                 sessionKind={sessionKind}
                 stripeMemberReady={!!authBackend?.stripe}
-                stripeSponsorSubscriptionReady={!!authBackend?.stripeSponsorSubscription}
                 stripeMemberMissingEnv={authBackend?.stripeMemberRecurringMissingEnv || []}
                 checkoutReturnPath="/profile"
                 membershipBillingStatus={profile.membershipBillingStatus}
                 stripeCustomerReady={!!profile.stripeCustomerIdSet}
+                stripeSubscriptionReady={!!profile.stripeSubscriptionIdSet}
+                stripePortalReady={!!authBackend?.stripePortal}
               />
             </>
           ) : (
@@ -824,16 +1123,18 @@ function TopAppInner({ initialNav = "home" }) {
             onRequestSignIn={openSignInForMembership}
             sessionKind={sessionKind}
             stripeMemberReady={!!authBackend?.stripe}
-            stripeSponsorSubscriptionReady={!!authBackend?.stripeSponsorSubscription}
+            stripePortalReady={!!authBackend?.stripePortal}
             checkoutReturnPath="/profile"
             membershipBillingStatus={profile.membershipBillingStatus}
             stripeCustomerReady={!!profile.stripeCustomerIdSet}
+            stripeSubscriptionReady={!!profile.stripeSubscriptionIdSet}
             onCheckoutNavigate={() => refreshWorkOSProfile()}
             collapsible
             defaultExpanded={false}
           />
           {showMembershipOnProfile ? (
             <HomeMembershipSection
+              variant="profile"
               isAuthenticated={isAuthenticated}
               loadingAccount={loadingProfile}
               currentTierKey={profile.membershipStatus}
@@ -883,8 +1184,10 @@ function TopAppInner({ initialNav = "home" }) {
             manageBillingSlot={
               sessionKind === "workos" ? (
                 <ManageBillingButton
-                  stripeReady={!!authBackend?.stripe}
+                  stripeReady={!!authBackend?.stripePortal}
                   hasStripeCustomer={!!profile.stripeCustomerIdSet}
+                  hasStripeSubscription={!!profile.stripeSubscriptionIdSet}
+                  returnPath="/profile"
                 />
               ) : null
             }
@@ -894,10 +1197,16 @@ function TopAppInner({ initialNav = "home" }) {
               <h3>Upgrade to Pro</h3>
               <p className="sponsorSectionLead">{membership.hint}</p>
               <div className="row wrap">
-                <button type="button" className="btnPrimary" onClick={() => setOverlay("upgrade")}>
+                <button type="button" className="btnPrimary" onClick={() => {
+                  if (requiresExternalWebAccountFlow()) {
+                    void openWebMembership();
+                    return;
+                  }
+                  setOverlay("upgrade");
+                }}>
                   View membership options
                 </button>
-                {authBackend.workos ? (
+                {hostedAuth && !requiresExternalWebAccountFlow() ? (
                   <a className="btnSoft" href="/onboarding">
                     Open membership onboarding
                   </a>
@@ -937,6 +1246,7 @@ function TopAppInner({ initialNav = "home" }) {
           setMembershipStatus={setMembershipStatus}
           openSignInForMembership={openSignInForMembership}
           favoriteEins={favoriteEins}
+          deleteAccount={deleteAccount}
         />
       ) : null}
 
@@ -945,7 +1255,7 @@ function TopAppInner({ initialNav = "home" }) {
           <div className="card">
             <h3>Settings</h3>
             <p className="sponsorSectionLead">Sign in to manage your account, membership, and billing.</p>
-            <button type="button" className="btnPrimary" onClick={() => { setAuthMode("signin"); setOverlay("signin"); }}>
+            <button type="button" className="btnPrimary" onClick={openSignInOverlay}>
               Sign in
             </button>
           </div>
@@ -959,7 +1269,9 @@ function TopAppInner({ initialNav = "home" }) {
             <h3><AppIcon name="contact" />Contact Us</h3>
             <p>If you are in immediate danger, call your local emergency number.</p>
             <p>In the U.S., call or text 988 for the Suicide & Crisis Lifeline.</p>
-            <a className="btnPrimary" href="mailto:hello@theoutreach-project.com?subject=Need%20Help%20Finding%20Support">Email The Team</a>
+            <a className="btnPrimary" href="/contact">
+              Email The Team
+            </a>
           </div>
           <div className="card">
             <h3>Send us a message</h3>
@@ -1016,61 +1328,55 @@ function TopAppInner({ initialNav = "home" }) {
       ) : null}
 
       {/* Fixed bottom navigation bar (dock). See top-app.css .footerDock / .footerDockBackdrop. */}
-      <div className="footerDockBackdrop" aria-hidden="true" />
-      <div className="footerDock">
-        <FooterInner className="footerNavInner">
-          <nav className="bottomNav bottomNav--withIcons bottomNav--mobileDock" aria-label="Bottom navigation">
-            <button
-              className={`navItem navItem--dockCol navItem--dockPrimary ${nav === "home" ? "isActive" : ""}`}
-              onClick={dockNavHome}
-              type="button"
-              title="Home"
-            >
-              <SiteBottomNavGlyph navKey="home" className="navItemGlyph" />
-              <span className="navItemLabel">Home</span>
-            </button>
-            <button
-              className={`navItem navItem--dockCol navItem--dockOverflow ${nav === "trusted" ? "isActive" : ""}`}
-              onClick={() => {
-                setNav("trusted");
-                if (!trusted.length) loadTrusted(true);
-              }}
-              type="button"
-              title="Trusted Resources"
-            >
-              <SiteBottomNavGlyph navKey="trusted" className="navItemGlyph" />
-              <span className="navItemLabel">Trusted Resources</span>
-            </button>
-            <button
-              className={`navItem navItem--dockCol navItem--dockOverflow ${nav === "community" ? "isActive" : ""}`}
-              onClick={() => setNav("community")}
-              type="button"
-              title="Community"
-            >
-              <SiteBottomNavGlyph navKey="community" className="navItemGlyph" />
-              <span className="navItemLabel">Community</span>
-            </button>
-            <button
-              className={`navItem navItem--dockCol navItem--dockPrimary ${nav === "profile" ? "isActive" : ""}`}
-              onClick={dockNavProfile}
-              type="button"
-              title="Profile"
-            >
-              <SiteBottomNavGlyph navKey="profile" className="navItemGlyph" />
-              <span className="navItemLabel">Profile</span>
-            </button>
-            <button
-              className={`navItem navItem--dockCol navItem--dockPrimary ${nav === "contact" ? "isActive" : ""}`}
-              onClick={() => setNav("contact")}
-              type="button"
-              title="Contact"
-            >
-              <SiteBottomNavGlyph navKey="contact" className="navItemGlyph" />
-              <span className="navItemLabel">Contact</span>
-            </button>
-          </nav>
+      <CapacitorFooterPortal>
+        <div className="footerDockBackdrop" aria-hidden="true" />
+        <div className="footerDock">
+          <FooterInner className="footerNavInner">
+            <nav className="bottomNav bottomNav--withIcons bottomNav--mobileDock" aria-label="Bottom navigation">
+              {SITE_MOBILE_DOCK_ITEMS.map((item) => {
+                const isActive = isSiteDockNavActive(item.key, { nav, pathname });
+                return (
+                  <button
+                    key={item.key}
+                    type="button"
+                    data-nav-key={item.key}
+                    className={`navItem navItem--dockCol navItem--dockPrimary ${isActive ? "isActive" : ""}`}
+                    onClick={() => dockNavItem(item)}
+                    title={item.linkTitle || item.label}
+                  >
+                    <SiteBottomNavGlyph navKey={item.key} className="navItemGlyph" />
+                    <span className="navItemLabel">{item.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
         </FooterInner>
       </div>
+      </CapacitorFooterPortal>
+
+      {overlay === "membership" && (
+        <MembershipPlansModal
+          open
+          onClose={() => void dismissMembershipModalAsFree()}
+          isAuthenticated={isAuthenticated}
+          loadingAccount={loadingProfile}
+          currentTierKey={profile.membershipStatus}
+          accountEmail={profile.email || workOSAccountEmail}
+          membershipLabel={membership.label}
+          membershipBillingStatus={profile.membershipBillingStatus}
+          onRequestSignIn={openSignInForMembership}
+          onJoinFree={() => void dismissMembershipModalAsFree()}
+          onUpgradeTier={async (tier) => {
+            await completeInitialMembershipChoice(tier === "sponsor" ? "sponsor" : tier);
+            setOverlay(null);
+            await startMembershipCheckoutFromHome(tier);
+          }}
+          onGoToProfile={() => {
+            setOverlay(null);
+            setNav("profile");
+          }}
+        />
+      )}
 
       {overlay === "upgrade" && (
         <div className="modalOverlay" onClick={() => setOverlay(null)}>
@@ -1084,10 +1390,17 @@ function TopAppInner({ initialNav = "home" }) {
               <button className="btnSoft" onClick={() => setOverlay(null)} type="button">
                 Not now
               </button>
-              {authBackend.workos ? (
-                <a className="btnPrimary" href="/onboarding">
-                  Open membership onboarding
-                </a>
+              {hostedAuth ? (
+                <button className="btnPrimary" type="button" onClick={() => {
+                  setOverlay(null);
+                  if (requiresExternalWebAccountFlow()) {
+                    void openWebMembership();
+                    return;
+                  }
+                  router.push("/onboarding");
+                }}>
+                  {requiresExternalWebAccountFlow() ? "Continue on web" : "Open membership onboarding"}
+                </button>
               ) : showLocalDemoChrome() ? (
                 <button
                   className="btnPrimary"
@@ -1111,7 +1424,7 @@ function TopAppInner({ initialNav = "home" }) {
           <div className="modalCard demoAuthModal" onClick={(e) => e.stopPropagation()}>
             <h3>{authMode === "signup" ? "Create account" : "Sign in"}</h3>
             <p className="demoAuthModal__lede">
-              {authBackend.workos
+              {hostedAuth
                 ? authMode === "signup"
                   ? "Create your account with WorkOS (email or Google, depending on what your administrator enabled)."
                   : "Sign in securely with WorkOS. Password reset and additional providers are managed in the hosted auth experience."
@@ -1119,7 +1432,7 @@ function TopAppInner({ initialNav = "home" }) {
                   ? "Start with a simple local demo account. Production sign-in is not connected yet."
                   : "Demo sign-in uses email and password stored on this device only."}
             </p>
-            {authBackend.workos ? (
+            {hostedAuth ? (
               <div className="demoAuthModal__providers">
                 <p className="demoAuthModal__providersLabel">WorkOS (production / demo users)</p>
                 <p className="profilePhotoUploadHint" style={{ marginTop: 0 }}>
@@ -1138,27 +1451,67 @@ function TopAppInner({ initialNav = "home" }) {
                   </FormCheckbox>
                 </div>
                 <div className="row wrap demoAuthModal__providerRow">
-                  <a
-                    className="btnPrimary"
-                    href={workosSignInHereHref}
-                    onClick={() => persistAuthPrefsBeforeWorkOSRedirect()}
-                  >
-                    Sign in
-                  </a>
-                  <a
-                    className="btnSoft"
-                    href={workosSignUpModalHref}
-                    onClick={() => persistAuthPrefsBeforeWorkOSRedirect()}
-                  >
-                    Create account
-                  </a>
-                  <a
-                    className="btnSoft"
-                    href={workosSignInHereHref}
-                    onClick={() => persistAuthPrefsBeforeWorkOSRedirect()}
-                  >
-                    Continue with Google
-                  </a>
+                  {isCapacitorNative() ? (
+                    <>
+                      <button
+                        className="btnPrimary"
+                        type="button"
+                        onClick={() => {
+                          persistAuthPrefsBeforeWorkOSRedirect();
+                          void startWorkOSSignIn();
+                        }}
+                      >
+                        Sign in
+                      </button>
+                      <button
+                        className="btnSoft"
+                        type="button"
+                        onClick={() => {
+                          persistAuthPrefsBeforeWorkOSRedirect();
+                          void openCreateAccountFlow();
+                        }}
+                      >
+                        Create account
+                      </button>
+                      <button
+                        className="btnSoft"
+                        type="button"
+                        onClick={() => {
+                          persistAuthPrefsBeforeWorkOSRedirect();
+                          void startWorkOSSignIn();
+                        }}
+                      >
+                        Continue with Google
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <a
+                        className="btnPrimary"
+                        href={workosSignInHereHref}
+                        onClick={() => persistAuthPrefsBeforeWorkOSRedirect()}
+                      >
+                        Sign in
+                      </a>
+                      <button
+                        className="btnSoft"
+                        type="button"
+                        onClick={() => {
+                          persistAuthPrefsBeforeWorkOSRedirect();
+                          void openCreateAccountFlow();
+                        }}
+                      >
+                        Create account
+                      </button>
+                      <a
+                        className="btnSoft"
+                        href={workosSignInHereHref}
+                        onClick={() => persistAuthPrefsBeforeWorkOSRedirect()}
+                      >
+                        Continue with Google
+                      </a>
+                    </>
+                  )}
                 </div>
                 <p className="profilePhotoUploadHint" style={{ marginTop: 8 }}>
                   Forgot your password? Use the reset link on the WorkOS sign-in screen.
@@ -1193,7 +1546,7 @@ function TopAppInner({ initialNav = "home" }) {
               autoComplete="on"
               onSubmit={(e) => {
                 e.preventDefault();
-                if (!authBackend.workos) void onAuthSubmit();
+                if (!hostedAuth) void onAuthSubmit();
               }}
             >
               {authMode === "signup" ? (
@@ -1219,10 +1572,10 @@ function TopAppInner({ initialNav = "home" }) {
                       ) : null}
                     </div>
                   </div>
-                  <label className="demoAuthModal__field" htmlFor="torp-demo-auth-given">
+                  <label className="demoAuthModal__field" htmlFor="top-demo-auth-given">
                     <span className="fieldLabel">First name</span>
                     <input
-                      id="torp-demo-auth-given"
+                      id="top-demo-auth-given"
                       name="given-name"
                       value={authDraft.firstName}
                       onChange={(e) => setAuthDraft((d) => ({ ...d, firstName: e.target.value }))}
@@ -1230,10 +1583,10 @@ function TopAppInner({ initialNav = "home" }) {
                       autoComplete="given-name"
                     />
                   </label>
-                  <label className="demoAuthModal__field" htmlFor="torp-demo-auth-family">
+                  <label className="demoAuthModal__field" htmlFor="top-demo-auth-family">
                     <span className="fieldLabel">Last name</span>
                     <input
-                      id="torp-demo-auth-family"
+                      id="top-demo-auth-family"
                       name="family-name"
                       value={authDraft.lastName}
                       onChange={(e) => setAuthDraft((d) => ({ ...d, lastName: e.target.value }))}
@@ -1243,11 +1596,11 @@ function TopAppInner({ initialNav = "home" }) {
                   </label>
                 </>
               ) : null}
-              <label className="demoAuthModal__field" htmlFor="torp-demo-auth-email">
+              <label className="demoAuthModal__field" htmlFor="top-demo-auth-email">
                 <span className="fieldLabel">Email</span>
                 <input
                   name="email"
-                  id="torp-demo-auth-email"
+                  id="top-demo-auth-email"
                   value={authDraft.email}
                   onChange={(e) => setAuthDraft((d) => ({ ...d, email: e.target.value }))}
                   placeholder="Email"
@@ -1256,12 +1609,12 @@ function TopAppInner({ initialNav = "home" }) {
                   autoComplete="email"
                 />
               </label>
-              {!authBackend.workos ? (
-                <label className="demoAuthModal__field" htmlFor="torp-demo-auth-password">
+              {!hostedAuth ? (
+                <label className="demoAuthModal__field" htmlFor="top-demo-auth-password">
                   <span className="fieldLabel">Password</span>
                   <div className="demoAuthModal__passwordWrap">
                     <input
-                      id="torp-demo-auth-password"
+                      id="top-demo-auth-password"
                       name="password"
                       value={authDraft.password}
                       onChange={(e) => setAuthDraft((d) => ({ ...d, password: e.target.value }))}
@@ -1281,7 +1634,7 @@ function TopAppInner({ initialNav = "home" }) {
                   </div>
                 </label>
               ) : null}
-              {!authBackend.workos ? (
+              {!hostedAuth ? (
                 <div className="demoAuthModal__rememberGroup" role="group" aria-label="Sign-in preferences">
                   <FormCheckbox checked={rememberDevice} onChange={(e) => setRememberDevice(e.target.checked)}>
                     Stay signed in (this browser)
@@ -1303,7 +1656,7 @@ function TopAppInner({ initialNav = "home" }) {
                   Clear saved email
                 </button>
               ) : null}
-              {!authBackend.workos ? (
+              {!hostedAuth ? (
                 <div className="demoAuthModal__providers" aria-label="Local demo sign-in">
                   <p className="demoAuthModal__providersLabel">Local demo only</p>
                   <div className="row wrap demoAuthModal__providerRow">
@@ -1316,7 +1669,7 @@ function TopAppInner({ initialNav = "home" }) {
               {authError ? <p className="applyError">{authError}</p> : null}
               {authStatus ? <p className="applyStatus">{authStatus}</p> : null}
               <div className="row wrap">
-                {!authBackend.workos ? (
+                {!hostedAuth ? (
                   <button className="btnPrimary" type="submit">{authMode === "signup" ? "Create Account" : "Sign In"}</button>
                 ) : null}
                 <button className="btnSoft" type="button" onClick={() => setAuthMode((m) => (m === "signup" ? "signin" : "signup"))}>

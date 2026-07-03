@@ -6,6 +6,9 @@ import MissionPageTopStrip from "@/components/layout/MissionPageTopStrip";
 import MembershipBillingCenter from "@/features/membership/components/MembershipBillingCenter";
 import ManageBillingButton from "@/features/profile/components/ManageBillingButton";
 import AccountInfoCard from "@/features/profile/components/AccountInfoCard";
+import { SUPPORT_EMAIL } from "@/lib/runtime/brandContact";
+
+const DELETE_CONFIRM_PHRASE = "DELETE";
 
 /**
  * Full-page account settings (WorkOS + demo). Edit Profile stays a quick modal from the profile tab.
@@ -21,6 +24,7 @@ export default function AccountSettingsPage({
   setMembershipStatus,
   openSignInForMembership,
   favoriteEins,
+  deleteAccount,
 }) {
   const isWorkos = sessionKind === "workos";
   const [draft, setDraft] = useState({
@@ -32,6 +36,10 @@ export default function AccountSettingsPage({
   const [saveStatus, setSaveStatus] = useState("");
   const [saveError, setSaveError] = useState("");
   const [savingSection, setSavingSection] = useState(null);
+  const [deleteConfirmPhrase, setDeleteConfirmPhrase] = useState("");
+  const [deleteAcknowledged, setDeleteAcknowledged] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
   useEffect(() => {
     setDraft({
@@ -73,6 +81,30 @@ export default function AccountSettingsPage({
       email: next,
     });
   }
+
+  async function handleDeleteAccount() {
+    setDeleteError("");
+    if (!deleteAcknowledged) {
+      setDeleteError("Confirm that you understand this action cannot be undone.");
+      return;
+    }
+    if (deleteConfirmPhrase.trim() !== DELETE_CONFIRM_PHRASE) {
+      setDeleteError(`Type ${DELETE_CONFIRM_PHRASE} to confirm account deletion.`);
+      return;
+    }
+    if (typeof deleteAccount !== "function") {
+      setDeleteError("Account deletion is unavailable right now. Contact support.");
+      return;
+    }
+    setDeletingAccount(true);
+    const result = await deleteAccount({ confirmPhrase: deleteConfirmPhrase.trim() });
+    setDeletingAccount(false);
+    if (!result?.ok) {
+      setDeleteError(String(result?.message || "").trim() || "Could not delete your account.");
+    }
+  }
+
+  const deleteReady = deleteAcknowledged && deleteConfirmPhrase.trim() === DELETE_CONFIRM_PHRASE;
 
   return (
     <section className="shell profileTabShell accountSettingsPage">
@@ -120,10 +152,10 @@ export default function AccountSettingsPage({
             <strong>WorkOS sign-in email:</strong> {workOSAccountEmail}
           </p>
         ) : null}
-        <label className="sponsorSectionLead" style={{ display: "block" }} htmlFor="torp-settings-profile-email">
+        <label className="sponsorSectionLead" style={{ display: "block" }} htmlFor="top-settings-profile-email">
           Profile email
           <input
-            id="torp-settings-profile-email"
+            id="top-settings-profile-email"
             name="email"
             type="email"
             inputMode="email"
@@ -203,10 +235,11 @@ export default function AccountSettingsPage({
           onRequestSignIn={openSignInForMembership}
           sessionKind={sessionKind}
           stripeMemberReady={!!authBackend?.stripe}
-          stripeSponsorSubscriptionReady={!!authBackend?.stripeSponsorSubscription}
+          stripePortalReady={!!authBackend?.stripePortal}
           checkoutReturnPath="/settings"
           membershipBillingStatus={profile.membershipBillingStatus}
           stripeCustomerReady={!!profile.stripeCustomerIdSet}
+          stripeSubscriptionReady={!!profile.stripeSubscriptionIdSet}
         />
       </div>
 
@@ -224,7 +257,12 @@ export default function AccountSettingsPage({
         profileSource="cloud"
         manageBillingSlot={
           isWorkos ? (
-            <ManageBillingButton stripeReady={!!authBackend?.stripe} hasStripeCustomer={!!profile.stripeCustomerIdSet} />
+            <ManageBillingButton
+              stripeReady={!!authBackend?.stripePortal}
+              hasStripeCustomer={!!profile.stripeCustomerIdSet}
+              hasStripeSubscription={!!profile.stripeSubscriptionIdSet}
+              returnPath="/settings"
+            />
           ) : null
         }
       />
@@ -237,6 +275,62 @@ export default function AccountSettingsPage({
         <Link className="btnSoft" href="/profile">
           View on profile
         </Link>
+      </div>
+
+      <div className="card accountSettingsDangerZone" id="account-delete">
+        <h3>Delete account</h3>
+        <p className="sponsorSectionLead">
+          Permanently delete your account and erase your personal data from The Outreach Project, including your
+          profile, saved organizations, notifications, and community activity tied to this account.
+          {isWorkos ? " Active Stripe subscriptions are canceled and your sign-in is revoked." : " Demo data on this device is cleared."}
+          {" "}This cannot be undone.
+        </p>
+        <label className="accountSettingsDangerZone__ack">
+          <input
+            type="checkbox"
+            checked={deleteAcknowledged}
+            onChange={(e) => {
+              setDeleteAcknowledged(e.target.checked);
+              if (deleteError) setDeleteError("");
+            }}
+          />
+          <span>I understand this permanently deletes my account and personal data.</span>
+        </label>
+        <label className="sponsorSectionLead accountSettingsDangerZone__confirmLabel" htmlFor="top-delete-confirm">
+          Type <strong>{DELETE_CONFIRM_PHRASE}</strong> to confirm
+          <input
+            id="top-delete-confirm"
+            name="deleteConfirm"
+            type="text"
+            autoComplete="off"
+            value={deleteConfirmPhrase}
+            onChange={(e) => {
+              setDeleteConfirmPhrase(e.target.value);
+              if (deleteError) setDeleteError("");
+            }}
+            placeholder={DELETE_CONFIRM_PHRASE}
+            className="accountSettingsDangerZone__confirmInput"
+          />
+        </label>
+        {deleteError ? (
+          <p className="profileEditSaveError" role="alert">
+            {deleteError}
+          </p>
+        ) : null}
+        <div className="row" style={{ marginTop: 12 }}>
+          <button
+            type="button"
+            className="btnSoft accountSettingsDangerZone__deleteBtn"
+            onClick={() => handleDeleteAccount()}
+            disabled={!deleteReady || deletingAccount}
+          >
+            {deletingAccount ? "Deleting account…" : "Delete account"}
+          </button>
+        </div>
+        <p className="sponsorSectionLead accountSettingsDangerZone__support">
+          Need help instead? Email{" "}
+          <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>.
+        </p>
       </div>
       <MissionPageTopStrip placement="bottom" />
     </section>

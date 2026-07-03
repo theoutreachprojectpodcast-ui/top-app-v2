@@ -18,6 +18,7 @@ Admin can edit sponsor cards via `Admin -> Sponsors`:
 - identity: `name`
 - classification: `sponsor_type`, `sponsor_category`, `sponsor_scope`
 - presentation: `tagline`, `short_description`, `long_description`
+- curated enrichment (optional table `sponsor_enrichment`): `curated_tagline`, `curated_short_description`, `curated_long_description` — these override catalog copy at read time when set (admin saves and repo sync both populate them)
 - links: `website_url`, `cta_label`
 - social:
   - `social_links` JSON

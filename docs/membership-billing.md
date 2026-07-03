@@ -3,7 +3,7 @@
 ## Tiers
 
 - **`free`** — default; no recurring Stripe subscription required.
-- **`support`** ($1.99/mo) / **`member`** (Pro, $5.99/mo) / **`sponsor`** — paid paths; billing state on `torp_profiles` is updated only from Stripe webhooks (never from the client).
+- **`support`** (Support with $1, $1/mo) / **`member`** (Pro, $5.99/mo) / **`sponsor`** — paid paths; billing state on `top_profiles` is updated only from Stripe webhooks (never from the client).
 
 ## Environment (QA vs production)
 
@@ -27,10 +27,12 @@ Use **Stripe test mode** keys and test price IDs on QA/local (`sk_test_…`). Us
 
 ## Entitlements (server)
 
-`web/src/lib/account/entitlements.js` — **`computeEntitlementsFromProfileRow`** grants `podcastMemberContent` and `communityStorySubmit` when:
+`web/src/lib/account/entitlements.js`:
 
-- `platform_role` is `admin` or `moderator`, **or**
-- `membership_tier` is **`support`**, **`member`**, or **`sponsor`** **and** billing status is active (including trialing at entitlement read).
+- **`podcastMemberContent`** — `admin`/`moderator`, or paid tier (`support` / `member` / `sponsor`) with active/trialing billing.
+- **`communityStorySubmit`** — `admin`/`moderator`, or **Pro** (`membership_tier` = `member`) with active/trialing billing, a Stripe subscription id (webhook lag), or `membership_source` = `manual` (admin-granted Pro).
+
+Member stories submit as `pending_review` and are approved in **`/admin/community`**.
 
 ## Sponsor / invoice side
 

@@ -2,7 +2,7 @@
 # Adjust $AssetsRoot if your machine uses a different clone path.
 
 $ErrorActionPreference = "Stop"
-$AssetsRoot = "C:\Users\andre\OneDrive\Documents\VolenteLabs\Active Projects\TheOutreachProject\tORPApp\top-app-v2\assets"
+$AssetsRoot = "C:\Users\andre\OneDrive\Documents\VolenteLabs\Active Projects\TheOutreachProject\TOPApp\top-app-v2\assets"
 $Pub = Join-Path $PSScriptRoot "..\public"
 
 $dark = Join-Path $AssetsRoot "The Outreach Project logo _ darkmode.png"

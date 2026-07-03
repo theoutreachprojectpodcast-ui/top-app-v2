@@ -10,6 +10,7 @@ import {
   getMembershipTierDefinition,
   normalizeMembershipTierKey,
 } from "@/features/membership/membershipTiers";
+import { userBillingTierDefinitions } from "@/lib/membership/membershipModel";
 
 /**
  * @param {"profile" | "settings"} surface — profile shows current plan only; settings shows upgrades/options.
@@ -22,14 +23,16 @@ export default function MembershipAtAGlance({
   onRequestSignIn,
   sessionKind = "demo",
   stripeMemberReady = false,
-  stripeSponsorSubscriptionReady = false,
   stripeMemberMissingEnv = [],
   checkoutReturnPath = "/profile",
   onCheckoutNavigate,
   membershipBillingStatus = "none",
   stripeCustomerReady = false,
+  stripeSubscriptionReady = false,
+  stripePortalReady = false,
 }) {
   const [open, setOpen] = useState(true);
+  const billingTierDefinitions = userBillingTierDefinitions(MEMBERSHIP_TIER_DEFINITIONS);
   const current = getMembershipTierDefinition(currentTierKey);
   const tierKey = normalizeMembershipTierKey(currentTierKey);
   const isWorkos = sessionKind === "workos";
@@ -67,7 +70,12 @@ export default function MembershipAtAGlance({
         </div>
         {isWorkos ? (
           <div className="membershipCurrentProfileBilling">
-            <ManageBillingButton stripeReady={!!stripeMemberReady} hasStripeCustomer={!!stripeCustomerReady} />
+            <ManageBillingButton
+              stripeReady={!!(stripePortalReady || stripeMemberReady)}
+              hasStripeCustomer={!!stripeCustomerReady}
+              hasStripeSubscription={!!stripeSubscriptionReady}
+              returnPath={checkoutReturnPath}
+            />
           </div>
         ) : null}
         <div className="membershipCurrentProfileSettingsLink">
@@ -108,7 +116,7 @@ export default function MembershipAtAGlance({
         <div className="membershipAtAGlanceBody">
           {!isAuthenticated ? (
             <div className="membershipTierChoiceGrid">
-              {MEMBERSHIP_TIER_DEFINITIONS.map((tier) => (
+              {billingTierDefinitions.map((tier) => (
                 <button key={tier.id} type="button" className="membershipTierCard" onClick={() => onRequestSignIn?.()}>
                   <span className="membershipTierCardTitle">{tier.label}</span>
                   {tier.priceLabel ? (
@@ -124,13 +132,17 @@ export default function MembershipAtAGlance({
             <div className="membershipStripePanel">
               <ProfileMembershipCheckout
                 stripeReady={stripeMemberReady}
-                stripeSponsorSubscriptionReady={stripeSponsorSubscriptionReady}
                 missingEnvKeys={stripeMemberMissingEnv}
                 returnPath={checkoutReturnPath}
                 onAfterRedirect={onCheckoutNavigate}
               />
               <div className="membershipSettingsBillingRow">
-                <ManageBillingButton stripeReady={!!stripeMemberReady} hasStripeCustomer={!!stripeCustomerReady} />
+                <ManageBillingButton
+              stripeReady={!!(stripePortalReady || stripeMemberReady)}
+              hasStripeCustomer={!!stripeCustomerReady}
+              hasStripeSubscription={!!stripeSubscriptionReady}
+              returnPath={checkoutReturnPath}
+            />
               </div>
             </div>
           ) : null}
@@ -150,7 +162,7 @@ export default function MembershipAtAGlance({
             <div className="membershipTierAdminRow">
               <span className="membershipDemoLabel">Demo: switch tier</span>
               <div className="row wrap membershipTierPills">
-                {MEMBERSHIP_TIER_DEFINITIONS.map((tier) => (
+                {billingTierDefinitions.map((tier) => (
                   <button
                     key={tier.id}
                     type="button"

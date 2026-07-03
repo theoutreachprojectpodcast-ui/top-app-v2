@@ -12,7 +12,7 @@ export function buildTrustedResourceCrmLeadPayload(applicationPayload = {}, meta
   const p = applicationPayload;
   return {
     objectType: "trusted_resource_application",
-    source: meta.source || "torp_web_trusted_resource_form",
+    source: meta.source || "top_web_trusted_resource_form",
     submissionId: meta.submissionId ?? null,
     capturedAt: new Date().toISOString(),
     organization: {

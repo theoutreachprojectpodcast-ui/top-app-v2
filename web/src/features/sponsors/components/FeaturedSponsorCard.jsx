@@ -2,10 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import OrganizationLogo from "@/components/shared/OrganizationLogo";
+import SponsorOutboundLink from "@/features/sponsors/components/SponsorOutboundLink";
 import { resolveSponsorDisplayName } from "@/lib/entityDisplayName";
 import { sanitizeDisplayableImageUrl } from "@/lib/media/safeImageUrl";
-
-const toneCache = new Map();
 
 function googleFaviconUrl(fromUrl) {
   try {
@@ -16,49 +16,6 @@ function googleFaviconUrl(fromUrl) {
     return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=128`;
   } catch {
     return "";
-  }
-}
-
-function assessLogoToneFromElement(imgEl) {
-  if (!imgEl?.naturalWidth || !imgEl?.naturalHeight) return "normal";
-  const canvas = document.createElement("canvas");
-  canvas.width = 30;
-  canvas.height = 30;
-  const ctx = canvas.getContext("2d", { willReadFrequently: true });
-  if (!ctx) return "normal";
-
-  try {
-    ctx.drawImage(imgEl, 0, 0, canvas.width, canvas.height);
-    const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    let samples = 0;
-    let lumaSum = 0;
-    let satSum = 0;
-
-    for (let i = 0; i < data.length; i += 4) {
-      const alpha = data[i + 3] / 255;
-      if (alpha < 0.28) continue;
-      const r = data[i] / 255;
-      const g = data[i + 1] / 255;
-      const b = data[i + 2] / 255;
-      const max = Math.max(r, g, b);
-      const min = Math.min(r, g, b);
-      const sat = max === 0 ? 0 : (max - min) / max;
-      const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-      samples += 1;
-      lumaSum += luma;
-      satSum += sat;
-    }
-
-    if (!samples) return "normal";
-    const avgLuma = lumaSum / samples;
-    const avgSat = satSum / samples;
-
-    if (avgLuma >= 0.9 && avgSat <= 0.11) return "lightmono";
-    if (avgLuma <= 0.16 && avgSat <= 0.15) return "darkmono";
-    if (avgSat >= 0.42 && avgLuma >= 0.2 && avgLuma <= 0.85) return "highsat";
-    return "normal";
-  } catch {
-    return "normal";
   }
 }
 
@@ -125,10 +82,10 @@ export default function FeaturedSponsorCard({
   isFavorite = false,
   onToggleFavorite,
   onRequestSignIn,
+  hidePrimaryBadge = false,
 }) {
   const router = useRouter();
   const [logoIndex, setLogoIndex] = useState(0);
-  const [logoTone, setLogoTone] = useState("normal");
   const warm = sponsor.warmVariant || "gold";
   const safeBg = sanitizeDisplayableImageUrl(String(sponsor.backgroundImageUrl || "").trim());
   const hasListingBg = !!safeBg;
@@ -169,25 +126,27 @@ export default function FeaturedSponsorCard({
   }, [sponsor.ctaUrl, sponsor.socialLinks]);
   const logoSrc = logoCandidates[logoIndex] || "";
   const profileHref = `/sponsors/${encodeURIComponent(sponsor.slug || sponsor.id || "")}`;
+  const pageSource = sponsor.isPodcastSponsor ? "podcast_sponsor_page" : "sponsor_hub_card";
   const favoriteKey = String(sponsor.slug || sponsor.id || "").trim().toLowerCase();
-  const useLightLogoPanel = sponsor.logoPanelMode === "light";
-  const lockLogoShellDefault = sponsor.logoPanelMode === "dark";
-  const logoToneClass =
-    useLightLogoPanel || lockLogoShellDefault || logoTone === "normal" ? "" : ` sponsorPremiumLogoImg--tone-${logoTone}`;
-  const shellToneClass = useLightLogoPanel
-    ? " sponsorPremiumLogoShell--panel-light"
-    : lockLogoShellDefault || logoTone === "normal"
-      ? ""
-      : ` sponsorPremiumLogoShell--tone-${logoTone}`;
+  const logoPanel =
+    sponsor.logoPanelMode === "light"
+      ? "light"
+      : sponsor.logoPanelMode === "dark"
+        ? "dark"
+        : sponsor.logoPanelMode === "neutral"
+          ? "neutral"
+          : "auto";
   const accentStyle = sponsor.sponsorAccentColor
     ? { "--sponsor-card-accent": sponsor.sponsorAccentColor }
     : undefined;
 
   const tierClass = sponsor.displayGroup ? ` sponsorPremiumCard--displayTier-${sponsor.displayGroup}` : "";
+  const showFavoriteControl = favoriteKey && (favoritesEnabled || onRequestSignIn);
+  const showCardTop = !hidePrimaryBadge || showFavoriteControl;
 
   return (
     <article
-      className={`torpListingCard sponsorPremiumCard sponsorPremiumCard--${warm}${tierClass}`}
+      className={`topListingCard sponsorPremiumCard sponsorPremiumCard--${warm}${tierClass}`}
       data-sponsor-slug={String(sponsor.slug || sponsor.id || "").trim().toLowerCase() || undefined}
       style={accentStyle}
       role="button"
@@ -202,7 +161,7 @@ export default function FeaturedSponsorCard({
       aria-label={`Open ${displayName} sponsor profile`}
     >
       <div
-        className={`sponsorPremiumCardBg torpListingCardHero ${hasListingBg ? "torpListingCardHero--photo" : `torpListingCardHero--sponsorTone torpListingCardHero--sponsorTone-${warm}`}`}
+        className={`sponsorPremiumCardBg topListingCardHero ${hasListingBg ? "topListingCardHero--photo" : `topListingCardHero--sponsorTone topListingCardHero--sponsorTone-${warm}`}`}
         style={hasListingBg ? { backgroundImage: `url('${safeBg.replace(/'/g, "%27")}')` } : undefined}
         aria-hidden
       />
@@ -212,80 +171,67 @@ export default function FeaturedSponsorCard({
         aria-hidden
       />
       <div className="sponsorPremiumCardInner">
-        <div className="sponsorPremiumCardTop">
-          <div className="sponsorPremiumCardBadges" aria-label="Sponsor recognition">
-            {sponsor.primaryBadge ? (
-              <span
-                className={`sponsorPremiumBadge sponsorPremiumBadge--primary sponsorPremiumBadge--${sponsor.primaryBadge.key}`}
-              >
-                {sponsor.primaryBadge.label}
-              </span>
+        {showCardTop ? (
+          <div className="sponsorPremiumCardTop">
+            {!hidePrimaryBadge ? (
+              <div className="sponsorPremiumCardBadges" aria-label="Sponsor recognition">
+                {sponsor.primaryBadge ? (
+                  <span
+                    className={`sponsorPremiumBadge sponsorPremiumBadge--primary sponsorPremiumBadge--${sponsor.primaryBadge.key}`}
+                  >
+                    {sponsor.primaryBadge.label}
+                  </span>
+                ) : null}
+              </div>
+            ) : null}
+            {showFavoriteControl ? (
+              <div className="sponsorPremiumCardTopActions">
+                {favoritesEnabled ? (
+                  <button
+                    type="button"
+                    className={`favBtn sponsorPremiumFavBtn${isFavorite ? " favBtn--on" : ""}`}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      onToggleFavorite?.(`sponsor:${favoriteKey}`);
+                    }}
+                    aria-pressed={isFavorite}
+                    aria-label={isFavorite ? "Remove sponsor from saved" : "Save sponsor"}
+                  >
+                    {isFavorite ? "★" : "☆"}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="favBtn favBtn--muted sponsorPremiumFavBtn"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      onRequestSignIn();
+                    }}
+                    aria-label="Sign in to save sponsor"
+                  >
+                    ☆
+                  </button>
+                )}
+              </div>
             ) : null}
           </div>
-          {favoriteKey ? (
-            <div className="sponsorPremiumCardTopActions">
-              {favoritesEnabled ? (
-                <button
-                  type="button"
-                  className={`favBtn sponsorPremiumFavBtn${isFavorite ? " favBtn--on" : ""}`}
-                  onClick={(event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    onToggleFavorite?.(`sponsor:${favoriteKey}`);
-                  }}
-                  aria-pressed={isFavorite}
-                  aria-label={isFavorite ? "Remove sponsor from saved" : "Save sponsor"}
-                >
-                  {isFavorite ? "★" : "☆"}
-                </button>
-              ) : onRequestSignIn ? (
-                <button
-                  type="button"
-                  className="favBtn favBtn--muted sponsorPremiumFavBtn"
-                  onClick={(event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    onRequestSignIn();
-                  }}
-                  aria-label="Sign in to save sponsor"
-                >
-                  ☆
-                </button>
-              ) : null}
-            </div>
-          ) : null}
-        </div>
+        ) : null}
         <div className="sponsorPremiumBrand">
           <div className="sponsorPremiumBrandIdentity">
-            <div className={`sponsorPremiumLogoShell${shellToneClass}`}>
-              {logoSrc ? (
-                <img
-                  className={`sponsorPremiumLogoImg${logoToneClass}`}
-                  src={logoSrc}
-                  alt=""
-                  loading="lazy"
-                  onLoad={(event) => {
-                    if (toneCache.has(logoSrc)) {
-                      setLogoTone(toneCache.get(logoSrc));
-                      return;
-                    }
-                    const tone = assessLogoToneFromElement(event.currentTarget);
-                    toneCache.set(logoSrc, tone);
-                    setLogoTone(tone);
-                  }}
-                  onError={() => {
-                    if (logoIndex < logoCandidates.length - 1) {
-                      setLogoIndex((v) => v + 1);
-                      setLogoTone("normal");
-                      return;
-                    }
-                    setLogoTone("normal");
-                  }}
-                />
-              ) : (
-                <span className="sponsorPremiumWordmark">{displayName}</span>
-              )}
-            </div>
+            <OrganizationLogo
+              src={logoSrc}
+              alt=""
+              name={displayName}
+              entityKey={String(sponsor.slug || sponsor.id || "").trim().toLowerCase()}
+              size="lg"
+              surface="onDark"
+              panel={logoPanel}
+              onError={() => {
+                if (logoIndex < logoCandidates.length - 1) setLogoIndex((v) => v + 1);
+              }}
+            />
             <div className="sponsorPremiumTitleBlock">
               <h4 className="sponsorPremiumOrgName">{displayName}</h4>
               {sponsor.cardSubheader ? <p className="sponsorPremiumSubheader">{sponsor.cardSubheader}</p> : null}
@@ -314,31 +260,35 @@ export default function FeaturedSponsorCard({
         </div>
         <div className="sponsorPremiumFooter">
           {sponsor.ctaUrl && !sponsor.websitePending ? (
-            <a
+            <SponsorOutboundLink
               className="btnSoft sponsorPremiumVisitBtn"
               href={sponsor.ctaUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+              sponsorSlug={sponsor.slug || sponsor.id}
+              sponsorName={displayName}
+              pageSource={pageSource}
+              ctaType="website"
               onClick={(event) => event.stopPropagation()}
             >
               {sponsor.ctaLabel || "Visit Website"}
-            </a>
+            </SponsorOutboundLink>
           ) : null}
           <div className="sponsorPremiumSocial" aria-label="Sponsor website and social profiles">
             {socialLinkItems.map(({ key, url }) => (
-              <a
+              <SponsorOutboundLink
                 key={`${key}-${url}`}
                 className="sponsorPremiumSocialLink"
                 href={url}
-                target="_blank"
-                rel="noopener noreferrer"
+                sponsorSlug={sponsor.slug || sponsor.id}
+                sponsorName={displayName}
+                pageSource={pageSource}
+                ctaType={key === "website" ? "website" : "social"}
                 aria-label={
                   key === "website" ? `${displayName} website` : `${displayName} on ${key === "x" ? "X" : key}`
                 }
                 onClick={(event) => event.stopPropagation()}
               >
                 <SocialIcon type={key} />
-              </a>
+              </SponsorOutboundLink>
             ))}
           </div>
           {sponsor.websitePending || !sponsor.ctaUrl ? (

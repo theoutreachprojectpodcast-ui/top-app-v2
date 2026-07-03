@@ -3,9 +3,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Avatar from "@/components/shared/Avatar";
+import { FormCheckbox } from "@/components/forms/FormChoice";
 import { emptyProfileAvatarUrl } from "@/lib/avatarFallback";
 import {
   PRO_MEMBERSHIP_PRICE_LABEL,
+  SUPPORT_MEMBERSHIP_DISPLAY_NAME,
   SUPPORT_MEMBERSHIP_PRICE_LABEL,
 } from "@/features/membership/membershipTiers";
 import { defaultMembershipTierForIntent, normalizePublicAccountIntent } from "@/lib/account/accountModel";
@@ -18,14 +20,9 @@ import {
 
 const INTENT_CARDS = [
   {
-    id: "free_user",
-    title: "Browse for Free",
-    blurb: "Explore the directory, trusted resources, and public community content. No card required.",
-  },
-  {
     id: "support_user",
     title: "Support the Mission",
-    blurb: "Back the work with a light monthly subscription. Profile and saves stay in sync.",
+    blurb: "Back the work with Support Membership ($0.99/year). Directory and community viewing included.",
   },
   {
     id: "member_user",
@@ -41,32 +38,18 @@ const INTENT_CARDS = [
 
 const PLANS = [
   {
-    id: "free",
-    title: "Free Membership",
-    price: "$0",
-    cadence: "",
-    blurb: "Explore the directory, trusted resources, and public community content. No card required.",
-  },
-  {
     id: "support",
-    title: "Support Membership",
-    price: SUPPORT_MEMBERSHIP_PRICE_LABEL.replace("/mo", ""),
-    cadence: "/month",
-    blurb: "Back the mission with a light monthly subscription. Saves and profile stay in sync.",
+    title: SUPPORT_MEMBERSHIP_DISPLAY_NAME,
+    price: SUPPORT_MEMBERSHIP_PRICE_LABEL.replace("/yr", ""),
+    cadence: "/year",
+    blurb: "Unlock the full platform with annual Support Membership.",
   },
   {
     id: "member",
     title: "Pro Membership",
-    price: PRO_MEMBERSHIP_PRICE_LABEL.replace("/mo", ""),
-    cadence: "/month",
-    blurb: "Full member flows as they roll out, including community submissions where enabled.",
-  },
-  {
-    id: "sponsor",
-    title: "Sponsor Membership",
-    price: "Monthly",
-    cadence: " — set in Stripe",
-    blurb: "Platform sponsor tier for aligned organizations (requires STRIPE_PRICE_SPONSOR_MONTHLY). Large mission partner packages are applied for separately on the Sponsors page.",
+    price: PRO_MEMBERSHIP_PRICE_LABEL.replace("/yr", ""),
+    cadence: "/year",
+    blurb: "Community story submission and premium features as they roll out.",
   },
 ];
 
@@ -76,6 +59,14 @@ const NOTIFICATION_CHOICES = [
   { id: "push", label: "Push" },
   { id: "in_app", label: "In-app" },
 ];
+
+const SPONSOR_ONBOARDING_PLAN = {
+  id: "sponsor",
+  title: "Sponsor Membership",
+  price: "Packages vary",
+  cadence: "",
+  blurb: "Platform sponsor subscriptions and mission partner packages live on the Sponsors page.",
+};
 
 const STEP_LABELS = ["Main account", "Identity", "Contribution", "Membership"];
 
@@ -171,7 +162,7 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
   const [error, setError] = useState("");
   const [draft, setDraft] = useState(() => draftFromProfile(initialProfile));
   const [selectedTier, setSelectedTier] = useState(() =>
-    normalizedInitialIntent ? defaultMembershipTierForIntent(normalizedInitialIntent) : "free",
+    normalizedInitialIntent ? defaultMembershipTierForIntent(normalizedInitialIntent) : "support",
   );
   const [autoFinalizing, setAutoFinalizing] = useState(false);
   const autoFinalizeRanRef = useRef(false);
@@ -443,14 +434,13 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
   }, [accountIntent]);
 
   async function startPaidCheckout() {
-    if (selectedTier === "free") return;
     if (selectedTier === "sponsor" && !authBackend?.stripeSponsorSubscription) {
       setError("Sponsor subscription checkout requires STRIPE_PRICE_SPONSOR_MONTHLY in the server environment.");
       return;
     }
     if (["support", "member"].includes(selectedTier) && !authBackend?.stripeMemberRecurring) {
       setError(
-        "Support and Pro checkout require STRIPE_PRICE_SUPPORT_MONTHLY and STRIPE_PRICE_PRO_MONTHLY (or STRIPE_PRICE_MEMBER_MONTHLY).",
+        "Support and Pro checkout require STRIPE_PRICE_SUPPORT_YEARLY and STRIPE_PRICE_PRO_YEARLY (or monthly fallbacks).",
       );
       return;
     }
@@ -465,7 +455,7 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
       });
       const data = await res.json().catch(() => ({}));
       if (res.status === 503) {
-        setMessage("Billing is not fully connected yet. Choose Free to continue, or configure Stripe in your environment.");
+        setMessage("Billing is not fully connected yet. Configure Stripe in your environment or try again later.");
         setSaving(false);
         return;
       }
@@ -548,7 +538,7 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
           ? "Optional: tell us how you would like to contribute. You can skip individual items and finish later in Profile."
           : accountIntent === "sponsor_user"
             ? "Finish sponsor onboarding: subscribe in Stripe or submit a partnership application for staff review."
-            : "Confirm your membership. Free browsing always stays available.";
+            : "Confirm your membership. Support or Pro is required to use the platform.";
 
   return (
     <div className="shell onboardingShell">
@@ -575,7 +565,7 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
             and tap <strong>Finish onboarding</strong>.
           </p>
         ) : null}
-        {checkoutFlash === "cancel" ? <p className="applyError">Checkout canceled. You can choose Free or try again.</p> : null}
+        {checkoutFlash === "cancel" ? <p className="applyError">Checkout canceled. Choose a membership to continue.</p> : null}
         {message ? <p className="applyStatus">{message}</p> : null}
         {error ? <p className="applyError">{error}</p> : null}
 
@@ -597,15 +587,15 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
               </label>
             </div>
             {initialProfile?.email ? (
-              <label className="fieldLabel" htmlFor="torp-onboarding-email">
+              <label className="fieldLabel" htmlFor="top-onboarding-email">
                 Email (from your sign-in provider)
-                <input id="torp-onboarding-email" type="email" readOnly value={initialProfile.email} />
+                <input id="top-onboarding-email" type="email" readOnly value={initialProfile.email} />
               </label>
             ) : null}
-            <label className="fieldLabel" htmlFor="torp-onboarding-display">
+            <label className="fieldLabel" htmlFor="top-onboarding-display">
               Display name <span className="applyError">*</span>
               <input
-                id="torp-onboarding-display"
+                id="top-onboarding-display"
                 autoComplete="nickname"
                 value={draft.displayName}
                 onChange={(e) => setDraft((d) => ({ ...d, displayName: e.target.value }))}
@@ -613,20 +603,20 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
               />
             </label>
             <div className="form">
-              <label className="fieldLabel" htmlFor="torp-onboarding-given">
+              <label className="fieldLabel" htmlFor="top-onboarding-given">
                 First name <span className="applyError">*</span>
                 <input
-                  id="torp-onboarding-given"
+                  id="top-onboarding-given"
                   autoComplete="given-name"
                   value={draft.firstName}
                   onChange={(e) => setDraft((d) => ({ ...d, firstName: e.target.value }))}
                   required
                 />
               </label>
-              <label className="fieldLabel" htmlFor="torp-onboarding-family">
+              <label className="fieldLabel" htmlFor="top-onboarding-family">
                 Last name <span className="applyError">*</span>
                 <input
-                  id="torp-onboarding-family"
+                  id="top-onboarding-family"
                   autoComplete="family-name"
                   value={draft.lastName}
                   onChange={(e) => setDraft((d) => ({ ...d, lastName: e.target.value }))}
@@ -634,10 +624,10 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
                 />
               </label>
             </div>
-            <label className="fieldLabel" htmlFor="torp-onboarding-phone">
+            <label className="fieldLabel" htmlFor="top-onboarding-phone">
               Phone number (optional)
               <input
-                id="torp-onboarding-phone"
+                id="top-onboarding-phone"
                 type="tel"
                 autoComplete="tel"
                 value={draft.phoneNumber}
@@ -645,19 +635,19 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
               />
             </label>
             <div className="form">
-              <label className="fieldLabel" htmlFor="torp-onboarding-city">
+              <label className="fieldLabel" htmlFor="top-onboarding-city">
                 City (optional)
                 <input
-                  id="torp-onboarding-city"
+                  id="top-onboarding-city"
                   autoComplete="address-level2"
                   value={draft.city}
                   onChange={(e) => setDraft((d) => ({ ...d, city: e.target.value }))}
                 />
               </label>
-              <label className="fieldLabel" htmlFor="torp-onboarding-state">
+              <label className="fieldLabel" htmlFor="top-onboarding-state">
                 State / region <span className="applyError">*</span>
                 <input
-                  id="torp-onboarding-state"
+                  id="top-onboarding-state"
                   autoComplete="address-level1"
                   value={draft.state}
                   onChange={(e) => setDraft((d) => ({ ...d, state: e.target.value }))}
@@ -665,19 +655,19 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
                 />
               </label>
             </div>
-            <label className="fieldLabel" htmlFor="torp-onboarding-zip">
+            <label className="fieldLabel" htmlFor="top-onboarding-zip">
               ZIP / postal code (optional)
               <input
-                id="torp-onboarding-zip"
+                id="top-onboarding-zip"
                 autoComplete="postal-code"
                 value={draft.postalCode}
                 onChange={(e) => setDraft((d) => ({ ...d, postalCode: e.target.value }))}
               />
             </label>
-            <label className="fieldLabel" htmlFor="torp-onboarding-contactpref">
+            <label className="fieldLabel" htmlFor="top-onboarding-contactpref">
               Preferred contact method <span className="applyError">*</span>
               <select
-                id="torp-onboarding-contactpref"
+                id="top-onboarding-contactpref"
                 value={draft.preferredContactMethod}
                 onChange={(e) => setDraft((d) => ({ ...d, preferredContactMethod: e.target.value }))}
                 required
@@ -692,16 +682,15 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
             </label>
             <fieldset className="profileEditFieldset">
               <legend>Notification preferences (optional)</legend>
-              <div className="communityPillRow" style={{ flexWrap: "wrap" }}>
+              <div className="dsChoiceGroup profileEditModal__notifyGroup onboardingForm__notifyGroup">
                 {NOTIFICATION_CHOICES.map((n) => (
-                  <label key={n.id} className="demoAuthModal__rememberGroup" style={{ display: "inline-flex", gap: 8 }}>
-                    <input
-                      type="checkbox"
-                      checked={draft.notificationPreferences?.includes(n.id)}
-                      onChange={() => toggleNotification(n.id)}
-                    />
+                  <FormCheckbox
+                    key={n.id}
+                    checked={!!draft.notificationPreferences?.includes(n.id)}
+                    onChange={() => toggleNotification(n.id)}
+                  >
                     {n.label}
-                  </label>
+                  </FormCheckbox>
                 ))}
               </div>
             </fieldset>
@@ -721,10 +710,10 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
             <h3 className="introTagline" style={{ marginBottom: 10 }}>
               Identity
             </h3>
-            <label className="fieldLabel" htmlFor="torp-id-seg">
+            <label className="fieldLabel" htmlFor="top-id-seg">
               How do you identify with this community? <span className="applyError">*</span>
               <select
-                id="torp-id-seg"
+                id="top-id-seg"
                 value={draft.identitySegment}
                 onChange={(e) => setDraft((d) => ({ ...d, identitySegment: e.target.value }))}
                 required
@@ -737,69 +726,69 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
                 ))}
               </select>
             </label>
-            <label className="fieldLabel" htmlFor="torp-org-affil">
+            <label className="fieldLabel" htmlFor="top-org-affil">
               Organization name {["organization_representative", "sponsor", "resource_partner"].includes(draft.identitySegment) ? <span className="applyError">*</span> : <span>(if applicable)</span>}
               <input
-                id="torp-org-affil"
+                id="top-org-affil"
                 value={draft.organizationAffiliation}
                 onChange={(e) => setDraft((d) => ({ ...d, organizationAffiliation: e.target.value }))}
               />
             </label>
-            <label className="fieldLabel" htmlFor="torp-job">
+            <label className="fieldLabel" htmlFor="top-job">
               Role / title (optional)
-              <input id="torp-job" value={draft.jobTitle} onChange={(e) => setDraft((d) => ({ ...d, jobTitle: e.target.value }))} />
+              <input id="top-job" value={draft.jobTitle} onChange={(e) => setDraft((d) => ({ ...d, jobTitle: e.target.value }))} />
             </label>
-            <label className="fieldLabel" htmlFor="torp-service">
+            <label className="fieldLabel" htmlFor="top-service">
               Branch or service affiliation{" "}
               {["veteran", "first_responder"].includes(draft.identitySegment) ? <span className="applyError">*</span> : <span>(if applicable)</span>}
               <input
-                id="torp-service"
+                id="top-service"
                 value={draft.serviceBackground}
                 onChange={(e) => setDraft((d) => ({ ...d, serviceBackground: e.target.value }))}
               />
             </label>
-            <label className="fieldLabel" htmlFor="torp-bio">
+            <label className="fieldLabel" htmlFor="top-bio">
               Short bio (optional)
               <textarea
-                id="torp-bio"
+                id="top-bio"
                 rows={3}
                 value={draft.bio}
                 onChange={(e) => setDraft((d) => ({ ...d, bio: e.target.value }))}
               />
             </label>
-            <label className="fieldLabel" htmlFor="torp-why">
+            <label className="fieldLabel" htmlFor="top-why">
               Why are you joining The Outreach Project? <span className="applyError">*</span>
               <textarea
-                id="torp-why"
+                id="top-why"
                 rows={3}
                 value={draft.reasonForJoining}
                 onChange={(e) => setDraft((d) => ({ ...d, reasonForJoining: e.target.value }))}
                 required
               />
             </label>
-            <label className="fieldLabel" htmlFor="torp-causes">
+            <label className="fieldLabel" htmlFor="top-causes">
               Interests / categories you care about (optional)
               <textarea
-                id="torp-causes"
+                id="top-causes"
                 rows={2}
                 value={draft.causes}
                 onChange={(e) => setDraft((d) => ({ ...d, causes: e.target.value }))}
                 placeholder="Topics, causes, or communities you follow"
               />
             </label>
-            <label className="fieldLabel" htmlFor="torp-support-needs">
+            <label className="fieldLabel" htmlFor="top-support-needs">
               Support needs (optional)
               <textarea
-                id="torp-support-needs"
+                id="top-support-needs"
                 rows={2}
                 value={draft.supportNeeds}
                 onChange={(e) => setDraft((d) => ({ ...d, supportNeeds: e.target.value }))}
               />
             </label>
-            <label className="fieldLabel" htmlFor="torp-communities">
+            <label className="fieldLabel" htmlFor="top-communities">
               Communities you identify with on the platform (optional)
               <textarea
-                id="torp-communities"
+                id="top-communities"
                 rows={2}
                 value={draft.communities}
                 onChange={(e) => setDraft((d) => ({ ...d, communities: e.target.value }))}
@@ -832,53 +821,52 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
             <h3 className="introTagline" style={{ marginBottom: 10 }}>
               Contribution (optional)
             </h3>
-            <p className="profilePhotoUploadHint">Select any that apply. You can refine these later in Profile.</p>
             <fieldset className="profileEditFieldset">
               <legend>Ways you want to contribute</legend>
-              <div className="communityPillRow" style={{ flexDirection: "column", alignItems: "stretch", gap: 10 }}>
+              <p className="profileEditFieldsetHint">Select any that apply. You can refine these later in Profile.</p>
+              <div className="dsChoiceGroup profileEditModal__contribGroup onboardingForm__contribGroup">
                 {CONTRIBUTION_INTEREST_KEYS.map(([key, label]) => (
-                  <label key={key} style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                    <input
-                      type="checkbox"
-                      checked={!!draft.contributionInterests?.[key]}
-                      onChange={() => toggleContribution(key)}
-                    />
+                  <FormCheckbox
+                    key={key}
+                    checked={!!draft.contributionInterests?.[key]}
+                    onChange={() => toggleContribution(key)}
+                  >
                     {label}
-                  </label>
+                  </FormCheckbox>
                 ))}
               </div>
             </fieldset>
-            <label className="fieldLabel" htmlFor="torp-skills">
+            <label className="fieldLabel" htmlFor="top-skills">
               Skills or services you can offer (optional)
               <textarea
-                id="torp-skills"
+                id="top-skills"
                 rows={2}
                 value={draft.skills}
                 onChange={(e) => setDraft((d) => ({ ...d, skills: e.target.value }))}
               />
             </label>
-            <label className="fieldLabel" htmlFor="torp-volunteer">
+            <label className="fieldLabel" htmlFor="top-volunteer">
               Volunteer interests (optional)
               <textarea
-                id="torp-volunteer"
+                id="top-volunteer"
                 rows={2}
                 value={draft.volunteerInterests}
                 onChange={(e) => setDraft((d) => ({ ...d, volunteerInterests: e.target.value }))}
               />
             </label>
-            <label className="fieldLabel" htmlFor="torp-contrib-sum">
+            <label className="fieldLabel" htmlFor="top-contrib-sum">
               How you want to contribute (summary, optional)
               <textarea
-                id="torp-contrib-sum"
+                id="top-contrib-sum"
                 rows={2}
                 value={draft.contributionSummary}
                 onChange={(e) => setDraft((d) => ({ ...d, contributionSummary: e.target.value }))}
               />
             </label>
-            <label className="fieldLabel" htmlFor="torp-pref-contrib-contact">
+            <label className="fieldLabel" htmlFor="top-pref-contrib-contact">
               Preferred ways to be contacted about opportunities (optional)
               <input
-                id="torp-pref-contrib-contact"
+                id="top-pref-contrib-contact"
                 value={draft.preferredContributionContact}
                 onChange={(e) => setDraft((d) => ({ ...d, preferredContributionContact: e.target.value }))}
                 placeholder="e.g. Email weekdays, text for events"
@@ -952,7 +940,7 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
                     <p className="sponsorSectionLead" style={{ marginTop: 0 }}>
                       Subscribe in Stripe or submit a partnership application. Either option keeps your account on the sponsor path.
                     </p>
-                    <div className="communityPillRow" style={{ marginBottom: 12 }}>
+                    <div className="row wrap onboardingForm__sponsorPath">
                       <button
                         type="button"
                         className={sponsorSubPath === "subscription" ? "btnPrimary" : "btnSoft"}
@@ -970,13 +958,17 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
                     </div>
                     {sponsorSubPath === "application" ? (
                       <>
-                        <textarea
-                          rows={4}
-                          autoComplete="off"
-                          value={draft.sponsorApplicationNotes}
-                          onChange={(e) => setDraft((d) => ({ ...d, sponsorApplicationNotes: e.target.value }))}
-                          placeholder="Anything else we should know for your partnership inquiry? (optional)"
-                        />
+                        <label className="fieldLabel" htmlFor="top-sponsor-app-notes">
+                          Partnership notes (optional)
+                          <textarea
+                            id="top-sponsor-app-notes"
+                            rows={4}
+                            autoComplete="off"
+                            value={draft.sponsorApplicationNotes}
+                            onChange={(e) => setDraft((d) => ({ ...d, sponsorApplicationNotes: e.target.value }))}
+                            placeholder="Anything else we should know for your partnership inquiry?"
+                          />
+                        </label>
                         <div className="row wrap">
                           <button
                             className="btnPrimary"
@@ -991,7 +983,7 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
                     ) : (
                       <>
                         <div className="onboardingPlanGrid">
-                          {PLANS.filter((p) => p.id === "sponsor").map((p) => (
+                          {[SPONSOR_ONBOARDING_PLAN].map((p) => (
                             <button
                               key={p.id}
                               type="button"
@@ -1041,13 +1033,8 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
                       ))}
                     </div>
                     <div className="row wrap">
-                      {selectedTier !== "free" ? (
-                        <button className="btnSoft" type="button" disabled={busy} onClick={startPaidCheckout}>
-                          Continue to secure checkout
-                        </button>
-                      ) : null}
-                      <button className="btnPrimary" type="button" disabled={busy} onClick={() => void finishOnboarding()}>
-                        {selectedTier === "free" ? "Finish with Free" : "Finish onboarding"}
+                      <button className="btnPrimary" type="button" disabled={busy} onClick={startPaidCheckout}>
+                        Continue to secure checkout
                       </button>
                     </div>
                   </div>

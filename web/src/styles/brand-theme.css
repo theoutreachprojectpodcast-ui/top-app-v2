@@ -39,6 +39,12 @@
   --color-focus-ring: rgba(50, 196, 59, 0.3);
 
   --color-success: #1fa64a;
+  --color-success-text: #0d7a4a;
+  --color-success-surface: color-mix(in srgb, var(--color-success) 12%, transparent);
+  --color-success-border: color-mix(in srgb, var(--color-success) 32%, transparent);
+  --color-danger-text: #b42318;
+  --color-danger-surface: color-mix(in srgb, var(--color-error) 10%, transparent);
+  --color-danger-border: color-mix(in srgb, var(--color-error) 35%, transparent);
   --color-warning: #c58a18;
   --color-error: #c94b49;
   --color-info: #2c7be5;
@@ -107,9 +113,9 @@
   --shadow-bottom-nav: 0 -8px 32px color-mix(in srgb, var(--color-text-primary) 15%, transparent);
 
   /* Fixed bottom nav + iOS home indicator — use for `padding-bottom` on shells with docked nav */
-  --torp-bottom-nav-reserve: calc(120px + env(safe-area-inset-bottom, 0px));
+  --top-bottom-nav-reserve: calc(68px + env(safe-area-inset-bottom, 0px));
   /* Horizontal page gutter on phones (avoid hard-coded 40px-only gutters) */
-  --torp-page-gutter-x: clamp(12px, 4.2vw, 48px);
+  --top-page-gutter-x: clamp(12px, 4.2vw, 48px);
 
   --color-scrollbar-track: color-mix(in srgb, var(--color-bg-subtle) 96%, var(--color-bg-app) 4%);
   --color-scrollbar-thumb: color-mix(in srgb, var(--color-border-strong) 55%, var(--color-bg-muted) 45%);
@@ -193,6 +199,12 @@
   --color-link: #83e387;
   --color-focus-ring: rgba(131, 227, 135, 0.34);
   --color-success: #32c43b;
+  --color-success-text: #6ee778;
+  --color-success-surface: color-mix(in srgb, var(--color-success) 14%, transparent);
+  --color-success-border: color-mix(in srgb, var(--color-success) 38%, transparent);
+  --color-danger-text: #fda29b;
+  --color-danger-surface: color-mix(in srgb, var(--color-error) 16%, transparent);
+  --color-danger-border: color-mix(in srgb, var(--color-error) 42%, transparent);
   --color-warning: #d4a12a;
   --color-error: #d96866;
   --color-info: #8a9590;
@@ -403,11 +415,11 @@ html {
 }
 
 /* Optional: extra topo depth on large bands (not for cards/forms — opt-in per section) */
-.torp-band-texture {
+.top-band-texture {
   position: relative;
   isolation: isolate;
 }
-.torp-band-texture::before {
+.top-band-texture::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -421,12 +433,12 @@ html {
   mix-blend-mode: multiply;
   filter: contrast(1.12) brightness(1.04);
 }
-:root[data-color-scheme="dark"] .torp-band-texture::before,
-.dark .torp-band-texture::before {
+:root[data-color-scheme="dark"] .top-band-texture::before,
+.dark .top-band-texture::before {
   mix-blend-mode: overlay;
   filter: grayscale(1) contrast(1.12) brightness(0.88);
 }
-.torp-band-texture > * {
+.top-band-texture > * {
   position: relative;
   z-index: 1;
 }

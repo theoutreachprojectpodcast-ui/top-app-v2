@@ -51,6 +51,6 @@ Logout URLs:
 
 - Create account launches WorkOS sign-up from homepage, profile, and podcast flows.
 - Sign-in launches WorkOS sign-in from same surfaces.
-- Callback returns authenticated session and profile row exists in `torp_profiles`.
+- Callback returns authenticated session and profile row exists in `top_profiles`.
 - Session survives refresh and cross-page navigation.
 - Manual sign-out clears session and redirects safely.

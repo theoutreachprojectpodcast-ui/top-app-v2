@@ -1,6 +1,12 @@
 export const APP_NAME = "The Outreach Project";
 export const APP_TAGLINE = "Veteran and First Responder Resource Network";
 
+/** Default mission strip copy (overridable via approved page_content_blocks, page_key=footer). */
+export const MISSION_STRIP_BADGE = "Veteran & First Responder Resource Network";
+export const MISSION_STRIP_MISSION_NOTE =
+  "The Outreach Project exists to bridge the gap between veterans, first responders, families and the organizations that can change lives through trusted resources, authentic stories, and meaningful connections.";
+export const MISSION_STRIP_TAGLINE = "";
+
 export const PODCAST_URL = "https://www.youtube.com/@TheOutreachProjectHq";
 
 export const PAGE_SIZE = 100;

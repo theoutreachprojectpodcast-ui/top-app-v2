@@ -1,4 +1,4 @@
--- tORP v0.3 — Sponsor logo enrichment metadata (non-destructive: ADD COLUMN only).
+-- TOP v0.3 — Sponsor logo enrichment metadata (non-destructive: ADD COLUMN only).
 -- Run after sponsors_catalog exists. Does not drop objects or mutate row data.
 
 alter table public.sponsors_catalog

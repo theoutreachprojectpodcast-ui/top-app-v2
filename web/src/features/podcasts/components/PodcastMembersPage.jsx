@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import PublicPageContentSlot from "@/components/content/PublicPageContentSlot";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { resolvePodcastMemberContentAccess, listPodcastMemberContent } from "@/features/podcasts/api/podcastApi";
 import { readRememberDevicePref } from "@/lib/auth/lastUsedEmail";
@@ -36,11 +37,18 @@ export default function PodcastMembersPage() {
             <h2>Members-only content</h2>
           </div>
         </div>
-        <p className="communityHeroText podcastPageHero__lead">
-          {allowed
-            ? "Unlocked for your account — same Pro tier as community story submissions."
-            : "Sign in with your Outreach Project account. Pro membership unlocks this library."}
-        </p>
+        <PublicPageContentSlot
+          pageKey="membership"
+          sectionKey="podcast_members_intro"
+          className="communityHeroText podcastPageHero__lead"
+          fallback={
+            <p className="communityHeroText podcastPageHero__lead">
+              {allowed
+                ? "Unlocked for your account — same Pro tier as community story submissions."
+                : "Sign in with your Outreach Project account. Pro membership unlocks this library."}
+            </p>
+          }
+        />
       </section>
       <section className="podcastSection">
         {!allowed ? (

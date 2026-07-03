@@ -31,22 +31,10 @@ begin
   if to_regclass('public.trusted_resources') is null then
     return;
   end if;
-  execute $p$
-    create policy trusted_resources_select_active on public.trusted_resources
-      for select to anon, authenticated
-      using (listing_status = 'active')
-  $p$;
-  execute $p$
-    create policy trusted_resources_insert_pending on public.trusted_resources
-      for insert to anon, authenticated
-      with check (listing_status = 'pending')
-  $p$;
-  execute $p$
-    create policy trusted_resources_update_pending on public.trusted_resources
-      for update to anon, authenticated
-      using (listing_status = 'pending')
-      with check (listing_status = 'pending')
-  $p$;
+  perform public._top_ensure_client_deny_rls('public.trusted_resources'::regclass);
+exception
+  when undefined_function then
+    alter table public.trusted_resources enable row level security;
 end $$;
 
 -- 2) Applications: legacy intake -> trusted_resource_applications

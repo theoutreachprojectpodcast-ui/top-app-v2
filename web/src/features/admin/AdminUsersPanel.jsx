@@ -1,5 +1,6 @@
 "use client";
 
+import AdminPanelShell from "@/components/admin/AdminPanelShell";
 import { useCallback, useEffect, useState } from "react";
 
 const ROLE_OPTIONS = ["user", "support", "member", "sponsor", "moderator", "admin"];
@@ -26,6 +27,9 @@ export default function AdminUsersPanel() {
   const [userTypeFilter, setUserTypeFilter] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteInfo, setInviteInfo] = useState("");
+  const [selectedId, setSelectedId] = useState("");
+  const [detail, setDetail] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -55,7 +59,38 @@ export default function AdminUsersPanel() {
 
   useEffect(() => {
     void load();
-  }, []);
+  }, [load]);
+
+  async function loadDetail(workosUserId) {
+    if (!workosUserId) {
+      setDetail(null);
+      return;
+    }
+    setDetailLoading(true);
+    try {
+      const res = await fetch(`/api/admin/users/${encodeURIComponent(workosUserId)}/activity`, {
+        credentials: "include",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) setDetail(data);
+      else setDetail(null);
+    } catch {
+      setDetail(null);
+    } finally {
+      setDetailLoading(false);
+    }
+  }
+
+  function applyPreset(preset) {
+    if (preset === "active") setStatusFilter("active");
+    else if (preset === "suspended") setStatusFilter("suspended");
+    else if (preset === "invited") setStatusFilter("invited");
+    else if (preset === "new") {
+      setStatusFilter("");
+      setQInput("");
+    }
+    void load();
+  }
 
   async function patchUser(workosUserId, patch) {
     setSaving(workosUserId);
@@ -107,10 +142,8 @@ export default function AdminUsersPanel() {
   }
 
   return (
-    <div className="adminPanel">
-      <h2 style={{ marginTop: 0 }}>Users</h2>
-      <p className="adminMuted">Search users, update role/user type/status, suspend/reactivate, and issue admin magic-link sign-in.</p>
-      <div className="adminToolbar">
+    <AdminPanelShell panelId="users" error={error}>
+            <div className="adminToolbar">
         <label className="fieldLabel" htmlFor="admin-q">
           Search
         </label>
@@ -170,7 +203,7 @@ export default function AdminUsersPanel() {
         {inviteInfo ? <span className="adminMuted">{inviteInfo}</span> : null}
       </div>
       {error ? (
-        <p role="alert" style={{ color: "var(--color-danger, #b42318)" }}>
+        <p className="adminFeedback adminFeedback--error" role="alert">
           {error}
         </p>
       ) : null}
@@ -194,11 +227,18 @@ export default function AdminUsersPanel() {
           </thead>
           <tbody>
             {rows.map((r) => (
-              <tr key={r.id}>
+              <tr
+                key={r.id}
+                style={selectedId === r.workos_user_id ? { background: "color-mix(in srgb, var(--color-accent) 6%, transparent)" } : undefined}
+                onClick={() => {
+                  setSelectedId(r.workos_user_id);
+                  void loadDetail(r.workos_user_id);
+                }}
+              >
                 <td data-label="Email">{r.email || "—"}</td>
                 <td data-label="Name">
                   {(r.first_name || "") + " " + (r.last_name || "")}
-                  <div className="adminMuted" style={{ fontSize: "0.75rem" }}>
+                  <div className="adminMuted adminMuted--xs">
                     {r.workos_user_id}
                   </div>
                 </td>
@@ -263,34 +303,46 @@ export default function AdminUsersPanel() {
                     <strong>{r.onboarding_completed ? "Wizard complete" : "Wizard incomplete"}</strong>
                     {r.onboarding_skipped ? <span className="adminMuted"> · skipped</span> : null}
                   </div>
-                  <div className="adminMuted" style={{ fontSize: "0.8rem" }}>
+                  <div className="adminMuted adminMuted--sm">
                     Status: {r.onboarding_status || "—"}
                   </div>
-                  <div className="adminMuted" style={{ fontSize: "0.8rem" }}>
+                  <div className="adminMuted adminMuted--sm">
                     Identity: {r.identity_segment || "—"} · User type: {r.user_type || "—"}
                   </div>
-                  <div className="adminMuted" style={{ fontSize: "0.8rem" }}>
+                  <div className="adminMuted adminMuted--sm">
                     Completeness:{" "}
                     {r.profile_completeness_percentage != null ? `${r.profile_completeness_percentage}%` : "—"}
                   </div>
-                  <div className="adminMuted" style={{ fontSize: "0.75rem", maxWidth: 280 }}>
+                  <div className="adminMuted adminMuted--xs adminMuted--clamp">
                     Missing:{" "}
                     {Array.isArray(r.profile_completeness_missing_fields) && r.profile_completeness_missing_fields.length
                       ? r.profile_completeness_missing_fields.join(", ")
                       : "—"}
                   </div>
-                  <div className="adminMuted" style={{ fontSize: "0.75rem" }}>
+                  <div className="adminMuted adminMuted--xs">
                     Setup done:{" "}
                     {r.account_setup_completed_at ? new Date(r.account_setup_completed_at).toLocaleString() : "—"}
                   </div>
-                  <div className="adminMuted" style={{ fontSize: "0.75rem" }}>
+                  <div className="adminMuted adminMuted--xs">
                     Profile updated:{" "}
                     {r.profile_last_updated_at ? new Date(r.profile_last_updated_at).toLocaleString() : "—"}
                   </div>
                 </td>
                 <td data-label="Last Login">{r.last_login_at ? new Date(r.last_login_at).toLocaleString() : "—"}</td>
                 <td data-label="Stripe">{r.stripe_customer_id ? "yes" : "—"}</td>
-                <td data-label="Actions" className="adminActionCell">
+                <td data-label="Actions" className="adminActionCell" onClick={(e) => e.stopPropagation()}>
+                  <select
+                    className="adminConsoleInput"
+                    value={String(r.membership_tier || "free")}
+                    disabled={saving === r.workos_user_id}
+                    onChange={(e) => patchUser(r.workos_user_id, { membership_tier: e.target.value })}
+                  >
+                    {["free", "support", "member", "sponsor"].map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
                   <select
                     className="adminConsoleInput"
                     value={String(r.membership_status || "none")}
@@ -303,12 +355,65 @@ export default function AdminUsersPanel() {
                       </option>
                     ))}
                   </select>
+                  <button
+                    type="button"
+                    className="btnSoft"
+                    disabled={saving === r.workos_user_id}
+                    onClick={() => {
+                      if (!window.confirm("Reset onboarding for this user?")) return;
+                      void patchUser(r.workos_user_id, { reset_onboarding: true });
+                    }}
+                  >
+                    Reset onboarding
+                  </button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-    </div>
+
+      {selectedId ? (
+        <div className="adminPanel adminDetailPanel">
+          <h2 className="adminSectionTitle">User detail</h2>
+          {detailLoading ? <p className="adminMuted">Loading activity…</p> : null}
+          {detail?.profile ? (
+            <>
+              <p className="adminMuted">
+                {detail.profile.email} · created {detail.profile.created_at ? new Date(detail.profile.created_at).toLocaleString() : "—"}
+              </p>
+              <p className="adminMuted">{detail.billingNote}</p>
+              <h3 className="adminBlockTitle">Community posts ({detail.communityPosts?.length || 0})</h3>
+              <ul className="adminListPlain">
+                {(detail.communityPosts || []).slice(0, 8).map((p) => (
+                  <li key={p.id}>
+                    {p.title || "(no title)"} — {p.status} — {String(p.created_at || "").slice(0, 10)}
+                  </li>
+                ))}
+              </ul>
+              <h3 className="adminBlockTitle">Podcast applications</h3>
+              <ul className="adminListPlain">
+                {(detail.podcastApplications || []).map((a) => (
+                  <li key={a.id}>
+                    {a.full_name} — {a.status}
+                  </li>
+                ))}
+              </ul>
+              <h3 className="adminBlockTitle">Sponsor applications</h3>
+              <ul className="adminListPlain">
+                {(detail.sponsorApplications || []).map((a) => (
+                  <li key={a.id}>
+                    {a.organization_name || "—"} — {a.status}
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : null}
+          <button type="button" className="btnSoft" onClick={() => setSelectedId("")}>
+            Close detail
+          </button>
+        </div>
+      ) : null}
+    </AdminPanelShell>
   );
 }

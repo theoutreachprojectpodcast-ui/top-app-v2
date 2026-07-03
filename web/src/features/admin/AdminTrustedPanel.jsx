@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import AdminPanelShell from "@/components/admin/AdminPanelShell";
 
 const EDIT_KEYS = [
   "display_name",
@@ -78,6 +79,17 @@ export default function AdminTrustedPanel() {
   const [scraping, setScraping] = useState(false);
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
+  const [showCreate, setShowCreate] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    display_name: "",
+    website_url: "",
+    logo_url: "",
+    header_image_url: "",
+    short_description: "",
+    listing_status: "pending",
+    featured: false,
+  });
+  const [creating, setCreating] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -162,6 +174,47 @@ export default function AdminTrustedPanel() {
     }
   }
 
+  async function createResource() {
+    const name = String(createForm.display_name || "").trim();
+    if (!name) {
+      setError("Organization name is required.");
+      return;
+    }
+    setCreating(true);
+    setError("");
+    setStatus("");
+    try {
+      const res = await fetch("/api/admin/trusted", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...createForm, featured: createForm.featured }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error || "Create failed.");
+        return;
+      }
+      setStatus("Trusted resource created.");
+      setShowCreate(false);
+      setCreateForm({
+        display_name: "",
+        website_url: "",
+        logo_url: "",
+        header_image_url: "",
+        short_description: "",
+        listing_status: "pending",
+        featured: false,
+      });
+      await load();
+      if (data.row?.id) setSelectedId(data.row.id);
+    } catch {
+      setError("Create failed.");
+    } finally {
+      setCreating(false);
+    }
+  }
+
   async function scrapeWebsite() {
     if (!selectedId) return;
     setScraping(true);
@@ -187,9 +240,7 @@ export default function AdminTrustedPanel() {
   }
 
   return (
-    <div className="adminPanel">
-      <h2 style={{ marginTop: 0 }}>Trusted resources</h2>
-      <p className="adminMuted">Edits `trusted_resources` (service role). Public listing still respects RLS for anon/authenticated clients.</p>
+    <AdminPanelShell panelId="trusted" error={error} message={status}>
       <div className="adminToolbar">
         <button type="button" className="btnSoft" onClick={() => void load()} disabled={loading}>
           Refresh
@@ -205,16 +256,68 @@ export default function AdminTrustedPanel() {
           </button>
         ) : null}
       </div>
-      {error ? (
-        <p role="alert" style={{ color: "var(--color-danger, #b42318)" }}>
-          {error}
-        </p>
+      {showCreate ? (
+        <div className="adminFieldStack adminFieldStack--bordered">
+          <h3 className="adminBlockTitle">Manual trusted resource</h3>
+          <p className="adminLead">No EIN lookup required. Assign listing status and publish from this form.</p>
+          <label className="fieldLabel">Organization name *</label>
+          <input
+            className="adminConsoleInput"
+            value={createForm.display_name}
+            onChange={(e) => setCreateForm((f) => ({ ...f, display_name: e.target.value }))}
+          />
+          <label className="fieldLabel">Short description</label>
+          <textarea
+            className="adminConsoleInput"
+            rows={3}
+            value={createForm.short_description}
+            onChange={(e) => setCreateForm((f) => ({ ...f, short_description: e.target.value }))}
+          />
+          <label className="fieldLabel">Website</label>
+          <input
+            className="adminConsoleInput"
+            value={createForm.website_url}
+            onChange={(e) => setCreateForm((f) => ({ ...f, website_url: e.target.value }))}
+          />
+          <label className="fieldLabel">Logo URL</label>
+          <input
+            className="adminConsoleInput"
+            value={createForm.logo_url}
+            onChange={(e) => setCreateForm((f) => ({ ...f, logo_url: e.target.value }))}
+          />
+          <label className="fieldLabel">Header image URL</label>
+          <input
+            className="adminConsoleInput"
+            value={createForm.header_image_url}
+            onChange={(e) => setCreateForm((f) => ({ ...f, header_image_url: e.target.value }))}
+          />
+          <label className="fieldLabel">Listing status</label>
+          <select
+            className="adminConsoleInput"
+            value={createForm.listing_status}
+            onChange={(e) => setCreateForm((f) => ({ ...f, listing_status: e.target.value }))}
+          >
+            <option value="pending">Pending</option>
+            <option value="active">Active (published)</option>
+            <option value="archived">Archived</option>
+          </select>
+          <label className="fieldLabel fieldLabel--row">
+            <input
+              type="checkbox"
+              checked={createForm.featured}
+              onChange={(e) => setCreateForm((f) => ({ ...f, featured: e.target.checked }))}
+            />
+            Featured
+          </label>
+          <button type="button" className="btnPrimary" disabled={creating} onClick={() => void createResource()}>
+            Create resource
+          </button>
+        </div>
       ) : null}
-      {status ? <p style={{ color: "var(--color-success, #166534)" }}>{status}</p> : null}
       {loading ? <p className="adminMuted">Loading…</p> : null}
       {!loading && rows.length === 0 ? <p className="adminMuted">No rows.</p> : null}
       {rows.length > 0 ? (
-        <div style={{ marginBottom: "12px" }}>
+        <div className="adminSelectField">
           <label className="fieldLabel" htmlFor="tr-select">
             Resource
           </label>
@@ -223,7 +326,6 @@ export default function AdminTrustedPanel() {
             className="adminConsoleInput"
             value={selectedId}
             onChange={(e) => setSelectedId(e.target.value)}
-            style={{ width: "100%", maxWidth: "560px" }}
           >
             {rows.map((r) => (
               <option key={r.id} value={r.id}>
@@ -263,6 +365,6 @@ export default function AdminTrustedPanel() {
           </button>
         </div>
       ) : null}
-    </div>
+    </AdminPanelShell>
   );
 }

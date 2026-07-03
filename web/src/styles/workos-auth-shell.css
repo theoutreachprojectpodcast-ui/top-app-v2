@@ -1,0 +1,112 @@
+/**
+ * Branded WorkOS handoff / callback pages (web + Capacitor).
+ * Reuses mobile splash atmosphere; works inside and outside `.mobileRouteShell`.
+ */
+
+.workosAuthShell {
+  min-height: 100dvh;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding:
+    max(env(safe-area-inset-top, 0px), 12px)
+    max(env(safe-area-inset-right, 0px), 16px)
+    max(env(safe-area-inset-bottom, 0px), 16px)
+    max(env(safe-area-inset-left, 0px), 16px);
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgba(34, 165, 43, 0.16), transparent 58%),
+    linear-gradient(168deg, #1a241c 0%, #101814 42%, #101814 100%);
+  color: #f8fcfa;
+}
+
+:root[data-color-scheme="light"] .workosAuthShell,
+html:not(.dark) .workosAuthShell {
+  background-color: #e0e8cf;
+  background-image:
+    radial-gradient(120% 80% at 50% 0%, rgba(34, 165, 43, 0.12), transparent 58%),
+    linear-gradient(168deg, #eef3ef 0%, #e8ece8 48%, #e0e8cf 100%);
+  color: #111714;
+}
+
+.workosAuthShell__inner {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--ds-space-3, 12px);
+  padding: clamp(16px, 4vw, 24px);
+  border-radius: var(--radius-card, 16px);
+  border: 1px solid color-mix(in srgb, #3a4a40 45%, transparent);
+  background: color-mix(in srgb, #101814 88%, transparent);
+  box-shadow: 0 16px 40px color-mix(in srgb, #000 28%, transparent);
+  text-align: center;
+}
+
+:root[data-color-scheme="light"] .workosAuthShell__inner,
+html:not(.dark) .workosAuthShell__inner {
+  background: color-mix(in srgb, #ffffff 92%, #eef3ef 8%);
+  border-color: color-mix(in srgb, #d6ddd8 70%, transparent);
+}
+
+.workosAuthShell__brand {
+  display: flex;
+  justify-content: center;
+}
+
+.workosAuthShell__brand .brandMarkImg--splash {
+  max-height: clamp(88px, 22vw, 120px);
+}
+
+.workosAuthShell__title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.workosAuthShell__lead {
+  margin: 0;
+  line-height: 1.45;
+  font-size: var(--text-body-sm, 0.9375rem);
+  color: color-mix(in srgb, currentColor 78%, transparent);
+}
+
+.workosAuthShell__notice {
+  margin: 0;
+  line-height: 1.45;
+  font-size: var(--text-body-sm, 0.9375rem);
+}
+
+.workosAuthShell__notice--warn {
+  color: #f5d76e;
+}
+
+.workosAuthShell__spinner {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto;
+  border: 3px solid rgba(34, 165, 43, 0.22);
+  border-top-color: var(--color-accent, #22a52b);
+  border-radius: 50%;
+  animation: workosAuthSpin 0.85s linear infinite;
+}
+
+@keyframes workosAuthSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.workosAuthShell__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-space-2, 8px);
+}
+
+.workosAuthShell__actions .mobileSplashPage__btn,
+.workosAuthShell__actions .btnPrimary,
+.workosAuthShell__actions .btnSoft {
+  width: 100%;
+}

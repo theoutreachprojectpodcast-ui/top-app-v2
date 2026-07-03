@@ -1,6 +1,8 @@
 node_modules
 .next
 .env*.local
+.env.vercel.production
+.env.vercel.preview
 .env.vercel*.pull
 
 # Generated from repo-root ../assets by scripts/sync-public-assets.mjs
@@ -15,3 +17,4 @@ ios/App/Pods/
 ios/App/build/
 ios/DerivedData/
 .vercel
+scripts/tools/bundletool-all.jar

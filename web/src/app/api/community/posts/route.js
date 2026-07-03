@@ -4,13 +4,19 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
 import { isCommunityModeratorServer } from "@/lib/community/moderatorServer";
 import { isPlatformAdminServer } from "@/lib/admin/platformAdminServer";
-import { profileMaySubmitCommunityStory } from "@/lib/account/entitlements";
+import { profileMayCreateCommunityPost } from "@/lib/account/entitlements";
+import {
+  membershipDeniedResponse,
+  profilePassesMembershipScope,
+} from "@/lib/membership/membershipRouteGuard";
+import { sortCommunityFeedRows } from "@/lib/community/adminCommunityPostPayload";
 import {
   createPlatformNotification,
   notifyStaffProfiles,
 } from "@/server/notifications/notificationService";
 import { shouldHideDemoCommunitySeeds } from "@/lib/runtime/qaEnv";
 import { mergeFounderOnboardingPostRows } from "@/lib/community/mergeFounderOnboardingPosts";
+import { sanitizeCommunityStoryPhotoUrl } from "@/features/community/domain/communityStoryPhoto";
 
 const REACTIONS = "community_post_reactions";
 
@@ -29,12 +35,22 @@ export async function GET(request) {
   }
 
   if (scope === "public") {
+    const auth = await resolveWorkOSRouteUser();
+    if (!auth.ok) {
+      return Response.json({ posts: [], error: "sign_in_required" }, { status: 401 });
+    }
+    const profileRow = await getProfileRowByWorkOSId(admin, auth.user.id);
+    if (!profileRow?.id || !profilePassesMembershipScope(profileRow, "community_view")) {
+      return membershipDeniedResponse("community_view");
+    }
+
     const { data, error } = await admin
       .from(TABLE)
       .select("*")
       .eq("status", "approved")
       .is("deleted_at", null)
       .in("visibility", ["community", "public"])
+      .order("is_pinned", { ascending: false, nullsFirst: false })
       .order("created_at", { ascending: false })
       .limit(80);
 
@@ -46,18 +62,14 @@ export async function GET(request) {
     if (shouldHideDemoCommunitySeeds()) {
       rows = rows.filter((r) => !r?.is_demo_seed);
     }
-    const auth = await resolveWorkOSRouteUser();
     let likedIds = new Set();
-    if (auth.ok && auth.user) {
-      const profileRow = await getProfileRowByWorkOSId(admin, auth.user.id);
-      if (profileRow?.id) {
-        const { data: likes } = await admin
-          .from(REACTIONS)
-          .select("post_id")
-          .eq("profile_id", profileRow.id)
-          .eq("reaction_type", "like");
-        likedIds = new Set((likes || []).map((r) => r.post_id));
-      }
+    if (profileRow?.id) {
+      const { data: likes } = await admin
+        .from(REACTIONS)
+        .select("post_id")
+        .eq("profile_id", profileRow.id)
+        .eq("reaction_type", "like");
+      likedIds = new Set((likes || []).map((r) => r.post_id));
     }
 
     const enriched = rows.map((row) => ({
@@ -65,10 +77,12 @@ export async function GET(request) {
       viewer_has_liked: likedIds.has(row.id),
     }));
 
-    const posts = mergeFounderOnboardingPostRows(enriched).map((row) => ({
-      ...row,
-      viewer_has_liked: likedIds.has(row.id),
-    }));
+    const posts = sortCommunityFeedRows(
+      mergeFounderOnboardingPostRows(enriched).map((row) => ({
+        ...row,
+        viewer_has_liked: likedIds.has(row.id),
+      })),
+    );
 
     return Response.json({ posts });
   }
@@ -168,12 +182,14 @@ export async function POST(request) {
     );
   }
 
-  if (!profileMaySubmitCommunityStory(profileRow)) {
+  if (!profileMayCreateCommunityPost(profileRow)) {
+    if (!profilePassesMembershipScope(profileRow, "community_post")) {
+      return membershipDeniedResponse("community_post");
+    }
     return Response.json(
       {
         ok: false,
-        message:
-          "An active Pro membership is required to submit community stories. Upgrade from Profile or complete member checkout.",
+        message: "Community posting requires Pro Membership.",
       },
       { status: 403 },
     );
@@ -201,6 +217,13 @@ export async function POST(request) {
     user.email ||
     "Member";
 
+  const linkUrl = String(body.link_url || "").trim().slice(0, 500);
+  if (linkUrl && !/^https?:\/\//i.test(linkUrl)) {
+    return Response.json({ ok: false, message: "Link URL must start with http:// or https://." }, { status: 400 });
+  }
+
+  const photoRaw = sanitizeCommunityStoryPhotoUrl(body.photo_url);
+
   const record = {
     author_profile_id: profileRow.id,
     author_id: user.id,
@@ -213,8 +236,8 @@ export async function POST(request) {
     category: String(body.category || "success_story").slice(0, 64),
     post_type: String(body.post_type || "share_story").slice(0, 64),
     show_author_name: body.show_author_name !== false,
-    link_url: String(body.link_url || "").trim().slice(0, 500),
-    photo_url: typeof body.photo_url === "string" ? body.photo_url.slice(0, 120000) : "",
+    link_url: linkUrl,
+    photo_url: photoRaw,
     status: "pending_review",
     visibility: "community",
     like_count: 0,
@@ -245,7 +268,7 @@ export async function POST(request) {
       type: "community_post_submitted_for_review",
       title: "New community post to review",
       message: title ? `“${title.slice(0, 80)}${title.length > 80 ? "…" : ""}”` : "A member submitted a story for moderation.",
-      linkPath: "/community",
+      linkPath: "/admin/community",
       entityType: "community_post",
       entityId: postId,
       dedupeHours: 12,

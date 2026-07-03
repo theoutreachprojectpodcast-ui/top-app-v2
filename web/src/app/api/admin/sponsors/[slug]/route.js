@@ -12,6 +12,12 @@ const KEYS = new Set([
   "sponsor_display_group",
   "sponsor_category",
   "cta_label",
+  "cta_url",
+  "promo_code",
+  "inquiry_url",
+  "publish_status",
+  "published_at",
+  "featured_items",
   "website_url",
   "social_links",
   "logo_url",
@@ -72,6 +78,31 @@ export async function PATCH(request, context) {
     } else if (k === "display_order") {
       const n = parseInt(String(v), 10);
       if (Number.isFinite(n)) patch[k] = n;
+    } else if (k === "publish_status") {
+      const s = String(v || "").trim().toLowerCase();
+      if (s === "draft" || s === "published" || s === "archived") {
+        patch[k] = s;
+        if (s === "published" && !Object.prototype.hasOwnProperty.call(body || {}, "published_at")) {
+          patch.published_at = new Date().toISOString();
+        }
+      }
+    } else if (k === "published_at") {
+      patch[k] = v ? String(v).trim() : null;
+    } else if (k === "featured_items") {
+      if (Array.isArray(v)) {
+        patch[k] = v;
+      } else if (typeof v === "string") {
+        const raw = v.trim();
+        if (!raw) patch[k] = [];
+        else {
+          try {
+            const parsed = JSON.parse(raw);
+            patch[k] = Array.isArray(parsed) ? parsed : [];
+          } catch {
+            return Response.json({ ok: false, error: "invalid_featured_items_json" }, { status: 400 });
+          }
+        }
+      }
     } else if (k === "social_links") {
       if (v && typeof v === "object" && !Array.isArray(v)) {
         patch[k] = v;
@@ -110,6 +141,27 @@ export async function PATCH(request, context) {
   }
   if (!data) {
     return Response.json({ ok: false, error: "not_found" }, { status: 404 });
+  }
+
+  const copyKeys = ["tagline", "short_description", "long_description"];
+  if (copyKeys.some((k) => Object.prototype.hasOwnProperty.call(body || {}, k))) {
+    const enrichPatch = {
+      sponsor_id: data.id,
+      canonical_display_name: String(data.display_name || data.name || "").trim() || data.name,
+      curated_tagline: data.tagline,
+      curated_short_description: data.short_description,
+      curated_long_description: data.long_description,
+      curated_at: new Date().toISOString(),
+      curated_source: "admin",
+      enrichment_status: "curated",
+      updated_at: new Date().toISOString(),
+    };
+    const { error: enrichErr } = await ctx.admin.from("sponsor_enrichment").upsert(enrichPatch, {
+      onConflict: "sponsor_id",
+    });
+    if (enrichErr && !/curated_/i.test(enrichErr.message || "")) {
+      console.warn("[admin/sponsors] sponsor_enrichment upsert:", enrichErr.message);
+    }
   }
 
   await writeAdminAuditLog(ctx.admin, request, {

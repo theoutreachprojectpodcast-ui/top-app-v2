@@ -1,19 +1,26 @@
 "use client";
 
 import "@/features/community/community-feed.css";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import IconWrap from "@/components/shared/IconWrap";
 import CommunityTrustDisclosure from "@/features/community/components/CommunityTrustDisclosure";
 import CommunityConnectionsPanel from "@/features/community/components/CommunityConnectionsPanel";
 import CommunityMemberProfileModal from "@/features/community/components/CommunityMemberProfileModal";
 import CommunityPostCard from "@/features/community/components/CommunityPostCard";
-import CommunitySubmissionForm from "@/features/community/components/CommunitySubmissionForm";
 import { isModeratorUser } from "@/features/community/api/communityApi";
 import { useCommunityFeed } from "@/features/community/hooks/useCommunityFeed";
-import { emptyProfileAvatarUrl } from "@/lib/avatarFallback";
 import { readRememberDevicePref } from "@/lib/auth/lastUsedEmail";
-import { workosSignInLink, workosSignUpHref } from "@/lib/auth/workosReturnTo";
+import { workosSignUpHref } from "@/lib/auth/workosReturnTo";
+import { shouldUseHostedWorkOSAuth } from "@/lib/auth/hostedWorkOSAuth";
+import {
+  openWebLogin,
+  openWebSignup,
+  requiresExternalWebAccountFlow,
+} from "@/lib/capacitor/webAccountRedirects";
+
+const V1_POSTING_MESSAGE =
+  "Community posting is currently moderator-led for launch. Members can comment, react, and participate in discussions now. Member posting is coming in a future update.";
 
 function CommunityIcon() {
   const path = "M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6m8 0a3 3 0 1 1 0-6 3 3 0 0 1 0 6M3 19c0-2.8 2.8-4 5-4s5 1.2 5 4m3 0c0-2.4 2.3-3.5 5-3.5 2.1 0 5 1 5 3.5";
@@ -21,7 +28,7 @@ function CommunityIcon() {
 }
 
 /**
- * Community hub — public feed from Supabase (via API); Member-tier posts go through moderation.
+ * Community hub — curated moderator content for V1; members view, like, and comment.
  */
 export default function CommunityPage({
   supabase,
@@ -30,35 +37,33 @@ export default function CommunityPage({
   isAuthenticated,
   authLoading = false,
   authBackend = { workos: false },
-  isMember,
-  fullName,
+  canCreatePost = false,
+  isPlatformAdmin = false,
   profile,
-  onRequestUpgrade,
   onRequestSignIn,
 }) {
-  const [submitOpen, setSubmitOpen] = useState(false);
-  const [editPost, setEditPost] = useState(null);
   const [selectedMemberId, setSelectedMemberId] = useState("");
-  const [feedTab, setFeedTab] = useState("latest");
 
-  const authorName = fullName || [profile.firstName, profile.lastName].filter(Boolean).join(" ").trim() || "Community member";
-  const feedScope =
-    isAuthenticated && feedTab === "mine" && sessionKind === "workos" ? "mine" : "public";
   const { posts, loading, error, refresh, onToggleLike } = useCommunityFeed(supabase, userId, {
-    feedScope,
+    feedScope: "public",
     sessionKind,
     isAuthenticated,
   });
   const canModerate = isAuthenticated && isModeratorUser({ userId, profile });
-  const useWorkOSApi = authBackend.workos && sessionKind === "workos";
   const workosCommunitySignUpHref = workosSignUpHref("/community", { rememberDevice: readRememberDevicePref() });
-  const workosCommunitySignInHref = workosSignInLink("/community", null, "/community", {
-    rememberDevice: readRememberDevicePref(),
-  });
+  const hostedAuth = shouldUseHostedWorkOSAuth(authBackend);
 
-  useEffect(() => {
-    if (!isAuthenticated) setFeedTab("latest");
-  }, [isAuthenticated]);
+  function handleCreateAccount() {
+    if (requiresExternalWebAccountFlow() && hostedAuth) {
+      void openWebSignup({ returnPath: "/membership/success" });
+      return;
+    }
+    if (hostedAuth) {
+      window.location.assign(workosCommunitySignUpHref);
+      return;
+    }
+    onRequestSignIn?.();
+  }
 
   if (authLoading) {
     return (
@@ -74,27 +79,42 @@ export default function CommunityPage({
     <div className="communityPage">
       <section className="card cardHero communityHero">
         <div className="communityHeroTop">
-          <div className="communityHeroIcon" aria-hidden="true"><CommunityIcon /></div>
+          <div className="communityHeroIcon" aria-hidden="true">
+            <CommunityIcon />
+          </div>
           <div className="communityHeroTitles">
             <p className="introTagline">Community</p>
-            <h2>Stories, guides, and support—carefully reviewed</h2>
+            <h2>Curated updates from the Outreach Project team</h2>
           </div>
         </div>
         <p className="communityHeroText">
-          A calm space for mission-aligned experiences: moderator guides to help you get started, peer stories, and
-          encouragement for veterans, first responders, families, and partners. Every member submission is reviewed before
-          it appears in the public feed.
+          A calm space for mission-aligned guidance and discussion. Josh and Hodge share practical guides, resources,
+          and encouragement for veterans, first responders, families, and partners. Members can react and join the
+          conversation on every published post.
         </p>
         {!isAuthenticated ? (
           <div className="row wrap">
-            {authBackend.workos ? (
+            {hostedAuth ? (
               <>
-                <a className="btnPrimary" href={workosCommunitySignUpHref}>
+                <button className="btnPrimary" type="button" onClick={handleCreateAccount}>
                   Create account
-                </a>
-                <a className="btnSoft" href={workosCommunitySignInHref}>
+                </button>
+                <button
+                  className="btnSoft"
+                  type="button"
+                  onClick={() => {
+                    if (requiresExternalWebAccountFlow()) {
+                      void openWebLogin({
+                        returnPath: "/community",
+                        rememberDevice: readRememberDevicePref(),
+                      });
+                      return;
+                    }
+                    onRequestSignIn?.();
+                  }}
+                >
                   Sign in
-                </a>
+                </button>
               </>
             ) : (
               <>
@@ -112,24 +132,13 @@ export default function CommunityPage({
           </div>
         ) : (
           <div className="row wrap">
-            {isMember ? (
-              <button
-                type="button"
-                className="btnPrimary"
-                onClick={() => {
-                  setEditPost(null);
-                  setSubmitOpen(true);
-                }}
-              >
-                Share your story
-              </button>
-            ) : (
-              <button type="button" className="btnPrimary" onClick={onRequestUpgrade}>
-                Become a member to submit a story
-              </button>
-            )}
+            {canCreatePost ? (
+              <Link href="/admin/community" className="btnPrimary">
+                Manage community posts
+              </Link>
+            ) : null}
             <button type="button" className="btnSoft" onClick={() => refresh()}>
-              Refresh
+              Refresh feed
             </button>
           </div>
         )}
@@ -137,14 +146,20 @@ export default function CommunityPage({
 
       <CommunityTrustDisclosure />
 
+      {isAuthenticated && !canCreatePost ? (
+        <section className="card communitySection communityV1Notice" aria-label="Community posting">
+          <p className="communityV1NoticeText">{V1_POSTING_MESSAGE}</p>
+        </section>
+      ) : null}
+
       {isAuthenticated ? (
         <CommunityConnectionsPanel userId={userId} onOpenMember={setSelectedMemberId} />
       ) : (
         <section className="card communitySection communitySignedOutHint">
           <h3>Participation</h3>
           <p className="sponsorSectionLead">
-            Sign in with your Outreach Project account to like posts (saved to your profile), explore member connections, and—at
-            the Member tier—submit stories for moderator review. The latest feed below shows approved posts only.
+            Sign in with your Outreach Project account to like posts, explore member connections, and comment on
+            moderator-led discussions. The feed below shows published posts only.
           </p>
         </section>
       )}
@@ -153,55 +168,37 @@ export default function CommunityPage({
         <div className="communitySectionHead">
           <h3>Community feed</h3>
           <div className="communityPillRow">
-            <span className="communityApprovedPill">
-              {feedTab === "latest" ? "Approved posts" : "Your submissions"}
-            </span>
-            {canModerate ? <span className="communityModeratorPill">Moderator access</span> : null}
+            <span className="communityApprovedPill">Published posts</span>
+            {canModerate ? (
+              <span className="communityModeratorPill">
+                Moderator access
+                {isPlatformAdmin ? (
+                  <>
+                    {" "}
+                    ·{" "}
+                    <Link href="/admin/community" className="communityModeratorPillLink">
+                      Admin panel
+                    </Link>
+                  </>
+                ) : null}
+              </span>
+            ) : null}
           </div>
         </div>
 
-        {isAuthenticated && sessionKind === "workos" ? (
-          <div className="communityFeedTabs" role="tablist" aria-label="Feed view">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={feedTab === "latest"}
-              className={`communityFeedTab ${feedTab === "latest" ? "isActive" : ""}`}
-              onClick={() => setFeedTab("latest")}
-            >
-              Latest
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={feedTab === "mine"}
-              className={`communityFeedTab ${feedTab === "mine" ? "isActive" : ""}`}
-              onClick={() => setFeedTab("mine")}
-            >
-              My posts
-            </button>
-          </div>
-        ) : null}
+        <p className="communityFeedIntro">
+          Moderator guides from Josh and Hodge walk through accounts, trusted resources, the directory, podcasts,
+          sponsors, and community participation—each with practical steps and links.
+        </p>
 
-        {feedTab === "latest" ? (
-          <p className="communityFeedIntro">
-            Moderator guides from Josh and Hodge walk through accounts, trusted resources, the directory, podcasts,
-            sponsors, and community participation—each with practical steps and links.
-          </p>
-        ) : null}
-
-        {loading ? <p className="communityFeedStatus">Loading stories…</p> : null}
+        {loading ? <p className="communityFeedStatus">Loading posts…</p> : null}
         {error ? <p className="applyError">{error}</p> : null}
         {!loading && !posts.length ? (
           <div className="emptyState">
             <CommunityIcon />
             <div>
-              <strong>{feedTab === "mine" ? "No posts on file yet" : "No approved stories yet"}</strong>
-              <p>
-                {feedTab === "mine"
-                  ? "When you submit a story, it will appear here with its review status until it is published."
-                  : "Check back soon—or become a Member to submit your own for review."}
-              </p>
+              <strong>No published posts yet</strong>
+              <p>Check back soon for curated updates from the Outreach Project team.</p>
             </div>
           </div>
         ) : null}
@@ -210,16 +207,9 @@ export default function CommunityPage({
             <CommunityPostCard
               key={p.id}
               post={p}
-              showModerationStatus={feedTab === "mine"}
+              isAuthenticated={isAuthenticated}
+              canModerate={canModerate}
               onOpenAuthor={(key) => setSelectedMemberId(String(key || "").trim())}
-              onRequestAuthorEdit={
-                feedTab === "mine" && useWorkOSApi && isMember
-                  ? (postToEdit) => {
-                      setSubmitOpen(false);
-                      setEditPost(postToEdit);
-                    }
-                  : undefined
-              }
               onToggleLike={
                 isAuthenticated && (sessionKind === "workos" || typeof onToggleLike === "function")
                   ? onToggleLike
@@ -230,51 +220,6 @@ export default function CommunityPage({
         </div>
       </section>
 
-      {(submitOpen || editPost) && isAuthenticated ? (
-        <div
-          className="modalOverlay"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="community-submit-title"
-          onClick={() => {
-            setSubmitOpen(false);
-            setEditPost(null);
-          }}
-        >
-          <div className="modalCard communitySubmitModalCard" onClick={(e) => e.stopPropagation()}>
-            <div className="sponsorApplyModalHead">
-              <h3 id="community-submit-title">{editPost ? "Edit your story" : "Share your story"}</h3>
-              <button
-                type="button"
-                className="btnSoft sponsorModalClose"
-                onClick={() => {
-                  setSubmitOpen(false);
-                  setEditPost(null);
-                }}
-              >
-                Close
-              </button>
-            </div>
-            <CommunitySubmissionForm
-              supabase={supabase}
-              userId={userId}
-              authorName={authorName}
-              authorAvatarUrl={profile.avatarUrl || emptyProfileAvatarUrl()}
-              useWorkOSApi={useWorkOSApi}
-              editPost={editPost}
-              onClose={() => {
-                setSubmitOpen(false);
-                setEditPost(null);
-              }}
-              onSubmitted={() => {
-                refresh();
-                setEditPost(null);
-                setSubmitOpen(false);
-              }}
-            />
-          </div>
-        </div>
-      ) : null}
       {selectedMemberId ? (
         <CommunityMemberProfileModal
           supabase={supabase}

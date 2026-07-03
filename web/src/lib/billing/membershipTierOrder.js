@@ -2,6 +2,7 @@
 export const MEMBERSHIP_TIER_RANK = {
   free: 0,
   none: 0,
+  access: 1,
   support: 1,
   member: 2,
   sponsor: 3,
@@ -15,7 +16,7 @@ export function membershipTierRank(tier) {
 export function normalizeDbMembershipTier(tier) {
   const t = String(tier || "free").toLowerCase();
   if (t === "none" || t === "guest" || t === "") return "free";
-  if (["free", "support", "member", "sponsor"].includes(t)) return t;
+  if (["free", "access", "support", "member", "sponsor"].includes(t)) return t;
   if (t === "pro") return "member";
   return "free";
 }
@@ -23,6 +24,7 @@ export function normalizeDbMembershipTier(tier) {
 /** Checkout tier param → DB membership_tier */
 export function checkoutTierToDb(tier) {
   const t = String(tier || "").toLowerCase();
+  if (t === "access") return "access";
   if (t === "member") return "member";
   if (t === "support") return "support";
   if (t === "sponsor") return "sponsor";

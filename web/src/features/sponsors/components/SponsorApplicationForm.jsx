@@ -66,7 +66,6 @@ export default function SponsorApplicationForm({
   const [confirmedStripeSessionId, setConfirmedStripeSessionId] = useState("");
   const [paymentBusy, setPaymentBusy] = useState(false);
   const [podcastBillingLive, setPodcastBillingLive] = useState(false);
-  const [podcastMissingEnv, setPodcastMissingEnv] = useState([]);
 
   const tier = useMemo(
     () => getTierById(selectedTierId || tierList[0]?.id, tierList),
@@ -83,11 +82,9 @@ export default function SponsorApplicationForm({
         const data = await res.json().catch(() => ({}));
         if (cancelled) return;
         setPodcastBillingLive(!!data.podcastSponsorCheckout);
-        setPodcastMissingEnv(Array.isArray(data.podcastSponsorMissingEnv) ? data.podcastSponsorMissingEnv : []);
       } catch {
         if (!cancelled) {
           setPodcastBillingLive(false);
-          setPodcastMissingEnv([]);
         }
       }
     })();
@@ -155,10 +152,10 @@ export default function SponsorApplicationForm({
 
     if (isPodcast) {
       const termsOk = form.agreed_to_terms;
-      const deferredOk = !podcastBillingLive && form.agreed_deferred_billing;
-      const agreementOk = termsOk && (podcastBillingLive ? true : deferredOk);
-      const paymentOk = podcastBillingLive ? paymentStatus === "stripe_paid" : true;
-      return agreementOk && paymentOk;
+      if (podcastBillingLive) {
+        return termsOk && paymentStatus === "stripe_paid";
+      }
+      return Boolean(termsOk && form.agreed_demo_payment && paymentStatus === "demo_paid");
     }
 
     if (demoModeEnabled) {
@@ -419,12 +416,12 @@ export default function SponsorApplicationForm({
               <label className="dsChoice dsChoice--checkbox">
                 <input
                   type="checkbox"
-                  checked={form.agreed_deferred_billing}
-                  onChange={(e) => setForm((f) => ({ ...f, agreed_deferred_billing: e.target.checked }))}
+                  checked={form.agreed_demo_payment}
+                  onChange={(e) => setForm((f) => ({ ...f, agreed_demo_payment: e.target.checked }))}
                 />
                 <span className="dsChoice__control" />
                 <span className="dsChoice__text">
-                  We understand live Stripe checkout for this tier is not configured yet; we are submitting for review and expect follow-up for payment and activation.
+                  We acknowledge this podcast sponsor checkout is a demo walkthrough until one-time Stripe prices are configured; membership Support/Pro billing uses live products when enabled.
                 </span>
               </label>
             ) : null}
@@ -475,18 +472,18 @@ export default function SponsorApplicationForm({
             </div>
           ) : null}
           {isPodcast && !podcastBillingLive ? (
-            <div className="sponsorPaymentCard sponsorPaymentCard--notice">
-              <h4>Stripe env required for live podcast payments</h4>
-              <p>Set these in your deployment environment (Stripe Dashboard → Products → one-time Prices):</p>
-              <ul>
-                {(podcastMissingEnv.length ? podcastMissingEnv : ["STRIPE_PRICE_PODCAST_SPONSOR_COMMUNITY", "STRIPE_PRICE_PODCAST_SPONSOR_IMPACT", "STRIPE_PRICE_PODCAST_SPONSOR_FOUNDATIONAL"]).map((k) => (
-                  <li key={k}>
-                    <code>{k}</code>
-                  </li>
-                ))}
-              </ul>
-              <p>Also required: <code>STRIPE_SECRET_KEY</code>. Until all are set, you can still submit this application for review using the checkbox in Step 6.</p>
-            </div>
+            <>
+              <p className="sponsorSectionLead">
+                Demo checkout — walk through payment screens here. Live membership upgrades (Support / Pro) use the wired recurring Stripe products on Profile.
+              </p>
+              <SponsorPaymentDemo
+                amount={tierAmount}
+                paymentStatus={paymentStatus}
+                onBegin={beginDemoPayment}
+                onComplete={completeDemoPayment}
+                busy={paymentBusy}
+              />
+            </>
           ) : null}
           {!isPodcast && demoModeEnabled ? (
             <SponsorPaymentDemo

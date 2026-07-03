@@ -6,7 +6,7 @@ import { isCommunityModeratorServer } from "@/lib/community/moderatorServer";
 
 export const runtime = "nodejs";
 
-const TABLE = "torp_platform_notifications";
+const TABLE = "top_platform_notifications";
 
 export async function GET(request) {
   const auth = await resolveWorkOSRouteUser();
@@ -39,7 +39,7 @@ export async function GET(request) {
     if (!isStaffViewer) q = q.eq("audience_scope", "user");
     const { count, error } = await q;
     if (error) {
-      console.warn("[torp] notifications summary query failed (degraded to zero):", error.message);
+      console.warn("[top] notifications summary query failed (degraded to zero):", error.message);
       return Response.json({ unreadCount: 0 });
     }
     return Response.json({ unreadCount: typeof count === "number" ? count : 0 });
@@ -63,7 +63,7 @@ export async function GET(request) {
 
   const { data: rows, error } = await q;
   if (error) {
-    console.warn("[torp] notifications list query failed (degraded to empty):", error.message);
+    console.warn("[top] notifications list query failed (degraded to empty):", error.message);
     return Response.json({ notifications: [], unreadCount: 0, nextCursor: null });
   }
 
@@ -80,7 +80,7 @@ export async function GET(request) {
   if (!isStaffViewer) unreadQ = unreadQ.eq("audience_scope", "user");
   const { count: unreadCount, error: unreadErr } = await unreadQ;
   if (unreadErr) {
-    console.warn("[torp] notifications unread count failed:", unreadErr.message);
+    console.warn("[top] notifications unread count failed:", unreadErr.message);
   }
 
   return Response.json({

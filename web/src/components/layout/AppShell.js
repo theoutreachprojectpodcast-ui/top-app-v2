@@ -6,24 +6,26 @@ import { usePathname } from "next/navigation";
 import AppHeaderBrand from "@/components/layout/AppHeaderBrand";
 import ColorSchemeToggle from "@/components/app/ColorSchemeToggle";
 import SiteBottomNavGlyph from "@/components/navigation/SiteBottomNavGlyph";
-import SiteMobileNavMoreMenu from "@/components/navigation/SiteMobileNavMoreMenu";
+import { SiteHamburgerNavMenu } from "@/components/navigation/SiteMobileNavHamburgerEntries";
 import HeaderInner from "@/components/layout/HeaderInner";
 import SubpageTopbarActions from "@/components/layout/SubpageTopbarActions";
+import AdminConsoleLink from "@/components/admin/AdminConsoleLink";
 import FooterInner from "@/components/layout/FooterInner";
 import MissionPageTopStrip from "@/components/layout/MissionPageTopStrip";
-import { useAuthSession } from "@/components/auth/AuthSessionProvider";
+import { useNavAuthState } from "@/hooks/useNavAuthState";
+import { useMobileShell } from "@/hooks/useMobileShell";
 import { usePodcastDarkSchemeLock } from "@/hooks/usePodcastDarkSchemeLock";
 import { resolvePageAtmosphere } from "@/lib/design/pageAtmosphere";
 import { useImmersiveHeaderScroll } from "@/hooks/useImmersiveHeaderScroll";
-import { readNavAuthCache } from "@/lib/auth/navAuthCache";
-
-const PRIMARY_BOTTOM_NAV_KEYS = new Set(["home", "profile", "contact"]);
+import CapacitorFooterPortal from "@/components/capacitor/CapacitorFooterPortal";
+import { isSiteDockNavActive, SITE_MOBILE_DOCK_ITEMS } from "@/components/navigation/siteBottomNavConfig";
 
 const NAV_ITEMS = [
   { href: "/", key: "home", label: "Home", linkTitle: "Home" },
   { href: "/trusted", key: "trusted", label: "Trusted", linkTitle: "Trusted Resources" },
   { href: "/community", key: "community", label: "Community", linkTitle: "Community" },
   { href: "/sponsors", key: "sponsors", label: "Sponsors", linkTitle: "Sponsors" },
+  { href: "/podcasts", key: "podcast", label: "Podcast", linkTitle: "Podcast" },
   { href: "/profile", key: "profile", label: "Profile", linkTitle: "Profile" },
   { href: "/contact", key: "contact", label: "Contact", linkTitle: "Contact" },
 ];
@@ -64,10 +66,8 @@ export default function AppShell({
   });
   usePodcastDarkSchemeLock(podcastThemeShell);
 
-  const session = useAuthSession();
-  const navAuthCache = typeof window !== "undefined" ? readNavAuthCache() : null;
-  const optimisticAuthed = session.loading && navAuthCache?.authenticated;
-  const isLoggedIn = session.authenticated || optimisticAuthed;
+  const { authed: isLoggedIn } = useNavAuthState();
+  const isMobileShell = useMobileShell();
 
   const mainChromeClass = immersiveHeaderScroll ? " header-at-top" : "";
   const authChromeClass = useTopAppStructure ? (isLoggedIn ? " topApp--auth-in" : " topApp--auth-out") : "";
@@ -104,23 +104,7 @@ export default function AppShell({
                   <div className="topbarActionsCluster">
                     <SubpageTopbarActions section="authMenu" />
                     {useFooterDockChrome ? (
-                      <SiteMobileNavMoreMenu tone="podcast" align="end">
-                        <Link className="siteMobileNavMore__entry" href="/trusted">
-                          Trusted Resources
-                        </Link>
-                        <Link className="siteMobileNavMore__entry" href="/community">
-                          Community
-                        </Link>
-                        <Link className="siteMobileNavMore__entry" href="/sponsors">
-                          Sponsors
-                        </Link>
-                        <Link className="siteMobileNavMore__entry" href="/">
-                          Main app home
-                        </Link>
-                        <Link className="siteMobileNavMore__entry" href="/sponsors">
-                          Become a Sponsor
-                        </Link>
-                      </SiteMobileNavMoreMenu>
+                      <SiteHamburgerNavMenu tone="podcast" align="end" />
                     ) : null}
                   </div>
                 </div>
@@ -143,33 +127,22 @@ export default function AppShell({
               <HeaderInner className="topbarInner">
                 <div className="topbarZone topbarLeft">
                   <div className="topbarActionsCluster topbarActionsCluster--start">
-                    {!podcastThemeShell && showThemeToggle ? <ColorSchemeToggle /> : null}
+                    {useFooterDockChrome ? (
+                      <SiteHamburgerNavMenu shellClass="siteMobileNavMore--phoneOnly" />
+                    ) : null}
+                    {isMobileShell && !podcastThemeShell && showThemeToggle ? <ColorSchemeToggle /> : null}
+                    {isMobileShell && isLoggedIn ? <AdminConsoleLink /> : null}
                     <SubpageTopbarActions section="lead" />
                   </div>
                 </div>
                 <div className="topbarZone topbarCenter" aria-hidden="true" />
                 <div className="topbarZone topbarRight">
                   <div className="topbarActionsCluster">
-                    <SubpageTopbarActions section="auth" />
+                    {!isMobileShell && !podcastThemeShell && showThemeToggle ? <ColorSchemeToggle /> : null}
                     {useFooterDockChrome ? (
-                      <SiteMobileNavMoreMenu tone="app" align="end">
-                        <Link className="siteMobileNavMore__entry" href="/trusted">
-                          Trusted Resources
-                        </Link>
-                        <Link className="siteMobileNavMore__entry" href="/community">
-                          Community
-                        </Link>
-                        <Link className="siteMobileNavMore__entry" href="/sponsors">
-                          Sponsors
-                        </Link>
-                        <Link className="siteMobileNavMore__entry" href="/podcasts">
-                          Podcast
-                        </Link>
-                        <Link className="siteMobileNavMore__entry" href="/sponsors">
-                          Become a Sponsor
-                        </Link>
-                      </SiteMobileNavMoreMenu>
+                      <SiteHamburgerNavMenu align="end" shellClass="siteMobileNavMore--desktopOnly" />
                     ) : null}
+                    <SubpageTopbarActions section="auth" />
                   </div>
                 </div>
               </HeaderInner>
@@ -194,30 +167,31 @@ export default function AppShell({
       )}
 
       {/* Fixed bottom nav dock (not .siteFooter). */}
-      {useFooterDockChrome ? <div className="footerDockBackdrop" aria-hidden="true" /> : null}
       {useFooterDockChrome ? (
-        <div className="footerDock">
-          <FooterInner className="footerNavInner">
-            <nav
-              className={`bottomNav bottomNav--withIcons${useFooterDockChrome ? " bottomNav--mobileDock" : ""}`}
-              aria-label="Bottom navigation"
-            >
-              {items.map((item) => (
-                <Link
-                  key={item.key}
-                  href={item.href}
-                  title={item.linkTitle || item.label}
-                  className={`navItem navItem--dockCol ${
-                    PRIMARY_BOTTOM_NAV_KEYS.has(item.key) ? "navItem--dockPrimary" : "navItem--dockOverflow"
-                  } ${activeNav === item.key ? "isActive" : ""}`}
-                >
-                  <SiteBottomNavGlyph navKey={item.key} className="navItemGlyph" />
-                  <span className="navItemLabel">{item.label}</span>
-                </Link>
-              ))}
-            </nav>
-          </FooterInner>
-        </div>
+        <CapacitorFooterPortal>
+          <div className="footerDockBackdrop" aria-hidden="true" />
+          <div className="footerDock">
+            <FooterInner className="footerNavInner">
+              <nav
+                className={`bottomNav bottomNav--withIcons${useFooterDockChrome ? " bottomNav--mobileDock" : ""}`}
+                aria-label="Bottom navigation"
+              >
+                {SITE_MOBILE_DOCK_ITEMS.map((item) => (
+                  <Link
+                    key={item.key}
+                    href={item.href}
+                    title={item.linkTitle || item.label}
+                    data-nav-key={item.key}
+                    className={`navItem navItem--dockCol navItem--dockPrimary ${isSiteDockNavActive(item.key, { nav: activeNav, pathname }) ? "isActive" : ""}`}
+                  >
+                    <SiteBottomNavGlyph navKey={item.key} className="navItemGlyph" />
+                    <span className="navItemLabel">{item.label}</span>
+                  </Link>
+                ))}
+              </nav>
+            </FooterInner>
+          </div>
+        </CapacitorFooterPortal>
       ) : (
         <nav
           className={`bottomNav bottomNav--withIcons${useFooterDockChrome ? " bottomNav--mobileDock" : ""}`}
@@ -228,9 +202,7 @@ export default function AppShell({
               key={item.key}
               href={item.href}
               title={item.linkTitle || item.label}
-              className={`navItem navItem--dockCol ${
-                PRIMARY_BOTTOM_NAV_KEYS.has(item.key) ? "navItem--dockPrimary" : "navItem--dockOverflow"
-              } ${activeNav === item.key ? "isActive" : ""}`}
+              className={`navItem navItem--dockCol ${activeNav === item.key ? "isActive" : ""}`}
             >
               <SiteBottomNavGlyph navKey={item.key} className="navItemGlyph" />
               <span className="navItemLabel">{item.label}</span>

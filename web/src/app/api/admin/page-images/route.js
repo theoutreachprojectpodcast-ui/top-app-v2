@@ -1,4 +1,5 @@
 import { requirePlatformAdminRouteContext, requirePlatformAdminMutation } from "@/lib/admin/adminRouteContext";
+import { writeAdminAuditLog } from "@/lib/admin/adminAuditLog";
 
 export const runtime = "nodejs";
 const TABLE = "page_images";

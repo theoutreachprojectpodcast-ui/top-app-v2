@@ -345,14 +345,31 @@ html[data-color-scheme="light"] .communityPostResource,
 
 /* —— Mobile (align with app shell @760px) —— */
 @media (max-width: 760px) {
+  main.topApp[data-page-atmosphere="community"] .appSiteHeader {
+    margin-bottom: 0;
+    padding-bottom: clamp(2px, 0.6vw, 6px);
+  }
+
+  main.topApp[data-page-atmosphere="community"] .headerBrandStack img.brandMarkImg--header:not(.podcastBrandLogo),
+  main.topApp[data-page-atmosphere="community"] .headerBrandStack .brandMarkImg--header {
+    margin-bottom: 0 !important;
+  }
+
+  main.topApp[data-page-atmosphere="community"] > .shell {
+    padding-top: 0;
+    margin-top: 0;
+  }
+
   .communityPage {
-    gap: var(--ds-space-5, 20px);
+    gap: var(--ds-space-4, 16px);
   }
 
   .communityHeroTop {
     grid-template-columns: auto minmax(0, 1fr);
     align-items: start;
-    column-gap: var(--ds-space-3, 12px);
+    column-gap: var(--ds-space-2, 8px);
+    row-gap: var(--ds-space-1, 4px);
+    margin-bottom: var(--ds-space-2, 8px);
   }
 
   .communityHeroTitles h2 {
@@ -536,6 +553,139 @@ html[data-color-scheme="light"] .communityPostResource,
     padding-inline: var(--ds-space-4, 16px) var(--ds-space-4, 16px);
     padding-bottom: var(--ds-space-4, 16px);
   }
+}
+
+/* —— V1 moderator-led community —— */
+.communityV1Notice {
+  border-left: 3px solid color-mix(in srgb, var(--color-accent) 45%, var(--color-border));
+}
+
+.communityV1NoticeText {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-body-sm, 0.92rem);
+  line-height: 1.55;
+}
+
+.communityPostPinnedBadge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-pill, 999px);
+  background: color-mix(in srgb, var(--color-accent) 14%, var(--color-bg-subtle));
+  color: var(--color-text-primary);
+}
+
+.communityPostCard--pinned {
+  border-color: color-mix(in srgb, var(--color-accent) 28%, var(--color-border));
+}
+
+.communityPostVideoEmbed {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-md, 10px);
+  overflow: hidden;
+  background: #000;
+  margin: 0.75rem 0;
+}
+
+.communityPostVideoEmbed iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.communityPostComments {
+  margin-top: var(--ds-space-4, 16px);
+  padding-top: var(--ds-space-4, 16px);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.communityPostCommentsTitle {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+}
+
+.communityPostCommentsList {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.communityPostComment {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 0.65rem;
+  align-items: start;
+}
+
+.profileAvatarShell.communityPostCommentAvatar {
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px;
+  min-height: 36px;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-bg-app) 92%, var(--color-text-primary) 8%);
+}
+
+.communityPostCommentMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: baseline;
+  font-size: 0.85rem;
+}
+
+.communityPostCommentMeta time {
+  color: var(--color-text-secondary);
+}
+
+.communityPostCommentBody p {
+  margin: 0.25rem 0 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.communityPostCommentForm {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.communityPostCommentInput {
+  width: 100%;
+  min-height: 4.5rem;
+  resize: vertical;
+  border-radius: var(--radius-md, 10px);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-card);
+  color: var(--color-text-primary);
+  padding: 0.65rem 0.75rem;
+  font: inherit;
+}
+
+.communityPostCommentsNote,
+.communityPostCommentsEmpty,
+.communityPostCommentsStatus {
+  margin: 0 0 0.75rem;
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+}
+
+.communityPostCommentMod {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+}
+
+.communityPostCommentMod .btnSoft {
+  font-size: 0.8rem;
+  padding: 0.2rem 0.55rem;
 }
 
 @media (max-width: 430px) {

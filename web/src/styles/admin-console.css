@@ -76,9 +76,9 @@
 .adminConsole .adminToolbar {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: var(--ds-space-2, 8px);
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: var(--ds-space-3, 12px);
 }
 
 .adminConsole .adminSessionEmail {
@@ -106,12 +106,12 @@
 
 .adminConsole .adminPanelBody {
   display: grid;
-  gap: 10px;
+  gap: var(--ds-space-3, 12px);
 }
 
 .adminConsole .adminFieldStack {
   display: grid;
-  gap: 10px;
+  gap: var(--ds-space-3, 12px);
   max-width: min(720px, 100%);
 }
 
@@ -218,4 +218,253 @@
     letter-spacing: 0.06em;
     text-transform: uppercase;
   }
+}
+
+.adminConsoleTopbarBtn {
+  white-space: nowrap;
+}
+
+.adminContentHubGrid {
+  display: grid;
+  gap: var(--ds-space-4, 16px);
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  margin-top: var(--ds-space-5, 20px);
+}
+
+.adminContentHubCard {
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md, 12px);
+  color: inherit;
+  display: block;
+  padding: 20px;
+  text-decoration: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.adminContentHubCard:hover {
+  border-color: var(--color-border-strong, var(--color-border-subtle));
+  box-shadow: var(--shadow-card-hover, 0 4px 16px var(--color-shadow));
+}
+
+.adminContentHubCard h3 {
+  font-size: 1rem;
+  margin: 0 0 8px;
+}
+
+.adminContentHubCard p {
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+/* Guided content creation wizard */
+.adminWizardSteps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0 20px;
+  padding: 0;
+  list-style: none;
+}
+
+.adminWizardSteps li {
+  font-size: 0.8125rem;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border-subtle);
+  color: var(--color-text-secondary);
+}
+
+.adminWizardSteps li.isCurrent {
+  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+  border-color: color-mix(in srgb, var(--color-accent) 35%, var(--color-border-subtle));
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.adminWizardSteps li.isDone {
+  color: var(--color-text-primary);
+}
+
+.adminWizardActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.adminDashboardGrid {
+  display: grid;
+  gap: var(--ds-space-4, 16px);
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}
+
+.adminDashboardCard {
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md, 12px);
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 120px;
+  padding: 18px;
+  text-decoration: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.adminDashboardCard:hover {
+  border-color: var(--color-border-strong, var(--color-border-subtle));
+  box-shadow: var(--shadow-card-hover, 0 4px 16px var(--color-shadow));
+}
+
+.adminDashboardCard strong {
+  font-size: 1rem;
+}
+
+.adminDashboardStat {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.adminAdvancedLinks {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.adminAdvancedLinks a {
+  color: var(--color-accent-hover, var(--color-accent));
+  text-decoration: none;
+}
+
+.adminAdvancedLinks a:hover {
+  text-decoration: underline;
+}
+
+/* Legacy vertical platform nav removed — see admin-route-shell.css (.adminHorizontalNav). */
+
+.adminNavBadge {
+  margin-left: 6px;
+  font-size: 0.65rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-muted);
+}
+
+.adminNavBadge--partial {
+  background: color-mix(in srgb, var(--color-accent) 15%, transparent);
+}
+
+.adminForecastChart {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 128px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.adminForecastBar {
+  flex: 1;
+  min-width: 6px;
+  max-width: 24px;
+  background: color-mix(in srgb, var(--color-accent) 55%, transparent);
+  border-radius: 4px 4px 0 0;
+}
+
+.adminForecastBar--sponsor {
+  background: var(--admin-chart-sponsor, color-mix(in srgb, var(--color-info, #2c7be5) 45%, transparent));
+}
+
+.adminPostMeta {
+  display: grid;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  margin-top: 8px;
+}
+
+.adminRichText__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.adminRichText__btn {
+  min-height: 32px;
+  padding: 4px 10px;
+  font-size: 0.85rem;
+}
+
+.adminRichText__emojiPanel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+  padding: 8px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md, 8px);
+}
+
+.adminRichText__emoji {
+  border: none;
+  background: transparent;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.adminRichText__editor {
+  min-height: 140px;
+  line-height: 1.5;
+}
+
+.adminRichText__editor:empty::before {
+  content: attr(data-placeholder);
+  color: var(--color-text-secondary);
+  pointer-events: none;
+}
+
+.adminMediaCard__thumb {
+  width: 100%;
+  max-height: 120px;
+  object-fit: cover;
+  border-radius: var(--radius-md, 8px);
+}
+
+.adminActivityFeed {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  display: grid;
+  gap: 10px;
+}
+
+.adminActivityFeed li {
+  padding: 10px 12px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md, 8px);
+  display: grid;
+  gap: 4px;
+}
+
+.adminActivityFeed__when {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+}
+
+.communityPostBody--rich p {
+  margin: 0 0 0.65em;
+}
+
+.communityPostBody--rich ul {
+  margin: 0 0 0.65em 1.2em;
+  padding: 0;
 }

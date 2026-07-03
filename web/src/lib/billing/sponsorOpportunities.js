@@ -123,14 +123,6 @@ export function listMembershipPlansForHome() {
       description: "Submit community stories and access member-only features.",
       cta: "Become a Pro Member",
     },
-    {
-      tierKey: "sponsor",
-      checkoutTier: "sponsor",
-      label: "Sponsor Member",
-      priceLabel: "Packages vary",
-      description: "Sponsor designation tied to mission, podcast, or monthly sponsor packages.",
-      cta: "Become a Sponsor",
-    },
   ];
 }
 

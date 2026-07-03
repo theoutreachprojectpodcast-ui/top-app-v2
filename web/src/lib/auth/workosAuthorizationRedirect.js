@@ -1,18 +1,67 @@
-import fnv1a from "@sindresorhus/fnv1a";
 import { sealData } from "iron-session";
 import { cookies } from "next/headers";
 import { getWorkOS } from "@workos-inc/authkit-nextjs";
+import { workOSAuthRedirectBridge } from "@/lib/auth/workosAuthRedirectBridge";
+import { workosMobileRedirectUri } from "@/lib/auth/workosMobileRedirect";
+import { TOP_OAUTH_SHELL_COOKIE, TOP_OAUTH_SHELL_NATIVE } from "@/lib/auth/workosOAuthShell";
 
-const PKCE_COOKIE_PREFIX = "wos-auth-verifier";
+/** AuthKit callback expects this exact cookie name (`handleAuth` in @workos-inc/authkit-nextjs). */
+export const WORKOS_PKCE_COOKIE_NAME = "wos-auth-verifier";
 
-/** Match AuthKit PKCE cookie naming so `/callback` can unseal the verifier. */
-function pkceCookieNameForState(sealedState) {
-  const hash = Number(fnv1a(sealedState, { size: 32 }));
-  return `${PKCE_COOKIE_PREFIX}-${hash.toString(16).padStart(8, "0")}`;
+/** @deprecated AuthKit v3 uses a single cookie name; kept for call-site compatibility. */
+export function pkceCookieNameForState(_sealedState) {
+  return WORKOS_PKCE_COOKIE_NAME;
 }
 
-function pkceCookieOptions() {
-  const domain = String(process.env.WORKOS_COOKIE_DOMAIN || "").trim() || undefined;
+/**
+ * HTML bridge to WorkOS with PKCE (+ optional native shell marker) on the response.
+ * @param {{ url: string, sealedState: string }} bundle
+ * @param {boolean} [markNativeShell=false]
+ */
+export function workOSAuthorizeBridgeFromBundle(bundle, markNativeShell = false) {
+  const response = workOSAuthRedirectBridge(bundle.url);
+  attachWorkOSAuthorizeCookies(response, bundle.sealedState, markNativeShell);
+  return response;
+}
+
+/** Attach PKCE (+ optional native shell marker) on the HTML bridge response. */
+export function attachWorkOSAuthorizeCookies(response, sealedState, markNativeShell = false) {
+  const state = String(sealedState || "").trim();
+  if (!state || !response?.cookies) return response;
+  const opts = workosPkceCookieOptions();
+  response.cookies.set(WORKOS_PKCE_COOKIE_NAME, state, opts);
+  if (markNativeShell) {
+    response.cookies.set(TOP_OAUTH_SHELL_COOKIE, TOP_OAUTH_SHELL_NATIVE, opts);
+  }
+  return response;
+}
+
+/**
+ * True when the browser tab holds a WorkOS PKCE verifier cookie.
+ * @param {Request} request
+ * @param {string} [oauthState] OAuth `state` query param from the callback URL
+ */
+export function requestHasWorkOSPkceCookie(request, oauthState = "") {
+  const jar = request.cookies;
+  if (jar.get(WORKOS_PKCE_COOKIE_NAME)?.value) return true;
+
+  const state = String(oauthState || "").trim();
+  if (state && jar.get(pkceCookieNameForState(state))?.value) return true;
+
+  const all = typeof jar.getAll === "function" ? jar.getAll() : [];
+  for (const cookie of all) {
+    if (
+      cookie.value &&
+      (cookie.name === WORKOS_PKCE_COOKIE_NAME || cookie.name.startsWith(`${WORKOS_PKCE_COOKIE_NAME}-`))
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export function workosPkceCookieOptions() {
+  const domain = String(process.env.WORKOS_COOKIE_DOMAIN || "").trim();
   const redirectUri = String(
     process.env.NEXT_PUBLIC_WORKOS_REDIRECT_URI || process.env.WORKOS_REDIRECT_URI || "",
   ).trim();
@@ -34,8 +83,46 @@ function pkceCookieOptions() {
   };
 }
 
+async function fetchWorkOSClaimNonce(clientId) {
+  const claimToken = String(process.env.WORKOS_CLAIM_TOKEN || "").trim();
+  if (!claimToken || !clientId) return null;
+  try {
+    const workos = getWorkOS();
+    const res = await fetch(`${workos.baseURL}/x/one-shot-environments/claim-nonces`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ client_id: clientId, claim_token: claimToken }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json().catch(() => ({}));
+    return String(data?.nonce || "").trim() || null;
+  } catch {
+    return null;
+  }
+}
+
 /**
- * Build a WorkOS AuthKit authorize URL and set the PKCE verifier cookie (same as AuthKit helpers).
+ * Read OAuth `state` from a WorkOS authorize URL without URLSearchParams `+` → space mangling.
+ * Prefer passing sealed state via `s` on `/auth/workos-browser-start` when possible.
+ * @param {string} authorizeUrl
+ */
+export function oauthStateFromAuthorizeUrl(authorizeUrl) {
+  const raw = String(authorizeUrl || "").trim();
+  const qIdx = raw.indexOf("?");
+  if (qIdx === -1) return "";
+  for (const segment of raw.slice(qIdx + 1).split("&")) {
+    if (!segment) continue;
+    const eq = segment.indexOf("=");
+    const name = eq === -1 ? segment : segment.slice(0, eq);
+    if (decodeURIComponent(name) !== "state") continue;
+    if (eq === -1) return "";
+    return decodeURIComponent(segment.slice(eq + 1));
+  }
+  return "";
+}
+
+/**
+ * Mint PKCE cookie + WorkOS authorize URL (AuthKit-compatible sealed state).
  *
  * @param {{
  *   returnPathname?: string,
@@ -44,13 +131,17 @@ function pkceCookieOptions() {
  *   prompt?: string,
  *   invitationToken?: string,
  *   organizationId?: string,
+ *   useMobileRedirect?: boolean,
+ *   markNativeShell?: boolean,
  * }} [options]
+ * @returns {Promise<{ url: string, sealedState: string }>}
  */
-export async function getWorkOSAuthKitRedirectUrl(options = {}) {
+export async function getWorkOSAuthKitAuthorizeBundle(options = {}) {
   const clientId = String(process.env.WORKOS_CLIENT_ID || "").trim();
-  const redirectUri = String(
+  const webRedirectUri = String(
     process.env.NEXT_PUBLIC_WORKOS_REDIRECT_URI || process.env.WORKOS_REDIRECT_URI || "",
   ).trim();
+  const redirectUri = options.useMobileRedirect ? workosMobileRedirectUri() : webRedirectUri;
   const password = String(process.env.WORKOS_COOKIE_PASSWORD || "");
   if (!clientId || !redirectUri || password.length < 32) {
     throw new Error("workos_not_configured");
@@ -58,6 +149,7 @@ export async function getWorkOSAuthKitRedirectUrl(options = {}) {
 
   const workos = getWorkOS();
   const pkce = await workos.pkce.generate();
+  const claimNonce = await fetchWorkOSClaimNonce(clientId);
   const state = {
     nonce: crypto.randomUUID(),
     codeVerifier: pkce.codeVerifier,
@@ -65,9 +157,13 @@ export async function getWorkOSAuthKitRedirectUrl(options = {}) {
   };
   const sealedState = await sealData(state, { password, ttl: 600 });
   const cookieStore = await cookies();
-  cookieStore.set(pkceCookieNameForState(sealedState), sealedState, pkceCookieOptions());
+  const cookieOpts = workosPkceCookieOptions();
+  cookieStore.set(WORKOS_PKCE_COOKIE_NAME, sealedState, cookieOpts);
+  if (options.markNativeShell) {
+    cookieStore.set(TOP_OAUTH_SHELL_COOKIE, TOP_OAUTH_SHELL_NATIVE, cookieOpts);
+  }
 
-  return workos.userManagement.getAuthorizationUrl({
+  const url = workos.userManagement.getAuthorizationUrl({
     provider: "authkit",
     clientId,
     redirectUri,
@@ -79,7 +175,19 @@ export async function getWorkOSAuthKitRedirectUrl(options = {}) {
     ...(options.prompt ? { prompt: options.prompt } : {}),
     ...(options.invitationToken ? { invitationToken: options.invitationToken } : {}),
     ...(options.organizationId ? { organizationId: options.organizationId } : {}),
+    ...(claimNonce ? { claimNonce } : {}),
   });
+
+  return { url, sealedState };
+}
+
+/**
+ * @param {Parameters<typeof getWorkOSAuthKitAuthorizeBundle>[0]} [options]
+ * @returns {Promise<string>}
+ */
+export async function getWorkOSAuthKitRedirectUrl(options = {}) {
+  const { url } = await getWorkOSAuthKitAuthorizeBundle(options);
+  return url;
 }
 
 /** @param {URLSearchParams} searchParams */

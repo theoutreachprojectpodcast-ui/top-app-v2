@@ -30,8 +30,14 @@ jobs:
       - name: Security guard smoke tests
         run: pnpm --dir web run security:guards
 
+      - name: Auth production freeze guards
+        run: pnpm --dir web run verify:auth-freeze
+
       - name: Dependency audit (high+)
-        run: pnpm --dir web run security:audit
+        run: pnpm --dir web run security:audit:ci
+
+      - name: Security posture checks
+        run: pnpm --dir web run verify:security
 
   lint-and-build:
     runs-on: ubuntu-latest
@@ -73,3 +79,42 @@ jobs:
           WORKOS_COOKIE_DOMAIN: example.com
           NEXT_PUBLIC_WORKOS_REDIRECT_URI: https://example.com/callback
         run: pnpm build
+
+      - name: Validate Capacitor config
+        run: pnpm run validate:capacitor
+
+      - name: Production env structure (strict)
+        run: pnpm --dir web exec node scripts/validate-environment.mjs --profile=production --strict
+        env:
+          APP_BASE_URL: https://theoutreachproject.app
+          NEXT_PUBLIC_APP_URL: https://theoutreachproject.app
+          NEXT_PUBLIC_WORKOS_REDIRECT_URI: https://theoutreachproject.app/callback
+          WORKOS_COOKIE_DOMAIN: theoutreachproject.app
+          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy-anon-key
+          SUPABASE_SERVICE_ROLE_KEY: dummy-service-role-key
+          WORKOS_API_KEY: sk_live_dummy
+          WORKOS_CLIENT_ID: client_dummy
+          WORKOS_COOKIE_PASSWORD: this-is-a-dummy-cookie-password-at-least-32
+          STRIPE_SECRET_KEY: sk_live_dummy
+          STRIPE_WEBHOOK_LIVE_SECRET: whsec_dummy
+          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: pk_live_dummy
+          STRIPE_PRICE_ACCESS_YEARLY: price_dummy
+
+  production-smoke:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Production HTTP smoke (live)
+        run: node web/scripts/production-http-smoke.mjs
+        env:
+          PRODUCTION_BASE_URL: https://theoutreachproject.app
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}

@@ -1,4 +1,4 @@
--- tORP v0.3 — Organization listing header images (directory + trusted resources).
+-- TOP v0.3 — Organization listing header images (directory + trusted resources).
 -- Non-destructive: only creates objects that are missing; never drops policies, tables, or columns;
 -- does not modify existing row data. Run in Supabase SQL editor or your migration runner.
 
@@ -80,22 +80,7 @@ create index if not exists nonprofit_directory_enrichment_slug_idx
 
 alter table public.nonprofit_directory_enrichment enable row level security;
 
--- Add public SELECT policy only when absent (never DROP/replace an existing policy).
-do $$
-begin
-  if not exists (
-    select 1
-    from pg_policies
-    where schemaname = 'public'
-      and tablename = 'nonprofit_directory_enrichment'
-      and policyname = 'nonprofit_directory_enrichment_select_public'
-  ) then
-    create policy nonprofit_directory_enrichment_select_public
-      on public.nonprofit_directory_enrichment
-      for select
-      using (true);
-  end if;
-end $$;
+-- RLS policies: see nonprofit_directory_enrichment.sql (deny anon/authenticated; service role only).
 
 -- =============================================================================
 -- 1) Header columns (additive only)

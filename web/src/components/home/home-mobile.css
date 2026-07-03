@@ -440,14 +440,14 @@
     margin-top: var(--ds-section-gap, 24px);
   }
 
-  /* Featured sponsors — reference layout: airy logo gap, left-aligned head, 3-up row. */
+  /* Featured sponsors — left-aligned head, 3-up row. */
   .homeSponsorSpotlights {
-    margin: 0 0 var(--ds-section-gap, 24px);
+    margin: 0 0 var(--ds-space-3, 12px);
   }
 
   .homeSponsorSpotlights__head {
-    gap: 6px;
-    margin-bottom: var(--ds-space-4, 16px);
+    gap: 4px;
+    margin-bottom: var(--ds-space-2, 8px);
   }
 
   .homeSponsorSpotlights__eyebrow {
@@ -510,7 +510,7 @@
     --home-gap: clamp(7px, 2.1vw, 11px);
     --home-header-content-breathe: clamp(6px, 1.4vw, 9px);
     --home-card-radius: clamp(14px, 3.5vw, 18px);
-    --home-pad-x: clamp(16px, 4.5vw, 20px);
+    --home-pad-x: var(--mobile-shell-pad-x, clamp(16px, 4.5vw, 20px));
     gap: var(--home-gap);
     padding: 0 0 clamp(7px, 1.6vw, 11px);
     overflow-x: clip;
@@ -544,20 +544,28 @@
     padding: 10px 12px;
   }
 
-  .homeAuthCards {
+  .homeMembershipSection {
     order: 3;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
   }
 
-  .homeFeatureList {
+  .homeAuthCards {
     order: 4;
   }
 
-  .homeDirectoryPanel {
+  .homeFeatureList {
     order: 5;
   }
 
-  .homeMobile__missionStrip {
+  .homeDirectoryPanel {
     order: 6;
+  }
+
+  .homeMobile__missionStrip {
+    order: 7;
     margin-top: 0;
   }
 
@@ -778,11 +786,10 @@
     white-space: nowrap;
   }
 
-  /* Home shares mobile header grid in `mobile-shell.css`; tune logo + account controls here. */
+  /* Home wordmark: +75% vs prior compact band (still below full non-home mobile size). */
   main.topApp[data-page-atmosphere="home"] {
-    --mobile-site-header-logo-h: clamp(367px, 95.5vw, 499px);
-    --mobile-site-header-logo-max-w: min(770px, calc(100vw - 28px));
-    padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+    --mobile-site-header-logo-h: clamp(301px, 78.75vw, 399px);
+    --mobile-site-header-logo-max-w: min(910px, calc(100vw - 28px));
   }
 
   main.topApp[data-page-atmosphere="home"] .headerNotificationBellBtn,
@@ -792,15 +799,15 @@
     height: var(--mobile-site-header-control-size, 44px);
   }
 
-  /* Home: keep sponsors below the wordmark — do not use desktop-style negative collapse on mobile. */
+  /* Home: breathing room between wordmark and first section (featured sponsors). */
   main.topApp[data-page-atmosphere="home"] .appSiteHeader {
     margin-bottom: 0;
-    padding-bottom: clamp(6px, 1.5vw, 10px);
+    padding-bottom: clamp(10px, 2.2vw, 14px);
   }
 
   main.topApp[data-page-atmosphere="home"] .headerBrandStack img.brandMarkImg--header:not(.podcastBrandLogo),
   main.topApp[data-page-atmosphere="home"] .headerBrandStack .brandMarkImg--header {
-    margin-bottom: clamp(-44px, -12.1vw, -57px);
+    margin-bottom: clamp(-142px, -36vw, -176px);
   }
 
   main.topApp[data-page-atmosphere="home"] .shell.shell--home {
@@ -815,32 +822,17 @@
   }
 
   main.topApp[data-page-atmosphere="home"] .homeSponsorSpotlights {
-    margin-top: clamp(-8px, -2vw, -4px);
-    padding-top: var(--home-header-content-breathe, 6px);
+    margin-top: 0;
+    padding-top: clamp(10px, 2.4vw, 16px);
   }
 
   main.topApp[data-page-atmosphere="home"] .homeSponsorSpotlights__head {
-    gap: 6px;
-    margin-bottom: 8px;
-  }
-
-  main.topApp[data-page-atmosphere="home"] .footerDockBackdrop {
-    height: calc(72px + env(safe-area-inset-bottom, 0px));
-    background: transparent;
+    gap: 4px;
+    margin-bottom: 6px;
   }
 
   main.topApp[data-page-atmosphere="home"] {
-    --home-pad-x: clamp(16px, 4.5vw, 20px);
-  }
-
-  main.topApp[data-page-atmosphere="home"] .bottomNav.bottomNav--mobileDock {
-    margin-inline: var(--home-pad-x);
-    max-width: calc(100% - 2 * var(--home-pad-x));
-    border-radius: 20px;
-    padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
-    box-shadow:
-      0 12px 32px color-mix(in srgb, #000 18%, transparent),
-      0 0 0 1px color-mix(in srgb, var(--color-border-soft) 80%, transparent);
+    --home-pad-x: var(--mobile-shell-pad-x, clamp(16px, 4.5vw, 20px));
   }
 
   /* Home light: don’t stack a heavy veil over the boosted mobile background. */

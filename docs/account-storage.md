@@ -1,6 +1,6 @@
 # Account storage model
 
-## Canonical row: `torp_profiles`
+## Canonical row: `top_profiles`
 
 Each WorkOS user maps to **one** profile row (service role from Next.js API routes):
 
@@ -16,7 +16,7 @@ Each WorkOS user maps to **one** profile row (service role from Next.js API rout
 
 ## QA isolation
 
-When configured for QA previews, the app may use **`top_qa_profiles`** instead of `torp_profiles` (see `PROFILE_TABLE` / deployment docs) so test sign-ups do not touch production profile rows.
+When configured for QA previews, the app may use **`top_qa_profiles`** instead of `top_profiles` (see `PROFILE_TABLE` / deployment docs) so test sign-ups do not touch production profile rows.
 
 ## Create / update flows
 

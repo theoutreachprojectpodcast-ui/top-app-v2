@@ -33,23 +33,25 @@ export default function AppHeaderBrand({
   brandSrc,
   brandAlt = "The Outreach Project",
   brandClassName = "",
+  compactMark = false,
 }) {
   const { colorScheme } = useColorScheme();
   const mobileHeader = useSyncExternalStore(subscribeMobileHeader, getMobileHeaderSnapshot, () => false);
   const isPodcastMark = String(brandClassName || "").includes("podcastBrandLogo");
   const resolvedSrc = isPodcastMark ? resolvePodcastBrandLogoSrc(colorScheme) : brandSrc || undefined;
   /* Full wordmark on mobile — mark assets crop “PROJECT” when height-capped. */
-  const useMobileFullWordmark = mobileHeader && !isPodcastMark && !brandSrc;
+  const useMobileFullWordmark = mobileHeader && !compactMark && !isPodcastMark && !brandSrc;
+  const markVariant = compactMark && !isPodcastMark ? "mark" : "full";
 
   return (
     <div
-      className={`headerBrandStack${useMobileFullWordmark ? " headerBrandStack--mobileWordmark" : ""}`}
-      data-torp-header-brand="1"
+      className={`headerBrandStack${useMobileFullWordmark ? " headerBrandStack--mobileWordmark" : ""}${compactMark ? " headerBrandStack--compactMark" : ""}`.trim()}
+      data-top-header-brand="1"
     >
       <Link href={homeHref} aria-label={ariaLabel}>
         <BrandMark
           size="header"
-          variant="full"
+          variant={markVariant}
           src={resolvedSrc}
           alt={brandAlt}
           className={brandClassName}

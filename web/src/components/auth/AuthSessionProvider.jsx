@@ -12,12 +12,24 @@ import {
 } from "react";
 
 async function fetchMeAuthenticated() {
-  const meRes = await fetch("/api/me", { credentials: "include", cache: "no-store" });
-  const me = await meRes.json().catch(() => ({}));
-  return !!me.authenticated;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 12_000);
+  try {
+    const meRes = await fetch("/api/me", { credentials: "include", cache: "no-store", signal: controller.signal });
+    const me = await meRes.json().catch(() => ({}));
+    return !!me.authenticated;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 import { usePathname } from "next/navigation";
 import { clearNavAuthCache, readNavAuthCache, writeNavAuthCache } from "@/lib/auth/navAuthCache";
+import { profileFromApiDto } from "@/features/profile/mappers";
+import { navCacheHasFreeAccess } from "@/lib/membership/appAccess";
+import { isCapacitorNative } from "@/lib/capacitor/platform";
+import { isInMobileOAuthResumeGrace } from "@/lib/auth/mobileOAuthReturn";
 
 const AuthSessionContext = createContext({
   loading: true,
@@ -50,32 +62,58 @@ export default function AuthSessionProvider({ children }) {
 
   const refresh = useCallback(async (opts = {}) => {
     const soft = !!opts.soft;
+    const cacheBefore = readNavAuthCache();
+    const stickyAuthed = sessionRef.current.authenticated || !!cacheBefore?.authenticated;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 12_000);
     try {
+      const fetchOpts = { credentials: "include", signal: controller.signal };
       const [statusRes, meRes] = await Promise.all([
-        fetch("/api/auth/status", { credentials: "include" }),
-        fetch("/api/me", { credentials: "include", cache: "no-store" }),
+        fetch("/api/auth/status", fetchOpts),
+        fetch("/api/me", { ...fetchOpts, cache: "no-store" }),
       ]);
       const status = await statusRes.json().catch(() => ({}));
       const me = await meRes.json().catch(() => ({}));
       const workos = !!status.workos;
       let authenticated = !!me.authenticated;
-      if (soft && sessionRef.current.authenticated && !authenticated) {
-        await new Promise((r) => setTimeout(r, 150));
-        authenticated = await fetchMeAuthenticated();
+      if (stickyAuthed && !authenticated) {
+        for (const delay of [150, 400, 900, 1600]) {
+          await new Promise((r) => setTimeout(r, delay));
+          authenticated = await fetchMeAuthenticated();
+          if (authenticated) break;
+        }
       }
-      if (soft && sessionRef.current.authenticated && !authenticated) {
-        await new Promise((r) => setTimeout(r, 400));
-        authenticated = await fetchMeAuthenticated();
+      const profileForAccess = me.profile ? profileFromApiDto(me.profile) : null;
+      if (authenticated) {
+        writeNavAuthCache(authenticated, workos, {
+          hasFreeAccess: authenticated && navCacheHasFreeAccess(profileForAccess, me.entitlements),
+        });
+        setState({ loading: false, authenticated: true, workos });
+        return;
       }
-      writeNavAuthCache(authenticated, workos);
-      setState({ loading: false, authenticated, workos });
+      if (soft && stickyAuthed) {
+        setState((prev) => ({
+          loading: false,
+          authenticated: true,
+          workos: prev.workos || !!cacheBefore?.workos || workos,
+        }));
+        return;
+      }
+      if (!soft) {
+        clearNavAuthCache();
+      }
+      setState({ loading: false, authenticated: false, workos });
     } catch {
+      const cache = readNavAuthCache();
+      const preserve = soft || !!cache?.authenticated;
       setState((prev) => ({
         loading: false,
-        authenticated: soft ? prev.authenticated : false,
-        workos: soft ? prev.workos : false,
+        authenticated: preserve ? prev.authenticated || !!cache?.authenticated : false,
+        workos: preserve ? prev.workos || !!cache?.workos : false,
       }));
-      if (!soft) clearNavAuthCache();
+      if (!soft && !cache?.authenticated) clearNavAuthCache();
+    } finally {
+      clearTimeout(timer);
     }
   }, []);
 
@@ -83,10 +121,21 @@ export default function AuthSessionProvider({ children }) {
     void refresh({ soft: false });
   }, [refresh]);
 
+  const lastPathRefreshRef = useRef(0);
+
   useEffect(() => {
     if (skipFirstPathnameEffect.current) {
       skipFirstPathnameEffect.current = false;
       return;
+    }
+    if (isCapacitorNative()) {
+      if (isInMobileOAuthResumeGrace()) {
+        void refresh({ soft: true });
+        return;
+      }
+      const now = Date.now();
+      if (now - lastPathRefreshRef.current < 8000) return;
+      lastPathRefreshRef.current = now;
     }
     void refresh({ soft: true });
   }, [pathname, refresh]);

@@ -1,12 +1,20 @@
 import { createSupabaseReadClient } from "@/lib/supabase/readServiceClient";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { fetchTrustedResourcesFromSupabase } from "@/features/trusted-resources/api";
 import { buildTrustedResourceDetailViewModel } from "@/features/trusted-resources/domain/trustedResourceDetailViewModel";
 import { buildTrustedResourceViewModel } from "@/features/trusted-resources/domain/trustedResourceViewModel";
 import { TRUSTED_RESOURCE_BY_SLUG } from "@/features/trusted-resources/trustedResourcesRegistry";
+import { requireMembershipApi } from "@/lib/membership/membershipRouteGuard";
 
 export const runtime = "nodejs";
 
 export async function GET(request) {
+  const admin = createSupabaseAdminClient();
+  if (admin) {
+    const membership = await requireMembershipApi(admin, "trusted_pro");
+    if (!membership.ok) return membership.response;
+  }
+
   const supabase = createSupabaseReadClient();
   const slug = String(new URL(request.url).searchParams.get("slug") || "")
     .trim()

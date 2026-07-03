@@ -1,12 +1,11 @@
--- tORP v0.4 — Platform admin RBAC + community follow-up bookmarks (additive).
--- Run after torp_account_access_model_v03.sql.
+-- TOP v0.4 — Platform admin RBAC + community follow-up bookmarks (additive).
+-- Run after top_account_access_model_v03.sql.
 --
 -- Row level security (RLS): this file does NOT add or change policies.
--- - community_posts RLS is defined in community_v03_data_model.sql: anon/authenticated may SELECT only
---   approved, public-facing rows; they have no INSERT/UPDATE/DELETE policies (denied).
+-- - community_posts RLS: deny direct PostgREST access; feed via /api/community/posts + service role.
 -- - The Next.js app reads/writes posts via Route Handlers using the Supabase service role, which bypasses RLS
 --   after WorkOS + application-level admin/moderator checks — that is intentional.
--- - torp_profiles uses deny-all RLS for anon/authenticated JWTs; profile data is only mutated server-side.
+-- - top_profiles uses deny-all RLS for anon/authenticated JWTs; profile data is only mutated server-side.
 -- If clients ever queried community_posts with the anon key directly, SELECT policies return whole rows
 -- (including any new columns). The product uses /api/community/posts instead; avoid exposing raw PostgREST.
 --
@@ -22,7 +21,7 @@
 -- Re-runs are no-ops once the row is already admin.
 -- Bootstrap platform admins (matches web/src/lib/admin/adminPolicy.js).
 -- ---------------------------------------------------------------------------
-update public.torp_profiles
+update public.top_profiles
 set
   platform_role = 'admin',
   updated_at = now()
@@ -60,10 +59,10 @@ begin
     add column if not exists admin_bookmark_note text;
 
   alter table public.community_posts
-    add column if not exists admin_bookmark_by uuid references public.torp_profiles (id) on delete set null;
+    add column if not exists admin_bookmark_by uuid references public.top_profiles (id) on delete set null;
 
   comment on column public.community_posts.admin_bookmark is 'Staff follow-up flag for customer outreach (admin console).';
-  comment on column public.community_posts.admin_bookmark_by is 'torp_profiles.id of admin who bookmarked.';
+  comment on column public.community_posts.admin_bookmark_by is 'top_profiles.id of admin who bookmarked.';
 
   -- Use := not SELECT … INTO — some SQL runners misparse INTO <name> as a table target (42P01).
   has_deleted_col := exists (

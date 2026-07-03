@@ -2,6 +2,7 @@
 
 import { useId, useMemo } from "react";
 import Link from "next/link";
+import OrganizationLogo from "@/components/shared/OrganizationLogo";
 import NonprofitIcon from "@/features/nonprofits/components/NonprofitIcon";
 import NonprofitSocialLinks from "@/features/nonprofits/components/NonprofitSocialLinks";
 
@@ -91,20 +92,18 @@ export default function TrustedResourceCard({ resource }) {
 
       <div className="trustedResourceCard__body">
         <header className="trustedResourceCard__profileHead">
-          <div className="trustedResourceCard__logoFrame">
-            {logoImage ? (
-              <img
-                className="trustedResourceCard__logoImg"
-                src={logoImage}
-                alt=""
-                loading="lazy"
-                decoding="async"
-              />
-            ) : (
-              <div className="trustedResourceCard__logoFallback" aria-hidden>
-                <NonprofitIcon category={cat} size={42} variant="default" />
-              </div>
-            )}
+          <div className="trustedResourceCard__logoSlot">
+            <OrganizationLogo
+              src={logoImage || ""}
+              alt=""
+              name={name}
+              entityKey={trustedResourceSlug || id}
+              size="card"
+              surface="page"
+              panel="auto"
+              fallback="icon"
+              fallbackIcon={<NonprofitIcon category={cat} size={42} variant="default" />}
+            />
           </div>
           <div className="trustedResourceCard__titleBlock">
             <h3 className="trustedResourceCard__title" id={titleId}>
@@ -136,12 +135,12 @@ export default function TrustedResourceCard({ resource }) {
             <NonprofitSocialLinks className="trustedResourceCard__socialLinks" links={socialLinksForRow} />
           ) : null}
           {resourceHref ? (
-            <Link className="trustedResourceCard__viewLink" href={resourceHref} data-torp-card-interactive>
+            <Link className="trustedResourceCard__viewLink" href={resourceHref} data-top-card-interactive>
               View resource profile
             </Link>
           ) : null}
           {profilePath && einIdentityVerified && profilePath !== resourceHref ? (
-            <Link className="trustedResourceCard__profileLink" href={profilePath} data-torp-card-interactive>
+            <Link className="trustedResourceCard__profileLink" href={profilePath} data-top-card-interactive>
               Directory profile
             </Link>
           ) : null}

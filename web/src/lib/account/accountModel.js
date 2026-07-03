@@ -1,6 +1,6 @@
 /**
- * Unified account model (tORP v0.3): intent vs platform role vs billing tier.
- * Authoritative storage: Supabase `torp_profiles` (+ Stripe for paid lifecycle).
+ * Unified account model (TOP v0.3): intent vs platform role vs billing tier.
+ * Authoritative storage: Supabase `top_profiles` (+ Stripe for paid lifecycle).
  */
 
 /** @type {readonly string[]} */
@@ -44,7 +44,7 @@ export function defaultMembershipTierForIntent(intent) {
       return "sponsor";
     case "free_user":
     default:
-      return "free";
+      return "support";
   }
 }
 

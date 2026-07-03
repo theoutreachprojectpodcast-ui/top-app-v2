@@ -8,7 +8,10 @@ import { rowCity, rowEin, rowNtee, rowState } from "@/lib/utils";
 import { nteeToService } from "@/lib/utils";
 import { mapNonprofitLinks } from "@/features/nonprofits/mappers/nonprofitLinksMapper";
 import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
-import { resolveFindInfoHref } from "@/features/nonprofits/domain/nonprofitCardActions";
+import {
+  buildNonprofitGoogleSearchHref,
+  resolveFindInfoHref,
+} from "@/features/nonprofits/domain/nonprofitCardActions";
 import { resolveNonprofitListingCategoryHeaderImageUrl } from "@/features/directory/nteeCategoryHeaderImages";
 import {
   resolveOrgListingHeaderImageUrl,
@@ -339,7 +342,8 @@ export function mapNonprofitCardRow(row = {}, source = "directory") {
   };
   return {
     ...cardShell,
-    findInfoHref: resolveFindInfoHref(cardShell),
+    findInfoHref:
+      source === "directory" ? buildNonprofitGoogleSearchHref(cardShell) : resolveFindInfoHref(cardShell),
   };
 }
 

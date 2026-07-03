@@ -1,0 +1,2 @@
+-- Superseded by sponsor_v20_curated_copy_enrichment.sql (catalog + sponsor_enrichment curated columns).
+-- Kept for migration history only.

@@ -1,33 +1,59 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
+import { navigateToStripePortal } from "@/lib/capacitor/billingNavigation";
 
 /**
- * Opens Stripe Customer Portal for the signed-in WorkOS user (server uses torp_profiles.stripe_customer_id).
+ * Opens Stripe Customer Portal for the signed-in WorkOS user.
+ * Server resolves or creates `top_profiles.stripe_customer_id` when missing.
  */
-export default function ManageBillingButton({ stripeReady, hasStripeCustomer, variant = "soft" }) {
+export default function ManageBillingButton({
+  stripeReady,
+  hasStripeCustomer,
+  hasStripeSubscription = false,
+  variant = "soft",
+  returnPath,
+  onOpened,
+}) {
+  const pathname = usePathname();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+
+  const billingHint =
+    hasStripeCustomer || hasStripeSubscription
+      ? null
+      : "Opens Stripe to manage payment methods, invoices, and your subscription when you have one.";
 
   async function openPortal() {
     setBusy(true);
     setError("");
     try {
-      const res = await fetch("/api/billing/portal", { method: "POST", credentials: "include" });
+      const portalReturnPath =
+        returnPath ||
+        (pathname && pathname.startsWith("/") ? pathname : "/profile");
+      const res = await fetch("/api/billing/portal", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ returnPath: portalReturnPath }),
+      });
       const data = await res.json().catch(() => ({}));
       if (res.status === 503) {
-        setError("Billing is not connected in this environment.");
-        return;
-      }
-      if (res.status === 400 && data.error === "no_stripe_customer") {
-        setError("Subscribe to a paid plan first, then you can manage billing here.");
+        setError(
+          data.message ||
+            (data.error === "billing_not_configured"
+              ? "Billing is not connected in this environment."
+              : "Billing portal is unavailable. Try again later or contact support."),
+        );
         return;
       }
       if (!res.ok || !data.url) {
         setError(data.message || "Could not open billing portal.");
         return;
       }
-      window.location.href = data.url;
+      onOpened?.();
+      await navigateToStripePortal(data.url);
     } catch {
       setError("Network error.");
     } finally {
@@ -38,8 +64,8 @@ export default function ManageBillingButton({ stripeReady, hasStripeCustomer, va
   if (!stripeReady) {
     return (
       <p className="sponsorSectionLead" style={{ marginTop: 8, marginBottom: 0 }}>
-        Billing is not fully configured (missing Stripe keys or price IDs). Paid plans are unavailable until your deploy
-        sets the required environment variables.
+        Billing is not fully configured (missing Stripe secret key). Paid plans and the customer portal are unavailable
+        until your deploy sets the required environment variables.
       </p>
     );
   }
@@ -48,12 +74,12 @@ export default function ManageBillingButton({ stripeReady, hasStripeCustomer, va
 
   return (
     <div>
-      <button type="button" className={btnClass} disabled={busy || !hasStripeCustomer} onClick={openPortal}>
+      <button type="button" className={btnClass} disabled={busy} onClick={openPortal}>
         {busy ? "Opening…" : "Manage billing"}
       </button>
-      {!hasStripeCustomer ? (
+      {billingHint ? (
         <p className="profileDemoResetNote" style={{ marginTop: 8 }}>
-          Available after you complete a paid subscription checkout.
+          {billingHint}
         </p>
       ) : null}
       {error ? <p className="applyError">{error}</p> : null}

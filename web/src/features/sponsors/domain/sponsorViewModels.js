@@ -1,5 +1,6 @@
 import { resolveSponsorDisplayName } from "@/lib/entityDisplayName";
 import { resolveSponsorListingLogoUrl } from "@/lib/sponsors/resolveSponsorListingLogoUrl";
+import { normalizePublishStatus } from "@/lib/sponsors/sponsorVisibility";
 import { FEATURED_SPONSOR_CARD_BACKGROUNDS } from "@/features/sponsors/data/featuredSponsors";
 import { getSponsorCardPresentation } from "@/features/sponsors/domain/sponsorCardPresentation";
 import { inferSponsorDisplayGroup } from "@/features/sponsors/domain/sponsorDisplayGroups";
@@ -59,13 +60,32 @@ function parseAdditionalLinks(value) {
   }
 }
 
-function validUrl(url) {
-  try {
-    const u = new URL(String(url || "").trim());
-    return /^https?:$/i.test(u.protocol);
-  } catch {
-    return false;
+function parseFeaturedItems(value) {
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => ({
+        title: clean(item?.title),
+        description: clean(item?.description),
+        url: validUrl(item?.url) ? clean(item.url) : "",
+      }))
+      .filter((item) => item.title || item.url);
   }
+  const raw = clean(value);
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parseFeaturedItems(parsed) : [];
+  } catch {
+    return [];
+  }
+}
+
+function resolveSponsorCtaUrl(row = {}) {
+  const cta = clean(row.cta_url || row.ctaUrl);
+  const website = clean(row.website_url || row.ctaUrl || row.website);
+  if (validUrl(cta)) return cta;
+  if (validUrl(website)) return website;
+  return "";
 }
 
 function platformVerified(url, expectedHost) {
@@ -168,6 +188,17 @@ export function normalizeSponsorRecord(row = {}) {
         ? false
         : !!(row.veteran_owned ?? row.veteranOwned),
     cta_label: clean(row.cta_label || row.ctaLabel),
+    cta_url: clean(row.cta_url || row.ctaUrl),
+    promo_code: clean(row.promo_code || row.promoCode),
+    inquiry_url: clean(row.inquiry_url || row.inquiryUrl),
+    publish_status: normalizePublishStatus(row.publish_status),
+    published_at: row.published_at ?? null,
+    featured_items: parseFeaturedItems(row.featured_items),
+    research_draft:
+      row.research_draft && typeof row.research_draft === "object" && !Array.isArray(row.research_draft)
+        ? row.research_draft
+        : null,
+    updated_at: row.updated_at ?? null,
   };
 }
 
@@ -267,6 +298,7 @@ export function getSponsorCardViewModel(row = {}) {
   const logoDisplay = resolveSponsorListingLogoUrl(s) || null;
   const veteranOwned = !!s.veteran_owned || !!presentation.veteranOwnedDefault;
   const locationChips = presentation.locationChips?.length ? presentation.locationChips : [];
+  const ctaUrl = resolveSponsorCtaUrl(s);
   return {
     id: s.id,
     slug: s.slug,
@@ -277,9 +309,9 @@ export function getSponsorCardViewModel(row = {}) {
     tierLabel: s.featured ? "Featured sponsor" : "Partner sponsor",
     primaryBadge,
     tagline: bodyTeaser,
-    ctaUrl: s.website_url || null,
-    ctaLabel: s.cta_label || (s.website_url ? "Visit Website" : ""),
-    websitePending: !s.website_url,
+    ctaUrl: ctaUrl || null,
+    ctaLabel: s.cta_label || (ctaUrl ? "Visit Website" : ""),
+    websitePending: !ctaUrl,
     logoUrl: logoDisplay,
     warmVariant: s.warm_variant || "gold",
     backgroundImageUrl: s.background_image_url || fallbackBg,
@@ -292,6 +324,7 @@ export function getSponsorCardViewModel(row = {}) {
     veteranOwned,
     locationChips,
     displayGroup: inferSponsorDisplayGroup(s),
+    isPodcastSponsor: String(s.sponsor_scope || "").trim().toLowerCase() === "podcast",
     socialLinks: {
       website: validUrl(s.website_url) ? s.website_url : "",
       instagram: platformVerified(s.instagram_url, "instagram.com") ? s.instagram_url : "",
@@ -328,6 +361,9 @@ export function getSponsorProfileViewModel(row = {}) {
   const fallbackBg =
     FEATURED_SPONSOR_CARD_BACKGROUNDS[s.slug] || FEATURED_SPONSOR_CARD_BACKGROUNDS[s.id] || "";
   const heroImage = clean(s.background_image_url) || fallbackBg;
+  const ctaUrl = resolveSponsorCtaUrl(s);
+  const isPodcastSponsor = String(s.sponsor_scope || "").trim().toLowerCase() === "podcast";
+  const lastUpdated = clean(s.published_at || s.last_enriched_at || s.updated_at);
 
   return {
     ...s,
@@ -336,8 +372,19 @@ export function getSponsorProfileViewModel(row = {}) {
     logo_url: logoDisplay,
     logo_candidate_urls: logoCandidates,
     logoPanelMode: presentation.logoPanelMode || "auto",
+    ctaUrl,
+    ctaLabel: s.cta_label || (ctaUrl ? "Visit Website" : ""),
+    promoCode: s.promo_code || "",
+    inquiryUrl: validUrl(s.inquiry_url) ? s.inquiry_url : "",
+    featuredItems: s.featured_items || [],
+    isPodcastSponsor,
+    profileBackHref: isPodcastSponsor ? "/podcasts" : "/sponsors",
+    profileBackLabel: isPodcastSponsor ? "← Podcast sponsors" : "← All sponsors",
+    lastUpdatedLabel: lastUpdated
+      ? new Date(lastUpdated).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })
+      : "",
     socialLinks: [
-      { key: "website", label: "Website", url: validUrl(s.website_url) ? s.website_url : "" },
+      { key: "website", label: "Website", url: validUrl(ctaUrl || s.website_url) ? ctaUrl || s.website_url : "" },
       { key: "instagram", label: "Instagram", url: platformVerified(s.instagram_url, "instagram.com") ? s.instagram_url : "" },
       { key: "facebook", label: "Facebook", url: platformVerified(s.facebook_url, "facebook.com") ? s.facebook_url : "" },
       { key: "linkedin", label: "LinkedIn", url: platformVerified(s.linkedin_url, "linkedin.com") ? s.linkedin_url : "" },
@@ -352,5 +399,7 @@ export function getSponsorAdminViewModel(row = {}) {
   return {
     ...s,
     additional_links_json: JSON.stringify(s.additional_links || [], null, 2),
+    featured_items_json: JSON.stringify(s.featured_items || [], null, 2),
+    research_draft_json: s.research_draft ? JSON.stringify(s.research_draft, null, 2) : "",
   };
 }

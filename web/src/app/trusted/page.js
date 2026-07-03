@@ -67,10 +67,6 @@ export default function TrustedPage() {
           resource profile for mission, programs, and official links — or the nonprofit directory when an IRS EIN is
           available.
         </p>
-        <p className="trustedListingIntro">
-          These cards are a dedicated Trusted Resource layout — not the general Directory grid. Curated fields (logo,
-          header image, category, copy, and links) override directory defaults when present.
-        </p>
       </div>
       <div className="row">
         <button className="btnPrimary" type="button" onClick={loadTrusted}>

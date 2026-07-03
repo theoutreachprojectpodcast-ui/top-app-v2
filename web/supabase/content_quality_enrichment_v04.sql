@@ -1,4 +1,4 @@
--- tORP v0.4 — Content quality & QA promotion metadata (additive only).
+-- TOP v0.4 — Content quality & QA promotion metadata (additive only).
 -- Run after nonprofit_directory_enrichment, trusted_resources, sponsors_catalog exist.
 -- No DROP / TRUNCATE. Safe to re-run.
 

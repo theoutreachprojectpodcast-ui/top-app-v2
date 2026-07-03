@@ -2,14 +2,18 @@
  * Safe client-only storage for the last email typed before WorkOS / demo sign-in.
  * Never stores passwords or tokens.
  */
-export const LAST_USED_EMAIL_KEY = "torp_last_used_email";
-export const REMEMBER_EMAIL_PREF_KEY = "torp_remember_email_pref";
-export const REMEMBER_DEVICE_PREF_KEY = "torp_workos_remember_device";
+export const LAST_USED_EMAIL_KEY = "top_last_used_email";
+export const REMEMBER_EMAIL_PREF_KEY = "top_remember_email_pref";
+export const REMEMBER_DEVICE_PREF_KEY = "top_workos_remember_device";
 
 export function readLastUsedEmail() {
   if (typeof window === "undefined") return "";
   try {
-    return String(window.localStorage.getItem(LAST_USED_EMAIL_KEY) || "").trim();
+    return String(
+      window.localStorage.getItem(LAST_USED_EMAIL_KEY) ||
+        window.localStorage.getItem("torp_last_used_email") ||
+        "",
+    ).trim();
   } catch {
     return "";
   }
@@ -39,7 +43,11 @@ export function clearLastUsedEmail() {
 export function readRememberEmailPref() {
   if (typeof window === "undefined") return true;
   try {
-    return window.localStorage.getItem(REMEMBER_EMAIL_PREF_KEY) !== "0";
+    const v =
+      window.localStorage.getItem(REMEMBER_EMAIL_PREF_KEY) ??
+      window.localStorage.getItem("torp_remember_email_pref");
+    if (v === null) return true;
+    return v !== "0";
   } catch {
     return true;
   }
@@ -58,7 +66,11 @@ export function writeRememberEmailPref(on) {
 export function readRememberDevicePref() {
   if (typeof window === "undefined") return true;
   try {
-    return window.localStorage.getItem(REMEMBER_DEVICE_PREF_KEY) !== "0";
+    const v =
+      window.localStorage.getItem(REMEMBER_DEVICE_PREF_KEY) ??
+      window.localStorage.getItem("torp_workos_remember_device");
+    if (v === null) return true;
+    return v !== "0";
   } catch {
     return true;
   }

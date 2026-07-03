@@ -1,4 +1,4 @@
-import { listSponsorsCatalogWithClient } from "@/features/sponsors/api/sponsorCatalogApi";
+import { listSponsorsCatalogWithClient, mergeLivePodcastCatalogWithStaticSeed } from "@/features/sponsors/api/sponsorCatalogApi";
 import { normalizeSponsorRecord } from "@/features/sponsors/domain/sponsorViewModels";
 
 async function fetchPodcastSponsorsCatalogFromApi() {
@@ -8,7 +8,7 @@ async function fetchPodcastSponsorsCatalogFromApi() {
     if (!res.ok) return null;
     const data = await res.json();
     if (!data?.ok || !Array.isArray(data.rows)) return null;
-    return data.rows.map((r) => normalizeSponsorRecord(r));
+    return mergeLivePodcastCatalogWithStaticSeed(data.rows.map((r) => normalizeSponsorRecord(r)));
   } catch {
     return null;
   }

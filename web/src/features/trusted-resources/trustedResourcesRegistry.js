@@ -277,7 +277,7 @@ export const TRUSTED_RESOURCE_CANONICAL_RECORDS = [
       facebookUrl: "https://www.facebook.com/frontlinehealingfoundation",
       instagramUrl: "https://www.instagram.com/frontlinehealingfoundation/",
     },
-    registryHeaderImageUrl: "/trusted/frontline-healing-foundation-hero.svg",
+    registryHeaderImageUrl: "/trusted/frontline-healing-foundation-hero.png",
     registryLogoUrl: "/trusted/frontline-healing-foundation-org-logo.png",
   },
   {

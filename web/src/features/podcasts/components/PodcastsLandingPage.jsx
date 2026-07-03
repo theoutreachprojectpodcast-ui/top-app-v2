@@ -24,31 +24,62 @@ import { PODCAST_LANDING_RECENT_EPISODE_COUNT } from "@/lib/podcast/podcastLandi
 const FULL_EPISODES_SECTION_COUNT = PODCAST_LANDING_RECENT_EPISODE_COUNT;
 const isDevBuild = typeof process !== "undefined" && process.env.NODE_ENV === "development";
 
+function mapUpcomingApiGuests(rows) {
+  return (Array.isArray(rows) ? rows : []).map((r) => ({
+    id: r.id,
+    slug: String(r.id || ""),
+    name: r.name || "Guest",
+    title:
+      [String(r.role_title || "").trim(), String(r.organization || "").trim()].filter(Boolean).join(" · ") ||
+      "Upcoming guest",
+    bio:
+      [String(r.short_description || "").trim(), String(r.episode_topic || "").trim()].filter(Boolean).join(" — ") ||
+      "Scheduled conversation — details will be announced soon.",
+    avatar_url: String(r.profile_image_url || "").trim(),
+    upcoming: true,
+  }));
+}
+
 export default function PodcastsLandingPage({
   initialEpisodes = [],
   initialFeaturedGuests = [],
+  initialSponsors = [],
+  initialUpcomingGuests = [],
+  initialEpisodeGuests = [],
+  initialHeroBandImageUrl = "",
   initialBundleMeta = {},
 }) {
+  const hasInitialBundle = Array.isArray(initialEpisodes) && initialEpisodes.length > 0;
+  const hasInitialSponsors = Array.isArray(initialSponsors) && initialSponsors.length > 0;
+  const hasInitialUpcoming = Array.isArray(initialUpcomingGuests) && initialUpcomingGuests.length > 0;
+  const hasInitialEpisodeGuests = Array.isArray(initialEpisodeGuests) && initialEpisodeGuests.length > 0;
+  const heroBandFromServer = String(initialHeroBandImageUrl || "").trim();
+
   const supabase = useMemo(() => getSupabaseClient(), []);
   const [episodes, setEpisodes] = useState(() => {
-    if (Array.isArray(initialEpisodes) && initialEpisodes.length) return initialEpisodes;
+    if (hasInitialBundle) return initialEpisodes;
     return isDevBuild ? FALLBACK_EPISODES : [];
   });
   const [featuredVoices, setFeaturedVoices] = useState(
-    Array.isArray(initialFeaturedGuests) && initialFeaturedGuests.length ? initialFeaturedGuests : []
+    Array.isArray(initialFeaturedGuests) && initialFeaturedGuests.length ? initialFeaturedGuests : [],
   );
-  const [podcastSponsors, setPodcastSponsors] = useState([]);
-  const [upcomingGuests, setUpcomingGuests] = useState([]);
-  const [podcastBandImageUrl, setPodcastBandImageUrl] = useState("");
-  const [episodeGuests, setEpisodeGuests] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [podcastSponsors, setPodcastSponsors] = useState(
+    hasInitialSponsors ? initialSponsors : [],
+  );
+  const [upcomingGuests, setUpcomingGuests] = useState(
+    hasInitialUpcoming ? initialUpcomingGuests : [],
+  );
+  const [podcastBandImageUrl, setPodcastBandImageUrl] = useState(heroBandFromServer);
+  const [episodeGuests, setEpisodeGuests] = useState(
+    hasInitialEpisodeGuests ? initialEpisodeGuests : [],
+  );
+  const [loading, setLoading] = useState(() => !hasInitialBundle && !isDevBuild);
   const [bundleNote, setBundleNote] = useState("");
   const [episodeFetchError, setEpisodeFetchError] = useState(() => {
     if (Array.isArray(initialEpisodes) && initialEpisodes.length) return "";
     return humanizePodcastBundleError(initialBundleMeta?.error);
   });
   const [podcastSponsorBillingReady, setPodcastSponsorBillingReady] = useState(true);
-  const [podcastSponsorBillingMissingEnv, setPodcastSponsorBillingMissingEnv] = useState([]);
 
   const [applyOpen, setApplyOpen] = useState(false);
   const [sponsorFlowOpen, setSponsorFlowOpen] = useState(false);
@@ -64,15 +95,17 @@ export default function PodcastsLandingPage({
   }, [searchParams]);
 
   useEffect(() => {
+    if (initialBundleMeta?.degraded) {
+      setBundleNote(
+        "Fewer than five episodes in the curated strip matched the official playlist, or YouTube data was unavailable. Check API keys, playlist ID, and admin include/exclude rules.",
+      );
+    }
+  }, [initialBundleMeta?.degraded]);
+
+  useEffect(() => {
     let cancelled = false;
-    (async () => {
-      const bundle = await fetchPodcastRecentBundle();
-      const [sp, eg, upcomingRes] = await Promise.all([
-        listPodcastSponsorsCatalog(supabase),
-        listPodcastEpisodeGuests(supabase),
-        fetch("/api/podcasts/upcoming", { credentials: "include", cache: "no-store" }).then((r) => r.json().catch(() => ({}))),
-      ]);
-      if (cancelled) return;
+
+    const applyBundle = (bundle) => {
       const nextEpisodes = Array.isArray(bundle.episodes) ? bundle.episodes : [];
       if (bundle.ok && nextEpisodes.length) {
         setEpisodeFetchError("");
@@ -86,7 +119,7 @@ export default function PodcastsLandingPage({
         if (Array.isArray(bundle.featuredGuests) && bundle.featuredGuests.length) {
           setFeaturedVoices(bundle.featuredGuests);
         }
-      } else {
+      } else if (!hasInitialBundle) {
         setEpisodes((prev) => (Array.isArray(prev) && prev.length ? prev : nextEpisodes));
         setEpisodeFetchError(
           humanizePodcastBundleError(bundle.error) || "Episodes could not be refreshed.",
@@ -94,33 +127,58 @@ export default function PodcastsLandingPage({
       }
       if (bundle?.degraded || initialBundleMeta?.degraded) {
         setBundleNote(
-          "Fewer than five episodes in the curated strip matched the official playlist, or YouTube data was unavailable. Check API keys, playlist ID, and admin include/exclude rules."
+          "Fewer than five episodes in the curated strip matched the official playlist, or YouTube data was unavailable. Check API keys, playlist ID, and admin include/exclude rules.",
         );
-      } else {
+      } else if (!initialBundleMeta?.degraded) {
         setBundleNote("");
       }
-      setPodcastSponsors(Array.isArray(sp) ? sp : []);
-      setEpisodeGuests(eg);
-      const ug = Array.isArray(upcomingRes?.guests) ? upcomingRes.guests : [];
-      setUpcomingGuests(
-        ug.map((r) => ({
-          id: r.id,
-          slug: String(r.id || ""),
-          name: r.name || "Guest",
-          title: [String(r.role_title || "").trim(), String(r.organization || "").trim()].filter(Boolean).join(" · ") || "Upcoming guest",
-          bio:
-            [String(r.short_description || "").trim(), String(r.episode_topic || "").trim()].filter(Boolean).join(" — ") ||
-            "Scheduled conversation — details will be announced soon.",
-          avatar_url: String(r.profile_image_url || "").trim(),
-          upcoming: true,
-        })),
-      );
+    };
+
+    (async () => {
+      const extrasPromises = [];
+      if (!hasInitialSponsors) {
+        extrasPromises.push(
+          listPodcastSponsorsCatalog(supabase).then((sp) => ({ sponsors: Array.isArray(sp) ? sp : [] })),
+        );
+      }
+      if (!hasInitialEpisodeGuests) {
+        extrasPromises.push(
+          listPodcastEpisodeGuests(supabase).then((eg) => ({ episodeGuests: eg })),
+        );
+      }
+      if (!hasInitialUpcoming) {
+        extrasPromises.push(
+          fetch("/api/podcasts/upcoming", { credentials: "include" })
+            .then((r) => r.json().catch(() => ({})))
+            .then((upcomingRes) => ({
+              upcomingGuests: mapUpcomingApiGuests(upcomingRes?.guests),
+            })),
+        );
+      }
+
+      const bundlePromise = hasInitialBundle
+        ? fetchPodcastRecentBundle({ background: true })
+        : fetchPodcastRecentBundle();
+
+      const [bundle, ...extrasResults] = await Promise.all([
+        bundlePromise,
+        ...extrasPromises,
+      ]);
+      if (cancelled) return;
+
+      applyBundle(bundle);
+      for (const part of extrasResults) {
+        if (part?.sponsors) setPodcastSponsors(part.sponsors);
+        if (part?.episodeGuests) setEpisodeGuests(part.episodeGuests);
+        if (part?.upcomingGuests) setUpcomingGuests(part.upcomingGuests);
+      }
       setLoading(false);
     })();
+
     return () => {
       cancelled = true;
     };
-  }, [supabase, initialBundleMeta?.degraded]);
+  }, [supabase, hasInitialBundle, hasInitialSponsors, hasInitialEpisodeGuests, hasInitialUpcoming, initialBundleMeta?.degraded]);
 
   useEffect(() => {
     const root = document.querySelector("main.topApp.appShell--podcast");
@@ -133,8 +191,9 @@ export default function PodcastsLandingPage({
   }, [podcastBandImageUrl]);
 
   useEffect(() => {
+    if (heroBandFromServer) return undefined;
     let cancelled = false;
-    fetch("/api/page-images?pageKey=podcasts&sectionKey=hero-band", { cache: "no-store" })
+    fetch("/api/page-images?pageKey=podcasts&sectionKey=hero-band")
       .then((res) => res.json())
       .then((body) => {
         if (cancelled) return;
@@ -145,7 +204,7 @@ export default function PodcastsLandingPage({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [heroBandFromServer]);
 
   useEffect(() => {
     let cancelled = false;
@@ -155,12 +214,10 @@ export default function PodcastsLandingPage({
         if (cancelled) return;
         const ready = !!body?.podcastSponsorCheckout;
         setPodcastSponsorBillingReady(ready);
-        setPodcastSponsorBillingMissingEnv(Array.isArray(body?.podcastSponsorMissingEnv) ? body.podcastSponsorMissingEnv : []);
       })
       .catch(() => {
         if (!cancelled) {
           setPodcastSponsorBillingReady(false);
-          setPodcastSponsorBillingMissingEnv([]);
         }
       });
     return () => {
@@ -271,10 +328,7 @@ export default function PodcastsLandingPage({
           </div>
           {!podcastSponsorBillingReady ? (
             <p className="podcastMuted" role="status">
-              Podcast sponsor checkout is not fully configured for this environment.
-              {podcastSponsorBillingMissingEnv.length
-                ? ` Missing: ${podcastSponsorBillingMissingEnv.join(", ")}.`
-                : ""}
+              Podcast sponsor tiers use the in-page demo checkout for now. Membership Support and Pro use live Stripe when enabled on Profile.
             </p>
           ) : null}
         </section>

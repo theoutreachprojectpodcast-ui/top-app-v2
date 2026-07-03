@@ -1,0 +1,148 @@
+/* Shared organization logo — one circular frame, per-mark matte color via inline styles. */
+
+.organizationLogo {
+  --org-logo-size: 96px;
+  display: inline-flex;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.organizationLogo--xs {
+  --org-logo-size: 52px;
+}
+
+.organizationLogo--sm {
+  --org-logo-size: 72px;
+}
+
+.organizationLogo--md {
+  --org-logo-size: 80px;
+}
+
+.organizationLogo--card {
+  --org-logo-size: 96px;
+}
+
+.organizationLogo--profile {
+  --org-logo-size: 88px;
+}
+
+.organizationLogo--lg {
+  --org-logo-size: 144px;
+}
+
+.organizationLogo--banner {
+  --org-logo-size: 72px;
+}
+
+.organizationLogo__frame {
+  width: var(--org-logo-size);
+  height: var(--org-logo-size);
+  aspect-ratio: 1 / 1;
+  border-radius: 9999px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--org-logo-bg, #f8fafc);
+  border: 1px solid color-mix(in srgb, var(--org-logo-border, var(--color-border-subtle)) 88%, transparent);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--color-shadow, #000) 22%, transparent);
+}
+
+/* Sponsor surfaces: logo only — no decorative outer ring or drop shadow */
+.organizationLogo__frame--minimal,
+.sponsorPremiumCard .organizationLogo__frame,
+.sponsorProfilePageRoot .organizationLogo__frame,
+.homeSponsorBannerSlot .organizationLogo__frame {
+  border: none;
+  box-shadow: none;
+}
+
+.organizationLogo--onDark .organizationLogo__frame:not(.organizationLogo__frame--matte) {
+  background: #0a100e;
+}
+
+.organizationLogo--onDark .organizationLogo__frame:not(.organizationLogo__frame--minimal) {
+  border-color: color-mix(in srgb, #ffffff 18%, transparent);
+}
+
+.organizationLogo--page .organizationLogo__frame:not(.organizationLogo__frame--matte) {
+  background: var(--color-bg-card, #f8fafc);
+  border-color: var(--color-border, rgba(0, 0, 0, 0.12));
+}
+
+.organizationLogo__inset {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.organizationLogo__img {
+  width: 100%;
+  height: 100%;
+  object-position: center center;
+  box-sizing: border-box;
+  display: block;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  filter: none;
+  flex-shrink: 0;
+}
+
+.organizationLogo__img--contain {
+  object-fit: contain;
+}
+
+.organizationLogo__img--cover {
+  object-fit: cover;
+}
+
+.organizationLogo__fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: clamp(0.75rem, 22%, 1.35rem);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  background: color-mix(in srgb, var(--color-bg-muted) 72%, var(--color-bg-elevated) 28%);
+  user-select: none;
+}
+
+.organizationLogo__fallbackIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: color-mix(in srgb, var(--color-bg-muted) 72%, var(--color-bg-elevated) 28%);
+}
+
+.trustedResourceCard__logoSlot {
+  margin-top: -52px;
+  position: relative;
+  z-index: 3;
+}
+
+.trustedDetailHero__logoSlot {
+  position: absolute;
+  left: var(--ds-space-5, 20px);
+  bottom: -44px;
+  z-index: 2;
+}
+
+.sponsorPremiumLogoShell {
+  width: var(--org-logo-size, 144px);
+  height: var(--org-logo-size, 144px);
+}
+
+.sponsorProfileLogoShell.organizationLogo {
+  --org-logo-size: 88px;
+}

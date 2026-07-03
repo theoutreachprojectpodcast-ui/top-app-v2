@@ -2,7 +2,7 @@
 
 ## Data model
 
-- WorkOS (and demo) users map to **`torp_profiles`** via the server. Display name, bio, identity fields, and sponsor metadata are persisted through **`PATCH /api/me/profile`**.
+- WorkOS (and demo) users map to **`top_profiles`** via the server. Display name, bio, identity fields, and sponsor metadata are persisted through **`PATCH /api/me/profile`**.
 - **`useProfileData`** (via `ProfileDataProvider`) owns profile state for the whole client session. **`persistProfile`** sends the API patch for WorkOS accounts and updates local React state from the JSON response.
 
 ## Completion checklist

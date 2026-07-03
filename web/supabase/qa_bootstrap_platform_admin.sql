@@ -1,7 +1,7 @@
 -- Grant platform admin on QA / staging after the user has signed in at least once.
 -- Replace the email before running. Safe to re-run (idempotent for same email).
 
--- update public.torp_profiles
+-- update public.top_profiles
 -- set
 --   platform_role = 'admin',
 --   admin_access_enabled = true,

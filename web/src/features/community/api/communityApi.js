@@ -10,7 +10,7 @@ import {
 
 const POSTS_TABLE = "community_posts";
 
-/** True when `id` is a torp_profiles row id (UUID) — use author_profile_id in queries. */
+/** True when `id` is a top_profiles row id (UUID) — use author_profile_id in queries. */
 export function isAuthorProfileLookupKey(id) {
   const s = String(id || "").trim();
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(s);

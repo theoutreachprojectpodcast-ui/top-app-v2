@@ -1,5 +1,6 @@
 "use client";
 
+import AdminPanelShell from "@/components/admin/AdminPanelShell";
 import { useState } from "react";
 import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
 
@@ -87,9 +88,13 @@ export default function AdminNonprofitPanel() {
   }
 
   return (
-    <div className="adminPanel">
-      <h2 style={{ marginTop: 0 }}>Directory nonprofit</h2>
-      <p className="adminMuted">Loads canonical directory row + enrichment (`nonprofit_directory_enrichment`). Saves upsert by EIN.</p>
+    <AdminPanelShell panelId="nonprofits" error={error} message={status}>
+      <div className="adminToolbar">
+        <a className="btnPrimary" href="/admin/trusted">
+          Add trusted resource manually
+        </a>
+      </div>
+      <h3 className="adminBlockTitle adminMt4">EIN / IRS lookup</h3>
       <div className="adminToolbar">
         <label className="fieldLabel" htmlFor="ein-q">
           EIN
@@ -106,19 +111,13 @@ export default function AdminNonprofitPanel() {
         </button>
       </div>
       {directory ? (
-        <p className="adminMuted" style={{ marginBottom: "12px" }}>
+        <p className="adminMuted">
           Directory name:{" "}
           <strong>
             {String(directory.org_name || directory.name || directory.NAME || directory.organization_name || "—")}
           </strong>
         </p>
       ) : null}
-      {error ? (
-        <p role="alert" style={{ color: "var(--color-danger, #b42318)" }}>
-          {error}
-        </p>
-      ) : null}
-      {status ? <p style={{ color: "var(--color-success, #166534)" }}>{status}</p> : null}
       {ein ? (
         <div className="adminFieldStack">
           {FIELDS.map(([key, label]) => (
@@ -139,6 +138,6 @@ export default function AdminNonprofitPanel() {
           </button>
         </div>
       ) : null}
-    </div>
+    </AdminPanelShell>
   );
 }

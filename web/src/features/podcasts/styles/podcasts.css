@@ -30,6 +30,14 @@
   --color-ring: rgba(111, 194, 255, 0.42);
 }
 
+/* Portaled footer dock (Capacitor) sits on `body` — mirror surface tokens on `html`. */
+html[data-use-podcast-theme="true"] {
+  --color-bg-secondary: #0b1422;
+  --color-surface-card: #0f1726;
+  --color-surface-card-deep: #111d30;
+  --color-border-soft: rgba(148, 171, 210, 0.24);
+}
+
 .appShell--podcast::before {
   content: "";
   position: fixed;
@@ -82,7 +90,13 @@
   --header-floating-offset: 12px;
   /* Action row at top (main-app layout); logo band sits below it. */
   --podcast-topbar-stack-height: 52px;
-  --podcast-header-brand-band: clamp(148px, 26vw, 228px);
+  /* Header wordmark scale (1.75 = 70% of prior 2.5 web size). */
+  --podcast-brand-logo-scale: 1.75;
+  --podcast-header-brand-band: clamp(
+    calc(148px * var(--podcast-brand-logo-scale)),
+    calc(26vw * var(--podcast-brand-logo-scale)),
+    calc(228px * var(--podcast-brand-logo-scale))
+  );
   --podcast-header-chrome-height: calc(
     env(safe-area-inset-top, 0px) + var(--header-floating-offset, 12px) + var(--podcast-topbar-stack-height) +
       var(--podcast-header-brand-band)
@@ -136,15 +150,25 @@
   border: 0;
   background: transparent;
   box-shadow: none;
+  align-items: center;
+  text-align: center;
+}
+
+.appShell--podcast .footerInner__badge {
+  color: color-mix(in srgb, #ffb08f 82%, #e8f0ff 18%);
+  border-color: color-mix(in srgb, #ff7a43 42%, rgba(148, 171, 210, 0.28));
+  background: color-mix(in srgb, #ff7a43 16%, rgba(15, 23, 38, 0.82));
 }
 
 .appShell--podcast .footerNote,
 .appShell--podcast .brandName {
   color: #e8f0ff;
+  text-align: center;
 }
 
 .appShell--podcast .footerNote {
   color: color-mix(in srgb, #a8b8d3 28%, #e8f0ff 72%);
+  text-align: center;
 }
 
 .appShell--podcast .topbar {
@@ -208,8 +232,9 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
   background: none !important;
 }
 
-/* Pill dock container — match main app `.bottomNav` chrome (see `top-app.css` + `home-mobile.css`). */
-.appShell--podcast .footerDock .bottomNav.bottomNav--withIcons {
+/* Pill dock container — match main app `.bottomNav` chrome (see `top-app.css` + `home-mobile.css`).
+   `html[data-use-podcast-theme]` covers Capacitor portaled dock (body child, outside `.appShell--podcast`). */
+:is(html[data-use-podcast-theme="true"], .appShell--podcast) .footerDock .bottomNav.bottomNav--withIcons {
   background: linear-gradient(
     165deg,
     color-mix(in srgb, var(--color-surface-card, #0f1726) 94%, #ffffff 6%) 0%,
@@ -222,23 +247,23 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
     inset 0 1px 0 color-mix(in srgb, #ffffff 7%, transparent);
 }
 
-.appShell--podcast .navItem--dockCol .navItemGlyph {
+:is(html[data-use-podcast-theme="true"], .appShell--podcast) .footerDock .navItem--dockCol .navItemGlyph {
   color: #e7efff;
   opacity: 0.95;
 }
 /* Bottom nav dock (fixed): match home gradient + glass, not opaque bar */
-.appShell--podcast .footerDockBackdrop {
+:is(html[data-use-podcast-theme="true"], .appShell--podcast) .footerDockBackdrop {
   background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--color-bg-secondary) 97%, transparent));
   border-top: 0;
 }
-.appShell--podcast .footerDock {
+:is(html[data-use-podcast-theme="true"], .appShell--podcast) .footerDock {
   background: transparent;
   border-top: 0;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
 
-.appShell--podcast .navItem {
+:is(html[data-use-podcast-theme="true"], .appShell--podcast) .footerDock .navItem {
   color: #e7efff;
   border-color: rgba(111, 194, 255, 0.34);
   background: color-mix(in srgb, rgba(14, 25, 41, 0.55) 100%, transparent);
@@ -251,7 +276,7 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
     transform 0.14s ease;
 }
 
-.appShell--podcast .navItem.isActive {
+:is(html[data-use-podcast-theme="true"], .appShell--podcast) .footerDock .navItem.isActive {
   color: #fff3ec;
   background: linear-gradient(180deg, rgba(255, 122, 67, 0.38), rgba(255, 95, 69, 0.2));
   border-color: rgba(255, 144, 112, 0.88);
@@ -260,7 +285,7 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
     0 0 0 1px rgba(255, 95, 69, 0.12),
     0 4px 14px rgba(0, 0, 0, 0.2);
 }
-.appShell--podcast .navItem:hover {
+:is(html[data-use-podcast-theme="true"], .appShell--podcast) .footerDock .navItem:hover {
   color: #ffffff;
   border-color: rgba(111, 194, 255, 0.78);
   background: color-mix(in srgb, rgba(20, 36, 58, 0.72) 100%, transparent);
@@ -268,7 +293,7 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
     inset 0 0 0 1px rgba(111, 194, 255, 0.18),
     0 0 0 2px rgba(111, 194, 255, 0.18);
 }
-.appShell--podcast .navItem:focus-visible {
+:is(html[data-use-podcast-theme="true"], .appShell--podcast) .footerDock .navItem:focus-visible {
   outline: none;
   color: #ffffff;
   border-color: rgba(111, 194, 255, 0.85);
@@ -277,10 +302,10 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
     0 0 0 2px rgba(7, 11, 18, 0.95),
     0 0 0 4px rgba(111, 194, 255, 0.38);
 }
-.appShell--podcast .navItem:active {
+:is(html[data-use-podcast-theme="true"], .appShell--podcast) .footerDock .navItem:active {
   transform: scale(0.98);
 }
-.appShell--podcast .navItem.isActive:hover {
+:is(html[data-use-podcast-theme="true"], .appShell--podcast) .footerDock .navItem.isActive:hover {
   border-color: rgba(255, 186, 160, 0.95);
   box-shadow:
     inset 0 0 0 1px rgba(255, 200, 180, 0.28),
@@ -380,8 +405,15 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
 
 @media (min-width: 761px) {
   .appShell--podcast .podcastBrandLogo {
-    max-height: min(clamp(132px, 24vw, 208px), calc(var(--podcast-header-brand-band, 200px) - 12px)) !important;
-    max-width: min(560px, calc(100vw - 48px)) !important;
+    max-height: min(
+      clamp(
+        calc(132px * var(--podcast-brand-logo-scale, 1.75)),
+        calc(24vw * var(--podcast-brand-logo-scale, 1.75)),
+        calc(208px * var(--podcast-brand-logo-scale, 1.75))
+      ),
+      calc(var(--podcast-header-brand-band, 500px) - 12px)
+    ) !important;
+    max-width: min(calc(560px * var(--podcast-brand-logo-scale, 1.75)), calc(100vw - 48px)) !important;
     width: auto;
   }
 }
@@ -430,7 +462,11 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
     flex-direction: column;
     position: relative;
     --podcast-topbar-stack-height: 48px;
-    --podcast-header-brand-band: clamp(120px, 32vw, 180px);
+    --podcast-header-brand-band: clamp(
+      calc(120px * var(--podcast-brand-logo-scale, 1.75)),
+      calc(32vw * var(--podcast-brand-logo-scale, 1.75)),
+      calc(180px * var(--podcast-brand-logo-scale, 1.75))
+    );
   }
 
   .topApp.appShell--podcastRoute .podcastScope {
@@ -818,7 +854,7 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
   justify-items: stretch;
 }
 
-.podcastSponsorsCardGrid > .sponsorPremiumCard.torpListingCard {
+.podcastSponsorsCardGrid > .sponsorPremiumCard.topListingCard {
   height: 100%;
   width: 100%;
   min-height: 0;
@@ -832,6 +868,36 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
 .podcastSponsorsCardGrid > .sponsorPremiumCard .sponsorPremiumBrand {
   flex: 1 1 auto;
   min-height: 0;
+}
+
+.podcastSponsorsCardGrid > .sponsorPremiumCard .sponsorPremiumBrandIdentity {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.podcastSponsorsCardGrid > .sponsorPremiumCard .sponsorPremiumTitleBlock {
+  width: 100%;
+  text-align: center;
+}
+
+.podcastSponsorsCardGrid > .sponsorPremiumCard .sponsorPremiumMetaChips,
+.podcastSponsorsCardGrid > .sponsorPremiumCard .sponsorPremiumLocationChips {
+  justify-content: center;
+}
+
+.podcastSponsorsCardGrid > .sponsorPremiumCard .sponsorPremiumTagline--card {
+  text-align: center;
+}
+
+.podcastSponsorsCardGrid > .sponsorPremiumCard .sponsorPremiumFooter {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.podcastSponsorsCardGrid > .sponsorPremiumCard .sponsorPremiumSocial {
+  justify-content: center;
 }
 
 @media (max-width: 720px) {
@@ -1594,9 +1660,9 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
 
 @media (max-width: 760px) {
   .appShell--podcast .footerDock .bottomNav.bottomNav--withIcons.bottomNav--mobileDock {
-    margin-inline: max(var(--content-gutter, 16px), 11px);
-    width: calc(100% - 2 * max(var(--content-gutter, 16px), 11px));
-    max-width: calc(100% - 2 * max(var(--content-gutter, 16px), 11px));
+    margin-inline: 0;
+    width: 100%;
+    max-width: 100%;
     border-radius: 20px;
     padding: 8px 10px;
     box-shadow:

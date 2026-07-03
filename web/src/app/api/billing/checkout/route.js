@@ -15,10 +15,12 @@ import {
   safeAppReturnPath,
   stripeMemberRecurringConfigured,
   stripeSponsorSubscriptionConfigured,
+  supportSubscriptionPriceId,
 } from "@/lib/billing/stripeConfig";
 import { getSponsorOpportunityById } from "@/lib/billing/sponsorOpportunities";
 import { isUpgrade, membershipTierRank } from "@/lib/billing/membershipTierOrder";
 import { tierFromProfileRow } from "@/lib/billing/stripeProfileSync";
+import { validateMembershipStripePrice } from "@/lib/billing/stripePriceValidation";
 
 export async function POST(request) {
   const guard = guardMutation(request, { rateKey: "billing-checkout", limit: 20 });
@@ -68,7 +70,17 @@ export async function POST(request) {
     }
   }
 
-  if (tier === "sponsor") {
+  if (tier === "access") {
+    if (!supportSubscriptionPriceId()) {
+      return Response.json(
+        {
+          error: "billing_not_configured",
+          message: "Set STRIPE_PRICE_SUPPORT_YEARLY (or legacy STRIPE_PRICE_ACCESS_YEARLY) for Support Membership checkout.",
+        },
+        { status: 503 },
+      );
+    }
+  } else if (tier === "sponsor") {
     if (!stripeSponsorSubscriptionConfigured()) {
       return Response.json(
         { error: "sponsor_billing_not_configured", message: "Set STRIPE_PRICE_SPONSOR_MONTHLY for sponsor subscription checkout." },
@@ -79,7 +91,7 @@ export async function POST(request) {
     return Response.json(
       {
         error: "billing_not_configured",
-        message: "Set STRIPE_SECRET_KEY, STRIPE_PRICE_SUPPORT_MONTHLY, and STRIPE_PRICE_PRO_MONTHLY (or STRIPE_PRICE_MEMBER_MONTHLY).",
+        message: "Set STRIPE_SECRET_KEY, STRIPE_PRICE_SUPPORT_YEARLY, and STRIPE_PRICE_PRO_YEARLY (or monthly fallbacks).",
       },
       { status: 503 },
     );
@@ -91,6 +103,20 @@ export async function POST(request) {
   }
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+  const priceValidation = await validateMembershipStripePrice(stripe, tier, priceId);
+  if (!priceValidation.ok) {
+    console.error("[top] CRITICAL checkout blocked — membership price validation failed", priceValidation);
+    return Response.json(
+      {
+        error: priceValidation.code || "price_validation_failed",
+        message: priceValidation.message || "Membership checkout is unavailable due to a pricing configuration error.",
+        tier,
+      },
+      { status: 503 },
+    );
+  }
+
   const base = requestOriginForStripeRedirects(request);
   const returnPath = safeAppReturnPath(body.returnPath || "", "/profile");
   const customerId = profileRow.stripe_customer_id ? String(profileRow.stripe_customer_id).trim() : null;
@@ -123,10 +149,17 @@ export async function POST(request) {
     membership_tier: tier,
     checkout_kind: "membership_subscription",
     ...(sponsorPackageId ? { sponsor_package_id: sponsorPackageId } : {}),
-    ...(profileId ? { torp_profile_id: profileId } : {}),
+    ...(profileId ? { top_profile_id: profileId } : {}),
   };
 
   try {
+    console.info("[top] Stripe checkout create", {
+      workosUserId: user.id,
+      tier,
+      priceId,
+      returnPath,
+      profileId: profileId || null,
+    });
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       customer: customerId || undefined,
@@ -142,11 +175,16 @@ export async function POST(request) {
     });
 
     if (session.url) {
+      console.info("[top] Stripe checkout session", {
+        workosUserId: user.id,
+        tier,
+        sessionId: session.id,
+      });
       return Response.json({ url: session.url });
     }
     return Response.json({ error: "no_checkout_url" }, { status: 500 });
   } catch (e) {
-    console.error("[torp] Stripe checkout", e);
+    console.error("[top] Stripe checkout", e);
     return Response.json({ error: "stripe_error", message: e.message }, { status: 500 });
   }
 }

@@ -1,6 +1,6 @@
 /** Survives TopApp remounts (e.g. `useSearchParams` + Suspense) when opening profile edit from deep links. */
-export const PROFILE_EDIT_PENDING_KEY = "torp-profile-edit-pending";
-export const PROFILE_EDIT_OPEN_KEY = "torp-profile-edit-open";
+export const PROFILE_EDIT_PENDING_KEY = "top-profile-edit-pending";
+export const PROFILE_EDIT_OPEN_KEY = "top-profile-edit-open";
 
 function storageSet(key, value) {
   if (typeof sessionStorage === "undefined") return;
@@ -32,7 +32,10 @@ export function clearProfileEditOpen() {
 export function isProfileEditOpen() {
   if (typeof sessionStorage === "undefined") return false;
   try {
-    return sessionStorage.getItem(PROFILE_EDIT_OPEN_KEY) === "1";
+    return (
+      sessionStorage.getItem(PROFILE_EDIT_OPEN_KEY) === "1" ||
+      sessionStorage.getItem("torp-profile-edit-open") === "1"
+    );
   } catch {
     return false;
   }
@@ -55,7 +58,9 @@ export function markPendingProfileEdit(payload = {}) {
 export function peekPendingProfileEdit() {
   if (typeof sessionStorage === "undefined") return null;
   try {
-    const raw = sessionStorage.getItem(PROFILE_EDIT_PENDING_KEY);
+    const raw =
+      sessionStorage.getItem(PROFILE_EDIT_PENDING_KEY) ||
+      sessionStorage.getItem("torp-profile-edit-pending");
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (!parsed || typeof parsed !== "object") return null;

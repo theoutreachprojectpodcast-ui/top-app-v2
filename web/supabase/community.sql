@@ -42,3 +42,8 @@ create table if not exists public.community_follows (
 comment on table public.community_posts is 'Moderation-first community stories; only approved rows belong in the public feed.';
 comment on column public.community_posts.status is 'draft | submitted | under_review | approved | rejected';
 
+-- Deny direct PostgREST access; community via /api/community/* + service role.
+alter table public.community_posts enable row level security;
+alter table public.community_post_likes enable row level security;
+alter table public.community_follows enable row level security;
+

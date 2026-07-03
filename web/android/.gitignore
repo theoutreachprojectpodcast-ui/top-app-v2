@@ -56,6 +56,9 @@ captures/
 # Uncomment the following lines if you do not want to check your keystore files in.
 #*.jks
 #*.keystore
+keystore.properties
+keystores/
+KEYSTORE_BACKUP_README.txt
 
 # External native build folder generated in Android Studio 2.2 and later
 .externalNativeBuild
@@ -95,7 +98,6 @@ capacitor-cordova-android-plugins
 # Copied web assets
 app/src/main/assets/public
 
-# Generated Config files
-app/src/main/assets/capacitor.config.json
+# Generated Config files (capacitor.config.json is committed — production server.url required for store builds)
 app/src/main/assets/capacitor.plugins.json
 app/src/main/res/xml/config.xml

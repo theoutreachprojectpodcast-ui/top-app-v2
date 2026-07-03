@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#22a52b</color>
+    <color name="colorPrimaryDark">#188a20</color>
+    <color name="colorAccent">#22a52b</color>
+    <!-- Warm sunset tone — matches mobile splash hero background letterboxing -->
+    <color name="splash_background">#3A200C</color>
+</resources>

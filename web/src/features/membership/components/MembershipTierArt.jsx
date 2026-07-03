@@ -6,30 +6,46 @@ import { MEMBERSHIP_TIER_KEYS } from "@/features/membership/membershipTiers";
 /**
  * Distinct vector treatments per tier — swap assets later without changing layout contracts.
  */
-export default function MembershipTierArt({ tierId, className = "" }) {
+export default function MembershipTierArt({ tierId, className = "", variant = "default" }) {
   const uid = useId().replace(/:/g, "");
   const id = String(tierId || "").toLowerCase();
-  const common = { className: `membershipTierArtSvg ${className}`.trim(), viewBox: "0 0 72 72", fill: "none", xmlns: "http://www.w3.org/2000/svg", "aria-hidden": true };
+  const isBadge = variant === "badge";
+  const common = {
+    className: `membershipTierArtSvg ${isBadge ? "membershipTierArtSvg--badge" : ""} ${className}`.trim(),
+    viewBox: "0 0 72 72",
+    fill: "none",
+    xmlns: "http://www.w3.org/2000/svg",
+    "aria-hidden": true,
+  };
 
   if (id === MEMBERSHIP_TIER_KEYS.NONE) {
     const g = `mta-free-${uid}`;
+    const ringOpacity = isBadge ? 0.95 : 0.55;
+    const ringEndOpacity = isBadge ? 0.65 : 0.2;
     return (
       <svg {...common}>
         <defs>
           <linearGradient id={`${g}-a`} x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="var(--color-accent)" stopOpacity="0.55" />
-            <stop offset="100%" stopColor="var(--color-accent)" stopOpacity="0.2" />
+            <stop offset="0%" stopColor="var(--color-accent)" stopOpacity={ringOpacity} />
+            <stop offset="100%" stopColor="var(--color-accent)" stopOpacity={ringEndOpacity} />
           </linearGradient>
         </defs>
-        <circle cx="36" cy="36" r="28" stroke={`url(#${g}-a)`} strokeWidth="1.4" />
+        <circle cx="36" cy="36" r="28" stroke={`url(#${g}-a)`} strokeWidth={isBadge ? 1.6 : 1.4} />
         <path
           d="M36 20v32M22 36h28"
           stroke="var(--color-accent)"
-          strokeWidth="1.2"
+          strokeWidth={isBadge ? 1.35 : 1.2}
           strokeLinecap="round"
-          opacity="0.85"
+          opacity={isBadge ? 1 : 0.85}
         />
-        <circle cx="36" cy="36" r="6" stroke="var(--color-text-secondary)" strokeWidth="1" opacity="0.5" />
+        <circle
+          cx="36"
+          cy="36"
+          r="6"
+          stroke={isBadge ? "var(--color-accent-hover)" : "var(--color-text-secondary)"}
+          strokeWidth="1"
+          opacity={isBadge ? 0.75 : 0.5}
+        />
       </svg>
     );
   }

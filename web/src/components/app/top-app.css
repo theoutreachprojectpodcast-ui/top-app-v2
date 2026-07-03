@@ -14,25 +14,37 @@
   --home-podcasts-image: url("/home/home-podcast-mic.png");
   --topapp-mobile-atmosphere-image-light: url("/home/app-page-background-light-mobile.png?v=3");
   --topapp-mobile-atmosphere-image-dark: url("/home/app-page-background-dark.png?v=15");
-  min-height: 100vh;
+  min-height: 100dvh;
+  min-height: 100svh;
   background: transparent;
   color: var(--color-text-primary);
-  padding-bottom: calc(186px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: var(--top-bottom-nav-reserve);
 }
 
-/* Home desktop: shell inset tracks wordmark height — avoid excess gap before Mission partners. */
+/* Home desktop: wordmark +75% vs prior compact home sizing. */
 @media (min-width: 761px) {
   main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) {
-    --header-floating-offset: 12px;
-    --header-floating-height: clamp(298px, 43.2vw, 394px);
-    --header-fade-height: 34px;
+    --header-floating-offset: 8px;
+    --header-floating-height: clamp(350px, 49vw, 476px);
+    --header-fade-height: 28px;
+    --home-logo-content-gap: 14px;
+  }
+
+  main.topApp[data-page-atmosphere="home"] .headerBrandStack {
+    max-width: min(1092px, 92vw);
   }
 
   main.topApp[data-page-atmosphere="home"] .shell.shell--home {
-    gap: var(--ds-section-gap, 24px);
+    gap: var(--ds-space-4, 16px);
     padding-top: calc(
-      var(--header-floating-offset) + var(--header-floating-height) + var(--header-fade-height) + 8px
+      var(--header-floating-offset) + var(--header-floating-height) + var(--header-fade-height) +
+        var(--home-logo-content-gap, 14px)
     );
+  }
+
+  main.topApp[data-page-atmosphere="home"] img.brandMarkImg--header:not(.podcastBrandLogo) {
+    max-height: clamp(350px, 49vw, 476px);
+    max-width: min(1260px, 88vw);
   }
 }
 
@@ -598,6 +610,16 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topba
 .topbarActionsCluster--start {
   justify-content: flex-start;
 }
+.downloadMobileAppBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.mobileAppLanding__actions {
+  margin-top: 16px;
+  margin-bottom: 8px;
+}
 .subpageAuthActionsPlaceholder {
   min-width: 88px;
   min-height: 42px;
@@ -831,6 +853,14 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topba
   background: linear-gradient(180deg, var(--color-surface-card) 0%, var(--color-surface-card-deep) 100%);
   box-shadow: var(--shadow-card);
   z-index: 130;
+  overflow: hidden;
+}
+.headerNotificationDropdown--mobileSheet,
+.headerAccountDropdown--mobileSheet {
+  display: flex;
+  flex-direction: column;
+  border-radius: 14px;
+  border: 1px solid var(--color-border-subtle);
   overflow: hidden;
 }
 .headerNotificationDropdown__head {
@@ -1387,6 +1417,60 @@ span.headerBrandMarkFallback {
   max-width: 62ch;
 }
 
+.accountSettingsDangerZone {
+  border-color: var(--color-danger-border);
+  background: color-mix(in srgb, var(--color-danger-surface) 55%, var(--color-surface) 45%);
+}
+
+.accountSettingsDangerZone h3 {
+  color: var(--color-danger-text);
+}
+
+.accountSettingsDangerZone__ack {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 12px 0 0;
+  font-size: var(--text-body-sm);
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.accountSettingsDangerZone__ack input {
+  margin-top: 3px;
+}
+
+.accountSettingsDangerZone__confirmLabel {
+  display: block;
+  margin-top: 12px;
+}
+
+.accountSettingsDangerZone__confirmInput {
+  display: block;
+  margin-top: 8px;
+  width: 100%;
+  max-width: 220px;
+}
+
+.accountSettingsDangerZone__deleteBtn {
+  color: var(--color-danger-text);
+  border-color: var(--color-danger-border);
+  background: var(--color-danger-surface);
+}
+
+.accountSettingsDangerZone__deleteBtn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-danger-surface) 70%, var(--color-error) 30%);
+}
+
+.accountSettingsDangerZone__deleteBtn:disabled {
+  opacity: 0.55;
+}
+
+.accountSettingsDangerZone__support {
+  margin-top: 12px;
+  margin-bottom: 0;
+}
+
 /* Guest / signed-out membership card: even vertical rhythm, title → copy → CTA */
 .membershipAtAGlance--profileCompact:not(:has(.membershipCurrentProfileRow)) {
   display: grid;
@@ -1776,6 +1860,9 @@ span.headerBrandMarkFallback {
   margin-top: 0;
   margin-bottom: 0;
   padding: 5px 12px 5px 6px;
+  font-size: var(--text-caption);
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 .membershipBadge__art {
   flex-shrink: 0;
@@ -1783,6 +1870,11 @@ span.headerBrandMarkFallback {
   place-items: center;
   width: 26px;
   height: 26px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+}
+.membershipBadge.ds-chip--emphasis .membershipBadge__art {
+  background: color-mix(in srgb, var(--color-accent-hover) 14%, transparent);
 }
 .membershipBadge__art .membershipTierArtSvg {
   width: 22px;
@@ -1791,6 +1883,7 @@ span.headerBrandMarkFallback {
 }
 .membershipBadge__label {
   line-height: 1.25;
+  color: inherit;
 }
 .welcomeActions {
   display: flex;
@@ -2263,7 +2356,7 @@ span.headerBrandMarkFallback {
   font-size: 1rem;
 }
 /* Nonprofit directory result cards: category / org header strip (default listing hero is 92px). */
-#home-directory .torpListingCardHeroWrap {
+#home-directory .topListingCardHeroWrap {
   height: 184px;
 }
 .directoryCategoryHeader__eyebrow {
@@ -3219,11 +3312,13 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 }
 .footerInner {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  flex-wrap: wrap;
-  gap: 20px 32px;
-  padding: 22px 22px 20px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  flex-wrap: nowrap;
+  gap: 10px;
+  padding: 22px 20px 18px;
   border-radius: var(--radius-card);
   border: 1px solid color-mix(in srgb, var(--color-border) 88%, transparent);
   border-top: 1px solid color-mix(in srgb, var(--color-border-strong) 55%, transparent);
@@ -3231,6 +3326,24 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   box-shadow:
     inset 0 1px 0 color-mix(in srgb, #ffffff 55%, transparent),
     0 10px 36px color-mix(in srgb, var(--color-text-primary) 10%, transparent);
+}
+.footerInner__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  max-width: min(36ch, 100%);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  line-height: 1.35;
+  text-transform: uppercase;
+  text-wrap: balance;
+  color: color-mix(in srgb, var(--color-accent-hover, var(--color-accent)) 82%, var(--color-text-primary) 18%);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 34%, var(--color-border-soft));
+  border-radius: 999px;
+  padding: 5px 11px;
+  background: color-mix(in srgb, var(--color-accent-soft) 42%, var(--color-surface-card) 58%);
 }
 :root[data-color-scheme="dark"] .footerInner,
 .dark .footerInner {
@@ -3241,31 +3354,55 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
     0 14px 40px color-mix(in srgb, #000 42%, transparent);
 }
 .siteFooter .brandName {
-  margin: 0 0 10px;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.16em;
-  line-height: 1.25;
-  color: var(--color-text-primary);
-  text-transform: uppercase;
-}
-.footerInner > div:first-child {
-  flex: 1 1 min(320px, 100%);
-  min-width: 0;
-}
-.footerInner > div:first-child .footerNote {
   margin: 0;
+  font-size: clamp(1rem, 2.8vw, 1.15rem);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  color: var(--color-text-primary);
+  text-transform: none;
+  text-align: center;
 }
+.footerInner > .footerNote,
 .footerInner > p.footerNote {
-  flex: 1 1 min(260px, 100%);
+  flex: 0 1 auto;
+  width: 100%;
   max-width: 52ch;
   margin: 0;
-  align-self: center;
+  text-align: center;
 }
-@media (min-width: 761px) {
-  .footerInner > p.footerNote {
-    text-align: right;
-  }
+.footerInner .footerNote p,
+.footerInner .footerNote li,
+.footerInner .footerNote h1,
+.footerInner .footerNote h2,
+.footerInner .footerNote h3 {
+  margin: 0;
+  text-align: center;
+}
+.footerNote--mission {
+  margin-top: 2px;
+}
+.footerNote--tagline {
+  color: color-mix(in srgb, var(--color-text-secondary) 55%, var(--color-text-primary) 45%);
+}
+.footerLegalNav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 2px;
+  width: 100%;
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.footerLegalNav a {
+  color: color-mix(in srgb, var(--color-text-secondary) 55%, var(--color-accent) 45%);
+  text-decoration: none;
+  font-weight: 600;
+}
+.footerLegalNav a:hover {
+  text-decoration: underline;
 }
 .footerNote {
   margin: 0;
@@ -3273,6 +3410,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   font-size: 14px;
   line-height: 1.6;
   font-weight: 500;
+  text-align: center;
 }
 :root[data-color-scheme="dark"] .footerNote,
 .dark .footerNote {
@@ -3321,6 +3459,26 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 .onboardingForm {
   grid-template-columns: 1fr;
   align-items: start;
+}
+.onboardingForm > * {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+.onboardingForm__contribGroup {
+  grid-template-columns: 1fr;
+  gap: var(--ds-space-2, 8px);
+}
+.onboardingForm__notifyGroup {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ds-space-2, 8px);
+}
+@media (min-width: 520px) {
+  .onboardingForm__notifyGroup {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.onboardingForm__sponsorPath {
+  margin-bottom: var(--ds-space-3, 12px);
 }
 
 .modalOverlay {
@@ -3708,7 +3866,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 }
 
 /* Cards in tier grids: stretch with the grid cell and push footer to the bottom of the card */
-.sponsorFeaturedShowcase > .sponsorPremiumCard.torpListingCard {
+.sponsorFeaturedShowcase > .sponsorPremiumCard.topListingCard {
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -3804,13 +3962,10 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   row-gap: 10px;
   align-items: start;
 }
-.sponsorPremiumCard--displayTier-community .sponsorPremiumLogoShell,
-.sponsorPremiumCard--displayTier-impact .sponsorPremiumLogoShell {
-  width: 100%;
+.sponsorPremiumCard--displayTier-community .organizationLogo--lg,
+.sponsorPremiumCard--displayTier-impact .organizationLogo--lg {
+  --org-logo-size: min(108px, 100%);
   max-width: 108px;
-  height: auto;
-  aspect-ratio: 1;
-  max-height: 108px;
   justify-self: start;
 }
 .sponsorPremiumCard--displayTier-community .sponsorPremiumTitleBlock,
@@ -3834,8 +3989,8 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
     justify-items: center;
     text-align: center;
   }
-  .sponsorPremiumCard--displayTier-community .sponsorPremiumLogoShell,
-  .sponsorPremiumCard--displayTier-impact .sponsorPremiumLogoShell {
+  .sponsorPremiumCard--displayTier-community .organizationLogo--lg,
+  .sponsorPremiumCard--displayTier-impact .organizationLogo--lg {
     justify-self: center;
   }
   .sponsorPremiumCard--displayTier-community .sponsorPremiumTitleBlock,
@@ -4346,6 +4501,15 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   background: var(--color-bg-card);
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 18%, transparent);
 }
+.communityModeratorPillLink {
+  color: inherit;
+  font-weight: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.communityModeratorPillLink:hover {
+  color: var(--color-accent-hover);
+}
 .card.communitySection {
   border-color: var(--color-border-strong);
   box-shadow: var(--shadow-card);
@@ -4757,8 +4921,52 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 
 .communitySubmitModalCard {
   width: min(760px, 96vw);
-  max-height: min(92vh, 900px);
+  max-height: min(92dvh, 900px);
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+.communitySubmitModalHead {
+  flex-shrink: 0;
+  padding: var(--ds-space-5, 20px) var(--ds-space-5, 20px) var(--ds-space-3, 12px);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+.communitySubmitModalBody {
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: var(--ds-space-4, 16px) var(--ds-space-5, 20px) var(--ds-space-5, 20px);
+}
+.modalOverlay--communitySubmit {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+.communityStoryPhotoLabel {
+  margin-top: 4px;
+  position: relative;
+}
+.communityStoryPhotoInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.communityStoryPhotoTrigger {
+  justify-self: start;
+  margin-top: 2px;
+}
+.communityStoryPhotoRemove {
+  justify-self: start;
 }
 .communityPostCard {
   border: 1px solid var(--color-border);
@@ -5145,9 +5353,12 @@ html.dark .communityPostBodyGuideSteps li {
   pointer-events: none;
 }
 .communityUploadPreview {
+  display: grid;
+  gap: 10px;
   border: 1px solid var(--color-border-soft);
   border-radius: 12px;
   overflow: hidden;
+  padding: 10px;
 }
 .communityUploadPreview img {
   width: 100%;
@@ -5389,6 +5600,77 @@ html.dark .communityPostBodyGuideSteps li {
   margin-top: 16px;
   padding-top: 14px;
   border-top: 1px solid var(--color-border-soft);
+}
+
+.proMembershipUpgradeCard {
+  margin-top: var(--ds-space-4, 16px);
+}
+.proMembershipUpgradeCard__title {
+  margin: 0 0 8px;
+  font-size: 1.125rem;
+}
+.proMembershipUpgradeCard__lead {
+  margin: 0 0 12px;
+}
+.proMembershipUpgradeCard__benefits {
+  margin: 0 0 12px;
+  padding-left: 1.1rem;
+  color: var(--color-text-muted);
+  font-size: var(--text-body-sm, 0.875rem);
+}
+.proMembershipUpgradeCard__price {
+  margin: 0 0 12px;
+}
+.proMembershipUpgradeCard__actions {
+  gap: 10px;
+}
+
+.sponsorOpportunitiesSection__list {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+.sponsorOpportunitiesSection__item {
+  padding: 14px;
+  border-radius: var(--radius-md, 12px);
+  border: 1px solid var(--color-border-soft);
+  background: var(--color-surface-soft);
+}
+.sponsorOpportunitiesSection__itemHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 12px;
+  margin-bottom: 6px;
+}
+.sponsorOpportunitiesSection__meta {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+.sponsorOpportunitiesSection__footer {
+  margin-top: 16px;
+  gap: 10px;
+}
+
+@media (max-width: 520px) {
+  .membershipBillingCenter__actions .btnPrimary,
+  .membershipBillingCenter__actions .btnSoft,
+  .profileMembershipCheckout .btnPrimary,
+  .profileMembershipCheckout .btnSoft,
+  .proMembershipUpgradeCard__actions .btnPrimary,
+  .proMembershipUpgradeCard__actions .btnSoft {
+    width: 100%;
+    min-height: 44px;
+  }
+  .membershipBillingCenter__pmItem,
+  .membershipBillingCenter__invoiceItem,
+  .sponsorOpportunitiesSection__item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
 }
 .adminMembershipGrid {
   display: grid;
@@ -5647,14 +5929,17 @@ html.dark .communityPostBodyGuideSteps li {
   min-width: 0;
 }
 .sponsorPremiumLogoShell {
+  /* Legacy hook — frame styles live on .organizationLogo__frame */
+  display: inline-flex;
+  flex-shrink: 0;
+}
+.sponsorPremiumLogoShell:not(.organizationLogo) {
   width: 144px;
   height: 144px;
   border-radius: 999px;
   background: rgba(8, 12, 16, 0.88);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.35),
-    0 10px 28px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
   display: grid;
   place-items: center;
   overflow: hidden;
@@ -5671,12 +5956,10 @@ html.dark .communityPostBodyGuideSteps li {
   border-color: color-mix(in srgb, var(--color-border-strong) 55%, rgba(255, 255, 255, 0.12));
 }
 /* Dark or black logos on transparent art — light inset so marks stay legible on dark cards */
-.sponsorPremiumLogoShell.sponsorPremiumLogoShell--panel-light {
+.sponsorPremiumLogoShell.sponsorPremiumLogoShell--panel-light:not(.organizationLogo) {
   background: #f8fafc;
   border-color: color-mix(in srgb, var(--color-border-strong) 35%, rgba(20, 22, 21, 0.14));
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.75),
-    0 8px 24px rgba(0, 0, 0, 0.28);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
 }
 .sponsorPremiumLogoShell--panel-light .sponsorPremiumLogoImg {
   filter: none;
@@ -5698,7 +5981,8 @@ html.dark .communityPostBodyGuideSteps li {
   object-position: center;
   padding: 12px;
   box-sizing: border-box;
-  border-radius: 999px;
+  border: none;
+  border-radius: 0;
 }
 .sponsorPremiumLogoImg--tone-highsat {
   filter: saturate(0.95) contrast(1.04);
@@ -6069,9 +6353,7 @@ html.dark .communityPostBodyGuideSteps li {
   gap: var(--ds-space-4, 16px);
   align-items: start;
 }
-.sponsorProfileLogoShell.sponsorPremiumLogoShell {
-  width: 88px;
-  height: 88px;
+.sponsorProfileLogoShell.organizationLogo {
   flex-shrink: 0;
 }
 .sponsorProfileTitleBlock {
@@ -6226,6 +6508,75 @@ html.dark .communityPostBodyGuideSteps li {
   color: var(--color-accent);
   text-decoration: underline;
 }
+.sponsorProfileContextBanner {
+  padding: var(--ds-space-3, 12px) var(--ds-space-4, 16px);
+  background: var(--color-bg-elevated, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--color-border-subtle, rgba(255, 255, 255, 0.08));
+}
+.sponsorProfileContextBannerText {
+  margin: 0;
+  font-size: var(--text-body-sm);
+  color: var(--color-text-secondary);
+}
+.sponsorProfileUpdated {
+  margin: 8px 0 0;
+  font-size: var(--text-caption);
+  color: var(--color-text-tertiary, var(--color-text-secondary));
+}
+.sponsorProfileMetaChip--promo {
+  font-variant-numeric: tabular-nums;
+}
+.sponsorProfileCtaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-space-3, 12px);
+}
+.sponsorProfileCtaBtn {
+  min-width: 0;
+}
+.sponsorProfileFeaturedList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--ds-space-3, 12px);
+}
+.sponsorProfileFeaturedItem {
+  margin: 0;
+}
+.sponsorProfileFeaturedLink,
+.sponsorProfileFeaturedStatic {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 12px;
+  align-items: start;
+  padding: var(--ds-space-3, 12px) var(--ds-space-4, 16px);
+  border-radius: var(--radius-md, 10px);
+  background: var(--color-bg-elevated, rgba(255, 255, 255, 0.03));
+  text-decoration: none;
+  color: inherit;
+}
+.sponsorProfileFeaturedLink:hover {
+  background: var(--color-bg-hover, rgba(255, 255, 255, 0.06));
+}
+.sponsorProfileFeaturedTitle {
+  grid-column: 1;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+.sponsorProfileFeaturedDesc {
+  grid-column: 1;
+  font-size: var(--text-body-sm);
+  color: var(--color-text-secondary);
+}
+.sponsorProfileFeaturedIcon {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  width: 16px;
+  height: 16px;
+  color: var(--color-text-secondary);
+  align-self: center;
+}
 
 @media (max-width: 760px) {
   .sponsorProfileHeroMedia,
@@ -6237,9 +6588,8 @@ html.dark .communityPostBodyGuideSteps li {
     justify-items: center;
     text-align: center;
   }
-  .sponsorProfileLogoShell.sponsorPremiumLogoShell {
-    width: 80px;
-    height: 80px;
+  .sponsorProfileLogoShell.organizationLogo {
+    --org-logo-size: 80px;
   }
   .sponsorProfileMetaChips {
     justify-content: center;
@@ -6446,7 +6796,11 @@ html.dark .communityPostBodyGuideSteps li {
   }
   .grid4, .form { grid-template-columns: 1fr; }
   .statsGrid, .accountGrid { grid-template-columns: 1fr; }
-  .footerInner { flex-direction: column; }
+  .footerInner {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
   .topApp {
     --content-gutter: clamp(32px, 8vw, 40px);
     --header-floating-offset: 0px;
@@ -6475,19 +6829,27 @@ html.dark .communityPostBodyGuideSteps li {
     pointer-events: none;
   }
 
-  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) {
-    --mobile-site-header-logo-h: clamp(367px, 95.5vw, 499px);
-    --mobile-site-header-logo-max-w: min(770px, calc(100vw - 28px));
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]):not([data-page-atmosphere="home"]) {
+    --mobile-site-header-logo-h: clamp(56px, 14vw, 72px);
+    --mobile-site-header-logo-max-w: min(180px, calc(100vw - 96px));
     --mobile-site-header-control-size: 44px;
-    --mobile-site-header-control-pad-top: calc(4px + env(safe-area-inset-top, 0px));
-    --mobile-site-header-pad-x: 11px;
+    --mobile-site-header-control-pad-top: 2px;
+    --mobile-site-header-pad-x: max(clamp(8px, 2.5vw, 12px), env(safe-area-inset-left, 0px));
+  }
+
+  main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) {
+    --mobile-site-header-logo-h: clamp(301px, 78.75vw, 399px);
+    --mobile-site-header-logo-max-w: min(910px, calc(100vw - 28px));
+    --mobile-site-header-control-size: 44px;
+    --mobile-site-header-control-pad-top: 2px;
+    --mobile-site-header-pad-x: max(clamp(8px, 2.5vw, 12px), env(safe-area-inset-left, 0px));
   }
 
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .appSiteHeader {
     position: relative;
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: start;
     box-sizing: border-box;
     width: 100%;
     min-height: 0;
@@ -6495,8 +6857,9 @@ html.dark .communityPostBodyGuideSteps li {
     overflow: visible;
     padding:
       env(safe-area-inset-top, 0px)
-      var(--mobile-site-header-pad-x)
-      0;
+      max(var(--mobile-site-header-pad-x), env(safe-area-inset-right, 0px))
+      0
+      max(var(--mobile-site-header-pad-x), env(safe-area-inset-left, 0px));
   }
 
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) header.topbar {
@@ -6550,7 +6913,7 @@ html.dark .communityPostBodyGuideSteps li {
     flex-shrink: 0;
     box-sizing: border-box;
     padding: 0 !important;
-    margin: 0 0 clamp(-53px, -14.52vw, -68px);
+    margin: 0 0 clamp(-8px, -2vw, -12px);
     width: auto !important;
     height: auto !important;
     min-width: 0 !important;
@@ -6570,30 +6933,38 @@ html.dark .communityPostBodyGuideSteps li {
   }
 
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarLeft {
-    position: absolute;
-    top: var(--mobile-site-header-control-pad-top);
-    left: var(--mobile-site-header-pad-x);
+    grid-column: 1;
+    grid-row: 1;
+    position: relative;
+    top: auto;
+    left: auto;
     z-index: 2;
     display: flex;
     align-items: flex-start;
     justify-content: flex-start;
+    align-self: start;
+    justify-self: start;
     width: auto;
     min-width: 0;
-    padding: 0;
+    padding: var(--mobile-site-header-control-pad-top, 2px) 0 0;
     margin: 0;
   }
 
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarRight {
-    position: absolute;
-    top: var(--mobile-site-header-control-pad-top);
-    right: var(--mobile-site-header-pad-x);
+    grid-column: 3;
+    grid-row: 1;
+    position: relative;
+    top: auto;
+    right: auto;
     z-index: 2;
     display: flex;
     align-items: flex-start;
     justify-content: flex-end;
+    align-self: start;
+    justify-self: end;
     width: auto;
     min-width: 0;
-    padding: 0;
+    padding: var(--mobile-site-header-control-pad-top, 2px) 0 0;
     margin: 0;
   }
 
@@ -6679,7 +7050,7 @@ html.dark .communityPostBodyGuideSteps li {
   }
   .topbarLeft .topbarActionsCluster--start {
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 12px;
   }
   /* Mobile site header — canonical rules above in this `@760` block; `mobile-shell.css` mirrors. */
   main.topApp.topApp--auth-out[data-page-atmosphere="home"] .topbarRight .topbarActionsCluster,
@@ -6692,7 +7063,7 @@ html.dark .communityPostBodyGuideSteps li {
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarRight .topbarActionsCluster {
     width: auto;
     flex-wrap: nowrap;
-    gap: 8px;
+    gap: 12px;
     align-items: center;
     justify-content: flex-end;
   }
@@ -6700,7 +7071,31 @@ html.dark .communityPostBodyGuideSteps li {
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarLeft .topbarActionsCluster,
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarLeft .topbarActionsCluster--start {
     justify-content: flex-start;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 8px;
+    max-width: min(100%, calc(50vw - 12px));
   }
+
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarRight .adminConsoleTopbarBtn {
+    display: none !important;
+  }
+
+  /* Platform admin entry — left cluster on phone (with theme toggle), never over the centered logo. */
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarLeft .adminConsoleTopbarBtn {
+    min-width: 0;
+    min-height: var(--mobile-site-header-control-size, 44px);
+    max-width: 5.5rem;
+    padding: 0 10px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-shrink: 1;
+  }
+
   .headerBrandTitle {
     letter-spacing: 0.08em;
   }
@@ -6924,7 +7319,11 @@ html.dark .communityPostBodyGuideSteps li {
   }
   .communitySubmitModalCard {
     width: min(100%, 100%);
-    max-height: calc(100dvh - 22px);
+    max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 20px);
+  }
+  .modalOverlay--communitySubmit {
+    overflow: hidden;
+    place-items: center;
   }
   .communitySectionHead {
     align-items: flex-start;
@@ -6948,16 +7347,22 @@ html.dark .communityPostBodyGuideSteps li {
   }
 }
 
-@media (max-width: 719px) {
+@media (max-width: 760px) {
   main.topApp.appShell--withMobileNavDock {
-    padding-bottom: calc(118px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: 0;
+  }
+
+  main.topApp.appShell--withMobileNavDock .siteFooter,
+  main.topApp.appShell--withMobileNavDock .siteFooter.siteFooter--pageBottom,
+  main.topApp.appShell--withMobileNavDock .siteFooter.siteFooter--pageBottom.siteFooter--inMainShell {
+    padding-bottom: 12px;
   }
 }
 
 @media (max-width: 520px) {
   .topApp {
     --content-gutter: clamp(28px, 7vw, 36px);
-    padding-bottom: calc(118px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: 0;
   }
   .topbarInner {
     grid-template-columns: 1fr;
@@ -7018,7 +7423,7 @@ html.dark .communityPostBodyGuideSteps li {
   main.topApp.appShell--withMobileNavDock .topbarRight .topbarActionsCluster {
     justify-content: flex-end;
     flex-wrap: nowrap;
-    gap: 8px;
+    gap: 12px;
   }
   .topbarLeft .topbarActionsCluster,
   .topbarRight .topbarActionsCluster {
@@ -7026,7 +7431,21 @@ html.dark .communityPostBodyGuideSteps li {
     justify-content: center;
     flex-wrap: wrap;
   }
-  /* Theme toggle lives in `.topbarLeft`. */
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarLeft .topbarActionsCluster,
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarRight .topbarActionsCluster {
+    width: auto;
+    flex-wrap: nowrap;
+    gap: 12px;
+    align-items: center;
+  }
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarRight .topbarActionsCluster {
+    justify-content: flex-end;
+  }
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarLeft .topbarActionsCluster,
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarLeft .topbarActionsCluster--start {
+    justify-content: flex-start;
+  }
+  /* Theme toggle lives in `.topbarLeft` on mobile. */
   .topbarLeft .topbarActionsCluster,
   .topbarLeft .topbarActionsCluster--start {
     justify-content: flex-start;
@@ -7162,12 +7581,6 @@ html.dark .communityPostBodyGuideSteps li {
     min-width: 0;
     padding-inline: 10px;
   }
-  .headerNotificationBellBtn,
-  .headerAccountAvatar.profileAvatarShell,
-  .headerAccountTrigger {
-    width: 40px;
-    height: 40px;
-  }
 }
 
 /* ── Nonprofit directory profile (standalone route) ── */
@@ -7302,7 +7715,7 @@ html.dark .communityPostBodyGuideSteps li {
   line-height: 1.35;
   max-width: 60ch;
 }
-.nonprofitProfileNameOnSite .torpEntityNameInline {
+.nonprofitProfileNameOnSite .topEntityNameInline {
   text-transform: uppercase;
   letter-spacing: 0.055em;
   font-weight: 700;
@@ -7439,7 +7852,7 @@ html.dark .communityPostBodyGuideSteps li {
 }
 
 /* Reusable: organization / sponsor title all-caps (admin lists, etc.) */
-.torpEntityNameDisplay {
+.topEntityNameDisplay {
   text-transform: uppercase;
   letter-spacing: 0.055em;
 }

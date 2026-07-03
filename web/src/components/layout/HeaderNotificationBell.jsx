@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuthSession } from "@/components/auth/AuthSessionProvider";
 import IconWrap from "@/components/shared/IconWrap";
+import HeaderDropdownLayer from "@/components/layout/HeaderDropdownLayer";
+import { useMobileShell } from "@/hooks/useMobileShell";
 
 const BELL_PATH =
   "M12 22a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2zm6-6V11a6 6 0 1 0-12 0v5H4v2h16v-2h-2z";
@@ -18,6 +20,7 @@ async function fetchJson(url, options) {
 export default function HeaderNotificationBell({ variant = "topbar", skipSessionGate = false } = {}) {
   const router = useRouter();
   const session = useAuthSession();
+  const mobileShell = useMobileShell();
   const wrapRef = useRef(null);
   const [open, setOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -66,7 +69,10 @@ export default function HeaderNotificationBell({ variant = "topbar", skipSession
   useEffect(() => {
     if (!open) return;
     function onDocClick(e) {
-      if (!wrapRef.current?.contains(e.target)) setOpen(false);
+      const target = e.target;
+      if (wrapRef.current?.contains(target)) return;
+      if (target instanceof Element && target.closest(".headerNotificationDropdown")) return;
+      setOpen(false);
     }
     function onKey(e) {
       if (e.key === "Escape") setOpen(false);
@@ -132,46 +138,52 @@ export default function HeaderNotificationBell({ variant = "topbar", skipSession
           </span>
         ) : null}
       </button>
-      {open ? (
-        <div className="headerNotificationDropdown" role="dialog" aria-label="Notifications">
-          <div className="headerNotificationDropdown__head">
-            <span className="headerNotificationDropdown__title">Notifications</span>
-            {unreadCount > 0 ? (
-              <button type="button" className="headerNotificationMarkAll" onClick={() => void markAllRead()}>
-                Mark all read
-              </button>
-            ) : null}
+      <HeaderDropdownLayer open={open} onClose={() => setOpen(false)} ariaLabel="Close notifications">
+        {open ? (
+          <div
+            className={`headerNotificationDropdown${mobileShell ? " headerNotificationDropdown--mobileSheet" : ""}`}
+            role="dialog"
+            aria-label="Notifications"
+          >
+            <div className="headerNotificationDropdown__head">
+              <span className="headerNotificationDropdown__title">Notifications</span>
+              {unreadCount > 0 ? (
+                <button type="button" className="headerNotificationMarkAll" onClick={() => void markAllRead()}>
+                  Mark all read
+                </button>
+              ) : null}
+            </div>
+            <div className="headerNotificationDropdown__body">
+              {loading ? <p className="headerNotificationEmpty">Loading…</p> : null}
+              {!loading && listError ? <p className="headerNotificationError">{listError}</p> : null}
+              {!loading && !listError && !items.length ? (
+                <p className="headerNotificationEmpty">You are all caught up.</p>
+              ) : null}
+              {!loading && !listError
+                ? items.map((n) => (
+                    <button
+                      key={n.id}
+                      type="button"
+                      className={`headerNotificationItem ${n.status === "unread" ? "isUnread" : ""}`}
+                      onClick={() => void onItemActivate(n)}
+                    >
+                      <span className="headerNotificationItem__title">{n.title}</span>
+                      {n.message ? <span className="headerNotificationItem__msg">{n.message}</span> : null}
+                      <span className="headerNotificationItem__meta">
+                        {n.created_at ? new Date(n.created_at).toLocaleString() : ""}
+                      </span>
+                    </button>
+                  ))
+                : null}
+            </div>
+            <div className="headerNotificationDropdown__foot">
+              <Link href="/notifications" className="headerNotificationViewAll" onClick={() => setOpen(false)}>
+                View all
+              </Link>
+            </div>
           </div>
-          <div className="headerNotificationDropdown__body">
-            {loading ? <p className="headerNotificationEmpty">Loading…</p> : null}
-            {!loading && listError ? <p className="headerNotificationError">{listError}</p> : null}
-            {!loading && !listError && !items.length ? (
-              <p className="headerNotificationEmpty">You are all caught up.</p>
-            ) : null}
-            {!loading && !listError
-              ? items.map((n) => (
-                  <button
-                    key={n.id}
-                    type="button"
-                    className={`headerNotificationItem ${n.status === "unread" ? "isUnread" : ""}`}
-                    onClick={() => void onItemActivate(n)}
-                  >
-                    <span className="headerNotificationItem__title">{n.title}</span>
-                    {n.message ? <span className="headerNotificationItem__msg">{n.message}</span> : null}
-                    <span className="headerNotificationItem__meta">
-                      {n.created_at ? new Date(n.created_at).toLocaleString() : ""}
-                    </span>
-                  </button>
-                ))
-              : null}
-          </div>
-          <div className="headerNotificationDropdown__foot">
-            <Link href="/notifications" className="headerNotificationViewAll" onClick={() => setOpen(false)}>
-              View all
-            </Link>
-          </div>
-        </div>
-      ) : null}
+        ) : null}
+      </HeaderDropdownLayer>
     </div>
   );
 }

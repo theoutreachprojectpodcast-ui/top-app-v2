@@ -1,0 +1,43 @@
+name: Production Monitor
+
+on:
+  schedule:
+    # Every 30 minutes — alerts via GitHub Actions failure notifications
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+jobs:
+  production-health:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Production HTTP smoke (live)
+        run: node web/scripts/production-http-smoke.mjs
+        env:
+          PRODUCTION_BASE_URL: https://theoutreachproject.app
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+
+  qa-health:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: QA HTTP smoke (live)
+        run: node web/scripts/qa-http-smoke.mjs
+        env:
+          QA_BASE_URL: https://qa-the-outreach-project.vercel.app
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}

@@ -31,3 +31,7 @@ create table if not exists public.trusted_resource_applications (
 
 create index if not exists idx_trusted_resource_applications_created_at on public.trusted_resource_applications(created_at desc);
 create index if not exists idx_trusted_resource_applications_review_status on public.trusted_resource_applications(review_status);
+
+-- Deny direct PostgREST access; applications via /api/trusted-resources/* + service role.
+alter table public.trusted_resource_applications enable row level security;
+

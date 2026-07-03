@@ -61,17 +61,27 @@ alter table if exists public.podcast_guests
 create index if not exists podcast_guests_voice_active_idx
   on public.podcast_guests (active, display_order, updated_at desc);
 
--- QA podcast sponsor seeds: mark paid so public podcast page shows roster under v0.6 rules
+-- Podcast sponsor roster fields (also added in admin_cms_v05 / sponsor_v06; safe if already present).
+alter table if exists public.sponsors_catalog
+  add column if not exists sponsor_scope text not null default 'app';
+
+alter table if exists public.sponsors_catalog
+  add column if not exists payment_status text not null default 'unknown';
+
+-- Known podcast sponsors: scope + paid (idempotent by slug; no-op if rows not seeded yet).
 update public.sponsors_catalog
-set payment_status = 'paid'
-where sponsor_scope = 'podcast'
-  and slug in (
-    'rope-solutions',
-    'game-day-mens-health',
-    'wrecking-realty-group',
-    'iron-soldiers-coffee-company',
-    'eduardo-pico-designs',
-    'wars-end-merch'
-  );
+set
+  sponsor_scope = 'podcast',
+  payment_status = 'paid'
+where slug in (
+  'rope-solutions',
+  'gameday-mens-health',
+  'game-day-mens-health',
+  'rucking-realty-group',
+  'wrecking-realty-group',
+  'iron-soldiers-coffee-company',
+  'eduardo-pico-designs',
+  'wars-end-merch'
+);
 
 commit;

@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 
-/** Always read the latest `torp_profiles` row for this session (avoid stale RSC cache emptying onboarding fields). */
+/** Always read the latest `top_profiles` row for this session (avoid stale RSC cache emptying onboarding fields). */
 export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { getWorkOSUserFromCookies } from "@/lib/auth/workosSessionFromCookies";
@@ -20,6 +20,8 @@ import {
   stripeSponsorSubscriptionConfigured,
 } from "@/lib/billing/stripeConfig";
 import { postOnboardingDestination } from "@/lib/account/postOnboardingDestination";
+import { computeEntitlementsFromProfileRow } from "@/lib/account/entitlements";
+import { hasActiveMembership } from "@/lib/membership/membershipAccess";
 
 async function OnboardingServer({ searchParams }) {
   const sp = await searchParams;
@@ -83,6 +85,16 @@ async function OnboardingServer({ searchParams }) {
         sponsorOnboardingPath: dto.sponsorOnboardingPath,
       }),
     );
+  }
+
+  const entitlements = computeEntitlementsFromProfileRow(row);
+  if (
+    !hasActiveMembership(dto, {
+      isPlatformAdmin: entitlements.isPlatformAdmin,
+      isPrivilegedStaff: entitlements.isPrivilegedStaff,
+    })
+  ) {
+    redirect("/access");
   }
 
   const authBackend = {

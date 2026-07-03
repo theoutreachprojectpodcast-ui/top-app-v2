@@ -1,5 +1,10 @@
+import { hasActiveMemberBilling } from "@/lib/account/entitlements";
 import { membershipTierRank } from "@/lib/billing/membershipTierOrder";
-import { getMembershipTierDefinition, normalizeMembershipTierKey } from "@/features/membership/membershipTiers";
+import {
+  getMembershipTierDefinition,
+  MEMBERSHIP_TIER_KEYS,
+  normalizeMembershipTierKey,
+} from "@/features/membership/membershipTiers";
 
 /** Human-readable billing status from profile / Stripe sync. */
 export function formatMembershipBillingStatus(raw) {
@@ -23,15 +28,39 @@ export function hasChosenInitialMembership(profile) {
   return !!profile.onboardingCompleted;
 }
 
-/** @param {{ isAuthenticated: boolean, profile?: object | null }} args */
-export function shouldShowMembershipPickerOnHome({ isAuthenticated, profile }) {
-  if (!isAuthenticated) return true;
-  return !hasChosenInitialMembership(profile);
+/** Membership tier picker is never an inline home section — use post-auth modal instead. */
+export function shouldShowMembershipPickerOnHome() {
+  return false;
 }
 
-/** @param {{ isAuthenticated: boolean, profile?: object | null }} args */
-export function shouldShowMembershipPickerOnProfile({ isAuthenticated, profile }) {
-  return isAuthenticated && hasChosenInitialMembership(profile);
+/** True when the account is on the free tier with no active paid subscription. */
+export function isFreeOnlyMembershipAccount(tierKey, billingStatus) {
+  const tier = normalizeMembershipTierKey(tierKey);
+  if (tier !== MEMBERSHIP_TIER_KEYS.NONE) return false;
+  return !hasActiveMemberBilling(billingStatus);
+}
+
+/**
+ * Profile upsell: signed-in users who finished initial setup but stayed on free membership.
+ * @param {{ isAuthenticated: boolean, profile?: object | null, tierKey?: string, billingStatus?: string }} args
+ */
+export function shouldShowMembershipPickerOnProfile({
+  isAuthenticated,
+  profile,
+  tierKey,
+  billingStatus,
+}) {
+  if (!isAuthenticated || !hasChosenInitialMembership(profile)) return false;
+  const tier = tierKey ?? profile?.membershipStatus ?? profile?.membershipTier;
+  const billing = billingStatus ?? profile?.membershipBillingStatus ?? profile?.membership_status;
+  return isFreeOnlyMembershipAccount(tier, billing);
+}
+
+/** Post-auth modal: local/demo accounts that have not picked an initial tier yet. */
+export function shouldShowMembershipPickerModal({ isAuthenticated, profile, sessionKind }) {
+  if (!isAuthenticated || hasChosenInitialMembership(profile)) return false;
+  if (sessionKind === "workos") return false;
+  return true;
 }
 
 /** Short line under “Membership / account” in the header menu. */

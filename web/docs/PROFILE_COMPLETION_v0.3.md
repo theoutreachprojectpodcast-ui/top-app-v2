@@ -1,8 +1,8 @@
-# Profile completion (tORP v0.3)
+# Profile completion (TOP v0.3)
 
 ## Source of truth
 
-Completion is computed only from **persisted `torp_profiles` data** exposed as the client/API DTO (`profileRowToClientDto` in `serverProfile.js`). **WorkOS IdP fields are not merged in** for the checklist: if `email` / `first_name` / etc. are empty in the database, the step stays incomplete until the user saves via **PATCH `/api/me/profile`**, onboarding, or the **WorkOS callback upsert** (which does write IdP name/email/photo into the row on sign-in).
+Completion is computed only from **persisted `top_profiles` data** exposed as the client/API DTO (`profileRowToClientDto` in `serverProfile.js`). **WorkOS IdP fields are not merged in** for the checklist: if `email` / `first_name` / etc. are empty in the database, the step stays incomplete until the user saves via **PATCH `/api/me/profile`**, onboarding, or the **WorkOS callback upsert** (which does write IdP name/email/photo into the row on sign-in).
 
 Tier and billing status on the DTO come from the server (Stripe / membership pipeline), not from optimistic client edits to `membershipTier` / `membershipBillingStatus`.
 

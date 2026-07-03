@@ -19,7 +19,7 @@
 
 ## Database
 
-- [ ] Run additive migrations through Supabase (including `web/supabase/torp_profiles_last_login_v06.sql` if not yet applied)
+- [ ] Run additive migrations through Supabase (including `web/supabase/top_profiles_last_login_v06.sql` if not yet applied)
 
 ## Post-deploy smoke
 

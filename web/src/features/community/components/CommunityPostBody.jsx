@@ -1,6 +1,7 @@
 "use client";
 
 import { parseGuidePostBody } from "@/features/community/domain/parseGuidePostBody";
+import { isLikelyHtml, sanitizeAdminHtml } from "@/lib/admin/sanitizeHtml";
 
 /**
  * @param {{ body: string, guideDisplay?: 'off' | 'brief' | 'full' }}
@@ -10,6 +11,14 @@ export default function CommunityPostBody({ body, guideDisplay = "off" }) {
   if (!text) return null;
 
   if (guideDisplay === "off") {
+    if (isLikelyHtml(text)) {
+      return (
+        <div
+          className="communityPostBody communityPostBody--rich"
+          dangerouslySetInnerHTML={{ __html: sanitizeAdminHtml(text) }}
+        />
+      );
+    }
     return <p className="communityPostBody">{text}</p>;
   }
 

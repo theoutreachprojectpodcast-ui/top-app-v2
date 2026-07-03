@@ -8,10 +8,14 @@ import {
   EDUARDO_PICO_DESIGNS_LOGO_URL,
   GAMEDAY_MENS_HEALTH_LOGO_URL,
   GREEN_GORILLA_LAND_MANAGEMENT_LOGO_URL,
+  IRON_SOLDIERS_COFFEE_LOGO_URL,
   ROPE_SOLUTIONS_LOGO_URL,
+  RUCKING_REALTY_GROUP_LOGO_URL,
   THE_VETERANS_VETERAN_LOGO_URL,
   VET_NAV_SERVICES_LOGO_URL,
 } from "@/features/sponsors/data/featuredSponsors";
+import { PODCAST_SPONSOR_SEED_SLUG_ALIASES } from "@/features/sponsors/api/sponsorCatalogApi";
+import { getCatalogLogoPanelMode } from "@/lib/media/logoPresentationCatalog";
 
 const DEFAULT = {
   accentColor: "color-mix(in srgb, var(--color-accent) 88%, #ffffff 12%)",
@@ -31,8 +35,8 @@ const BY_SLUG = {
       "linear-gradient(118deg, rgba(14, 10, 8, 0.94) 0%, rgba(22, 14, 8, 0.76) 46%, rgba(12, 8, 6, 0.52) 100%)",
     veteranOwnedDefault: false,
     locationChips: [],
-    /* Square brand art (central disc + scene); avoid forcing a light logo shell over warm tones. */
-    logoPanelMode: "neutral",
+    /* Circular wordmark PNG (transparent outside disc); hero art is separate. */
+    logoPanelMode: "light",
     logoFallbackUrls: [APEX_GLOBAL_OUTDOORS_LOGO_URL],
   },
   "rope-solutions": {
@@ -51,6 +55,8 @@ const BY_SLUG = {
       "linear-gradient(118deg, rgba(18, 12, 8, 0.95) 0%, rgba(28, 20, 12, 0.72) 45%, rgba(14, 10, 8, 0.52) 100%)",
     veteranOwnedDefault: true,
     locationChips: ["San Antonio, TX", "Texas"],
+    logoPanelMode: "dark",
+    logoFallbackUrls: [RUCKING_REALTY_GROUP_LOGO_URL],
   },
   "eduardo-pico-designs": {
     accentColor: "#7dd3fc",
@@ -76,9 +82,27 @@ const BY_SLUG = {
     cardScrimGradient:
       "linear-gradient(118deg, rgba(14, 8, 8, 0.96) 0%, rgba(22, 10, 10, 0.76) 48%, rgba(12, 6, 6, 0.52) 100%)",
     veteranOwnedDefault: false,
-    locationChips: ["U.S. & Canada", "400+ clinics"],
+    locationChips: ["San Antonio, TX"],
     logoPanelMode: "light",
     logoFallbackUrls: [GAMEDAY_MENS_HEALTH_LOGO_URL],
+  },
+  "iron-soldiers-coffee-company": {
+    accentColor: "#d97706",
+    cardScrimGradient:
+      "linear-gradient(118deg, rgba(14, 12, 8, 0.95) 0%, rgba(22, 18, 12, 0.74) 46%, rgba(12, 10, 8, 0.52) 100%)",
+    veteranOwnedDefault: true,
+    locationChips: [],
+    logoPanelMode: "neutral",
+    logoFallbackUrls: [IRON_SOLDIERS_COFFEE_LOGO_URL],
+  },
+  "wars-end-merch": {
+    accentColor: "#94a3b8",
+    veteranOwnedDefault: false,
+    locationChips: [],
+    logoPanelMode: "dark",
+    logoFallbackUrls: [
+      "https://images.squarespace-cdn.com/content/v1/6959573fd567e738e7c613f3/cfd220a6-7daf-4845-8d83-fdb8c2ffa128/ChatGPT+Image+Jan+7%2C+2026%2C+08_37_51+PM.png?format=2500w",
+    ],
   },
   "vetnav-services": {
     accentColor: "#f59e0b",
@@ -108,15 +132,21 @@ const BY_SLUG = {
  */
 export function getSponsorCardPresentation(slug) {
   const raw = String(slug || "").trim().toLowerCase();
-  const row = BY_SLUG[raw];
+  const key = PODCAST_SPONSOR_SEED_SLUG_ALIASES[raw] || raw;
+  const row = BY_SLUG[key];
   if (!row) {
-    return { ...DEFAULT, locationChips: [], logoFallbackUrls: [] };
+    return {
+      ...DEFAULT,
+      locationChips: [],
+      logoFallbackUrls: [],
+      logoPanelMode: getCatalogLogoPanelMode(key) || DEFAULT.logoPanelMode,
+    };
   }
   return {
     ...DEFAULT,
     ...row,
     locationChips: Array.isArray(row.locationChips) ? [...row.locationChips] : [],
     logoFallbackUrls: Array.isArray(row.logoFallbackUrls) ? [...row.logoFallbackUrls] : [],
-    logoPanelMode: row.logoPanelMode ?? DEFAULT.logoPanelMode,
+    logoPanelMode: row.logoPanelMode ?? getCatalogLogoPanelMode(key) ?? DEFAULT.logoPanelMode,
   };
 }

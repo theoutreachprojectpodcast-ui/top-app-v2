@@ -2,14 +2,19 @@ import { guardMutation, guardFailureResponse } from "@/lib/security/secureRoute"
 import { authFailureJson, resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
+import { requireMembershipApi } from "@/lib/membership/membershipRouteGuard";
 
 const SAVED_TABLE = process.env.NEXT_PUBLIC_SAVED_ORG_TABLE || "top_app_saved_org_eins";
 
 export async function GET() {
   const auth = await resolveWorkOSRouteUser();
   if (!auth.ok) return authFailureJson(auth);
-  const user = auth.user;
   const admin = createSupabaseAdminClient();
+  if (admin) {
+    const membership = await requireMembershipApi(admin, "save_organizations");
+    if (!membership.ok) return membership.response;
+  }
+  const user = auth.user;
   if (!admin) {
     return Response.json({ eins: [] });
   }
@@ -35,6 +40,8 @@ export async function PUT(request) {
   if (!admin) {
     return Response.json({ error: "server_storage_unavailable" }, { status: 503 });
   }
+  const membership = await requireMembershipApi(admin, "save_organizations");
+  if (!membership.ok) return membership.response;
 
   let body;
   try {

@@ -5,7 +5,7 @@ import "@/features/podcasts/styles/podcasts.css";
 export default function PodcastsLayout({ children }) {
   return (
     <AppShell
-      activeNav="home"
+      activeNav="podcast"
       shellClassName="appShell--podcast appShell--podcastRoute"
       brandSrc={
         (typeof process !== "undefined" && process.env.NEXT_PUBLIC_PODCAST_BRAND_LOGO_PATH) ||

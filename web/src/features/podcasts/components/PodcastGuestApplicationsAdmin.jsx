@@ -8,8 +8,11 @@ import {
   updatePodcastGuestApplicationStatus,
 } from "@/features/podcasts/api/podcastApi";
 
+const STATUS_FILTERS = ["all", "new", "submitted", "in_review", "approved", "denied", "needs_follow_up", "scheduled", "archived"];
+
 export default function PodcastGuestApplicationsAdmin({ supabase }) {
   const [rows, setRows] = useState([]);
+  const [statusFilter, setStatusFilter] = useState("all");
   const [selectedId, setSelectedId] = useState("");
   const [notes, setNotes] = useState("");
   const [status, setStatus] = useState("");
@@ -29,7 +32,17 @@ export default function PodcastGuestApplicationsAdmin({ supabase }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supabase]);
 
-  const selected = rows.find((row) => String(row.id || "") === String(selectedId || ""));
+  const filtered =
+    statusFilter === "all"
+      ? rows
+      : rows.filter((row) => String(row.status || "submitted").toLowerCase() === statusFilter);
+  const selected = filtered.find((row) => String(row.id || "") === String(selectedId || ""));
+
+  useEffect(() => {
+    if (selectedId && !filtered.some((r) => String(r.id) === String(selectedId))) {
+      setSelectedId(filtered[0]?.id ? String(filtered[0].id) : "");
+    }
+  }, [filtered, selectedId]);
 
   async function run(nextStatus) {
     if (!selected?.id) return;
@@ -64,9 +77,26 @@ export default function PodcastGuestApplicationsAdmin({ supabase }) {
   return (
     <section className="podcastAdminSection">
       <h3>Podcast Guest Application Review</h3>
+      <div className="adminToolbar" style={{ marginBottom: 12 }}>
+        <label className="fieldLabel" htmlFor="podcast-app-filter">
+          Status
+        </label>
+        <select
+          id="podcast-app-filter"
+          className="adminConsoleInput"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+        >
+          {STATUS_FILTERS.map((s) => (
+            <option key={s} value={s}>
+              {s === "all" ? "All" : s.replace(/_/g, " ")}
+            </option>
+          ))}
+        </select>
+      </div>
       <div className="podcastAdminGrid">
         <div className="podcastAdminList">
-          {rows.map((row) => (
+          {filtered.map((row) => (
             <button
               key={row.id}
               type="button"
@@ -81,7 +111,9 @@ export default function PodcastGuestApplicationsAdmin({ supabase }) {
               <span>{row.status || "submitted"}</span>
             </button>
           ))}
-          {!rows.length ? <p className="podcastMuted">No applications yet.</p> : null}
+          {!filtered.length ? (
+            <p className="podcastMuted">{rows.length ? "No applications match this filter." : "No applications yet."}</p>
+          ) : null}
         </div>
         <div className="podcastAdminDetail">
           {selected ? (

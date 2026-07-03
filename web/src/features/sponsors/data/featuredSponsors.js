@@ -14,7 +14,7 @@ export const GAMEDAY_MENS_HEALTH_LOGO_URL = "/sponsors/gameday-mens-health-wordm
 export const ROPE_SOLUTIONS_LOGO_URL = "/sponsors/rope-solutions-logo.png";
 
 /** Apex Global Outdoors — official circular wordmark PNG (card logo slot); hero art is `featured-bg-apex-global-outdoors.png`. */
-export const APEX_GLOBAL_OUTDOORS_LOGO_URL = "/sponsors/apex-global-outdoors-logo.png";
+export const APEX_GLOBAL_OUTDOORS_LOGO_URL = "/sponsors/apex-global-outdoors-logo.png?v=2";
 
 /** Iron Soldiers Coffee Company round emblem — app-hosted PNG. */
 export const IRON_SOLDIERS_COFFEE_LOGO_URL = "/sponsors/iron-soldiers-coffee-company-logo.png";
@@ -29,6 +29,9 @@ export const VET_NAV_SERVICES_LOGO_URL = "/sponsors/vetnav-services-logo.png";
 export const GREEN_GORILLA_LAND_MANAGEMENT_LOGO_URL =
   "/sponsors/green-gorilla-land-management-logo.png?v=2";
 
+/** Rucking Realty Group — circular wordmark (Mike & Natalie Evans, Texas). */
+export const RUCKING_REALTY_GROUP_LOGO_URL = "/sponsors/rucking-realty-group-logo.png";
+
 export const FEATURED_SPONSORS = [
   {
     id: "apex-global-outdoors",
@@ -36,13 +39,13 @@ export const FEATURED_SPONSORS = [
     sponsorType: "mission_partner_sponsor",
     sponsorDisplayGroup: "mission_partner",
     primaryDisplayTag: "Mission Partner Sponsor",
-    tag: "Outdoor gear & expedition retail",
-    industry: "Outdoor retail",
+    tag: "Global Hunting Agent",
+    industry: "Global Hunting Agent",
     tierLabel: "Mission partner",
     subtitle:
-      "Curated gear and global outdoor brands for people who train, travel, and serve in demanding environments.",
+      "Apex Global Outdoors is a retired LEO-owned hunting & fishing booking agency offering only personally vetted locations to ensure world-class outdoor adventures.",
     longDescription:
-      "Apex Global Outdoors is building a mission-aligned outdoor retail experience—pairing trusted equipment with education on preparedness, fieldcraft, and responsible land use. The team partners with The Outreach Project to expand outdoor access for veterans, first responders, and families who rely on dependable kit when conditions turn serious. Official site: apexglobaloutdoors.com.",
+      "Our mission is simple: To deliver expertly planned trips, exceptional accommodations, harvests led by the world's leading outfitters, and vacations that will become core memories for you and your family.",
     ctaLabel: "Visit Website",
     ctaUrl: "https://apexglobaloutdoors.com/",
     logoUrl: APEX_GLOBAL_OUTDOORS_LOGO_URL,
@@ -59,13 +62,13 @@ export const FEATURED_SPONSORS = [
     sponsorType: "mission_partner_sponsor",
     sponsorDisplayGroup: "mission_partner",
     primaryDisplayTag: "Mission Partner Sponsor",
-    tag: "Men's health clinics",
-    industry: "Men's health",
+    tag: "Men's & Women's Wellness",
+    industry: "Men's & Women's Wellness",
     tierLabel: "Featured sponsor",
     subtitle:
-      "Stone Oak, San Antonio — same-day visits, on-site labs, and physician-guided men’s health care in a private clinic.",
+      "San Antonio — same-day visits, on-site labs, and physician-guided men's & women's health care in a private clinic.",
     longDescription:
-      "Gameday Men's Health Stone Oak is the San Antonio clinic in the national Gameday network. Patients get same-day scheduling, on-site labs with rapid turnaround, and physician-guided treatment plans across testosterone therapy, weight management, sexual wellness, hair restoration, and recovery support—delivered in a discreet, sports-lounge-style setting built for busy professionals and veterans juggling shift work and family life.",
+      "Patients get same-day scheduling, on-site labs with rapid turnaround, and physician-guided treatment plans across testosterone therapy, weight management, sexual wellness, hair restoration, and recovery support.",
     ctaLabel: "Visit Website",
     ctaUrl: "https://gamedaymenshealth.com/stone-oak/",
     logoUrl: GAMEDAY_MENS_HEALTH_LOGO_URL,
@@ -86,13 +89,12 @@ export const FEATURED_SPONSORS = [
     displayName: "",
     internalAlias: "",
     primaryDisplayTag: "Foundational Sponsor",
-    tag: "Rope access, rescue & training",
-    industry: "Training & readiness",
+    tag: "Elite Leadership Coaching",
+    industry: "Elite Leadership Coaching",
     tierLabel: "Featured sponsor",
-    subtitle:
-      "Trusted access. Proven under pressure. Built for teams that don't get second chances.",
+    subtitle: "Leadership Development where it matters most: on the front lines of your operation.",
     longDescription:
-      "Rope Solutions delivers industrial rope access, confined-space rescue, and technical training for teams that work at height and in high-consequence environments. Veteran-led and service-disabled veteran-owned, the company combines field-proven systems with leadership development so crews can plan, communicate, and execute safely when there is no room for error.\n\nFrom vertical mobility to complex rescue scenarios, Rope Solutions equips public safety, industrial, and defense-adjacent organizations with the skills and hardware to operate in unforgiving conditions.",
+      "ROPE Solutions embeds with your organization to build elite leaders, high-performing teams, and strategies that hold up when the pressure is real, closing the gap between leadership training and leadership that actually performs.",
     ctaLabel: "Visit Website",
     ctaUrl: "https://www.ropesolutions.com/",
     logoUrl: ROPE_SOLUTIONS_LOGO_URL,
@@ -145,7 +147,7 @@ export const FEATURED_SPONSORS = [
       "Rucking Realty Group is led by Mike and Natalie Evans, a husband-and-wife team based near San Antonio. Mike served as a United States Marine Corps infantry Marine (2005–2009) and carries that discipline into every transaction; Natalie brings a decade of HR leadership and a calm, people-first style that keeps complex deals on track. Together they serve Military City USA and communities statewide with honest pricing guidance, proactive communication, and extra care for military families, first-time buyers, and folks navigating life transitions.",
     ctaLabel: "Visit Website",
     ctaUrl: "https://ruckingrealtygroup.com/",
-    logoUrl: null,
+    logoUrl: RUCKING_REALTY_GROUP_LOGO_URL,
     warmVariant: "amber",
     backgroundImageUrl: "/sponsors/featured-bg-rucking-realty.png",
     missionPartner: true,

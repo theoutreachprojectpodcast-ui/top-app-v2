@@ -4,9 +4,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import NonprofitIcon from "@/features/nonprofits/components/NonprofitIcon";
+import OrganizationLogo from "@/components/shared/OrganizationLogo";
 import NonprofitSocialLinks from "@/features/nonprofits/components/NonprofitSocialLinks";
 import { fetchNonprofitProfileDetail } from "@/features/directory/api";
 import { resolveFindInfoHref } from "@/features/nonprofits/domain/nonprofitCardActions";
+import { openExternalBrowserSheet } from "@/lib/capacitor/openExternalBrowserSheet";
 import { useProfileData } from "@/features/profile/ProfileDataProvider";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
@@ -166,6 +168,12 @@ export default function NonprofitProfilePage({ ein: einParam }) {
     }
   }
 
+  function openExternalLink(url, title) {
+    const href = String(url || "").trim();
+    if (!href) return;
+    void openExternalBrowserSheet(href, { title: title || card?.name || "Organization" }).catch(() => {});
+  }
+
   const socialLinks = card?.links?.filter((l) => l.type !== "website") || [];
   const websiteLinks = card?.links?.filter((l) => l.type === "website") || [];
   const heroUrl = sanitizeDisplayableImageUrl(String(card?.heroImageUrl || "").trim());
@@ -198,21 +206,24 @@ export default function NonprofitProfilePage({ ein: einParam }) {
               >
                 <div className="nonprofitProfileHeroInner">
                   <div className="nonprofitProfileIdentity">
-                    {card.logoUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img className="nonprofitProfileLogo" src={card.logoUrl} alt="" loading="lazy" />
-                    ) : (
-                      <div className="nonprofitProfileIconWrap">
-                        <NonprofitIcon category={card.category} size={40} variant="default" />
-                      </div>
-                    )}
+                    <OrganizationLogo
+                      src={card.logoUrl || ""}
+                      alt=""
+                      name={card.name}
+                      entityKey={card.ein || card.slug || card.id}
+                      size="sm"
+                      surface="page"
+                      panel="auto"
+                      fallback="icon"
+                      fallbackIcon={<NonprofitIcon category={card.category} size={40} variant="default" />}
+                    />
                     <div className="nonprofitProfileTitleBlock">
                       <h1 className="nonprofitProfileTitle">{card.name}</h1>
                       {card.displayNameOnSite &&
                       sanitizePlainText(card.displayNameOnSite) !== sanitizePlainText(card.name) ? (
                         <p className="nonprofitProfileNameOnSite" title="As shown on the official website">
                           On site:{" "}
-                          <span className="torpEntityNameInline">{sanitizePlainText(card.displayNameOnSite)}</span>
+                          <span className="topEntityNameInline">{sanitizePlainText(card.displayNameOnSite)}</span>
                         </p>
                       ) : null}
                       {card.tagline ? <p className="nonprofitProfileTagline">{sanitizePlainText(card.tagline)}</p> : null}
@@ -255,13 +266,22 @@ export default function NonprofitProfilePage({ ein: einParam }) {
               <div className="nonprofitProfileActions card">
                 <h2 className="nonprofitProfileSectionTitle">Connect</h2>
                 <div className="nonprofitProfileActionRow">
-                  <a className="btnBlack btnBlack--findInfo" href={resolveFindInfoHref(card)} target="_blank" rel="noopener noreferrer">
+                  <button
+                    className="btnBlack btnBlack--findInfo"
+                    type="button"
+                    onClick={() => openExternalLink(resolveFindInfoHref(card), "Find Info")}
+                  >
                     Find Info
-                  </a>
+                  </button>
                   {websiteLinks.map((l) => (
-                    <a key={l.url} className="btnPrimary" href={l.url} target="_blank" rel="noopener noreferrer">
+                    <button
+                      key={l.url}
+                      className="btnPrimary"
+                      type="button"
+                      onClick={() => openExternalLink(l.url, l.label || "Website")}
+                    >
                       Website
-                    </a>
+                    </button>
                   ))}
                   <NonprofitSocialLinks links={socialLinks} />
                 </div>

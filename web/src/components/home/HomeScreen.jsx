@@ -6,7 +6,6 @@ import HomeAuthCards from "@/components/home/HomeAuthCards";
 import HomeDirectoryPanel from "@/components/home/HomeDirectoryPanel";
 import HomeFeatureCards from "@/components/home/HomeFeatureCards";
 import HomeMembershipBar from "@/components/home/HomeMembershipBar";
-import HomeMembershipSection from "@/components/home/HomeMembershipSection";
 import "@/components/home/home-mobile.css";
 
 export default function HomeScreen({
@@ -23,8 +22,8 @@ export default function HomeScreen({
   onTrusted,
   onCommunity,
   onPodcasts,
-  onUpgradeTier,
-  onJoinFree,
+  onProUpgrade,
+  hasProAccess = true,
   directoryProps,
   favoriteEinSet,
   onToggleFavorite,
@@ -41,21 +40,6 @@ export default function HomeScreen({
           <HomeMembershipBar onActivateMembership={onActivateMembership} />
         ) : null}
 
-        {showMembershipSection ? (
-          <HomeMembershipSection
-            isAuthenticated={isAuthenticated}
-            loadingAccount={loadingAccount}
-            currentTierKey={currentTierKey}
-            accountEmail={accountEmail}
-            membershipLabel={membershipLabel}
-            membershipBillingStatus={membershipBillingStatus}
-            onRequestSignIn={onRequestSignIn || onSignIn}
-            onJoinFree={onJoinFree || onActivateMembership}
-            onUpgradeTier={onUpgradeTier}
-            onGoToProfile={onGoToProfile}
-          />
-        ) : null}
-
         {!isAuthenticated ? (
           <HomeAuthCards onCreateAccount={onCreateAccount} onSignIn={onSignIn} />
         ) : null}
@@ -65,6 +49,8 @@ export default function HomeScreen({
           onTrusted={onTrusted}
           onCommunity={onCommunity}
           onPodcasts={onPodcasts}
+          onProUpgrade={onProUpgrade}
+          hasProAccess={hasProAccess}
         />
 
         <HomeDirectoryPanel

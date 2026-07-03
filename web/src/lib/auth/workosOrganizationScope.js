@@ -39,8 +39,17 @@ export function profileRowAuthorizesWorkOSSession(profileRow, email = "", workos
 }
 
 /**
+ * Pin `organizationId` on hosted AuthKit URLs only when explicitly enabled.
+ * Default off: WorkOS shows "Couldn't sign in… contact your organization admin" for users
+ * not already in the org. Membership is added after callback via `ensureWorkOSOrganizationMembership`.
+ */
+export function shouldPinWorkOSOrganizationOnHostedAuth() {
+  return String(process.env.WORKOS_PIN_ORG_ON_SIGNIN || "").trim() === "1";
+}
+
+/**
  * Options for `getSignInUrl` / `getSignUpUrl`.
- * Skips `organizationId` for sign-up and bootstrap admin sign-in (WorkOS rejects non-members at the hosted UI).
+ * Skips `organizationId` on sign-up and sign-in unless `WORKOS_PIN_ORG_ON_SIGNIN=1`.
  *
  * @param {{ loginHint?: string, bootstrap?: boolean, signUp?: boolean, adminReturn?: boolean, invitation?: boolean }} [options]
  * @returns {Record<string, string> | {}}
@@ -57,6 +66,8 @@ export function workOSAuthKitAuthorizeOptions(options = {}) {
 
   const hint = String(options.loginHint || "").trim().toLowerCase();
   if (hint && isDefaultApprovedAdminEmail(hint)) return {};
+
+  if (!shouldPinWorkOSOrganizationOnHostedAuth()) return {};
 
   return { organizationId };
 }
@@ -89,6 +100,8 @@ export function sessionMatchesExpectedWorkOSOrganization(session) {
       orgId = "";
     }
   }
+  /** Fresh WorkOS sessions often omit org_id until membership propagates — do not treat as cross-org. */
+  if (!orgId) return true;
   return orgId === expected;
 }
 
@@ -98,7 +111,7 @@ export function sessionMatchesExpectedWorkOSOrganization(session) {
  * (common for WorkOS dashboard owners who are not yet org members).
  *
  * @param {{ organizationId?: string, accessToken?: string, user?: { email?: string } } | null | undefined} session
- * @param {{ email?: string }} [options]
+ * @param {{ email?: string, profileRow?: Record<string, unknown> | null, workosUserId?: string }} [options]
  */
 export function sessionAuthorizedForWorkOS(session, options = {}) {
   if (sessionMatchesExpectedWorkOSOrganization(session)) return true;

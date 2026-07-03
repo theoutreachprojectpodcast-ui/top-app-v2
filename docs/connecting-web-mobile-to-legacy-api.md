@@ -13,9 +13,9 @@ The repo does **not** contain a separate REST service named “mobile API.” Th
 | UI | Static HTML + in-browser JS | Next.js App Router + React |
 | “API” | Supabase PostgREST (anon key in client) | **Next.js Route Handlers** under `/api/*` + Supabase **server-side** (service role) |
 | Directory | Table/view `nonprofits_search_app_v1` | `POST /api/directory/search` (same underlying object when configured) |
-| Profile | `localStorage` (`top_profile_v3`) + optional `top_app_user_profiles` | `torp_profiles` keyed by **WorkOS user id** via `GET/PATCH /api/me` |
+| Profile | `localStorage` (`top_profile_v3`) + optional `top_app_user_profiles` | `top_profiles` keyed by **WorkOS user id** via `GET/PATCH /api/me` |
 | Auth | Demo / local only in legacy script | **WorkOS AuthKit** (cookies) |
-| Membership | Demo toggle in legacy script | **Stripe** webhooks → `torp_profiles` |
+| Membership | Demo toggle in legacy script | **Stripe** webhooks → `top_profiles` |
 
 So “connecting to the existing mobile API” really means:
 
@@ -72,7 +72,7 @@ References:
 
 ### Strategy A — Capacitor WebView (preferred; already in repo)
 
-**Use when:** You control the App Store listing and can ship `org.theoutreachproject.torp` built from `web/ios` and `web/android`.
+**Use when:** You control the App Store listing and can ship `org.theoutreachproject.top` built from `web/ios` and `web/android`.
 
 | Step | Action |
 |------|--------|
@@ -91,7 +91,7 @@ The “mobile API” is simply **`https://theoutreachproject.app/api/...`** with
 |------|--------|
 | 1 | Confirm which Supabase project and tables the legacy app uses (compare with `app.js` constants). |
 | 2 | Apply the same Supabase migrations as Production (`web/supabase/*.sql`). |
-| 3 | Map legacy profile storage to `torp_profiles` or add a **compatibility view** (§6). |
+| 3 | Map legacy profile storage to `top_profiles` or add a **compatibility view** (§6). |
 | 4 | Plan cutover: TestFlight WebView build → replace listing → retire direct anon access where possible. |
 
 Long term, Strategy A avoids duplicating business logic (Stripe tiers, community moderation, admin grants) in native code.
@@ -134,15 +134,15 @@ curl -s -X POST "https://theoutreachproject.app/api/directory/search" \
 
 | Legacy | Current |
 |--------|---------|
-| `PROFILE_KEY` / `top_profile_v3` in localStorage | `torp_profiles` + `GET /api/me` |
+| `PROFILE_KEY` / `top_profile_v3` in localStorage | `top_profiles` + `GET /api/me` |
 | `FAV_KEY` / favorites array locally | `GET/PUT /api/me/saved-orgs` |
-| `top_app_user_profiles` (optional Supabase table) | `torp_profiles` with `workos_user_id` |
+| `top_app_user_profiles` (optional Supabase table) | `top_profiles` with `workos_user_id` |
 
 **Action for parity:**
 
 1. Run profile migrations: [production-supabase-migration-order.md](./production-supabase-migration-order.md).
 2. Do **not** set `NEXT_PUBLIC_PROFILE_TABLE=top_app_user_profiles` on Production (see `web/.env.local.example`).
-3. Migrate legacy rows: copy `top_app_user_profiles` → `torp_profiles` only after you have a stable `workos_user_id` per email (WorkOS sign-in or admin script).
+3. Migrate legacy rows: copy `top_app_user_profiles` → `top_profiles` only after you have a stable `workos_user_id` per email (WorkOS sign-in or admin script).
 
 ### 4.3 Auth
 
@@ -308,7 +308,7 @@ All requests from the WebView must use **`credentials: "include"`** where cookie
 Use one Supabase project per environment (QA vs Production).
 
 - [ ] `nonprofits_search_app_v1` exists and returns rows used by directory UI.  
-- [ ] `torp_profiles` and related migrations applied ([production-supabase-migration-order.md](./production-supabase-migration-order.md)).  
+- [ ] `top_profiles` and related migrations applied ([production-supabase-migration-order.md](./production-supabase-migration-order.md)).  
 - [ ] RLS policies allow **server** access via `SUPABASE_SERVICE_ROLE_KEY` on Vercel (never expose service role in mobile binaries).  
 - [ ] Legacy `top_app_user_profiles` either migrated or left read-only for old clients only.  
 - [ ] Storage bucket `profile-photos` (if using avatar upload) exists and policies match [web/src/app/api/me/avatar/route.js](../web/src/app/api/me/avatar/route.js).  
@@ -321,7 +321,7 @@ Use one Supabase project per environment (QA vs Production).
 |-------|----------|
 | 1 | Ship Production web (sections 1–7 in [mvp-production-launch.md](./mvp-production-launch.md)). |
 | 2 | Internal TestFlight / Play internal testing with `mobile:prep:prod`. |
-| 3 | Match **bundle ID** `org.theoutreachproject.torp` in App Store Connect (or create new listing if ID changes). |
+| 3 | Match **bundle ID** `org.theoutreachproject.top` in App Store Connect (or create new listing if ID changes). |
 | 4 | Use copy from [store-listing-copy.md](./store-listing-copy.md). |
 | 5 | After approval, monitor WorkOS sign-in and Stripe on real devices. |
 | 6 | Deprecate direct Supabase anon usage in any remaining legacy binary; rotate anon key if it was embedded in old builds. |
@@ -348,7 +348,7 @@ If the **bundle ID** changes, users get a **new** App Store app; plan communicat
 | Sign-in works on web, fails in app | Missing redirect URI or cookie domain | WorkOS Staging/Production redirects; `WORKOS_COOKIE_DOMAIN` |
 | Directory empty | Missing `nonprofits_search_app_v1` | Supabase object + seed/ETL |
 | Profile save 401 | Org/session mismatch | WorkOS org membership; see `/api/me` vs PATCH errors |
-| Legacy app data not in new app | Different Supabase project or profile table | Align env URLs/keys; migrate `torp_profiles` |
+| Legacy app data not in new app | Different Supabase project or profile table | Align env URLs/keys; migrate `top_profiles` |
 | Stripe works on web, not mobile | WebView blocked third-party cookies rare on iOS | Use same apex HTTPS origin; test in-app checkout return URL |
 
 CLI helpers:
@@ -379,6 +379,6 @@ pnpm --dir web run smoke:qa:http
 - The **existing App Store “mobile API”** is best understood as **Supabase + client-side queries**, as in root `app.js`.  
 - **Web and new mobile** should share **one Next.js deployment** and its **`/api/*` routes**; Capacitor only wraps that URL.  
 - **Do not build a second mobile-only API** unless you must support an old native binary during transition; prefer WebView + `CAP_SERVER_URL`, then retire direct anon access.  
-- Align **Supabase schema** (`nonprofits_search_app_v1`, `torp_profiles`) and **WorkOS/Stripe** on Production before store submission.
+- Align **Supabase schema** (`nonprofits_search_app_v1`, `top_profiles`) and **WorkOS/Stripe** on Production before store submission.
 
 For implementation questions (new `/api/mobile/v1` proxies, migration SQL, or WorkOS in pure native), extend this doc with your actual legacy bundle ID, Supabase project ref, and API inventory from the old repository.

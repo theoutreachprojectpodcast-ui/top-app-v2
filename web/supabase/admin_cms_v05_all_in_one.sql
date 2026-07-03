@@ -145,4 +145,10 @@ values
   ))
 on conflict (setting_key) do nothing;
 
+-- Deny direct PostgREST access; admin CMS via /api/admin/* + service role.
+alter table public.admin_settings enable row level security;
+alter table public.page_images enable row level security;
+alter table public.form_submissions enable row level security;
+alter table public.billing_records enable row level security;
+
 commit;

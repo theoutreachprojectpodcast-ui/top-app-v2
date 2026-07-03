@@ -1,4 +1,4 @@
-# Capacitor (tORP v0.3) — stacked web + Android + iOS
+# Capacitor (TOP v0.3) — stacked web + Android + iOS
 
 This document describes how Capacitor is integrated **without** forking the Next.js app. The **browser and `next dev` / `next start` experience remains primary**.
 
@@ -6,7 +6,7 @@ This document describes how Capacitor is integrated **without** forking the Next
 
 Before Capacitor files were added, a checkpoint commit was created and pushed:
 
-- **Commit:** `checkpoint: pre-capacitor-integration (tORP v0.3)` (e.g. `de69e85` on branch `tORP_Volente_v0.3`)
+- **Commit:** `checkpoint: pre-capacitor-integration (TOP v0.3)` (e.g. `de69e85` on branch `TOP_Volente_v0.3`)
 - **Remote:** `origin` → `https://github.com/theoutreachprojectpodcast-ui/top-app-v2.git`
 
 Restore that point if needed: `git checkout <commit>`.
@@ -25,7 +25,7 @@ Restore that point if needed: `git checkout <commit>`.
 | Supabase | Client + service routes from Next API |
 | Stripe | API routes + webhooks — requires **HTTPS** origin in production |
 | Browser-only assumptions | Minimal; native uses the **same** UI loaded from a URL |
-| Dev commands | `pnpm dev` → **localhost:3001**; `pnpm dev:alt` → **localhost:3000** |
+| Dev commands | `pnpm dev` → **localhost:3000**; `pnpm dev:alt` → **localhost:3001** |
 | Start prod locally | `pnpm start` (after `pnpm build`) |
 
 **Why `webDir` is not `.next`:** Capacitor expects static web assets. This app relies on **Next Route Handlers** and dynamic rendering, so the native wrapper loads the **real Next deployment** via `server.url` (see below).
@@ -41,7 +41,7 @@ Inside **`web/`** (the Next app root):
 
 **App identity (update when branding is final):**
 
-- **appId / bundle id:** `org.theoutreachproject.torp`
+- **appId / bundle id:** `org.theoutreachproject.top`
 - **appName:** `The Outreach Project`
 
 ## Phase 5 — Scripts (`web/package.json`)
@@ -55,17 +55,22 @@ Inside **`web/`** (the Next app root):
 | `pnpm run cap:sync` / `pnpm run mobile:sync` | Copy `capacitor-www` + config into native projects |
 | `pnpm run cap:open:android` / `mobile:open:android` | Open Android Studio |
 | `pnpm run cap:open:ios` / `mobile:open:ios` | Open Xcode (**macOS only**) |
-| `pnpm run mobile:prep` | `pnpm run build` then `cap sync` — verifies web build, then refreshes native assets |
+| `pnpm run mobile:prep` | Same as `mobile:prep:prod` — builds web, syncs native, verifies embedded Production URL |
+| `pnpm run mobile:prep:prod` | **TestFlight / App Store** — embeds `https://theoutreachproject.app` |
+| `pnpm run verify:cap-server` | Fails if iOS/Android `capacitor.config.json` has localhost or missing `server.url` |
 
-## Phase 6 — `CAP_SERVER_URL` (required for real app in WebView)
+## Phase 6 — `CAP_SERVER_URL` (remote WebView origin)
 
-Set **`CAP_SERVER_URL`** to the **origin** where Next is actually served (no trailing slash):
+**TestFlight / App Store:** `capacitor.config.js` **defaults to Production** (`https://theoutreachproject.app`) when `CAP_SERVER_URL` is unset. Always run `pnpm run mobile:prep:prod` before archiving in Xcode.
+
+Override **`CAP_SERVER_URL`** only for local dev / QA (no trailing slash):
 
 **Examples**
 
-- Production: `https://your-app.vercel.app` (or your custom domain)
-- Android **emulator** hitting host machine: `http://10.0.2.2:3001` (maps to host `localhost:3001`)
-- Physical device on LAN: `http://192.168.x.x:3001` (use your machine’s IP; same Wi‑Fi)
+- Production (default): `https://theoutreachproject.app`
+- QA native builds: `pnpm run mobile:prep:qa` → `https://qa.theoutreachproject.app`
+- Android **emulator** → host machine: `http://10.0.2.2:3000` (with `pnpm dev` on port 3000)
+- Physical device on LAN: `http://192.168.x.x:3000` (same Wi‑Fi; dev only)
 
 Then from **`web/`**:
 
@@ -104,6 +109,8 @@ Default Capacitor placeholders apply. Replace later with:
 - `pnpm exec capacitor-assets` flow or manual assets (documented on [capacitorjs.com](https://capacitorjs.com/docs/guides/splash-screens-and-icons))
 
 ## Phase 11 — iOS on a Mac (next steps)
+
+**Full walkthrough:** [../../docs/IOS_XCODE_SETUP.md](../../docs/IOS_XCODE_SETUP.md)
 
 On **macOS** with **Xcode** installed:
 
@@ -155,5 +162,7 @@ Changing only Next **source** (no static shell change) still requires **redeploy
 
 ## See also
 
+- [../../docs/MOBILE_READINESS.md](../../docs/MOBILE_READINESS.md) — build workflow, scripts, store checklist
+- [../../docs/MOBILE_ARCHITECTURE_GAPS.md](../../docs/MOBILE_ARCHITECTURE_GAPS.md) — feature matrix, plugins, compliance gaps
 - [../../docs/connecting-web-mobile-to-legacy-api.md](../../docs/connecting-web-mobile-to-legacy-api.md) — how web + Capacitor connect to the legacy App Store Supabase client vs Next `/api/*`
 - [../../docs/mvp-production-launch.md](../../docs/mvp-production-launch.md) §9 — store submission checklist

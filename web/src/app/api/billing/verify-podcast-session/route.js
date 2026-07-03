@@ -32,7 +32,7 @@ export async function GET(request) {
       paymentStatus: session.payment_status,
     });
   } catch (e) {
-    console.error("[torp] verify podcast session", e);
+    console.error("[top] verify podcast session", e);
     return Response.json({ paid: false, error: "stripe_error", message: e.message }, { status: 500 });
   }
 }
