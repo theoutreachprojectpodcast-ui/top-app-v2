@@ -1,10 +1,8 @@
 "use client";
 
 import { useLayoutEffect } from "react";
-import { App } from "@capacitor/app";
-import { ScreenOrientation } from "@capacitor/screen-orientation";
 import { installCapacitorInAppNavigation } from "@/lib/capacitor/inAppNavigation";
-import { lockPortraitOrientation } from "@/lib/capacitor/lockPortraitOrientation";
+import { installCapacitorViewportSync } from "@/lib/capacitor/syncCapacitorViewport";
 import { capacitorPlatform, isCapacitorNative } from "@/lib/capacitor/platform";
 
 /**
@@ -16,43 +14,18 @@ export default function CapacitorNativeShell() {
     const root = document.documentElement;
     if (!isCapacitorNative()) {
       delete root.dataset.capacitorNative;
+      delete root.dataset.capOrientation;
       return;
     }
 
     root.dataset.capacitorNative = capacitorPlatform();
     installCapacitorInAppNavigation();
-
-    const reinforcePortraitLock = () => {
-      void lockPortraitOrientation();
-    };
-
-    reinforcePortraitLock();
-
-    window.addEventListener("orientationchange", reinforcePortraitLock);
-    window.addEventListener("resize", reinforcePortraitLock);
-    window.addEventListener("focus", reinforcePortraitLock);
-    window.visualViewport?.addEventListener("resize", reinforcePortraitLock);
-
-    let appStateListener;
-    void App.addListener("appStateChange", ({ isActive }) => {
-      if (isActive) reinforcePortraitLock();
-    }).then((handle) => {
-      appStateListener = handle;
-    });
-
-    let orientationListener;
-    void ScreenOrientation.addListener("screenOrientationChange", reinforcePortraitLock).then((handle) => {
-      orientationListener = handle;
-    });
+    const teardownViewport = installCapacitorViewportSync();
 
     return () => {
-      window.removeEventListener("orientationchange", reinforcePortraitLock);
-      window.removeEventListener("resize", reinforcePortraitLock);
-      window.removeEventListener("focus", reinforcePortraitLock);
-      window.visualViewport?.removeEventListener("resize", reinforcePortraitLock);
-      void appStateListener?.remove();
-      void orientationListener?.remove();
+      teardownViewport();
       delete root.dataset.capacitorNative;
+      delete root.dataset.capOrientation;
     };
   }, []);
 

@@ -131,7 +131,7 @@ const BY_SLUG = {
       "linear-gradient(118deg, rgba(18, 10, 6, 0.96) 0%, rgba(28, 16, 8, 0.78) 44%, rgba(14, 8, 4, 0.55) 100%)",
     veteranOwnedDefault: true,
     locationChips: ["Texas"],
-    logoPanelMode: "light",
+    logoPanelMode: "dark",
     logoFallbackUrls: [DON_BLAS_CIGARS_LOGO_URL],
   },
 };

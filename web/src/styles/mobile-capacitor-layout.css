@@ -2,11 +2,77 @@
  * Capacitor native shell — scroll container + dock clearance (header sizing matches mobile web via mobile-shell.css).
  */
 
-/* Lock document scroll; only main.topApp scrolls (prevents short rubber-band past viewport). */
+/* Portrait logical viewport — JS sets --cap-vw/--cap-portrait-width (see syncCapacitorViewport.js). */
+html[data-capacitor-native] {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+html[data-capacitor-native] main.topApp {
+  --mobile-shell-pad-x: clamp(16px, calc(var(--cap-vw, 1vw) * 4.5), 20px);
+  min-height: var(--cap-app-height, 100dvh);
+  height: var(--cap-app-height, 100%);
+  max-height: var(--cap-app-height, 100dvh);
+}
+
+html[data-capacitor-native] main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]):not([data-page-atmosphere="home"]) {
+  --mobile-site-header-logo-h: clamp(56px, calc(var(--cap-vw, 1vw) * 14), 72px);
+  --mobile-site-header-logo-max-w: min(180px, calc(var(--cap-portrait-width, 100vw) - 96px));
+  --mobile-site-header-control-size: 44px;
+  --mobile-site-header-pad-x: max(
+    clamp(8px, calc(var(--cap-vw, 1vw) * 2.5), 12px),
+    env(safe-area-inset-left, 0px),
+    env(safe-area-inset-right, 0px)
+  );
+}
+
+html[data-capacitor-native] main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) {
+  --mobile-site-header-logo-h: clamp(301px, calc(var(--cap-vw, 1vw) * 78.75), 399px);
+  --mobile-site-header-logo-max-w: min(910px, calc(var(--cap-portrait-width, 100vw) - 28px));
+  --mobile-site-header-control-size: 44px;
+  --mobile-site-header-pad-x: max(
+    clamp(8px, calc(var(--cap-vw, 1vw) * 2.5), 12px),
+    env(safe-area-inset-left, 0px),
+    env(safe-area-inset-right, 0px)
+  );
+}
+
+html[data-capacitor-native] main.topApp.topApp--mobileHomeEntrance[data-page-atmosphere="home"]:not(.appShell--podcast) {
+  --mobile-site-header-logo-h: clamp(52px, calc(var(--cap-vw, 1vw) * 13.5), 64px);
+  --mobile-site-header-logo-max-w: min(168px, calc(var(--cap-portrait-width, 100vw) - 120px));
+}
+
+html[data-capacitor-native] .bottomNav.bottomNav--mobileDock .navItemLabel {
+  font-size: clamp(9px, calc(var(--cap-vw, 1vw) * 2.4), 11px);
+}
+
+/* Never apply desktop width breakpoint layout inside the native shell. */
+@media (min-width: 761px) {
+  html[data-capacitor-native] main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) {
+    --header-floating-offset: 4px;
+    --header-floating-height: clamp(350px, calc(var(--cap-vw, 1vw) * 49), 476px);
+    --header-fade-height: 24px;
+    --home-logo-content-gap: 8px;
+  }
+
+  html[data-capacitor-native] main.topApp[data-page-atmosphere="home"] .headerBrandStack {
+    max-width: min(1092px, calc(var(--cap-portrait-width, 100vw) * 0.92));
+  }
+
+  html[data-capacitor-native] main.topApp[data-page-atmosphere="home"] img.brandMarkImg--header:not(.podcastBrandLogo) {
+    max-height: clamp(350px, calc(var(--cap-vw, 1vw) * 49), 476px);
+    max-width: min(910px, calc(var(--cap-portrait-width, 100vw) * 0.88));
+  }
+}
+
+html[data-capacitor-native][data-cap-orientation="landscape"] body {
+  overflow: hidden;
+}
+
 html[data-capacitor-native],
 html[data-capacitor-native] body {
   height: 100%;
-  max-height: 100dvh;
+  max-height: var(--cap-app-height, 100dvh);
   overflow: hidden;
   overscroll-behavior: none;
 }
@@ -21,9 +87,12 @@ html[data-capacitor-native] main.topApp {
   position: absolute;
   inset: 0;
   width: 100%;
+  min-width: 0;
+  max-width: var(--cap-portrait-width, 100%);
+  margin-inline: auto;
   min-height: 0 !important;
-  height: 100%;
-  max-height: 100dvh;
+  height: var(--cap-app-height, 100%);
+  max-height: var(--cap-app-height, 100dvh);
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior-y: contain;
@@ -135,7 +204,7 @@ html[data-capacitor-native] main.topApp .siteFooter.siteFooter--pageBottom.siteF
   html[data-capacitor-native]
     main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]):not([data-page-atmosphere="home"])
     .appSiteHeader {
-    margin-bottom: clamp(2px, 0.8vw, 6px);
+    margin-bottom: clamp(2px, calc(var(--cap-vw, 1vw) * 0.8), 6px);
     padding-bottom: 0;
   }
 
@@ -153,7 +222,7 @@ html[data-capacitor-native] main.topApp .siteFooter.siteFooter--pageBottom.siteF
   html[data-capacitor-native]
     main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]):not([data-page-atmosphere="home"])
     > .shell:not(.shell--home) {
-    padding-top: clamp(2px, 0.6vw, 6px);
+    padding-top: clamp(2px, calc(var(--cap-vw, 1vw) * 0.6), 6px);
   }
 
   /* Header corner controls — wins over `top-app.css` @520px dock rules (loads last). */
