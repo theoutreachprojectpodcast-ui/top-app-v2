@@ -7006,8 +7006,8 @@ html.dark .communityPostBodyGuideSteps li {
   }
 
   main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) {
-    --mobile-site-header-logo-h: clamp(215px, 56vw, 285px);
-    --mobile-site-header-logo-max-w: min(720px, calc(100vw - 16px));
+    --mobile-site-header-logo-h: clamp(112px, 29vw, 148px);
+    --mobile-site-header-logo-max-w: min(480px, calc(100vw - 24px));
     --mobile-site-header-control-size: 44px;
     --mobile-site-header-control-pad-top: 2px;
     --mobile-site-header-pad-x: max(clamp(8px, 2.5vw, 12px), env(safe-area-inset-left, 0px));
@@ -7047,7 +7047,7 @@ html.dark .communityPostBodyGuideSteps li {
     position: relative !important;
     top: auto !important;
     left: auto !important;
-    align-self: center;
+    align-self: start;
     transform: none !important;
     z-index: 0;
     flex: 0 0 auto;

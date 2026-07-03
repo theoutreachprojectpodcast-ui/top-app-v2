@@ -104,8 +104,9 @@ html {
   }
 
   main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) {
-    --mobile-site-header-logo-h: clamp(255px, 67vw, 340px);
-    --mobile-site-header-logo-max-w: min(780px, calc(100vw - 16px));
+    --mobile-home-header-content-gap: clamp(4px, 1.2vw, 8px);
+    --mobile-site-header-logo-h: clamp(112px, 29vw, 148px);
+    --mobile-site-header-logo-max-w: min(480px, calc(100vw - 24px));
     --mobile-site-header-control-size: 44px;
     --mobile-site-header-control-pad-top: 2px;
     --mobile-site-header-pad-x: max(
@@ -113,6 +114,26 @@ html {
       env(safe-area-inset-left, 0px),
       env(safe-area-inset-right, 0px)
     );
+  }
+
+  main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) .appSiteHeader {
+    align-items: start;
+    margin-bottom: var(--mobile-home-header-content-gap, 6px);
+  }
+
+  main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) .headerBrandStack--mobileWordmark {
+    align-self: start;
+    height: fit-content;
+    max-height: var(--mobile-site-header-logo-h);
+  }
+
+  main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) .headerBrandStack--mobileWordmark .brandMarkImg,
+  main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast)
+    .headerBrandStack--mobileWordmark
+    img.brandMarkImg--header:not(.podcastBrandLogo) {
+    margin-bottom: 0 !important;
+    min-height: 0 !important;
+    min-width: 0 !important;
   }
 
   /* Guest mobile home: compact header mark — splash panel carries branding + auth CTAs. */
