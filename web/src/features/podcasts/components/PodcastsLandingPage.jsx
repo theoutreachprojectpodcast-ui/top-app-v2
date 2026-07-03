@@ -16,8 +16,9 @@ import EpisodeCard from "@/features/podcasts/components/EpisodeCard";
 import GuestCard from "@/features/podcasts/components/GuestCard";
 import PodcastSponsorFlowModal from "@/features/podcasts/components/PodcastSponsorFlowModal";
 import PodcastSectionHeader from "@/features/podcasts/components/PodcastSectionHeader";
-import PodcastSponsorsSection from "@/features/podcasts/components/PodcastSponsorsSection";
+import PodcastSponsorHubSection from "@/features/podcasts/components/PodcastSponsorHubSection";
 import PodcastCTASection from "@/features/podcasts/components/PodcastCTASection";
+import { PODCAST_SPONSOR_TIERS } from "@/features/sponsors/data/podcastSponsorTiers";
 import PodcastApplyGuestForm from "@/features/podcasts/components/PodcastApplyGuestForm";
 import MemberOnlyLockSection from "@/features/podcasts/components/MemberOnlyLockSection";
 import { listPodcastMemberContent } from "@/features/podcasts/api/podcastApi";
@@ -87,6 +88,7 @@ export default function PodcastsLandingPage({
 
   const [applyOpen, setApplyOpen] = useState(false);
   const [sponsorFlowOpen, setSponsorFlowOpen] = useState(false);
+  const [podcastSponsorTierId, setPodcastSponsorTierId] = useState(PODCAST_SPONSOR_TIERS[0]?.id || "");
   const [sponsorUpgradeOpen, setSponsorUpgradeOpen] = useState(false);
   const sponsorUpgradeCopy = getProUpgradeGateContent("/podcasts/sponsor");
 
@@ -323,52 +325,18 @@ export default function PodcastsLandingPage({
             </button>
           </div>
         </section>
-        {hasProPodcastExtras ? (
-          <section className="podcastSection podcastSponsorCtaBand">
-            <PodcastSectionHeader
-              eyebrow="Podcast sponsors"
-              title="Sponsor the show"
-              subtitle="Community, Impact, and Foundational packages. Open the flow to compare tiers, review full placements and benefits, and apply—without leaving the podcast experience."
-            />
-            <div className="row wrap">
-              <button className="btnPrimary" type="button" onClick={() => setSponsorFlowOpen(true)}>
-                Sponsor the show
-              </button>
-              <Link className="btnSoft" href="/sponsors?packages=1">
-                Sponsor hub (main app)
-              </Link>
-            </div>
-            {!podcastSponsorBillingReady ? (
-              <p className="podcastMuted" role="status">
-                Podcast sponsor tiers use the in-page demo checkout for now. Membership Support and Pro use live Stripe when enabled on Profile.
-              </p>
-            ) : null}
-          </section>
-        ) : (
-          <section className="podcastSection podcastSponsorCtaBand">
-            <PodcastSectionHeader
-              eyebrow="Podcast sponsors"
-              title="Sponsor opportunities — Pro members"
-              subtitle="Podcast sponsor packages and in-page checkout are available to Pro members."
-            />
-            <div className="podcastLockCard">
-              <strong>Upgrade to Pro for sponsor opportunities</strong>
-              <p>
-                Support members can watch episodes, explore guests, and apply to be on the show. Pro membership unlocks podcast
-                sponsor packages and the full partnership flow.
-              </p>
-              <div className="row wrap">
-                <Link className="btnSoft" href="/profile">
-                  Profile &amp; membership
-                </Link>
-                <Link className="btnSoft" href="/sponsors">
-                  Main sponsor hub
-                </Link>
-              </div>
-            </div>
-          </section>
-        )}
-        <PodcastSponsorsSection sponsors={podcastSponsors} />
+        <PodcastSponsorHubSection
+          sponsors={podcastSponsors}
+          canAccess={hasProPodcastExtras}
+          selectedTierId={podcastSponsorTierId}
+          onSelectTier={setPodcastSponsorTierId}
+          onApply={openPodcastSponsorApply}
+          billingNote={
+            !podcastSponsorBillingReady && hasProPodcastExtras
+              ? "Podcast sponsor tiers use the in-page demo checkout for now. Membership Support and Pro use live Stripe when enabled on Profile."
+              : ""
+          }
+        />
         <PodcastCTASection onApply={() => setApplyOpen(true)} />
       </div>
       {applyOpen ? (
@@ -408,7 +376,7 @@ export default function PodcastsLandingPage({
           open={sponsorFlowOpen}
           onClose={() => setSponsorFlowOpen(false)}
           supabase={supabase}
-          initialTierId={searchParams.get("tier") || undefined}
+          initialTierId={searchParams.get("tier") || podcastSponsorTierId || undefined}
           stripeReturn={{
             checkout: searchParams.get("sponsor_checkout") || "",
             sessionId: searchParams.get("session_id") || "",

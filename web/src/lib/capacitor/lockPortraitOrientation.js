@@ -1,11 +1,19 @@
+import { ScreenOrientation } from "@capacitor/screen-orientation";
 import { isCapacitorNative } from "@/lib/capacitor/platform";
 
 /**
- * Reinforce portrait lock inside Capacitor WebViews. Native Android/iOS configs are primary;
- * the Screen Orientation API helps where the WebView exposes it.
+ * Lock the native shell to portrait. AndroidManifest / Info.plist are primary;
+ * Capacitor Screen Orientation + the web Screen Orientation API reinforce the lock.
  */
 export async function lockPortraitOrientation() {
   if (typeof window === "undefined" || !isCapacitorNative()) return;
+
+  try {
+    await ScreenOrientation.lock({ orientation: "portrait" });
+    return;
+  } catch {
+    // Plugin unavailable or already locked — try web API below.
+  }
 
   const orientation = window.screen?.orientation;
   if (!orientation || typeof orientation.lock !== "function") return;
@@ -13,6 +21,6 @@ export async function lockPortraitOrientation() {
   try {
     await orientation.lock("portrait");
   } catch {
-    // Some iOS builds deny lock outside fullscreen — Info.plist orientation still applies.
+    // Native manifest/plist + ScreenOrientation plugin remain authoritative.
   }
 }

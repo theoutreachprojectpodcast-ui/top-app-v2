@@ -40,6 +40,7 @@ const SLUG_DEFAULT_GROUP = /** @type {Record<string, SponsorDisplayGroupKey>} */
   "vetnav-services": "impact",
   "eduardo-pico-designs": "community",
   "green-gorilla-land-management": "community",
+  "don-blas-cigars": "community",
 });
 
 /**

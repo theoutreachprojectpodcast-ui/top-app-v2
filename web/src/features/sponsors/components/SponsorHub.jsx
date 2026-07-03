@@ -6,20 +6,18 @@ import { getSupabaseClient } from "@/lib/supabase/client";
 import BecomeSponsorModal from "@/features/sponsors/components/BecomeSponsorModal";
 import SponsorsLandingPage from "@/features/sponsors/components/SponsorsLandingPage";
 import {
-  ALL_SPONSOR_PACKAGE_TIERS,
+  MAIN_APP_SPONSOR_PACKAGE_TIERS,
   getSponsorPackageById,
-  isKnownSponsorPackageId,
+  isKnownMainAppSponsorPackageId,
 } from "@/features/sponsors/data/allSponsorPackages";
-import { useSponsorHubCatalog } from "@/features/sponsors/hooks/useSponsorHubCatalog";
 
 export default function SponsorHub({ supabase: supabaseProp }) {
   const supabaseClient = useMemo(() => getSupabaseClient(), []);
   const supabase = supabaseProp ?? supabaseClient;
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { sponsorCatalogRows } = useSponsorHubCatalog(supabase);
   const [becomeSponsorOpen, setBecomeSponsorOpen] = useState(false);
-  const [selectedTierId, setSelectedTierId] = useState(ALL_SPONSOR_PACKAGE_TIERS[0]?.id);
+  const [selectedTierId, setSelectedTierId] = useState(MAIN_APP_SPONSOR_PACKAGE_TIERS[0]?.id);
 
   const stripeReturn = useMemo(() => {
     const checkout = searchParams.get("sponsor_checkout");
@@ -32,7 +30,7 @@ export default function SponsorHub({ supabase: supabaseProp }) {
 
   useEffect(() => {
     const tier = searchParams.get("tier");
-    if (tier && isKnownSponsorPackageId(tier)) {
+    if (tier && isKnownMainAppSponsorPackageId(tier)) {
       setSelectedTierId(tier);
     }
   }, [searchParams]);
@@ -53,7 +51,7 @@ export default function SponsorHub({ supabase: supabaseProp }) {
   }
 
   function openBecomeSponsor(tierId) {
-    if (tierId && isKnownSponsorPackageId(tierId)) {
+    if (tierId && isKnownMainAppSponsorPackageId(tierId)) {
       setSelectedTierId(tierId);
     }
     setBecomeSponsorOpen(true);
@@ -67,8 +65,8 @@ export default function SponsorHub({ supabase: supabaseProp }) {
   return (
     <>
       <SponsorsLandingPage
-        sponsorCatalogRows={sponsorCatalogRows}
         onOpenBecomeSponsor={() => openBecomeSponsor()}
+        onOpenBecomeSponsorWithTier={openBecomeSponsor}
       />
       <BecomeSponsorModal
         open={becomeSponsorOpen}

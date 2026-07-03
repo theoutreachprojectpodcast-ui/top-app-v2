@@ -6,6 +6,8 @@ export const SPONSOR_PROGRAM_TYPE_MAIN = "main_app";
 
 /** Stored on sponsor_applications.sponsor_family */
 export const SPONSOR_FAMILY_MISSION = "mission_partner";
+export const SPONSOR_FAMILY_FOUNDATIONAL = "foundational";
+export const SPONSOR_FAMILY_IMPACT = "impact";
 
 export const MISSION_PARTNER_TIERS = [
   {
@@ -68,6 +70,57 @@ export const MISSION_PARTNER_TIERS = [
       "Highest standard stewardship tier before engaging a fully custom agreement",
     ],
   },
+];
+
+export const FOUNDATIONAL_SPONSOR_TIERS = [
+  {
+    id: "platform-foundational-5000",
+    programType: SPONSOR_PROGRAM_TYPE_MAIN,
+    family: SPONSOR_FAMILY_FOUNDATIONAL,
+    familyLabel: "Foundational sponsors",
+    name: "Foundational Sponsor",
+    amount: 5000,
+    spotlight: "Core partners that anchor trust, training, and readiness across the ecosystem.",
+    fullPlacements: [
+      "Foundational sponsor listing on The Outreach Project website with standard logo treatment",
+      "Inclusion in partner-focused digital announcements when those programs are active",
+      "Visibility in community-appropriate surfaces aligned to sponsor category and fit",
+    ],
+    fullBenefits: [
+      "Association with vetted resource navigation for veterans, first responders, and families",
+      "Sponsor profile eligible for the public catalog after review and asset readiness",
+      "Structured onboarding with brand-fit review and placement coordination",
+    ],
+  },
+];
+
+export const IMPACT_SPONSOR_TIERS = [
+  {
+    id: "platform-impact-3500",
+    programType: SPONSOR_PROGRAM_TYPE_MAIN,
+    family: SPONSOR_FAMILY_IMPACT,
+    familyLabel: "Impact sponsors",
+    name: "Impact Sponsor",
+    amount: 3500,
+    spotlight: "Regional and program sponsors extending reach into communities and verticals.",
+    fullPlacements: [
+      "Impact sponsor presence across approved website and discovery modules",
+      "Digital acknowledgements scaled to regional or program focus areas",
+      "Qualified visibility in community-aligned surfaces when inventory allows",
+    ],
+    fullBenefits: [
+      "Mission-connected positioning for organizations serving specific regions or causes",
+      "Sponsor profile eligible for catalog listing after review",
+      "Onboarding support for messaging, assets, and placement timing",
+    ],
+  },
+];
+
+/** Main Outreach Project sponsors hub — mission, foundational, and impact only (no podcast or community). */
+export const MAIN_APP_SPONSOR_TIERS = [
+  ...MISSION_PARTNER_TIERS,
+  ...FOUNDATIONAL_SPONSOR_TIERS,
+  ...IMPACT_SPONSOR_TIERS,
 ];
 
 export const SPONSOR_TIERS = MISSION_PARTNER_TIERS;

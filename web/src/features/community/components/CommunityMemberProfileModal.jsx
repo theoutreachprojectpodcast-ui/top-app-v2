@@ -13,7 +13,7 @@ import {
   isAuthorProfileLookupKey,
 } from "@/features/community/api/communityApi";
 import { mapCommunityMemberProfile } from "@/features/community/mappers/memberProfileMapper";
-import { avatarFallbackUrl } from "@/lib/avatarFallback";
+import { emptyProfileAvatarUrl } from "@/lib/avatarFallback";
 
 function buildSyntheticMemberFromPosts(memberId, posts) {
   const first = Array.isArray(posts) ? posts[0] : null;
@@ -107,7 +107,7 @@ export default function CommunityMemberProfileModal({ supabase, memberId, onClos
           <>
             <section className="communityMemberProfileHeader">
               <Avatar
-                src={profile.avatarUrl || avatarFallbackUrl(displayMember.id)}
+                src={String(profile.avatarUrl || "").trim() || emptyProfileAvatarUrl()}
                 alt={profile.name}
                 className="communityMemberProfileAvatar"
               />

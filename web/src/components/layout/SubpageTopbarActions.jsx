@@ -85,7 +85,10 @@ export default function SubpageTopbarActions({ section = "all" }) {
   }
 
   const sponsorLink = (
-    <Link className="btnSoft sponsorBtn" href="/sponsors">
+    <Link
+      className="btnSoft sponsorBtn"
+      href={pathname?.startsWith("/sponsors") ? "/sponsors?apply=1" : "/sponsors"}
+    >
       <IconWrap path={SPONSOR_ICON} />
       Become a Sponsor
     </Link>

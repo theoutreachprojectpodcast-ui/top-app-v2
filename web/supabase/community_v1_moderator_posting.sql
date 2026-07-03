@@ -32,7 +32,7 @@ create index if not exists community_posts_pinned_feed_idx
   on public.community_posts (is_pinned desc, created_at desc)
   where deleted_at is null and status = 'approved';
 
-comment on column public.community_posts.is_pinned is 'Pinned posts appear first in the public feed.';
+comment on column public.community_posts.is_pinned is 'Visual pin badge only; public feed sorts by published_at (newest first).';
 comment on column public.community_posts.comments_enabled is 'When false, comments are disabled for this post.';
 comment on column public.community_posts.feed_media_json is 'Carousel slides, resource highlight, captions, etc.';
 

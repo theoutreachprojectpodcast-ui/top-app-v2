@@ -45,19 +45,6 @@ export default function SponsorOpportunitiesSection({ checkoutReturnPath = "/spo
         await navigateToStripeCheckout(data.url);
         return;
       }
-      if (data.error === "use_podcast_checkout" && data.podcastTierId) {
-        const pr = await fetch("/api/billing/podcast-sponsor-checkout", {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ podcastTierId: data.podcastTierId, returnPath: checkoutReturnPath }),
-        });
-        const pd = await pr.json().catch(() => ({}));
-        if (pd.url) {
-          await navigateToStripeCheckout(pd.url);
-          return;
-        }
-      }
       if (data.error === "use_sponsor_application") {
         const tid = data.missionTierId || "";
         window.location.assign(`/sponsors?packages=1${tid ? `&tier=${encodeURIComponent(tid)}` : ""}`);
@@ -71,15 +58,17 @@ export default function SponsorOpportunitiesSection({ checkoutReturnPath = "/spo
     }
   }
 
+  const packageOpportunities = opportunities.filter((opp) => opp.family !== "account_sponsor" && !opp.podcastTierId);
+
   return (
     <section className="card sponsorSection sponsorOpportunitiesSection" id="sponsor-opportunities">
       <div className="sponsorSectionHead">
         <h3>Sponsor opportunities</h3>
-        <span className="sponsorFeaturedValuePill">Partnership packages</span>
+        <span className="sponsorFeaturedValuePill">Main platform</span>
       </div>
       <p className="sponsorSectionLead">
-        Explore sponsorship levels, podcast placements, and mission partner packages. Pricing and benefits come from our
-        sponsor programs — not from personal membership billing.
+        Explore mission partner, foundational, and impact packages for the main Outreach Project platform. Podcast
+        packages are on the <Link href="/podcasts">Podcast hub</Link>.
       </p>
       {loading ? <p className="sponsorSectionLead">Loading opportunities…</p> : null}
       {error ? (
@@ -87,9 +76,9 @@ export default function SponsorOpportunitiesSection({ checkoutReturnPath = "/spo
           {error}
         </p>
       ) : null}
-      {opportunities.length > 0 ? (
+      {packageOpportunities.length > 0 ? (
         <ul className="sponsorOpportunitiesSection__list">
-          {opportunities.map((opp) => (
+          {packageOpportunities.map((opp) => (
             <li key={opp.id} className="sponsorOpportunitiesSection__item">
               <div className="sponsorOpportunitiesSection__itemHead">
                 <strong>{opp.name}</strong>
@@ -107,15 +96,6 @@ export default function SponsorOpportunitiesSection({ checkoutReturnPath = "/spo
                 >
                   Subscribe
                 </button>
-              ) : opp.checkoutKind === "one_time" && opp.stripeConfigured ? (
-                <button
-                  type="button"
-                  className="btnSoft"
-                  disabled={!!busy}
-                  onClick={() => startCheckout("sponsor", opp.id)}
-                >
-                  Checkout
-                </button>
               ) : (
                 <Link
                   className="btnSoft"
@@ -129,17 +109,14 @@ export default function SponsorOpportunitiesSection({ checkoutReturnPath = "/spo
         </ul>
       ) : !loading ? (
         <p className="sponsorSectionLead">
-          Mission partner and podcast packages are available — use the buttons above or{" "}
-          <Link href="/podcasts?sponsor=1">sponsor the podcast</Link>.
+          Main platform packages are available — use{" "}
+          <Link href="/sponsors?apply=1">Start sponsor application</Link> on the Sponsors hub.
         </p>
       ) : null}
       <div className="row wrap sponsorOpportunitiesSection__footer">
-        <button type="button" className="btnPrimary" onClick={() => window.location.assign("/sponsors?packages=1")}>
-          View mission partner packages
+        <button type="button" className="btnPrimary" onClick={() => window.location.assign("/sponsors?apply=1")}>
+          Apply to be a sponsor
         </button>
-        <Link className="btnSoft" href="/podcasts?sponsor=1">
-          Podcast sponsor options
-        </Link>
       </div>
     </section>
   );

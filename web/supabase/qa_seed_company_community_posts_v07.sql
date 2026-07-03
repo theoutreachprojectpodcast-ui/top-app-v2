@@ -49,7 +49,7 @@ Step 4 — Engage: read Community stories, listen on the Podcast page, and at th
 
 Why this matters: You get one trusted front door—curated resources, searchable nonprofits, peer stories, and podcast context—instead of scattered tabs and outdated lists.',
   'platform_guide',
-  'platform_guide',
+  'platform_guide_image',
   true,
   'cta:/api/auth/workos/signup?returnTo=/community|Create your account',
   '/home/home-community-group.png',
@@ -58,12 +58,12 @@ Why this matters: You get one trusted front door—curated resources, searchable
   48,
   0,
   'founder-onboarding-v09',
-  now(),
-  now(),
+  '2026-07-03T13:05:44.679Z'::timestamptz,
+  '2026-07-03T13:05:44.679Z'::timestamptz,
   false,
   false,
   now(),
-  '2026-06-01T12:39:38.406Z'::timestamptz
+  '2026-07-03T12:05:44.679Z'::timestamptz
 ),
 (
   'd2000000-0000-4000-8000-000000000002',
@@ -81,7 +81,7 @@ Step 4 — On a trusted device, choose remember device so you stay signed in dur
 
 Why this matters: A verified account keeps your activity and support pathways consistent when you return—especially across directory saves and story submissions.',
   'platform_guide',
-  'platform_guide',
+  'platform_guide_image',
   true,
   'cta:/api/auth/workos/signup?returnTo=/community|Create your account',
   '/home/home-header-flag-horizontal.png',
@@ -90,12 +90,12 @@ Why this matters: A verified account keeps your activity and support pathways co
   31,
   0,
   'founder-onboarding-v09',
-  now(),
-  now(),
+  '2026-07-03T07:05:44.679Z'::timestamptz,
+  '2026-07-03T07:05:44.679Z'::timestamptz,
   false,
   false,
   now(),
-  '2026-06-01T06:39:38.406Z'::timestamptz
+  '2026-07-03T06:05:44.679Z'::timestamptz
 ),
 (
   'd2000000-0000-4000-8000-000000000003',
@@ -122,12 +122,12 @@ Why this matters: This is not vanity data—it powers saved-org follow-up, commu
   27,
   0,
   'founder-onboarding-v09',
-  now(),
-  now(),
+  '2026-07-03T01:05:44.679Z'::timestamptz,
+  '2026-07-03T01:05:44.679Z'::timestamptz,
   false,
   false,
   now(),
-  '2026-06-01T00:39:38.406Z'::timestamptz
+  '2026-07-03T00:05:44.679Z'::timestamptz
 ),
 (
   'd2000000-0000-4000-8000-000000000004',
@@ -154,12 +154,12 @@ Why this matters: When someone is in crisis or transition, guesswork costs time.
   35,
   0,
   'founder-onboarding-v09',
-  now(),
-  now(),
+  '2026-07-02T19:05:44.679Z'::timestamptz,
+  '2026-07-02T19:05:44.679Z'::timestamptz,
   false,
   false,
   now(),
-  '2026-05-31T18:39:38.406Z'::timestamptz
+  '2026-07-02T18:05:44.679Z'::timestamptz
 ),
 (
   'd2000000-0000-4000-8000-000000000005',
@@ -186,12 +186,12 @@ Why this matters: Discovery should feel practical. Filters and consistent cards 
   22,
   0,
   'founder-onboarding-v09',
-  now(),
-  now(),
+  '2026-07-02T13:05:44.679Z'::timestamptz,
+  '2026-07-02T13:05:44.679Z'::timestamptz,
   false,
   false,
   now(),
-  '2026-05-31T12:39:38.406Z'::timestamptz
+  '2026-07-02T12:05:44.679Z'::timestamptz
 ),
 (
   'd2000000-0000-4000-8000-000000000006',
@@ -218,12 +218,12 @@ Why this matters: Audio builds trust at human speed, especially for peers who wa
   19,
   0,
   'founder-onboarding-v09',
-  now(),
-  now(),
+  '2026-07-02T07:05:44.679Z'::timestamptz,
+  '2026-07-02T07:05:44.679Z'::timestamptz,
   false,
   false,
   now(),
-  '2026-05-31T06:39:38.406Z'::timestamptz
+  '2026-07-02T06:05:44.679Z'::timestamptz
 ),
 (
   'd2000000-0000-4000-8000-000000000007',
@@ -241,7 +241,7 @@ Step 4 — Read sponsor disclosures on listings so you always know what is edito
 
 Why this matters: Transparent support protects the community from pay-to-play listings and keeps Trusted Resources credible.',
   'platform_guide',
-  'platform_guide',
+  'platform_guide_image',
   true,
   'cta:/sponsors|View sponsors & membership',
   '/home/home-sponsors-city.png',
@@ -250,12 +250,12 @@ Why this matters: Transparent support protects the community from pay-to-play li
   24,
   0,
   'founder-onboarding-v09',
-  now(),
-  now(),
+  '2026-07-02T01:05:44.679Z'::timestamptz,
+  '2026-07-02T01:05:44.679Z'::timestamptz,
   false,
   false,
   now(),
-  '2026-05-31T00:39:38.406Z'::timestamptz
+  '2026-07-02T00:05:44.679Z'::timestamptz
 ),
 (
   'd2000000-0000-4000-8000-000000000008',
@@ -282,12 +282,12 @@ Why this matters: Peer transparency only works when posts stay safe and actionab
   41,
   0,
   'founder-onboarding-v09',
-  now(),
-  now(),
+  '2026-07-01T19:05:44.679Z'::timestamptz,
+  '2026-07-01T19:05:44.679Z'::timestamptz,
   false,
   false,
   now(),
-  '2026-05-30T18:39:38.406Z'::timestamptz
+  '2026-07-01T18:05:44.679Z'::timestamptz
 ),
 (
   'd2000000-0000-4000-8000-00000000000c',
@@ -314,12 +314,12 @@ Why this matters: Veterans, first responders, and families deserve a single trus
   29,
   0,
   'founder-onboarding-v09',
-  now(),
-  now(),
+  '2026-07-01T13:05:44.679Z'::timestamptz,
+  '2026-07-01T13:05:44.679Z'::timestamptz,
   false,
   false,
   now(),
-  '2026-05-30T12:39:38.407Z'::timestamptz
+  '2026-07-01T12:05:44.679Z'::timestamptz
 ),
 (
   'd2000000-0000-4000-8000-00000000000a',
@@ -337,7 +337,7 @@ Step 4 — Encourage clients to share community stories only with consent and pr
 
 Why this matters: Participation is partnership, not pay-to-rank. Clarity and mission fit keep the community’s trust high.',
   'platform_guide',
-  'platform_guide',
+  'platform_guide_image',
   true,
   'cta:/contact|Contact our team',
   '/trusted/hero-to-the-line-hero.png',
@@ -346,12 +346,12 @@ Why this matters: Participation is partnership, not pay-to-rank. Clarity and mis
   17,
   0,
   'founder-onboarding-v09',
-  now(),
-  now(),
+  '2026-07-01T09:05:44.679Z'::timestamptz,
+  '2026-07-01T09:05:44.679Z'::timestamptz,
   false,
   false,
   now(),
-  '2026-05-30T08:39:38.407Z'::timestamptz
+  '2026-07-01T08:05:44.679Z'::timestamptz
 ),
 (
   'd2000000-0000-4000-8000-00000000000b',
@@ -369,7 +369,7 @@ Step 4 — Moderators may request edits or decline posts that risk harm or misin
 
 Why this matters: A mission-driven community only works when members feel safe showing up. These rules protect the people who need this space most.',
   'platform_guide',
-  'platform_guide',
+  'platform_guide_image',
   true,
   'cta:/community|Read the Community feed',
   '/home/home-header-mountain-patriotic.png',
@@ -378,12 +378,12 @@ Why this matters: A mission-driven community only works when members feel safe s
   52,
   0,
   'founder-onboarding-v09',
-  now(),
-  now(),
+  '2026-07-01T05:05:44.679Z'::timestamptz,
+  '2026-07-01T05:05:44.679Z'::timestamptz,
   false,
   false,
   now(),
-  '2026-05-30T04:39:38.407Z'::timestamptz
+  '2026-07-01T04:05:44.679Z'::timestamptz
 )
 on conflict (id) do update set
   author_id = excluded.author_id,

@@ -3759,6 +3759,19 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   line-height: 1.5;
   max-width: 52ch;
 }
+.sponsorHero__actions {
+  margin-top: var(--ds-space-4, 16px);
+}
+.sponsorApplySection__actions {
+  margin-top: var(--ds-space-4, 16px);
+}
+.sponsorApplySection__actions--primary {
+  margin-bottom: var(--ds-space-2, 8px);
+}
+.sponsorApplySection__footNote {
+  margin-top: var(--ds-space-4, 16px);
+  margin-bottom: 0;
+}
 .sponsorSectionLead {
   margin: 0 0 14px;
   color: var(--color-text-secondary);
@@ -3857,6 +3870,10 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 .sponsorFeaturedSection {
   padding: 18px;
 }
+.sponsorApplySection .sponsorTierSection + .sponsorTierSection {
+  margin-top: var(--ds-space-4, 16px);
+}
+
 .sponsorRosterStack {
   display: flex;
   flex-direction: column;
@@ -4621,7 +4638,50 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   font-weight: 800;
 }
 .communityConnectionsPanel {
+  padding: 0;
+  overflow: hidden;
+}
+.communityConnectionsDisclosure > .communityConnectionsBody {
+  padding: 0 16px 14px;
+}
+.communityConnectionsSummary {
+  list-style: none;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
   padding: 14px 16px;
+  cursor: pointer;
+  transition: background 160ms ease;
+}
+.communityConnectionsSummary::-webkit-details-marker {
+  display: none;
+}
+.communityConnectionsSummary:hover {
+  background: var(--color-surface-muted);
+}
+.communityConnectionsSummaryMain {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+}
+.communityConnectionsSummaryTitle {
+  margin: 0;
+  font-size: var(--text-section-title);
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+.communityConnectionsChevron {
+  flex-shrink: 0;
+  color: var(--color-accent);
+  font-size: 17.5px;
+  line-height: 1;
+  margin-top: 4px;
+  transition: transform 180ms ease;
+}
+.communityConnectionsDisclosure[open] .communityConnectionsChevron {
+  transform: rotate(180deg);
 }
 .communityCollapseBtn {
   padding: 7px 12px;
@@ -4632,6 +4692,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   justify-content: space-between;
   gap: 12px;
 }
+.communityConnectionsPreviewText,
 .communityConnectionsPreview p {
   margin: 0;
   color: var(--color-text-secondary);
@@ -4640,6 +4701,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 .communityConnectionsPreviewAvatars {
   display: inline-flex;
   align-items: center;
+  flex-shrink: 0;
 }
 .communityConnectionsPreviewAvatars .communityMemberAvatarImg {
   width: 48px;
@@ -4648,13 +4710,13 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   border: 2px solid var(--color-bg-secondary);
 }
 .communityConnectionsPreview--solo {
-  margin: 0 0 12px;
+  margin: 0;
   color: var(--color-text-secondary);
   font-size: 13px;
 }
 
 .communityConnectionsBody {
-  margin-top: 12px;
+  margin-top: 0;
   display: grid;
   gap: 10px;
 }
@@ -6059,12 +6121,13 @@ html.dark .communityPostBodyGuideSteps li {
   padding: 5px;
   object-fit: contain;
 }
-/* Rucking Realty: full-bleed square mark — cover fills the circular frame (no matte gutter) */
-.sponsorPremiumCard[data-sponsor-slug="rucking-realty-group"] .organizationLogo__inset {
-  padding: 0;
-}
+/* Rucking Realty: contain so badge white border is never clipped in the circular frame */
 .sponsorPremiumCard[data-sponsor-slug="rucking-realty-group"] .organizationLogo__img {
-  object-fit: cover;
+  object-fit: contain;
+}
+/* Don Blas: circular badge — contain so gold ring is never clipped */
+.sponsorPremiumCard[data-sponsor-slug="don-blas-cigars"] .organizationLogo__img {
+  object-fit: contain;
 }
 .sponsorPremiumLogoImg {
   width: 100%;

@@ -868,6 +868,27 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
   color: color-mix(in srgb, var(--pod-text) 92%, var(--pod-muted) 8%);
 }
 
+.podcastSponsorHubSection .podcastSponsorTierGrid {
+  margin-top: var(--ds-space-3, 12px);
+}
+
+.podcastSponsorHubSection__roster {
+  margin-top: var(--ds-space-4, 16px);
+}
+
+.podcastSponsorHubSection__rosterTitle {
+  margin: 0 0 6px;
+  font-size: var(--text-section-title);
+}
+
+.podcastSponsorHubSection__rosterLead {
+  margin: 0 0 12px;
+}
+
+.podcastSponsorHubSection__foot {
+  margin: 12px 0 0;
+}
+
 .podcastSponsorsSectionWrap {
   margin-top: var(--ds-space-6, 24px);
 }

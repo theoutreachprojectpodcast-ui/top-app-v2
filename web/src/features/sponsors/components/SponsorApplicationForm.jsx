@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import SponsorPaymentDemo from "@/features/sponsors/components/SponsorPaymentDemo";
 import { submitSponsorApplication } from "@/features/sponsors/api/sponsorApi";
 import { SPONSOR_PROGRAM_TYPE_PODCAST, PODCAST_PLACEMENT_OPTIONS } from "@/features/sponsors/data/podcastSponsorTiers";
-import { MISSION_PARTNER_TIERS, SPONSOR_PROGRAM_TYPE_MAIN, SPONSOR_TIERS, formatUsd, getTierById } from "@/features/sponsors/data/sponsorTiers";
+import { MISSION_PARTNER_TIERS, SPONSOR_PROGRAM_TYPE_MAIN, SPONSOR_TIERS, formatUsd, getTierById, FOUNDATIONAL_SPONSOR_TIERS, IMPACT_SPONSOR_TIERS } from "@/features/sponsors/data/sponsorTiers";
 import { isDemoModeEnabled } from "@/lib/runtime/launchMode";
 
 const INITIAL_FORM = {
@@ -59,6 +59,7 @@ export default function SponsorApplicationForm({
   const demoModeEnabled = isDemoModeEnabled();
   const isPodcastSkin = designContext === "podcast";
   const tierList = Array.isArray(tiers) && tiers.length ? tiers : SPONSOR_TIERS;
+  const mainPlatformPackages = packageScope === "main";
   const unifiedPackages = packageScope === "all";
   const [form, setForm] = useState(INITIAL_FORM);
   const [submitting, setSubmitting] = useState(false);
@@ -281,8 +282,8 @@ export default function SponsorApplicationForm({
 
   const flowLabel = isPodcast
     ? "Podcast sponsor application"
-    : unifiedPackages
-      ? "Mission partner application"
+    : mainPlatformPackages || unifiedPackages
+      ? "Main platform sponsor application"
       : "Mission partner application (main Outreach Project sponsors)";
 
   const outerClass = (() => {
@@ -364,7 +365,31 @@ export default function SponsorApplicationForm({
             Sponsorship tier
           </label>
           <select id="sponsor-tier-select" className="sponsorTierSelect" value={tier.id} onChange={(e) => setTier(e.target.value)}>
-            {unifiedPackages ? (
+            {mainPlatformPackages ? (
+              <>
+                <optgroup label="Mission partners">
+                  {MISSION_PARTNER_TIERS.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name} ({formatUsd(item.amount)})
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label="Foundational sponsors">
+                  {FOUNDATIONAL_SPONSOR_TIERS.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name} ({formatUsd(item.amount)})
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label="Impact sponsors">
+                  {IMPACT_SPONSOR_TIERS.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name} ({formatUsd(item.amount)})
+                    </option>
+                  ))}
+                </optgroup>
+              </>
+            ) : unifiedPackages ? (
               <>
                 <optgroup label="Mission partners">
                   {MISSION_PARTNER_TIERS.map((item) => (

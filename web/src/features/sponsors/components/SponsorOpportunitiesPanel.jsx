@@ -7,7 +7,11 @@ import { navigateToStripeCheckout } from "@/lib/capacitor/billingNavigation";
 /**
  * Compact sponsor opportunity list for the Become a sponsor modal.
  */
-export default function SponsorOpportunitiesPanel({ checkoutReturnPath = "/sponsors", onSelectTier }) {
+export default function SponsorOpportunitiesPanel({
+  checkoutReturnPath = "/sponsors",
+  onSelectTier,
+  programScope = "main",
+}) {
   const [opportunities, setOpportunities] = useState([]);
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
@@ -71,7 +75,11 @@ export default function SponsorOpportunitiesPanel({ checkoutReturnPath = "/spons
     }
   }
 
-  const packageOpportunities = opportunities.filter((opp) => opp.family !== "account_sponsor");
+  const packageOpportunities = opportunities.filter((opp) => {
+    if (opp.family === "account_sponsor") return false;
+    if (programScope === "podcast") return !!opp.podcastTierId;
+    return !opp.podcastTierId;
+  });
 
   if (loading) {
     return (
@@ -88,11 +96,14 @@ export default function SponsorOpportunitiesPanel({ checkoutReturnPath = "/spons
     <section className="card sponsorSection sponsorSection--modalInset sponsorOpportunitiesSection">
       <div className="sponsorSectionHead">
         <h4 className="missionPartnerPackagesModal__sectionTitle">Sponsor opportunities</h4>
-        <span className="sponsorFeaturedValuePill">Six packages</span>
+        <span className="sponsorFeaturedValuePill">
+          {programScope === "podcast" ? "Podcast packages" : "Main platform"}
+        </span>
       </div>
       <p className="sponsorSectionLead">
-        Mission partners and podcast sponsors — select a package to focus the application form, or use checkout when
-        Stripe is enabled.
+        {programScope === "podcast"
+          ? "Community, Impact, and Foundational podcast packages — select a tier to focus the application form, or use checkout when Stripe is enabled."
+          : "Mission partner, foundational, and impact packages — select a tier to focus the application form."}
       </p>
       {error ? (
         <p className="applyError" role="alert">

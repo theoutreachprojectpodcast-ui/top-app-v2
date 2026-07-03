@@ -38,9 +38,11 @@ export const LOGO_PRESENTATION_CATALOG = {
   "rope-solutions": {
     panel: "dark",
     bgColor: "#000000",
-    pad: 4,
+    pad: 5,
     fit: "contain",
     scale: 1,
+    focusX: 50,
+    focusY: 50,
     minimalFrame: true,
   },
   "the-veterans-veteran": {
@@ -53,12 +55,12 @@ export const LOGO_PRESENTATION_CATALOG = {
   },
   "rucking-realty-group": {
     panel: "neutral",
-    bgColor: "#2a4530",
-    pad: 0,
-    fit: "cover",
-    scale: 1.14,
+    bgColor: "#1e2a36",
+    pad: 5,
+    fit: "contain",
+    scale: 1,
     focusX: 50,
-    focusY: 44,
+    focusY: 50,
     minimalFrame: true,
   },
   "iron-soldiers-coffee-company": {
@@ -93,6 +95,16 @@ export const LOGO_PRESENTATION_CATALOG = {
     pad: 2,
     fit: "contain",
     scale: 1.12,
+    minimalFrame: true,
+  },
+  "don-blas-cigars": {
+    panel: "light",
+    bgColor: "#ffffff",
+    pad: 4,
+    fit: "contain",
+    scale: 1,
+    focusX: 50,
+    focusY: 50,
     minimalFrame: true,
   },
 

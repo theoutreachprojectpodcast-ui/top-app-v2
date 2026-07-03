@@ -8,6 +8,7 @@ import {
   EDUARDO_PICO_DESIGNS_LOGO_URL,
   GAMEDAY_MENS_HEALTH_LOGO_URL,
   GREEN_GORILLA_LAND_MANAGEMENT_LOGO_URL,
+  DON_BLAS_CIGARS_LOGO_URL,
   IRON_SOLDIERS_COFFEE_LOGO_URL,
   ROPE_SOLUTIONS_LOGO_URL,
   RUCKING_REALTY_GROUP_LOGO_URL,
@@ -123,6 +124,15 @@ const BY_SLUG = {
     /* Official mark is white stencil on black art — dark logo shell (not panel-light). */
     logoPanelMode: "dark",
     logoFallbackUrls: [GREEN_GORILLA_LAND_MANAGEMENT_LOGO_URL],
+  },
+  "don-blas-cigars": {
+    accentColor: "#d4a017",
+    cardScrimGradient:
+      "linear-gradient(118deg, rgba(18, 10, 6, 0.96) 0%, rgba(28, 16, 8, 0.78) 44%, rgba(14, 8, 4, 0.55) 100%)",
+    veteranOwnedDefault: true,
+    locationChips: ["Texas"],
+    logoPanelMode: "light",
+    logoFallbackUrls: [DON_BLAS_CIGARS_LOGO_URL],
   },
 };
 

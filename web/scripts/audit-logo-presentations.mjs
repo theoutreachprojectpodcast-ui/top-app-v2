@@ -20,6 +20,7 @@ const ASSETS = {
   "eduardo-pico-designs":
     "https://eduardopicodesigns.com/cdn/shop/files/eduardo_pico_logo.png?v=1775735693&width=240",
   "green-gorilla-land-management": "/sponsors/green-gorilla-land-management-logo.png?v=2",
+  "don-blas-cigars": "/sponsors/don-blas-cigars-logo.png?v=1",
   "say-when-and-remember-him": "/trusted/say-when-and-remember-him-org-logo.png",
   "back-country-heroes": "/trusted/back-country-heroes-org-logo.png",
   "hero-to-the-line": "/trusted/hero-to-the-line-org-logo.png",

@@ -1,5 +1,5 @@
 /**
- * Shared community feed ordering — pinned first, then newest publish/review/create time.
+ * Shared community feed ordering — newest publish/review/create time first.
  */
 
 export function communityFeedSortTime(row) {
@@ -15,13 +15,16 @@ export function communityFeedSortTime(row) {
   return Number.isFinite(t) ? t : 0;
 }
 
+function feedRowId(row) {
+  return String(row?.id || "");
+}
+
 /** @param {Record<string, unknown>[]} rows */
 export function sortCommunityFeedRows(rows) {
   return [...(rows || [])].sort((a, b) => {
-    const pinA = a?.is_pinned || a?.isPinned ? 1 : 0;
-    const pinB = b?.is_pinned || b?.isPinned ? 1 : 0;
-    if (pinB !== pinA) return pinB - pinA;
-    return communityFeedSortTime(b) - communityFeedSortTime(a);
+    const timeDelta = communityFeedSortTime(b) - communityFeedSortTime(a);
+    if (timeDelta !== 0) return timeDelta;
+    return feedRowId(b).localeCompare(feedRowId(a));
   });
 }
 

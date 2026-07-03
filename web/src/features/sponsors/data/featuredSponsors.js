@@ -11,7 +11,7 @@ export const EDUARDO_PICO_DESIGNS_LOGO_URL =
 export const GAMEDAY_MENS_HEALTH_LOGO_URL = "/sponsors/gameday-mens-health-wordmark.jpg";
 
 /** ROPE Solutions official mark (square PNG, dark-friendly). */
-export const ROPE_SOLUTIONS_LOGO_URL = "/sponsors/rope-solutions-logo.png";
+export const ROPE_SOLUTIONS_LOGO_URL = "/sponsors/rope-solutions-logo.png?v=2";
 
 /** Apex Global Outdoors — official circular wordmark PNG (card logo slot); hero art is `featured-bg-apex-global-outdoors.png`. */
 export const APEX_GLOBAL_OUTDOORS_LOGO_URL = "/sponsors/apex-global-outdoors-logo.png?v=2";
@@ -30,7 +30,10 @@ export const GREEN_GORILLA_LAND_MANAGEMENT_LOGO_URL =
   "/sponsors/green-gorilla-land-management-logo.png?v=2";
 
 /** Rucking Realty Group — official badge mark (Mike & Natalie Evans, Texas). */
-export const RUCKING_REALTY_GROUP_LOGO_URL = "/sponsors/rucking-realty-group-logo.png?v=2";
+export const RUCKING_REALTY_GROUP_LOGO_URL = "/sponsors/rucking-realty-group-logo.png?v=3";
+
+/** Don Blas Cigars — circular badge mark on white (veteran-owned premium cigars). */
+export const DON_BLAS_CIGARS_LOGO_URL = "/sponsors/don-blas-cigars-logo.png?v=1";
 
 export const FEATURED_SPONSORS = [
   {
@@ -234,6 +237,31 @@ export const FEATURED_SPONSORS = [
     veteranOwned: true,
     featured: true,
     socialLinks: {},
+  },
+  {
+    id: "don-blas-cigars",
+    name: "Don Blas Cigars",
+    sponsorType: "community_sponsor",
+    sponsorDisplayGroup: "community",
+    primaryDisplayTag: "Community Sponsor",
+    tag: "Premium Aged Cigars",
+    industry: "Premium cigars",
+    tierLabel: "Community sponsor",
+    subtitle: "Tune Out & Light Up",
+    tagline: "Tune Out & Light Up",
+    longDescription:
+      "Don Blas is more than a premium cigar company—it's a business built on service, craftsmanship, and community. As a Veteran-Owned company that is also owned and operated by an active-duty service member, Don Blas understands firsthand the values of commitment, sacrifice, and brotherhood that unite our military community.\n\nEvery handcrafted cigar reflects a dedication to quality, tradition, and bringing people together. Whether you're celebrating life's victories, sharing stories with friends, or simply taking a moment to slow down, Don Blas is about creating experiences that matter.",
+    ctaLabel: "Follow on Instagram",
+    ctaUrl: "https://www.instagram.com/db_premiumcigars/",
+    logoUrl: DON_BLAS_CIGARS_LOGO_URL,
+    warmVariant: "amber",
+    backgroundImageUrl: "",
+    missionPartner: false,
+    veteranOwned: true,
+    featured: true,
+    socialLinks: {
+      instagram: "https://www.instagram.com/db_premiumcigars/",
+    },
   },
 ];
 

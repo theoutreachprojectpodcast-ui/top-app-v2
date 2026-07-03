@@ -6,9 +6,16 @@ import SponsorApplicationForm from "@/features/sponsors/components/SponsorApplic
 import SponsorOpportunitiesPanel from "@/features/sponsors/components/SponsorOpportunitiesPanel";
 import SponsorTierComparison from "@/features/sponsors/components/SponsorTierComparison";
 import SponsorTimeline from "@/features/sponsors/components/SponsorTimeline";
-import { ALL_SPONSOR_PACKAGE_TIERS, getSponsorPackageById, isPodcastSponsorPackage } from "@/features/sponsors/data/allSponsorPackages";
-import { MISSION_PARTNER_TIERS } from "@/features/sponsors/data/sponsorTiers";
-import { PODCAST_SPONSOR_TIERS } from "@/features/sponsors/data/podcastSponsorTiers";
+import {
+  MAIN_APP_SPONSOR_PACKAGE_TIERS,
+  getSponsorPackageById,
+} from "@/features/sponsors/data/allSponsorPackages";
+import {
+  FOUNDATIONAL_SPONSOR_TIERS,
+  IMPACT_SPONSOR_TIERS,
+  MISSION_PARTNER_TIERS,
+} from "@/features/sponsors/data/sponsorTiers";
+import { SPONSOR_DISPLAY_GROUP_SECTION_LEAD } from "@/features/sponsors/domain/sponsorDisplayGroups";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
 export default function BecomeSponsorModal({
@@ -20,7 +27,7 @@ export default function BecomeSponsorModal({
 }) {
   const supabaseClient = useMemo(() => getSupabaseClient(), []);
   const supabase = supabaseProp ?? supabaseClient;
-  const [tierId, setTierId] = useState(initialTierId || ALL_SPONSOR_PACKAGE_TIERS[0]?.id);
+  const [tierId, setTierId] = useState(initialTierId || MAIN_APP_SPONSOR_PACKAGE_TIERS[0]?.id);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -45,8 +52,6 @@ export default function BecomeSponsorModal({
 
   if (!open || !mounted || typeof document === "undefined") return null;
 
-  const selectedTier = getSponsorPackageById(tierId);
-
   return createPortal(
     <div
       className="modalOverlay missionSponsorModalOverlay becomeSponsorModalOverlay"
@@ -58,10 +63,10 @@ export default function BecomeSponsorModal({
       <div className="modalCard missionPartnerPackagesModal becomeSponsorModal" onClick={(e) => e.stopPropagation()}>
         <div className="becomeSponsorModal__head missionPartnerPackagesModal__head">
           <div className="becomeSponsorModal__headCopy">
-            <h3 id="become-sponsor-title">Become a sponsor</h3>
+            <h3 id="become-sponsor-title">Apply to be a sponsor</h3>
             <p className="missionPartnerPackagesModal__sub">
-              Compare all six sponsorship packages — three mission partners for the main platform and three podcast
-              sponsors for the show — then complete one application without leaving this page.
+              Mission partner, foundational, and impact packages for the main Outreach Project platform. Podcast sponsor
+              options are available on the Podcast hub only.
             </p>
           </div>
           <button type="button" className="btnSoft missionPartnerPackagesModal__close becomeSponsorModal__close" onClick={onClose}>
@@ -72,27 +77,38 @@ export default function BecomeSponsorModal({
         <div className="missionPartnerPackagesModal__body becomeSponsorModal__body">
           <SponsorTimeline />
 
-          <SponsorOpportunitiesPanel checkoutReturnPath="/sponsors" onSelectTier={setTierId} />
+          <SponsorOpportunitiesPanel checkoutReturnPath="/sponsors" onSelectTier={setTierId} programScope="main" />
 
           <SponsorTierComparison
             tiers={MISSION_PARTNER_TIERS}
-            selectedTierId={!isPodcastSponsorPackage(selectedTier) ? tierId : ""}
+            selectedTierId={tierId}
             onSelectTier={setTierId}
-            title="Mission partner packages"
-            lead="Supporting Partner, Growth Partner, and Strategic Partner — website and ecosystem visibility."
-            familyTitle="Main platform sponsors"
+            title="Mission partner sponsors"
+            lead={SPONSOR_DISPLAY_GROUP_SECTION_LEAD.mission_partner}
+            familyTitle="Mission partner packages"
             familyDescription="Application + review. Billing is coordinated after approval."
             compareHref="/sponsors?apply=1"
           />
 
           <SponsorTierComparison
-            tiers={PODCAST_SPONSOR_TIERS}
-            selectedTierId={isPodcastSponsorPackage(selectedTier) ? tierId : ""}
+            tiers={FOUNDATIONAL_SPONSOR_TIERS}
+            selectedTierId={tierId}
             onSelectTier={setTierId}
-            title="Podcast sponsor packages"
-            lead="Community Sponsor, Impact Sponsor, and Foundational — episode-first placements on the show."
-            familyTitle="Podcast sponsors"
-            familyDescription="Select a tier below or in the application form. Stripe checkout is available when billing is live."
+            title="Foundational sponsors"
+            lead={SPONSOR_DISPLAY_GROUP_SECTION_LEAD.foundational}
+            familyTitle="Foundational sponsor program"
+            familyDescription="Core platform partners with structured onboarding."
+            compareHref="/sponsors?apply=1"
+          />
+
+          <SponsorTierComparison
+            tiers={IMPACT_SPONSOR_TIERS}
+            selectedTierId={tierId}
+            onSelectTier={setTierId}
+            title="Impact sponsors"
+            lead={SPONSOR_DISPLAY_GROUP_SECTION_LEAD.impact}
+            familyTitle="Impact sponsor program"
+            familyDescription="Regional and program-focused platform visibility."
             compareHref="/sponsors?apply=1"
           />
 
@@ -101,8 +117,8 @@ export default function BecomeSponsorModal({
             selectedTierId={tierId}
             onSelectTier={setTierId}
             variant="modal"
-            packageScope="all"
-            tiers={ALL_SPONSOR_PACKAGE_TIERS}
+            packageScope="main"
+            tiers={MAIN_APP_SPONSOR_PACKAGE_TIERS}
             checkoutReturnPath="/sponsors"
             onSuccessfulSubmit={onClose}
             stripeReturn={stripeReturn}

@@ -7,7 +7,12 @@ import {
   getConnectionState,
   sendConnectionRequest,
 } from "@/features/community/api/communityApi";
-import { avatarFallbackUrl } from "@/lib/avatarFallback";
+import { emptyProfileAvatarUrl } from "@/lib/avatarFallback";
+
+function memberAvatarSrc(member) {
+  const url = String(member?.avatar_url || "").trim();
+  return url || emptyProfileAvatarUrl();
+}
 
 function memberIsSelf(member, { viewerProfileId, viewerUserId }) {
   const profileId = String(viewerProfileId || "").trim();
@@ -64,23 +69,32 @@ export default function CommunityConnectionsPanel({ userId, viewerProfileId = ""
       : "No members match yet";
 
   return (
-    <section className="card communitySection communityConnectionsPanel">
-      <div className="communitySectionHead">
-        <h3>Member connections</h3>
-      </div>
-
-      {preview.length ? (
-        <div className="communityConnectionsPreview">
-          <div className="communityConnectionsPreviewAvatars">
-            {preview.map((m) => (
-              <Avatar key={m.id} src={m.avatar_url || avatarFallbackUrl(m.id)} alt={m.name} className="communityMemberAvatarImg" />
-            ))}
-          </div>
-          <p>{summary}</p>
-        </div>
-      ) : (
-        <p className="communityConnectionsPreview communityConnectionsPreview--solo">{summary}</p>
-      )}
+    <details className="card communitySection communityConnectionsPanel communityConnectionsDisclosure">
+      <summary className="communityConnectionsSummary">
+        <span className="communityConnectionsSummaryMain">
+          <span className="communityConnectionsSummaryTitle">Member connections</span>
+          {preview.length ? (
+            <span className="communityConnectionsPreview">
+              <span className="communityConnectionsPreviewAvatars">
+                {preview.map((m) => (
+                  <Avatar
+                    key={m.id}
+                    src={memberAvatarSrc(m)}
+                    alt=""
+                    className="communityMemberAvatarImg"
+                  />
+                ))}
+              </span>
+              <span className="communityConnectionsPreviewText">{summary}</span>
+            </span>
+          ) : (
+            <span className="communityConnectionsPreview communityConnectionsPreview--solo">{summary}</span>
+          )}
+        </span>
+        <span className="communityConnectionsChevron" aria-hidden="true">
+          ▾
+        </span>
+      </summary>
 
       <div className="communityConnectionsBody">
         <div className="communitySearchBar">
@@ -96,7 +110,11 @@ export default function CommunityConnectionsPanel({ userId, viewerProfileId = ""
           />
         </div>
 
-        {error ? <p className="applyError" role="alert">{error}</p> : null}
+        {error ? (
+          <p className="applyError" role="alert">
+            {error}
+          </p>
+        ) : null}
 
         <div className="communitySearchResults">
           {loading ? <p className="communityFeedStatus">Searching members…</p> : null}
@@ -108,7 +126,7 @@ export default function CommunityConnectionsPanel({ userId, viewerProfileId = ""
               return (
                 <div key={m.id} className="communitySearchResultRow">
                   <button type="button" className="communityMemberMini communityMemberMiniBtn" onClick={() => onOpenMember?.(m.id)}>
-                    <Avatar src={m.avatar_url || avatarFallbackUrl(m.id)} alt={m.name} className="communityMemberAvatarImg" />
+                    <Avatar src={memberAvatarSrc(m)} alt={m.name} className="communityMemberAvatarImg" />
                     <div>
                       <strong>{m.name}</strong>
                       <p>{subtitle || m.tagline || "Community member"}</p>
@@ -140,6 +158,6 @@ export default function CommunityConnectionsPanel({ userId, viewerProfileId = ""
           ) : null}
         </div>
       </div>
-    </section>
+    </details>
   );
 }

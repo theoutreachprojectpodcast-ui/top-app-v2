@@ -49,7 +49,6 @@ export async function GET(request) {
       .eq("status", "approved")
       .is("deleted_at", null)
       .in("visibility", ["community", "public"])
-      .order("is_pinned", { ascending: false, nullsFirst: false })
       .order("published_at", { ascending: false, nullsFirst: false })
       .order("created_at", { ascending: false })
       .limit(80);
