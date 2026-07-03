@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import SponsorTierComparison from "@/features/sponsors/components/SponsorTierComparison";
+import SponsorsTieredSections from "@/features/sponsors/components/SponsorsTieredSections";
 import {
   FOUNDATIONAL_SPONSOR_TIERS,
   IMPACT_SPONSOR_TIERS,
@@ -18,7 +19,11 @@ function ChannelChip({ icon, label }) {
   );
 }
 
-export default function SponsorsLandingPage({ onOpenBecomeSponsor, onOpenBecomeSponsorWithTier }) {
+export default function SponsorsLandingPage({
+  sponsorCatalogRows = [],
+  onOpenBecomeSponsor,
+  onOpenBecomeSponsorWithTier,
+}) {
   const openApply = typeof onOpenBecomeSponsor === "function" ? onOpenBecomeSponsor : () => {};
   const openApplyWithTier =
     typeof onOpenBecomeSponsorWithTier === "function" ? onOpenBecomeSponsorWithTier : () => openApply();
@@ -29,9 +34,9 @@ export default function SponsorsLandingPage({ onOpenBecomeSponsor, onOpenBecomeS
         <p className="introTagline">Platform sponsors</p>
         <h2>Partner with The Outreach Project</h2>
         <p className="sponsorHeroBlurb">
-          Mission partner, foundational, and impact sponsorships support the main Outreach Project platform — website,
-          discovery, and ecosystem visibility. Podcast packages are handled separately on the{" "}
-          <Link href="/podcasts">Podcast hub</Link>.
+          Browse mission partner, foundational, impact, and community sponsors below. When you are ready, use{" "}
+          <strong>Become a sponsor</strong> to compare main-platform packages and submit one application. Podcast
+          packages are handled separately on the <Link href="/podcasts">Podcast hub</Link>.
         </p>
         <div className="row wrap sponsorHero__actions">
           <button className="btnPrimary" type="button" onClick={() => openApply()}>
@@ -39,6 +44,19 @@ export default function SponsorsLandingPage({ onOpenBecomeSponsor, onOpenBecomeS
           </button>
         </div>
       </section>
+
+      <div className="sponsorRosterStack">
+        <section className="card sponsorSection sponsorFeaturedSection">
+          <div className="sponsorSectionHead">
+            <h3>Sponsor roster</h3>
+            <span className="sponsorFeaturedValuePill">App sponsor roster</span>
+          </div>
+          <p className="sponsorSectionLead">
+            Partners by tier — open a card for the full profile and verified links.
+          </p>
+        </section>
+        <SponsorsTieredSections sponsorRecords={sponsorCatalogRows} />
+      </div>
 
       <section className="card sponsorSection sponsorApplySection" id="apply-sponsor">
         <div className="sponsorSectionHead">
@@ -106,6 +124,18 @@ export default function SponsorsLandingPage({ onOpenBecomeSponsor, onOpenBecomeS
           Podcast sponsor packages (Community, Impact, and Foundational for the show) live on the{" "}
           <Link href="/podcasts">Podcast hub</Link> — not on this page.
         </p>
+      </section>
+
+      <section className="card sponsorCtaBand sponsorCtaBand--become">
+        <div>
+          <h3>Ready to partner?</h3>
+          <p className="sponsorSectionLead">
+            Compare mission partner, foundational, and impact packages, then apply in one guided modal.
+          </p>
+        </div>
+        <button className="btnPrimary" type="button" onClick={() => openApply()}>
+          Become a sponsor
+        </button>
       </section>
     </div>
   );

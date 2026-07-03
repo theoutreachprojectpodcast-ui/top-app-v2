@@ -10,12 +10,14 @@ import {
   getSponsorPackageById,
   isKnownMainAppSponsorPackageId,
 } from "@/features/sponsors/data/allSponsorPackages";
+import { useSponsorHubCatalog } from "@/features/sponsors/hooks/useSponsorHubCatalog";
 
 export default function SponsorHub({ supabase: supabaseProp }) {
   const supabaseClient = useMemo(() => getSupabaseClient(), []);
   const supabase = supabaseProp ?? supabaseClient;
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { sponsorCatalogRows } = useSponsorHubCatalog(supabase);
   const [becomeSponsorOpen, setBecomeSponsorOpen] = useState(false);
   const [selectedTierId, setSelectedTierId] = useState(MAIN_APP_SPONSOR_PACKAGE_TIERS[0]?.id);
 
@@ -65,6 +67,7 @@ export default function SponsorHub({ supabase: supabaseProp }) {
   return (
     <>
       <SponsorsLandingPage
+        sponsorCatalogRows={sponsorCatalogRows}
         onOpenBecomeSponsor={() => openBecomeSponsor()}
         onOpenBecomeSponsorWithTier={openBecomeSponsor}
       />
