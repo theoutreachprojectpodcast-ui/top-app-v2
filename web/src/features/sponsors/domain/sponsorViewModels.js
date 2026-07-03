@@ -9,6 +9,17 @@ function clean(value) {
   return String(value ?? "").trim();
 }
 
+function validUrl(value) {
+  const raw = clean(value);
+  if (!raw) return false;
+  try {
+    const parsed = new URL(raw);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 function truncateSponsorLine(value, max = 140) {
   const text = clean(value);
   if (!text) return "";
