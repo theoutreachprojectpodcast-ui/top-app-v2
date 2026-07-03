@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { installCapacitorInAppNavigation } from "@/lib/capacitor/inAppNavigation";
+import { lockPortraitOrientation } from "@/lib/capacitor/lockPortraitOrientation";
 import { capacitorPlatform, isCapacitorNative } from "@/lib/capacitor/platform";
 
 /**
@@ -17,6 +18,7 @@ export default function CapacitorNativeShell() {
     }
     root.dataset.capacitorNative = capacitorPlatform();
     installCapacitorInAppNavigation();
+    void lockPortraitOrientation();
     return () => {
       delete root.dataset.capacitorNative;
     };

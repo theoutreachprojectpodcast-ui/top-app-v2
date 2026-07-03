@@ -51,9 +51,9 @@ export const LOGO_PRESENTATION_CATALOG = {
     minimalFrame: true,
   },
   "rucking-realty-group": {
-    panel: "dark",
-    bgColor: "#1a1208",
-    pad: 5,
+    panel: "neutral",
+    bgColor: "#f4efe6",
+    pad: 4,
     fit: "contain",
     scale: 1,
     minimalFrame: true,

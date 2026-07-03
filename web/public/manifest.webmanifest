@@ -5,6 +5,7 @@
   "description": "Veteran and first responder resource network",
   "start_url": "/",
   "scope": "/",
+  "orientation": "portrait",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui", "browser"],
   "background_color": "#ffffff",

@@ -154,13 +154,17 @@ export default function AppShell({
 
       {useTopAppStructure ? (
         <section className="shell">
-          {showSiteFooter && missionStripOnHome ? <MissionPageTopStrip placement="top" /> : null}
+          {showSiteFooter && missionStripOnHome ? (
+            <MissionPageTopStrip placement="top" profileLinkInsteadOfContact />
+          ) : null}
           {children}
           {showSiteFooter && !missionStripOnHome ? <MissionPageTopStrip placement="bottom" /> : null}
         </section>
       ) : (
         <main className="content content--subpage">
-          {showSiteFooter && missionStripOnHome ? <MissionPageTopStrip placement="top" /> : null}
+          {showSiteFooter && missionStripOnHome ? (
+            <MissionPageTopStrip placement="top" profileLinkInsteadOfContact />
+          ) : null}
           {children}
           {showSiteFooter && !missionStripOnHome ? <MissionPageTopStrip placement="bottom" /> : null}
         </main>

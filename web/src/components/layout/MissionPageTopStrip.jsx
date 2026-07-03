@@ -9,7 +9,7 @@ import {
  * Brand + mission strip for main app shells.
  * @param {"top" | "bottom"} [placement="top"] — Home hero: `top` (under the bar). Other tabs / site routes: `bottom` (end of main content).
  */
-export default function MissionPageTopStrip({ placement = "top" }) {
+export default function MissionPageTopStrip({ placement = "top", profileLinkInsteadOfContact = false }) {
   const positionClass = placement === "bottom" ? "siteFooter--pageBottom" : "siteFooter--pageTop";
   return (
     <footer className={`siteFooter ${positionClass} siteFooter--inMainShell`} aria-label="The Outreach Project">
@@ -24,7 +24,9 @@ export default function MissionPageTopStrip({ placement = "top" }) {
           <span aria-hidden="true"> · </span>
           <a href="/terms">Terms</a>
           <span aria-hidden="true"> · </span>
-          <a href="/contact">Contact</a>
+          <a href={profileLinkInsteadOfContact ? "/profile" : "/contact"}>
+            {profileLinkInsteadOfContact ? "Profile" : "Contact"}
+          </a>
         </nav>
       </div>
     </footer>

@@ -55,7 +55,7 @@ const BY_SLUG = {
       "linear-gradient(118deg, rgba(18, 12, 8, 0.95) 0%, rgba(28, 20, 12, 0.72) 45%, rgba(14, 10, 8, 0.52) 100%)",
     veteranOwnedDefault: true,
     locationChips: ["San Antonio, TX", "Texas"],
-    logoPanelMode: "dark",
+    logoPanelMode: "neutral",
     logoFallbackUrls: [RUCKING_REALTY_GROUP_LOGO_URL],
   },
   "eduardo-pico-designs": {

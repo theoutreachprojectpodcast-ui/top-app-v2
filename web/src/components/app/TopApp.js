@@ -377,7 +377,7 @@ function TopAppInner({ initialNav = "home" }) {
 
   function dockNavItem(item) {
     const key = String(item?.key || "");
-    if (["community", "trusted", "contact", "settings"].includes(key) && !hasProAccess) {
+    if (["community", "trusted", "settings"].includes(key) && !hasProAccess) {
       if (!isAuthenticated) {
         openSignInOverlay();
         return;
@@ -387,6 +387,10 @@ function TopAppInner({ initialNav = "home" }) {
     }
     if (key === "home") {
       dockNavHome();
+      return;
+    }
+    if (key === "profile") {
+      dockNavProfile();
       return;
     }
     if (key === "podcast") {

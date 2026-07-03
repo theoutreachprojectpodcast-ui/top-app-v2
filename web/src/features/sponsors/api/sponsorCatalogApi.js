@@ -15,7 +15,7 @@ import { isPublicSponsorRow, preferCuratedField } from "@/lib/sponsors/sponsorVi
 const SPONSOR_TABLE = "sponsors_catalog";
 
 /** Omitted from `/sponsors` tier roster and static fallback seed (slug unchanged in DB for history). */
-const HIDDEN_SPONSOR_HUB_ROSTER_SLUGS = new Set(["wars-end-merch"]);
+const HIDDEN_SPONSOR_HUB_ROSTER_SLUGS = new Set(["wars-end-merch", "the-veterans-veteran"]);
 
 /** Slugs omitted from the `/podcasts` sponsor strip (retained in DB for history). */
 const PODCAST_SPONSOR_EXCLUDED_SLUGS = new Set([
@@ -180,6 +180,14 @@ export function mergeSponsorHubSeedRowWithLive(seed, live) {
   const pickSocial = (key) =>
     preferSeedCopy ? preferCuratedCopy(seed[key], live[key]) : pick(key) || seed[key];
 
+  const liveScope = nonEmptyTrim(live.sponsor_scope).toLowerCase();
+  const seedScope = nonEmptyTrim(seed.sponsor_scope).toLowerCase() || "app";
+  const liveType = nonEmptyTrim(live.sponsor_type).toLowerCase();
+  const seedType = nonEmptyTrim(seed.sponsor_type);
+  const liveLooksPodcast =
+    liveScope === "podcast" || liveType === "podcast_sponsor" || liveType === "podcast sponsor";
+  const reclaimAppHubFromPodcast = seedScope === "app" && liveLooksPodcast;
+
   return normalizeSponsorRecord({
     ...seed,
     ...live,
@@ -194,15 +202,25 @@ export function mergeSponsorHubSeedRowWithLive(seed, live) {
     logo_review_status: preferSeedLogo ? seed.logo_review_status : live.logo_review_status,
     background_image_url: pick("background_image_url"),
     sponsor_category: pickText("sponsor_category") || pick("sponsor_category") || seed.sponsor_category,
-    sponsor_type: preferSeedCopy
-      ? preferCuratedCopy(seed.sponsor_type, live.sponsor_type)
-      : pick("sponsor_type") || seed.sponsor_type,
-    primary_display_tag: preferSeedCopy
-      ? preferCuratedCopy(seed.primary_display_tag, live.primary_display_tag)
-      : pick("primary_display_tag") || seed.primary_display_tag,
-    sponsor_display_group: preferSeedCopy
-      ? preferCuratedCopy(seed.sponsor_display_group, live.sponsor_display_group)
-      : pick("sponsor_display_group") || seed.sponsor_display_group,
+    sponsor_type: reclaimAppHubFromPodcast
+      ? seedType || pick("sponsor_type") || seed.sponsor_type
+      : preferSeedCopy
+        ? preferCuratedCopy(seed.sponsor_type, live.sponsor_type)
+        : pick("sponsor_type") || seed.sponsor_type,
+    primary_display_tag: reclaimAppHubFromPodcast
+      ? preferCuratedCopy(seed.primary_display_tag, live.primary_display_tag) ||
+        pick("primary_display_tag") ||
+        seed.primary_display_tag
+      : preferSeedCopy
+        ? preferCuratedCopy(seed.primary_display_tag, live.primary_display_tag)
+        : pick("primary_display_tag") || seed.primary_display_tag,
+    sponsor_display_group: reclaimAppHubFromPodcast
+      ? preferCuratedCopy(seed.sponsor_display_group, live.sponsor_display_group) ||
+        pick("sponsor_display_group") ||
+        seed.sponsor_display_group
+      : preferSeedCopy
+        ? preferCuratedCopy(seed.sponsor_display_group, live.sponsor_display_group)
+        : pick("sponsor_display_group") || seed.sponsor_display_group,
     internal_alias: pick("internal_alias") || seed.internal_alias,
     warm_variant: pick("warm_variant") || seed.warm_variant,
     instagram_url: pickSocial("instagram_url"),
@@ -212,9 +230,11 @@ export function mergeSponsorHubSeedRowWithLive(seed, live) {
     youtube_url: pickSocial("youtube_url"),
     display_order: Number.isFinite(Number(live.display_order)) ? Number(live.display_order) : Number(seed.display_order),
     is_active: live.is_active != null ? live.is_active : seed.is_active,
-    sponsor_scope: preferSeedCopy
-      ? preferCuratedCopy(seed.sponsor_scope, live.sponsor_scope)
-      : pick("sponsor_scope") || seed.sponsor_scope,
+    sponsor_scope: reclaimAppHubFromPodcast
+      ? "app"
+      : preferSeedCopy
+        ? preferCuratedCopy(seed.sponsor_scope, live.sponsor_scope)
+        : pick("sponsor_scope") || seed.sponsor_scope,
     mission_partner: preferSeedCopy ? true : live.mission_partner != null ? live.mission_partner : seed.mission_partner,
     veteran_owned: live.veteran_owned != null ? live.veteran_owned : seed.veteran_owned,
     featured: preferSeedCopy ? true : live.featured != null ? live.featured : seed.featured,
@@ -506,7 +526,7 @@ async function fetchPublicSponsorCatalogRow(supabase, slug) {
 
 async function buildPublicSponsorProfileRow(supabase, slug) {
   const key = String(slug || "").trim();
-  if (!key) return null;
+  if (!key || isHiddenFromSponsorHubRosterSlug(key)) return null;
   const row = supabase ? await fetchPublicSponsorCatalogRow(supabase, key) : null;
   if (row) {
     const canonical = canonicalSponsorHubSlug(row.slug || key);
@@ -528,7 +548,7 @@ export async function getPublicSponsorCatalogRowBySlug(supabase, slug) {
 
 export async function getSponsorBySlug(supabase, slug) {
   const key = String(slug || "").trim();
-  if (!key) return null;
+  if (!key || isHiddenFromSponsorHubRosterSlug(key)) return null;
 
   const seedProfile = () => {
     const seed = findSeedSponsorBySlug(key);

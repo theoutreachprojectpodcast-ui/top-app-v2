@@ -55,7 +55,7 @@ export default function HomeScreen({
         />
 
         <div className="homeMobile__missionStrip">
-          <MissionPageTopStrip placement="bottom" />
+          <MissionPageTopStrip placement="bottom" profileLinkInsteadOfContact />
         </div>
       </div>
     </>

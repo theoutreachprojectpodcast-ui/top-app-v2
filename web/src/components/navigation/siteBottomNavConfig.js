@@ -1,5 +1,5 @@
 /**
- * Fixed-order bottom dock (Home · Trusted · Community · Podcast · Contact).
+ * Fixed-order bottom dock (Home · Trusted · Profile · Community · Podcast).
  * Shared by TopApp and AppShell so tab positions never swap across routes.
  */
 
@@ -9,9 +9,9 @@
 export const SITE_MOBILE_DOCK_ITEMS = [
   { key: "home", href: "/", label: "Home", linkTitle: "Home" },
   { key: "trusted", href: "/trusted", label: "Trusted", linkTitle: "Trusted Resources" },
+  { key: "profile", href: "/profile", label: "Profile", linkTitle: "Profile" },
   { key: "community", href: "/community", label: "Community", linkTitle: "Community" },
   { key: "podcast", href: "/podcasts", label: "Podcast", linkTitle: "Podcast" },
-  { key: "contact", href: "/contact", label: "Contact", linkTitle: "Contact" },
 ];
 
 export const SITE_MOBILE_DOCK_KEYS = new Set(SITE_MOBILE_DOCK_ITEMS.map((item) => item.key));
@@ -45,7 +45,7 @@ export const SITE_MOBILE_HAMBURGER_ITEMS = SITE_HAMBURGER_NAV_ITEMS;
 export const SITE_HAMBURGER_NAV_KEYS = new Set(SITE_HAMBURGER_NAV_ITEMS.map((item) => item.key));
 
 /** TopApp in-tab keys that can switch via `setNav` when pathname is `/`. */
-export const SITE_TOP_APP_DOCK_TAB_KEYS = new Set(["home", "trusted", "community", "contact"]);
+export const SITE_TOP_APP_DOCK_TAB_KEYS = new Set(["home", "trusted", "profile", "community"]);
 
 /**
  * @param {string} navKey
@@ -59,18 +59,18 @@ export function isSiteDockNavActive(navKey, { nav = "", pathname = "" } = {}) {
       return (
         tab === "home" &&
         path !== "/community" &&
-        path !== "/contact" &&
+        path !== "/profile" &&
         !path.startsWith("/trusted") &&
         !path.startsWith("/podcasts")
       );
     case "trusted":
       return tab === "trusted" || path.startsWith("/trusted");
+    case "profile":
+      return tab === "profile" || path.startsWith("/profile");
     case "community":
       return tab === "community" || path.startsWith("/community");
     case "podcast":
       return tab === "podcast" || path.startsWith("/podcasts");
-    case "contact":
-      return tab === "contact" || path.startsWith("/contact");
     default:
       return tab === navKey;
   }

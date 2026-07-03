@@ -29,8 +29,8 @@ export const VET_NAV_SERVICES_LOGO_URL = "/sponsors/vetnav-services-logo.png";
 export const GREEN_GORILLA_LAND_MANAGEMENT_LOGO_URL =
   "/sponsors/green-gorilla-land-management-logo.png?v=2";
 
-/** Rucking Realty Group — circular wordmark (Mike & Natalie Evans, Texas). */
-export const RUCKING_REALTY_GROUP_LOGO_URL = "/sponsors/rucking-realty-group-logo.png";
+/** Rucking Realty Group — official badge mark (Mike & Natalie Evans, Texas). */
+export const RUCKING_REALTY_GROUP_LOGO_URL = "/sponsors/rucking-realty-group-logo.png?v=2";
 
 export const FEATURED_SPONSORS = [
   {
@@ -116,29 +116,6 @@ export const FEATURED_SPONSORS = [
     },
   },
   {
-    id: "the-veterans-veteran",
-    name: "The Veterans Veteran",
-    sponsorType: "foundational_sponsor",
-    sponsorDisplayGroup: "foundational",
-    primaryDisplayTag: "Foundational Sponsor",
-    tag: "VA disability claims & post-service coaching",
-    industry: "Veteran benefits consulting",
-    tierLabel: "Foundational sponsor",
-    subtitle:
-      "Veteran-led guidance through VA disability claims, ratings, appeals, GI Bill planning, and post-service transition—so you do not navigate the system alone.",
-    longDescription:
-      "The Veterans Veteran, founded and led by Drew Jones, helps veterans move through the VA disability and benefits process with clarity and advocacy. The team provides educational and administrative support—not legal representation—including claims and ratings review, medical evidence organization, appeals guidance, and GI Bill maximization. Post-service coaching helps veterans set career goals and build a roadmap after the uniform. Fellow service members built this practice after walking the same transition; the mission is to ensure veterans understand their options and receive the benefits they earned.",
-    ctaLabel: "Visit Website",
-    ctaUrl: "https://thevetsvet.com/",
-    logoUrl: THE_VETERANS_VETERAN_LOGO_URL,
-    warmVariant: "rose",
-    backgroundImageUrl: "/sponsors/featured-bg-the-veterans-veteran.png",
-    missionPartner: true,
-    veteranOwned: true,
-    featured: true,
-    socialLinks: {},
-  },
-  {
     id: "rucking-realty-group",
     name: "Rucking Realty Group",
     sponsorType: "impact_sponsor",
@@ -167,12 +144,12 @@ export const FEATURED_SPONSORS = [
   {
     id: "iron-soldiers-coffee-company",
     name: "Iron Soldiers Coffee Company",
-    sponsorType: "impact_sponsor",
-    sponsorDisplayGroup: "impact",
-    primaryDisplayTag: "Impact Sponsor",
+    sponsorType: "foundational_sponsor",
+    sponsorDisplayGroup: "foundational",
+    primaryDisplayTag: "Foundational Sponsor",
     tag: "Veteran-owned coffee roaster",
     industry: "Food & beverage",
-    tierLabel: "Impact sponsor",
+    tierLabel: "Foundational sponsor",
     subtitle: "Small-batch roasts, wholesale programs, and retail for crews who live on coffee between missions.",
     longDescription:
       "Iron Soldiers Coffee Company is a veteran-owned specialty roaster focused on bold, consistent profiles for shift workers, athletes, and community fundraisers. Beans are roasted in small batches with transparent sourcing so wholesale partners, nonprofits, and local retailers can serve cups that taste as intentional as the mission behind the brand.",
