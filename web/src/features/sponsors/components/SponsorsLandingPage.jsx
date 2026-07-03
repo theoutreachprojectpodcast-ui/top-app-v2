@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import SponsorsTieredSections from "@/features/sponsors/components/SponsorsTieredSections";
-import SponsorOpportunitiesSection from "@/features/sponsors/components/SponsorOpportunitiesSection";
 
 function ChannelChip({ icon, label }) {
   return (
@@ -13,13 +12,8 @@ function ChannelChip({ icon, label }) {
   );
 }
 
-export default function SponsorsLandingPage({
-  sponsorCatalogRows = [],
-  onOpenMissionPackages,
-  onOpenMissionApply,
-}) {
-  const openPackages = typeof onOpenMissionPackages === "function" ? onOpenMissionPackages : () => {};
-  const openApply = typeof onOpenMissionApply === "function" ? onOpenMissionApply : () => {};
+export default function SponsorsLandingPage({ sponsorCatalogRows = [], onOpenBecomeSponsor }) {
+  const openBecomeSponsor = typeof onOpenBecomeSponsor === "function" ? onOpenBecomeSponsor : () => {};
 
   return (
     <div className="sponsorPage sponsorLanding">
@@ -27,17 +21,9 @@ export default function SponsorsLandingPage({
         <p className="introTagline">Platform sponsors</p>
         <h2>Partner with The Outreach Project</h2>
         <p className="sponsorHeroBlurb">
-          Browse the full partner roster below, then explore Supporting, Growth, and Strategic mission packages in a guided popup.
-          Podcast sponsors are a separate roster and checkout — open them from the Podcast hub only.
+          Browse the partner roster below. When you are ready, use Become a sponsor at the bottom of this page to
+          compare all six packages and submit one application.
         </p>
-        <div className="row wrap">
-          <button className="btnPrimary" type="button" onClick={() => openPackages()}>
-            Explore mission partner packages
-          </button>
-          <button className="btnSoft" type="button" onClick={() => openApply()}>
-            Become a mission partner
-          </button>
-        </div>
       </section>
 
       <div className="sponsorRosterStack">
@@ -62,32 +48,27 @@ export default function SponsorsLandingPage({
           <ChannelChip icon={<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8a3 3 0 100-6 3 3 0 000 6zM6 15a3 3 0 100-6 3 3 0 000 6zM13 21a3 3 0 100-6 3 3 0 000 6z" /></svg>} label="Social and digital" />
         </div>
         <details className="sponsorReveal">
-          <summary>Podcast sponsors (separate program)</summary>
+          <summary>Podcast sponsors (included in Become a sponsor)</summary>
           <ul className="sponsorBulletList">
-            <li>Community, Impact, and Foundational podcast packages are offered from the Podcast page.</li>
+            <li>Community, Impact, and Foundational podcast packages are available in the same application flow.</li>
             <li>
-              <Link href="/podcasts?sponsor=1">Open podcast sponsor flow →</Link>
+              <Link href="/podcasts?sponsor=1">Open the Podcast hub →</Link>
             </li>
           </ul>
         </details>
       </section>
 
-      <section className="card sponsorCtaBand">
+      <section className="card sponsorCtaBand sponsorCtaBand--become">
         <div>
-          <h3>Mission partner next steps</h3>
-          <p className="sponsorSectionLead">Review packages in detail, then apply when your team is ready.</p>
+          <h3>Ready to partner?</h3>
+          <p className="sponsorSectionLead">
+            Compare mission partner and podcast packages, then apply in one guided modal.
+          </p>
         </div>
-        <div className="row wrap">
-          <button className="btnSoft" type="button" onClick={() => openPackages()}>
-            View mission partner options
-          </button>
-          <button className="btnPrimary" type="button" onClick={() => openApply()}>
-            Apply to become a mission partner
-          </button>
-        </div>
+        <button className="btnPrimary" type="button" onClick={() => openBecomeSponsor()}>
+          Become a sponsor
+        </button>
       </section>
-
-      <SponsorOpportunitiesSection checkoutReturnPath="/sponsors" />
     </div>
   );
 }

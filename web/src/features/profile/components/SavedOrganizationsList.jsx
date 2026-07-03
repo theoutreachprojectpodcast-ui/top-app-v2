@@ -58,7 +58,7 @@ export default function SavedOrganizationsList({
             No saved organizations yet. Star an organization from Directory or Trusted Resources.
           </p>
         ) : (
-          <div className="savedOrganizationsPanel__list" id="saved-organizations-list">
+          <div className="savedOrganizationsPanel__list results" id="saved-organizations-list">
             {orderedOrgs.map((card) => (
               <SavedOrganizationCard
                 key={`saved-${String(card?.einNormalized || card?.ein || "")}`}

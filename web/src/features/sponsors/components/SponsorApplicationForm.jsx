@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import SponsorPaymentDemo from "@/features/sponsors/components/SponsorPaymentDemo";
 import { submitSponsorApplication } from "@/features/sponsors/api/sponsorApi";
-import { SPONSOR_PROGRAM_TYPE_PODCAST } from "@/features/sponsors/data/podcastSponsorTiers";
-import { SPONSOR_PROGRAM_TYPE_MAIN, SPONSOR_TIERS, formatUsd, getTierById } from "@/features/sponsors/data/sponsorTiers";
+import { SPONSOR_PROGRAM_TYPE_PODCAST, PODCAST_PLACEMENT_OPTIONS } from "@/features/sponsors/data/podcastSponsorTiers";
+import { MISSION_PARTNER_TIERS, SPONSOR_PROGRAM_TYPE_MAIN, SPONSOR_TIERS, formatUsd, getTierById } from "@/features/sponsors/data/sponsorTiers";
 import { isDemoModeEnabled } from "@/lib/runtime/launchMode";
 
 const INITIAL_FORM = {
@@ -48,16 +48,18 @@ export default function SponsorApplicationForm({
   variant = "page",
   designContext = "main",
   programType = SPONSOR_PROGRAM_TYPE_MAIN,
+  packageScope = "single",
   tiers = SPONSOR_TIERS,
   placementOptions = PLACEMENT_OPTIONS,
+  checkoutReturnPath = "/podcasts",
   onSuccessfulSubmit,
   /** When returning from Stripe Checkout (podcast flow): { checkout: "success"|"cancel", sessionId } */
   stripeReturn = null,
 }) {
   const demoModeEnabled = isDemoModeEnabled();
   const isPodcastSkin = designContext === "podcast";
-  const isPodcast = programType === SPONSOR_PROGRAM_TYPE_PODCAST;
   const tierList = Array.isArray(tiers) && tiers.length ? tiers : SPONSOR_TIERS;
+  const unifiedPackages = packageScope === "all";
   const [form, setForm] = useState(INITIAL_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [status, setStatus] = useState("");
@@ -71,6 +73,9 @@ export default function SponsorApplicationForm({
     () => getTierById(selectedTierId || tierList[0]?.id, tierList),
     [selectedTierId, tierList],
   );
+  const effectiveProgramType = unifiedPackages ? tier?.programType || programType : programType;
+  const isPodcast = effectiveProgramType === SPONSOR_PROGRAM_TYPE_PODCAST;
+  const effectivePlacementOptions = isPodcast ? PODCAST_PLACEMENT_OPTIONS : placementOptions;
   const tierFamily = tier.family;
   const tierAmount = Number(tier.amount || 0);
 
@@ -203,7 +208,7 @@ export default function SponsorApplicationForm({
         method: "POST",
         credentials: "include",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ podcastTierId: tier.id, returnPath: "/podcasts" }),
+        body: JSON.stringify({ podcastTierId: tier.id, returnPath: checkoutReturnPath }),
       });
       const data = await res.json().catch(() => ({}));
       if (data.url) {
@@ -244,7 +249,7 @@ export default function SponsorApplicationForm({
 
       const payload = {
         ...form,
-        sponsor_program_type: programType,
+        sponsor_program_type: effectiveProgramType,
         sponsor_family: tierFamily,
         sponsor_tier_id: tier.id,
         sponsor_tier_name: tier.name,
@@ -274,10 +279,11 @@ export default function SponsorApplicationForm({
     }
   }
 
-  const flowLabel =
-    programType === SPONSOR_PROGRAM_TYPE_MAIN
-      ? "Mission partner application (main Outreach Project sponsors)"
-      : "Podcast sponsor application";
+  const flowLabel = isPodcast
+    ? "Podcast sponsor application"
+    : unifiedPackages
+      ? "Mission partner application"
+      : "Mission partner application (main Outreach Project sponsors)";
 
   const outerClass = (() => {
     if (isPodcastSkin) {
@@ -358,11 +364,32 @@ export default function SponsorApplicationForm({
             Sponsorship tier
           </label>
           <select id="sponsor-tier-select" className="sponsorTierSelect" value={tier.id} onChange={(e) => setTier(e.target.value)}>
-            {tierList.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name} ({formatUsd(item.amount)})
-              </option>
-            ))}
+            {unifiedPackages ? (
+              <>
+                <optgroup label="Mission partners">
+                  {MISSION_PARTNER_TIERS.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name} ({formatUsd(item.amount)})
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label="Podcast sponsors">
+                  {tierList
+                    .filter((item) => item.programType === SPONSOR_PROGRAM_TYPE_PODCAST)
+                    .map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.name} ({formatUsd(item.amount)})
+                      </option>
+                    ))}
+                </optgroup>
+              </>
+            ) : (
+              tierList.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name} ({formatUsd(item.amount)})
+                </option>
+              ))
+            )}
           </select>
         </section>
 
@@ -372,7 +399,7 @@ export default function SponsorApplicationForm({
           <textarea rows={2} placeholder="What audience are you hoping to reach?" value={form.audience_goals} onChange={(e) => setForm((f) => ({ ...f, audience_goals: e.target.value }))} />
           <textarea rows={2} placeholder="What should be highlighted about your brand or mission?" value={form.highlights_requested} onChange={(e) => setForm((f) => ({ ...f, highlights_requested: e.target.value }))} />
           <div className="dsChoiceGroup">
-            {placementOptions.map((option) => (
+            {effectivePlacementOptions.map((option) => (
               <label className="dsChoice dsChoice--checkbox" key={option}>
                 <input
                   type="checkbox"

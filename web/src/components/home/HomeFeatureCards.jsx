@@ -73,10 +73,7 @@ export default function HomeFeatureCards({
           >
             <AppIcon name={item.icon} size={WELCOME_ACTION_ICON_SIZE} />
             <span className="welcomeActionText">
-              <span className="welcomeActionLabel">
-                {item.title}
-                {locked ? <span className="welcomeActionProBadge">Pro</span> : null}
-              </span>
+              <span className="welcomeActionLabel">{item.title}</span>
               <span className="welcomeActionHint">
                 {locked ? "Upgrade to Pro to unlock this section." : item.hint}
               </span>

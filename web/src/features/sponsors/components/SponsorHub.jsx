@@ -3,10 +3,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getSupabaseClient } from "@/lib/supabase/client";
-import MissionPartnerPackagesModal from "@/features/sponsors/components/MissionPartnerPackagesModal";
-import MissionSponsorApplyModal from "@/features/sponsors/components/MissionSponsorApplyModal";
+import BecomeSponsorModal from "@/features/sponsors/components/BecomeSponsorModal";
 import SponsorsLandingPage from "@/features/sponsors/components/SponsorsLandingPage";
-import { SPONSOR_TIERS } from "@/features/sponsors/data/sponsorTiers";
+import {
+  ALL_SPONSOR_PACKAGE_TIERS,
+  getSponsorPackageById,
+  isKnownSponsorPackageId,
+} from "@/features/sponsors/data/allSponsorPackages";
 import { useSponsorHubCatalog } from "@/features/sponsors/hooks/useSponsorHubCatalog";
 
 export default function SponsorHub({ supabase: supabaseProp }) {
@@ -15,54 +18,49 @@ export default function SponsorHub({ supabase: supabaseProp }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { sponsorCatalogRows } = useSponsorHubCatalog(supabase);
-  const [missionApplyOpen, setMissionApplyOpen] = useState(false);
-  const [missionPackagesOpen, setMissionPackagesOpen] = useState(false);
-  const [missionApplyTierId, setMissionApplyTierId] = useState(SPONSOR_TIERS[0]?.id);
+  const [becomeSponsorOpen, setBecomeSponsorOpen] = useState(false);
+  const [selectedTierId, setSelectedTierId] = useState(ALL_SPONSOR_PACKAGE_TIERS[0]?.id);
+
+  const stripeReturn = useMemo(() => {
+    const checkout = searchParams.get("sponsor_checkout");
+    const sessionId = searchParams.get("session_id");
+    if (checkout === "success" || checkout === "cancel") {
+      return { checkout, sessionId: sessionId || "" };
+    }
+    return null;
+  }, [searchParams]);
 
   useEffect(() => {
     const tier = searchParams.get("tier");
-    if (tier && SPONSOR_TIERS.some((t) => t.id === tier)) {
-      setMissionApplyTierId(tier);
+    if (tier && isKnownSponsorPackageId(tier)) {
+      setSelectedTierId(tier);
     }
   }, [searchParams]);
 
   useEffect(() => {
     const apply = searchParams.get("apply") === "1";
     const packages = searchParams.get("packages") === "1";
-    if (apply) {
-      setMissionApplyOpen(true);
-      setMissionPackagesOpen(false);
-    } else if (packages) {
-      setMissionPackagesOpen(true);
-      setMissionApplyOpen(false);
+    const sponsorCheckout = searchParams.get("sponsor_checkout");
+    if (apply || packages || sponsorCheckout === "success" || sponsorCheckout === "cancel") {
+      setBecomeSponsorOpen(true);
     }
   }, [searchParams]);
 
   function clearModalQueries() {
-    if (!searchParams.get("apply") && !searchParams.get("packages") && !searchParams.get("tier")) return;
+    const keys = ["apply", "packages", "tier", "sponsor_checkout", "session_id"];
+    if (!keys.some((key) => searchParams.get(key))) return;
     router.replace("/sponsors", { scroll: false });
   }
 
-  function openMissionPackages() {
-    setMissionPackagesOpen(true);
-    setMissionApplyOpen(false);
-  }
-
-  function closeMissionPackages() {
-    setMissionPackagesOpen(false);
-    clearModalQueries();
-  }
-
-  function openMissionApply(tierId) {
-    if (tierId && SPONSOR_TIERS.some((t) => t.id === tierId)) {
-      setMissionApplyTierId(tierId);
+  function openBecomeSponsor(tierId) {
+    if (tierId && isKnownSponsorPackageId(tierId)) {
+      setSelectedTierId(tierId);
     }
-    setMissionPackagesOpen(false);
-    setMissionApplyOpen(true);
+    setBecomeSponsorOpen(true);
   }
 
-  function closeMissionApply() {
-    setMissionApplyOpen(false);
+  function closeBecomeSponsor() {
+    setBecomeSponsorOpen(false);
     clearModalQueries();
   }
 
@@ -70,20 +68,14 @@ export default function SponsorHub({ supabase: supabaseProp }) {
     <>
       <SponsorsLandingPage
         sponsorCatalogRows={sponsorCatalogRows}
-        onOpenMissionPackages={openMissionPackages}
-        onOpenMissionApply={openMissionApply}
+        onOpenBecomeSponsor={() => openBecomeSponsor()}
       />
-      <MissionPartnerPackagesModal
-        open={missionPackagesOpen}
-        onClose={closeMissionPackages}
-        onRequestApply={(tierId) => openMissionApply(tierId)}
-        initialTierId={searchParams.get("tier") || undefined}
-      />
-      <MissionSponsorApplyModal
-        open={missionApplyOpen}
-        onClose={closeMissionApply}
-        initialTierId={missionApplyTierId}
+      <BecomeSponsorModal
+        open={becomeSponsorOpen}
+        onClose={closeBecomeSponsor}
+        initialTierId={selectedTierId || getSponsorPackageById(searchParams.get("tier") || "")?.id}
         supabase={supabase}
+        stripeReturn={stripeReturn}
       />
     </>
   );

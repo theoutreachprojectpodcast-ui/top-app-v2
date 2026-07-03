@@ -78,7 +78,7 @@ export default function PodcastSponsorFlowModal({ open, onClose, supabase: supab
               <p className="podcastSponsorFlowModal__footNote">
                 Mission partner packages (website &amp; ecosystem) live on the main Outreach Project sponsors hub.
               </p>
-              <Link className="podcastSponsorFlowModal__missionLink" href="/sponsors?packages=1" onClick={onClose}>
+              <Link className="podcastSponsorFlowModal__missionLink" href="/sponsors?apply=1" onClick={onClose}>
                 Open mission partner packages
               </Link>
             </div>

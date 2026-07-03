@@ -456,7 +456,7 @@ export function useProfileDataState(supabase) {
           const res = await fetch("/api/me/saved-orgs/cards", { credentials: "include" });
           const j = await res.json().catch(() => ({}));
           const rows = Array.isArray(j.rows) ? j.rows : [];
-          setSavedOrganizations(rows.map((r) => mapNonprofitCardRow(r, "saved")));
+          setSavedOrganizations(rows.map((r) => mapNonprofitCardRow(r, "directory")));
           return;
         }
         if (!supabase) {
@@ -464,7 +464,7 @@ export function useProfileDataState(supabase) {
           return;
         }
         const rows = await fetchSavedOrganizationsByEin(supabase, favoriteEins);
-        setSavedOrganizations(rows.map((r) => mapNonprofitCardRow(r, "saved")));
+        setSavedOrganizations(rows.map((r) => mapNonprofitCardRow(r, "directory")));
       } catch {
         setSavedOrganizations([]);
       }

@@ -3585,6 +3585,11 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   padding: 18px 20px 14px;
   border-bottom: 1px solid var(--color-border-subtle);
 }
+.missionPartnerPackagesModal__head > div:first-child,
+.becomeSponsorModal__headCopy {
+  flex: 1;
+  min-width: 0;
+}
 .missionPartnerPackagesModal__head h3 {
   margin: 0;
   font-size: clamp(1.1rem, 2vw, 1.35rem);
@@ -4178,6 +4183,63 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 }
 .sponsorCtaBand h3 {
   margin: 0 0 4px;
+}
+.sponsorCtaBand--become {
+  align-items: center;
+}
+.sponsorCtaBand--become .btnPrimary {
+  flex-shrink: 0;
+}
+.becomeSponsorModalOverlay {
+  z-index: 200;
+  align-items: flex-start;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.becomeSponsorModal.modalCard {
+  width: min(920px, 98vw);
+  max-height: min(calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)), 960px);
+  margin: max(12px, env(safe-area-inset-top, 0px)) auto max(12px, env(safe-area-inset-bottom, 0px));
+}
+.becomeSponsorModal__head {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  background: linear-gradient(180deg, var(--color-surface-elevated) 0%, var(--color-surface-card-deep) 100%);
+  box-shadow: 0 1px 0 var(--color-border-subtle);
+}
+.becomeSponsorModal__headCopy {
+  flex: 1;
+  min-width: 0;
+}
+.becomeSponsorModal__close {
+  position: relative;
+  z-index: 5;
+  flex-shrink: 0;
+}
+.becomeSponsorModal__body {
+  position: relative;
+  z-index: 1;
+}
+@media (max-width: 760px) {
+  .becomeSponsorModalOverlay {
+    padding-top: max(8px, env(safe-area-inset-top, 0px));
+    padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
+  }
+  .becomeSponsorModal.modalCard {
+    width: min(100%, calc(100vw - 16px));
+    max-height: calc(100dvh - 16px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    margin: 0 auto;
+  }
+  .becomeSponsorModal__head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .becomeSponsorModal__close {
+    width: 100%;
+    justify-content: center;
+  }
 }
 .sponsorFamilyBlock {
   margin-top: 16px;
@@ -7932,6 +7994,18 @@ html.dark .communityPostBodyGuideSteps li {
 .savedOrgCollapsible__body {
   padding: 0 14px 14px;
   border-top: 1px solid var(--color-border-subtle);
+}
+.savedOrgCollapsible__body--card {
+  padding: 10px;
+  border-top: 1px solid var(--color-border-subtle);
+  background: var(--color-bg-subtle);
+}
+.savedOrgCollapsible__body--card .resultCard {
+  margin: 0;
+}
+.savedOrgCollapsible__body--card .resultCard--directoryListing {
+  border-radius: var(--radius-md, 12px);
+  box-shadow: var(--shadow-card);
 }
 .savedOrgCollapsible__body .nonprofitMetaRow {
   margin-top: 10px;

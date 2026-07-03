@@ -574,7 +574,7 @@ function TopAppInner({ initialNav = "home" }) {
       return;
     }
     if (tier === "sponsor") {
-      router.push("/sponsors?packages=1");
+      router.push("/sponsors?apply=1");
       return;
     }
     if (sessionKind !== "workos" || !authBackend?.stripe) {
@@ -622,7 +622,7 @@ function TopAppInner({ initialNav = "home" }) {
     if (!favoriteEins.length) return [];
     const byEin = new Map();
     for (const raw of fallbackSavedOrganizations) {
-      const card = mapNonprofitCardRow(raw, "saved");
+      const card = mapNonprofitCardRow(raw, "directory");
       const key = card.einNormalized || normalizeEinDigits(card.ein);
       if (key.length === 9) byEin.set(key, card);
     }
@@ -636,7 +636,7 @@ function TopAppInner({ initialNav = "home" }) {
         if (key.length !== 9) return null;
         return (
           byEin.get(key) ||
-          mapNonprofitCardRow({ ein: key, orgName: "Saved organization", city: "", state: "" }, "saved")
+          mapNonprofitCardRow({ ein: key, orgName: "Saved organization", city: "", state: "" }, "directory")
         );
       })
       .filter(Boolean);
@@ -1262,7 +1262,6 @@ function TopAppInner({ initialNav = "home" }) {
             organizations={savedOrgsToRender}
             savedEinCount={favoriteEins.length}
             onToggleFavorite={toggleFavoriteEin}
-            isMember={isMember}
           />
           <div className="card">
             <div className="row wrap">
