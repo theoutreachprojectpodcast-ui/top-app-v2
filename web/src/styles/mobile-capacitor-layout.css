@@ -28,8 +28,9 @@ html[data-capacitor-native] main.topApp:not(.appShell--podcast):not([data-page-a
 
 html[data-capacitor-native] main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) {
   --mobile-home-header-content-gap: clamp(4px, calc(var(--cap-vw, 1vw) * 1.2), 8px);
-  --mobile-site-header-logo-h: clamp(112px, calc(var(--cap-vw, 1vw) * 29), 148px);
-  --mobile-site-header-logo-max-w: min(480px, calc(var(--cap-portrait-width, 100vw) - 24px));
+  --mobile-home-header-layout-h: clamp(112px, calc(var(--cap-vw, 1vw) * 29), 148px);
+  --mobile-site-header-logo-h: clamp(134px, calc(var(--cap-vw, 1vw) * 35), 178px);
+  --mobile-site-header-logo-max-w: min(576px, calc(var(--cap-portrait-width, 100vw) - 24px));
   --mobile-site-header-control-size: 44px;
   --mobile-site-header-control-pad-top: 2px;
   --mobile-site-header-pad-x: max(

@@ -786,10 +786,11 @@
     white-space: nowrap;
   }
 
-  /* Home wordmark — compact band; layout collapse lives on `.headerBrandStack--mobileWordmark`. */
+  /* Home wordmark — +20% visual size; layout band frozen so content does not shift. */
   main.topApp[data-page-atmosphere="home"] {
-    --mobile-site-header-logo-h: clamp(112px, 29vw, 148px);
-    --mobile-site-header-logo-max-w: min(480px, calc(100vw - 24px));
+    --mobile-home-header-layout-h: clamp(112px, 29vw, 148px);
+    --mobile-site-header-logo-h: clamp(134px, 35vw, 178px);
+    --mobile-site-header-logo-max-w: min(576px, calc(100vw - 24px));
     --mobile-home-header-content-gap: clamp(4px, 1.2vw, 8px);
   }
 

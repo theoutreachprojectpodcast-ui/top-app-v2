@@ -105,8 +105,10 @@ html {
 
   main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) {
     --mobile-home-header-content-gap: clamp(4px, 1.2vw, 8px);
-    --mobile-site-header-logo-h: clamp(112px, 29vw, 148px);
-    --mobile-site-header-logo-max-w: min(480px, calc(100vw - 24px));
+    /* Layout band stays fixed; logo renders larger and overhang is collapsed via stack margin. */
+    --mobile-home-header-layout-h: clamp(112px, 29vw, 148px);
+    --mobile-site-header-logo-h: clamp(134px, 35vw, 178px);
+    --mobile-site-header-logo-max-w: min(576px, calc(100vw - 24px));
     --mobile-site-header-control-size: 44px;
     --mobile-site-header-control-pad-top: 2px;
     --mobile-site-header-pad-x: max(
@@ -119,12 +121,16 @@ html {
   main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) .appSiteHeader {
     align-items: start;
     margin-bottom: var(--mobile-home-header-content-gap, 6px);
+    overflow: visible;
   }
 
   main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) .headerBrandStack--mobileWordmark {
     align-self: start;
     height: fit-content;
     max-height: var(--mobile-site-header-logo-h);
+    margin-bottom: calc(
+      -1 * max(0px, var(--mobile-site-header-logo-h) - var(--mobile-home-header-layout-h))
+    );
   }
 
   main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) .headerBrandStack--mobileWordmark .brandMarkImg,
