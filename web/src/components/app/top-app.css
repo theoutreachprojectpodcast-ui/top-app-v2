@@ -7861,3 +7861,87 @@ html.dark .communityPostBodyGuideSteps li {
   text-transform: uppercase;
   letter-spacing: 0.055em;
 }
+
+.savedOrganizationsPanel__headRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.savedOrganizationsPanel--collapsed .savedOrganizationsPanel__headRow {
+  margin-bottom: 0;
+}
+.savedOrganizationsPanel__head {
+  flex: 1;
+  min-width: 0;
+}
+.savedOrganizationsPanel__title {
+  margin: 0 0 4px;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+.savedOrganizationsPanel__lead {
+  margin: 0;
+}
+.savedOrganizationsPanel__toggle {
+  flex-shrink: 0;
+}
+.savedOrganizationsPanel__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.savedOrgCollapsible {
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md, 12px);
+  background: linear-gradient(180deg, var(--color-bg-card) 0%, var(--color-bg-subtle) 100%);
+  overflow: hidden;
+}
+.savedOrgCollapsible__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  cursor: pointer;
+  list-style: none;
+  padding: 12px 14px;
+}
+.savedOrgCollapsible__summary::-webkit-details-marker {
+  display: none;
+}
+.savedOrgCollapsible__summaryMain {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.savedOrgCollapsible__name {
+  font-weight: 800;
+  color: var(--color-text-primary);
+  line-height: 1.25;
+}
+.savedOrgCollapsible__location {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.savedOrgCollapsible__fav {
+  flex-shrink: 0;
+}
+.savedOrgCollapsible__body {
+  padding: 0 14px 14px;
+  border-top: 1px solid var(--color-border-subtle);
+}
+.savedOrgCollapsible__body .nonprofitMetaRow {
+  margin-top: 10px;
+}
+.savedOrgCollapsible__body .nonprofitDescription {
+  margin-bottom: 10px;
+}
+.savedOrgCollapsible__actions {
+  margin-top: 10px;
+}
+.savedOrgCollapsible[open] > .savedOrgCollapsible__summary {
+  border-bottom: 1px solid var(--color-border-subtle);
+}

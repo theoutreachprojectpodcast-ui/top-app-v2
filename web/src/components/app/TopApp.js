@@ -590,10 +590,28 @@ function TopAppInner({ initialNav = "home" }) {
     return favoriteEins.map((ein) => byEin.get(String(ein)) || { ein, orgName: "Saved organization", city: "", state: "" });
   }, [favoriteEins, results, trusted]);
   const savedOrgsToRender = useMemo(() => {
-    if (savedOrganizations.length) return savedOrganizations;
-    if (isAuthenticated && favoriteEins.length) return [];
-    return fallbackSavedOrganizations.map((raw) => mapNonprofitCardRow(raw, "saved"));
-  }, [savedOrganizations, isAuthenticated, favoriteEins, fallbackSavedOrganizations]);
+    if (!favoriteEins.length) return [];
+    const byEin = new Map();
+    for (const raw of fallbackSavedOrganizations) {
+      const card = mapNonprofitCardRow(raw, "saved");
+      const key = card.einNormalized || normalizeEinDigits(card.ein);
+      if (key.length === 9) byEin.set(key, card);
+    }
+    for (const card of savedOrganizations) {
+      const key = card.einNormalized || normalizeEinDigits(card.ein);
+      if (key.length === 9) byEin.set(key, card);
+    }
+    return favoriteEins
+      .map((ein) => {
+        const key = normalizeEinDigits(ein);
+        if (key.length !== 9) return null;
+        return (
+          byEin.get(key) ||
+          mapNonprofitCardRow({ ein: key, orgName: "Saved organization", city: "", state: "" }, "saved")
+        );
+      })
+      .filter(Boolean);
+  }, [savedOrganizations, fallbackSavedOrganizations, favoriteEins]);
   const favoriteEinSet = useMemo(
     () => new Set((favoriteEins || []).map((e) => normalizeEinDigits(e)).filter((e) => e.length === 9)),
     [favoriteEins]
