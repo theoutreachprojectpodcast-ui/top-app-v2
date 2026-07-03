@@ -56,19 +56,31 @@ export function normalizeModeratorAuthorFields(row) {
 }
 
 /**
- * @param {{ authorId?: string, authorName?: string, authorAvatarUrl?: string }} post
+ * Raw catalog row or mapped client post — true for Outreach moderator / platform guide content.
+ * @param {Record<string, unknown> | null | undefined} row
+ */
+export function isCommunityModeratorFeedRow(row) {
+  if (!row) return false;
+  const postType = String(row.post_type ?? row.postType ?? "").trim();
+  const category = String(row.category ?? "").trim();
+  if (postType === "admin_update" || postType.startsWith("platform_guide") || category === "platform_guide") {
+    return true;
+  }
+  const authorId = String(row.author_id ?? row.authorId ?? "").trim();
+  if (authorId === OUTREACH_MODERATOR_AUTHOR_ID) return true;
+  const nameRaw = String(row.author_name ?? row.authorName ?? "").trim();
+  const name = remapLegacyModeratorName(nameRaw);
+  if (MODERATOR_NAME_PATTERN.test(name)) return true;
+  if (/^(marcus|liz)\b/i.test(nameRaw)) return true;
+  const avatar = String(row.author_avatar_url ?? row.authorAvatarUrl ?? "");
+  return avatar.includes("outreach-project-moderator") || avatar.includes("/community/admin-");
+}
+
+/**
+ * @param {{ authorId?: string, authorName?: string, authorAvatarUrl?: string, postType?: string, category?: string }} post
  */
 export function isOutreachModeratorPost(post) {
-  if (!post) return false;
-  const postType = String(post.postType || "").trim();
-  if (postType === "admin_update" || postType.startsWith("platform_guide")) return true;
-  const authorId = String(post.authorId || "").trim();
-  if (authorId === OUTREACH_MODERATOR_AUTHOR_ID) return true;
-  const name = remapLegacyModeratorName(String(post.authorName || "").trim());
-  if (MODERATOR_NAME_PATTERN.test(name)) return true;
-  if (/^(marcus|liz)\b/i.test(String(post.authorName || ""))) return true;
-  const avatar = String(post.authorAvatarUrl || "");
-  return avatar.includes("outreach-project-moderator") || avatar.includes("/community/admin-");
+  return isCommunityModeratorFeedRow(post);
 }
 
 /**

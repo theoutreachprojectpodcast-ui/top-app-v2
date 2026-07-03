@@ -1,27 +1,12 @@
 import { formatMembershipBillingStatus } from "@/features/membership/membershipAccountDisplay";
 
-function sourceLabel(source) {
-  if (source === "cloud") return "Cloud (WorkOS + Supabase)";
-  if (source === "supabase") return "Supabase (demo sync)";
-  return "This device only";
-}
-
-function formatMembershipSource(src) {
-  const s = String(src || "manual").toLowerCase();
-  if (s === "stripe") return "Stripe (subscription)";
-  if (s === "onboarding") return "Onboarding";
-  return "Manual / free";
-}
-
 export default function AccountInfoCard({
   firstName,
   lastName,
   email = "",
   sessionEmail = "",
-  profileSource = "local",
   membershipTier = "",
   membershipBillingStatus = "",
-  membershipSource = "",
   podcastSponsorLastTierId = "",
   podcastSponsorLastCheckoutAt = "",
   displayName = "",
@@ -60,11 +45,6 @@ export default function AccountInfoCard({
         <br />
         {billingLine}
       </p>
-      <p>
-        <strong>Membership source</strong>
-        <br />
-        {formatMembershipSource(membershipSource)}
-      </p>
       {sponsorLine ? (
         <p>
           <strong>Sponsor activity</strong>
@@ -72,11 +52,6 @@ export default function AccountInfoCard({
           {sponsorLine}
         </p>
       ) : null}
-      <p>
-        <strong>Profile data source</strong>
-        <br />
-        {sourceLabel(profileSource)}
-      </p>
       {manageBillingSlot ? <div className="accountInfoCard__billing">{manageBillingSlot}</div> : null}
     </div>
   );
