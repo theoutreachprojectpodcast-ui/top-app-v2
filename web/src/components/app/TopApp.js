@@ -27,6 +27,7 @@ import {
   SITE_TOP_APP_DOCK_TAB_KEYS,
 } from "@/components/navigation/siteBottomNavConfig";
 import { SiteHamburgerNavMenu } from "@/components/navigation/SiteMobileNavHamburgerEntries";
+import HomeScreen from "@/components/home/HomeScreen";
 import { scrollToPageTop } from "@/lib/navigation/scrollToPageTop";
 import { SUPPORT_EMAIL } from "@/lib/runtime/brandContact";
 import ProfileCompletionPanel from "@/features/profile/components/ProfileCompletionPanel";
