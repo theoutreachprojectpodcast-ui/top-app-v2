@@ -69,7 +69,6 @@ export default function SponsorHub({ supabase: supabaseProp }) {
       <SponsorsLandingPage
         sponsorCatalogRows={sponsorCatalogRows}
         onOpenBecomeSponsor={() => openBecomeSponsor()}
-        onOpenBecomeSponsorWithTier={openBecomeSponsor}
       />
       <BecomeSponsorModal
         open={becomeSponsorOpen}

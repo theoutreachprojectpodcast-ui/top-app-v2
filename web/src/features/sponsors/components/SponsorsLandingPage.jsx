@@ -1,14 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import SponsorTierComparison from "@/features/sponsors/components/SponsorTierComparison";
 import SponsorsTieredSections from "@/features/sponsors/components/SponsorsTieredSections";
-import {
-  FOUNDATIONAL_SPONSOR_TIERS,
-  IMPACT_SPONSOR_TIERS,
-  MISSION_PARTNER_TIERS,
-} from "@/features/sponsors/data/sponsorTiers";
-import { SPONSOR_DISPLAY_GROUP_SECTION_LEAD } from "@/features/sponsors/domain/sponsorDisplayGroups";
 
 function ChannelChip({ icon, label }) {
   return (
@@ -19,14 +12,8 @@ function ChannelChip({ icon, label }) {
   );
 }
 
-export default function SponsorsLandingPage({
-  sponsorCatalogRows = [],
-  onOpenBecomeSponsor,
-  onOpenBecomeSponsorWithTier,
-}) {
+export default function SponsorsLandingPage({ sponsorCatalogRows = [], onOpenBecomeSponsor }) {
   const openApply = typeof onOpenBecomeSponsor === "function" ? onOpenBecomeSponsor : () => {};
-  const openApplyWithTier =
-    typeof onOpenBecomeSponsorWithTier === "function" ? onOpenBecomeSponsorWithTier : () => openApply();
 
   return (
     <div className="sponsorPage sponsorLanding">
@@ -46,71 +33,8 @@ export default function SponsorsLandingPage({
       </section>
 
       <div className="sponsorRosterStack">
-        <section className="card sponsorSection sponsorFeaturedSection">
-          <div className="sponsorSectionHead">
-            <h3>Sponsor roster</h3>
-            <span className="sponsorFeaturedValuePill">App sponsor roster</span>
-          </div>
-          <p className="sponsorSectionLead">
-            Partners by tier — open a card for the full profile and verified links.
-          </p>
-        </section>
         <SponsorsTieredSections sponsorRecords={sponsorCatalogRows} />
       </div>
-
-      <section className="card sponsorSection sponsorApplySection" id="apply-sponsor">
-        <div className="sponsorSectionHead">
-          <h3>Apply to be a sponsor</h3>
-          <span className="sponsorFeaturedValuePill">Main platform</span>
-        </div>
-        <p className="sponsorSectionLead">
-          Compare mission partner, foundational, and impact packages below, then start one application for the main
-          Outreach Project experience. Community and podcast sponsor programs are not part of this flow.
-        </p>
-
-        <div className="row wrap sponsorApplySection__actions sponsorApplySection__actions--primary">
-          <button className="btnPrimary" type="button" onClick={() => openApply()}>
-            Become a sponsor
-          </button>
-        </div>
-
-        <SponsorTierComparison
-          tiers={MISSION_PARTNER_TIERS}
-          selectedTierId=""
-          onSelectTier={openApplyWithTier}
-          title="Mission partner sponsors"
-          lead={SPONSOR_DISPLAY_GROUP_SECTION_LEAD.mission_partner}
-          familyTitle="Mission partner packages"
-          familyDescription="Supporting, Growth, and Strategic Partner tiers for premier ecosystem visibility."
-          compareHref="/sponsors?apply=1"
-        />
-
-        <SponsorTierComparison
-          tiers={FOUNDATIONAL_SPONSOR_TIERS}
-          selectedTierId=""
-          onSelectTier={openApplyWithTier}
-          title="Foundational sponsors"
-          lead={SPONSOR_DISPLAY_GROUP_SECTION_LEAD.foundational}
-          familyTitle="Foundational sponsor program"
-          familyDescription="Core partners anchoring trust and readiness across the platform."
-          compareHref="/sponsors?apply=1"
-        />
-
-        <SponsorTierComparison
-          tiers={IMPACT_SPONSOR_TIERS}
-          selectedTierId=""
-          onSelectTier={openApplyWithTier}
-          title="Impact sponsors"
-          lead={SPONSOR_DISPLAY_GROUP_SECTION_LEAD.impact}
-          familyTitle="Impact sponsor program"
-          familyDescription="Regional and program sponsors extending reach into communities and verticals."
-          compareHref="/sponsors?apply=1"
-        />
-
-        <p className="sponsorSectionLead sponsorApplySection__footNote">
-          Ready to apply? Use <strong>Become a sponsor</strong> above or compare tiers first, then select a package.
-        </p>
-      </section>
 
       <section className="card sponsorSection">
         <h3>Why sponsor</h3>
@@ -130,7 +54,8 @@ export default function SponsorsLandingPage({
         <div>
           <h3>Ready to partner?</h3>
           <p className="sponsorSectionLead">
-            Compare mission partner, foundational, and impact packages, then apply in one guided modal.
+            Open the application to compare mission partner, foundational, and impact packages and apply in one guided
+            flow.
           </p>
         </div>
         <button className="btnPrimary" type="button" onClick={() => openApply()}>

@@ -19,6 +19,7 @@ import { resolvePageAtmosphere } from "@/lib/design/pageAtmosphere";
 import { useImmersiveHeaderScroll } from "@/hooks/useImmersiveHeaderScroll";
 import CapacitorFooterPortal from "@/components/capacitor/CapacitorFooterPortal";
 import { isSiteDockNavActive, SITE_MOBILE_DOCK_ITEMS } from "@/components/navigation/siteBottomNavConfig";
+import { scrollToPageTop } from "@/lib/navigation/scrollToPageTop";
 
 const NAV_ITEMS = [
   { href: "/", key: "home", label: "Home", linkTitle: "Home" },
@@ -51,6 +52,11 @@ export default function AppShell({
 }) {
   const shellRef = useRef(null);
   const pathname = usePathname();
+
+  function scrollShellToTop() {
+    scrollToPageTop({ root: shellRef.current });
+  }
+
   const missionStripOnHome = pathname === "/";
   const items = Array.isArray(navItems) && navItems.length ? navItems : NAV_ITEMS;
   const RootTag = useTopAppStructure ? "main" : "div";
@@ -187,6 +193,7 @@ export default function AppShell({
                     title={item.linkTitle || item.label}
                     data-nav-key={item.key}
                     className={`navItem navItem--dockCol navItem--dockPrimary ${isSiteDockNavActive(item.key, { nav: activeNav, pathname }) ? "isActive" : ""}`}
+                    onClick={() => scrollShellToTop()}
                   >
                     <SiteBottomNavGlyph navKey={item.key} className="navItemGlyph" />
                     <span className="navItemLabel">{item.label}</span>
@@ -207,6 +214,7 @@ export default function AppShell({
               href={item.href}
               title={item.linkTitle || item.label}
               className={`navItem navItem--dockCol ${activeNav === item.key ? "isActive" : ""}`}
+              onClick={() => scrollShellToTop()}
             >
               <SiteBottomNavGlyph navKey={item.key} className="navItemGlyph" />
               <span className="navItemLabel">{item.label}</span>

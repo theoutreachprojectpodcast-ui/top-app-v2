@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import HeaderInner from "@/components/layout/HeaderInner";
@@ -27,7 +27,7 @@ import {
   SITE_TOP_APP_DOCK_TAB_KEYS,
 } from "@/components/navigation/siteBottomNavConfig";
 import { SiteHamburgerNavMenu } from "@/components/navigation/SiteMobileNavHamburgerEntries";
-import HomeScreen from "@/components/home/HomeScreen";
+import { scrollToPageTop } from "@/lib/navigation/scrollToPageTop";
 import { SUPPORT_EMAIL } from "@/lib/runtime/brandContact";
 import ProfileCompletionPanel from "@/features/profile/components/ProfileCompletionPanel";
 import HeaderAccountMenu from "@/components/layout/HeaderAccountMenu";
@@ -148,8 +148,10 @@ function TopAppInner({ initialNav = "home" }) {
     typeof window !== "undefined" ? readRememberEmailPref() : true,
   );
 
-  useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  const mainScrollRef = useRef(null);
+
+  useLayoutEffect(() => {
+    scrollToPageTop({ root: mainScrollRef.current });
   }, [nav]);
 
   useEffect(() => {
@@ -447,6 +449,10 @@ function TopAppInner({ initialNav = "home" }) {
     setNav("community");
   }
 
+  function scrollAppToTop() {
+    scrollToPageTop({ root: mainScrollRef.current });
+  }
+
   function dockNavItem(item) {
     const key = String(item?.key || "");
     if (["community", "trusted", "settings"].includes(key) && !hasProAccess) {
@@ -520,6 +526,16 @@ function TopAppInner({ initialNav = "home" }) {
     }
     if (pathname !== href) router.push(href);
     else if (SITE_TOP_APP_DOCK_TAB_KEYS.has(key)) setNav(key);
+  }
+
+  function handleHamburgerNav(item) {
+    hamburgerNavItem(item);
+    scrollAppToTop();
+  }
+
+  function handleDockNav(item) {
+    dockNavItem(item);
+    scrollAppToTop();
   }
 
   async function fileToCompressedDataUrl(file) {
@@ -854,7 +870,6 @@ function TopAppInner({ initialNav = "home" }) {
   }
 
   const pageAtmosphere = useMemo(() => resolvePageAtmosphere(pathname, nav), [pathname, nav]);
-  const mainScrollRef = useRef(null);
   const immersiveHeaderScroll = pageAtmosphere !== "podcast";
   useImmersiveHeaderScroll({
     rootRef: mainScrollRef,
@@ -895,7 +910,7 @@ function TopAppInner({ initialNav = "home" }) {
               <div className="topbarActionsCluster topbarActionsCluster--start">
                 <SiteHamburgerNavMenu
                   shellClass="siteMobileNavMore--phoneOnly"
-                  onItemClick={hamburgerNavItem}
+                  onItemClick={handleHamburgerNav}
                 />
                 {isMobileShell && pageAtmosphere !== "podcast" ? <ColorSchemeToggle /> : null}
                 {isMobileShell && isLoggedIn ? <AdminConsoleLink /> : null}
@@ -907,7 +922,7 @@ function TopAppInner({ initialNav = "home" }) {
               <SiteHamburgerNavMenu
                 shellClass="siteMobileNavMore--desktopOnly"
                 align="end"
-                onItemClick={hamburgerNavItem}
+                onItemClick={handleHamburgerNav}
               />
               {pageAtmosphere === "home" ? <DownloadMobileAppButton /> : null}
               {!isMobileShell && pageAtmosphere !== "podcast" ? <ColorSchemeToggle /> : null}
@@ -1420,7 +1435,7 @@ function TopAppInner({ initialNav = "home" }) {
                     type="button"
                     data-nav-key={item.key}
                     className={`navItem navItem--dockCol navItem--dockPrimary ${isActive ? "isActive" : ""}`}
-                    onClick={() => dockNavItem(item)}
+                    onClick={() => handleDockNav(item)}
                     title={item.linkTitle || item.label}
                   >
                     <SiteBottomNavGlyph navKey={item.key} className="navItemGlyph" />

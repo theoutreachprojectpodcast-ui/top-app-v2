@@ -22,6 +22,7 @@ import ProMembershipGate from "@/components/membership/ProMembershipGate";
 import AuthSessionProvider from "@/components/auth/AuthSessionProvider";
 import { ProfileDataProvider } from "@/features/profile/ProfileDataProvider";
 import { ProfileEditProvider } from "@/features/profile/ProfileEditProvider";
+import ScrollToTopOnNavigate from "@/components/navigation/ScrollToTopOnNavigate";
 
 /** Mobile WebView + PWA safe areas (notches, home indicator). */
 export const viewport = {
@@ -110,6 +111,7 @@ html[data-capacitor-native], html[data-capacitor-native] body {
                 <ExternalBrowserSheetHost />
                 <MobileProductionHealthGate />
                 <Suspense fallback={null}>
+                  <ScrollToTopOnNavigate />
                   <MobileOAuthBrowserFinish />
                   <MobileOAuthDeepLink />
                   <MobileOAuthSessionResume />
