@@ -1,81 +1,117 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Avatar from "@/components/shared/Avatar";
 import {
+  fetchCommunityMembers,
   getConnectionState,
   sendConnectionRequest,
 } from "@/features/community/api/communityApi";
-import { COMMUNITY_FOLLOWS_SEED, COMMUNITY_MEMBERS_SEED } from "@/features/community/data/communitySeed";
 import { avatarFallbackUrl } from "@/lib/avatarFallback";
 
-function followingCount(memberId) {
-  return COMMUNITY_FOLLOWS_SEED.filter((f) => f.followerId === memberId).length;
+function memberIsSelf(member, { viewerProfileId, viewerUserId }) {
+  const profileId = String(viewerProfileId || "").trim();
+  const userId = String(viewerUserId || "").trim();
+  if (profileId && String(member?.id || "") === profileId) return true;
+  if (userId && String(member?.workosUserId || "") === userId) return true;
+  return false;
 }
 
-export default function CommunityConnectionsPanel({ userId, onOpenMember }) {
-  const [open, setOpen] = useState(false);
+export default function CommunityConnectionsPanel({ userId, viewerProfileId = "", onOpenMember }) {
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [members, setMembers] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [version, setVersion] = useState(0);
 
-  const members = useMemo(() => COMMUNITY_MEMBERS_SEED.map((m) => ({
-    ...m,
-    followingCount: followingCount(m.id),
-  })), []);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedSearch(search.trim()), 280);
+    return () => window.clearTimeout(timer);
+  }, [search]);
 
-  const matches = useMemo(() => {
-    const q = String(search || "").trim().toLowerCase();
-    if (!q) return members.slice(0, 4);
-    return members.filter((m) => {
-      const haystack = `${m.name} ${m.role} ${m.tagline}`.toLowerCase();
-      return haystack.includes(q);
-    });
-  }, [members, search, version]);
+  useEffect(() => {
+    let cancelled = false;
 
-  const preview = members.slice(0, 3);
+    (async () => {
+      setLoading(true);
+      setError("");
+      const result = await fetchCommunityMembers({ q: debouncedSearch, limit: debouncedSearch ? 40 : 24 });
+      if (cancelled) return;
+      if (!result.ok) {
+        setMembers([]);
+        setTotal(0);
+        setError(result.error === "membership_required" ? "Pro membership is required to browse members." : "Could not load members right now.");
+      } else {
+        setMembers(result.members);
+        setTotal(result.total || result.members.length);
+        setError("");
+      }
+      setLoading(false);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [debouncedSearch, version]);
+
+  const preview = useMemo(() => members.slice(0, 3), [members]);
+  const summary = loading
+    ? "Loading members…"
+    : total > 0
+      ? `${total} member${total === 1 ? "" : "s"} on the platform`
+      : "No members match yet";
 
   return (
     <section className="card communitySection communityConnectionsPanel">
       <div className="communitySectionHead">
         <h3>Member connections</h3>
-        <button
-          type="button"
-          className="btnSoft communityCollapseBtn"
-          onClick={() => setOpen((v) => !v)}
-          aria-expanded={open}
-        >
-          {open ? "Collapse" : "Expand"}
-        </button>
-      </div>
-      <div className="communityConnectionsPreview">
-        <div className="communityConnectionsPreviewAvatars">
-          {preview.map((m) => (
-            <Avatar key={m.id} src={m.avatar_url || avatarFallbackUrl(m.id)} alt={m.name} className="communityMemberAvatarImg" />
-          ))}
-        </div>
-        <p>{members.length} demo members available</p>
       </div>
 
-      {open ? (
-        <div className="communityConnectionsBody">
-          <div className="communitySearchBar">
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Find members by name, role, or tagline"
-            />
+      {preview.length ? (
+        <div className="communityConnectionsPreview">
+          <div className="communityConnectionsPreviewAvatars">
+            {preview.map((m) => (
+              <Avatar key={m.id} src={m.avatar_url || avatarFallbackUrl(m.id)} alt={m.name} className="communityMemberAvatarImg" />
+            ))}
           </div>
-          <div className="communitySearchResults">
-            {matches.map((m) => {
-              const state = getConnectionState(userId, m.id, COMMUNITY_FOLLOWS_SEED);
-              const isSelf = String(m.id) === String(userId);
+          <p>{summary}</p>
+        </div>
+      ) : (
+        <p className="communityConnectionsPreview communityConnectionsPreview--solo">{summary}</p>
+      )}
+
+      <div className="communityConnectionsBody">
+        <div className="communitySearchBar">
+          <label className="fieldLabel" htmlFor="community-member-search">
+            Search members
+          </label>
+          <input
+            id="community-member-search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by name, role, bio, or location"
+            autoComplete="off"
+          />
+        </div>
+
+        {error ? <p className="applyError" role="alert">{error}</p> : null}
+
+        <div className="communitySearchResults">
+          {loading ? <p className="communityFeedStatus">Searching members…</p> : null}
+          {!loading &&
+            members.map((m) => {
+              const state = getConnectionState(userId, m.id);
+              const isSelf = memberIsSelf(m, { viewerProfileId, viewerUserId: userId });
+              const subtitle = [m.role, m.location].filter(Boolean).join(" · ");
               return (
                 <div key={m.id} className="communitySearchResultRow">
                   <button type="button" className="communityMemberMini communityMemberMiniBtn" onClick={() => onOpenMember?.(m.id)}>
                     <Avatar src={m.avatar_url || avatarFallbackUrl(m.id)} alt={m.name} className="communityMemberAvatarImg" />
                     <div>
                       <strong>{m.name}</strong>
-                      <p>{m.role} · Following {m.followingCount}</p>
+                      <p>{subtitle || m.tagline || "Community member"}</p>
                     </div>
                   </button>
                   {isSelf ? (
@@ -99,11 +135,11 @@ export default function CommunityConnectionsPanel({ userId, onOpenMember }) {
                 </div>
               );
             })}
-            {!matches.length ? <p className="communityFeedStatus">No members match this search yet.</p> : null}
-          </div>
+          {!loading && !members.length && !error ? (
+            <p className="communityFeedStatus">No members match this search yet.</p>
+          ) : null}
         </div>
-      ) : null}
+      </div>
     </section>
   );
 }
-

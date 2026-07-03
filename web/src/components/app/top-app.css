@@ -3495,6 +3495,25 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   z-index: 100;
   box-sizing: border-box;
 }
+.proUpgradeModalOverlay {
+  z-index: 120;
+}
+.proUpgradeModal__title {
+  margin: 0;
+}
+.proUpgradeModal__lead {
+  margin: 0;
+  color: color-mix(in srgb, var(--color-text-primary) 88%, var(--color-text-secondary) 12%);
+  line-height: 1.5;
+}
+.proUpgradeModal__meta {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-body-sm);
+}
+.proUpgradeModal__actions {
+  margin-top: var(--ds-space-2, 8px);
+}
 .modalOverlay--profileEdit {
   z-index: 500;
 }
@@ -4628,6 +4647,12 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   margin-right: -12px;
   border: 2px solid var(--color-bg-secondary);
 }
+.communityConnectionsPreview--solo {
+  margin: 0 0 12px;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+
 .communityConnectionsBody {
   margin-top: 12px;
   display: grid;
@@ -6033,6 +6058,13 @@ html.dark .communityPostBodyGuideSteps li {
 .sponsorPremiumCard[data-sponsor-slug="green-gorilla-land-management"] .sponsorPremiumLogoImg {
   padding: 5px;
   object-fit: contain;
+}
+/* Rucking Realty: full-bleed square mark — cover fills the circular frame (no matte gutter) */
+.sponsorPremiumCard[data-sponsor-slug="rucking-realty-group"] .organizationLogo__inset {
+  padding: 0;
+}
+.sponsorPremiumCard[data-sponsor-slug="rucking-realty-group"] .organizationLogo__img {
+  object-fit: cover;
 }
 .sponsorPremiumLogoImg {
   width: 100%;

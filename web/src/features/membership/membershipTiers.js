@@ -39,7 +39,7 @@ export const MEMBERSHIP_TIER_DEFINITIONS = [
       "Sign in and choose Support or Pro to access the platform",
     ],
     isMember: false,
-    hint: "Support Membership ($0.99/year) unlocks the nonprofit directory and saved organizations.",
+    hint: "Support Membership ($0.99/year) unlocks the nonprofit directory.",
   },
   {
     id: MEMBERSHIP_TIER_KEYS.SUPPORT,
@@ -48,9 +48,8 @@ export const MEMBERSHIP_TIER_DEFINITIONS = [
     priceLabel: SUPPORT_MEMBERSHIP_PRICE_LABEL,
     benefits: [
       "Nonprofit directory search and exploration",
-      "Save favorite nonprofits to your profile",
       "Podcast episodes, guests, and guest applications",
-      "Upgrade to Pro for exclusive content and sponsor opportunities",
+      "Upgrade to Pro to save organizations and unlock community",
     ],
     isMember: false,
     hint: "Entry-level paid membership — billed annually at $0.99/year.",
@@ -62,6 +61,7 @@ export const MEMBERSHIP_TIER_DEFINITIONS = [
     priceLabel: PRO_MEMBERSHIP_PRICE_LABEL,
     benefits: [
       "Everything in Support Membership",
+      "Save favorite nonprofits to your profile",
       "Create and submit community posts",
       "Pro-exclusive podcast content (YouTube playlist integration)",
       "Podcast sponsor opportunities",

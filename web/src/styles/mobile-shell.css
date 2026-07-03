@@ -475,7 +475,7 @@ html {
     position: relative !important;
     top: auto !important;
     left: auto !important;
-    align-self: center;
+    align-self: flex-start;
     transform: none !important;
     z-index: 0;
     flex: 0 0 auto;

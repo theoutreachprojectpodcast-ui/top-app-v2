@@ -21,6 +21,7 @@ export default function HomeDirectoryPanel({
   runSearch,
   clearSearch,
   isAuthenticated,
+  canSaveOrganizations = false,
   favoriteEinSet,
   onToggleFavorite,
   onRequestSignIn,
@@ -144,7 +145,7 @@ export default function HomeDirectoryPanel({
               key={`${card.ein}-${card.name}`}
               card={card}
               actionMode="directory"
-              favoritesEnabled={isAuthenticated}
+              favoritesEnabled={isAuthenticated && canSaveOrganizations}
               isFavorite={einKey.length === 9 && favoriteEinSet.has(einKey)}
               onToggleFavorite={onToggleFavorite}
               onRequestSignIn={onRequestSignIn}

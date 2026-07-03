@@ -264,9 +264,8 @@ export default function AppAccessPaywall({
             <p className="mobileSplashPage__tierPrice">{SUPPORT_MEMBERSHIP_PRICE_LABEL}</p>
             <ul className="mobileSplashPage__benefits">
               <li>Nonprofit directory search and exploration</li>
-              <li>Save favorite nonprofits</li>
               <li>Podcast episodes, guests, and guest applications</li>
-              <li>Community, exclusive podcast content, and trusted resources are Pro-only</li>
+              <li>Saving organizations, community, exclusive podcast content, and trusted resources are Pro-only</li>
             </ul>
           </section>
           <section className="mobileSplashPage__tierCard mobileSplashPage__tierCard--pro" aria-labelledby="pro-tier-heading">
@@ -276,6 +275,7 @@ export default function AppAccessPaywall({
             <p className="mobileSplashPage__tierPrice">{PRO_MEMBERSHIP_PRICE_LABEL}</p>
             <ul className="mobileSplashPage__benefits">
               <li>Everything in Support</li>
+              <li>Save favorite nonprofits</li>
               <li>Create and submit community posts</li>
               <li>Pro-exclusive podcast content (YouTube playlist integration)</li>
               <li>Podcast sponsor opportunities</li>

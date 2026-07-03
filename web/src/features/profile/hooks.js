@@ -556,6 +556,14 @@ export function useProfileDataState(supabase) {
 
   async function setFavoriteEinList(nextEins) {
     const normalized = [...new Set((nextEins || []).map((e) => normalizeEinDigits(e)).filter((e) => e.length === 9))];
+    if (
+      isAuthenticated &&
+      !entitlements.saveOrganizationsAccess &&
+      !entitlements.isPlatformAdmin &&
+      !entitlements.isPrivilegedStaff
+    ) {
+      return;
+    }
     setFavoriteEins(normalized);
     if (!isAuthenticated) return;
     if (workosRef.current) {
@@ -866,6 +874,14 @@ export function useProfileDataState(supabase) {
   function toggleFavoriteEin(ein) {
     const id = normalizeEinDigits(ein);
     if (id.length !== 9) return;
+    if (
+      isAuthenticated &&
+      !entitlements.saveOrganizationsAccess &&
+      !entitlements.isPlatformAdmin &&
+      !entitlements.isPrivilegedStaff
+    ) {
+      return;
+    }
     const next = favoriteEins.includes(id) ? favoriteEins.filter((x) => x !== id) : [id, ...favoriteEins];
     setFavoriteEinList(next);
   }

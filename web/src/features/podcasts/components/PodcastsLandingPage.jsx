@@ -22,6 +22,8 @@ import PodcastApplyGuestForm from "@/features/podcasts/components/PodcastApplyGu
 import MemberOnlyLockSection from "@/features/podcasts/components/MemberOnlyLockSection";
 import { listPodcastMemberContent } from "@/features/podcasts/api/podcastApi";
 import { useProfileData } from "@/features/profile/ProfileDataProvider";
+import ProUpgradeModal from "@/components/membership/ProUpgradeModal";
+import { getProUpgradeGateContent } from "@/lib/membership/proUpgradeGateCopy";
 import { PODCAST_LANDING_RECENT_EPISODE_COUNT } from "@/lib/podcast/podcastLandingCuratedEpisodes";
 
 const FULL_EPISODES_SECTION_COUNT = PODCAST_LANDING_RECENT_EPISODE_COUNT;
@@ -45,7 +47,6 @@ function mapUpcomingApiGuests(rows) {
 
 export default function PodcastsLandingPage({
   initialEpisodes = [],
-  initialFeaturedGuests = [],
   initialSponsors = [],
   initialUpcomingGuests = [],
   initialEpisodeGuests = [],
@@ -66,9 +67,6 @@ export default function PodcastsLandingPage({
     if (hasInitialBundle) return initialEpisodes;
     return isDevBuild ? FALLBACK_EPISODES : [];
   });
-  const [featuredVoices, setFeaturedVoices] = useState(
-    Array.isArray(initialFeaturedGuests) && initialFeaturedGuests.length ? initialFeaturedGuests : [],
-  );
   const [podcastSponsors, setPodcastSponsors] = useState(
     hasInitialSponsors ? initialSponsors : [],
   );
@@ -89,6 +87,16 @@ export default function PodcastsLandingPage({
 
   const [applyOpen, setApplyOpen] = useState(false);
   const [sponsorFlowOpen, setSponsorFlowOpen] = useState(false);
+  const [sponsorUpgradeOpen, setSponsorUpgradeOpen] = useState(false);
+  const sponsorUpgradeCopy = getProUpgradeGateContent("/podcasts/sponsor");
+
+  function openPodcastSponsorApply() {
+    if (hasProPodcastExtras) {
+      setSponsorFlowOpen(true);
+      return;
+    }
+    setSponsorUpgradeOpen(true);
+  }
   const searchParams = useSearchParams();
 
   useEffect(() => {
@@ -127,15 +135,9 @@ export default function PodcastsLandingPage({
       if (bundle.ok && nextEpisodes.length) {
         setEpisodeFetchError("");
         setEpisodes(nextEpisodes);
-        if (Array.isArray(bundle.featuredGuests) && bundle.featuredGuests.length) {
-          setFeaturedVoices(bundle.featuredGuests);
-        }
       } else if (nextEpisodes.length) {
         setEpisodeFetchError("");
         setEpisodes(nextEpisodes);
-        if (Array.isArray(bundle.featuredGuests) && bundle.featuredGuests.length) {
-          setFeaturedVoices(bundle.featuredGuests);
-        }
       } else if (!hasInitialBundle) {
         setEpisodes((prev) => (Array.isArray(prev) && prev.length ? prev : nextEpisodes));
         setEpisodeFetchError(
@@ -256,22 +258,11 @@ export default function PodcastsLandingPage({
   return (
     <>
     <div className="podcastScope">
-        <PodcastHero featured={featured} onApply={() => setApplyOpen(true)} />
-
-        <section className="podcastSection">
-          <PodcastSectionHeader
-            eyebrow="Featured guests"
-            title="Voices shaping service communities"
-            subtitle="Short pull-quotes from episode captions when available; otherwise curated public quotes or tight show-notes lines. Active voice cards: Admin → Podcasts."
-          />
-          {bundleNote ? <p className="podcastMuted">{bundleNote}</p> : null}
-          <div className="podcastGuestGrid">
-            {featuredVoices.slice(0, 4).map((guest) => (
-              <GuestCard key={guest.id || guest.slug} guest={guest} variant="voiceStrip" />
-            ))}
-          </div>
-          {!featuredVoices.length ? <p className="podcastMuted">Guest highlights will appear after the next successful sync.</p> : null}
-        </section>
+        <PodcastHero
+          featured={featured}
+          onApply={() => setApplyOpen(true)}
+          onSponsorApply={openPodcastSponsorApply}
+        />
 
         <section className="podcastSection">
           <PodcastSectionHeader
@@ -279,6 +270,7 @@ export default function PodcastsLandingPage({
             title="Latest full episodes"
             subtitle="The ten most recent episodes from our official YouTube full-episodes playlist, with thumbnails synced from YouTube."
           />
+          {bundleNote ? <p className="podcastMuted">{bundleNote}</p> : null}
           {episodeFetchError && !lastTenFullEpisodes.length ? (
             <p className="podcastMuted" role="alert">
               {episodeFetchError}
@@ -423,6 +415,13 @@ export default function PodcastsLandingPage({
           }}
         />
       ) : null}
+      <ProUpgradeModal
+        open={sponsorUpgradeOpen}
+        title={sponsorUpgradeCopy.title}
+        message={sponsorUpgradeCopy.message}
+        feature={sponsorUpgradeCopy.feature}
+        onBack={() => setSponsorUpgradeOpen(false)}
+      />
     </>
   );
 }

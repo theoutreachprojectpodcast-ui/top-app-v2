@@ -1,17 +1,17 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { isCapacitorNative } from "@/lib/capacitor/platform";
 import { hasActiveMembership } from "@/lib/membership/appAccess";
 import { requirePro } from "@/lib/membership/membershipAccess";
+import { getProUpgradeGateContent } from "@/lib/membership/proUpgradeGateCopy";
 import {
   isMembershipExemptPath,
-  membershipUpgradePaywallPath,
   requiresProMembershipPath,
 } from "@/lib/membership/protectedRoutes";
 import { readNavAuthCache } from "@/lib/auth/navAuthCache";
 import { useProfileData } from "@/features/profile/ProfileDataProvider";
+import ProUpgradeModal from "@/components/membership/ProUpgradeModal";
 
 function accessOpts(entitlements) {
   return {
@@ -21,37 +21,59 @@ function accessOpts(entitlements) {
 }
 
 /**
- * Support members may use directory, saves, and the podcast hub. Pro-only routes redirect to upgrade paywall.
+ * Support members may use directory, podcast hub, and profile. Pro-only routes show an upgrade modal.
  */
 export default function ProMembershipGate() {
   const router = useRouter();
   const pathname = usePathname();
   const { isAuthenticated, loadingProfile, profile, entitlements } = useProfileData();
   const opts = accessOpts(entitlements);
+  const [gateOpen, setGateOpen] = useState(false);
 
-  useEffect(() => {
+  const shouldGate = useMemo(() => {
     const path = pathname || "/";
-    if (isMembershipExemptPath(path)) return;
-    if (!requiresProMembershipPath(path)) return;
+    if (isMembershipExemptPath(path)) return false;
+    if (!requiresProMembershipPath(path)) return false;
 
     const sessionHint = readNavAuthCache()?.authenticated;
     const signedIn = isAuthenticated || sessionHint;
-    if (!signedIn) return;
+    if (!signedIn) return false;
 
-    if (requirePro(profile, opts)) return;
-    if (loadingProfile && hasActiveMembership(profile, opts)) return;
+    if (requirePro(profile, opts)) return false;
+    if (loadingProfile && hasActiveMembership(profile, opts)) return false;
 
-    router.replace(membershipUpgradePaywallPath(isCapacitorNative()));
+    return true;
   }, [
     pathname,
     isAuthenticated,
     loadingProfile,
     profile,
-    entitlements,
     opts.isPlatformAdmin,
     opts.isPrivilegedStaff,
-    router,
   ]);
 
-  return null;
+  useEffect(() => {
+    setGateOpen(shouldGate);
+  }, [shouldGate]);
+
+  const copy = useMemo(() => getProUpgradeGateContent(pathname || "/"), [pathname]);
+
+  function handleBack() {
+    setGateOpen(false);
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back();
+      return;
+    }
+    router.replace("/");
+  }
+
+  return (
+    <ProUpgradeModal
+      open={gateOpen}
+      title={copy.title}
+      message={copy.message}
+      feature={copy.feature}
+      onBack={handleBack}
+    />
+  );
 }

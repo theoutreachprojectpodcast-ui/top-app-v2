@@ -47,7 +47,16 @@ export function profilePassesMembershipScope(profileRow, scope) {
  * @param {{ upgrade?: string }} [extra]
  */
 export function membershipDeniedResponse(scope, extra = {}) {
-  const upgrade = extra.upgrade || (scope.includes("pro") || scope === "community_post" ? "pro" : "support");
+  const upgrade =
+    extra.upgrade ||
+    (scope === "save_organizations" ||
+    scope.includes("pro") ||
+    scope === "community_post" ||
+    scope === "community_view" ||
+    scope === "podcast_premium" ||
+    scope === "trusted_pro"
+      ? "pro"
+      : "support");
   return Response.json(
     {
       ok: false,

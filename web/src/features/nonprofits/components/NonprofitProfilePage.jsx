@@ -40,7 +40,12 @@ function readProfileTheme() {
 export default function NonprofitProfilePage({ ein: einParam }) {
   const router = useRouter();
   const sb = useMemo(() => getSupabaseClient(), []);
-  const { isAuthenticated, favoriteEins, toggleFavoriteEin } = useProfileData();
+  const { isAuthenticated, favoriteEins, toggleFavoriteEin, entitlements } = useProfileData();
+  const canSaveOrganizations = !!(
+    entitlements?.saveOrganizationsAccess ||
+    entitlements?.isPlatformAdmin ||
+    entitlements?.isPrivilegedStaff
+  );
 
   const [theme, setTheme] = useState("clean");
   const [card, setCard] = useState(null);
@@ -230,7 +235,7 @@ export default function NonprofitProfilePage({ ein: einParam }) {
                     </div>
                     {einDigits.length === 9 ? (
                       <div className="nonprofitProfileFavSlot">
-                        {isAuthenticated ? (
+                        {isAuthenticated && canSaveOrganizations ? (
                           <button
                             className={`favBtn${isFavorite ? " favBtn--on" : ""}`}
                             type="button"
@@ -240,11 +245,11 @@ export default function NonprofitProfilePage({ ein: einParam }) {
                           >
                             {isFavorite ? "★" : "☆"}
                           </button>
-                        ) : (
+                        ) : !isAuthenticated ? (
                           <Link className="btnSoft nonprofitProfileSignInHint" href="/">
                             Sign in to save
                           </Link>
-                        )}
+                        ) : null}
                       </div>
                     ) : null}
                   </div>

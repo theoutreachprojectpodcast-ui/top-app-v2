@@ -113,9 +113,9 @@ export function canViewDirectory(profile, opts = {}) {
   return requireSupportOrPro(profile, opts);
 }
 
-/** Save nonprofit directory favorites (Support + Pro). */
+/** Save nonprofit directory favorites (Pro + sponsor / staff). */
 export function canSaveOrganizations(profile, opts = {}) {
-  return requireSupportOrPro(profile, opts);
+  return requirePro(profile, opts);
 }
 
 /** Public podcast hub (episodes, guests, apply) — Support + Pro. */

@@ -21,6 +21,7 @@ export default function HomeScreen({
   onSupportUpgrade,
   hasProAccess = true,
   hasSupportAccess = true,
+  canSaveOrganizations = false,
   directoryProps,
   favoriteEinSet,
   onToggleFavorite,
@@ -53,6 +54,7 @@ export default function HomeScreen({
         <HomeDirectoryPanel
           {...directoryProps}
           isAuthenticated={isAuthenticated}
+          canSaveOrganizations={canSaveOrganizations}
           favoriteEinSet={favoriteEinSet}
           onToggleFavorite={onToggleFavorite}
           onRequestSignIn={onRequestSignIn}

@@ -417,7 +417,10 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
     width: auto;
   }
 }
-.appShell--podcast .podcastBrandLogo {
+.appShell--podcast .podcastBrandLogo,
+.appShell--podcast .headerBrandStack img.podcastBrandLogo {
+  object-position: top center;
+  vertical-align: top;
   filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.45));
 }
 
@@ -429,6 +432,10 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
 
 /* Keep the mark centered but inset from viewport edges so wide assets never sit under corner controls. */
 .topApp.appShell--podcast .headerBrandStack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
   max-width: min(900px, calc(100vw - 24px));
   padding-left: max(10px, env(safe-area-inset-left, 0px));
   padding-right: max(10px, env(safe-area-inset-right, 0px));
@@ -439,6 +446,8 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
   display: inline-flex;
   max-width: 100%;
   justify-content: center;
+  align-items: flex-start;
+  line-height: 0;
 }
 
 /* Main-app order: action row at top, podcast mark below (see AppShell DOM). */
@@ -478,6 +487,10 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
     width: 100%;
     min-height: 44px;
     justify-content: center;
+  }
+
+  .podcastPageHero__applyStack {
+    width: 100%;
   }
 
   /* Mobile podcast header layout: `mobile-shell.css` (same pattern as home). */
@@ -581,6 +594,19 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
 
 .podcastPageHero__actions {
   margin: 0;
+}
+
+.podcastPageHero__applyStack {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--ds-space-2, 8px);
+  min-width: min(100%, 280px);
+}
+
+.podcastPageHero__applyStack .btnSoft {
+  width: 100%;
+  justify-content: center;
 }
 
 .podcastPageHero--compact {
