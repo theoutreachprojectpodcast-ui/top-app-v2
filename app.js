@@ -557,7 +557,7 @@ function buildMemberFeedItems() {
     },
     {
       icon: "🤝",
-      title: "Sponsor Perk — Rope Solutions",
+      title: "Sponsor Perk — ROPE Solutions",
       meta: "Foundational Sponsor",
       body: "Member perk: 15% off leadership training. Code: TOP15 (Demo)",
       ctaLabel: "Open Sponsors",

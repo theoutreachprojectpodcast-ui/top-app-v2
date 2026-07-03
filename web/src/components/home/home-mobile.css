@@ -507,7 +507,7 @@
 
 @media (max-width: 760px) {
   .homeMobile {
-    --home-gap: clamp(7px, 2.1vw, 11px);
+    --home-gap: clamp(5px, 1.5vw, 9px);
     --home-header-content-breathe: clamp(6px, 1.4vw, 9px);
     --home-card-radius: clamp(14px, 3.5vw, 18px);
     --home-pad-x: var(--mobile-shell-pad-x, clamp(16px, 4.5vw, 20px));
@@ -800,14 +800,19 @@
   }
 
   /* Home: breathing room between wordmark and first section (featured sponsors). */
+  main.topApp[data-page-atmosphere="home"] .headerBrandStack {
+    align-items: flex-start;
+    padding-top: clamp(2px, 0.5vw, 6px);
+  }
+
   main.topApp[data-page-atmosphere="home"] .appSiteHeader {
     margin-bottom: 0;
-    padding-bottom: clamp(10px, 2.2vw, 14px);
+    padding-bottom: clamp(4px, 1vw, 8px);
   }
 
   main.topApp[data-page-atmosphere="home"] .headerBrandStack img.brandMarkImg--header:not(.podcastBrandLogo),
   main.topApp[data-page-atmosphere="home"] .headerBrandStack .brandMarkImg--header {
-    margin-bottom: clamp(-142px, -36vw, -176px);
+    margin-bottom: clamp(-118px, -30vw, -148px);
   }
 
   main.topApp[data-page-atmosphere="home"] .shell.shell--home {
@@ -823,12 +828,12 @@
 
   main.topApp[data-page-atmosphere="home"] .homeSponsorSpotlights {
     margin-top: 0;
-    padding-top: clamp(10px, 2.4vw, 16px);
+    padding-top: clamp(2px, 0.8vw, 6px);
   }
 
   main.topApp[data-page-atmosphere="home"] .homeSponsorSpotlights__head {
-    gap: 4px;
-    margin-bottom: 6px;
+    gap: 2px;
+    margin-bottom: 4px;
   }
 
   main.topApp[data-page-atmosphere="home"] {

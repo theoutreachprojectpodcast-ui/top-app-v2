@@ -16,7 +16,7 @@ alter table if exists public.sponsors_catalog
 alter table if exists public.sponsors_catalog
   add column if not exists veteran_owned boolean not null default false;
 
--- Rope Solutions — one public badge + tighten short line (avoid duplicate “mission” chip tone).
+-- ROPE Solutions — one public badge + tighten short line (avoid duplicate “mission” chip tone).
 update public.sponsors_catalog
 set
   primary_display_tag = 'Foundational Sponsor',

@@ -20,7 +20,7 @@ export const PODCAST_LANDING_CURATED_LABELS = [
   "Hero's Journey",
   "Tyler Burgett",
   "Rucking Realty Group",
-  "Rope Solutions",
+  "ROPE Solutions",
   "Hero to the Line",
   "Brain Treatment Center hosts",
   "Backcountry Heroes",
@@ -29,7 +29,7 @@ export const PODCAST_LANDING_CURATED_LABELS = [
   "MOS Veteran Adventures",
   "Hoof to Heart Veterans",
   "The Fallen Outdoors",
-  "Rope Solutions",
+  "ROPE Solutions",
   "Sheepdog Impact Assistance",
 ];
 

@@ -17,6 +17,7 @@ import OrganizationLogo from "@/components/shared/OrganizationLogo";
 import SponsorOutboundLink from "@/features/sponsors/components/SponsorOutboundLink";
 import { getSponsorBySlug } from "@/features/sponsors/api/sponsorCatalogApi";
 import { sponsorBlurbsRedundant } from "@/features/sponsors/domain/sponsorViewModels";
+import { isMainAppMissionPartnerSlug } from "@/features/sponsors/domain/sponsorMissionPartners";
 
 function formatTierLabel(key) {
   const k = String(key || "").trim().toLowerCase();
@@ -106,7 +107,7 @@ export default function SponsorProfilePage({ slug, initialProfile = null }) {
         </div>
       ) : (
         <>
-          {profile.isPodcastSponsor ? (
+          {profile.isPodcastSponsor && !isMainAppMissionPartnerSlug(profile.slug) ? (
             <div className="sponsorProfileContextBanner card" role="note">
               <p className="sponsorProfileContextBannerText">
                 This organization sponsors The Outreach Project podcast.{" "}
@@ -148,9 +149,11 @@ export default function SponsorProfilePage({ slug, initialProfile = null }) {
                 <div className="sponsorProfileTitleBlock">
                   <h1 className="sponsorProfileTitle">{brandName}</h1>
                   <p className="sponsorProfileTypeLine">
-                    {String(profile.sponsor_type || "")
-                      .replace(/_/g, " ")
-                      .replace(/\b\w/g, (c) => c.toUpperCase())}
+                    {String(profile.sponsor_category || "")
+                      .trim() ||
+                      String(profile.sponsor_type || "")
+                        .replace(/_/g, " ")
+                        .replace(/\b\w/g, (c) => c.toUpperCase())}
                   </p>
                   {(() => {
                     const t = String(profile.tagline || "").trim();
@@ -226,10 +229,22 @@ export default function SponsorProfilePage({ slug, initialProfile = null }) {
           <div className="card sponsorProfileCard sponsorProfileOverview">
             <h2 className="sponsorProfileSectionTitle">Overview</h2>
             {(() => {
+              const introLead = String(profile.tagline || "").trim();
               const shortD = String(profile.short_description || "").trim();
               const longD = String(profile.long_description || "").trim();
+              const category = String(profile.sponsor_category || "").trim();
+              const shortIsCategoryLabel =
+                shortD && category && (shortD === category || sponsorBlurbsRedundant(shortD, category));
               if (!shortD && !longD) {
                 return <p className="sponsorProfileProse sponsorProfileProse--muted">No description on file yet.</p>;
+              }
+              if (longD && introLead && shortIsCategoryLabel) {
+                return (
+                  <div className="sponsorProfileProseStack">
+                    <p className="sponsorProfileProse sponsorProfileProse--lead">{introLead}</p>
+                    <p className="sponsorProfileProse">{longD}</p>
+                  </div>
+                );
               }
               if (shortD && longD && sponsorBlurbsRedundant(shortD, longD)) {
                 return <p className="sponsorProfileProse">{longD}</p>;

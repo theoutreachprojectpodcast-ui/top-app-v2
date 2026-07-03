@@ -10,7 +10,7 @@ export const EDUARDO_PICO_DESIGNS_LOGO_URL =
 /** Gameday Men's Health official horizontal wordmark (franchise brand kit). */
 export const GAMEDAY_MENS_HEALTH_LOGO_URL = "/sponsors/gameday-mens-health-wordmark.jpg";
 
-/** Rope Solutions official mark (square PNG, dark-friendly). */
+/** ROPE Solutions official mark (square PNG, dark-friendly). */
 export const ROPE_SOLUTIONS_LOGO_URL = "/sponsors/rope-solutions-logo.png";
 
 /** Apex Global Outdoors — official circular wordmark PNG (card logo slot); hero art is `featured-bg-apex-global-outdoors.png`. */
@@ -54,7 +54,11 @@ export const FEATURED_SPONSORS = [
     missionPartner: true,
     veteranOwned: false,
     featured: true,
-    socialLinks: {},
+    socialLinks: {
+      instagram: "https://www.instagram.com/apex_global_outdoors/",
+      facebook: "https://www.facebook.com/apexglobaloutdoors",
+      youtube: "https://www.youtube.com/channel/UCW6eRLm7RTo8_iqcem6AweA",
+    },
   },
   {
     id: "gameday-mens-health",
@@ -65,8 +69,10 @@ export const FEATURED_SPONSORS = [
     tag: "Men's & Women's Wellness",
     industry: "Men's & Women's Wellness",
     tierLabel: "Featured sponsor",
+    tagline:
+      "San Antonio — same-day visits, on-site labs, and physician-guided men's & Women's health care in a private clinic.",
     subtitle:
-      "San Antonio — same-day visits, on-site labs, and physician-guided men's & women's health care in a private clinic.",
+      "San Antonio — same-day visits, on-site labs, and physician-guided men's & Women's health care in a private clinic.",
     longDescription:
       "Patients get same-day scheduling, on-site labs with rapid turnaround, and physician-guided treatment plans across testosterone therapy, weight management, sexual wellness, hair restoration, and recovery support.",
     ctaLabel: "Visit Website",
@@ -83,7 +89,7 @@ export const FEATURED_SPONSORS = [
   },
   {
     id: "rope-solutions",
-    name: "Rope Solutions",
+    name: "ROPE Solutions",
     sponsorType: "foundational_sponsor",
     sponsorDisplayGroup: "foundational",
     displayName: "",

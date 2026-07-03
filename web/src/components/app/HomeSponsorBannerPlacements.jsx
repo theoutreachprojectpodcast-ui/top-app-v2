@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import OrganizationLogo from "@/components/shared/OrganizationLogo";
 import { getHomepageFeaturedSponsorSeed } from "@/lib/sponsors/homepageFeaturedSponsors";
+import { canonicalSponsorHubSlug } from "@/features/sponsors/api/sponsorCatalogApi";
 import "./home-sponsor-banner.css";
 
 const MOBILE_CAROUSEL_MQ = "(max-width: 760px)";
@@ -24,7 +25,7 @@ function SponsorHomePlacement({ sponsor }) {
   const hasPhoto = !!photo;
   const eyebrow = sponsorEyebrow(sponsor);
   const tagline = sponsorTagline(sponsor);
-  const slug = String(sponsor.slug || sponsor.id || "").trim();
+  const slug = canonicalSponsorHubSlug(String(sponsor.slug || sponsor.id || "").trim());
   const profileHref = slug ? `/sponsors/${encodeURIComponent(slug)}` : "/sponsors";
   const isGameday = slug === "gameday-mens-health";
 

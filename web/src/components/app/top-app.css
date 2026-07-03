@@ -24,10 +24,10 @@
 /* Home desktop: wordmark +75% vs prior compact home sizing. */
 @media (min-width: 761px) {
   main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) {
-    --header-floating-offset: 8px;
+    --header-floating-offset: 4px;
     --header-floating-height: clamp(350px, 49vw, 476px);
-    --header-fade-height: 28px;
-    --home-logo-content-gap: 14px;
+    --header-fade-height: 24px;
+    --home-logo-content-gap: 8px;
   }
 
   main.topApp[data-page-atmosphere="home"] .headerBrandStack {
@@ -35,7 +35,7 @@
   }
 
   main.topApp[data-page-atmosphere="home"] .shell.shell--home {
-    gap: var(--ds-space-4, 16px);
+    gap: var(--ds-space-2, 8px);
     padding-top: calc(
       var(--header-floating-offset) + var(--header-floating-height) + var(--header-fade-height) +
         var(--home-logo-content-gap, 14px)
@@ -6409,7 +6409,9 @@ html.dark .communityPostBodyGuideSteps li {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: center;
   gap: 8px;
+  width: 100%;
 }
 .sponsorProfileIconLink {
   display: inline-flex;
@@ -6529,6 +6531,9 @@ html.dark .communityPostBodyGuideSteps li {
 .sponsorProfileCtaRow {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
   gap: var(--ds-space-3, 12px);
 }
 .sponsorProfileCtaBtn {
@@ -6838,8 +6843,8 @@ html.dark .communityPostBodyGuideSteps li {
   }
 
   main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) {
-    --mobile-site-header-logo-h: clamp(301px, 78.75vw, 399px);
-    --mobile-site-header-logo-max-w: min(910px, calc(100vw - 28px));
+    --mobile-site-header-logo-h: clamp(252px, 66vw, 332px);
+    --mobile-site-header-logo-max-w: min(840px, calc(100vw - 28px));
     --mobile-site-header-control-size: 44px;
     --mobile-site-header-control-pad-top: 2px;
     --mobile-site-header-pad-x: max(clamp(8px, 2.5vw, 12px), env(safe-area-inset-left, 0px));

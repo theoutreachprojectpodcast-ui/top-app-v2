@@ -37,9 +37,9 @@ set
   tagline = 'Trusted access. Proven under pressure. Built for teams that don''t get second chances.',
   long_description =
     $rope$
-Rope Solutions delivers industrial rope access, confined-space rescue, and technical training for teams that work at height and in high-consequence environments. Veteran-led and service-disabled veteran-owned, the company combines field-proven systems with leadership development so crews can plan, communicate, and execute safely when there is no room for error.
+ROPE Solutions delivers industrial rope access, confined-space rescue, and technical training for teams that work at height and in high-consequence environments. Veteran-led and service-disabled veteran-owned, the company combines field-proven systems with leadership development so crews can plan, communicate, and execute safely when there is no room for error.
 
-From vertical mobility to complex rescue scenarios, Rope Solutions equips public safety, industrial, and defense-adjacent organizations with the skills and hardware to operate in unforgiving conditions.
+From vertical mobility to complex rescue scenarios, ROPE Solutions equips public safety, industrial, and defense-adjacent organizations with the skills and hardware to operate in unforgiving conditions.
 $rope$,
   website_url = coalesce(nullif(trim(website_url), ''), 'https://www.ropesolutions.com/'),
   updated_at = now()
