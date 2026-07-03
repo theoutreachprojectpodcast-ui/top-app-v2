@@ -197,6 +197,36 @@ export const LOGO_PRESENTATION_CATALOG = {
     fit: "cover",
     scale: 1.08,
   },
+  "the-rivetin-rosies-project": {
+    panel: "light",
+    bgColor: "#ffd400",
+    pad: 4,
+    fit: "contain",
+    scale: 1,
+    focusX: 50,
+    focusY: 50,
+    minimalFrame: true,
+  },
+  "changed-by-nature-outdoors": {
+    panel: "light",
+    bgColor: "#f4f1ea",
+    pad: 3,
+    fit: "contain",
+    scale: 1,
+    focusX: 50,
+    focusY: 50,
+    minimalFrame: true,
+  },
+  "shepherds-light-foundation": {
+    panel: "dark",
+    bgColor: "#0b245b",
+    pad: 6,
+    fit: "contain",
+    scale: 1,
+    focusX: 50,
+    focusY: 48,
+    minimalFrame: true,
+  },
 };
 
 /** Slugs that use scenic full-bleed art (runtime fallback when no catalog row). */

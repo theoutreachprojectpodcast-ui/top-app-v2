@@ -35,6 +35,9 @@ const ASSETS = {
   "mos-veteran-adventures": "/trusted/mos-veteran-adventures-org-logo.png",
   "the-fallen-outdoors": "/trusted/the-fallen-outdoors-org-logo.png",
   "sheepdog-impact-assistance": "/trusted/sheepdog-impact-assistance-org-logo.png",
+  "the-rivetin-rosies-project": "/trusted/the-rivetin-rosies-project-org-logo.png?v=1",
+  "changed-by-nature-outdoors": "/trusted/changed-by-nature-outdoors-org-logo.png?v=1",
+  "shepherds-light-foundation": "/trusted/shepherds-light-foundation-org-logo.png?v=1",
 };
 
 async function analyze(url) {

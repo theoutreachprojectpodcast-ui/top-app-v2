@@ -258,6 +258,31 @@
   }
 }
 
+/* Sponsors landing — tighter closing stack below tier roster */
+.appShell--siteChrome .shell:has(.sponsorLanding),
+.appShell--sponsors .shell:has(.sponsorLanding) {
+  gap: 12px;
+}
+
+.appShell--siteChrome .shell:has(.sponsorLanding) > .siteFooter.siteFooter--pageBottom,
+.appShell--sponsors .shell:has(.sponsorLanding) > .siteFooter.siteFooter--pageBottom {
+  margin-top: 4px;
+}
+
+@media (max-width: 760px) {
+  .appShell--siteChrome.appShell--subpage .shell:has(.sponsorLanding),
+  .appShell--sponsors.appShell--subpage .shell:has(.sponsorLanding) {
+    padding-bottom: calc(12px + 92px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@media (min-width: 761px) {
+  .appShell--siteChrome.appShell--subpage .shell:has(.sponsorLanding),
+  .appShell--sponsors.appShell--subpage .shell:has(.sponsorLanding) {
+    padding-bottom: calc(16px + 92px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 /* Legal routes — /terms, /privacy */
 .legalPageRoute {
   width: 100%;

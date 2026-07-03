@@ -3879,6 +3879,20 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   flex-direction: column;
   gap: var(--ds-section-gap, 24px);
 }
+.sponsorLandingClosing {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sponsorLanding .sponsorSection--why {
+  padding-bottom: var(--ds-space-4, 16px);
+}
+.sponsorLanding .sponsorSection--why .sponsorSectionLead--flush {
+  margin-bottom: 0;
+}
+.sponsorLandingClosing .sponsorCtaBand .sponsorSectionLead {
+  margin-bottom: 0;
+}
 .sponsorSectionHead {
   display: flex;
   align-items: center;
