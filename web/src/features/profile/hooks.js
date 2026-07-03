@@ -293,7 +293,10 @@ export function useProfileDataState(supabase) {
               const entityFavJson = await entityFavRes.json().catch(() => ({}));
               if (Array.isArray(entityFavJson.keys)) {
                 setFavoriteEntityKeys(
-                  [...new Set(entityFavJson.keys.map((k) => String(k || "").trim().toLowerCase()).filter(Boolean))].slice(0, 500),
+                  [...new Set(entityFavJson.keys.map((k) => String(k || "").trim().toLowerCase()).filter((k) => k.startsWith("trusted:")))].slice(
+                    0,
+                    500,
+                  ),
                 );
               }
             } catch {
@@ -341,7 +344,7 @@ export function useProfileDataState(supabase) {
         setFavoriteEins([...new Set(rawFavs.map((e) => normalizeEinDigits(e)).filter((e) => e.length === 9))]);
         const rawEntityFavs = Array.isArray(storedEntityFavs) ? storedEntityFavs : [];
         setFavoriteEntityKeys(
-          [...new Set(rawEntityFavs.map((k) => String(k || "").trim().toLowerCase()).filter(Boolean))].slice(0, 500),
+          [...new Set(rawEntityFavs.map((k) => String(k || "").trim().toLowerCase()).filter((k) => k.startsWith("trusted:")))].slice(0, 500),
         );
 
         if (supabase) {
@@ -589,7 +592,7 @@ export function useProfileDataState(supabase) {
       ...new Set(
         (nextKeys || [])
           .map((k) => String(k || "").trim().toLowerCase())
-          .filter((k) => k.startsWith("sponsor:") || k.startsWith("trusted:")),
+          .filter((k) => k.startsWith("trusted:")),
       ),
     ].slice(0, 500);
     setFavoriteEntityKeys(normalized);
@@ -736,7 +739,7 @@ export function useProfileDataState(supabase) {
       const storedEntityFavs = loadJson(FAV_ENTITY_KEY, []);
       const rawEntityFavs = Array.isArray(storedEntityFavs) ? storedEntityFavs : [];
       setFavoriteEntityKeys(
-        [...new Set(rawEntityFavs.map((k) => String(k || "").trim().toLowerCase()).filter(Boolean))].slice(0, 500),
+        [...new Set(rawEntityFavs.map((k) => String(k || "").trim().toLowerCase()).filter((k) => k.startsWith("trusted:")))].slice(0, 500),
       );
       setIsAuthenticated(true);
       setAuthProvider(AUTH_PROVIDER.DEMO_EMAIL);
@@ -869,7 +872,7 @@ export function useProfileDataState(supabase) {
 
   function toggleFavoriteEntityKey(key) {
     const id = String(key || "").trim().toLowerCase();
-    if (!(id.startsWith("sponsor:") || id.startsWith("trusted:"))) return;
+    if (!id.startsWith("trusted:")) return;
     if (!entitlements.fullPlatformAccess && !entitlements.isPlatformAdmin && !entitlements.isPrivilegedStaff) {
       return;
     }

@@ -13,18 +13,8 @@ import { getSponsorCardViewModel, normalizeSponsorRecord } from "@/features/spon
 /**
  * @param {object} props
  * @param {Record<string, unknown>[]} props.sponsorRecords raw or normalized catalog rows (preferred for tier inference)
- * @param {boolean} [props.favoritesEnabled]
- * @param {Set<string>} [props.favoriteKeySet]
- * @param {(key: string) => void} [props.onToggleFavorite]
- * @param {() => void} [props.onRequestSignIn]
  */
-export default function SponsorsTieredSections({
-  sponsorRecords = [],
-  favoritesEnabled = false,
-  favoriteKeySet = new Set(),
-  onToggleFavorite,
-  onRequestSignIn,
-}) {
+export default function SponsorsTieredSections({ sponsorRecords = [] }) {
   const sections = useMemo(() => {
     const normalized = (Array.isArray(sponsorRecords) ? sponsorRecords : []).map((r) => normalizeSponsorRecord(r));
     const grouped = groupSponsorsByDisplayTier(normalized);
@@ -57,14 +47,7 @@ export default function SponsorsTieredSections({
           <p className="sponsorSectionLead">{lead}</p>
           <div className={`sponsorFeaturedShowcase sponsorFeaturedShowcase--tier-${key}`}>
             {cards.map((sponsor) => (
-              <FeaturedSponsorCard
-                key={sponsor.slug || sponsor.id}
-                sponsor={sponsor}
-                favoritesEnabled={favoritesEnabled}
-                isFavorite={favoriteKeySet.has(`sponsor:${String(sponsor.slug || sponsor.id || "").trim().toLowerCase()}`)}
-                onToggleFavorite={onToggleFavorite}
-                onRequestSignIn={onRequestSignIn}
-              />
+              <FeaturedSponsorCard key={sponsor.slug || sponsor.id} sponsor={sponsor} />
             ))}
           </div>
         </section>

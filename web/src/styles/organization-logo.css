@@ -51,11 +51,16 @@
 
 /* Sponsor surfaces: logo only — no decorative outer ring or drop shadow */
 .organizationLogo__frame--minimal,
+.organizationLogo__frame--rounded,
 .sponsorPremiumCard .organizationLogo__frame,
 .sponsorProfilePageRoot .organizationLogo__frame,
 .homeSponsorBannerSlot .organizationLogo__frame {
   border: none;
   box-shadow: none;
+}
+
+.organizationLogo__frame--rounded {
+  border-radius: 14px;
 }
 
 .organizationLogo--onDark .organizationLogo__frame:not(.organizationLogo__frame--matte) {

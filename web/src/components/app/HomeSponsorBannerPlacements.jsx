@@ -28,10 +28,11 @@ function SponsorHomePlacement({ sponsor }) {
   const slug = canonicalSponsorHubSlug(String(sponsor.slug || sponsor.id || "").trim());
   const profileHref = slug ? `/sponsors/${encodeURIComponent(slug)}` : "/sponsors";
   const isGameday = slug === "gameday-mens-health";
+  const isRucking = slug === "rucking-realty-group";
 
   return (
     <Link
-      className={`homeSponsorBannerSlot${hasPhoto ? " homeSponsorBannerSlot--photo" : ""}${hasLogo ? " homeSponsorBannerSlot--hasLogo" : ""}${isGameday ? " homeSponsorBannerSlot--gameday" : ""}`}
+      className={`homeSponsorBannerSlot${hasPhoto ? " homeSponsorBannerSlot--photo" : ""}${hasLogo ? " homeSponsorBannerSlot--hasLogo" : ""}${isGameday ? " homeSponsorBannerSlot--gameday" : ""}${isRucking ? " homeSponsorBannerSlot--rucking" : ""}`}
       href={profileHref}
     >
       {hasPhoto ? (

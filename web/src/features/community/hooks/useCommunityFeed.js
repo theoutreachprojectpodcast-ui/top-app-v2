@@ -9,6 +9,7 @@ import {
   togglePostLike,
   togglePostLikeApi,
 } from "@/features/community/api/communityApi";
+import { sortCommunityFeedRows } from "@/lib/community/communityFeedSort";
 
 /**
  * @param {import('@supabase/supabase-js').SupabaseClient | null} supabase
@@ -55,12 +56,7 @@ export function useCommunityFeed(supabase, userId, options = {}) {
   }, [refresh]);
 
   const postsWithMeta = useMemo(() => {
-    const sorted = [...posts].sort((a, b) => {
-      const pinA = a.isPinned ? 1 : 0;
-      const pinB = b.isPinned ? 1 : 0;
-      if (pinB !== pinA) return pinB - pinA;
-      return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
-    });
+    const sorted = sortCommunityFeedRows(posts);
     return sorted.map((p) => ({
       ...p,
       relativeTime: getRelativeTime(p.createdAt),

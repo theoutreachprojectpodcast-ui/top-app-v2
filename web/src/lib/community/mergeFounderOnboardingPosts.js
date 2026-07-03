@@ -1,50 +1,22 @@
-import { buildFounderOnboardingPostRows } from "@/features/community/data/founderOnboardingPosts";
-import { mapCommunityPostRow } from "@/features/community/mappers/mapCommunityPost";
-
-const FOUNDER_ROWS = buildFounderOnboardingPostRows();
-
-const FOUNDER_MAPPED = FOUNDER_ROWS.map(mapCommunityPostRow).filter(Boolean);
-
-function postSortKey(row) {
-  const raw = row?.created_at ?? row?.createdAt ?? "";
-  const t = new Date(raw).getTime();
-  return Number.isFinite(t) ? t : 0;
-}
+import { sortCommunityFeedRows } from "@/lib/community/communityFeedSort";
 
 /**
- * Merge canonical Josh/Hodge moderator guides into a public feed (DB-shaped rows).
+ * Public feed rows only — no client-side injection of starter content.
  * @param {Record<string, unknown>[]} rows
  */
 export function mergeFounderOnboardingPostRows(rows) {
-  const byId = new Map();
-  for (const row of rows || []) {
-    if (!row?.id) continue;
-    byId.set(String(row.id), row);
-  }
-  for (const founder of FOUNDER_ROWS) {
-    byId.set(String(founder.id), founder);
-  }
-  return Array.from(byId.values()).sort((a, b) => postSortKey(b) - postSortKey(a));
+  return sortCommunityFeedRows(rows || []);
 }
 
 /**
- * Merge canonical moderator guides into mapped client feed posts.
- * @param {ReturnType<typeof mapCommunityPostRow>[]} posts
+ * Mapped client feed posts only — no hard-coded moderator guides merged at runtime.
+ * @param {import("@/features/community/mappers/mapCommunityPost").CommunityPostRow[]} posts
  */
 export function mergeFounderOnboardingPosts(posts) {
-  const byId = new Map();
-  for (const row of posts || []) {
-    if (!row?.id) continue;
-    byId.set(row.id, row);
-  }
-  for (const founder of FOUNDER_MAPPED) {
-    byId.set(founder.id, founder);
-  }
-  return Array.from(byId.values()).sort(
-    (a, b) => postSortKey(b) - postSortKey(a),
-  );
+  return sortCommunityFeedRows(posts || []);
 }
 
+/** @deprecated Starter posts are no longer injected into the live feed. */
 export function founderOnboardingPostCount() {
-  return FOUNDER_MAPPED.length;
+  return 0;
 }

@@ -143,6 +143,28 @@
 .homeSponsorBannerSlot--gameday .homeSponsorBannerSlot__logoCell .organizationLogo {
   --org-logo-size: 64px;
 }
+.homeSponsorSpotlights a.homeSponsorBannerSlot--rucking {
+  min-height: 164px;
+}
+.homeSponsorBannerSlot--rucking .homeSponsorBannerSlot__logoCell {
+  box-sizing: border-box;
+  display: inline-flex;
+  flex: 0 1 auto;
+  width: fit-content;
+  max-width: min(100%, 220px);
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  margin: 2px 0;
+  background: #f4efe6;
+  border-radius: 14px;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--color-border-strong) 18%, transparent),
+    0 6px 16px color-mix(in srgb, #000 8%, transparent);
+}
+.homeSponsorBannerSlot--rucking .homeSponsorBannerSlot__logoCell .organizationLogo {
+  --org-logo-size: 72px;
+}
 .homeSponsorSpotlights a.homeSponsorBannerSlot--photo {
   flex-direction: column;
   justify-content: flex-end;
@@ -316,6 +338,14 @@
   }
   .homeSponsorBannerSlot--gameday .homeSponsorBannerSlot__logoCell .organizationLogo {
     --org-logo-size: 56px;
+  }
+  .homeSponsorBannerSlot--rucking .homeSponsorBannerSlot__logoCell {
+    padding: 8px;
+    border-radius: 12px;
+    max-width: min(100%, 190px);
+  }
+  .homeSponsorBannerSlot--rucking .homeSponsorBannerSlot__logoCell .organizationLogo {
+    --org-logo-size: 64px;
   }
 }
 

@@ -110,17 +110,5 @@ export function buildAdminCommunityPostFields(body, opts = {}) {
   return fields;
 }
 
-/**
- * Sort feed rows: pinned first, then newest.
- * @param {Record<string, unknown>[]} rows
- */
-export function sortCommunityFeedRows(rows) {
-  return [...rows].sort((a, b) => {
-    const pinA = a?.is_pinned ? 1 : 0;
-    const pinB = b?.is_pinned ? 1 : 0;
-    if (pinB !== pinA) return pinB - pinA;
-    const tA = new Date(a?.created_at || a?.createdAt || 0).getTime();
-    const tB = new Date(b?.created_at || b?.createdAt || 0).getTime();
-    return tB - tA;
-  });
-}
+/** @deprecated Import from `@/lib/community/communityFeedSort`. */
+export { sortCommunityFeedRows } from "@/lib/community/communityFeedSort";

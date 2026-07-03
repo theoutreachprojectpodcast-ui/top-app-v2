@@ -8,7 +8,7 @@ function normalizeFavoriteKey(raw) {
   const text = String(raw || "").trim().toLowerCase();
   if (!text) return "";
   if (!/^[a-z0-9:_-]+$/.test(text)) return "";
-  if (text.startsWith("sponsor:") || text.startsWith("trusted:")) return text.slice(0, 180);
+  if (text.startsWith("trusted:")) return text.slice(0, 180);
   return "";
 }
 
@@ -51,8 +51,8 @@ export async function PUT(request) {
   const keys = normalizedListFromBody(body);
   const membership = await requireMembershipApi(admin, "save_organizations");
   if (!membership.ok) return membership.response;
-  const hasNonOrgKey = keys.some((k) => k.startsWith("sponsor:") || k.startsWith("trusted:"));
-  if (hasNonOrgKey) {
+  const hasTrustedKey = keys.some((k) => k.startsWith("trusted:"));
+  if (hasTrustedKey) {
     const proCheck = await requireMembershipApi(admin, "trusted_pro");
     if (!proCheck.ok) return proCheck.response;
   }

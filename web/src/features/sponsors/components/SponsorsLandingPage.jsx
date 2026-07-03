@@ -17,10 +17,6 @@ export default function SponsorsLandingPage({
   sponsorCatalogRows = [],
   onOpenMissionPackages,
   onOpenMissionApply,
-  favoritesEnabled = false,
-  favoriteKeySet = new Set(),
-  onToggleFavorite,
-  onRequestSignIn,
 }) {
   const openPackages = typeof onOpenMissionPackages === "function" ? onOpenMissionPackages : () => {};
   const openApply = typeof onOpenMissionApply === "function" ? onOpenMissionApply : () => {};
@@ -51,16 +47,10 @@ export default function SponsorsLandingPage({
             <span className="sponsorFeaturedValuePill">App sponsor roster</span>
           </div>
           <p className="sponsorSectionLead">
-            Partners by tier — open a card for the full profile, verified links, and favorites.
+            Partners by tier — open a card for the full profile and verified links.
           </p>
         </section>
-        <SponsorsTieredSections
-          sponsorRecords={sponsorCatalogRows}
-          favoritesEnabled={favoritesEnabled}
-          favoriteKeySet={favoriteKeySet}
-          onToggleFavorite={onToggleFavorite}
-          onRequestSignIn={onRequestSignIn}
-        />
+        <SponsorsTieredSections sponsorRecords={sponsorCatalogRows} />
       </div>
 
       <section className="card sponsorSection">

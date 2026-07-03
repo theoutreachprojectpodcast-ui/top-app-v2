@@ -1,6 +1,6 @@
 import { mapCommunityPostRow } from "@/features/community/mappers/mapCommunityPost";
 import { COMMUNITY_MEMBER_FAVORITE_ROWS_SEED, COMMUNITY_MEMBERS_SEED } from "@/features/community/data/communitySeed";
-import { mergeFounderOnboardingPosts } from "@/lib/community/mergeFounderOnboardingPosts";
+import { sortCommunityFeedRows } from "@/lib/community/communityFeedSort";
 import { queryTrustedOrgsByEin } from "@/lib/supabase/queries";
 import {
   buildCommunityShareUrl,
@@ -169,11 +169,8 @@ export function rejectPendingLocal(pendingId, reason = "") {
   return { ok: true, reason };
 }
 
-export { mergeFounderOnboardingPosts } from "@/lib/community/mergeFounderOnboardingPosts";
-
 /**
  * Public feed: approved posts from API (and RLS direct read when available), plus local demo approvals only when offline.
- * Canonical moderator starter stories are always merged in (bundle overrides stale DB rows by id).
  */
 export async function fetchPublicCommunityFeed(supabase) {
   let posts = [];
@@ -188,7 +185,7 @@ export async function fetchPublicCommunityFeed(supabase) {
       posts = loadLocalApprovedPosts().filter((p) => p && p.status === "approved");
     }
   }
-  return mergeFounderOnboardingPosts(posts);
+  return sortCommunityFeedRows(posts);
 }
 
 export async function fetchApprovedPostsByMember(supabase, memberId) {

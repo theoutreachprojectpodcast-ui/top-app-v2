@@ -9,13 +9,12 @@ import {
   membershipDeniedResponse,
   profilePassesMembershipScope,
 } from "@/lib/membership/membershipRouteGuard";
-import { sortCommunityFeedRows } from "@/lib/community/adminCommunityPostPayload";
+import { sortCommunityFeedRows } from "@/lib/community/communityFeedSort";
 import {
   createPlatformNotification,
   notifyStaffProfiles,
 } from "@/server/notifications/notificationService";
 import { shouldHideDemoCommunitySeeds } from "@/lib/runtime/qaEnv";
-import { mergeFounderOnboardingPostRows } from "@/lib/community/mergeFounderOnboardingPosts";
 import { sanitizeCommunityStoryPhotoUrl } from "@/features/community/domain/communityStoryPhoto";
 
 const REACTIONS = "community_post_reactions";
@@ -29,7 +28,7 @@ export async function GET(request) {
 
   if (!admin) {
     return Response.json({
-      posts: scope === "public" ? mergeFounderOnboardingPostRows([]) : [],
+      posts: [],
       warning: "storage_unavailable",
     });
   }
@@ -51,6 +50,7 @@ export async function GET(request) {
       .is("deleted_at", null)
       .in("visibility", ["community", "public"])
       .order("is_pinned", { ascending: false, nullsFirst: false })
+      .order("published_at", { ascending: false, nullsFirst: false })
       .order("created_at", { ascending: false })
       .limit(80);
 
@@ -77,12 +77,7 @@ export async function GET(request) {
       viewer_has_liked: likedIds.has(row.id),
     }));
 
-    const posts = sortCommunityFeedRows(
-      mergeFounderOnboardingPostRows(enriched).map((row) => ({
-        ...row,
-        viewer_has_liked: likedIds.has(row.id),
-      })),
-    );
+    const posts = sortCommunityFeedRows(enriched);
 
     return Response.json({ posts });
   }

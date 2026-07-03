@@ -156,6 +156,7 @@ function TopAppInner({ initialNav = "home" }) {
   useEffect(() => {
     if (pathname === "/settings") setNav("settings");
     else if (pathname === "/profile") setNav("profile");
+    else if (pathname === "/community") setNav("community");
   }, [pathname]);
 
   useEffect(() => {
@@ -375,6 +376,26 @@ function TopAppInner({ initialNav = "home" }) {
     else setNav("profile");
   }
 
+  function dockNavCommunity() {
+    if (isCapacitorNative()) {
+      if (pathname === "/") {
+        setNav("community");
+        return;
+      }
+      router.replace("/?nav=community");
+      return;
+    }
+    if (pathname === "/") {
+      setNav("community");
+      return;
+    }
+    if (pathname !== "/community") {
+      router.push("/community");
+      return;
+    }
+    setNav("community");
+  }
+
   function dockNavItem(item) {
     const key = String(item?.key || "");
     if (["community", "trusted", "settings"].includes(key) && !hasProAccess) {
@@ -391,6 +412,10 @@ function TopAppInner({ initialNav = "home" }) {
     }
     if (key === "profile") {
       dockNavProfile();
+      return;
+    }
+    if (key === "community") {
+      dockNavCommunity();
       return;
     }
     if (key === "podcast") {
@@ -431,6 +456,10 @@ function TopAppInner({ initialNav = "home" }) {
     }
     if (key === "profile") {
       dockNavProfile();
+      return;
+    }
+    if (key === "community") {
+      dockNavCommunity();
       return;
     }
     if (key === "settings") {
@@ -583,7 +612,7 @@ function TopAppInner({ initialNav = "home" }) {
       goToProUpgrade();
       return;
     }
-    setNav("community");
+    dockNavCommunity();
   }
   const fallbackSavedOrganizations = useMemo(() => {
     const byEin = new Map([...results, ...trusted].map((r) => [String(rowEin(r)), r]));
