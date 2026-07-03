@@ -16,16 +16,34 @@ const HIDDEN_SPONSOR_HUB_ROSTER_SLUGS = new Set(["wars-end-merch"]);
 /** Slugs omitted from the `/podcasts` sponsor strip (retained in DB for history). */
 const PODCAST_SPONSOR_EXCLUDED_SLUGS = new Set(["wars-end-merch"]);
 
-/** QA / legacy podcast slugs that map to curated FEATURED_SPONSORS ids. */
+/** QA / legacy slugs that map to curated FEATURED_SPONSORS ids. */
 export const PODCAST_SPONSOR_SEED_SLUG_ALIASES = {
   "game-day-mens-health": "gameday-mens-health",
   "wrecking-realty-group": "rucking-realty-group",
 };
 
-function podcastCatalogCanonicalSlug(slug) {
+/** Canonical hub/profile slug (seed id) for a URL or DB slug. */
+export function canonicalSponsorHubSlug(slug) {
   const key = sponsorCatalogRowKey({ slug });
   if (!key) return "";
   return PODCAST_SPONSOR_SEED_SLUG_ALIASES[key] || key;
+}
+
+/** All slug variants to try when resolving a sponsor in the catalog. */
+export function sponsorSlugLookupVariants(slug) {
+  const key = sponsorCatalogRowKey({ slug });
+  if (!key) return [];
+  const variants = new Set([key]);
+  const canonical = PODCAST_SPONSOR_SEED_SLUG_ALIASES[key];
+  if (canonical) variants.add(canonical);
+  for (const [alias, can] of Object.entries(PODCAST_SPONSOR_SEED_SLUG_ALIASES)) {
+    if (can === key) variants.add(alias);
+  }
+  return [...variants];
+}
+
+function podcastCatalogCanonicalSlug(slug) {
+  return canonicalSponsorHubSlug(slug);
 }
 
 function isPodcastCatalogAliasSlug(slug) {
@@ -191,16 +209,16 @@ export function mergeLiveHubCatalogWithStaticSeed(liveRows) {
     if (k) bySlug.set(k, normalizeSponsorRecord(r));
   }
   for (const r of Array.isArray(liveRows) ? liveRows : []) {
-    const k = sponsorCatalogRowKey(r);
-    if (!k) continue;
+    const canonicalKey = canonicalSponsorHubSlug(r?.slug || r?.id);
+    if (!canonicalKey) continue;
     const [allowed] = filterAppSponsorHubListRows([r]);
     if (!allowed) continue;
-    const live = normalizeSponsorRecord(allowed);
-    const seed = bySlug.get(k);
+    const live = normalizeSponsorRecord({ ...allowed, slug: canonicalKey, id: canonicalKey });
+    const seed = bySlug.get(canonicalKey);
     if (seed) {
-      bySlug.set(k, mergeSponsorHubSeedRowWithLive(seed, live));
+      bySlug.set(canonicalKey, mergeSponsorHubSeedRowWithLive(seed, live));
     } else {
-      bySlug.set(k, live);
+      bySlug.set(canonicalKey, live);
     }
   }
   return sortSponsorsCatalogRows(filterAppSponsorHubListRows([...bySlug.values()]));
@@ -434,6 +452,44 @@ export async function listAppSponsorsCatalog(supabase, opts = {}) {
   return staticRows;
 }
 
+function findSeedSponsorBySlug(slug) {
+  const variants = new Set(sponsorSlugLookupVariants(slug));
+  return fallbackRows().find((r) => variants.has(sponsorCatalogRowKey(r))) || null;
+}
+
+async function fetchPublicSponsorCatalogRow(supabase, slug) {
+  const variants = sponsorSlugLookupVariants(slug);
+  if (!variants.length) return null;
+  const { data, error } = await supabase
+    .from(SPONSOR_TABLE)
+    .select("*")
+    .in("slug", variants)
+    .eq("is_active", true);
+  if (error || !Array.isArray(data) || !data.length) return null;
+  return data.find((r) => isPublicSponsorRow(r)) || data[0] || null;
+}
+
+async function buildPublicSponsorProfileRow(supabase, slug) {
+  const key = String(slug || "").trim();
+  if (!key) return null;
+  const row = supabase ? await fetchPublicSponsorCatalogRow(supabase, key) : null;
+  if (row) {
+    const canonical = canonicalSponsorHubSlug(row.slug || key);
+    const mergedBase =
+      mergeSponsorCatalogRowWithSeed({ ...row, slug: canonical, id: canonical }) ||
+      normalizeSponsorRecord({ ...row, slug: canonical, id: canonical });
+    const [merged] = await mergeSponsorEnrichmentForRows(supabase, [mergedBase]);
+    const [allowed] = filterPublicSponsorDetailRows([merged]);
+    if (allowed) return allowed;
+  }
+  return findSeedSponsorBySlug(key);
+}
+
+/** Server/catalog API: merged public sponsor row for a slug (aliases + seed fallback). */
+export async function getPublicSponsorCatalogRowBySlug(supabase, slug) {
+  return buildPublicSponsorProfileRow(supabase, slug);
+}
+
 export async function getSponsorBySlug(supabase, slug) {
   const key = String(slug || "").trim();
   if (!key) return null;
@@ -446,27 +502,17 @@ export async function getSponsorBySlug(supabase, slug) {
       if (res.ok) {
         const data = await res.json();
         if (data?.ok && data.row) return getSponsorProfileViewModel(data.row);
+        if (data?.ok) {
+          const seed = findSeedSponsorBySlug(key);
+          if (seed) return getSponsorProfileViewModel(seed);
+        }
       }
     } catch {
       /* fall through */
     }
   }
-  if (!supabase) return getSponsorProfileViewModel(fallbackRows().find((r) => r.slug === key) || null);
-  const { data, error } = await supabase
-    .from(SPONSOR_TABLE)
-    .select("*")
-    .eq("slug", key)
-    .eq("is_active", true)
-    .maybeSingle();
-  if (data && !error) {
-    const [merged] = await mergeSponsorEnrichmentForRows(supabase, [
-      mergeSponsorCatalogRowWithSeed(data) || normalizeSponsorRecord(data),
-    ]);
-    const [allowed] = filterPublicSponsorDetailRows([merged]);
-    if (!allowed) return getSponsorProfileViewModel(fallbackRows().find((r) => r.slug === key) || null);
-    return getSponsorProfileViewModel(allowed);
-  }
-  return getSponsorProfileViewModel(fallbackRows().find((r) => r.slug === key) || null);
+  const row = await buildPublicSponsorProfileRow(supabase, key);
+  return getSponsorProfileViewModel(row);
 }
 
 export async function saveSponsorAdminRecord(supabase, payload) {
