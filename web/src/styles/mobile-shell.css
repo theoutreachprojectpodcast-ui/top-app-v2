@@ -92,8 +92,8 @@ html {
 @media (max-width: 760px) {
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]):not([data-page-atmosphere="home"]) {
     /* In-app tabs: compact mark (Capacitor gets tighter overrides in mobile-capacitor-layout.css). */
-    --mobile-site-header-logo-h: clamp(56px, 14vw, 72px);
-    --mobile-site-header-logo-max-w: min(180px, calc(100vw - 96px));
+    --mobile-site-header-logo-h: clamp(50px, 12.5vw, 64px);
+    --mobile-site-header-logo-max-w: min(168px, calc(100vw - 88px));
     --mobile-site-header-control-size: 44px;
     --mobile-site-header-control-pad-top: 2px;
     --mobile-site-header-pad-x: max(
@@ -104,8 +104,8 @@ html {
   }
 
   main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) {
-    --mobile-site-header-logo-h: clamp(301px, 78.75vw, 399px);
-    --mobile-site-header-logo-max-w: min(910px, calc(100vw - 28px));
+    --mobile-site-header-logo-h: clamp(255px, 67vw, 340px);
+    --mobile-site-header-logo-max-w: min(780px, calc(100vw - 16px));
     --mobile-site-header-control-size: 44px;
     --mobile-site-header-control-pad-top: 2px;
     --mobile-site-header-pad-x: max(

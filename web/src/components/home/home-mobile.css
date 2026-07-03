@@ -786,10 +786,10 @@
     white-space: nowrap;
   }
 
-  /* Home wordmark: +75% vs prior compact band (still below full non-home mobile size). */
+  /* Home wordmark — tighter band so first section sits closer below the header. */
   main.topApp[data-page-atmosphere="home"] {
-    --mobile-site-header-logo-h: clamp(301px, 78.75vw, 399px);
-    --mobile-site-header-logo-max-w: min(910px, calc(100vw - 28px));
+    --mobile-site-header-logo-h: clamp(255px, 67vw, 340px);
+    --mobile-site-header-logo-max-w: min(780px, calc(100vw - 16px));
   }
 
   main.topApp[data-page-atmosphere="home"] .headerNotificationBellBtn,
@@ -802,17 +802,17 @@
   /* Home: breathing room between wordmark and first section (featured sponsors). */
   main.topApp[data-page-atmosphere="home"] .headerBrandStack {
     align-items: flex-start;
-    padding-top: clamp(2px, 0.5vw, 6px);
+    padding-top: 0;
   }
 
   main.topApp[data-page-atmosphere="home"] .appSiteHeader {
     margin-bottom: 0;
-    padding-bottom: clamp(4px, 1vw, 8px);
+    padding-bottom: 0;
   }
 
   main.topApp[data-page-atmosphere="home"] .headerBrandStack img.brandMarkImg--header:not(.podcastBrandLogo),
   main.topApp[data-page-atmosphere="home"] .headerBrandStack .brandMarkImg--header {
-    margin-bottom: clamp(-118px, -30vw, -148px);
+    margin-bottom: clamp(-136px, -35vw, -168px);
   }
 
   main.topApp[data-page-atmosphere="home"] .shell.shell--home {
@@ -828,7 +828,7 @@
 
   main.topApp[data-page-atmosphere="home"] .homeSponsorSpotlights {
     margin-top: 0;
-    padding-top: clamp(2px, 0.8vw, 6px);
+    padding-top: 0;
   }
 
   main.topApp[data-page-atmosphere="home"] .homeSponsorSpotlights__head {

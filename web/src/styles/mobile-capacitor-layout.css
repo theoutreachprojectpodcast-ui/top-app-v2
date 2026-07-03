@@ -16,8 +16,8 @@ html[data-capacitor-native] main.topApp {
 }
 
 html[data-capacitor-native] main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]):not([data-page-atmosphere="home"]) {
-  --mobile-site-header-logo-h: clamp(56px, calc(var(--cap-vw, 1vw) * 14), 72px);
-  --mobile-site-header-logo-max-w: min(180px, calc(var(--cap-portrait-width, 100vw) - 96px));
+  --mobile-site-header-logo-h: clamp(50px, calc(var(--cap-vw, 1vw) * 12.5), 64px);
+  --mobile-site-header-logo-max-w: min(168px, calc(var(--cap-portrait-width, 100vw) - 88px));
   --mobile-site-header-control-size: 44px;
   --mobile-site-header-pad-x: max(
     clamp(8px, calc(var(--cap-vw, 1vw) * 2.5), 12px),
@@ -27,8 +27,8 @@ html[data-capacitor-native] main.topApp:not(.appShell--podcast):not([data-page-a
 }
 
 html[data-capacitor-native] main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) {
-  --mobile-site-header-logo-h: clamp(301px, calc(var(--cap-vw, 1vw) * 78.75), 399px);
-  --mobile-site-header-logo-max-w: min(910px, calc(var(--cap-portrait-width, 100vw) - 28px));
+  --mobile-site-header-logo-h: clamp(255px, calc(var(--cap-vw, 1vw) * 67), 340px);
+  --mobile-site-header-logo-max-w: min(780px, calc(var(--cap-portrait-width, 100vw) - 16px));
   --mobile-site-header-control-size: 44px;
   --mobile-site-header-pad-x: max(
     clamp(8px, calc(var(--cap-vw, 1vw) * 2.5), 12px),

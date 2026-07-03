@@ -172,10 +172,14 @@ export const LOGO_PRESENTATION_CATALOG = {
     scale: 1.08,
   },
   "warriors-refuge": {
-    bgColor: "#8a7b72",
-    pad: 7,
+    panel: "neutral",
+    bgColor: "#8a7a6b",
+    pad: 0,
     fit: "contain",
-    scale: 1.02,
+    scale: 0.97,
+    focusX: 50,
+    focusY: 52,
+    minimalFrame: true,
   },
   "hoof-to-heart-veterans": {
     bgColor: "#4c3723",
