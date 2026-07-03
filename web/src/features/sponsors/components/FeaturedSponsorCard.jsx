@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import OrganizationLogo from "@/components/shared/OrganizationLogo";
+import SponsorOutboundLink from "@/features/sponsors/components/SponsorOutboundLink";
 import { resolveSponsorDisplayName } from "@/lib/entityDisplayName";
 import { sanitizeDisplayableImageUrl } from "@/lib/media/safeImageUrl";
 
@@ -125,6 +126,7 @@ export default function FeaturedSponsorCard({
   }, [sponsor.ctaUrl, sponsor.socialLinks]);
   const logoSrc = logoCandidates[logoIndex] || "";
   const profileHref = `/sponsors/${encodeURIComponent(sponsor.slug || sponsor.id || "")}`;
+  const pageSource = sponsor.isPodcastSponsor ? "podcast_sponsor_page" : "sponsor_hub_card";
   const favoriteKey = String(sponsor.slug || sponsor.id || "").trim().toLowerCase();
   const logoPanel =
     sponsor.logoPanelMode === "light"
@@ -258,31 +260,35 @@ export default function FeaturedSponsorCard({
         </div>
         <div className="sponsorPremiumFooter">
           {sponsor.ctaUrl && !sponsor.websitePending ? (
-            <a
+            <SponsorOutboundLink
               className="btnSoft sponsorPremiumVisitBtn"
               href={sponsor.ctaUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+              sponsorSlug={sponsor.slug || sponsor.id}
+              sponsorName={displayName}
+              pageSource={pageSource}
+              ctaType="website"
               onClick={(event) => event.stopPropagation()}
             >
               {sponsor.ctaLabel || "Visit Website"}
-            </a>
+            </SponsorOutboundLink>
           ) : null}
           <div className="sponsorPremiumSocial" aria-label="Sponsor website and social profiles">
             {socialLinkItems.map(({ key, url }) => (
-              <a
+              <SponsorOutboundLink
                 key={`${key}-${url}`}
                 className="sponsorPremiumSocialLink"
                 href={url}
-                target="_blank"
-                rel="noopener noreferrer"
+                sponsorSlug={sponsor.slug || sponsor.id}
+                sponsorName={displayName}
+                pageSource={pageSource}
+                ctaType={key === "website" ? "website" : "social"}
                 aria-label={
                   key === "website" ? `${displayName} website` : `${displayName} on ${key === "x" ? "X" : key}`
                 }
                 onClick={(event) => event.stopPropagation()}
               >
                 <SocialIcon type={key} />
-              </a>
+              </SponsorOutboundLink>
             ))}
           </div>
           {sponsor.websitePending || !sponsor.ctaUrl ? (

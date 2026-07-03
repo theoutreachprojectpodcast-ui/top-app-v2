@@ -52,7 +52,9 @@ export default function MembershipBillingCenter({
   currentTierKey,
   membershipBillingStatus = "none",
   stripeMemberReady = false,
+  stripePortalReady = false,
   stripeCustomerReady = false,
+  stripeSubscriptionReady = false,
   checkoutReturnPath = "/profile",
   onRequestSignIn,
   onCheckoutNavigate,
@@ -369,7 +371,12 @@ export default function MembershipBillingCenter({
         <div className="membershipBillingCenter__section">
           <h4>Downgrade or cancel</h4>
           <p className="sponsorSectionLead">{DOWNGRADE_HINT}</p>
-          <ManageBillingButton stripeReady={stripeMemberReady} hasStripeCustomer={stripeCustomerReady} />
+          <ManageBillingButton
+            stripeReady={!!(stripePortalReady || stripeMemberReady)}
+            hasStripeCustomer={stripeCustomerReady}
+            hasStripeSubscription={stripeSubscriptionReady}
+            returnPath={checkoutReturnPath}
+          />
         </div>
       ) : null}
 
@@ -444,7 +451,12 @@ export default function MembershipBillingCenter({
       </div>
 
       <div className="membershipBillingCenter__footer">
-        <ManageBillingButton stripeReady={stripeMemberReady} hasStripeCustomer={stripeCustomerReady} />
+        <ManageBillingButton
+          stripeReady={!!(stripePortalReady || stripeMemberReady)}
+          hasStripeCustomer={stripeCustomerReady}
+          hasStripeSubscription={stripeSubscriptionReady}
+          returnPath={checkoutReturnPath}
+        />
         <Link className="btnSoft" href="/settings#account-membership">
           Settings
         </Link>

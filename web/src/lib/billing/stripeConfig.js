@@ -9,6 +9,16 @@ export function stripeSecretConfigured() {
   return !!process.env.STRIPE_SECRET_KEY?.trim();
 }
 
+/** Customer Portal — only requires secret key (price IDs not required). */
+export function stripePortalConfigured() {
+  return stripeSecretConfigured();
+}
+
+/** Optional Stripe Billing Portal configuration id (`bpc_*`). */
+export function stripeBillingPortalConfigurationId() {
+  return process.env.STRIPE_BILLING_PORTAL_CONFIGURATION?.trim() || "";
+}
+
 export function stripePublishableConfigured() {
   return !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY?.trim();
 }

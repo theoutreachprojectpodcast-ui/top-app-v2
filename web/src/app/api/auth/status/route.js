@@ -7,6 +7,7 @@ import {
   stripeCheckoutConfigured,
   stripeMemberRecurringConfigured,
   stripeMemberRecurringMissingEnvKeys,
+  stripePortalConfigured,
   stripePublishableConfigured,
   stripeSponsorSubscriptionConfigured,
   stripeWebhookConfigured,
@@ -23,6 +24,7 @@ export async function GET() {
     return Response.json({
       workos: isWorkOSConfigured(),
       stripe: stripeMemberRecurringConfigured(),
+      stripePortal: stripePortalConfigured(),
       sessionIdleTimeoutMs: sessionIdleTimeoutMs(),
     });
   }
@@ -57,6 +59,8 @@ export async function GET() {
     stripe: stripeMemberRecurringConfigured(),
     stripeMemberRecurring: stripeMemberRecurringConfigured(),
     stripeMemberRecurringMissingEnv: stripeMemberRecurringConfigured() ? [] : stripeMemberRecurringMissingEnvKeys(),
+    /** Customer Portal (manage payment method, invoices, plan changes) — secret key only. */
+    stripePortal: stripePortalConfigured(),
     stripeSponsorSubscription: stripeSponsorSubscriptionConfigured(),
     /** All onboarding paid tiers including sponsor subscription price. */
     stripeFullOnboarding: stripeCheckoutConfigured(),

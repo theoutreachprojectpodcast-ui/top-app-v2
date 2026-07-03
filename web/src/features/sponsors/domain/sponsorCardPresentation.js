@@ -82,7 +82,7 @@ const BY_SLUG = {
     cardScrimGradient:
       "linear-gradient(118deg, rgba(14, 8, 8, 0.96) 0%, rgba(22, 10, 10, 0.76) 48%, rgba(12, 6, 6, 0.52) 100%)",
     veteranOwnedDefault: false,
-    locationChips: ["U.S. & Canada", "400+ clinics"],
+    locationChips: ["San Antonio, TX"],
     logoPanelMode: "light",
     logoFallbackUrls: [GAMEDAY_MENS_HEALTH_LOGO_URL],
   },

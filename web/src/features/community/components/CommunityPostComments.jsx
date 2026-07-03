@@ -33,7 +33,7 @@ export default function CommunityPostComments({
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setComments([]);
-        setError(data.error || "Could not load comments.");
+        setError(data.message || data.error || "Could not load comments.");
         return;
       }
       setClosed(data.commentsEnabled === false);
@@ -118,7 +118,7 @@ export default function CommunityPostComments({
       </h5>
       {loading ? <p className="communityPostCommentsStatus">Loading comments…</p> : null}
       {error ? <p className="applyError communityPostCommentsError">{error}</p> : null}
-      {!loading && comments.length === 0 ? (
+      {!loading && !error && comments.length === 0 ? (
         <p className="communityPostCommentsEmpty">Be the first to join the discussion.</p>
       ) : null}
       <ul className="communityPostCommentsList">

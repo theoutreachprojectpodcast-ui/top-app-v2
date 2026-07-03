@@ -1092,6 +1092,8 @@ function TopAppInner({ initialNav = "home" }) {
                 checkoutReturnPath="/profile"
                 membershipBillingStatus={profile.membershipBillingStatus}
                 stripeCustomerReady={!!profile.stripeCustomerIdSet}
+                stripeSubscriptionReady={!!profile.stripeSubscriptionIdSet}
+                stripePortalReady={!!authBackend?.stripePortal}
               />
             </>
           ) : (
@@ -1114,9 +1116,11 @@ function TopAppInner({ initialNav = "home" }) {
             onRequestSignIn={openSignInForMembership}
             sessionKind={sessionKind}
             stripeMemberReady={!!authBackend?.stripe}
+            stripePortalReady={!!authBackend?.stripePortal}
             checkoutReturnPath="/profile"
             membershipBillingStatus={profile.membershipBillingStatus}
             stripeCustomerReady={!!profile.stripeCustomerIdSet}
+            stripeSubscriptionReady={!!profile.stripeSubscriptionIdSet}
             onCheckoutNavigate={() => refreshWorkOSProfile()}
             collapsible
             defaultExpanded={false}
@@ -1173,8 +1177,10 @@ function TopAppInner({ initialNav = "home" }) {
             manageBillingSlot={
               sessionKind === "workos" ? (
                 <ManageBillingButton
-                  stripeReady={!!authBackend?.stripe}
+                  stripeReady={!!authBackend?.stripePortal}
                   hasStripeCustomer={!!profile.stripeCustomerIdSet}
+                  hasStripeSubscription={!!profile.stripeSubscriptionIdSet}
+                  returnPath="/profile"
                 />
               ) : null
             }

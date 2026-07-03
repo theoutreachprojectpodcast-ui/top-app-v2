@@ -6,6 +6,7 @@ import {
   normalizeSponsorRecord,
 } from "@/features/sponsors/domain/sponsorViewModels";
 import { resolveSponsorListingLogoUrl } from "@/lib/sponsors/resolveSponsorListingLogoUrl";
+import { isPublicSponsorRow, preferCuratedField } from "@/lib/sponsors/sponsorVisibility";
 
 const SPONSOR_TABLE = "sponsors_catalog";
 
@@ -49,11 +50,15 @@ export function isExcludedFromAppSponsorsHubSlug(slug) {
  */
 export function filterAppSponsorRows(rows) {
   return (Array.isArray(rows) ? rows : []).filter((r) => {
+    if (!isPublicSponsorRow(r)) return false;
     const scope = String(r?.sponsor_scope || "").trim().toLowerCase();
-    const active = r?.is_active == null ? true : !!r.is_active;
-    if (!active) return false;
     return scope !== "podcast";
   });
+}
+
+/** Any active published sponsor (app + podcast) for detail pages. */
+export function filterPublicSponsorDetailRows(rows) {
+  return (Array.isArray(rows) ? rows : []).filter((r) => isPublicSponsorRow(r));
 }
 
 /** App hub list: podcast filter + slugs omitted from the public tier roster. */
@@ -99,13 +104,22 @@ function nonEmptyTrim(value) {
   return s || "";
 }
 
-/** Prefer the longer non-empty blurb so sparse DB rows do not replace curated seed copy. */
-function preferRicherText(liveVal, seedVal) {
-  const a = nonEmptyTrim(liveVal);
-  const b = nonEmptyTrim(seedVal);
-  if (!b) return a;
-  if (!a) return b;
-  return a.length >= b.length ? a : b;
+/** Prefer first non-empty value (left wins — DB / curated enrichment over seed). */
+function preferCuratedCopy(primaryVal, fallbackVal) {
+  return nonEmptyTrim(primaryVal) || nonEmptyTrim(fallbackVal);
+}
+
+/**
+ * Merge a live sponsors_catalog row with the static FEATURED_SPONSORS seed when available.
+ * @param {ReturnType<normalizeSponsorRecord> | null | undefined} liveRow
+ */
+export function mergeSponsorCatalogRowWithSeed(liveRow) {
+  if (!liveRow) return null;
+  const key = sponsorCatalogRowKey(liveRow);
+  if (!key) return normalizeSponsorRecord(liveRow);
+  const seed = getStaticAppSponsorCatalogRows().find((r) => sponsorCatalogRowKey(r) === key);
+  if (!seed) return normalizeSponsorRecord(liveRow);
+  return mergeSponsorHubSeedRowWithLive(seed, normalizeSponsorRecord(liveRow));
 }
 
 /**
@@ -132,9 +146,9 @@ export function mergeSponsorHubSeedRowWithLive(seed, live) {
     ...live,
     name: pick("name") || seed.name,
     display_name: pick("display_name") || seed.display_name,
-    long_description: preferRicherText(live.long_description, seed.long_description),
-    short_description: preferRicherText(live.short_description, seed.short_description),
-    tagline: preferRicherText(live.tagline, seed.tagline),
+    long_description: preferCuratedCopy(live.long_description, seed.long_description),
+    short_description: preferCuratedCopy(live.short_description, seed.short_description),
+    tagline: preferCuratedCopy(live.tagline, seed.tagline),
     website_url: pick("website_url"),
     logo_url,
     logo_status: preferSeedLogo ? seed.logo_status : live.logo_status,
@@ -315,7 +329,7 @@ export async function mergeSponsorEnrichmentForRows(supabase, normalizedRows) {
   const { data: enrichRows, error: enrichErr } = await supabase
     .from("sponsor_enrichment")
     .select(
-      "sponsor_id,canonical_display_name,extracted_site_title,extracted_meta_description,source_summary,enrichment_status,last_enriched_at,review_required"
+      "sponsor_id,canonical_display_name,extracted_site_title,extracted_meta_description,curated_tagline,curated_short_description,curated_long_description,source_summary,enrichment_status,last_enriched_at,review_required,research_draft"
     )
     .in("sponsor_id", sponsorIds);
   if (enrichErr || !Array.isArray(enrichRows) || !enrichRows.length) return normalizedRows;
@@ -328,14 +342,27 @@ export async function mergeSponsorEnrichmentForRows(supabase, normalizedRows) {
     const extDesc = String(enrich.extracted_meta_description || "").trim();
     const explicitDisplay = String(row.display_name || "").trim();
     const mergedName = explicitDisplay ? row.name : enrich.canonical_display_name || row.name;
+    const tagline = preferCuratedField(
+      row.tagline,
+      enrich.curated_tagline,
+    ) || extTitle || row.tagline;
+    const short_description = preferCuratedField(
+      row.short_description,
+      enrich.curated_short_description,
+    ) || row.short_description;
+    const long_description = preferCuratedField(
+      row.long_description,
+      enrich.curated_long_description,
+    ) || extDesc || row.long_description;
     return normalizeSponsorRecord({
       ...row,
       name: mergedName,
-      short_description: String(row.short_description || "").trim() || extDesc || row.short_description,
-      long_description: String(row.long_description || "").trim() || extDesc || row.long_description,
-      tagline: String(row.tagline || "").trim() || extTitle || row.tagline,
+      tagline,
+      short_description,
+      long_description,
       enrichment_status: enrich.enrichment_status || row.enrichment_status,
       last_enriched_at: enrich.last_enriched_at || row.last_enriched_at,
+      research_draft: enrich.research_draft || row.research_draft,
     });
   });
 }
@@ -344,12 +371,9 @@ export async function mergeSponsorEnrichmentForRows(supabase, normalizedRows) {
 export async function listSponsorsCatalogWithClient(supabase, opts = {}) {
   const sponsorScope = String(opts.sponsorScope || opts.scope || "app").toLowerCase();
   if (!supabase) return sponsorScope === "podcast" ? getStaticPodcastSponsorCatalogRows() : filterAppSponsorHubListRows(fallbackRows());
-  let q = supabase.from(SPONSOR_TABLE).select("*");
+  let q = supabase.from(SPONSOR_TABLE).select("*").eq("is_active", true);
   if (sponsorScope === "podcast") {
-    q = q.eq("sponsor_scope", "podcast").eq("is_active", true);
-  } else {
-    /* Load all active catalog rows; drop podcast roster in `filterAppSponsorRows` (avoids missing legacy scope values). */
-    q = q.eq("is_active", true);
+    q = q.eq("sponsor_scope", "podcast");
   }
   const { data, error } = await q
     .order("display_order", { ascending: true, nullsFirst: false })
@@ -358,7 +382,10 @@ export async function listSponsorsCatalogWithClient(supabase, opts = {}) {
     return sponsorScope === "podcast" ? getStaticPodcastSponsorCatalogRows() : filterAppSponsorHubListRows(fallbackRows());
   }
 
-  const scoped = sponsorScope === "app" ? filterAppSponsorRows(data) : data;
+  const scoped =
+    sponsorScope === "app"
+      ? filterAppSponsorRows(data.filter((r) => isPublicSponsorRow(r)))
+      : data.filter((r) => isPublicSponsorRow(r));
   if (sponsorScope === "app" && !scoped.length) {
     return filterAppSponsorHubListRows(fallbackRows());
   }
@@ -432,8 +459,10 @@ export async function getSponsorBySlug(supabase, slug) {
     .eq("is_active", true)
     .maybeSingle();
   if (data && !error) {
-    const [merged] = await mergeSponsorEnrichmentForRows(supabase, [normalizeSponsorRecord(data)]);
-    const [allowed] = filterAppSponsorRows([merged]);
+    const [merged] = await mergeSponsorEnrichmentForRows(supabase, [
+      mergeSponsorCatalogRowWithSeed(data) || normalizeSponsorRecord(data),
+    ]);
+    const [allowed] = filterPublicSponsorDetailRows([merged]);
     if (!allowed) return getSponsorProfileViewModel(fallbackRows().find((r) => r.slug === key) || null);
     return getSponsorProfileViewModel(allowed);
   }

@@ -39,6 +39,7 @@
     "verify:nonprofit-canonical-names": "node scripts/verify-nonprofit-canonical-names.mjs",
     "verify:supabase": "node scripts/verify-supabase-schema.mjs",
     "seed:sponsors": "node scripts/seed-sponsors-catalog.mjs",
+    "sync:sponsor-curated-copy": "node scripts/sync-sponsor-curated-copy.mjs",
     "seed:local-dev": "node scripts/seed-local-dev-data.mjs",
     "seed:qa-community-demo": "node scripts/seed-qa-community-demo.mjs",
     "enrich:sponsors": "node scripts/enrich-sponsors.mjs",

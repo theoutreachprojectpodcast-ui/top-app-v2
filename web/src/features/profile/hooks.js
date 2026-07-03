@@ -135,6 +135,7 @@ export function useProfileDataState(supabase) {
     workos: !isDemoModeEnabled(),
     workosMissingEnv: [],
     stripe: false,
+    stripePortal: false,
     supabaseServiceRole: false,
   });
   const [entitlements, setEntitlements] = useState(() => entitlementsFromApi(null));
@@ -241,6 +242,7 @@ export function useProfileDataState(supabase) {
           workos: !!status.workos,
           workosMissingEnv: Array.isArray(status.workosMissingEnv) ? status.workosMissingEnv : [],
           stripe: !!status.stripe,
+          stripePortal: !!(status.stripePortal ?? status.stripe),
           stripeMemberRecurringMissingEnv: Array.isArray(status.stripeMemberRecurringMissingEnv)
             ? status.stripeMemberRecurringMissingEnv
             : [],

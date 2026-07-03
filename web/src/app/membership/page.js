@@ -50,9 +50,11 @@ function MembershipHubInner() {
             currentTierKey={profile.membershipStatus}
             sessionKind={sessionKind}
             stripeMemberReady={!!authBackend?.stripe}
+            stripePortalReady={!!authBackend?.stripePortal}
             checkoutReturnPath="/membership/success"
             membershipBillingStatus={profile.membershipBillingStatus}
             stripeCustomerReady={!!profile.stripeCustomerIdSet}
+            stripeSubscriptionReady={!!profile.stripeSubscriptionIdSet}
             onCheckoutNavigate={() => refreshWorkOSProfile()}
             defaultExpanded
           />

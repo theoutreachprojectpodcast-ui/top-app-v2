@@ -28,6 +28,8 @@ export default function MembershipAtAGlance({
   onCheckoutNavigate,
   membershipBillingStatus = "none",
   stripeCustomerReady = false,
+  stripeSubscriptionReady = false,
+  stripePortalReady = false,
 }) {
   const [open, setOpen] = useState(true);
   const billingTierDefinitions = userBillingTierDefinitions(MEMBERSHIP_TIER_DEFINITIONS);
@@ -68,7 +70,12 @@ export default function MembershipAtAGlance({
         </div>
         {isWorkos ? (
           <div className="membershipCurrentProfileBilling">
-            <ManageBillingButton stripeReady={!!stripeMemberReady} hasStripeCustomer={!!stripeCustomerReady} />
+            <ManageBillingButton
+              stripeReady={!!(stripePortalReady || stripeMemberReady)}
+              hasStripeCustomer={!!stripeCustomerReady}
+              hasStripeSubscription={!!stripeSubscriptionReady}
+              returnPath={checkoutReturnPath}
+            />
           </div>
         ) : null}
         <div className="membershipCurrentProfileSettingsLink">
@@ -130,7 +137,12 @@ export default function MembershipAtAGlance({
                 onAfterRedirect={onCheckoutNavigate}
               />
               <div className="membershipSettingsBillingRow">
-                <ManageBillingButton stripeReady={!!stripeMemberReady} hasStripeCustomer={!!stripeCustomerReady} />
+                <ManageBillingButton
+              stripeReady={!!(stripePortalReady || stripeMemberReady)}
+              hasStripeCustomer={!!stripeCustomerReady}
+              hasStripeSubscription={!!stripeSubscriptionReady}
+              returnPath={checkoutReturnPath}
+            />
               </div>
             </div>
           ) : null}

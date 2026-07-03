@@ -1,4 +1,5 @@
 import { requirePlatformAdminRouteContext } from "@/lib/admin/adminRouteContext";
+import { loadCommentAuthorProfiles } from "@/lib/community/communityPostCommentsServer";
 
 const COMMENTS = "community_post_comments";
 
@@ -15,22 +16,7 @@ export async function GET(request, context) {
 
   const { data, error } = await ctx.admin
     .from(COMMENTS)
-    .select(
-      `
-      id,
-      post_id,
-      profile_id,
-      body,
-      status,
-      created_at,
-      updated_at,
-      top_profiles:profile_id (
-        display_name,
-        first_name,
-        last_name
-      )
-    `,
-    )
+    .select("id, post_id, profile_id, body, status, created_at, updated_at")
     .eq("post_id", postId)
     .neq("status", "deleted")
     .order("created_at", { ascending: true })
@@ -40,5 +26,16 @@ export async function GET(request, context) {
     return Response.json({ comments: [], error: error.message }, { status: 500 });
   }
 
-  return Response.json({ comments: data || [] });
+  const rows = data || [];
+  const profileMap = await loadCommentAuthorProfiles(
+    ctx.admin,
+    rows.map((row) => row.profile_id),
+  );
+
+  const comments = rows.map((row) => ({
+    ...row,
+    top_profiles: profileMap.get(String(row.profile_id)) || null,
+  }));
+
+  return Response.json({ comments });
 }

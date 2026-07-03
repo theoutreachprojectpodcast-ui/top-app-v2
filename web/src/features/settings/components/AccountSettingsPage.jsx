@@ -235,9 +235,11 @@ export default function AccountSettingsPage({
           onRequestSignIn={openSignInForMembership}
           sessionKind={sessionKind}
           stripeMemberReady={!!authBackend?.stripe}
+          stripePortalReady={!!authBackend?.stripePortal}
           checkoutReturnPath="/settings"
           membershipBillingStatus={profile.membershipBillingStatus}
           stripeCustomerReady={!!profile.stripeCustomerIdSet}
+          stripeSubscriptionReady={!!profile.stripeSubscriptionIdSet}
         />
       </div>
 
@@ -255,7 +257,12 @@ export default function AccountSettingsPage({
         profileSource="cloud"
         manageBillingSlot={
           isWorkos ? (
-            <ManageBillingButton stripeReady={!!authBackend?.stripe} hasStripeCustomer={!!profile.stripeCustomerIdSet} />
+            <ManageBillingButton
+              stripeReady={!!authBackend?.stripePortal}
+              hasStripeCustomer={!!profile.stripeCustomerIdSet}
+              hasStripeSubscription={!!profile.stripeSubscriptionIdSet}
+              returnPath="/settings"
+            />
           ) : null
         }
       />

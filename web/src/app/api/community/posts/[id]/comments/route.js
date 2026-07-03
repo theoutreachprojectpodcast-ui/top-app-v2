@@ -2,93 +2,44 @@ import { guardMutation, guardFailureResponse } from "@/lib/security/secureRoute"
 import { authFailureJson, resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
-
-const POSTS = "community_posts";
-const COMMENTS = "community_post_comments";
-
-/**
- * @param {import("@supabase/supabase-js").SupabaseClient} admin
- * @param {string} postId
- */
-async function loadPublishedPostForComments(admin, postId) {
-  const { data, error } = await admin
-    .from(POSTS)
-    .select("id,status,comments_enabled,deleted_at")
-    .eq("id", postId)
-    .maybeSingle();
-  if (error || !data || data.deleted_at) return null;
-  if (String(data.status || "").toLowerCase() !== "approved") return null;
-  if (data.comments_enabled === false) return { ...data, commentsClosed: true };
-  return data;
-}
+import {
+  ensureTopProfilesShadowForComment,
+  listPublishedCommentsForPost,
+  loadPostForComments,
+  profileRowToCommentAuthor,
+} from "@/lib/community/communityPostCommentsServer";
 
 export async function GET(_request, context) {
   const admin = createSupabaseAdminClient();
   const params = await context.params;
   const postId = String(params?.id || "").trim();
   if (!postId) {
-    return Response.json({ comments: [], error: "missing_id" }, { status: 400 });
+    return Response.json({ comments: [], error: "missing_id", message: "Missing post id." }, { status: 400 });
   }
   if (!admin) {
     return Response.json({ comments: [], warning: "storage_unavailable" });
   }
 
-  const post = await loadPublishedPostForComments(admin, postId);
+  const post = await loadPostForComments(admin, postId);
   if (!post) {
-    return Response.json({ comments: [], error: "not_found" }, { status: 404 });
+    return Response.json(
+      { comments: [], error: "not_found", message: "This post is not available for comments." },
+      { status: 404 },
+    );
   }
   if (post.commentsClosed) {
     return Response.json({ comments: [], commentsEnabled: false });
   }
 
-  const { data, error } = await admin
-    .from(COMMENTS)
-    .select(
-      `
-      id,
-      post_id,
-      profile_id,
-      body,
-      status,
-      created_at,
-      updated_at,
-      top_profiles:profile_id (
-        display_name,
-        first_name,
-        last_name,
-        profile_photo_url
-      )
-    `,
-    )
-    .eq("post_id", postId)
-    .eq("status", "published")
-    .order("created_at", { ascending: true })
-    .limit(200);
-
-  if (error) {
-    return Response.json({ comments: [], error: error.message }, { status: 500 });
+  const result = await listPublishedCommentsForPost(admin, postId);
+  if (!result.ok) {
+    return Response.json(
+      { comments: [], error: "query_failed", message: result.error || "Could not load comments." },
+      { status: 500 },
+    );
   }
 
-  const comments = (data || []).map((row) => {
-    const prof = row.top_profiles && typeof row.top_profiles === "object" ? row.top_profiles : {};
-    const name =
-      [prof.first_name, prof.last_name].filter(Boolean).join(" ").trim() ||
-      String(prof.display_name || "").trim() ||
-      "Member";
-    return {
-      id: row.id,
-      postId: row.post_id,
-      profileId: row.profile_id,
-      body: row.body,
-      status: row.status,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
-      authorName: name,
-      authorAvatarUrl: String(prof.profile_photo_url || ""),
-    };
-  });
-
-  return Response.json({ comments, commentsEnabled: true });
+  return Response.json({ comments: result.comments, commentsEnabled: true });
 }
 
 export async function POST(request, context) {
@@ -109,7 +60,7 @@ export async function POST(request, context) {
     return Response.json({ ok: false, message: "Missing post id." }, { status: 400 });
   }
 
-  const post = await loadPublishedPostForComments(admin, postId);
+  const post = await loadPostForComments(admin, postId);
   if (!post) {
     return Response.json({ ok: false, message: "Post not found." }, { status: 404 });
   }
@@ -121,6 +72,8 @@ export async function POST(request, context) {
   if (!profileRow?.id) {
     return Response.json({ ok: false, message: "Finish onboarding before commenting." }, { status: 403 });
   }
+
+  await ensureTopProfilesShadowForComment(admin, profileRow);
 
   let json;
   try {
@@ -139,7 +92,7 @@ export async function POST(request, context) {
 
   const now = new Date().toISOString();
   const { data, error } = await admin
-    .from(COMMENTS)
+    .from("community_post_comments")
     .insert({
       post_id: postId,
       profile_id: profileRow.id,
@@ -155,10 +108,7 @@ export async function POST(request, context) {
     return Response.json({ ok: false, message: error.message || "Could not post comment." }, { status: 500 });
   }
 
-  const displayName =
-    [profileRow.first_name, profileRow.last_name].filter(Boolean).join(" ").trim() ||
-    String(profileRow.display_name || "").trim() ||
-    "Member";
+  const { authorName, authorAvatarUrl } = profileRowToCommentAuthor(profileRow);
 
   return Response.json({
     ok: true,
@@ -169,8 +119,8 @@ export async function POST(request, context) {
       body,
       status: "published",
       createdAt: data?.created_at || now,
-      authorName: displayName,
-      authorAvatarUrl: String(profileRow.profile_photo_url || ""),
+      authorName,
+      authorAvatarUrl,
     },
   });
 }

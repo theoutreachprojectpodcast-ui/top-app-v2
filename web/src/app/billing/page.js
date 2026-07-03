@@ -22,9 +22,11 @@ function BillingHubInner() {
         ) : null}
         {isAuthenticated && sessionKind === "workos" ? (
           <ManageBillingButton
-            stripeReady={!!authBackend?.stripe}
+            stripeReady={!!authBackend?.stripePortal}
             hasStripeCustomer={!!profile.stripeCustomerIdSet}
+            hasStripeSubscription={!!profile.stripeSubscriptionIdSet}
             variant="primary"
+            returnPath="/billing"
           />
         ) : null}
         <p style={{ marginTop: 16 }}>
