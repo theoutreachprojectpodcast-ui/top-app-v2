@@ -31,18 +31,22 @@ export const MEMBERSHIP_EXEMPT_PATTERNS = [
   /^\/sponsor(\/|$)/,
 ];
 
-/** Support or Pro — directory home, profile (saved orgs), nonprofit detail. */
+/** Support or Pro — directory home, profile (saved orgs), nonprofit detail, podcast hub. */
 export const SUPPORT_TIER_PATH_PATTERNS = [
   /^\/$/,
   /^\/profile(\/|$)/,
   /^\/nonprofit(\/|$)/,
+  /^\/podcasts\/?$/,
+  /^\/podcasts\/apply(\/|$)/,
+  /^\/podcasts\/guests(\/|$)/,
 ];
 
-/** Pro only — community, trusted, podcast, settings, etc. */
+/** Pro only — community, trusted, podcast exclusive content, settings, etc. */
 export const PRO_MEMBERSHIP_PATH_PATTERNS = [
   /^\/community(\/|$)/,
   /^\/trusted(\/|$)/,
-  /^\/podcasts(\/|$)/,
+  /^\/podcasts\/members(\/|$)/,
+  /^\/podcasts\/sponsor(\/|$)/,
   /^\/notifications(\/|$)/,
   /^\/onboarding(\/|$)/,
   /^\/contact(\/|$)/,

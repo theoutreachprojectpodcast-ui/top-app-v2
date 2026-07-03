@@ -265,7 +265,8 @@ export default function AppAccessPaywall({
             <ul className="mobileSplashPage__benefits">
               <li>Nonprofit directory search and exploration</li>
               <li>Save favorite nonprofits</li>
-              <li>Community, podcast, and trusted resources are Pro-only</li>
+              <li>Podcast episodes, guests, and guest applications</li>
+              <li>Community, exclusive podcast content, and trusted resources are Pro-only</li>
             </ul>
           </section>
           <section className="mobileSplashPage__tierCard mobileSplashPage__tierCard--pro" aria-labelledby="pro-tier-heading">
@@ -276,7 +277,8 @@ export default function AppAccessPaywall({
             <ul className="mobileSplashPage__benefits">
               <li>Everything in Support</li>
               <li>Create and submit community posts</li>
-              <li>Premium podcast content</li>
+              <li>Pro-exclusive podcast content (YouTube playlist integration)</li>
+              <li>Podcast sponsor opportunities</li>
               <li>Trusted resource discounts and partner offers</li>
             </ul>
           </section>

@@ -236,8 +236,23 @@ function TopAppInner({ initialNav = "home" }) {
     [entitlements],
   );
 
+  const hasSupportAccess = useMemo(
+    () =>
+      !!(
+        entitlements?.hasActiveMembership ||
+        entitlements?.directoryAccess ||
+        entitlements?.isPlatformAdmin ||
+        entitlements?.isPrivilegedStaff
+      ),
+    [entitlements],
+  );
+
   function goToProUpgrade() {
     router.push(isCapacitorNative() ? "/mobile/access?upgrade=pro" : "/access?upgrade=pro");
+  }
+
+  function goToSupportUpgrade() {
+    router.push(isCapacitorNative() ? "/mobile/access" : "/access");
   }
 
   const showMembershipOnProfile = useMemo(
@@ -354,12 +369,12 @@ function TopAppInner({ initialNav = "home" }) {
   }
 
   function dockNavPodcast() {
-    if (!hasProAccess) {
+    if (!hasSupportAccess) {
       if (!isAuthenticated) {
         openSignInOverlay();
         return;
       }
-      goToProUpgrade();
+      goToSupportUpgrade();
       return;
     }
     if (pathname !== "/podcasts" && !pathname.startsWith("/podcasts/")) {
@@ -434,7 +449,7 @@ function TopAppInner({ initialNav = "home" }) {
   function hamburgerNavItem(item) {
     const key = String(item?.key || "");
     const href = String(item?.href || "").trim() || "/";
-    if (["community", "trusted", "podcast", "contact", "settings"].includes(key) && !hasProAccess) {
+    if (["community", "trusted", "contact", "settings"].includes(key) && !hasProAccess) {
       if (!isAuthenticated) {
         openSignInOverlay();
         return;
@@ -947,18 +962,20 @@ function TopAppInner({ initialNav = "home" }) {
               }}
               onCommunity={openCommunity}
               onPodcasts={() => {
-                if (!hasProAccess) {
+                if (!hasSupportAccess) {
                   if (!isAuthenticated) {
                     openSignInOverlay();
                     return;
                   }
-                  goToProUpgrade();
+                  goToSupportUpgrade();
                   return;
                 }
                 router.push("/podcasts");
               }}
               onProUpgrade={goToProUpgrade}
+              onSupportUpgrade={goToSupportUpgrade}
               hasProAccess={hasProAccess}
+              hasSupportAccess={hasSupportAccess}
               directoryProps={{
                 filters,
                 setFilters,

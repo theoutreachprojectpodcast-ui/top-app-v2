@@ -146,24 +146,21 @@
 .homeSponsorSpotlights a.homeSponsorBannerSlot--rucking {
   min-height: 164px;
 }
+/* Circular frame on OrganizationLogo only — avoid double rounded-rect wrapper that clips the badge */
 .homeSponsorBannerSlot--rucking .homeSponsorBannerSlot__logoCell {
-  box-sizing: border-box;
-  display: inline-flex;
-  flex: 0 1 auto;
-  width: fit-content;
-  max-width: min(100%, 220px);
+  flex: 0 0 auto;
+  display: flex;
   align-items: center;
   justify-content: center;
-  padding: 10px;
-  margin: 2px 0;
-  background: #f4efe6;
-  border-radius: 14px;
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--color-border-strong) 18%, transparent),
-    0 6px 16px color-mix(in srgb, #000 8%, transparent);
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+  max-width: none;
 }
 .homeSponsorBannerSlot--rucking .homeSponsorBannerSlot__logoCell .organizationLogo {
-  --org-logo-size: 72px;
+  --org-logo-size: 88px;
 }
 .homeSponsorSpotlights a.homeSponsorBannerSlot--photo {
   flex-direction: column;
@@ -339,13 +336,8 @@
   .homeSponsorBannerSlot--gameday .homeSponsorBannerSlot__logoCell .organizationLogo {
     --org-logo-size: 56px;
   }
-  .homeSponsorBannerSlot--rucking .homeSponsorBannerSlot__logoCell {
-    padding: 8px;
-    border-radius: 12px;
-    max-width: min(100%, 190px);
-  }
   .homeSponsorBannerSlot--rucking .homeSponsorBannerSlot__logoCell .organizationLogo {
-    --org-logo-size: 64px;
+    --org-logo-size: 76px;
   }
 }
 

@@ -49,7 +49,8 @@ export const MEMBERSHIP_TIER_DEFINITIONS = [
     benefits: [
       "Nonprofit directory search and exploration",
       "Save favorite nonprofits to your profile",
-      "Upgrade anytime to unlock community, podcast, and trusted resources",
+      "Podcast episodes, guests, and guest applications",
+      "Upgrade to Pro for exclusive content and sponsor opportunities",
     ],
     isMember: false,
     hint: "Entry-level paid membership — billed annually at $0.99/year.",
@@ -62,7 +63,8 @@ export const MEMBERSHIP_TIER_DEFINITIONS = [
     benefits: [
       "Everything in Support Membership",
       "Create and submit community posts",
-      "Premium podcast content",
+      "Pro-exclusive podcast content (YouTube playlist integration)",
+      "Podcast sponsor opportunities",
       "Trusted resource discounts and partner offers",
       "All current and future Pro-only features",
     ],

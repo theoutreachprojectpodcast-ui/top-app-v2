@@ -35,7 +35,7 @@ const FEATURES = [
     icon: "podcast",
     title: "Podcasts",
     hint: "Stories that inspire. Voices that matter.",
-    proOnly: true,
+    supportOnly: true,
   },
 ];
 
@@ -45,7 +45,9 @@ export default function HomeFeatureCards({
   onCommunity,
   onPodcasts,
   onProUpgrade,
+  onSupportUpgrade,
   hasProAccess = true,
+  hasSupportAccess = true,
 }) {
   const handlers = {
     sponsors: onSponsors,
@@ -57,15 +59,27 @@ export default function HomeFeatureCards({
   return (
     <div className="homeFeatureList welcomeActionList" role="navigation" aria-label="Explore The Outreach Project">
       {FEATURES.map((item) => {
-        const locked = item.proOnly && !hasProAccess;
+        const lockedPro = item.proOnly && !hasProAccess;
+        const lockedSupport = item.supportOnly && !hasSupportAccess;
+        const locked = lockedPro || lockedSupport;
+        const lockedHint = lockedPro
+          ? "Upgrade to Pro to unlock this section."
+          : lockedSupport
+            ? "Support Membership unlocks the podcast hub."
+            : item.hint;
+
         return (
           <button
             key={item.key}
             type="button"
             className={`card action welcomeActionCard welcomeActionCard--uniform ${item.cardClass}${locked ? " welcomeActionCard--locked" : ""}`}
             onClick={() => {
-              if (locked) {
+              if (lockedPro) {
                 onProUpgrade?.(item.key);
+                return;
+              }
+              if (lockedSupport) {
+                onSupportUpgrade?.(item.key);
                 return;
               }
               handlers[item.key]?.();
@@ -74,9 +88,7 @@ export default function HomeFeatureCards({
             <AppIcon name={item.icon} size={WELCOME_ACTION_ICON_SIZE} />
             <span className="welcomeActionText">
               <span className="welcomeActionLabel">{item.title}</span>
-              <span className="welcomeActionHint">
-                {locked ? "Upgrade to Pro to unlock this section." : item.hint}
-              </span>
+              <span className="welcomeActionHint">{locked ? lockedHint : item.hint}</span>
             </span>
           </button>
         );

@@ -118,7 +118,12 @@ export function canSaveOrganizations(profile, opts = {}) {
   return requireSupportOrPro(profile, opts);
 }
 
-/** Full platform beyond directory + saves (Pro, sponsor, staff). */
+/** Public podcast hub (episodes, guests, apply) — Support + Pro. */
+export function canAccessPodcastHub(profile, opts = {}) {
+  return requireSupportOrPro(profile, opts);
+}
+
+/** Full platform beyond directory + saves + podcast hub (Pro, sponsor, staff). */
 export function canAccessFullPlatform(profile, opts = {}) {
   return requirePro(profile, opts);
 }

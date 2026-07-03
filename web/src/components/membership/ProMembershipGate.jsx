@@ -21,7 +21,7 @@ function accessOpts(entitlements) {
 }
 
 /**
- * Support members may use directory + saves only. Pro-only routes redirect to upgrade paywall.
+ * Support members may use directory, saves, and the podcast hub. Pro-only routes redirect to upgrade paywall.
  */
 export default function ProMembershipGate() {
   const router = useRouter();

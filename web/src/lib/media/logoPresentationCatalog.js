@@ -54,11 +54,10 @@ export const LOGO_PRESENTATION_CATALOG = {
   "rucking-realty-group": {
     panel: "neutral",
     bgColor: "#f4efe6",
-    pad: 8,
+    pad: 12,
     fit: "contain",
-    scale: 0.92,
+    scale: 0.82,
     minimalFrame: true,
-    frameShape: "rounded",
   },
   "iron-soldiers-coffee-company": {
     panel: "neutral",
