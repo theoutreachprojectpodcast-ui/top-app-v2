@@ -30,6 +30,7 @@ export default function CapacitorNativeShell() {
 
     window.addEventListener("orientationchange", reinforcePortraitLock);
     window.addEventListener("resize", reinforcePortraitLock);
+    window.addEventListener("focus", reinforcePortraitLock);
     window.visualViewport?.addEventListener("resize", reinforcePortraitLock);
 
     let appStateListener;
@@ -47,6 +48,7 @@ export default function CapacitorNativeShell() {
     return () => {
       window.removeEventListener("orientationchange", reinforcePortraitLock);
       window.removeEventListener("resize", reinforcePortraitLock);
+      window.removeEventListener("focus", reinforcePortraitLock);
       window.visualViewport?.removeEventListener("resize", reinforcePortraitLock);
       void appStateListener?.remove();
       void orientationListener?.remove();

@@ -8,7 +8,13 @@ import com.getcapacitor.BridgeActivity;
 public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        lockPortrait();
         super.onCreate(savedInstanceState);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
         lockPortrait();
     }
 
@@ -16,6 +22,14 @@ public class MainActivity extends BridgeActivity {
     public void onResume() {
         super.onResume();
         lockPortrait();
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus) {
+            lockPortrait();
+        }
     }
 
     @Override

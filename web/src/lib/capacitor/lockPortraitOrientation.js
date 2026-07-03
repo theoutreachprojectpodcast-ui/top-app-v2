@@ -1,6 +1,8 @@
 import { ScreenOrientation } from "@capacitor/screen-orientation";
 import { isCapacitorNative } from "@/lib/capacitor/platform";
 
+const PORTRAIT_LOCKS = ["portrait", "portrait-primary"];
+
 /**
  * Lock the native shell to portrait. AndroidManifest / Info.plist are primary;
  * Capacitor Screen Orientation + the web Screen Orientation API reinforce the lock.
@@ -8,19 +10,24 @@ import { isCapacitorNative } from "@/lib/capacitor/platform";
 export async function lockPortraitOrientation() {
   if (typeof window === "undefined" || !isCapacitorNative()) return;
 
-  try {
-    await ScreenOrientation.lock({ orientation: "portrait" });
-    return;
-  } catch {
-    // Plugin unavailable or already locked — try web API below.
+  for (const orientation of PORTRAIT_LOCKS) {
+    try {
+      await ScreenOrientation.lock({ orientation });
+      return;
+    } catch {
+      // Try the next lock mode.
+    }
   }
 
   const orientation = window.screen?.orientation;
   if (!orientation || typeof orientation.lock !== "function") return;
 
-  try {
-    await orientation.lock("portrait");
-  } catch {
-    // Native manifest/plist + ScreenOrientation plugin remain authoritative.
+  for (const mode of PORTRAIT_LOCKS) {
+    try {
+      await orientation.lock(mode);
+      return;
+    } catch {
+      // Native manifest/plist remain authoritative.
+    }
   }
 }
