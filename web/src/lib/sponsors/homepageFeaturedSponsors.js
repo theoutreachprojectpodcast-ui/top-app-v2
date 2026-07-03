@@ -1,4 +1,5 @@
 import { getSponsorCardViewModel } from "@/features/sponsors/domain/sponsorViewModels";
+import { canonicalSponsorHubSlug } from "@/features/sponsors/api/sponsorCatalogApi";
 import { FEATURED_SPONSORS } from "@/features/sponsors/data/featuredSponsors";
 
 /** Mission Partners marked featured + active for the home spotlight row. */
@@ -17,7 +18,7 @@ export function isHomepageFeaturedSponsorRow(row) {
 /** Map catalog row → shape expected by `HomeSponsorBannerPlacements`. */
 export function catalogRowToHomeSpotlight(row) {
   const vm = getSponsorCardViewModel(row);
-  const slug = String(vm.slug || vm.id || "").trim();
+  const slug = canonicalSponsorHubSlug(vm.slug || vm.id || "");
   return {
     id: slug,
     slug,
@@ -87,4 +88,9 @@ function seedHomepageFallback(limit) {
       mission_partner: true,
       featured: true,
     }));
+}
+
+/** Client-safe seed when `/api/sponsors/homepage-featured` is unreachable. */
+export function getHomepageFeaturedSponsorSeed(limit = 12) {
+  return seedHomepageFallback(limit);
 }

@@ -493,26 +493,33 @@ export async function getPublicSponsorCatalogRowBySlug(supabase, slug) {
 export async function getSponsorBySlug(supabase, slug) {
   const key = String(slug || "").trim();
   if (!key) return null;
+
+  const seedProfile = () => {
+    const seed = findSeedSponsorBySlug(key);
+    return seed ? getSponsorProfileViewModel(seed) : null;
+  };
+
   if (typeof window !== "undefined") {
     try {
+      const controller = new AbortController();
+      const timer = window.setTimeout(() => controller.abort(), 12_000);
       const res = await fetch(`/api/sponsors/catalog?slug=${encodeURIComponent(key)}`, {
         credentials: "include",
         cache: "no-store",
+        signal: controller.signal,
       });
-      if (res.ok) {
-        const data = await res.json();
-        if (data?.ok && data.row) return getSponsorProfileViewModel(data.row);
-        if (data?.ok) {
-          const seed = findSeedSponsorBySlug(key);
-          if (seed) return getSponsorProfileViewModel(seed);
-        }
-      }
+      window.clearTimeout(timer);
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data?.ok && data.row) return getSponsorProfileViewModel(data.row);
     } catch {
-      /* fall through */
+      /* API unavailable — fall back to bundled seed */
     }
+    return seedProfile();
   }
+
   const row = await buildPublicSponsorProfileRow(supabase, key);
-  return getSponsorProfileViewModel(row);
+  if (row) return getSponsorProfileViewModel(row);
+  return seedProfile();
 }
 
 export async function saveSponsorAdminRecord(supabase, payload) {

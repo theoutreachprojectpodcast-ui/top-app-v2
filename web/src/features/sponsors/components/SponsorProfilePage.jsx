@@ -15,7 +15,6 @@ import {
 import { sanitizeDisplayableImageUrl } from "@/lib/media/safeImageUrl";
 import OrganizationLogo from "@/components/shared/OrganizationLogo";
 import SponsorOutboundLink from "@/features/sponsors/components/SponsorOutboundLink";
-import { getSupabaseClient } from "@/lib/supabase/client";
 import { getSponsorBySlug } from "@/features/sponsors/api/sponsorCatalogApi";
 import { sponsorBlurbsRedundant } from "@/features/sponsors/domain/sponsorViewModels";
 
@@ -57,25 +56,32 @@ function SocialIconLink({ item, brandName, sponsorSlug, pageSource }) {
   );
 }
 
-export default function SponsorProfilePage({ slug }) {
-  const supabase = useMemo(() => getSupabaseClient(), []);
-  const [profile, setProfile] = useState(null);
-  const [status, setStatus] = useState("Loading sponsor...");
+export default function SponsorProfilePage({ slug, initialProfile = null }) {
+  const resolvedSlug = decodeURIComponent(String(slug || "").trim());
+  const [profile, setProfile] = useState(() => initialProfile || null);
+  const [status, setStatus] = useState(() => (initialProfile ? "" : "Loading sponsor..."));
   const [logoIndex, setLogoIndex] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const row = await getSponsorBySlug(supabase, slug);
+      const row = await getSponsorBySlug(null, resolvedSlug);
       if (cancelled) return;
-      setProfile(row);
-      setStatus(row ? "" : "Sponsor profile not found.");
-      setLogoIndex(0);
+      if (row) {
+        setProfile(row);
+        setStatus("");
+        setLogoIndex(0);
+        return;
+      }
+      if (!initialProfile) {
+        setProfile(null);
+        setStatus("Sponsor profile not found.");
+      }
     })();
     return () => {
       cancelled = true;
     };
-  }, [supabase, slug]);
+  }, [resolvedSlug, initialProfile]);
 
   const heroSrc = profile ? sanitizeDisplayableImageUrl(String(profile.background_image_url || "").trim()) : "";
   const logoCandidates = useMemo(() => {

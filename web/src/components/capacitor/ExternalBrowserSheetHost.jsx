@@ -7,7 +7,7 @@ import { isCapacitorNative } from "@/lib/capacitor/platform";
 import "@/styles/external-browser-sheet.css";
 
 const IFRAME_BLOCKLIST =
-  /(?:^|\.)google\.|(?:^|\.)facebook\.com|(?:^|\.)instagram\.com|(?:^|\.)twitter\.com|(?:^|\.)x\.com/i;
+  /(?:^|\.)google\.|(?:^|\.)facebook\.com|(?:^|\.)instagram\.com|(?:^|\.)twitter\.com|(?:^|\.)x\.com|(?:^|\.)stripe\.com/i;
 
 function hostFromUrl(url) {
   try {
@@ -36,7 +36,10 @@ export default function ExternalBrowserSheetHost() {
   const openedTabRef = useRef(null);
 
   const close = useCallback(() => {
-    setSheet(null);
+    setSheet((current) => {
+      current?.onClose?.();
+      return null;
+    });
     setFrameBlocked(false);
     openedTabRef.current = null;
   }, []);
@@ -55,15 +58,17 @@ export default function ExternalBrowserSheetHost() {
       if (isCapacitorNative()) return;
 
       const title = String(req?.title || "").trim() || hostFromUrl(url) || "External page";
+      const doneLabel = String(req?.doneLabel || "Done").trim() || "Done";
+      const onClose = typeof req?.onClose === "function" ? req.onClose : undefined;
       if (!canEmbedInFrame(url)) {
         openExternalTab(url);
         setFrameBlocked(true);
-        setSheet({ url, title });
+        setSheet({ url, title, doneLabel, onClose });
         return;
       }
 
       setFrameBlocked(false);
-      setSheet({ url, title });
+      setSheet({ url, title, doneLabel, onClose });
     });
   }, [openExternalTab]);
 
@@ -87,7 +92,7 @@ export default function ExternalBrowserSheetHost() {
     <div className="externalBrowserSheet" role="dialog" aria-modal="true" aria-label={sheet.title}>
       <header className="externalBrowserSheet__chrome">
         <button type="button" className="btnSoft externalBrowserSheet__done" onClick={close}>
-          Done
+          {sheet.doneLabel || "Done"}
         </button>
         <p className="externalBrowserSheet__title">{sheet.title}</p>
         <button
@@ -103,7 +108,9 @@ export default function ExternalBrowserSheetHost() {
         {frameBlocked ? (
           <div className="externalBrowserSheet__fallback">
             <p>This page opened in a new browser tab.</p>
-            <p className="externalBrowserSheet__fallbackHint">Tap Done when you are finished to return to The Outreach Project.</p>
+            <p className="externalBrowserSheet__fallbackHint">
+              Tap {sheet.doneLabel || "Done"} when you are finished to return to The Outreach Project.
+            </p>
             <button type="button" className="btnPrimary" onClick={() => openExternalTab(sheet.url)}>
               Open again
             </button>

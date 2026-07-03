@@ -376,6 +376,7 @@ export default function MembershipBillingCenter({
             hasStripeCustomer={stripeCustomerReady}
             hasStripeSubscription={stripeSubscriptionReady}
             returnPath={checkoutReturnPath}
+            onReturned={() => void load()}
           />
         </div>
       ) : null}
@@ -456,6 +457,7 @@ export default function MembershipBillingCenter({
           hasStripeCustomer={stripeCustomerReady}
           hasStripeSubscription={stripeSubscriptionReady}
           returnPath={checkoutReturnPath}
+          onReturned={() => void load()}
         />
         <Link className="btnSoft" href="/settings#account-membership">
           Settings

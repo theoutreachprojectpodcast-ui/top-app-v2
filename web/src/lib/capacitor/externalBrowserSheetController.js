@@ -1,4 +1,4 @@
-/** @typedef {{ url: string, title?: string }} ExternalBrowserSheetRequest */
+/** @typedef {{ url: string, title?: string, doneLabel?: string, onClose?: () => void }} ExternalBrowserSheetRequest */
 
 /** @type {((req: ExternalBrowserSheetRequest) => void) | null} */
 let hostOpen = null;

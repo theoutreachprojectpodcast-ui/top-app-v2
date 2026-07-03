@@ -26,6 +26,9 @@ export const MEMBERSHIP_EXEMPT_PATTERNS = [
   /^\/api\/auth\//,
   /^\/mobile\/auth\//,
   /^\/mobile-auth\//,
+  /** Mission partner hub + profiles — linked from the public home page. */
+  /^\/sponsors(\/|$)/,
+  /^\/sponsor(\/|$)/,
 ];
 
 /** Support or Pro — directory home, profile (saved orgs), nonprofit detail. */
@@ -35,14 +38,12 @@ export const SUPPORT_TIER_PATH_PATTERNS = [
   /^\/nonprofit(\/|$)/,
 ];
 
-/** Pro only — community, trusted, podcast, sponsors, settings, etc. */
+/** Pro only — community, trusted, podcast, settings, etc. */
 export const PRO_MEMBERSHIP_PATH_PATTERNS = [
   /^\/community(\/|$)/,
   /^\/trusted(\/|$)/,
   /^\/podcasts(\/|$)/,
   /^\/notifications(\/|$)/,
-  /^\/sponsors(\/|$)/,
-  /^\/sponsor(\/|$)/,
   /^\/onboarding(\/|$)/,
   /^\/contact(\/|$)/,
   /^\/settings(\/|$)/,

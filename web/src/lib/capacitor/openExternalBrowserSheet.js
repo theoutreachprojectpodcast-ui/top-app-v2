@@ -35,7 +35,7 @@ function validateBrowserSheetUrl(rawUrl) {
  * Keeps the Outreach Project shell mounted — never navigates the main WebView to external sites.
  *
  * @param {string} url
- * @param {{ title?: string }} [options]
+ * @param {{ title?: string, doneLabel?: string, presentationStyle?: "fullscreen" | "popover", onClose?: () => void }} [options]
  * @returns {Promise<{ mode: "browser-sheet" | "browser-modal" | "browser-tab" | "same-window" }>}
  */
 export async function openExternalBrowserSheet(url, options = {}) {
@@ -45,18 +45,28 @@ export async function openExternalBrowserSheet(url, options = {}) {
   }
   const target = check.url.href;
   const title = String(options.title || "").trim();
+  const doneLabel = String(options.doneLabel || "Done").trim() || "Done";
+  const onClose = typeof options.onClose === "function" ? options.onClose : null;
 
   if (isCapacitorNative()) {
-    const presentationStyle = capacitorPlatform() === "ios" ? "popover" : "fullscreen";
+    const presentationStyle =
+      options.presentationStyle ||
+      (capacitorPlatform() === "ios" ? "popover" : "fullscreen");
     await Browser.open({
       url: target,
       presentationStyle,
       toolbarColor: "#101814",
     });
+    if (onClose) {
+      const listener = await Browser.addListener("browserFinished", () => {
+        void listener.remove();
+        onClose();
+      });
+    }
     return { mode: "browser-sheet" };
   }
 
-  if (openExternalBrowserSheetHost({ url: target, title })) {
+  if (openExternalBrowserSheetHost({ url: target, title, doneLabel, onClose: onClose || undefined })) {
     return { mode: "browser-modal" };
   }
 

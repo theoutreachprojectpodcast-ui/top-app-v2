@@ -16,6 +16,52 @@ function headers(extra = {}) {
   return h;
 }
 
+function isVercelDeploymentProtection(status, text) {
+  const body = String(text || "");
+  if (status === 401) return true;
+  if (status === 302 && /vercel\.com\/sso-api/i.test(body)) return true;
+  if (/vercel\.com\/sso-api|Authentication Required|deployment protection/i.test(body)) return true;
+  return false;
+}
+
+function printDeploymentProtectionHelp() {
+  console.error("[smoke:qa] QA Deployment Protection is blocking API routes (HTML/SSO instead of JSON).");
+  console.error(
+    "[smoke:qa] Set GitHub Actions secret VERCEL_AUTOMATION_BYPASS_SECRET_QA (or VERCEL_AUTOMATION_BYPASS_SECRET)",
+  );
+  console.error(
+    "[smoke:qa] Value: Vercel → qa-the-outreach-project → Settings → Deployment Protection → Protection Bypass for Automation",
+  );
+}
+
+/** Fail fast when protection is on but CI has no working bypass. */
+async function assertDeploymentProtectionBypass() {
+  const res = await fetch(`${base}/api/health`, {
+    redirect: "manual",
+    headers: headers({ Accept: "application/json, */*" }),
+  });
+  const text = await res.text();
+  if (res.status === 200) {
+    try {
+      JSON.parse(text);
+      return;
+    } catch {
+      /* fall through */
+    }
+  }
+  if (isVercelDeploymentProtection(res.status, text) || (res.status === 200 && text.includes("<!DOCTYPE html"))) {
+    printDeploymentProtectionHelp();
+    if (!bypass) {
+      console.error("[smoke:qa] FAIL bypass secret is missing in this environment.");
+    } else {
+      console.error("[smoke:qa] FAIL bypass secret is set but did not unlock QA API routes (wrong project secret?).");
+    }
+    process.exit(1);
+  }
+}
+
+await assertDeploymentProtectionBypass();
+
 const checks = [
   { name: "homepage", path: "/", kind: "html", expect: [200] },
   { name: "sign-in", path: "/sign-in", kind: "html", expect: [200] },
@@ -85,7 +131,12 @@ for (const check of checks) {
       try {
         JSON.parse(text);
       } catch {
-        console.error(`[smoke:qa] FAIL ${check.name} -> invalid JSON`);
+        if (isVercelDeploymentProtection(res.status, text) || text.includes("<!DOCTYPE html")) {
+          console.error(`[smoke:qa] FAIL ${check.name} -> blocked by Vercel Deployment Protection`);
+          if (!failed) printDeploymentProtectionHelp();
+        } else {
+          console.error(`[smoke:qa] FAIL ${check.name} -> invalid JSON`);
+        }
         failed = true;
         continue;
       }
