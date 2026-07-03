@@ -49,7 +49,7 @@ Patients get same-day scheduling, on-site labs with rapid turnaround, and physic
 $gd$,
   enrichment_status = 'curated',
   updated_at = now()
-where slug = 'gameday-mens-health';
+where slug in ('gameday-mens-health', 'game-day-mens-health');
 
 -- Rope Solutions (Elite Leadership Coaching)
 update public.sponsors_catalog
@@ -87,7 +87,7 @@ select
   'curated',
   now()
 from public.sponsors_catalog sc
-where sc.slug in ('apex-global-outdoors', 'gameday-mens-health', 'rope-solutions')
+where sc.slug in ('apex-global-outdoors', 'gameday-mens-health', 'game-day-mens-health', 'rope-solutions')
 on conflict (sponsor_id) do update set
   curated_tagline = excluded.curated_tagline,
   curated_short_description = excluded.curated_short_description,
