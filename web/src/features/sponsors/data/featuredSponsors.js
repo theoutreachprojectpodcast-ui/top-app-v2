@@ -179,8 +179,8 @@ export const FEATURED_SPONSORS = [
       "Human navigation that sequences VA benefits, healthcare, employment, and community programs without the runaround.",
     longDescription:
       "Vet Nav Services pairs veterans and military families with navigators who speak the language of DD-214s, disability claims, vocational rehab, and local aid networks. The focus is practical sequencing—what to file first, which clinic or VSO can help, and how to avoid dead ends—so people spend less time searching portals and more time moving toward stable housing, healthcare, and work.",
-    ctaLabel: "Website pending verification",
-    ctaUrl: "",
+    ctaLabel: "Visit Website",
+    ctaUrl: "https://www.vetnavservices.com/about",
     logoUrl: VET_NAV_SERVICES_LOGO_URL,
     warmVariant: "gold",
     backgroundImageUrl: "/sponsors/featured-bg-vetnav-services.png",
@@ -195,13 +195,13 @@ export const FEATURED_SPONSORS = [
     sponsorType: "community_sponsor",
     sponsorDisplayGroup: "community",
     primaryDisplayTag: "Community Sponsor",
-    tag: "Laser engraving & CNC fabrication",
-    industry: "Design & fabrication",
+    tag: "Woodworking & custom fabrication",
+    industry: "Woodworking & custom fabrication",
     tierLabel: "Featured sponsor",
     subtitle:
-      "Veteran-owned Texas studio for awards, signage, drinkware, and bespoke shop projects with museum-grade finishing.",
+      "Eduardo Pico Designs is a veteran-owned woodworking and custom fabrication studio serving San Antonio and beyond. Woodworking is at the heart of everything we build, with CNC routing, laser engraving, and UV printing allowing us to create premium custom pieces that stand out.",
     longDescription:
-      "Eduardo Pico Designs is a veteran-owned laser and CNC studio outside San Antonio, Texas. The team produces everything from personalized tumblers and ranch-style door hangers to unit coins, nonprofit gala awards, and full custom shop fit-outs. Expect collaborative proofs, disciplined timelines, and finishes that hold up to Texas heat, humidity, and the scrutiny of clients who care about detail.",
+      "We specialize in business branding, custom signs, military and nonprofit awards, golf tournament merchandise, whiskey and cigar accessories, personalized gifts, vendor displays, and home décor. Every project is designed with a focus on quality craftsmanship, clean design, and products that people are proud to display, use, or give as gifts.",
     ctaLabel: "Visit Website",
     ctaUrl: "https://eduardopicodesigns.com/",
     logoUrl: EDUARDO_PICO_DESIGNS_LOGO_URL,

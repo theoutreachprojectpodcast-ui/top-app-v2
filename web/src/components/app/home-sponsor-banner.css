@@ -162,9 +162,6 @@
 .homeSponsorBannerSlot--rucking .homeSponsorBannerSlot__logoCell .organizationLogo {
   --org-logo-size: 88px;
 }
-.homeSponsorBannerSlot--rucking .organizationLogo__img {
-  object-fit: contain;
-}
 .homeSponsorSpotlights a.homeSponsorBannerSlot--photo {
   flex-direction: column;
   justify-content: flex-end;

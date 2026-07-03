@@ -6135,10 +6135,6 @@ html.dark .communityPostBodyGuideSteps li {
   padding: 5px;
   object-fit: contain;
 }
-/* Rucking Realty: contain so badge white border is never clipped in the circular frame */
-.sponsorPremiumCard[data-sponsor-slug="rucking-realty-group"] .organizationLogo__img {
-  object-fit: contain;
-}
 /* Don Blas: circular badge — contain so gold ring is never clipped */
 .sponsorPremiumCard[data-sponsor-slug="don-blas-cigars"] .organizationLogo__img {
   object-fit: contain;
