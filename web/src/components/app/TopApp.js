@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
@@ -904,7 +904,7 @@ function TopAppInner({ initialNav = "home" }) {
       data-page-atmosphere={pageAtmosphere}
     >
       <div className="appSiteHeader">
-        <AppHeaderBrand />
+        <AppHeaderBrand pageAtmosphere={pageAtmosphere} />
         <header className="topbar">
           <HeaderInner className="topbarInner">
             <div className="topbarZone topbarLeft">

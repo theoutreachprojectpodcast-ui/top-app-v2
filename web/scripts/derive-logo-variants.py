@@ -24,6 +24,7 @@ OUT_DARK = ROOT / "public" / "brand-logo-site-dark.png"
 OUT_LIGHT = ROOT / "public" / "brand-logo-site-light.png"
 OUT_MARK_DARK = ROOT / "public" / "brand-logo-mark-dark.png"
 OUT_MARK_LIGHT = ROOT / "public" / "brand-logo-mark-light.png"
+MARK_IMPORT = ROOT / "public" / "brand-logo-mark-import.png"
 LIGHT_IMPORT = ROOT / "public" / "brand-logo-site-light-import.png"
 DARK_IMPORT = ROOT / "public" / "brand-logo-site-dark-import.png"
 
@@ -283,12 +284,81 @@ def _is_white_plate(im: Image.Image) -> bool:
     return bool(opaque_corners) and all(min(r, g, b) >= WHITE_PLATE_MIN - 8 for r, g, b, _ in opaque_corners)
 
 
+def _wordmark_band_bounds(im: Image.Image) -> tuple[int, int, int, int, int, int] | None:
+    """Return icon_y1, outreach_y0, outreach_y1, project_y0 for content bbox fractions."""
+    bbox = im.getbbox()
+    if not bbox:
+        return None
+    x0, y0, x1, y1 = bbox
+    bh = max(1, y1 - y0)
+    icon_y1 = y0 + int(bh * 0.58)
+    outreach_y0 = y0 + int(bh * 0.58)
+    outreach_y1 = y0 + int(bh * 0.78)
+    project_y0 = y0 + int(bh * 0.78)
+    return x0, icon_y1, outreach_y0, outreach_y1, project_y0, y1
+
+
+def _extract_black_plate_graphics(img: Image.Image, *, allow_silver: bool = False) -> Image.Image:
+    """
+    Black export plate: do not flood-remove black (it deletes black-on-black THE OUTREACH).
+    Keep graphics by band — icon greens/outlines, outreach line, PROJECT greens.
+    """
+    im = img.convert("RGBA")
+    px = im.load()
+    w, h = im.size
+    bands = _wordmark_band_bounds(im)
+    if not bands:
+        return im
+    _, icon_y1, outreach_y0, outreach_y1, project_y0, _y1 = bands
+
+    for y in range(h):
+        for x in range(w):
+            r, g, b, a = px[x, y]
+            if a < 16:
+                px[x, y] = (0, 0, 0, 0)
+                continue
+
+            keep = False
+            if _is_green_pixel(r, g, b, a):
+                keep = True
+            elif _is_ink_pixel(r, g, b, a):
+                keep = True
+            elif allow_silver and outreach_y0 <= y < outreach_y1 and _is_silver_wordmark(r, g, b, a):
+                keep = True
+            elif not allow_silver and outreach_y0 <= y < outreach_y1 and max(r, g, b) <= 100:
+                # Light wordmark: THE OUTREACH is black ink on the same plate color.
+                keep = True
+            elif y >= project_y0 and _is_ink_pixel(r, g, b, a):
+                keep = True
+            elif y < icon_y1 and (_is_green_pixel(r, g, b, a) or _is_ink_pixel(r, g, b, a)):
+                keep = True
+
+            if keep:
+                mn = min(r, g, b)
+                lum, sat = _lum_sat(r, g, b)
+                if mn >= 200 and sat <= 0.22 and not _is_green_pixel(r, g, b, a):
+                    px[x, y] = (0, 0, 0, 0)
+                continue
+
+            mn = min(r, g, b)
+            lum, sat = _lum_sat(r, g, b)
+            if mn >= 200 and sat <= 0.22:
+                px[x, y] = (0, 0, 0, 0)
+            elif lum >= 0.78 and sat <= 0.18:
+                px[x, y] = (0, 0, 0, 0)
+            elif max(r, g, b) <= 42 and lum <= 0.17 and sat <= 0.22:
+                px[x, y] = (0, 0, 0, 0)
+            else:
+                px[x, y] = (0, 0, 0, 0)
+
+    return im
+
+
 def extract_wordmark_graphics(img: Image.Image, *, allow_silver: bool = False) -> Image.Image:
     """Keep OP greens, ink, and optional silver wordmark — drop plate + matte fringe."""
     if _is_black_plate(img):
-        im = remove_outer_black(img, thresh=42)
-    else:
-        im = remove_outer_white(img)
+        return _extract_black_plate_graphics(img, allow_silver=allow_silver)
+    im = remove_outer_white(img)
     px = im.load()
     w, h = im.size
     for y in range(h):
@@ -559,24 +629,35 @@ def _trim_mark_margins(im: Image.Image, threshold: float = 0.05) -> Image.Image:
 
 
 def main() -> None:
+    mark_from_import = False
+    if MARK_IMPORT.exists():
+        mark = _trim_mark_margins(Image.open(MARK_IMPORT).convert("RGBA"))
+        mark.save(OUT_MARK_DARK, "PNG", optimize=True)
+        mark.save(OUT_MARK_LIGHT, "PNG", optimize=True)
+        mark_from_import = True
+        print("Mark logos: trimmed RGBA from brand-logo-mark-import.png")
+
     if DARK_IMPORT.exists():
         dark = prepare_wordmark_rgba(Image.open(DARK_IMPORT), allow_silver=True)
         dark.save(OUT_DARK, "PNG", optimize=True)
-        crop_mark(dark).save(OUT_MARK_DARK, "PNG", optimize=True)
-        print("Dark logo: graphics-only RGBA from dark import + mark crop")
+        if not mark_from_import:
+            crop_mark(dark).save(OUT_MARK_DARK, "PNG", optimize=True)
+        print("Dark logo: graphics-only RGBA from dark import" + ("" if mark_from_import else " + mark crop"))
     elif SRC.exists():
         base = Image.open(SRC)
 
         if _has_meaningful_alpha(base):
             if SRC.resolve() != OUT_DARK.resolve():
                 shutil.copyfile(SRC, OUT_DARK)
-            crop_mark(Image.open(SRC)).save(OUT_MARK_DARK, "PNG", optimize=True)
-            print("Dark logo: transparent master - copied to site-dark + mark (no knockout/blur)")
+            if not mark_from_import:
+                crop_mark(Image.open(SRC)).save(OUT_MARK_DARK, "PNG", optimize=True)
+            print("Dark logo: transparent master - copied to site-dark" + ("" if mark_from_import else " + mark (no knockout/blur)"))
         else:
             raw = remove_outer_black(base)
             dark = smooth_alpha_edges(raw, 0.35)
             dark.save(OUT_DARK, "PNG", optimize=True)
-            crop_mark(dark).save(OUT_MARK_DARK, "PNG", optimize=True)
+            if not mark_from_import:
+                crop_mark(dark).save(OUT_MARK_DARK, "PNG", optimize=True)
             dark.save(ROOT / "public" / "brand-logo-site.png", "PNG", optimize=True)
     else:
         raise SystemExit(f"Missing dark logo import ({DARK_IMPORT}) or source ({SRC})")
@@ -584,8 +665,9 @@ def main() -> None:
     if LIGHT_IMPORT.exists():
         light = prepare_wordmark_rgba(Image.open(LIGHT_IMPORT), allow_silver=False)
         light.save(OUT_LIGHT, "PNG", optimize=True)
-        crop_mark(light).save(OUT_MARK_LIGHT, "PNG", optimize=True)
-        print("Light logo: graphics-only RGBA from light import + mark crop")
+        if not mark_from_import:
+            crop_mark(light).save(OUT_MARK_LIGHT, "PNG", optimize=True)
+        print("Light logo: graphics-only RGBA from light import" + ("" if mark_from_import else " + mark crop"))
     else:
         print("Light logo: skipped (add brand-logo-site-light-import.png or run install-light-logo.py)")
 

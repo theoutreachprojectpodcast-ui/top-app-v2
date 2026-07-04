@@ -424,32 +424,26 @@ html {
   }
 }
 
-/* Podcast mobile header — same layout as home (corner controls + centered mark); keeps podcast assets. */
+/* Podcast mobile header — home grid + sizing tokens; keeps podcast logo asset + chrome. */
 @media (max-width: 760px) {
   main.topApp.appShell--podcast,
   main.topApp[data-page-atmosphere="podcast"] {
-    --mobile-podcast-header-logo-h: clamp(
-      calc(168px * var(--podcast-brand-logo-scale, 1.75)),
-      calc(44vw * var(--podcast-brand-logo-scale, 1.75)),
-      calc(248px * var(--podcast-brand-logo-scale, 1.75))
-    );
-    --mobile-podcast-header-logo-max-w: min(calc(320px * var(--podcast-brand-logo-scale, 1.75)), calc(100vw - 28px));
+    --mobile-home-header-content-gap: clamp(4px, 1.2vw, 8px);
+    --mobile-home-header-layout-h: clamp(112px, 29vw, 148px);
+    --mobile-site-header-logo-h: clamp(137px, 36vw, 182px);
+    --mobile-site-header-logo-max-w: min(587px, calc(100vw - 24px));
     --mobile-site-header-control-size: 44px;
-    --mobile-site-header-control-pad-top: calc(4px + env(safe-area-inset-top, 0px));
-    --mobile-site-header-pad-x: max(var(--mobile-shell-pad-x, clamp(16px, 4.5vw, 20px)), env(safe-area-inset-left, 0px));
+    --mobile-site-header-control-pad-top: 2px;
+    --mobile-site-header-pad-x: max(
+      clamp(8px, 2.5vw, 12px),
+      env(safe-area-inset-left, 0px),
+      env(safe-area-inset-right, 0px)
+    );
     --header-floating-offset: 0px;
     --header-floating-height: 0px;
     --header-fade-height: 0px;
-    --podcast-header-brand-band: var(--mobile-podcast-header-logo-h);
-    --mobile-podcast-header-controls-row: calc(
-      var(--mobile-site-header-control-pad-top) + var(--mobile-site-header-control-size) + 10px
-    );
+    --podcast-header-brand-band: var(--mobile-home-header-layout-h);
     display: block;
-  }
-
-  main.topApp.appShell--podcast.topApp--auth-out .topbarInner,
-  main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarInner {
-    display: contents;
   }
 
   main.topApp.appShell--podcast > .topbarOcclusion,
@@ -462,32 +456,34 @@ html {
   main.topApp.appShell--podcast .appSiteHeader,
   main.topApp[data-page-atmosphere="podcast"] .appSiteHeader {
     position: relative;
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
+    z-index: 120;
+    isolation: isolate;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    grid-template-rows: auto;
+    align-items: start;
     box-sizing: border-box;
     width: 100%;
     min-height: 0;
     height: auto;
     overflow: visible;
-    flex-direction: row;
-    flex-wrap: wrap;
+    margin-bottom: var(--mobile-home-header-content-gap, 6px);
     padding:
       env(safe-area-inset-top, 0px)
-      var(--mobile-site-header-pad-x)
-      0;
+      max(var(--mobile-site-header-pad-x), env(safe-area-inset-right, 0px))
+      0
+      max(var(--mobile-site-header-pad-x), env(safe-area-inset-left, 0px));
   }
 
   main.topApp.appShell--podcast header.topbar,
   main.topApp[data-page-atmosphere="podcast"] header.topbar {
     position: static;
-    top: auto !important;
+    top: auto;
     left: auto;
     right: auto;
     z-index: auto;
-    order: unset;
     padding: 0;
-    width: 100%;
+    width: auto;
   }
 
   main.topApp.appShell--podcast .topbar,
@@ -502,24 +498,33 @@ html {
     position: relative !important;
     top: auto !important;
     left: auto !important;
-    align-self: flex-start;
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: center;
     transform: none !important;
     z-index: 0;
-    flex: 0 0 auto;
     width: auto !important;
     min-width: 0;
     max-width: 100% !important;
-    padding: var(--mobile-podcast-header-controls-row) 0 0 !important;
-    margin: 0 !important;
+    padding: 0 !important;
+    margin: 0;
     overflow: visible;
     pointer-events: none;
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    order: unset;
   }
 
-  /* Home uses theme toggle in the left corner; podcast keeps corners uncluttered on small screens. */
+  main.topApp.appShell--podcast .headerBrandStack--mobileWordmark,
+  main.topApp[data-page-atmosphere="podcast"] .headerBrandStack--mobileWordmark {
+    align-self: start;
+    height: fit-content;
+    max-height: var(--mobile-site-header-logo-h);
+    margin-bottom: calc(
+      -1 * max(0px, var(--mobile-site-header-logo-h) - var(--mobile-home-header-layout-h))
+    );
+  }
+
   main.topApp.appShell--podcast .topbarLeft .sponsorBtn,
   main.topApp[data-page-atmosphere="podcast"] .topbarLeft .sponsorBtn {
     display: none;
@@ -533,6 +538,7 @@ html {
     overflow: visible;
     line-height: 0;
     pointer-events: auto;
+    filter: none !important;
   }
 
   main.topApp.appShell--podcast .headerBrandStack .podcastBrandLogo,
@@ -546,42 +552,57 @@ html {
     height: auto !important;
     min-width: 0 !important;
     min-height: 0 !important;
-    max-width: var(--mobile-podcast-header-logo-max-w) !important;
-    max-height: var(--mobile-podcast-header-logo-h) !important;
-    margin: 0 0 12px;
+    max-width: var(--mobile-site-header-logo-max-w) !important;
+    max-height: var(--mobile-site-header-logo-h) !important;
+    margin: 0 0 clamp(-8px, -2vw, -12px);
     padding: 0 !important;
     object-fit: contain;
     object-position: center top;
     filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.45)) !important;
   }
 
+  main.topApp.appShell--podcast .headerBrandStack--mobileWordmark .podcastBrandLogo,
+  main.topApp.appShell--podcast .headerBrandStack--mobileWordmark img.podcastBrandLogo,
+  main.topApp[data-page-atmosphere="podcast"] .headerBrandStack--mobileWordmark .podcastBrandLogo,
+  main.topApp[data-page-atmosphere="podcast"] .headerBrandStack--mobileWordmark img.podcastBrandLogo {
+    margin-bottom: 0 !important;
+  }
+
   main.topApp.appShell--podcast .topbarLeft,
   main.topApp[data-page-atmosphere="podcast"] .topbarLeft {
-    position: absolute;
-    top: var(--mobile-site-header-control-pad-top);
-    left: var(--mobile-site-header-pad-x);
+    grid-column: 1;
+    grid-row: 1;
+    position: relative;
+    top: auto;
+    left: auto;
     z-index: 2;
     display: flex;
     align-items: flex-start;
     justify-content: flex-start;
+    align-self: start;
+    justify-self: start;
     width: auto;
     min-width: 0;
-    padding: 0;
+    padding: var(--mobile-site-header-control-pad-top, 2px) 0 0;
     margin: 0;
   }
 
   main.topApp.appShell--podcast .topbarRight,
   main.topApp[data-page-atmosphere="podcast"] .topbarRight {
-    position: absolute;
-    top: var(--mobile-site-header-control-pad-top);
-    right: var(--mobile-site-header-pad-x);
+    grid-column: 3;
+    grid-row: 1;
+    position: relative;
+    top: auto;
+    right: auto;
     z-index: 2;
     display: flex;
     align-items: flex-start;
     justify-content: flex-end;
+    align-self: start;
+    justify-self: end;
     width: auto;
     min-width: 0;
-    padding: 0;
+    padding: var(--mobile-site-header-control-pad-top, 2px) 0 0;
     margin: 0;
   }
 

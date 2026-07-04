@@ -97,6 +97,12 @@ export default function AppShell({
       <div className={`appSiteHeader${podcastThemeShell ? " appSiteHeader--podcast" : ""}`}>
         {podcastThemeShell ? (
           <>
+            <AppHeaderBrand
+              brandSrc={brandSrc || undefined}
+              brandAlt={brandAlt}
+              brandClassName={brandClassName}
+              pageAtmosphere={pageAtmosphere}
+            />
             <header className={usePrimaryTopbarChrome ? "topbar" : "subpageTopbar"}>
               <HeaderInner className="topbarInner">
                 <div className="topbarZone topbarLeft">
@@ -116,11 +122,6 @@ export default function AppShell({
                 </div>
               </HeaderInner>
             </header>
-            <AppHeaderBrand
-              brandSrc={brandSrc || undefined}
-              brandAlt={brandAlt}
-              brandClassName={brandClassName}
-            />
           </>
         ) : (
           <>
@@ -128,6 +129,7 @@ export default function AppShell({
               brandSrc={brandSrc || undefined}
               brandAlt={brandAlt}
               brandClassName={brandClassName}
+              pageAtmosphere={pageAtmosphere}
             />
             <header className={usePrimaryTopbarChrome ? "topbar" : "subpageTopbar"}>
               <HeaderInner className="topbarInner">

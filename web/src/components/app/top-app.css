@@ -7562,28 +7562,6 @@ html.dark .communityPostBodyGuideSteps li {
     width: auto;
     justify-self: start;
   }
-  /* Podcast: one chrome row at top — theme/sponsor left | auth + menu right. */
-  main.topApp.appShell--podcast.topApp--auth-out .topbarInner,
-  main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarInner {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas: "left right";
-    gap: 8px 10px;
-    align-items: center;
-  }
-  main.topApp.appShell--podcast.topApp--auth-out .topbarLeft,
-  main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarLeft {
-    grid-area: left;
-    width: 100%;
-    justify-content: flex-start;
-  }
-  main.topApp.appShell--podcast.topApp--auth-out .topbarRight,
-  main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
-    grid-area: right;
-    justify-self: end;
-    width: auto;
-    justify-content: flex-end;
-  }
   /* Mobile hamburger: header top-right (`.topbarRight`), not bottom dock. */
   main.topApp.appShell--withMobileNavDock .topbarRight .topbarActionsCluster {
     justify-content: flex-end;
