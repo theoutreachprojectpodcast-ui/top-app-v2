@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import PodcastSectionHeader from "@/features/podcasts/components/PodcastSectionHeader";
 import SponsorApplicationForm from "@/features/sponsors/components/SponsorApplicationForm";
+import SponsorOpportunitiesPanel from "@/features/sponsors/components/SponsorOpportunitiesPanel";
 import SponsorTierComparison from "@/features/sponsors/components/SponsorTierComparison";
 import {
   PODCAST_PLACEMENT_OPTIONS,
@@ -59,6 +60,12 @@ export default function PodcastSponsorFlowModal({ open, onClose, supabase: supab
               familyTitle="Select your package"
               familyDescription="Tap a tier to select it, then scroll to apply with that package."
               compareHref="/podcasts"
+            />
+
+            <SponsorOpportunitiesPanel
+              checkoutReturnPath="/podcasts"
+              onSelectTier={setTierId}
+              programScope="podcast"
             />
 
             <SponsorApplicationForm

@@ -27,6 +27,7 @@ OUT_MARK_LIGHT = ROOT / "public" / "brand-logo-mark-light.png"
 MARK_IMPORT = ROOT / "public" / "brand-logo-mark-import.png"
 LIGHT_IMPORT = ROOT / "public" / "brand-logo-site-light-import.png"
 DARK_IMPORT = ROOT / "public" / "brand-logo-site-dark-import.png"
+DARK_WORDMARK_TARGET_W = 1536
 
 BG_THRESH = 24
 WHITE_PLATE_MIN = 248  # edge-flood only near-pure white (keeps icon inner strokes)
@@ -334,10 +335,11 @@ def _extract_black_plate_graphics(img: Image.Image, *, allow_silver: bool = Fals
                 keep = True
 
             if keep:
-                mn = min(r, g, b)
-                lum, sat = _lum_sat(r, g, b)
-                if mn >= 200 and sat <= 0.22 and not _is_green_pixel(r, g, b, a):
-                    px[x, y] = (0, 0, 0, 0)
+                if not (allow_silver and _is_silver_wordmark(r, g, b, a)):
+                    mn = min(r, g, b)
+                    lum, sat = _lum_sat(r, g, b)
+                    if mn >= 200 and sat <= 0.22 and not _is_green_pixel(r, g, b, a):
+                        px[x, y] = (0, 0, 0, 0)
                 continue
 
             mn = min(r, g, b)
@@ -391,7 +393,8 @@ def prepare_wordmark_rgba(img: Image.Image, *, allow_silver: bool = False) -> Im
         or _opaque_near_black_ratio(im) > 0.08
     )
     if needs_knockout:
-        return smooth_alpha_edges(extract_wordmark_graphics(im, allow_silver=allow_silver), 0.45)
+        edge_radius = 0.25 if allow_silver else 0.45
+        return smooth_alpha_edges(extract_wordmark_graphics(im, allow_silver=allow_silver), edge_radius)
     if _has_meaningful_alpha(im):
         return im
     return smooth_alpha_edges(remove_outer_black(img), 0.35)
@@ -628,6 +631,15 @@ def _trim_mark_margins(im: Image.Image, threshold: float = 0.05) -> Image.Image:
     return im.crop((left, top, right, bottom))
 
 
+def _maybe_upscale_wordmark(im: Image.Image, target_w: int = DARK_WORDMARK_TARGET_W) -> Image.Image:
+    """Upscale design imports to the master wordmark width for crisp header rendering."""
+    w, h = im.size
+    if w >= target_w:
+        return im
+    scale = target_w / w
+    return im.resize((target_w, max(1, int(round(h * scale)))), Image.Resampling.LANCZOS)
+
+
 def main() -> None:
     mark_from_import = False
     if MARK_IMPORT.exists():
@@ -638,7 +650,8 @@ def main() -> None:
         print("Mark logos: trimmed RGBA from brand-logo-mark-import.png")
 
     if DARK_IMPORT.exists():
-        dark = prepare_wordmark_rgba(Image.open(DARK_IMPORT), allow_silver=True)
+        dark_src = _maybe_upscale_wordmark(Image.open(DARK_IMPORT))
+        dark = prepare_wordmark_rgba(dark_src, allow_silver=True)
         dark.save(OUT_DARK, "PNG", optimize=True)
         if not mark_from_import:
             crop_mark(dark).save(OUT_MARK_DARK, "PNG", optimize=True)

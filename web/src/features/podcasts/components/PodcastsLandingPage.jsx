@@ -18,7 +18,6 @@ import PodcastSponsorFlowModal from "@/features/podcasts/components/PodcastSpons
 import PodcastSectionHeader from "@/features/podcasts/components/PodcastSectionHeader";
 import PodcastSponsorHubSection from "@/features/podcasts/components/PodcastSponsorHubSection";
 import PodcastCTASection from "@/features/podcasts/components/PodcastCTASection";
-import { PODCAST_SPONSOR_TIERS } from "@/features/sponsors/data/podcastSponsorTiers";
 import PodcastApplyGuestForm from "@/features/podcasts/components/PodcastApplyGuestForm";
 import MemberOnlyLockSection from "@/features/podcasts/components/MemberOnlyLockSection";
 import { listPodcastMemberContent } from "@/features/podcasts/api/podcastApi";
@@ -88,7 +87,6 @@ export default function PodcastsLandingPage({
 
   const [applyOpen, setApplyOpen] = useState(false);
   const [sponsorFlowOpen, setSponsorFlowOpen] = useState(false);
-  const [podcastSponsorTierId, setPodcastSponsorTierId] = useState(PODCAST_SPONSOR_TIERS[0]?.id || "");
   const [sponsorUpgradeOpen, setSponsorUpgradeOpen] = useState(false);
   const sponsorUpgradeCopy = getProUpgradeGateContent("/podcasts/sponsor");
 
@@ -328,8 +326,6 @@ export default function PodcastsLandingPage({
         <PodcastSponsorHubSection
           sponsors={podcastSponsors}
           canAccess={hasProPodcastExtras}
-          selectedTierId={podcastSponsorTierId}
-          onSelectTier={setPodcastSponsorTierId}
           onApply={openPodcastSponsorApply}
           billingNote={
             !podcastSponsorBillingReady && hasProPodcastExtras
@@ -376,7 +372,7 @@ export default function PodcastsLandingPage({
           open={sponsorFlowOpen}
           onClose={() => setSponsorFlowOpen(false)}
           supabase={supabase}
-          initialTierId={searchParams.get("tier") || podcastSponsorTierId || undefined}
+          initialTierId={searchParams.get("tier") || undefined}
           stripeReturn={{
             checkout: searchParams.get("sponsor_checkout") || "",
             sessionId: searchParams.get("session_id") || "",

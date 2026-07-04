@@ -95,6 +95,7 @@ html[data-use-podcast-theme="true"] {
     env(safe-area-inset-top, 0px) + var(--header-floating-offset, 4px) + var(--podcast-header-brand-band) +
       var(--header-fade-height, 24px)
   );
+  --podcast-logo-content-gap: clamp(12px, 2.5vw, 20px);
   /* Single rectangular header wash (only on `.topbarOcclusion`). */
   --podcast-header-chrome-bg: linear-gradient(
     180deg,
@@ -120,7 +121,7 @@ html[data-use-podcast-theme="true"] {
   flex: 1 1 auto;
   min-height: 0;
   background: transparent;
-  padding-top: calc(var(--podcast-header-chrome-height) + 6px);
+  padding-top: calc(var(--podcast-header-chrome-height) + var(--podcast-logo-content-gap, 12px));
 }
 /* Mission strip: home uses top placement under the bar; other routes use bottom placement (see `MissionPageTopStrip`). */
 .topApp.appShell--podcast .siteFooter.siteFooter--pageTop,

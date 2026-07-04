@@ -2,18 +2,13 @@
 
 import Link from "next/link";
 import PodcastSectionHeader from "@/features/podcasts/components/PodcastSectionHeader";
-import SponsorOpportunitiesPanel from "@/features/sponsors/components/SponsorOpportunitiesPanel";
-import SponsorTierComparison from "@/features/sponsors/components/SponsorTierComparison";
 import FeaturedSponsorCard from "@/features/sponsors/components/FeaturedSponsorCard";
 import { mapSponsorsToCardModels } from "@/features/sponsors/api/sponsorCatalogApi";
-import { PODCAST_SPONSOR_TIERS } from "@/features/sponsors/data/podcastSponsorTiers";
 
 export default function PodcastSponsorHubSection({
   sponsors = [],
   canAccess = false,
   onApply,
-  onSelectTier,
-  selectedTierId = "",
   billingNote = "",
 }) {
   const models = mapSponsorsToCardModels(sponsors);
@@ -23,29 +18,11 @@ export default function PodcastSponsorHubSection({
       <PodcastSectionHeader
         eyebrow="Podcast sponsors"
         title="Sponsor the show"
-        subtitle="Community, Impact, and Foundational packages for episode-first placements — compare tiers, review benefits, and apply without leaving the podcast experience."
+        subtitle="Organizations supporting the podcast — open the application to compare tiers, review packages, and apply."
       />
 
       {canAccess ? (
         <>
-          <SponsorTierComparison
-            tiers={PODCAST_SPONSOR_TIERS}
-            variant="podcast"
-            selectedTierId={selectedTierId}
-            onSelectTier={onSelectTier}
-            title="Podcast sponsor packages"
-            lead="Episode acknowledgements, show notes, and on-page podcast presence — podcast channels only."
-            familyTitle="Select your package"
-            familyDescription="Tap a tier to select it, then apply with that package."
-            compareHref="/podcasts"
-          />
-
-          <SponsorOpportunitiesPanel
-            checkoutReturnPath="/podcasts"
-            onSelectTier={onSelectTier}
-            programScope="podcast"
-          />
-
           {models.length ? (
             <div className="podcastSponsorHubSection__roster">
               <h4 className="podcastSponsorHubSection__rosterTitle">Current podcast sponsors</h4>

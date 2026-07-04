@@ -429,6 +429,7 @@ html {
   main.topApp.appShell--podcast,
   main.topApp[data-page-atmosphere="podcast"] {
     --mobile-home-header-content-gap: clamp(4px, 1.2vw, 8px);
+    --mobile-podcast-header-content-gap: clamp(10px, 2.5vw, 16px);
     --mobile-home-header-layout-h: clamp(112px, 29vw, 148px);
     --mobile-site-header-logo-h: clamp(137px, 36vw, 182px);
     --mobile-site-header-logo-max-w: min(587px, calc(100vw - 24px));
@@ -467,7 +468,7 @@ html {
     min-height: 0;
     height: auto;
     overflow: visible;
-    margin-bottom: var(--mobile-home-header-content-gap, 6px);
+    margin-bottom: var(--mobile-podcast-header-content-gap, 12px);
     padding:
       env(safe-area-inset-top, 0px)
       max(var(--mobile-site-header-pad-x), env(safe-area-inset-right, 0px))
