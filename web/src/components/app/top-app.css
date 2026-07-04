@@ -7007,8 +7007,8 @@ html.dark .communityPostBodyGuideSteps li {
 
   main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) {
     --mobile-home-header-layout-h: clamp(112px, 29vw, 148px);
-    --mobile-site-header-logo-h: clamp(161px, 42vw, 214px);
-    --mobile-site-header-logo-max-w: min(691px, calc(100vw - 24px));
+    --mobile-site-header-logo-h: clamp(137px, 36vw, 182px);
+    --mobile-site-header-logo-max-w: min(587px, calc(100vw - 24px));
     --mobile-site-header-control-size: 44px;
     --mobile-site-header-control-pad-top: 2px;
     --mobile-site-header-pad-x: max(clamp(8px, 2.5vw, 12px), env(safe-area-inset-left, 0px));

@@ -27,6 +27,7 @@ OUT_MARK_LIGHT = ROOT / "public" / "brand-logo-mark-light.png"
 LIGHT_IMPORT = ROOT / "public" / "brand-logo-site-light-import.png"
 
 BG_THRESH = 24
+WHITE_PLATE_MIN = 248  # edge-flood only near-pure white (keeps icon inner strokes)
 # Near-white / silver (wordmark on dark plate) → ink on light
 LIGHT_INK = (17, 23, 20)  # aligns with --color-text-primary
 # Icon (top): remap neutral highlights; threshold must catch gray AA on wordmark
@@ -97,6 +98,76 @@ def remove_outer_black(img: Image.Image) -> Image.Image:
                 px[x, y] = (r, g, b, 0)
 
     return im
+
+
+def remove_outer_white(img: Image.Image) -> Image.Image:
+    """Knock out a white export plate; icon inner whites stay (not edge-connected)."""
+    im = img.convert("RGBA")
+    w, h = im.size
+    px = im.load()
+    seen = bytearray(w * h)
+
+    def idx(x: int, y: int) -> int:
+        return y * w + x
+
+    def floodable(x: int, y: int) -> bool:
+        r, g, b, a = px[x, y]
+        if a < 8:
+            return True
+        return min(r, g, b) >= WHITE_PLATE_MIN
+
+    q: deque[tuple[int, int]] = deque()
+
+    def seed(x: int, y: int) -> None:
+        if x < 0 or x >= w or y < 0 or y >= h:
+            return
+        i = idx(x, y)
+        if seen[i]:
+            return
+        if not floodable(x, y):
+            return
+        seen[i] = 1
+        q.append((x, y))
+
+    for x in range(w):
+        seed(x, 0)
+        seed(x, h - 1)
+    for y in range(h):
+        seed(0, y)
+        seed(w - 1, y)
+
+    while q:
+        x, y = q.popleft()
+        for nx, ny in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
+            if nx < 0 or nx >= w or ny < 0 or ny >= h:
+                continue
+            i = idx(nx, ny)
+            if seen[i]:
+                continue
+            if not floodable(nx, ny):
+                continue
+            seen[i] = 1
+            q.append((nx, ny))
+
+    for y in range(h):
+        for x in range(w):
+            if seen[idx(x, y)]:
+                px[x, y] = (0, 0, 0, 0)
+
+    return im
+
+
+def prepare_wordmark_rgba(img: Image.Image) -> Image.Image:
+    """Transparent export, white plate, or dark plate → RGBA wordmark."""
+    im = img.convert("RGBA")
+    if _has_meaningful_alpha(im):
+        return im
+    px = im.load()
+    w, h = im.size
+    corners = (px[0, 0], px[w - 1, 0], px[0, h - 1], px[w - 1, h - 1])
+    if all(min(*c[:3]) >= WHITE_PLATE_MIN - 4 for c in corners):
+        return smooth_alpha_edges(remove_outer_white(im), 0.55)
+    return smooth_alpha_edges(remove_outer_black(img), 0.35)
 
 
 def _lum_sat(r: int, g: int, b: int) -> tuple[float, float]:
@@ -389,9 +460,10 @@ def main() -> None:
         dark.save(ROOT / "public" / "brand-logo-site.png", "PNG", optimize=True)
 
     if LIGHT_IMPORT.exists():
-        shutil.copyfile(LIGHT_IMPORT, OUT_LIGHT)
-        crop_mark(Image.open(OUT_LIGHT)).save(OUT_MARK_LIGHT, "PNG", optimize=True)
-        print("Light logo: copied import + refreshed mark crop")
+        light = prepare_wordmark_rgba(Image.open(LIGHT_IMPORT))
+        light.save(OUT_LIGHT, "PNG", optimize=True)
+        crop_mark(light).save(OUT_MARK_LIGHT, "PNG", optimize=True)
+        print("Light logo: prepared RGBA import + refreshed mark crop")
     else:
         print("Light logo: skipped (add brand-logo-site-light-import.png or run install-light-logo.py)")
 
