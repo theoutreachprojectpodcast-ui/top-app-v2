@@ -52,9 +52,23 @@ export async function PUT(request) {
   const raw = Array.isArray(body.eins) ? body.eins : [];
   const list = [...new Set(raw.map((e) => normalizeEinDigits(e)).filter((e) => e.length === 9))];
 
-  const { error: delErr } = await admin.from(SAVED_TABLE).delete().eq("user_id", user.id);
-  if (delErr) {
-    return Response.json({ error: "delete_failed", message: delErr.message }, { status: 500 });
+  const { data: existingRows, error: readErr } = await admin
+    .from(SAVED_TABLE)
+    .select("ein")
+    .eq("user_id", user.id);
+  if (readErr) {
+    return Response.json({ error: "read_failed", message: readErr.message }, { status: 500 });
+  }
+  const existing = new Set(
+    (existingRows || []).map((r) => normalizeEinDigits(r.ein)).filter((e) => e.length === 9),
+  );
+  const next = new Set(list);
+  const toRemove = [...existing].filter((e) => !next.has(e));
+  if (toRemove.length) {
+    const { error: delErr } = await admin.from(SAVED_TABLE).delete().eq("user_id", user.id).in("ein", toRemove);
+    if (delErr) {
+      return Response.json({ error: "delete_failed", message: delErr.message }, { status: 500 });
+    }
   }
   if (!list.length) {
     return Response.json({ eins: [] });
@@ -64,9 +78,9 @@ export async function PUT(request) {
     ein,
     sort_order: i,
   }));
-  const { error: insErr } = await admin.from(SAVED_TABLE).insert(rows);
-  if (insErr) {
-    return Response.json({ error: "insert_failed", message: insErr.message }, { status: 500 });
+  const { error: upsErr } = await admin.from(SAVED_TABLE).upsert(rows, { onConflict: "user_id,ein" });
+  if (upsErr) {
+    return Response.json({ error: "upsert_failed", message: upsErr.message }, { status: 500 });
   }
   return Response.json({ eins: list });
 }

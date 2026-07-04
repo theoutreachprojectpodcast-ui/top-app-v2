@@ -67,6 +67,42 @@ import { profileToApiPatch } from "@/lib/profile/profileApiPatch";
 const SESSION_FETCH_TIMEOUT_MS = 12_000;
 const PROFILE_LOAD_SAFETY_MS = 15_000;
 
+function savedOrgCardEin(card) {
+  return normalizeEinDigits(card?.einNormalized || card?.ein || "");
+}
+
+function orderSavedEins(eins) {
+  return [...new Set((eins || []).map((e) => normalizeEinDigits(e)).filter((e) => e.length === 9))];
+}
+
+function savedEinsKey(eins) {
+  return orderSavedEins(eins).join(",");
+}
+
+function filterSavedOrgCards(cards, eins) {
+  const allowed = new Set(orderSavedEins(eins));
+  return (cards || []).filter((card) => {
+    const key = savedOrgCardEin(card);
+    return key.length === 9 && allowed.has(key);
+  });
+}
+
+function mergeSavedOrgCardRows(existingCards, rowInputs, eins) {
+  const order = orderSavedEins(eins);
+  const allowed = new Set(order);
+  const byEin = new Map();
+  for (const card of existingCards || []) {
+    const key = savedOrgCardEin(card);
+    if (key.length === 9 && allowed.has(key)) byEin.set(key, card);
+  }
+  for (const row of rowInputs || []) {
+    const card = mapNonprofitCardRow(row, "directory");
+    const key = savedOrgCardEin(card);
+    if (key.length === 9 && allowed.has(key)) byEin.set(key, card);
+  }
+  return order.map((key) => byEin.get(key)).filter(Boolean);
+}
+
 async function fetchWithTimeout(url, options = {}, timeoutMs = SESSION_FETCH_TIMEOUT_MS) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -124,6 +160,7 @@ export function useProfileDataState(supabase) {
   const [profileSource, setProfileSource] = useState("local");
   const [profile, setProfile] = useState(() => createInitialProfile());
   const [favoriteEins, setFavoriteEins] = useState([]);
+  const favoriteEinsRef = useRef(favoriteEins);
   const [favoriteEntityKeys, setFavoriteEntityKeys] = useState([]);
   const [savedOrganizations, setSavedOrganizations] = useState([]);
   const [sessionKind, setSessionKind] = useState("none");
@@ -424,6 +461,10 @@ export function useProfileDataState(supabase) {
   }, [favoriteEins]);
 
   useEffect(() => {
+    favoriteEinsRef.current = favoriteEins;
+  }, [favoriteEins]);
+
+  useEffect(() => {
     if (!hydratedRef.current || workosRef.current || !demoModeEnabled) return;
     saveJson(FAV_ENTITY_KEY, favoriteEntityKeys.slice(0, 500));
   }, [favoriteEntityKeys]);
@@ -442,34 +483,51 @@ export function useProfileDataState(supabase) {
   }, [isAuthenticated, authProvider, profile.email]);
 
   useEffect(() => {
+    let cancelled = false;
     async function loadSavedOrgCards() {
       if (!isAuthenticated) {
         setSavedOrganizations([]);
         return;
       }
-      if (!favoriteEins.length) {
+      const targetEins = orderSavedEins(favoriteEins);
+      const requestKey = savedEinsKey(targetEins);
+      if (!targetEins.length) {
         setSavedOrganizations([]);
         return;
       }
       try {
         if (workosRef.current) {
           const res = await fetch("/api/me/saved-orgs/cards", { credentials: "include" });
+          if (cancelled || savedEinsKey(favoriteEinsRef.current) !== requestKey) return;
           const j = await res.json().catch(() => ({}));
           const rows = Array.isArray(j.rows) ? j.rows : [];
-          setSavedOrganizations(rows.map((r) => mapNonprofitCardRow(r, "directory")));
+          if (!rows.length) {
+            setSavedOrganizations((prev) => filterSavedOrgCards(prev, targetEins));
+            return;
+          }
+          setSavedOrganizations((prev) => mergeSavedOrgCardRows(prev, rows, targetEins));
           return;
         }
         if (!supabase) {
-          setSavedOrganizations([]);
+          setSavedOrganizations((prev) => filterSavedOrgCards(prev, targetEins));
           return;
         }
-        const rows = await fetchSavedOrganizationsByEin(supabase, favoriteEins);
-        setSavedOrganizations(rows.map((r) => mapNonprofitCardRow(r, "directory")));
+        const rows = await fetchSavedOrganizationsByEin(supabase, targetEins);
+        if (cancelled || savedEinsKey(favoriteEinsRef.current) !== requestKey) return;
+        if (!rows.length) {
+          setSavedOrganizations((prev) => filterSavedOrgCards(prev, targetEins));
+          return;
+        }
+        setSavedOrganizations((prev) => mergeSavedOrgCardRows(prev, rows, targetEins));
       } catch {
-        setSavedOrganizations([]);
+        if (cancelled) return;
+        setSavedOrganizations((prev) => filterSavedOrgCards(prev, favoriteEinsRef.current));
       }
     }
     loadSavedOrgCards();
+    return () => {
+      cancelled = true;
+    };
   }, [supabase, favoriteEins, isAuthenticated]);
 
   /**
@@ -565,6 +623,7 @@ export function useProfileDataState(supabase) {
       return;
     }
     setFavoriteEins(normalized);
+    setSavedOrganizations((prev) => filterSavedOrgCards(prev, normalized));
     if (!isAuthenticated) return;
     if (workosRef.current) {
       if (syncingRef.current) return;
