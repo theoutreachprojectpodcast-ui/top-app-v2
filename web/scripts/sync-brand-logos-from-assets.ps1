@@ -9,8 +9,7 @@ $dark = Join-Path $AssetsRoot "The Outreach Project logo _ darkmode.png"
 $light = Join-Path $AssetsRoot "The Outreach Project logo _Lightmode.png"
 
 foreach ($pair in @(
-    @{ Src = $dark;  Dst = Join-Path $Pub "brand-logo-site.png" },
-    @{ Src = $dark;  Dst = Join-Path $Pub "brand-logo-site-dark.png" },
+    @{ Src = $dark;  Dst = Join-Path $Pub "brand-logo-site-dark-import.png" },
     @{ Src = $light; Dst = Join-Path $Pub "brand-logo-site-light-import.png" }
 )) {
     if (-not (Test-Path -LiteralPath $pair.Src)) {

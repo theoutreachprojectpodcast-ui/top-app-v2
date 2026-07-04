@@ -1048,16 +1048,12 @@ img.brandMarkImg--header {
 }
 :root[data-color-scheme="light"] img.brandMarkImg--header:not(.podcastBrandLogo) {
   filter:
-    drop-shadow(0 2px 8px rgba(255, 255, 255, 0.92))
-    drop-shadow(0 4px 18px rgba(255, 255, 255, 0.55));
+    drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2))
+    drop-shadow(0 4px 14px rgba(0, 0, 0, 0.12));
 }
 :root[data-color-scheme="dark"] img.brandMarkImg--header:not(.podcastBrandLogo),
 .dark img.brandMarkImg--header:not(.podcastBrandLogo) {
-  /* Dark mode: brighter mark + dark edge separation over atmospheric header. */
   filter:
-    saturate(1.32)
-    contrast(1.05)
-    brightness(1.16)
     drop-shadow(0 2px 10px rgba(0, 0, 0, 0.52))
     drop-shadow(0 4px 20px rgba(0, 0, 0, 0.38));
 }

@@ -25,6 +25,7 @@ OUT_LIGHT = ROOT / "public" / "brand-logo-site-light.png"
 OUT_MARK_DARK = ROOT / "public" / "brand-logo-mark-dark.png"
 OUT_MARK_LIGHT = ROOT / "public" / "brand-logo-mark-light.png"
 LIGHT_IMPORT = ROOT / "public" / "brand-logo-site-light-import.png"
+DARK_IMPORT = ROOT / "public" / "brand-logo-site-dark-import.png"
 
 BG_THRESH = 24
 WHITE_PLATE_MIN = 248  # edge-flood only near-pure white (keeps icon inner strokes)
@@ -43,7 +44,7 @@ TEXT_BAND_Y = 0.18
 GREEN_MIN_SAT = 0.1
 
 
-def remove_outer_black(img: Image.Image) -> Image.Image:
+def remove_outer_black(img: Image.Image, *, thresh: int = BG_THRESH) -> Image.Image:
     im = img.convert("RGBA")
     w, h = im.size
     px = im.load()
@@ -56,7 +57,9 @@ def remove_outer_black(img: Image.Image) -> Image.Image:
         r, g, b, a = px[x, y]
         if a < 8:
             return True
-        return max(r, g, b) <= BG_THRESH
+        mx = max(r, g, b)
+        lum, sat = _lum_sat(r, g, b)
+        return mx <= thresh or (lum <= 0.17 and sat <= 0.22)
 
     q: deque[tuple[int, int]] = deque()
 
@@ -71,6 +74,10 @@ def remove_outer_black(img: Image.Image) -> Image.Image:
         seen[i] = 1
         q.append((x, y))
 
+    for y in range(h):
+        for x in range(w):
+            if px[x, y][3] < 8:
+                seed(x, y)
     for x in range(w):
         seed(x, 0)
         seed(x, h - 1)
@@ -94,14 +101,52 @@ def remove_outer_black(img: Image.Image) -> Image.Image:
     for y in range(h):
         for x in range(w):
             if seen[idx(x, y)]:
-                r, g, b, _ = px[x, y]
-                px[x, y] = (r, g, b, 0)
+                px[x, y] = (0, 0, 0, 0)
 
     return im
 
 
+def _lum_sat(r: int, g: int, b: int) -> tuple[float, float]:
+    mx, mn = max(r, g, b), min(r, g, b)
+    if mx == 0:
+        return 0.0, 0.0
+    sat = (mx - mn) / mx
+    lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255.0
+    return lum, sat
+
+
+def _is_green_pixel(r: int, g: int, b: int, a: int) -> bool:
+    """True for brand green fills and PROJECT gradient (including darker forest tones)."""
+    if a < 30:
+        return False
+    # Cream / tan ring: r≈g high, b lower but still "muddy"; not lime (min channel low).
+    mn = min(r, g, b)
+    if (
+        mn > 95
+        and abs(r - g) < 22
+        and b == mn
+        and (r + g + b) / 3 > 150
+        and g < max(r, b) + 8
+    ):
+        return False
+    _, sat = _lum_sat(r, g, b)
+    # Bright mint / highlight: require a clear green lead (fringe grays are ~246,243,237).
+    if g >= max(r, b) + 10 and g >= 165:
+        return True
+    if sat < GREEN_MIN_SAT:
+        return False
+    if g < 48:
+        return False
+    # Green leads, or near-neutral greenish (dark forest) where g still tops r,b
+    if g >= r + 4 and g >= b + 4:
+        return True
+    if g >= r and g >= b and sat >= 0.14 and (r + b) < 2 * g:
+        return True
+    return False
+
+
 def remove_outer_white(img: Image.Image) -> Image.Image:
-    """Knock out a white export plate; icon inner whites stay (not edge-connected)."""
+    """Edge-flood light plate pixels (white + off-white fringe connected to borders)."""
     im = img.convert("RGBA")
     w, h = im.size
     px = im.load()
@@ -114,7 +159,9 @@ def remove_outer_white(img: Image.Image) -> Image.Image:
         r, g, b, a = px[x, y]
         if a < 8:
             return True
-        return min(r, g, b) >= WHITE_PLATE_MIN
+        mn = min(r, g, b)
+        lum, sat = _lum_sat(r, g, b)
+        return mn >= WHITE_PLATE_MIN - 16 or (lum >= 0.9 and sat <= 0.14)
 
     q: deque[tuple[int, int]] = deque()
 
@@ -157,56 +204,127 @@ def remove_outer_white(img: Image.Image) -> Image.Image:
     return im
 
 
-def prepare_wordmark_rgba(img: Image.Image) -> Image.Image:
-    """Transparent export, white plate, or dark plate → RGBA wordmark."""
-    im = img.convert("RGBA")
-    if _has_meaningful_alpha(im):
-        return im
-    px = im.load()
-    w, h = im.size
-    corners = (px[0, 0], px[w - 1, 0], px[0, h - 1], px[w - 1, h - 1])
-    if all(min(*c[:3]) >= WHITE_PLATE_MIN - 4 for c in corners):
-        return smooth_alpha_edges(remove_outer_white(im), 0.55)
-    return smooth_alpha_edges(remove_outer_black(img), 0.35)
-
-
-def _lum_sat(r: int, g: int, b: int) -> tuple[float, float]:
-    mx, mn = max(r, g, b), min(r, g, b)
-    if mx == 0:
-        return 0.0, 0.0
-    sat = (mx - mn) / mx
-    lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255.0
-    return lum, sat
-
-
-def _is_green_pixel(r: int, g: int, b: int, a: int) -> bool:
-    """True for brand green fills and PROJECT gradient (including darker forest tones)."""
-    if a < 30:
+def _is_ink_pixel(r: int, g: int, b: int, a: int) -> bool:
+    """Black/dark strokes and forest-green wordmark fills."""
+    if a < 16:
         return False
-    # Cream / tan ring: r≈g high, b lower but still "muddy"; not lime (min channel low).
-    mn = min(r, g, b)
-    if (
-        mn > 95
-        and abs(r - g) < 22
-        and b == mn
-        and (r + g + b) / 3 > 150
-        and g < max(r, b) + 8
-    ):
-        return False
+    if max(r, g, b) <= 78:
+        return True
     _, sat = _lum_sat(r, g, b)
-    # Bright mint / highlight: require a clear green lead (fringe grays are ~246,243,237).
-    if g >= max(r, b) + 10 and g >= 165:
-        return True
-    if sat < GREEN_MIN_SAT:
-        return False
-    if g < 48:
-        return False
-    # Green leads, or near-neutral greenish (dark forest) where g still tops r,b
-    if g >= r + 4 and g >= b + 4:
-        return True
-    if g >= r and g >= b and sat >= 0.14 and (r + b) < 2 * g:
+    if g >= r and g >= b and g >= 55 and sat >= 0.12:
         return True
     return False
+
+
+def _is_silver_wordmark(r: int, g: int, b: int, a: int) -> bool:
+    """Metallic THE OUTREACH line on the dark wordmark export."""
+    if a < 16:
+        return False
+    mn = min(r, g, b)
+    if mn < 105 or mn >= 238:
+        return False
+    lum, sat = _lum_sat(r, g, b)
+    return 0.42 <= lum <= 0.86 and sat <= 0.38
+
+
+def _opaque_near_white_ratio(im: Image.Image) -> float:
+    px = im.convert("RGBA").load()
+    w, h = im.size
+    opaque = 0
+    light = 0
+    for y in range(h):
+        for x in range(w):
+            r, g, b, a = px[x, y]
+            if a <= 200:
+                continue
+            opaque += 1
+            if min(r, g, b) >= 220:
+                light += 1
+    if opaque == 0:
+        return 0.0
+    return light / opaque
+
+
+def _opaque_near_black_ratio(im: Image.Image) -> float:
+    px = im.convert("RGBA").load()
+    w, h = im.size
+    opaque = 0
+    dark = 0
+    for y in range(h):
+        for x in range(w):
+            r, g, b, a = px[x, y]
+            if a <= 200:
+                continue
+            opaque += 1
+            if max(r, g, b) <= 36:
+                dark += 1
+    if opaque == 0:
+        return 0.0
+    return dark / opaque
+
+
+def _is_black_plate(im: Image.Image) -> bool:
+    px = im.convert("RGBA").load()
+    w, h = im.size
+    corners = (px[0, 0], px[w - 1, 0], px[0, h - 1], px[w - 1, h - 1])
+    if all(a < 16 for _, _, _, a in corners):
+        return True
+    if _opaque_near_black_ratio(im) > 0.08:
+        return True
+    opaque_corners = [c for c in corners if c[3] > 200]
+    return bool(opaque_corners) and all(max(r, g, b) <= 48 for r, g, b, _ in opaque_corners)
+
+
+def _is_white_plate(im: Image.Image) -> bool:
+    px = im.convert("RGBA").load()
+    w, h = im.size
+    corners = (px[0, 0], px[w - 1, 0], px[0, h - 1], px[w - 1, h - 1])
+    opaque_corners = [c for c in corners if c[3] > 200]
+    return bool(opaque_corners) and all(min(r, g, b) >= WHITE_PLATE_MIN - 8 for r, g, b, _ in opaque_corners)
+
+
+def extract_wordmark_graphics(img: Image.Image, *, allow_silver: bool = False) -> Image.Image:
+    """Keep OP greens, ink, and optional silver wordmark — drop plate + matte fringe."""
+    if _is_black_plate(img):
+        im = remove_outer_black(img, thresh=42)
+    else:
+        im = remove_outer_white(img)
+    px = im.load()
+    w, h = im.size
+    for y in range(h):
+        for x in range(w):
+            r, g, b, a = px[x, y]
+            if a < 16:
+                continue
+            if _is_green_pixel(r, g, b, a):
+                continue
+            if _is_ink_pixel(r, g, b, a):
+                continue
+            if allow_silver and _is_silver_wordmark(r, g, b, a):
+                continue
+            mn = min(r, g, b)
+            lum, sat = _lum_sat(r, g, b)
+            if mn >= 200 and sat <= 0.22:
+                px[x, y] = (0, 0, 0, 0)
+            elif lum >= 0.78 and sat <= 0.18:
+                px[x, y] = (0, 0, 0, 0)
+    return im
+
+
+def prepare_wordmark_rgba(img: Image.Image, *, allow_silver: bool = False) -> Image.Image:
+    """Design export plate → transparent RGBA wordmark (graphics only)."""
+    im = img.convert("RGBA")
+    needs_knockout = (
+        _is_black_plate(im)
+        or _is_white_plate(im)
+        or _opaque_near_white_ratio(im) > 0.05
+        or _opaque_near_black_ratio(im) > 0.08
+    )
+    if needs_knockout:
+        return smooth_alpha_edges(extract_wordmark_graphics(im, allow_silver=allow_silver), 0.45)
+    if _has_meaningful_alpha(im):
+        return im
+    return smooth_alpha_edges(remove_outer_black(img), 0.35)
 
 
 def light_variant(im: Image.Image) -> Image.Image:
@@ -441,29 +559,33 @@ def _trim_mark_margins(im: Image.Image, threshold: float = 0.05) -> Image.Image:
 
 
 def main() -> None:
-    if not SRC.exists():
-        raise SystemExit(f"Missing source logo: {SRC}")
-
-    base = Image.open(SRC)
-
-    if _has_meaningful_alpha(base):
-        # Master is already `brand-logo-site.png`; only refresh the dark alias + mark.
-        if SRC.resolve() != OUT_DARK.resolve():
-            shutil.copyfile(SRC, OUT_DARK)
-        crop_mark(Image.open(SRC)).save(OUT_MARK_DARK, "PNG", optimize=True)
-        print("Dark logo: transparent master - copied to site-dark + mark (no knockout/blur)")
-    else:
-        raw = remove_outer_black(base)
-        dark = smooth_alpha_edges(raw, 0.35)
+    if DARK_IMPORT.exists():
+        dark = prepare_wordmark_rgba(Image.open(DARK_IMPORT), allow_silver=True)
         dark.save(OUT_DARK, "PNG", optimize=True)
         crop_mark(dark).save(OUT_MARK_DARK, "PNG", optimize=True)
-        dark.save(ROOT / "public" / "brand-logo-site.png", "PNG", optimize=True)
+        print("Dark logo: graphics-only RGBA from dark import + mark crop")
+    elif SRC.exists():
+        base = Image.open(SRC)
+
+        if _has_meaningful_alpha(base):
+            if SRC.resolve() != OUT_DARK.resolve():
+                shutil.copyfile(SRC, OUT_DARK)
+            crop_mark(Image.open(SRC)).save(OUT_MARK_DARK, "PNG", optimize=True)
+            print("Dark logo: transparent master - copied to site-dark + mark (no knockout/blur)")
+        else:
+            raw = remove_outer_black(base)
+            dark = smooth_alpha_edges(raw, 0.35)
+            dark.save(OUT_DARK, "PNG", optimize=True)
+            crop_mark(dark).save(OUT_MARK_DARK, "PNG", optimize=True)
+            dark.save(ROOT / "public" / "brand-logo-site.png", "PNG", optimize=True)
+    else:
+        raise SystemExit(f"Missing dark logo import ({DARK_IMPORT}) or source ({SRC})")
 
     if LIGHT_IMPORT.exists():
-        light = prepare_wordmark_rgba(Image.open(LIGHT_IMPORT))
+        light = prepare_wordmark_rgba(Image.open(LIGHT_IMPORT), allow_silver=False)
         light.save(OUT_LIGHT, "PNG", optimize=True)
         crop_mark(light).save(OUT_MARK_LIGHT, "PNG", optimize=True)
-        print("Light logo: prepared RGBA import + refreshed mark crop")
+        print("Light logo: graphics-only RGBA from light import + mark crop")
     else:
         print("Light logo: skipped (add brand-logo-site-light-import.png or run install-light-logo.py)")
 
