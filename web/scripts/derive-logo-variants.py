@@ -424,23 +424,57 @@ def _upscale_wordmark_clean(im: Image.Image, target_w: int = DARK_WORDMARK_TARGE
     return out
 
 
-def prepare_dark_wordmark_from_import(img: Image.Image) -> Image.Image:
-    """
-    Dark header wordmark from design import.
+def _trim_snapped(im: Image.Image, *, threshold: float = 0.03) -> Image.Image:
+    return snap_light_alpha(_trim_mark_margins(im.convert("RGBA"), threshold=threshold))
 
-    Transparent RGBA exports (TopLogo-1): trim + crisp upscale only — do not re-run
-    band extraction or edge flood (that strips silver text and beige icon outlines).
-    Opaque black-plate fallbacks: graphics-only knockout + soft alpha.
+
+def _fit_in_box(im: Image.Image, box_w: int, box_h: int) -> Image.Image:
+    """Center `im` in a transparent box without scaling up beyond its native trim size."""
+    im = im.convert("RGBA")
+    w, h = im.size
+    scale = min(box_w / w, box_h / h, 1.0)
+    nw = max(1, int(round(w * scale)))
+    nh = max(1, int(round(h * scale)))
+    if (nw, nh) != (w, h):
+        im = im.resize((nw, nh), Image.Resampling.LANCZOS)
+        im = snap_light_alpha(im)
+    canvas = Image.new("RGBA", (box_w, box_h), (0, 0, 0, 0))
+    canvas.paste(im, ((box_w - nw) // 2, (box_h - nh) // 2), im)
+    return canvas
+
+
+def prepare_transparent_wordmark_from_import(
+    img: Image.Image,
+    *,
+    allow_silver: bool = False,
+    fit_box: tuple[int, int] | None = None,
+) -> Image.Image:
+    """
+    Header wordmark from design import.
+
+    Transparent RGBA exports: trim + optional unified fit box + crisp upscale.
+    Opaque plate fallbacks: graphics-only knockout + soft alpha.
     """
     im = img.convert("RGBA")
     if _has_meaningful_alpha(im):
-        out = _trim_mark_margins(im, threshold=0.03)
-        out = snap_light_alpha(out)
-        return _upscale_wordmark_clean(out)
-    out = prepare_wordmark_rgba(im, allow_silver=True)
-    out = _trim_mark_margins(out, threshold=0.03)
-    out = snap_light_alpha(out)
+        out = _trim_snapped(im)
+    else:
+        out = prepare_wordmark_rgba(im, allow_silver=allow_silver)
+        out = _trim_snapped(out)
+    if fit_box:
+        out = _fit_in_box(out, fit_box[0], fit_box[1])
     return _upscale_wordmark_clean(out)
+
+
+def prepare_dark_wordmark_from_import(img: Image.Image) -> Image.Image:
+    """Backward-compatible alias."""
+    return prepare_transparent_wordmark_from_import(img, allow_silver=True)
+
+
+def _unified_wordmark_fit_box(*sources: Image.Image) -> tuple[int, int]:
+    """Shared trim box so light/dark wordmarks render at the same header size."""
+    trims = [_trim_snapped(src) for src in sources]
+    return max(t.size[0] for t in trims), max(t.size[1] for t in trims)
 
 
 def light_variant(im: Image.Image) -> Image.Image:
@@ -692,12 +726,26 @@ def main() -> None:
         mark_from_import = True
         print("Mark logos: trimmed RGBA from brand-logo-mark-import.png")
 
+    wordmark_fit_box: tuple[int, int] | None = None
+    if DARK_IMPORT.exists() and LIGHT_IMPORT.exists():
+        wordmark_fit_box = _unified_wordmark_fit_box(
+            Image.open(DARK_IMPORT),
+            Image.open(LIGHT_IMPORT),
+        )
+
     if DARK_IMPORT.exists():
-        dark = prepare_dark_wordmark_from_import(Image.open(DARK_IMPORT))
+        dark = prepare_transparent_wordmark_from_import(
+            Image.open(DARK_IMPORT),
+            allow_silver=True,
+            fit_box=wordmark_fit_box,
+        )
         dark.save(OUT_DARK, "PNG", optimize=True)
         if not mark_from_import:
             crop_mark(dark).save(OUT_MARK_DARK, "PNG", optimize=True)
-        print("Dark logo: trimmed transparent import + crisp upscale")
+        print(
+            "Dark logo: trimmed transparent import + crisp upscale"
+            + (f" (fit {wordmark_fit_box[0]}x{wordmark_fit_box[1]})" if wordmark_fit_box else "")
+        )
     elif SRC.exists():
         base = Image.open(SRC)
 
@@ -718,11 +766,18 @@ def main() -> None:
         raise SystemExit(f"Missing dark logo import ({DARK_IMPORT}) or source ({SRC})")
 
     if LIGHT_IMPORT.exists():
-        light = prepare_wordmark_rgba(Image.open(LIGHT_IMPORT), allow_silver=False)
+        light = prepare_transparent_wordmark_from_import(
+            Image.open(LIGHT_IMPORT),
+            allow_silver=False,
+            fit_box=wordmark_fit_box,
+        )
         light.save(OUT_LIGHT, "PNG", optimize=True)
         if not mark_from_import:
             crop_mark(light).save(OUT_MARK_LIGHT, "PNG", optimize=True)
-        print("Light logo: graphics-only RGBA from light import" + ("" if mark_from_import else " + mark crop"))
+        print(
+            "Light logo: trimmed transparent import + crisp upscale"
+            + (f" (fit {wordmark_fit_box[0]}x{wordmark_fit_box[1]})" if wordmark_fit_box else "")
+        )
     else:
         print("Light logo: skipped (add brand-logo-site-light-import.png or run install-light-logo.py)")
 

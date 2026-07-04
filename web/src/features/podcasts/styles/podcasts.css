@@ -174,7 +174,7 @@ html[data-use-podcast-theme="true"] {
   display: none;
 }
 
-/* Guest chrome: menu + sponsor left, auth right — same 3-column row as main app home header. */
+/* Guest chrome: hamburger left, auth right — same 3-column row as main app home header. */
 main.topApp.appShell--podcast.topApp--auth-out .topbarInner,
 main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarInner {
   display: grid;

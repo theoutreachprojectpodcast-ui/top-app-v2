@@ -107,17 +107,24 @@ export default function AppShell({
               <HeaderInner className="topbarInner">
                 <div className="topbarZone topbarLeft">
                   <div className="topbarActionsCluster topbarActionsCluster--start">
-                    <SubpageTopbarActions section="authNotifications" />
+                    {useFooterDockChrome ? (
+                      <SiteHamburgerNavMenu tone="podcast" shellClass="siteMobileNavMore--phoneOnly" />
+                    ) : null}
+                    {isMobileShell && isLoggedIn ? <AdminConsoleLink /> : null}
                     <SubpageTopbarActions section="lead" />
                   </div>
                 </div>
                 <div className="topbarZone topbarCenter" aria-hidden="true" />
                 <div className="topbarZone topbarRight">
                   <div className="topbarActionsCluster">
-                    <SubpageTopbarActions section="authMenu" />
                     {useFooterDockChrome ? (
-                      <SiteHamburgerNavMenu tone="podcast" align="end" />
+                      <SiteHamburgerNavMenu
+                        tone="podcast"
+                        align="end"
+                        shellClass="siteMobileNavMore--desktopOnly"
+                      />
                     ) : null}
+                    <SubpageTopbarActions section="auth" />
                   </div>
                 </div>
               </HeaderInner>

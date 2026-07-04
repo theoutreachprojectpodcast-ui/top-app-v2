@@ -22,8 +22,8 @@ const SPONSOR_ICON = "M4 6h16v12H4z M4 10h16";
  * @param {{ section?: "lead" | "auth" | "authNotifications" | "authMenu" | "all" }} props
  * - lead: Become a Sponsor (left header); theme toggle lives in `AppHeaderBrand`
  * - auth: notification bell + account / sign-in (right header)
- * - authNotifications: bell only (podcast mobile left corner)
- * - authMenu: account menu or sign-in CTAs without bell
+ * - authNotifications: bell only (legacy split layout)
+ * - authMenu: account menu or sign-in CTAs without bell (legacy split layout)
  * - all: single row (legacy)
  */
 export default function SubpageTopbarActions({ section = "all" }) {
