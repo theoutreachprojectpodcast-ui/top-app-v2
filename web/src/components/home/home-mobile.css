@@ -412,14 +412,6 @@
   cursor: pointer;
 }
 
-.homeDirectoryPanel__search {
-  display: block;
-}
-
-.homeDirectoryPanel__search:not(.isOpen) {
-  display: none;
-}
-
 .homeDirectoryPanel__meta {
   margin: 8px 0 0;
   font-size: var(--text-body-sm);
@@ -700,6 +692,12 @@
   .homeDirectoryPanel__searchToggle {
     max-width: 100%;
     box-sizing: border-box;
+  }
+
+  /* Prevent iOS Safari from zooming the page when directory filters receive focus. */
+  #home-directory input,
+  #home-directory select {
+    font-size: 16px;
   }
 
   .homeDirectoryPanel__head {

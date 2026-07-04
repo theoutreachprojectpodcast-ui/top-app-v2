@@ -428,6 +428,7 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
   max-width: min(1092px, 92vw);
   padding-left: max(10px, env(safe-area-inset-left, 0px));
   padding-right: max(10px, env(safe-area-inset-right, 0px));
+  padding-bottom: clamp(4px, 0.6vw, 8px);
   box-sizing: border-box;
 }
 

@@ -1,9 +1,8 @@
 """
 Derive / refresh logo assets under web/public/.
 
-- Dark master `brand-logo-site.png`: if it already has transparency (alpha < 255 somewhere),
-  it is treated as a finished export — byte-copied to `brand-logo-site-dark.png` with no
-  knockout or blur. Opaque black-plate masters still use edge flood + soft alpha.
+- Dark: `brand-logo-site-dark-import.png` when present — transparent exports are trimmed
+  and upscaled only; opaque black-plate exports use graphics-only knockout (silver wordmark).
 - Light: byte-copied from `brand-logo-site-light-import.png` when present.
 
 Run from repo: python web/scripts/derive-logo-variants.py
@@ -210,7 +209,12 @@ def _is_ink_pixel(r: int, g: int, b: int, a: int) -> bool:
     """Black/dark strokes and forest-green wordmark fills."""
     if a < 16:
         return False
-    if max(r, g, b) <= 78:
+    mx = max(r, g, b)
+    mn = min(r, g, b)
+    if mx <= 78:
+        # Opaque plate black reads as dark ink — exclude flat near-pure black matte.
+        if mx <= 10 and (mx - mn) <= 8:
+            return False
         return True
     _, sat = _lum_sat(r, g, b)
     if g >= r and g >= b and g >= 55 and sat >= 0.12:
@@ -398,6 +402,45 @@ def prepare_wordmark_rgba(img: Image.Image, *, allow_silver: bool = False) -> Im
     if _has_meaningful_alpha(im):
         return im
     return smooth_alpha_edges(remove_outer_black(img), 0.35)
+
+
+def _upscale_wordmark_clean(im: Image.Image, target_w: int = DARK_WORDMARK_TARGET_W) -> Image.Image:
+    """Upscale for header density without amplifying premultiplied AA fringe."""
+    w, h = im.size
+    if w >= target_w:
+        return im
+    nw = target_w
+    nh = max(1, int(round(h * (target_w / w))))
+    r, g, b, a = im.split()
+    apx = a.load()
+    aw, ah = a.size
+    for y in range(ah):
+        for x in range(aw):
+            apx[x, y] = 255 if apx[x, y] >= 128 else 0
+    rgb = Image.merge("RGB", (r, g, b)).resize((nw, nh), Image.Resampling.LANCZOS)
+    alpha = a.resize((nw, nh), Image.Resampling.NEAREST)
+    out = rgb.convert("RGBA")
+    out.putalpha(alpha)
+    return out
+
+
+def prepare_dark_wordmark_from_import(img: Image.Image) -> Image.Image:
+    """
+    Dark header wordmark from design import.
+
+    Transparent RGBA exports (TopLogo-1): trim + crisp upscale only — do not re-run
+    band extraction or edge flood (that strips silver text and beige icon outlines).
+    Opaque black-plate fallbacks: graphics-only knockout + soft alpha.
+    """
+    im = img.convert("RGBA")
+    if _has_meaningful_alpha(im):
+        out = _trim_mark_margins(im, threshold=0.03)
+        out = snap_light_alpha(out)
+        return _upscale_wordmark_clean(out)
+    out = prepare_wordmark_rgba(im, allow_silver=True)
+    out = _trim_mark_margins(out, threshold=0.03)
+    out = snap_light_alpha(out)
+    return _upscale_wordmark_clean(out)
 
 
 def light_variant(im: Image.Image) -> Image.Image:
@@ -650,12 +693,11 @@ def main() -> None:
         print("Mark logos: trimmed RGBA from brand-logo-mark-import.png")
 
     if DARK_IMPORT.exists():
-        dark_src = _maybe_upscale_wordmark(Image.open(DARK_IMPORT))
-        dark = prepare_wordmark_rgba(dark_src, allow_silver=True)
+        dark = prepare_dark_wordmark_from_import(Image.open(DARK_IMPORT))
         dark.save(OUT_DARK, "PNG", optimize=True)
         if not mark_from_import:
             crop_mark(dark).save(OUT_MARK_DARK, "PNG", optimize=True)
-        print("Dark logo: graphics-only RGBA from dark import" + ("" if mark_from_import else " + mark crop"))
+        print("Dark logo: trimmed transparent import + crisp upscale")
     elif SRC.exists():
         base = Image.open(SRC)
 

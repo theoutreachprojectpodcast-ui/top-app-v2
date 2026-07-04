@@ -1000,6 +1000,10 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topba
   box-sizing: border-box;
   pointer-events: none;
 }
+/* Subpage OP logomark — slight breathe below mark before controls / content. */
+.headerBrandStack--compactMark {
+  padding-bottom: clamp(4px, 0.6vw, 8px);
+}
 .headerBrandStack > a {
   pointer-events: auto;
   display: inline-flex;
@@ -7089,6 +7093,17 @@ html.dark .communityPostBodyGuideSteps li {
     object-position: center top;
     vertical-align: top;
     filter: none !important;
+  }
+
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .headerBrandStack--compactMark {
+    padding-bottom: clamp(4px, 1.2vw, 8px) !important;
+  }
+
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .headerBrandStack--compactMark .brandMarkImg,
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .headerBrandStack--compactMark .brandMarkImg--header,
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .headerBrandStack--compactMark img.brandMarkImg--header:not(.podcastBrandLogo),
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .headerBrandStack--compactMark .headerBrandMarkFallback {
+    margin-bottom: 0 !important;
   }
 
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]).header-at-top .headerBrandStack > a,

@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Search } from "lucide-react";
 import AppIcon from "@/components/shared/AppIcon";
-import DirectoryCategoryHeader from "@/features/directory/components/DirectoryCategoryHeader";
 import NonprofitCard from "@/features/nonprofits/components/NonprofitCard";
 import { mapNonprofitCardRow } from "@/features/nonprofits/mappers/nonprofitCardMapper";
 import { STATES, SERVICE_OPTIONS } from "@/lib/constants";
@@ -42,10 +41,9 @@ export default function HomeDirectoryPanel({
       audience: audience || filters.audience || "all",
     };
     applyFilters(next);
-    setSearchOpen(true);
-    requestAnimationFrame(() => {
-      document.getElementById("home-directory-search")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    });
+    if (!next.state) {
+      setSearchOpen(true);
+    }
   }
 
   return (
@@ -72,57 +70,54 @@ export default function HomeDirectoryPanel({
         {searchOpen ? "Hide search filters" : "Search directory"}
       </button>
 
-      <div
-        id="home-directory-search"
-        className={`homeDirectoryPanel__search${searchOpen ? " isOpen" : ""}`}
-        hidden={!searchOpen}
-      >
-        {filters.service ? <DirectoryCategoryHeader letter={filters.service} variant="compact" /> : null}
-        <div className="form">
-          <select
-            value={filters.state}
-            onChange={(e) => applyFilters({ ...filters, state: e.target.value })}
-          >
-            {STATES.map(([v, label]) => (
-              <option key={v} value={v}>
-                {label}
-              </option>
-            ))}
-          </select>
-          <input
-            placeholder="City or Organization"
-            value={filters.q}
-            onChange={(e) => setFilters((f) => ({ ...f, q: e.target.value }))}
-          />
-          <select
-            value={filters.service}
-            onChange={(e) => applyFilters({ ...filters, service: e.target.value })}
-            aria-label="Service category letter"
-          >
-            {SERVICE_OPTIONS.map(([v, label]) => (
-              <option key={v || "all"} value={v}>
-                {label}
-              </option>
-            ))}
-          </select>
-          <select
-            value={filters.audience}
-            onChange={(e) => applyFilters({ ...filters, audience: e.target.value })}
-          >
-            <option value="all">All</option>
-            <option value="veteran">Veterans</option>
-            <option value="first_responder">First Responders</option>
-          </select>
+      {searchOpen ? (
+        <div id="home-directory-search" className="homeDirectoryPanel__search">
+          <div className="form">
+            <select
+              value={filters.state}
+              onChange={(e) => applyFilters({ ...filters, state: e.target.value })}
+            >
+              {STATES.map(([v, label]) => (
+                <option key={v} value={v}>
+                  {label}
+                </option>
+              ))}
+            </select>
+            <input
+              placeholder="City or Organization"
+              value={filters.q}
+              onChange={(e) => setFilters((f) => ({ ...f, q: e.target.value }))}
+            />
+            <select
+              value={filters.service}
+              onChange={(e) => applyFilters({ ...filters, service: e.target.value })}
+              aria-label="Service category letter"
+            >
+              {SERVICE_OPTIONS.map(([v, label]) => (
+                <option key={v || "all"} value={v}>
+                  {label}
+                </option>
+              ))}
+            </select>
+            <select
+              value={filters.audience}
+              onChange={(e) => applyFilters({ ...filters, audience: e.target.value })}
+            >
+              <option value="all">All</option>
+              <option value="veteran">Veterans</option>
+              <option value="first_responder">First Responders</option>
+            </select>
+          </div>
+          <div className="row">
+            <button className="btnPrimary" onClick={() => runSearch(1)} type="button">
+              Search
+            </button>
+            <button className="btnSoft" onClick={clearSearch} type="button">
+              Clear
+            </button>
+          </div>
         </div>
-        <div className="row">
-          <button className="btnPrimary" onClick={() => runSearch(1)} type="button">
-            Search
-          </button>
-          <button className="btnSoft" onClick={clearSearch} type="button">
-            Clear
-          </button>
-        </div>
-      </div>
+      ) : null}
 
       {status ? <p className="homeDirectoryPanel__meta">{status}</p> : null}
       {meta ? <p className="homeDirectoryPanel__meta">{meta}</p> : null}

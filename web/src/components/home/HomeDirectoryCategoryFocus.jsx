@@ -3,11 +3,13 @@
 import { useId, useState } from "react";
 import DirectoryCategoryQuickPick from "@/features/directory/components/DirectoryCategoryQuickPick";
 import HomeDirectoryQuickCategories from "@/components/home/HomeDirectoryQuickCategories";
+import { useMobileShell } from "@/hooks/useMobileShell";
 
 /**
  * Home directory categories — desktop: collapsible full grid; mobile: top 3 chips + optional full list.
  */
 export default function HomeDirectoryCategoryFocus({ activeLetter, activeAudience, onSelect }) {
+  const isMobile = useMobileShell();
   const allPanelId = useId();
   const [showAllCategories, setShowAllCategories] = useState(false);
 
@@ -19,8 +21,13 @@ export default function HomeDirectoryCategoryFocus({ activeLetter, activeAudienc
     setShowAllCategories(false);
   }
 
-  return (
-    <>
+  function onQuickCategorySelect(payload) {
+    onSelect(payload);
+    setShowAllCategories(false);
+  }
+
+  if (!isMobile) {
+    return (
       <div className="homeDirectoryCategoryFocus homeDirectoryCategoryFocus--full">
         <DirectoryCategoryQuickPick
           value={activeLetter}
@@ -29,44 +36,46 @@ export default function HomeDirectoryCategoryFocus({ activeLetter, activeAudienc
           visualStyle="color"
         />
       </div>
+    );
+  }
 
-      <div className="homeDirectoryCategoryFocus homeDirectoryCategoryFocus--compact">
-        <HomeDirectoryQuickCategories
-          activeLetter={activeLetter}
-          activeAudience={activeAudience}
-          onSelect={onSelect}
-        />
+  return (
+    <div className="homeDirectoryCategoryFocus homeDirectoryCategoryFocus--compact">
+      <HomeDirectoryQuickCategories
+        activeLetter={activeLetter}
+        activeAudience={activeAudience}
+        onSelect={onQuickCategorySelect}
+      />
 
-        <button
-          type="button"
-          className="homeDirectoryCategoryFocus__expandBtn"
-          aria-expanded={showAllCategories}
-          aria-controls={allPanelId}
-          onClick={() => setShowAllCategories((open) => !open)}
+      <button
+        type="button"
+        className="homeDirectoryCategoryFocus__expandBtn"
+        aria-expanded={showAllCategories}
+        aria-controls={allPanelId}
+        onClick={() => setShowAllCategories((open) => !open)}
+      >
+        <span>{showAllCategories ? "Fewer categories" : "All categories"}</span>
+        <span className="homeDirectoryCategoryFocus__expandChevron" aria-hidden="true">
+          ▾
+        </span>
+      </button>
+
+      {showAllCategories ? (
+        <div
+          id={allPanelId}
+          className="homeDirectoryCategoryFocus__allPanel"
+          role="region"
+          aria-label="All nonprofit categories"
         >
-          <span>{showAllCategories ? "Fewer categories" : "All categories"}</span>
-          <span className="homeDirectoryCategoryFocus__expandChevron" aria-hidden="true">
-            ▾
-          </span>
-        </button>
-
-        {showAllCategories ? (
-          <div
-            id={allPanelId}
-            className="homeDirectoryCategoryFocus__allPanel"
-            role="region"
-            aria-label="All nonprofit categories"
-          >
-            <DirectoryCategoryQuickPick
-              value={activeLetter}
-              onChange={onFullCategoryLetter}
-              collapsible={false}
-              visualStyle="color"
-              hideLabel
-            />
-          </div>
-        ) : null}
-      </div>
-    </>
+          <DirectoryCategoryQuickPick
+            value={activeLetter}
+            onChange={onFullCategoryLetter}
+            collapsible={false}
+            visualStyle="color"
+            hideLabel
+          />
+        </div>
+      ) : null}
+    </div>
   );
 }
