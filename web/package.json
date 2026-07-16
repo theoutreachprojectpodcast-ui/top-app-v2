@@ -29,6 +29,8 @@
     "apply:production:rls": "node scripts/apply-production-rls-hardening.mjs",
     "apply:production:rls:apply": "node scripts/apply-production-rls-hardening.mjs --apply",
     "verify:production-rls": "node scripts/verify-production-rls.mjs",
+    "security:rls:live": "node scripts/security-rls-live-probe.mjs",
+    "security:check": "node scripts/security-check.mjs",
     "test:membership-config": "node scripts/test-membership-configuration.mjs",
     "test:support-to-pro-migration": "node scripts/test-support-to-pro-migration.mjs",
     "verify:auth-freeze": "node scripts/auth-production-guards.mjs",
