@@ -68,14 +68,14 @@ export default function HomeMembershipSection({
       ? "Choose your membership"
       : "Become a member";
   const lead = isProfileUpsell
-    ? "You are on a free account. Support the mission with a recurring membership when you are ready."
+    ? "You are on a free account. Upgrade to Pro Membership when you are ready."
     : isAuthenticated
       ? loadingAccount
         ? "Loading your account and membership…"
         : isModal
-          ? "Pick a free account or a paid tier to continue. You can change this later on your profile."
+          ? "Choose Pro Membership to unlock the platform, or continue with a free account for the public directory."
           : `Signed in as ${accountEmail || "your account"}. Current plan: ${membershipLabel || current.label}. Billing: ${billingLabel}.`
-      : "Support the mission with a free account or a recurring membership.";
+      : "Create a free account to browse the directory, or join Pro for full platform access.";
 
   const headingId = isModal ? "membership-plans-modal-heading" : "home-membership-heading";
 

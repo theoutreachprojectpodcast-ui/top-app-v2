@@ -1,9 +1,12 @@
 /**
  * Canonical membership pricing (USD, yearly). Server-side source of truth for checkout validation.
  * UI labels must match these amounts.
+ *
+ * Support Membership availability is controlled by membershipConfiguration
+ * (DB feature flag `supportMembershipEnabled`, default false).
  */
 
-/** Support Membership — $0.99/year */
+/** Support Membership — $0.99/year (only when feature flag enabled) */
 export const SUPPORT_MEMBERSHIP_ANNUAL_CENTS = 99;
 
 /** Pro Membership — $5.99/year */
@@ -44,8 +47,23 @@ export function blockedMembershipPriceIds() {
   return new Set([...HARDCODED_BLOCKED_MEMBERSHIP_PRICE_IDS, ...fromEnv]);
 }
 
+/**
+ * Sync default: Support checkout blocked (Pro-only).
+ * API routes must await {@link supportCheckoutDisabledAsync}.
+ */
 export function supportCheckoutTemporarilyDisabled() {
-  return String(process.env.STRIPE_SUPPORT_CHECKOUT_DISABLED || "").trim() === "1";
+  return true;
+}
+
+/** @param {import('@supabase/supabase-js').SupabaseClient | null | undefined} [admin] */
+export async function supportCheckoutDisabledAsync(admin) {
+  try {
+    const { isSupportMembershipEnabled } = await import("@/lib/membership/membershipConfiguration");
+    const enabled = await isSupportMembershipEnabled(admin);
+    return !enabled;
+  } catch {
+    return true;
+  }
 }
 
 export function membershipCheckoutHardBlock() {

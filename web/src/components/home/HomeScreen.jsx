@@ -18,9 +18,7 @@ export default function HomeScreen({
   onCommunity,
   onPodcasts,
   onProUpgrade,
-  onSupportUpgrade,
   hasProAccess = true,
-  hasSupportAccess = true,
   canSaveOrganizations = false,
   directoryProps,
   favoriteEinSet,
@@ -46,9 +44,7 @@ export default function HomeScreen({
           onCommunity={onCommunity}
           onPodcasts={onPodcasts}
           onProUpgrade={onProUpgrade}
-          onSupportUpgrade={onSupportUpgrade}
           hasProAccess={hasProAccess}
-          hasSupportAccess={hasSupportAccess}
         />
 
         <HomeDirectoryPanel

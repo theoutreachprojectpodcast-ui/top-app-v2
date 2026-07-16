@@ -11,8 +11,6 @@ import {
 } from "@/lib/billing/stripeConfig";
 import {
   PRO_MEMBERSHIP_PRICE_LABEL,
-  SUPPORT_MEMBERSHIP_DISPLAY_NAME,
-  SUPPORT_MEMBERSHIP_PRICE_LABEL,
 } from "@/features/membership/membershipTiers";
 
 /** @typedef {'free' | 'subscription' | 'one_time' | 'application'} SponsorCheckoutKind */
@@ -138,23 +136,15 @@ export function listMembershipPlansForHome() {
       checkoutTier: null,
       label: "Free Member",
       priceLabel: "Free",
-      description: "Explore the directory, community stories, and trusted resources.",
+      description: "Create an account, then subscribe to Pro to unlock the platform.",
       cta: "Join Free",
-    },
-    {
-      tierKey: "support",
-      checkoutTier: "support",
-      label: SUPPORT_MEMBERSHIP_DISPLAY_NAME,
-      priceLabel: SUPPORT_MEMBERSHIP_PRICE_LABEL,
-      description: "Save favorites and keep your profile in sync across devices.",
-      cta: "Become a Support Member",
     },
     {
       tierKey: "member",
       checkoutTier: "member",
       label: "Pro Member",
       priceLabel: PRO_MEMBERSHIP_PRICE_LABEL,
-      description: "Submit community stories and access member-only features.",
+      description: "Full platform access — directory, community, podcast, and trusted resources.",
       cta: "Become a Pro Member",
     },
   ];

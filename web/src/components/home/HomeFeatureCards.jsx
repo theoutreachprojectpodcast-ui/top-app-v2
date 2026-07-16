@@ -35,7 +35,7 @@ const FEATURES = [
     icon: "podcast",
     title: "Podcasts",
     hint: "Stories that inspire. Voices that matter.",
-    supportOnly: true,
+    proOnly: true,
   },
 ];
 
@@ -45,9 +45,7 @@ export default function HomeFeatureCards({
   onCommunity,
   onPodcasts,
   onProUpgrade,
-  onSupportUpgrade,
   hasProAccess = true,
-  hasSupportAccess = true,
 }) {
   const handlers = {
     sponsors: onSponsors,
@@ -59,14 +57,8 @@ export default function HomeFeatureCards({
   return (
     <div className="homeFeatureList welcomeActionList" role="navigation" aria-label="Explore The Outreach Project">
       {FEATURES.map((item) => {
-        const lockedPro = item.proOnly && !hasProAccess;
-        const lockedSupport = item.supportOnly && !hasSupportAccess;
-        const locked = lockedPro || lockedSupport;
-        const lockedHint = lockedPro
-          ? "Upgrade to Pro to unlock this section."
-          : lockedSupport
-            ? "Support Membership unlocks the podcast hub."
-            : item.hint;
+        const locked = item.proOnly && !hasProAccess;
+        const lockedHint = locked ? "Upgrade to Pro to unlock this section." : item.hint;
 
         return (
           <button
@@ -74,12 +66,8 @@ export default function HomeFeatureCards({
             type="button"
             className={`card action welcomeActionCard welcomeActionCard--uniform ${item.cardClass}${locked ? " welcomeActionCard--locked" : ""}`}
             onClick={() => {
-              if (lockedPro) {
+              if (locked) {
                 onProUpgrade?.(item.key);
-                return;
-              }
-              if (lockedSupport) {
-                onSupportUpgrade?.(item.key);
                 return;
               }
               handlers[item.key]?.();

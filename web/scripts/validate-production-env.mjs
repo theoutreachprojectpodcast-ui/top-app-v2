@@ -76,15 +76,19 @@ if (vercelProduction) {
   if (!hasWebhook) {
     missing.push("STRIPE_WEBHOOK_LIVE_SECRET or STRIPE_WEBHOOK_SECRET");
   }
+  const proPrice =
+    String(process.env.STRIPE_PRICE_PRO_YEARLY || "").trim() ||
+    String(process.env.STRIPE_PRICE_PRO_MONTHLY || "").trim() ||
+    String(process.env.STRIPE_PRICE_MEMBER_MONTHLY || "").trim();
+  if (!proPrice) {
+    missing.push("STRIPE_PRICE_PRO_YEARLY");
+  }
   const supportPrice =
     String(process.env.STRIPE_PRICE_SUPPORT_YEARLY || "").trim() ||
     String(process.env.STRIPE_PRICE_SUPPORT_ANNUAL || "").trim();
-  if (!supportPrice) {
-    missing.push("STRIPE_PRICE_SUPPORT_YEARLY");
-  }
   if (supportPrice === "price_1TlqQ9CiwOqAGcUDuZkKPlJ2") {
     console.error(
-      "[validate-production-env] STRIPE_PRICE_SUPPORT_YEARLY points at blocked $99/year price — update before deploy.",
+      "[validate-production-env] STRIPE_PRICE_SUPPORT_YEARLY points at blocked $99/year price — remove from env (Support checkout is retired).",
     );
     process.exit(1);
   }

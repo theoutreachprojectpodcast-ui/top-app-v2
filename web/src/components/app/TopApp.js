@@ -46,8 +46,6 @@ import MembershipAtAGlance from "@/features/membership/components/MembershipAtAG
 import MembershipBillingCenter from "@/features/membership/components/MembershipBillingCenter";
 import {
   PRO_MEMBERSHIP_PRICE_LABEL,
-  SUPPORT_MEMBERSHIP_DISPLAY_NAME,
-  SUPPORT_MEMBERSHIP_PRICE_LABEL,
 } from "@/features/membership/membershipTiers";
 import {
   membershipAccountMenuHint,
@@ -242,17 +240,6 @@ function TopAppInner({ initialNav = "home" }) {
     [entitlements],
   );
 
-  const hasSupportAccess = useMemo(
-    () =>
-      !!(
-        entitlements?.hasActiveMembership ||
-        entitlements?.directoryAccess ||
-        entitlements?.isPlatformAdmin ||
-        entitlements?.isPrivilegedStaff
-      ),
-    [entitlements],
-  );
-
   const canSaveOrganizations = useMemo(
     () =>
       !!(
@@ -289,10 +276,6 @@ function TopAppInner({ initialNav = "home" }) {
     if (proGateHint) return getProUpgradeGateContentForNav(proGateHint);
     return null;
   }, [showTopAppProGate, nav, proGateHint]);
-
-  function goToSupportUpgrade() {
-    router.push(isCapacitorNative() ? "/mobile/access" : "/access");
-  }
 
   const showMembershipOnProfile = useMemo(
     () =>
@@ -408,12 +391,12 @@ function TopAppInner({ initialNav = "home" }) {
   }
 
   function dockNavPodcast() {
-    if (!hasSupportAccess) {
+    if (!hasProAccess) {
       if (!isAuthenticated) {
         openSignInOverlay();
         return;
       }
-      goToSupportUpgrade();
+      openProUpgradeModal("podcasts");
       return;
     }
     if (pathname !== "/podcasts" && !pathname.startsWith("/podcasts/")) {
@@ -1006,20 +989,18 @@ function TopAppInner({ initialNav = "home" }) {
               }}
               onCommunity={openCommunity}
               onPodcasts={() => {
-                if (!hasSupportAccess) {
+                if (!hasProAccess) {
                   if (!isAuthenticated) {
                     openSignInOverlay();
                     return;
                   }
-                  goToSupportUpgrade();
+                  openProUpgradeModal("podcasts");
                   return;
                 }
                 router.push("/podcasts");
               }}
               onProUpgrade={openProUpgradeModal}
-              onSupportUpgrade={goToSupportUpgrade}
               hasProAccess={hasProAccess}
-              hasSupportAccess={hasSupportAccess}
               canSaveOrganizations={canSaveOrganizations}
               directoryProps={{
                 filters,
@@ -1478,8 +1459,9 @@ function TopAppInner({ initialNav = "home" }) {
           <div className="modalCard" onClick={(e) => e.stopPropagation()}>
             <h3>Membership &amp; billing</h3>
             <p>
-              Pro Membership ({PRO_MEMBERSHIP_PRICE_LABEL}) unlocks saved organizations, profile sync, and community. {SUPPORT_MEMBERSHIP_DISPLAY_NAME} ({SUPPORT_MEMBERSHIP_PRICE_LABEL}) includes the nonprofit directory and podcast hub.
-              participation. Use the Membership card above for Stripe checkout, or open onboarding for the full setup flow.
+              Pro Membership ({PRO_MEMBERSHIP_PRICE_LABEL}) unlocks the full platform — directory favorites, podcasts,
+              community, trusted resources, and profile sync. Use the Membership card for Stripe checkout, or open
+              onboarding for the full setup flow.
             </p>
             <div className="row wrap">
               <button className="btnSoft" onClick={() => setOverlay(null)} type="button">

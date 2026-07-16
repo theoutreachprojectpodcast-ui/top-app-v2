@@ -7,10 +7,10 @@ import AuthLoadingOverlay from "@/components/auth/AuthLoadingOverlay";
 import { useAuthSession } from "@/components/auth/AuthSessionProvider";
 import { readNavAuthCache } from "@/lib/auth/navAuthCache";
 import {
-  SUPPORT_MEMBERSHIP_DISPLAY_NAME,
-  SUPPORT_MEMBERSHIP_PRICE_LABEL,
   PRO_MEMBERSHIP_DISPLAY_NAME,
   PRO_MEMBERSHIP_PRICE_LABEL,
+  SUPPORT_MEMBERSHIP_DISPLAY_NAME,
+  SUPPORT_MEMBERSHIP_PRICE_LABEL,
 } from "@/features/membership/membershipTiers";
 import { hasMobileAppAccess, navCacheHasFreeAccess } from "@/lib/membership/appAccess";
 import { sanitizeAuthReturnPath } from "@/lib/auth/authReturnPath";
@@ -21,7 +21,7 @@ const CHECKOUT_POLL_MS = 1_500;
 const CHECKOUT_POLL_MAX_MS = 45_000;
 
 /**
- * App Access paywall — Support Annual + Pro Membership required before using the product.
+ * App Access paywall — Pro Membership ($5.99/yr) required before using the product.
  * @param {{ checkoutReturnPath: string, postAccessPath: string, backHref?: string, backLabel?: string }} props
  */
 export default function AppAccessPaywall({
@@ -42,13 +42,10 @@ export default function AppAccessPaywall({
   const [billingCapabilities, setBillingCapabilities] = useState(null);
   const checkoutPollStartedRef = useRef(0);
 
-  const supportCheckoutEnabled = billingCapabilities?.tierCheckout?.support?.enabled === true;
   const proCheckoutEnabled = billingCapabilities?.tierCheckout?.member?.enabled === true;
-  const supportCheckoutMessage =
-    billingCapabilities?.tierCheckout?.support?.message ||
-    (billingCapabilities?.supportCheckoutDisabled
-      ? "Support Membership checkout is temporarily disabled while pricing is verified."
-      : "");
+  const supportCheckoutEnabled =
+    billingCapabilities?.supportMembershipEnabled === true &&
+    billingCapabilities?.tierCheckout?.support?.enabled === true;
 
   const checkoutResult = searchParams.get("checkout");
 
@@ -138,7 +135,7 @@ export default function AppAccessPaywall({
           if (data.authenticated && data.profile) {
             const st = String(data.profile.membershipBillingStatus || "").toLowerCase();
             const tier = String(data.profile.membershipTier || "").toLowerCase();
-            if (st === "active" && ["support", "member", "access", "sponsor"].includes(tier)) {
+            if (st === "active" && ["member", "sponsor"].includes(tier)) {
               router.replace(postAccessPath);
               return;
             }
@@ -157,7 +154,7 @@ export default function AppAccessPaywall({
     };
   }, [checkoutResult, checkoutPolling, postAccessPath, refreshAuth, refreshWorkOSProfile, router]);
 
-  async function startCheckout(tier) {
+  async function startCheckout(tier = "member") {
     setError("");
     setBusyTier(tier);
     try {
@@ -180,6 +177,7 @@ export default function AppAccessPaywall({
         data.error === "price_validation_failed" ||
         data.error === "blocked_price_id" ||
         data.error === "amount_mismatch" ||
+        data.error === "support_checkout_retired" ||
         data.error === "support_checkout_disabled" ||
         data.error === "checkout_disabled"
       ) {
@@ -252,33 +250,38 @@ export default function AppAccessPaywall({
         <div className="mobileSplashPage__brand mobileSplashPage__brand--small">
           <BrandMark variant="mark" size="splash" alt="The Outreach Project" />
         </div>
-        <h1 className="mobileSplashPage__title">Choose your membership</h1>
+        <h1 className="mobileSplashPage__title">
+          {supportCheckoutEnabled ? "Choose your membership" : "Pro Membership required"}
+        </h1>
         <p className="mobileSplashPage__lead">
-          The Outreach Project requires an active membership. Select Support or Pro to continue.
+          {supportCheckoutEnabled
+            ? "Select Support or Pro Membership to continue."
+            : "The Outreach Project requires an active Pro Membership to continue. The public directory remains available without a membership."}
         </p>
         <div className="mobileSplashPage__tierGrid">
-          <section className="mobileSplashPage__tierCard" aria-labelledby="support-tier-heading">
-            <h2 id="support-tier-heading" className="mobileSplashPage__tierTitle">
-              {SUPPORT_MEMBERSHIP_DISPLAY_NAME}
-            </h2>
-            <p className="mobileSplashPage__tierPrice">{SUPPORT_MEMBERSHIP_PRICE_LABEL}</p>
-            <ul className="mobileSplashPage__benefits">
-              <li>Nonprofit directory search and exploration</li>
-              <li>Podcast episodes, guests, and guest applications</li>
-              <li>Saving organizations, community, exclusive podcast content, and trusted resources are Pro-only</li>
-            </ul>
-          </section>
+          {supportCheckoutEnabled ? (
+            <section className="mobileSplashPage__tierCard" aria-labelledby="support-tier-heading">
+              <h2 id="support-tier-heading" className="mobileSplashPage__tierTitle">
+                {SUPPORT_MEMBERSHIP_DISPLAY_NAME}
+              </h2>
+              <p className="mobileSplashPage__tierPrice">{SUPPORT_MEMBERSHIP_PRICE_LABEL}</p>
+              <ul className="mobileSplashPage__benefits">
+                <li>Nonprofit directory search and exploration</li>
+                <li>Podcast episodes, guests, and guest applications</li>
+              </ul>
+            </section>
+          ) : null}
           <section className="mobileSplashPage__tierCard mobileSplashPage__tierCard--pro" aria-labelledby="pro-tier-heading">
             <h2 id="pro-tier-heading" className="mobileSplashPage__tierTitle">
               {PRO_MEMBERSHIP_DISPLAY_NAME}
             </h2>
             <p className="mobileSplashPage__tierPrice">{PRO_MEMBERSHIP_PRICE_LABEL}</p>
             <ul className="mobileSplashPage__benefits">
-              <li>Everything in Support</li>
+              <li>Nonprofit directory search and exploration</li>
               <li>Save favorite nonprofits</li>
+              <li>Podcast episodes, guests, and guest applications</li>
               <li>Create and submit community posts</li>
-              <li>Pro-exclusive podcast content (YouTube playlist integration)</li>
-              <li>Podcast sponsor opportunities</li>
+              <li>Pro-exclusive podcast content</li>
               <li>Trusted resource discounts and partner offers</li>
             </ul>
           </section>
@@ -290,12 +293,7 @@ export default function AppAccessPaywall({
         ) : null}
         {checkoutResult === "cancel" ? (
           <p className="mobileSplashPage__notice mobileSplashPage__notice--warn" role="status">
-            Checkout was canceled. Choose a membership to continue.
-          </p>
-        ) : null}
-        {supportCheckoutMessage && !supportCheckoutEnabled ? (
-          <p className="mobileSplashPage__notice mobileSplashPage__notice--warn" role="status">
-            {supportCheckoutMessage}
+            Checkout was canceled. Subscribe to continue.
           </p>
         ) : null}
         {error ? (
@@ -304,23 +302,22 @@ export default function AppAccessPaywall({
           </p>
         ) : null}
         <div className="mobileSplashPage__actions">
+          {supportCheckoutEnabled ? (
+            <button
+              type="button"
+              className="btnSoft mobileSplashPage__btn"
+              onClick={() => void startCheckout("support")}
+              disabled={!!busyTier || billingCapabilities === null || !supportCheckoutEnabled}
+            >
+              {busyTier === "support"
+                ? "Redirecting to checkout…"
+                : `${SUPPORT_MEMBERSHIP_DISPLAY_NAME} — ${SUPPORT_MEMBERSHIP_PRICE_LABEL}`}
+            </button>
+          ) : null}
           <button
             type="button"
             className="btnPrimary mobileSplashPage__btn"
-            onClick={() => startCheckout("support")}
-            disabled={!!busyTier || billingCapabilities === null || !supportCheckoutEnabled}
-            title={!supportCheckoutEnabled ? supportCheckoutMessage || "Support checkout unavailable" : undefined}
-          >
-            {busyTier === "support"
-              ? "Redirecting to checkout…"
-              : billingCapabilities === null
-                ? "Loading checkout…"
-                : `${SUPPORT_MEMBERSHIP_DISPLAY_NAME} — ${SUPPORT_MEMBERSHIP_PRICE_LABEL}`}
-          </button>
-          <button
-            type="button"
-            className="btnSoft mobileSplashPage__btn"
-            onClick={() => startCheckout("member")}
+            onClick={() => void startCheckout("member")}
             disabled={!!busyTier || billingCapabilities === null || !proCheckoutEnabled}
             title={!proCheckoutEnabled ? "Pro checkout unavailable" : undefined}
           >

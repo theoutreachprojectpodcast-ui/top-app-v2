@@ -473,7 +473,7 @@ export default function SponsorApplicationForm({
                 />
                 <span className="dsChoice__control" />
                 <span className="dsChoice__text">
-                  We acknowledge this podcast sponsor checkout is a demo walkthrough until one-time Stripe prices are configured; membership Support/Pro billing uses live products when enabled.
+                  We acknowledge this podcast sponsor checkout is a demo walkthrough until one-time Stripe prices are configured; Pro Membership billing uses live products when enabled.
                 </span>
               </label>
             ) : null}
@@ -526,7 +526,7 @@ export default function SponsorApplicationForm({
           {isPodcast && !podcastBillingLive ? (
             <>
               <p className="sponsorSectionLead">
-                Demo checkout — walk through payment screens here. Live membership upgrades (Support / Pro) use the wired recurring Stripe products on Profile.
+                Demo checkout — walk through payment screens here. Live Pro Membership upgrades use the wired recurring Stripe products on Profile.
               </p>
               <SponsorPaymentDemo
                 amount={tierAmount}

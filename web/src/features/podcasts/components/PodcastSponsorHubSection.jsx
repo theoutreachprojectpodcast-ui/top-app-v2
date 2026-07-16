@@ -58,8 +58,8 @@ export default function PodcastSponsorHubSection({
         <div className="podcastLockCard">
           <strong>Upgrade to Pro for podcast sponsor opportunities</strong>
           <p>
-            Support members can watch episodes, explore guests, and apply to be on the show. Pro membership unlocks
-            podcast sponsor packages and the full partnership flow.
+            Pro Membership unlocks podcast sponsor packages, partnership applications, and the full show partnership
+            flow.
           </p>
           <div className="row wrap">
             <Link className="btnSoft" href="/profile">

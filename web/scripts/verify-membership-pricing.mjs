@@ -1,6 +1,7 @@
 /**
- * Verify canonical membership pricing and (when STRIPE_SECRET_KEY is set) live Stripe price amounts.
- * Fails closed if Support ≠ $0.99/year, Pro ≠ $5.99/year, or env points at a blocked/wrong price.
+ * Verify canonical Pro membership pricing and (when STRIPE_SECRET_KEY is set) live Stripe price amounts.
+ * Fails closed if Pro ≠ $5.99/year, or env points at a blocked/wrong price.
+ * Support Membership is retired — Support price IDs are not required.
  *
  * Usage:
  *   node scripts/verify-membership-pricing.mjs
@@ -14,7 +15,6 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /** Must match web/src/lib/billing/membershipPricing.js */
-const SUPPORT_MEMBERSHIP_ANNUAL_CENTS = 99;
 const PRO_MEMBERSHIP_ANNUAL_CENTS = 599;
 const INCORRECT_SUPPORT_ANNUAL_CENTS = 9900;
 const HARDCODED_BLOCKED_PRICE_IDS = ["price_1TlqQ9CiwOqAGcUDuZkKPlJ2"];
@@ -67,18 +67,18 @@ function blockedIds() {
   return new Set([...HARDCODED_BLOCKED_PRICE_IDS, ...fromEnv]);
 }
 
-function supportPriceId() {
-  return (
-    String(process.env.STRIPE_PRICE_SUPPORT_YEARLY || "").trim() ||
-    String(process.env.STRIPE_PRICE_SUPPORT_ANNUAL || "").trim()
-  );
-}
-
 function proPriceId() {
   return (
     String(process.env.STRIPE_PRICE_PRO_YEARLY || "").trim() ||
     String(process.env.STRIPE_PRICE_PRO_MONTHLY || "").trim() ||
     String(process.env.STRIPE_PRICE_MEMBER_MONTHLY || "").trim()
+  );
+}
+
+function legacySupportPriceId() {
+  return (
+    String(process.env.STRIPE_PRICE_SUPPORT_YEARLY || "").trim() ||
+    String(process.env.STRIPE_PRICE_SUPPORT_ANNUAL || "").trim()
   );
 }
 
@@ -93,7 +93,7 @@ async function stripeGet(pathname, key) {
 
 async function validateConfiguredPrice({ tier, priceId, expectedCents, key }) {
   if (!priceId) {
-    fail(`${tier}: no price ID in env (STRIPE_PRICE_SUPPORT_YEARLY / STRIPE_PRICE_PRO_YEARLY)`);
+    fail(`${tier}: no price ID in env (STRIPE_PRICE_PRO_YEARLY)`);
     return;
   }
   if (!priceId.startsWith("price_")) {
@@ -127,7 +127,7 @@ async function validateConfiguredPrice({ tier, priceId, expectedCents, key }) {
     );
     return;
   }
-  if (amount === INCORRECT_SUPPORT_ANNUAL_CENTS && tier === "support") {
+  if (amount === INCORRECT_SUPPORT_ANNUAL_CENTS) {
     fail(`${tier}: CRITICAL — env still points at $99/year Support price ${priceId}`);
     return;
   }
@@ -135,16 +135,15 @@ async function validateConfiguredPrice({ tier, priceId, expectedCents, key }) {
 }
 
 console.log("[verify:membership-pricing] Canonical amounts (must match membershipPricing.js)");
-if (SUPPORT_MEMBERSHIP_ANNUAL_CENTS !== 99) fail("SUPPORT_MEMBERSHIP_ANNUAL_CENTS must be 99");
-else pass("Support = $0.99/year (99 cents)");
 if (PRO_MEMBERSHIP_ANNUAL_CENTS !== 599) fail("PRO_MEMBERSHIP_ANNUAL_CENTS must be 599");
 else pass("Pro = $5.99/year (599 cents)");
+pass("Support Membership checkout is retired (Pro-only)");
 
-const supportId = supportPriceId();
 const proId = proPriceId();
+const supportId = legacySupportPriceId();
 const block = blockedIds();
 if (supportId && block.has(supportId)) {
-  fail(`STRIPE_PRICE_SUPPORT_YEARLY=${supportId} is on the blocked list — update Vercel env before deploy`);
+  fail(`STRIPE_PRICE_SUPPORT_YEARLY=${supportId} is on the blocked list — remove from Vercel env`);
 }
 
 const key = String(process.env.STRIPE_SECRET_KEY || "").trim();
@@ -154,17 +153,16 @@ if (!key) {
 } else {
   console.log("\n[verify:membership-pricing] Live Stripe price validation");
   await validateConfiguredPrice({
-    tier: "support",
-    priceId: supportId,
-    expectedCents: SUPPORT_MEMBERSHIP_ANNUAL_CENTS,
-    key,
-  });
-  await validateConfiguredPrice({
     tier: "pro",
     priceId: proId,
     expectedCents: PRO_MEMBERSHIP_ANNUAL_CENTS,
     key,
   });
+  if (supportId) {
+    console.warn(
+      `[verify:membership-pricing] Legacy STRIPE_PRICE_SUPPORT_* still set (${supportId}) — unused for new checkout.`,
+    );
+  }
 }
 
 if (failures.length) {

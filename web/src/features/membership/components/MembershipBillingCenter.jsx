@@ -18,7 +18,7 @@ import {
 import { membershipTierRank } from "@/lib/billing/membershipTierOrder";
 
 const UPGRADE_TARGETS = {
-  [MEMBERSHIP_TIER_KEYS.NONE]: ["support", "member"],
+  [MEMBERSHIP_TIER_KEYS.NONE]: ["member"],
   [MEMBERSHIP_TIER_KEYS.ACCESS]: ["member"],
   [MEMBERSHIP_TIER_KEYS.SUPPORT]: ["member"],
   [MEMBERSHIP_TIER_KEYS.MEMBER]: [],

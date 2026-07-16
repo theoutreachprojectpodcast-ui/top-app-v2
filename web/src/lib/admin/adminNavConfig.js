@@ -84,7 +84,7 @@ export const ADMIN_HORIZONTAL_NAV = [
     href: "/admin/membership",
     readiness: "production",
     matchPrefix: "/admin/membership",
-    keywords: ["tiers", "pricing", "pro", "support", "plans"],
+    keywords: ["tiers", "pricing", "pro", "support", "plans", "availability", "feature flag"],
     description: "Membership tiers, copy, and subscription settings.",
   },
   {

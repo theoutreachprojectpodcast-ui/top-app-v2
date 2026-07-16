@@ -22,7 +22,7 @@ export function getProUpgradeGateContent(pathname) {
   if (/^\/settings(\/|$)/.test(path)) {
     return {
       title: "Account settings are a Pro feature",
-      message: "Upgrade to Pro for full account settings. Support members can still manage membership on Profile.",
+      message: "Upgrade to Pro for full account settings and membership management.",
       feature: "Settings",
     };
   }
@@ -76,5 +76,12 @@ export function getProUpgradeGateContentForNav(navKey) {
   if (key === "trusted") return getProUpgradeGateContent("/trusted");
   if (key === "settings") return getProUpgradeGateContent("/settings");
   if (key === "contact") return getProUpgradeGateContent("/contact");
+  if (key === "podcasts" || key === "podcast") {
+    return {
+      title: "Podcasts are a Pro feature",
+      message: "Upgrade to Pro to watch episodes, explore guests, and apply to be on the show.",
+      feature: "Podcasts",
+    };
+  }
   return getProUpgradeGateContent("/");
 }

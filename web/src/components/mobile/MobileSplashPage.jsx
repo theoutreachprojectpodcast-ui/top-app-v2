@@ -6,8 +6,7 @@ import BrandMark from "@/components/BrandMark";
 import AuthLoadingOverlay from "@/components/auth/AuthLoadingOverlay";
 import { isCapacitorNative } from "@/lib/capacitor/platform";
 import {
-  SUPPORT_MEMBERSHIP_DISPLAY_NAME,
-  SUPPORT_MEMBERSHIP_PRICE_LABEL,
+  PRO_MEMBERSHIP_DISPLAY_NAME,
   PRO_MEMBERSHIP_PRICE_LABEL,
 } from "@/features/membership/membershipTiers";
 import { launchWorkOSAuth } from "@/lib/auth/workosNativeAuthLaunch";
@@ -88,8 +87,8 @@ export default function MobileSplashPage() {
           Veterans, sponsors, trusted resources, and community — in one app.
         </p>
         <p className="mobileSplashPage__pricing">
-          <strong>{SUPPORT_MEMBERSHIP_DISPLAY_NAME}</strong> — {SUPPORT_MEMBERSHIP_PRICE_LABEL} for web and app access.
-          Pro ({PRO_MEMBERSHIP_PRICE_LABEL}) adds community posting and premium tools.
+          <strong>{PRO_MEMBERSHIP_DISPLAY_NAME}</strong> — {PRO_MEMBERSHIP_PRICE_LABEL} unlocks the full platform.
+          Browse the public nonprofit directory anytime without a membership.
         </p>
         {authError ? (
           <p className="mobileSplashPage__notice mobileSplashPage__notice--warn" role="alert">

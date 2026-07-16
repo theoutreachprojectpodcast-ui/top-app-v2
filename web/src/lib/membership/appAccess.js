@@ -25,10 +25,10 @@ export {
   navCacheHasFreeAccess,
 } from "@/lib/membership/membershipAccess";
 
-/** @deprecated Use SUPPORT_MEMBERSHIP_DISPLAY_NAME */
-export { SUPPORT_MEMBERSHIP_DISPLAY_NAME as APP_ACCESS_MEMBERSHIP_DISPLAY_NAME } from "@/lib/membership/membershipAccess";
-/** @deprecated Use SUPPORT_MEMBERSHIP_PRICE_LABEL */
-export { SUPPORT_MEMBERSHIP_PRICE_LABEL as APP_ACCESS_MEMBERSHIP_PRICE_LABEL } from "@/lib/membership/membershipAccess";
+/** @deprecated Use PRO_MEMBERSHIP_DISPLAY_NAME */
+export { PRO_MEMBERSHIP_DISPLAY_NAME as APP_ACCESS_MEMBERSHIP_DISPLAY_NAME } from "@/lib/membership/membershipAccess";
+/** @deprecated Use PRO_MEMBERSHIP_PRICE_LABEL */
+export { PRO_MEMBERSHIP_PRICE_LABEL as APP_ACCESS_MEMBERSHIP_PRICE_LABEL } from "@/lib/membership/membershipAccess";
 
 import { hasStaffBypass, hasActiveMembership } from "@/lib/membership/membershipAccess";
 

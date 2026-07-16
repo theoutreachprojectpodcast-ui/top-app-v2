@@ -228,14 +228,15 @@ export default function MobileNativeGate() {
         }
       }
       if (path === "/" || path === "") {
-        if (guest) return;
-        if (access === "pending") return;
-        if (access === "denied") {
-          const target = membershipTarget;
-          if (lastRedirectRef.current !== target) {
-            lastRedirectRef.current = target;
-            router.replace(target);
-          }
+        // Public home/directory — guests and non-Pro users may stay.
+        return;
+      }
+      if (isMembershipExemptPath(path)) return;
+      if (requiresActiveMembershipPath(path) && access === "denied") {
+        const target = membershipTarget;
+        if (lastRedirectRef.current !== target) {
+          lastRedirectRef.current = target;
+          router.replace(target);
         }
       }
       return;
@@ -245,7 +246,7 @@ export default function MobileNativeGate() {
 
     if (access === "pending") return;
 
-    if (access === "denied") {
+    if (access === "denied" && requiresActiveMembershipPath(path)) {
       const target = membershipTarget;
       if (lastRedirectRef.current !== target) {
         lastRedirectRef.current = target;

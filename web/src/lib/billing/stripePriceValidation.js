@@ -4,7 +4,6 @@ import {
   blockedMembershipPriceIds,
   expectedAnnualCentsForTier,
   membershipCheckoutHardBlock,
-  supportCheckoutTemporarilyDisabled,
 } from "@/lib/billing/membershipPricing";
 
 /**
@@ -26,9 +25,10 @@ import {
  * @param {import('stripe').Stripe} stripe
  * @param {string} tier
  * @param {string} priceId
+ * @param {{ supportEnabled?: boolean }} [opts]
  * @returns {Promise<MembershipPriceValidation>}
  */
-export async function validateMembershipStripePrice(stripe, tier, priceId) {
+export async function validateMembershipStripePrice(stripe, tier, priceId, opts = {}) {
   const t = String(tier || "").toLowerCase();
   const id = String(priceId || "").trim();
   const expectedCents = expectedAnnualCentsForTier(t);
@@ -52,11 +52,11 @@ export async function validateMembershipStripePrice(stripe, tier, priceId) {
     };
   }
 
-  if ((t === "support" || t === "access") && supportCheckoutTemporarilyDisabled()) {
+  if ((t === "support" || t === "access") && opts.supportEnabled !== true) {
     return {
       ...base,
       code: "support_checkout_disabled",
-      message: "Support Membership checkout is temporarily disabled while pricing is verified.",
+      message: "Support Membership is not available. Choose Pro Membership ($5.99/year).",
     };
   }
 
