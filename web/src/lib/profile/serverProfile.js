@@ -79,6 +79,11 @@ export function profileRowToClientDto(row) {
     stripeCustomerIdSet: Boolean(row.stripe_customer_id),
     stripeSubscriptionIdSet: Boolean(row.stripe_subscription_id),
     membershipSource: String(row.membership_source || "manual").trim() || "manual",
+    migratedToProAt: row.migrated_to_pro_at != null ? String(row.migrated_to_pro_at) : "",
+    migratedToProUntil: row.migrated_to_pro_until != null ? String(row.migrated_to_pro_until) : "",
+    migrationVersion: row.migration_version != null ? String(row.migration_version) : "",
+    supportMembershipStatus:
+      row.support_membership_status != null ? String(row.support_membership_status) : "",
     ...spreadMetadata(meta),
     userType: row.user_type != null ? String(row.user_type).trim().toLowerCase() : "member",
   };

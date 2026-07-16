@@ -7,7 +7,7 @@
     "node": ">=20.20.0"
   },
   "scripts": {
-    "prebuild": "node scripts/sync-public-assets.mjs && node scripts/sync-pwa-icons.mjs && node scripts/validate-production-env.mjs && node scripts/test-membership-pricing.mjs && node scripts/test-membership-configuration.mjs && node scripts/verify-trusted-resources-registry.mjs && node scripts/verify-entity-display-names.mjs && node scripts/verify-trusted-resources-titles.mjs",
+    "prebuild": "node scripts/sync-public-assets.mjs && node scripts/sync-pwa-icons.mjs && node scripts/validate-production-env.mjs && node scripts/test-membership-pricing.mjs && node scripts/test-membership-configuration.mjs && node scripts/test-support-to-pro-migration.mjs && node scripts/verify-trusted-resources-registry.mjs && node scripts/verify-entity-display-names.mjs && node scripts/verify-trusted-resources-titles.mjs",
     "verify:trusted-resources": "node scripts/verify-trusted-resources-registry.mjs",
     "smoke:routes": "node scripts/smoke-routes.mjs",
     "verify:workos-auth": "node scripts/verify-workos-auth.mjs",
@@ -30,6 +30,7 @@
     "apply:production:rls:apply": "node scripts/apply-production-rls-hardening.mjs --apply",
     "verify:production-rls": "node scripts/verify-production-rls.mjs",
     "test:membership-config": "node scripts/test-membership-configuration.mjs",
+    "test:support-to-pro-migration": "node scripts/test-support-to-pro-migration.mjs",
     "verify:auth-freeze": "node scripts/auth-production-guards.mjs",
     "verify:production-auth": "node scripts/verify-production-auth-flow.mjs",
     "verify:membership-access": "node scripts/verify-membership-access.mjs",

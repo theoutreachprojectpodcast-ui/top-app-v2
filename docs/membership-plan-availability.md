@@ -36,9 +36,9 @@ Run in Supabase SQL Editor:
 ## Existing Support users
 
 - Accounts and Stripe history preserved
-- No auto-upgrade / cancel / refund
-- While flag is off: public directory only; Pro paywall for protected features
-- Admin report on the Membership page shows Support profile counts
+- Use **Admin → Memberships → Support-to-Pro Migration** to grant complimentary Pro through the original paid period end
+- See `docs/support-to-pro-migration.md`
+- While Support is disabled: new Support purchases remain blocked
 
 ## Rollback
 

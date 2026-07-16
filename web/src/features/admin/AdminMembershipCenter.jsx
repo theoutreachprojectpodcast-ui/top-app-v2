@@ -16,6 +16,10 @@ export default function AdminMembershipCenter() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
+  const [migrationDryRun, setMigrationDryRun] = useState(null);
+  const [migrationResult, setMigrationResult] = useState(null);
+  const [migrationVerification, setMigrationVerification] = useState(null);
+  const [migrationBusy, setMigrationBusy] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -90,6 +94,67 @@ export default function AdminMembershipCenter() {
       setError(`Network error while trying to ${verb} Support Membership.`);
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function runMigrationDryRun() {
+    setMigrationBusy(true);
+    setError("");
+    setStatus("");
+    try {
+      const res = await fetch("/api/admin/membership/support-to-pro-migration", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "dry_run" }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.message || data.error || "Dry run failed.");
+        return;
+      }
+      setMigrationDryRun(data.dryRun || null);
+      setStatus(
+        `Dry run complete: ${data.dryRun?.summary?.eligible ?? 0} eligible, ${data.dryRun?.summary?.exceptions ?? 0} exceptions. No accounts were changed.`,
+      );
+    } catch {
+      setError("Network error during migration dry run.");
+    } finally {
+      setMigrationBusy(false);
+    }
+  }
+
+  async function runMigrationExecute() {
+    const confirmed = window.confirm(
+      "Run Support→Pro migration?\n\nEligible Support members will receive complimentary Pro access through the end of their original paid year. No new Stripe charges will be created. Support renewals will be set to cancel at period end.\n\nContinue?",
+    );
+    if (!confirmed) return;
+
+    setMigrationBusy(true);
+    setError("");
+    setStatus("");
+    try {
+      const res = await fetch("/api/admin/membership/support-to-pro-migration", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "execute", confirm: true, sendEmail: true }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.message || data.error || "Migration execute failed.");
+        return;
+      }
+      setMigrationResult(data.result || null);
+      setMigrationVerification(data.verification || null);
+      setStatus(
+        `Migration complete: ${data.result?.migrated ?? 0} upgraded, ${data.result?.emailsSent ?? 0} emails sent, ${data.result?.emailsFailed ?? 0} email failures, ${data.result?.stripeCancelsApplied ?? 0} Stripe cancel-at-period-end updates.`,
+      );
+      await load();
+    } catch {
+      setError("Network error while executing migration.");
+    } finally {
+      setMigrationBusy(false);
     }
   }
 
@@ -168,12 +233,95 @@ export default function AdminMembershipCenter() {
             </div>
           </div>
           <p className="adminMuted adminMt4">
-            Existing Support users keep their accounts and billing history. While Support is disabled they only retain
-            public directory access and must upgrade to Pro for protected features. Do not cancel or refund Stripe
-            subscriptions without an explicit business decision.
+            Use Support-to-Pro Migration below to grant complimentary Pro through each member&apos;s original paid
+            period end. Do not cancel or refund Stripe subscriptions outside that controlled migration.
           </p>
         </>
       ) : null}
+
+      <h2 className="adminSectionTitle">Support-to-Pro Migration</h2>
+      <div className="adminEntityCard adminMt4">
+        <p className="adminMuted" style={{ marginTop: 0 }}>
+          Upgrades existing $0.99 Support members to complimentary Pro through the end of their original one-year paid
+          term. Idempotent. No new charges. Sets Support subscriptions to cancel at period end when still renewing.
+        </p>
+        <div className="adminToolbar" style={{ gap: 12, flexWrap: "wrap" }}>
+          <button
+            type="button"
+            className="btnSoft"
+            disabled={migrationBusy || loading}
+            onClick={() => void runMigrationDryRun()}
+          >
+            {migrationBusy ? "Working…" : "Preview dry run"}
+          </button>
+          <button
+            type="button"
+            className="btnPrimary"
+            disabled={migrationBusy || loading}
+            onClick={() => void runMigrationExecute()}
+          >
+            {migrationBusy ? "Working…" : "Run migration"}
+          </button>
+        </div>
+        {migrationDryRun?.summary ? (
+          <div className="adminMembershipGrid adminMt4">
+            <div className="adminMembershipStat">
+              <span className="adminMembershipStat__label">Discovered</span>
+              <strong>{migrationDryRun.summary.totalDiscovered}</strong>
+            </div>
+            <div className="adminMembershipStat">
+              <span className="adminMembershipStat__label">Eligible</span>
+              <strong>{migrationDryRun.summary.eligible}</strong>
+            </div>
+            <div className="adminMembershipStat">
+              <span className="adminMembershipStat__label">Already Pro</span>
+              <strong>{migrationDryRun.summary.alreadyPaidPro}</strong>
+            </div>
+            <div className="adminMembershipStat">
+              <span className="adminMembershipStat__label">Expired</span>
+              <strong>{migrationDryRun.summary.expired}</strong>
+            </div>
+            <div className="adminMembershipStat">
+              <span className="adminMembershipStat__label">Exceptions</span>
+              <strong>{migrationDryRun.summary.exceptions}</strong>
+            </div>
+            <div className="adminMembershipStat">
+              <span className="adminMembershipStat__label">Stripe cancel@period end</span>
+              <strong>{migrationDryRun.summary.proposedStripeCancelAtPeriodEnd}</strong>
+            </div>
+          </div>
+        ) : null}
+        {migrationResult ? (
+          <p className="adminMuted adminMt4">
+            Last execute: migrated {migrationResult.migrated}, emails sent {migrationResult.emailsSent}, email failures{" "}
+            {migrationResult.emailsFailed}, Stripe cancels {migrationResult.stripeCancelsApplied}, errors{" "}
+            {migrationResult.errors?.length || 0}.
+          </p>
+        ) : null}
+        {migrationVerification ? (
+          <p className="adminMuted adminMt4">
+            Verification — active Support: {migrationVerification.activeSupportUsers}, active migrated Pro:{" "}
+            {migrationVerification.activeMigratedProUsers}, missing expiry:{" "}
+            {migrationVerification.migratedUsersMissingExpiration}, ok: {migrationVerification.ok ? "yes" : "no"}.
+          </p>
+        ) : null}
+        {migrationDryRun?.candidates?.length ? (
+          <div className="adminPanelBody adminPanelBody--loose adminMt4" style={{ maxHeight: 320, overflow: "auto" }}>
+            {migrationDryRun.candidates.slice(0, 100).map((row) => (
+              <article key={row.workosUserId} className="adminEntityCard adminEntityCard--compact">
+                <div className="adminMuted adminEntityCard__meta">
+                  {row.status} · {row.email || "no email"} · {row.displayName || "—"}
+                </div>
+                <p className="adminEntityCard__body--pre" style={{ margin: 0 }}>
+                  Period: {row.originalSupportPeriodStart || "—"} → {row.originalSupportPeriodEnd || "—"}
+                  {row.exceptionReason ? ` · ${row.exceptionReason}` : ""}
+                  {row.proposedStripeCancelAtPeriodEnd ? " · will cancel@period end" : ""}
+                </p>
+              </article>
+            ))}
+          </div>
+        ) : null}
+      </div>
 
       {stats ? (
         <>

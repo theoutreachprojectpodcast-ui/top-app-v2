@@ -1,13 +1,15 @@
 /**
  * Single source of truth for membership tier access (web + mobile + API).
  *
- * App access requires Pro Membership ($5.99/yr) or sponsor/staff.
+ * App access requires Pro Membership ($5.99/yr), sponsor/staff, or an active
+ * complimentary Support→Pro migrated entitlement through the original paid end date.
  * Legacy Support / App Access tiers remain recognized for display and upgrade UX only.
  */
 import { hasActiveMemberBilling } from "@/lib/account/entitlements";
 import { isDefaultApprovedAdminEmail } from "@/lib/admin/adminPolicy";
 import { normalizeMembershipTierKey, MEMBERSHIP_TIER_KEYS } from "@/features/membership/membershipTiers";
 import { normalizeDbMembershipTier as normalizeBillingTier } from "@/lib/billing/membershipTierOrder";
+import { hasMigratedSupportProEntitlement } from "@/lib/membership/supportToProMigrationShared";
 
 /** @deprecated Support Membership product — kept for legacy subscriber labels. */
 export const SUPPORT_MEMBERSHIP_DISPLAY_NAME = "Support Membership";
@@ -29,6 +31,7 @@ const APP_ACCESS_TIERS = new Set(["member", "sponsor"]);
  */
 export function getCurrentUserMembershipTier(profile) {
   if (!profile) return "none";
+  if (hasMigratedSupportProEntitlement(profile)) return "pro";
   const raw = normalizeMembershipTierKey(
     profile.membershipTier ?? profile.membership_tier ?? "free",
   );
@@ -72,6 +75,7 @@ export function hasStaffBypass(profile, opts = {}) {
  */
 export function hasActiveMembership(profile, opts = {}) {
   if (hasStaffBypass(profile, opts)) return true;
+  if (hasMigratedSupportProEntitlement(profile)) return true;
   if (!profile) return false;
 
   const tier = normalizeBillingTier(
@@ -108,12 +112,14 @@ export function requireSupportOrPro(profile, opts = {}) {
 
 /**
  * Pro (or sponsor / staff) with active billing — required for app access.
+ * Includes complimentary Support→Pro migrated entitlements until original period end.
  * @param {Record<string, unknown> | null | undefined} profile
  * @param {{ isPlatformAdmin?: boolean, isPrivilegedStaff?: boolean }} [opts]
  */
 export function requirePro(profile, opts = {}) {
   if (hasStaffBypass(profile, opts)) return true;
   if (!profile) return false;
+  if (hasMigratedSupportProEntitlement(profile)) return true;
 
   const tier = normalizeBillingTier(
     profile.membershipTier ?? profile.membership_tier ?? "free",
@@ -123,7 +129,8 @@ export function requirePro(profile, opts = {}) {
   if (!APP_ACCESS_TIERS.has(tier)) return false;
   if (!hasActiveMemberBilling(status)) return false;
 
-  if (String(profile.membershipSource ?? profile.membership_source ?? "").toLowerCase() === "manual") {
+  const source = String(profile.membershipSource ?? profile.membership_source ?? "").toLowerCase();
+  if (source === "manual" || source === "support_to_pro_migration") {
     return APP_ACCESS_TIERS.has(tier);
   }
 
@@ -177,4 +184,4 @@ export function navCacheHasFreeAccess(profile, entitlements) {
   });
 }
 
-export { SUPPORT_TIERS, PRO_TIERS };
+export { SUPPORT_TIERS, PRO_TIERS, hasMigratedSupportProEntitlement };
