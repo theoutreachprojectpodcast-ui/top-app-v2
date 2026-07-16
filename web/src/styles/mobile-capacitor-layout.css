@@ -49,22 +49,24 @@ html[data-capacitor-native] .bottomNav.bottomNav--mobileDock .navItemLabel {
   font-size: clamp(9px, calc(var(--cap-vw, 1vw) * 2.4), 11px);
 }
 
-/* Never apply desktop width breakpoint layout inside the native shell. */
+/* Wide WebView: keep home wordmark at mobile header scale (not desktop hero sizing). */
 @media (min-width: 761px) {
   html[data-capacitor-native] main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) {
     --header-floating-offset: 4px;
-    --header-floating-height: clamp(350px, calc(var(--cap-vw, 1vw) * 49), 476px);
-    --header-fade-height: 24px;
+    --header-floating-height: clamp(137px, calc(var(--cap-vw, 1vw) * 36), 182px);
+    --header-fade-height: 16px;
     --home-logo-content-gap: 8px;
   }
 
   html[data-capacitor-native] main.topApp[data-page-atmosphere="home"] .headerBrandStack {
-    max-width: min(1092px, calc(var(--cap-portrait-width, 100vw) * 0.92));
+    max-width: min(587px, calc(var(--cap-portrait-width, 100vw) * 0.92));
   }
 
   html[data-capacitor-native] main.topApp[data-page-atmosphere="home"] img.brandMarkImg--header:not(.podcastBrandLogo) {
-    max-height: clamp(350px, calc(var(--cap-vw, 1vw) * 49), 476px);
-    max-width: min(910px, calc(var(--cap-portrait-width, 100vw) * 0.88));
+    max-height: clamp(137px, calc(var(--cap-vw, 1vw) * 36), 182px);
+    max-width: min(587px, calc(var(--cap-portrait-width, 100vw) * 0.88));
+    min-width: 0;
+    min-height: 0;
   }
 }
 

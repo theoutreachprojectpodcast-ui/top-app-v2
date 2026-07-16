@@ -11,7 +11,7 @@ export const EDUARDO_PICO_DESIGNS_LOGO_URL =
 export const GAMEDAY_MENS_HEALTH_LOGO_URL = "/sponsors/gameday-mens-health-wordmark.jpg";
 
 /** ROPE Solutions official mark (square PNG, dark-friendly). */
-export const ROPE_SOLUTIONS_LOGO_URL = "/sponsors/rope-solutions-logo.png?v=3";
+export const ROPE_SOLUTIONS_LOGO_URL = "/sponsors/rope-solutions-logo.png?v=4";
 
 /** Apex Global Outdoors — official circular wordmark PNG (card logo slot); hero art is `featured-bg-apex-global-outdoors.png`. */
 export const APEX_GLOBAL_OUTDOORS_LOGO_URL = "/sponsors/apex-global-outdoors-logo.png?v=2";
