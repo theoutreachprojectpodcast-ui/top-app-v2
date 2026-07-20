@@ -15,9 +15,9 @@ import {
 import { sanitizeDisplayableImageUrl } from "@/lib/media/safeImageUrl";
 import OrganizationLogo from "@/components/shared/OrganizationLogo";
 import SponsorOutboundLink from "@/features/sponsors/components/SponsorOutboundLink";
-import { getSupabaseClient } from "@/lib/supabase/client";
 import { getSponsorBySlug } from "@/features/sponsors/api/sponsorCatalogApi";
 import { sponsorBlurbsRedundant } from "@/features/sponsors/domain/sponsorViewModels";
+import { isMainAppMissionPartnerSlug } from "@/features/sponsors/domain/sponsorMissionPartners";
 
 function formatTierLabel(key) {
   const k = String(key || "").trim().toLowerCase();
@@ -57,25 +57,32 @@ function SocialIconLink({ item, brandName, sponsorSlug, pageSource }) {
   );
 }
 
-export default function SponsorProfilePage({ slug }) {
-  const supabase = useMemo(() => getSupabaseClient(), []);
-  const [profile, setProfile] = useState(null);
-  const [status, setStatus] = useState("Loading sponsor...");
+export default function SponsorProfilePage({ slug, initialProfile = null }) {
+  const resolvedSlug = decodeURIComponent(String(slug || "").trim());
+  const [profile, setProfile] = useState(() => initialProfile || null);
+  const [status, setStatus] = useState(() => (initialProfile ? "" : "Loading sponsor..."));
   const [logoIndex, setLogoIndex] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const row = await getSponsorBySlug(supabase, slug);
+      const row = await getSponsorBySlug(null, resolvedSlug);
       if (cancelled) return;
-      setProfile(row);
-      setStatus(row ? "" : "Sponsor profile not found.");
-      setLogoIndex(0);
+      if (row) {
+        setProfile(row);
+        setStatus("");
+        setLogoIndex(0);
+        return;
+      }
+      if (!initialProfile) {
+        setProfile(null);
+        setStatus("Sponsor profile not found.");
+      }
     })();
     return () => {
       cancelled = true;
     };
-  }, [supabase, slug]);
+  }, [resolvedSlug, initialProfile]);
 
   const heroSrc = profile ? sanitizeDisplayableImageUrl(String(profile.background_image_url || "").trim()) : "";
   const logoCandidates = useMemo(() => {
@@ -100,7 +107,7 @@ export default function SponsorProfilePage({ slug }) {
         </div>
       ) : (
         <>
-          {profile.isPodcastSponsor ? (
+          {profile.isPodcastSponsor && !isMainAppMissionPartnerSlug(profile.slug) ? (
             <div className="sponsorProfileContextBanner card" role="note">
               <p className="sponsorProfileContextBannerText">
                 This organization sponsors The Outreach Project podcast.{" "}
@@ -142,9 +149,11 @@ export default function SponsorProfilePage({ slug }) {
                 <div className="sponsorProfileTitleBlock">
                   <h1 className="sponsorProfileTitle">{brandName}</h1>
                   <p className="sponsorProfileTypeLine">
-                    {String(profile.sponsor_type || "")
-                      .replace(/_/g, " ")
-                      .replace(/\b\w/g, (c) => c.toUpperCase())}
+                    {String(profile.sponsor_category || "")
+                      .trim() ||
+                      String(profile.sponsor_type || "")
+                        .replace(/_/g, " ")
+                        .replace(/\b\w/g, (c) => c.toUpperCase())}
                   </p>
                   {(() => {
                     const t = String(profile.tagline || "").trim();
@@ -220,10 +229,22 @@ export default function SponsorProfilePage({ slug }) {
           <div className="card sponsorProfileCard sponsorProfileOverview">
             <h2 className="sponsorProfileSectionTitle">Overview</h2>
             {(() => {
+              const introLead = String(profile.tagline || "").trim();
               const shortD = String(profile.short_description || "").trim();
               const longD = String(profile.long_description || "").trim();
+              const category = String(profile.sponsor_category || "").trim();
+              const shortIsCategoryLabel =
+                shortD && category && (shortD === category || sponsorBlurbsRedundant(shortD, category));
               if (!shortD && !longD) {
                 return <p className="sponsorProfileProse sponsorProfileProse--muted">No description on file yet.</p>;
+              }
+              if (longD && introLead && shortIsCategoryLabel) {
+                return (
+                  <div className="sponsorProfileProseStack">
+                    <p className="sponsorProfileProse sponsorProfileProse--lead">{introLead}</p>
+                    <p className="sponsorProfileProse">{longD}</p>
+                  </div>
+                );
               }
               if (shortD && longD && sponsorBlurbsRedundant(shortD, longD)) {
                 return <p className="sponsorProfileProse">{longD}</p>;

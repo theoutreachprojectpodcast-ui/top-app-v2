@@ -18,7 +18,7 @@ import {
 import { membershipTierRank } from "@/lib/billing/membershipTierOrder";
 
 const UPGRADE_TARGETS = {
-  [MEMBERSHIP_TIER_KEYS.NONE]: ["support", "member"],
+  [MEMBERSHIP_TIER_KEYS.NONE]: ["member"],
   [MEMBERSHIP_TIER_KEYS.ACCESS]: ["member"],
   [MEMBERSHIP_TIER_KEYS.SUPPORT]: ["member"],
   [MEMBERSHIP_TIER_KEYS.MEMBER]: [],
@@ -376,6 +376,7 @@ export default function MembershipBillingCenter({
             hasStripeCustomer={stripeCustomerReady}
             hasStripeSubscription={stripeSubscriptionReady}
             returnPath={checkoutReturnPath}
+            onReturned={() => void load()}
           />
         </div>
       ) : null}
@@ -456,6 +457,7 @@ export default function MembershipBillingCenter({
           hasStripeCustomer={stripeCustomerReady}
           hasStripeSubscription={stripeSubscriptionReady}
           returnPath={checkoutReturnPath}
+          onReturned={() => void load()}
         />
         <Link className="btnSoft" href="/settings#account-membership">
           Settings

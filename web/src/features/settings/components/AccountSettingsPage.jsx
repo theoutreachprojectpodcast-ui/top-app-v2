@@ -272,7 +272,7 @@ export default function AccountSettingsPage({
         <p className="sponsorSectionLead">
           You have <strong>{favoriteEins.length}</strong> saved {favoriteEins.length === 1 ? "organization" : "organizations"}.
         </p>
-        <Link className="btnSoft" href="/profile">
+        <Link className="btnSoft" href="/profile#saved-organizations">
           View on profile
         </Link>
       </div>

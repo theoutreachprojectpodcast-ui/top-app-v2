@@ -24,7 +24,7 @@ insert into public.sponsors_catalog (
   short_description, tagline, featured, display_order, verified, enrichment_status, is_active
 )
 values
-  ('rope-solutions', 'Rope Solutions', 'Podcast sponsor', 'podcast', '',
+  ('rope-solutions', 'ROPE Solutions', 'Podcast sponsor', 'podcast', '',
    'Podcast sponsor', 'Supporting The Outreach Project podcast.', true, 10, true, 'manual', true),
   ('game-day-mens-health', 'Game Day Men''s Health', 'Podcast sponsor', 'podcast', '',
    'Podcast sponsor', 'Supporting The Outreach Project podcast.', true, 20, true, 'manual', true),

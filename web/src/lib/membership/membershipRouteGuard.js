@@ -3,10 +3,7 @@ import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
 import {
   canSaveOrganizations,
   canViewCommunity,
-  canViewDirectory,
-  hasActiveMembership,
   requirePro,
-  requireSupportOrPro,
 } from "@/lib/membership/membershipAccess";
 import { computeEntitlementsFromProfileRow } from "@/lib/account/entitlements";
 
@@ -26,7 +23,7 @@ export function profilePassesMembershipScope(profileRow, scope) {
     case "platform":
       return requirePro(profileRow, opts);
     case "directory":
-      return canViewDirectory(profileRow, opts);
+      return true;
     case "save_organizations":
       return canSaveOrganizations(profileRow, opts);
     case "community_view":
@@ -38,7 +35,7 @@ export function profilePassesMembershipScope(profileRow, scope) {
     case "trusted_pro":
       return requirePro(profileRow, opts);
     default:
-      return requireSupportOrPro(profileRow, opts);
+      return requirePro(profileRow, opts);
   }
 }
 
@@ -47,17 +44,23 @@ export function profilePassesMembershipScope(profileRow, scope) {
  * @param {{ upgrade?: string }} [extra]
  */
 export function membershipDeniedResponse(scope, extra = {}) {
-  const upgrade = extra.upgrade || (scope.includes("pro") || scope === "community_post" ? "pro" : "support");
+  const upgrade =
+    extra.upgrade ||
+    (scope === "save_organizations" ||
+    scope.includes("pro") ||
+    scope === "community_post" ||
+    scope === "community_view" ||
+    scope === "podcast_premium" ||
+    scope === "trusted_pro"
+      ? "pro"
+      : "pro");
   return Response.json(
     {
       ok: false,
       error: "membership_required",
       scope,
       upgrade,
-      message:
-        upgrade === "pro"
-          ? "Pro Membership is required for this feature."
-          : "An active Support or Pro membership is required.",
+      message: "Pro Membership ($5.99/year) is required for this feature.",
     },
     { status: 403 },
   );

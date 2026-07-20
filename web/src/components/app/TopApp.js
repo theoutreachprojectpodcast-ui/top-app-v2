@@ -1,6 +1,6 @@
-﻿"use client";
+"use client";
 
-import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import HeaderInner from "@/components/layout/HeaderInner";
@@ -19,7 +19,6 @@ import "@/features/trusted-resources/trusted-resources-cards.css";
 import CommunityPage from "@/features/community/components/CommunityPage";
 import ProfileHeader from "@/features/profile/components/ProfileHeader";
 import ProfileIdentitySection from "@/features/profile/components/ProfileIdentitySection";
-import ProfileQuickStats from "@/features/profile/components/ProfileQuickStats";
 import SavedOrganizationsList from "@/features/profile/components/SavedOrganizationsList";
 import SiteBottomNavGlyph from "@/components/navigation/SiteBottomNavGlyph";
 import {
@@ -29,6 +28,7 @@ import {
 } from "@/components/navigation/siteBottomNavConfig";
 import { SiteHamburgerNavMenu } from "@/components/navigation/SiteMobileNavHamburgerEntries";
 import HomeScreen from "@/components/home/HomeScreen";
+import { scrollToPageTop } from "@/lib/navigation/scrollToPageTop";
 import { SUPPORT_EMAIL } from "@/lib/runtime/brandContact";
 import ProfileCompletionPanel from "@/features/profile/components/ProfileCompletionPanel";
 import HeaderAccountMenu from "@/components/layout/HeaderAccountMenu";
@@ -46,8 +46,6 @@ import MembershipAtAGlance from "@/features/membership/components/MembershipAtAG
 import MembershipBillingCenter from "@/features/membership/components/MembershipBillingCenter";
 import {
   PRO_MEMBERSHIP_PRICE_LABEL,
-  SUPPORT_MEMBERSHIP_DISPLAY_NAME,
-  SUPPORT_MEMBERSHIP_PRICE_LABEL,
 } from "@/features/membership/membershipTiers";
 import {
   membershipAccountMenuHint,
@@ -56,7 +54,8 @@ import {
 } from "@/features/membership/membershipAccountDisplay";
 import HomeMembershipSection from "@/components/home/HomeMembershipSection";
 import MembershipPlansModal from "@/components/membership/MembershipPlansModal";
-import MembershipUpgradePrompt from "@/components/membership/MembershipUpgradePrompt";
+import ProUpgradeModal from "@/components/membership/ProUpgradeModal";
+import { getProUpgradeGateContentForNav } from "@/lib/membership/proUpgradeGateCopy";
 import { getSupabaseClient } from "@/lib/supabase/client";
 import { emptyProfileAvatarUrl } from "@/lib/avatarFallback";
 import { rowEin } from "@/lib/utils";
@@ -119,6 +118,8 @@ function DemoAuthPasswordVisibilityIcon({ revealed }) {
   );
 }
 
+const TOP_APP_PRO_NAV_KEYS = new Set(["community", "trusted", "settings"]);
+
 function TopAppInner({ initialNav = "home" }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -128,6 +129,7 @@ function TopAppInner({ initialNav = "home" }) {
   const sb = useMemo(() => getSupabaseClient(), []);
   const [nav, setNav] = useState(initialNav);
   const [overlay, setOverlay] = useState(null);
+  const [proGateHint, setProGateHint] = useState("");
   const [authMode, setAuthMode] = useState("signin");
   const [authDraft, setAuthDraft] = useState({ firstName: "", lastName: "", email: "", password: "" });
   const [demoAuthPasswordVisible, setDemoAuthPasswordVisible] = useState(false);
@@ -145,8 +147,10 @@ function TopAppInner({ initialNav = "home" }) {
     typeof window !== "undefined" ? readRememberEmailPref() : true,
   );
 
-  useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  const mainScrollRef = useRef(null);
+
+  useLayoutEffect(() => {
+    scrollToPageTop({ root: mainScrollRef.current });
   }, [nav]);
 
   useEffect(() => {
@@ -156,6 +160,7 @@ function TopAppInner({ initialNav = "home" }) {
   useEffect(() => {
     if (pathname === "/settings") setNav("settings");
     else if (pathname === "/profile") setNav("profile");
+    else if (pathname === "/community") setNav("community");
   }, [pathname]);
 
   useEffect(() => {
@@ -235,9 +240,42 @@ function TopAppInner({ initialNav = "home" }) {
     [entitlements],
   );
 
-  function goToProUpgrade() {
-    router.push(isCapacitorNative() ? "/mobile/access?upgrade=pro" : "/access?upgrade=pro");
+  const canSaveOrganizations = useMemo(
+    () =>
+      !!(
+        entitlements?.saveOrganizationsAccess ||
+        entitlements?.isPlatformAdmin ||
+        entitlements?.isPrivilegedStaff
+      ),
+    [entitlements],
+  );
+
+  function openProUpgradeModal(hint = "") {
+    if (!isAuthenticated) {
+      openSignInOverlay();
+      return;
+    }
+    setProGateHint(String(hint || "generic").trim() || "generic");
   }
+
+  function goToProUpgrade() {
+    openProUpgradeModal("generic");
+  }
+
+  const showTopAppProGate = useMemo(
+    () =>
+      pathname === "/" &&
+      isAuthenticated &&
+      !hasProAccess &&
+      TOP_APP_PRO_NAV_KEYS.has(nav),
+    [pathname, isAuthenticated, hasProAccess, nav],
+  );
+
+  const topAppProGateCopy = useMemo(() => {
+    if (showTopAppProGate) return getProUpgradeGateContentForNav(nav);
+    if (proGateHint) return getProUpgradeGateContentForNav(proGateHint);
+    return null;
+  }, [showTopAppProGate, nav, proGateHint]);
 
   const showMembershipOnProfile = useMemo(
     () =>
@@ -358,7 +396,7 @@ function TopAppInner({ initialNav = "home" }) {
         openSignInOverlay();
         return;
       }
-      goToProUpgrade();
+      openProUpgradeModal("podcasts");
       return;
     }
     if (pathname !== "/podcasts" && !pathname.startsWith("/podcasts/")) {
@@ -375,18 +413,48 @@ function TopAppInner({ initialNav = "home" }) {
     else setNav("profile");
   }
 
+  function dockNavCommunity() {
+    if (isCapacitorNative()) {
+      if (pathname === "/") {
+        setNav("community");
+        return;
+      }
+      router.replace("/?nav=community");
+      return;
+    }
+    if (pathname === "/") {
+      setNav("community");
+      return;
+    }
+    if (pathname !== "/community") {
+      router.push("/community");
+      return;
+    }
+    setNav("community");
+  }
+
+  function scrollAppToTop() {
+    scrollToPageTop({ root: mainScrollRef.current });
+  }
+
   function dockNavItem(item) {
     const key = String(item?.key || "");
-    if (["community", "trusted", "contact", "settings"].includes(key) && !hasProAccess) {
+    if (["community", "trusted", "settings"].includes(key) && !hasProAccess) {
       if (!isAuthenticated) {
         openSignInOverlay();
         return;
       }
-      goToProUpgrade();
-      return;
     }
     if (key === "home") {
       dockNavHome();
+      return;
+    }
+    if (key === "profile") {
+      dockNavProfile();
+      return;
+    }
+    if (key === "community") {
+      dockNavCommunity();
       return;
     }
     if (key === "podcast") {
@@ -405,13 +473,11 @@ function TopAppInner({ initialNav = "home" }) {
   function hamburgerNavItem(item) {
     const key = String(item?.key || "");
     const href = String(item?.href || "").trim() || "/";
-    if (["community", "trusted", "podcast", "contact", "settings"].includes(key) && !hasProAccess) {
+    if (["community", "trusted", "contact", "settings"].includes(key) && !hasProAccess) {
       if (!isAuthenticated) {
         openSignInOverlay();
         return;
       }
-      goToProUpgrade();
-      return;
     }
     if (key === "sponsors") {
       goToSponsorsHub();
@@ -429,6 +495,10 @@ function TopAppInner({ initialNav = "home" }) {
       dockNavProfile();
       return;
     }
+    if (key === "community") {
+      dockNavCommunity();
+      return;
+    }
     if (key === "settings") {
       if (pathname === "/") setNav("settings");
       else if (pathname !== "/settings") router.push("/settings");
@@ -440,6 +510,16 @@ function TopAppInner({ initialNav = "home" }) {
     }
     if (pathname !== href) router.push(href);
     else if (SITE_TOP_APP_DOCK_TAB_KEYS.has(key)) setNav(key);
+  }
+
+  function handleHamburgerNav(item) {
+    hamburgerNavItem(item);
+    scrollAppToTop();
+  }
+
+  function handleDockNav(item) {
+    dockNavItem(item);
+    scrollAppToTop();
   }
 
   async function fileToCompressedDataUrl(file) {
@@ -541,7 +621,7 @@ function TopAppInner({ initialNav = "home" }) {
       return;
     }
     if (tier === "sponsor") {
-      router.push("/sponsors?packages=1");
+      router.push("/sponsors?apply=1");
       return;
     }
     if (sessionKind !== "workos" || !authBackend?.stripe) {
@@ -571,25 +651,39 @@ function TopAppInner({ initialNav = "home" }) {
   }
 
   function openCommunity() {
-    if (!hasProAccess) {
-      if (!isAuthenticated) {
-        openSignInOverlay();
-        return;
-      }
-      goToProUpgrade();
+    if (!isAuthenticated) {
+      openSignInOverlay();
       return;
     }
-    setNav("community");
+    dockNavCommunity();
   }
   const fallbackSavedOrganizations = useMemo(() => {
     const byEin = new Map([...results, ...trusted].map((r) => [String(rowEin(r)), r]));
     return favoriteEins.map((ein) => byEin.get(String(ein)) || { ein, orgName: "Saved organization", city: "", state: "" });
   }, [favoriteEins, results, trusted]);
   const savedOrgsToRender = useMemo(() => {
-    if (savedOrganizations.length) return savedOrganizations;
-    if (isAuthenticated && favoriteEins.length) return [];
-    return fallbackSavedOrganizations.map((raw) => mapNonprofitCardRow(raw, "saved"));
-  }, [savedOrganizations, isAuthenticated, favoriteEins, fallbackSavedOrganizations]);
+    if (!favoriteEins.length) return [];
+    const byEin = new Map();
+    for (const raw of fallbackSavedOrganizations) {
+      const card = mapNonprofitCardRow(raw, "directory");
+      const key = card.einNormalized || normalizeEinDigits(card.ein);
+      if (key.length === 9) byEin.set(key, card);
+    }
+    for (const card of savedOrganizations) {
+      const key = card.einNormalized || normalizeEinDigits(card.ein);
+      if (key.length === 9) byEin.set(key, card);
+    }
+    return favoriteEins
+      .map((ein) => {
+        const key = normalizeEinDigits(ein);
+        if (key.length !== 9) return null;
+        return (
+          byEin.get(key) ||
+          mapNonprofitCardRow({ ein: key, orgName: "Saved organization", city: "", state: "" }, "directory")
+        );
+      })
+      .filter(Boolean);
+  }, [savedOrganizations, fallbackSavedOrganizations, favoriteEins]);
   const favoriteEinSet = useMemo(
     () => new Set((favoriteEins || []).map((e) => normalizeEinDigits(e)).filter((e) => e.length === 9)),
     [favoriteEins]
@@ -760,7 +854,6 @@ function TopAppInner({ initialNav = "home" }) {
   }
 
   const pageAtmosphere = useMemo(() => resolvePageAtmosphere(pathname, nav), [pathname, nav]);
-  const mainScrollRef = useRef(null);
   const immersiveHeaderScroll = pageAtmosphere !== "podcast";
   useImmersiveHeaderScroll({
     rootRef: mainScrollRef,
@@ -794,29 +887,24 @@ function TopAppInner({ initialNav = "home" }) {
       data-page-atmosphere={pageAtmosphere}
     >
       <div className="appSiteHeader">
-        <AppHeaderBrand />
+        <AppHeaderBrand pageAtmosphere={pageAtmosphere} />
         <header className="topbar">
           <HeaderInner className="topbarInner">
             <div className="topbarZone topbarLeft">
               <div className="topbarActionsCluster topbarActionsCluster--start">
                 <SiteHamburgerNavMenu
                   shellClass="siteMobileNavMore--phoneOnly"
-                  onItemClick={hamburgerNavItem}
+                  onItemClick={handleHamburgerNav}
                 />
-                {isMobileShell && pageAtmosphere !== "podcast" ? <ColorSchemeToggle /> : null}
+                {pageAtmosphere === "home" && !isMobileShell ? <DownloadMobileAppButton /> : null}
+                {pageAtmosphere !== "podcast" ? <ColorSchemeToggle /> : null}
                 {isMobileShell && isLoggedIn ? <AdminConsoleLink /> : null}
               </div>
             </div>
             <div className="topbarZone topbarCenter" aria-hidden="true" />
             <div className="topbarZone topbarRight">
             <div className="topbarActionsCluster">
-              <SiteHamburgerNavMenu
-                shellClass="siteMobileNavMore--desktopOnly"
-                align="end"
-                onItemClick={hamburgerNavItem}
-              />
-              {pageAtmosphere === "home" ? <DownloadMobileAppButton /> : null}
-              {!isMobileShell && pageAtmosphere !== "podcast" ? <ColorSchemeToggle /> : null}
+              {pageAtmosphere === "home" && isMobileShell ? <DownloadMobileAppButton /> : null}
               {isLoggedIn ? (
                 <>
                   {!isMobileShell ? <AdminConsoleLink /> : null}
@@ -867,6 +955,11 @@ function TopAppInner({ initialNav = "home" }) {
                   </button>
                 </>
               )}
+              <SiteHamburgerNavMenu
+                shellClass="siteMobileNavMore--desktopOnly"
+                align="end"
+                onItemClick={handleHamburgerNav}
+              />
             </div>
           </div>
         </HeaderInner>
@@ -890,15 +983,15 @@ function TopAppInner({ initialNav = "home" }) {
               onSignIn={openSignInOverlay}
               onSponsors={goToSponsorsHub}
               onTrusted={() => {
-                if (!hasProAccess) {
-                  if (!isAuthenticated) {
-                    openSignInOverlay();
-                    return;
-                  }
-                  goToProUpgrade();
+                if (!isAuthenticated) {
+                  openSignInOverlay();
                   return;
                 }
-                setNav("trusted");
+                if (pathname === "/") {
+                  setNav("trusted");
+                  return;
+                }
+                router.push("/trusted");
               }}
               onCommunity={openCommunity}
               onPodcasts={() => {
@@ -907,13 +1000,14 @@ function TopAppInner({ initialNav = "home" }) {
                     openSignInOverlay();
                     return;
                   }
-                  goToProUpgrade();
+                  openProUpgradeModal("podcasts");
                   return;
                 }
                 router.push("/podcasts");
               }}
-              onProUpgrade={goToProUpgrade}
+              onProUpgrade={openProUpgradeModal}
               hasProAccess={hasProAccess}
+              canSaveOrganizations={canSaveOrganizations}
               directoryProps={{
                 filters,
                 setFilters,
@@ -932,8 +1026,7 @@ function TopAppInner({ initialNav = "home" }) {
             />
           )}
 
-          {nav === "community" && (
-            hasProAccess ? (
+          {nav === "community" && hasProAccess ? (
             <CommunityPage
               supabase={sb}
               userId={userId}
@@ -953,21 +1046,13 @@ function TopAppInner({ initialNav = "home" }) {
                 setOverlay("signin");
               }}
             />
-            ) : (
-              <MembershipUpgradePrompt
-                title="Community is a Pro feature"
-                message="Upgrade to Pro to view and participate in community discussions."
-                feature="Community"
-              />
-            )
-          )}
+          ) : null}
           {nav === "community" ? <MissionPageTopStrip placement="bottom" /> : null}
         </section>
       )}
 
-      {nav === "trusted" && (
+      {nav === "trusted" && hasProAccess ? (
         <section className="shell">
-          {hasProAccess ? (
           <div className="card trustedRouteCard">
             <div className="ds-page-intro" style={{ borderBottom: "none", marginBottom: 0, paddingBottom: 0 }}>
               <h2>
@@ -1012,7 +1097,7 @@ function TopAppInner({ initialNav = "home" }) {
                     key={`trusted-${ein}-${card.name}`}
                     card={card}
                     actionMode="trustedResource"
-                    favoritesEnabled={isAuthenticated}
+                    favoritesEnabled={isAuthenticated && canSaveOrganizations}
                     isFavorite={trustedIsFavorite}
                     onToggleFavorite={(key) => {
                       const normalizedEin = normalizeEinDigits(key);
@@ -1028,16 +1113,9 @@ function TopAppInner({ initialNav = "home" }) {
               })}
             </div>
           </div>
-          ) : (
-            <MembershipUpgradePrompt
-              title="Trusted Resources are a Pro feature"
-              message="Upgrade to Pro to browse trusted partner offers and discounts."
-              feature="Trusted Resources"
-            />
-          )}
           <MissionPageTopStrip placement="bottom" />
         </section>
-      )}
+      ) : null}
 
       {nav === "profile" && (
         <section className="shell profileTabShell">
@@ -1132,6 +1210,13 @@ function TopAppInner({ initialNav = "home" }) {
             collapsible
             defaultExpanded={false}
           />
+          {canSaveOrganizations ? (
+            <SavedOrganizationsList
+              organizations={savedOrgsToRender}
+              savedEinCount={favoriteEins.length}
+              onToggleFavorite={toggleFavoriteEin}
+            />
+          ) : null}
           {showMembershipOnProfile ? (
             <HomeMembershipSection
               variant="profile"
@@ -1155,7 +1240,12 @@ function TopAppInner({ initialNav = "home" }) {
             onOpenMembership={openMembershipJourney}
           />
 
-          <ProfileIdentitySection profile={profile} onEdit={() => openProfileEdit()} savedCount={favoriteEins.length} />
+          <ProfileIdentitySection
+            profile={profile}
+            onEdit={() => openProfileEdit()}
+            savedCount={canSaveOrganizations ? favoriteEins.length : 0}
+            showSavedCount={canSaveOrganizations}
+          />
 
           {loadingProfile && (
             <div className="card">
@@ -1168,7 +1258,6 @@ function TopAppInner({ initialNav = "home" }) {
             </div>
           )}
 
-          <ProfileQuickStats savedCount={favoriteEins.length} />
           <AccountInfoCard
             firstName={profile.firstName}
             lastName={profile.lastName}
@@ -1214,12 +1303,6 @@ function TopAppInner({ initialNav = "home" }) {
               </div>
             </div>
           ) : null}
-          <SavedOrganizationsList
-            organizations={savedOrgsToRender}
-            savedEinCount={favoriteEins.length}
-            onToggleFavorite={toggleFavoriteEin}
-            isMember={isMember}
-          />
           <div className="card">
             <div className="row wrap">
               {showLocalDemoChrome() ? (
@@ -1234,7 +1317,7 @@ function TopAppInner({ initialNav = "home" }) {
         </section>
       )}
 
-      {nav === "settings" && isAuthenticated ? (
+      {nav === "settings" && isAuthenticated && hasProAccess ? (
         <AccountSettingsPage
           profile={profile}
           workOSAccountEmail={workOSAccountEmail}
@@ -1341,7 +1424,7 @@ function TopAppInner({ initialNav = "home" }) {
                     type="button"
                     data-nav-key={item.key}
                     className={`navItem navItem--dockCol navItem--dockPrimary ${isActive ? "isActive" : ""}`}
-                    onClick={() => dockNavItem(item)}
+                    onClick={() => handleDockNav(item)}
                     title={item.linkTitle || item.label}
                   >
                     <SiteBottomNavGlyph navKey={item.key} className="navItemGlyph" />
@@ -1383,8 +1466,9 @@ function TopAppInner({ initialNav = "home" }) {
           <div className="modalCard" onClick={(e) => e.stopPropagation()}>
             <h3>Membership &amp; billing</h3>
             <p>
-              {SUPPORT_MEMBERSHIP_DISPLAY_NAME} ({SUPPORT_MEMBERSHIP_PRICE_LABEL}) and Pro Membership ({PRO_MEMBERSHIP_PRICE_LABEL}) unlock saved organizations, profile sync, and community
-              participation. Use the Membership card above for Stripe checkout, or open onboarding for the full setup flow.
+              Pro Membership ({PRO_MEMBERSHIP_PRICE_LABEL}) unlocks the full platform — directory favorites, podcasts,
+              community, trusted resources, and profile sync. Use the Membership card for Stripe checkout, or open
+              onboarding for the full setup flow.
             </p>
             <div className="row wrap">
               <button className="btnSoft" onClick={() => setOverlay(null)} type="button">
@@ -1681,6 +1765,19 @@ function TopAppInner({ initialNav = "home" }) {
           </div>
         </div>
       )}
+
+      {topAppProGateCopy && (showTopAppProGate || proGateHint) ? (
+        <ProUpgradeModal
+          open
+          title={topAppProGateCopy.title}
+          message={topAppProGateCopy.message}
+          feature={topAppProGateCopy.feature}
+          onBack={() => {
+            setProGateHint("");
+            if (showTopAppProGate) setNav("home");
+          }}
+        />
+      ) : null}
 
       {overlay === "applyTrustedResource" && (
         <TrustedResourceApplicationForm

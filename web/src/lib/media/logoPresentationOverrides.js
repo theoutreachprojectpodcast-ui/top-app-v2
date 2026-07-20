@@ -54,6 +54,7 @@ export function mergeLogoPresentation(manual, assessed, context = {}) {
     tone: assessed.tone || "normal",
     borderColor: manual?.borderColor || "",
     minimalFrame: !!manual?.minimalFrame,
+    frameShape: manual?.frameShape === "rounded" ? "rounded" : "circle",
     panel,
     focusX,
     focusY,

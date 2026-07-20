@@ -22,6 +22,8 @@ import ProMembershipGate from "@/components/membership/ProMembershipGate";
 import AuthSessionProvider from "@/components/auth/AuthSessionProvider";
 import { ProfileDataProvider } from "@/features/profile/ProfileDataProvider";
 import { ProfileEditProvider } from "@/features/profile/ProfileEditProvider";
+import ScrollToTopOnNavigate from "@/components/navigation/ScrollToTopOnNavigate";
+import { PORTRAIT_LOCK_BOOTSTRAP_SCRIPT } from "@/lib/capacitor/portraitLockBootstrapScript";
 
 /** Mobile WebView + PWA safe areas (notches, home indicator). */
 export const viewport = {
@@ -76,6 +78,11 @@ export default function RootLayout({ children }) {
             __html: `(function(){try{var p=location.protocol,h=(location.hostname||"").toLowerCase();if(p==="capacitor:"||p==="ionic:"||p==="file:"||(p!=="http:"&&p!=="https:"&&(!h||h==="localhost"||h==="127.0.0.1"))){location.replace("https://theoutreachproject.app/");}}catch(e){}})();`,
           }}
         />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: PORTRAIT_LOCK_BOOTSTRAP_SCRIPT,
+          }}
+        />
         <style
           dangerouslySetInnerHTML={{
             __html: `
@@ -110,6 +117,7 @@ html[data-capacitor-native], html[data-capacitor-native] body {
                 <ExternalBrowserSheetHost />
                 <MobileProductionHealthGate />
                 <Suspense fallback={null}>
+                  <ScrollToTopOnNavigate />
                   <MobileOAuthBrowserFinish />
                   <MobileOAuthDeepLink />
                   <MobileOAuthSessionResume />

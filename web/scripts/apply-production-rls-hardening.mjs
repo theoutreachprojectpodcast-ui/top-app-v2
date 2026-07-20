@@ -1,5 +1,5 @@
 /**
- * Apply production RLS hardening (Supabase linter 0013 + 0010).
+ * Apply production RLS hardening (Supabase linter rls_disabled_in_public + views).
  *
  * Usage:
  *   node scripts/apply-production-rls-hardening.mjs
@@ -17,10 +17,7 @@ import { fileURLToPath } from "node:url";
 import { createClient } from "@supabase/supabase-js";
 
 const webRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
-const sqlPath = path.join(
-  webRoot,
-  "supabase/supabase_public_rls_hardening_nondestructive_2026_06.sql",
-);
+const sqlPath = path.join(webRoot, "supabase/supabase_security_advisor_rls_2026_07.sql");
 const apply = process.argv.includes("--apply");
 const PROJECT_REF = "xbtfoundwmhrqrbcuqcw";
 
@@ -37,16 +34,27 @@ function loadEnvFile(rel) {
     if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
       val = val.slice(1, -1);
     }
-    val = val.replace(/\r/g, "").trim();
+    val = val
+      .replace(/\\r\\n/g, "")
+      .replace(/\\n/g, "")
+      .replace(/\\r/g, "")
+      .replace(/[\r\n]+/g, "")
+      .trim();
     if (!process.env[key]) process.env[key] = val;
   }
 }
 
 loadEnvFile(".env.local");
 loadEnvFile(".env.production.local");
+loadEnvFile(".env.vercel.production");
 
 function env(name) {
-  return String(process.env[name] || "").replace(/[\r\n]+/g, "").trim();
+  return String(process.env[name] || "")
+    .replace(/\\r\\n/g, "")
+    .replace(/\\n/g, "")
+    .replace(/\\r/g, "")
+    .replace(/[\r\n]+/g, "")
+    .trim();
 }
 
 const url = env("NEXT_PUBLIC_SUPABASE_URL");
@@ -137,7 +145,7 @@ async function applySql() {
   }
 
   console.log("[apply-production-rls] No apply credentials — run in Production Supabase SQL editor:");
-  console.log(`  https://supabase.com/dashboard/project/${PROJECT_REF}/sql/new`);
+  console.log(`  https://supabase.com/dashboard/project/${projectRefFromUrl(url)}/sql/new`);
   console.log(`  File: ${sqlPath}`);
   console.log("\nOr set one of:");
   console.log("  SUPABASE_ACCESS_TOKEN  (from https://supabase.com/dashboard/account/tokens)");
@@ -156,6 +164,7 @@ if (apply) {
   }
 } else {
   console.log("[apply-production-rls] Probe mode (pass --apply to run SQL)");
+  console.log(`[apply-production-rls] SQL file: ${sqlPath}`);
 }
 
 const audit = await runAudit();
@@ -177,7 +186,7 @@ if (audit) {
 
 if (!apply && audit && audit.rows.some((r) => r.status === "FAIL")) {
   console.log("\n[apply-production-rls] Fix: run this file in Production Supabase SQL editor:");
-  console.log("  web/supabase/supabase_public_rls_hardening_nondestructive_2026_06.sql");
+  console.log("  web/supabase/supabase_security_advisor_rls_2026_07.sql");
 }
 
 const auditOk = !audit || audit.rows.every((r) => r.status !== "FAIL");

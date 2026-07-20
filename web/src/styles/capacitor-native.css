@@ -11,6 +11,31 @@ html[data-capacitor-native] body {
   overscroll-behavior-y: none;
 }
 
+/* Fallback when a device still reports landscape — block interaction until portrait. */
+@media (orientation: landscape) and (max-height: 520px) {
+  html[data-capacitor-native]::before {
+    content: "Please rotate your device to portrait to use The Outreach Project.";
+    position: fixed;
+    inset: 0;
+    z-index: 100000;
+    display: grid;
+    place-items: center;
+    padding: max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right))
+      max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
+    background: #121212;
+    color: #e8eef6;
+    text-align: center;
+    font-size: 1rem;
+    line-height: 1.45;
+    font-weight: 500;
+  }
+
+  html[data-color-scheme="light"][data-capacitor-native]::before {
+    background: #e8ece8;
+    color: #111714;
+  }
+}
+
 html[data-capacitor-native] .legalPageRoute {
   padding-top: max(12px, env(safe-area-inset-top, 0px));
 }

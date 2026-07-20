@@ -15,12 +15,12 @@ import {
   safeAppReturnPath,
   stripeMemberRecurringConfigured,
   stripeSponsorSubscriptionConfigured,
-  supportSubscriptionPriceId,
 } from "@/lib/billing/stripeConfig";
 import { getSponsorOpportunityById } from "@/lib/billing/sponsorOpportunities";
 import { isUpgrade, membershipTierRank } from "@/lib/billing/membershipTierOrder";
 import { tierFromProfileRow } from "@/lib/billing/stripeProfileSync";
 import { validateMembershipStripePrice } from "@/lib/billing/stripePriceValidation";
+import { isSupportMembershipEnabled } from "@/lib/membership/membershipConfiguration";
 
 export async function POST(request) {
   const guard = guardMutation(request, { rateKey: "billing-checkout", limit: 20 });
@@ -51,6 +51,20 @@ export async function POST(request) {
   const tier = body.tier;
   const sponsorPackageId = body.sponsorPackageId ? String(body.sponsorPackageId).trim() : "";
 
+  const supportEnabled = await isSupportMembershipEnabled(admin);
+  if ((tier === "access" || tier === "support") && !supportEnabled) {
+    return Response.json(
+      {
+        error: "support_checkout_disabled",
+        code: "PRO_MEMBERSHIP_REQUIRED",
+        message: "Support Membership is not available. Choose Pro Membership ($5.99/year).",
+        redirect: "/access",
+      },
+      { status: 400 },
+    );
+  }
+
+  // Never trust a client-provided Stripe price ID — resolve on server only.
   const currentTier = tierFromProfileRow(profileRow);
   if (!isUpgrade(currentTier, tier) && membershipTierRank(tier) <= membershipTierRank(currentTier)) {
     if (profileRow.stripe_subscription_id && membershipTierRank(tier) < membershipTierRank(currentTier)) {
@@ -70,17 +84,7 @@ export async function POST(request) {
     }
   }
 
-  if (tier === "access") {
-    if (!supportSubscriptionPriceId()) {
-      return Response.json(
-        {
-          error: "billing_not_configured",
-          message: "Set STRIPE_PRICE_SUPPORT_YEARLY (or legacy STRIPE_PRICE_ACCESS_YEARLY) for Support Membership checkout.",
-        },
-        { status: 503 },
-      );
-    }
-  } else if (tier === "sponsor") {
+  if (tier === "sponsor") {
     if (!stripeSponsorSubscriptionConfigured()) {
       return Response.json(
         { error: "sponsor_billing_not_configured", message: "Set STRIPE_PRICE_SPONSOR_MONTHLY for sponsor subscription checkout." },
@@ -91,7 +95,7 @@ export async function POST(request) {
     return Response.json(
       {
         error: "billing_not_configured",
-        message: "Set STRIPE_SECRET_KEY, STRIPE_PRICE_SUPPORT_YEARLY, and STRIPE_PRICE_PRO_YEARLY (or monthly fallbacks).",
+        message: "Set STRIPE_SECRET_KEY and STRIPE_PRICE_PRO_YEARLY (or monthly fallbacks).",
       },
       { status: 503 },
     );
@@ -104,7 +108,9 @@ export async function POST(request) {
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-  const priceValidation = await validateMembershipStripePrice(stripe, tier, priceId);
+  const priceValidation = await validateMembershipStripePrice(stripe, tier, priceId, {
+    supportEnabled,
+  });
   if (!priceValidation.ok) {
     console.error("[top] CRITICAL checkout blocked — membership price validation failed", priceValidation);
     return Response.json(

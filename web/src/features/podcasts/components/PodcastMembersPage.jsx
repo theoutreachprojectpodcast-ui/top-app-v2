@@ -44,8 +44,8 @@ export default function PodcastMembersPage() {
           fallback={
             <p className="communityHeroText podcastPageHero__lead">
               {allowed
-                ? "Unlocked for your account — same Pro tier as community story submissions."
-                : "Sign in with your Outreach Project account. Pro membership unlocks this library."}
+                ? "Unlocked for your account — Pro-exclusive podcast library via our members-only YouTube playlist integration."
+                : "Sign in with your Outreach Project account. Pro membership unlocks exclusive podcast content and sponsor opportunities."}
             </p>
           }
         />

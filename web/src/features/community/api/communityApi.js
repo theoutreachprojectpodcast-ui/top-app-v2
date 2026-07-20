@@ -1,6 +1,6 @@
 import { mapCommunityPostRow } from "@/features/community/mappers/mapCommunityPost";
 import { COMMUNITY_MEMBER_FAVORITE_ROWS_SEED, COMMUNITY_MEMBERS_SEED } from "@/features/community/data/communitySeed";
-import { mergeFounderOnboardingPosts } from "@/lib/community/mergeFounderOnboardingPosts";
+import { sortCommunityFeedRows } from "@/lib/community/communityFeedSort";
 import { queryTrustedOrgsByEin } from "@/lib/supabase/queries";
 import {
   buildCommunityShareUrl,
@@ -130,6 +130,47 @@ export function getCommunityMemberById(memberId) {
   return COMMUNITY_MEMBERS_SEED.find((m) => String(m.id) === id) || null;
 }
 
+export async function fetchCommunityMembers({ q = "", limit = 24 } = {}) {
+  try {
+    const params = new URLSearchParams();
+    if (q) params.set("q", q);
+    if (limit) params.set("limit", String(limit));
+    const res = await fetch(`/api/community/members?${params.toString()}`, {
+      credentials: "include",
+      cache: "no-store",
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok || !json.ok) {
+      return { ok: false, members: [], total: 0, error: json.message || json.error || "search_failed" };
+    }
+    return {
+      ok: true,
+      members: Array.isArray(json.members) ? json.members : [],
+      total: Number(json.total) || 0,
+    };
+  } catch {
+    return { ok: false, members: [], total: 0, error: "network_error" };
+  }
+}
+
+export async function fetchCommunityMemberById(profileId) {
+  const id = String(profileId || "").trim();
+  if (!id) return null;
+  const seed = getCommunityMemberById(id);
+  if (seed) return seed;
+  try {
+    const res = await fetch(`/api/community/members?id=${encodeURIComponent(id)}`, {
+      credentials: "include",
+      cache: "no-store",
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok || !json.ok) return null;
+    return Array.isArray(json.members) ? json.members[0] || null : null;
+  } catch {
+    return null;
+  }
+}
+
 export function loadLocalApprovedPosts() {
   const list = readJson(LS_LOCAL_APPROVED, []);
   return Array.isArray(list) ? list.map(mapCommunityPostRow).filter(Boolean) : [];
@@ -169,11 +210,8 @@ export function rejectPendingLocal(pendingId, reason = "") {
   return { ok: true, reason };
 }
 
-export { mergeFounderOnboardingPosts } from "@/lib/community/mergeFounderOnboardingPosts";
-
 /**
  * Public feed: approved posts from API (and RLS direct read when available), plus local demo approvals only when offline.
- * Canonical moderator starter stories are always merged in (bundle overrides stale DB rows by id).
  */
 export async function fetchPublicCommunityFeed(supabase) {
   let posts = [];
@@ -188,7 +226,7 @@ export async function fetchPublicCommunityFeed(supabase) {
       posts = loadLocalApprovedPosts().filter((p) => p && p.status === "approved");
     }
   }
-  return mergeFounderOnboardingPosts(posts);
+  return sortCommunityFeedRows(posts);
 }
 
 export async function fetchApprovedPostsByMember(supabase, memberId) {

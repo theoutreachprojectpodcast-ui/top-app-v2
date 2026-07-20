@@ -1,9 +1,8 @@
 """
 Derive / refresh logo assets under web/public/.
 
-- Dark master `brand-logo-site.png`: if it already has transparency (alpha < 255 somewhere),
-  it is treated as a finished export — byte-copied to `brand-logo-site-dark.png` with no
-  knockout or blur. Opaque black-plate masters still use edge flood + soft alpha.
+- Dark: `brand-logo-site-dark-import.png` when present — transparent exports are trimmed
+  and upscaled only; opaque black-plate exports use graphics-only knockout (silver wordmark).
 - Light: byte-copied from `brand-logo-site-light-import.png` when present.
 
 Run from repo: python web/scripts/derive-logo-variants.py
@@ -24,9 +23,13 @@ OUT_DARK = ROOT / "public" / "brand-logo-site-dark.png"
 OUT_LIGHT = ROOT / "public" / "brand-logo-site-light.png"
 OUT_MARK_DARK = ROOT / "public" / "brand-logo-mark-dark.png"
 OUT_MARK_LIGHT = ROOT / "public" / "brand-logo-mark-light.png"
+MARK_IMPORT = ROOT / "public" / "brand-logo-mark-import.png"
 LIGHT_IMPORT = ROOT / "public" / "brand-logo-site-light-import.png"
+DARK_IMPORT = ROOT / "public" / "brand-logo-site-dark-import.png"
+DARK_WORDMARK_TARGET_W = 1536
 
 BG_THRESH = 24
+WHITE_PLATE_MIN = 248  # edge-flood only near-pure white (keeps icon inner strokes)
 # Near-white / silver (wordmark on dark plate) → ink on light
 LIGHT_INK = (17, 23, 20)  # aligns with --color-text-primary
 # Icon (top): remap neutral highlights; threshold must catch gray AA on wordmark
@@ -42,7 +45,7 @@ TEXT_BAND_Y = 0.18
 GREEN_MIN_SAT = 0.1
 
 
-def remove_outer_black(img: Image.Image) -> Image.Image:
+def remove_outer_black(img: Image.Image, *, thresh: int = BG_THRESH) -> Image.Image:
     im = img.convert("RGBA")
     w, h = im.size
     px = im.load()
@@ -55,7 +58,9 @@ def remove_outer_black(img: Image.Image) -> Image.Image:
         r, g, b, a = px[x, y]
         if a < 8:
             return True
-        return max(r, g, b) <= BG_THRESH
+        mx = max(r, g, b)
+        lum, sat = _lum_sat(r, g, b)
+        return mx <= thresh or (lum <= 0.17 and sat <= 0.22)
 
     q: deque[tuple[int, int]] = deque()
 
@@ -70,6 +75,10 @@ def remove_outer_black(img: Image.Image) -> Image.Image:
         seen[i] = 1
         q.append((x, y))
 
+    for y in range(h):
+        for x in range(w):
+            if px[x, y][3] < 8:
+                seed(x, y)
     for x in range(w):
         seed(x, 0)
         seed(x, h - 1)
@@ -93,8 +102,7 @@ def remove_outer_black(img: Image.Image) -> Image.Image:
     for y in range(h):
         for x in range(w):
             if seen[idx(x, y)]:
-                r, g, b, _ = px[x, y]
-                px[x, y] = (r, g, b, 0)
+                px[x, y] = (0, 0, 0, 0)
 
     return im
 
@@ -136,6 +144,337 @@ def _is_green_pixel(r: int, g: int, b: int, a: int) -> bool:
     if g >= r and g >= b and sat >= 0.14 and (r + b) < 2 * g:
         return True
     return False
+
+
+def remove_outer_white(img: Image.Image) -> Image.Image:
+    """Edge-flood light plate pixels (white + off-white fringe connected to borders)."""
+    im = img.convert("RGBA")
+    w, h = im.size
+    px = im.load()
+    seen = bytearray(w * h)
+
+    def idx(x: int, y: int) -> int:
+        return y * w + x
+
+    def floodable(x: int, y: int) -> bool:
+        r, g, b, a = px[x, y]
+        if a < 8:
+            return True
+        mn = min(r, g, b)
+        lum, sat = _lum_sat(r, g, b)
+        return mn >= WHITE_PLATE_MIN - 16 or (lum >= 0.9 and sat <= 0.14)
+
+    q: deque[tuple[int, int]] = deque()
+
+    def seed(x: int, y: int) -> None:
+        if x < 0 or x >= w or y < 0 or y >= h:
+            return
+        i = idx(x, y)
+        if seen[i]:
+            return
+        if not floodable(x, y):
+            return
+        seen[i] = 1
+        q.append((x, y))
+
+    for x in range(w):
+        seed(x, 0)
+        seed(x, h - 1)
+    for y in range(h):
+        seed(0, y)
+        seed(w - 1, y)
+
+    while q:
+        x, y = q.popleft()
+        for nx, ny in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
+            if nx < 0 or nx >= w or ny < 0 or ny >= h:
+                continue
+            i = idx(nx, ny)
+            if seen[i]:
+                continue
+            if not floodable(nx, ny):
+                continue
+            seen[i] = 1
+            q.append((nx, ny))
+
+    for y in range(h):
+        for x in range(w):
+            if seen[idx(x, y)]:
+                px[x, y] = (0, 0, 0, 0)
+
+    return im
+
+
+def _is_ink_pixel(r: int, g: int, b: int, a: int) -> bool:
+    """Black/dark strokes and forest-green wordmark fills."""
+    if a < 16:
+        return False
+    mx = max(r, g, b)
+    mn = min(r, g, b)
+    if mx <= 78:
+        # Opaque plate black reads as dark ink — exclude flat near-pure black matte.
+        if mx <= 10 and (mx - mn) <= 8:
+            return False
+        return True
+    _, sat = _lum_sat(r, g, b)
+    if g >= r and g >= b and g >= 55 and sat >= 0.12:
+        return True
+    return False
+
+
+def _is_silver_wordmark(r: int, g: int, b: int, a: int) -> bool:
+    """Metallic THE OUTREACH line on the dark wordmark export."""
+    if a < 16:
+        return False
+    mn = min(r, g, b)
+    if mn < 105 or mn >= 238:
+        return False
+    lum, sat = _lum_sat(r, g, b)
+    return 0.42 <= lum <= 0.86 and sat <= 0.38
+
+
+def _opaque_near_white_ratio(im: Image.Image) -> float:
+    px = im.convert("RGBA").load()
+    w, h = im.size
+    opaque = 0
+    light = 0
+    for y in range(h):
+        for x in range(w):
+            r, g, b, a = px[x, y]
+            if a <= 200:
+                continue
+            opaque += 1
+            if min(r, g, b) >= 220:
+                light += 1
+    if opaque == 0:
+        return 0.0
+    return light / opaque
+
+
+def _opaque_near_black_ratio(im: Image.Image) -> float:
+    px = im.convert("RGBA").load()
+    w, h = im.size
+    opaque = 0
+    dark = 0
+    for y in range(h):
+        for x in range(w):
+            r, g, b, a = px[x, y]
+            if a <= 200:
+                continue
+            opaque += 1
+            if max(r, g, b) <= 36:
+                dark += 1
+    if opaque == 0:
+        return 0.0
+    return dark / opaque
+
+
+def _is_black_plate(im: Image.Image) -> bool:
+    px = im.convert("RGBA").load()
+    w, h = im.size
+    corners = (px[0, 0], px[w - 1, 0], px[0, h - 1], px[w - 1, h - 1])
+    if all(a < 16 for _, _, _, a in corners):
+        return True
+    if _opaque_near_black_ratio(im) > 0.08:
+        return True
+    opaque_corners = [c for c in corners if c[3] > 200]
+    return bool(opaque_corners) and all(max(r, g, b) <= 48 for r, g, b, _ in opaque_corners)
+
+
+def _is_white_plate(im: Image.Image) -> bool:
+    px = im.convert("RGBA").load()
+    w, h = im.size
+    corners = (px[0, 0], px[w - 1, 0], px[0, h - 1], px[w - 1, h - 1])
+    opaque_corners = [c for c in corners if c[3] > 200]
+    return bool(opaque_corners) and all(min(r, g, b) >= WHITE_PLATE_MIN - 8 for r, g, b, _ in opaque_corners)
+
+
+def _wordmark_band_bounds(im: Image.Image) -> tuple[int, int, int, int, int, int] | None:
+    """Return icon_y1, outreach_y0, outreach_y1, project_y0 for content bbox fractions."""
+    bbox = im.getbbox()
+    if not bbox:
+        return None
+    x0, y0, x1, y1 = bbox
+    bh = max(1, y1 - y0)
+    icon_y1 = y0 + int(bh * 0.58)
+    outreach_y0 = y0 + int(bh * 0.58)
+    outreach_y1 = y0 + int(bh * 0.78)
+    project_y0 = y0 + int(bh * 0.78)
+    return x0, icon_y1, outreach_y0, outreach_y1, project_y0, y1
+
+
+def _extract_black_plate_graphics(img: Image.Image, *, allow_silver: bool = False) -> Image.Image:
+    """
+    Black export plate: do not flood-remove black (it deletes black-on-black THE OUTREACH).
+    Keep graphics by band — icon greens/outlines, outreach line, PROJECT greens.
+    """
+    im = img.convert("RGBA")
+    px = im.load()
+    w, h = im.size
+    bands = _wordmark_band_bounds(im)
+    if not bands:
+        return im
+    _, icon_y1, outreach_y0, outreach_y1, project_y0, _y1 = bands
+
+    for y in range(h):
+        for x in range(w):
+            r, g, b, a = px[x, y]
+            if a < 16:
+                px[x, y] = (0, 0, 0, 0)
+                continue
+
+            keep = False
+            if _is_green_pixel(r, g, b, a):
+                keep = True
+            elif _is_ink_pixel(r, g, b, a):
+                keep = True
+            elif allow_silver and outreach_y0 <= y < outreach_y1 and _is_silver_wordmark(r, g, b, a):
+                keep = True
+            elif not allow_silver and outreach_y0 <= y < outreach_y1 and max(r, g, b) <= 100:
+                # Light wordmark: THE OUTREACH is black ink on the same plate color.
+                keep = True
+            elif y >= project_y0 and _is_ink_pixel(r, g, b, a):
+                keep = True
+            elif y < icon_y1 and (_is_green_pixel(r, g, b, a) or _is_ink_pixel(r, g, b, a)):
+                keep = True
+
+            if keep:
+                if not (allow_silver and _is_silver_wordmark(r, g, b, a)):
+                    mn = min(r, g, b)
+                    lum, sat = _lum_sat(r, g, b)
+                    if mn >= 200 and sat <= 0.22 and not _is_green_pixel(r, g, b, a):
+                        px[x, y] = (0, 0, 0, 0)
+                continue
+
+            mn = min(r, g, b)
+            lum, sat = _lum_sat(r, g, b)
+            if mn >= 200 and sat <= 0.22:
+                px[x, y] = (0, 0, 0, 0)
+            elif lum >= 0.78 and sat <= 0.18:
+                px[x, y] = (0, 0, 0, 0)
+            elif max(r, g, b) <= 42 and lum <= 0.17 and sat <= 0.22:
+                px[x, y] = (0, 0, 0, 0)
+            else:
+                px[x, y] = (0, 0, 0, 0)
+
+    return im
+
+
+def extract_wordmark_graphics(img: Image.Image, *, allow_silver: bool = False) -> Image.Image:
+    """Keep OP greens, ink, and optional silver wordmark — drop plate + matte fringe."""
+    if _is_black_plate(img):
+        return _extract_black_plate_graphics(img, allow_silver=allow_silver)
+    im = remove_outer_white(img)
+    px = im.load()
+    w, h = im.size
+    for y in range(h):
+        for x in range(w):
+            r, g, b, a = px[x, y]
+            if a < 16:
+                continue
+            if _is_green_pixel(r, g, b, a):
+                continue
+            if _is_ink_pixel(r, g, b, a):
+                continue
+            if allow_silver and _is_silver_wordmark(r, g, b, a):
+                continue
+            mn = min(r, g, b)
+            lum, sat = _lum_sat(r, g, b)
+            if mn >= 200 and sat <= 0.22:
+                px[x, y] = (0, 0, 0, 0)
+            elif lum >= 0.78 and sat <= 0.18:
+                px[x, y] = (0, 0, 0, 0)
+    return im
+
+
+def prepare_wordmark_rgba(img: Image.Image, *, allow_silver: bool = False) -> Image.Image:
+    """Design export plate → transparent RGBA wordmark (graphics only)."""
+    im = img.convert("RGBA")
+    needs_knockout = (
+        _is_black_plate(im)
+        or _is_white_plate(im)
+        or _opaque_near_white_ratio(im) > 0.05
+        or _opaque_near_black_ratio(im) > 0.08
+    )
+    if needs_knockout:
+        edge_radius = 0.25 if allow_silver else 0.45
+        return smooth_alpha_edges(extract_wordmark_graphics(im, allow_silver=allow_silver), edge_radius)
+    if _has_meaningful_alpha(im):
+        return im
+    return smooth_alpha_edges(remove_outer_black(img), 0.35)
+
+
+def _upscale_wordmark_clean(im: Image.Image, target_w: int = DARK_WORDMARK_TARGET_W) -> Image.Image:
+    """Upscale for header density without amplifying premultiplied AA fringe."""
+    w, h = im.size
+    if w >= target_w:
+        return im
+    nw = target_w
+    nh = max(1, int(round(h * (target_w / w))))
+    r, g, b, a = im.split()
+    apx = a.load()
+    aw, ah = a.size
+    for y in range(ah):
+        for x in range(aw):
+            apx[x, y] = 255 if apx[x, y] >= 128 else 0
+    rgb = Image.merge("RGB", (r, g, b)).resize((nw, nh), Image.Resampling.LANCZOS)
+    alpha = a.resize((nw, nh), Image.Resampling.NEAREST)
+    out = rgb.convert("RGBA")
+    out.putalpha(alpha)
+    return out
+
+
+def _trim_snapped(im: Image.Image, *, threshold: float = 0.03) -> Image.Image:
+    return snap_light_alpha(_trim_mark_margins(im.convert("RGBA"), threshold=threshold))
+
+
+def _fit_in_box(im: Image.Image, box_w: int, box_h: int) -> Image.Image:
+    """Center `im` in a transparent box without scaling up beyond its native trim size."""
+    im = im.convert("RGBA")
+    w, h = im.size
+    scale = min(box_w / w, box_h / h, 1.0)
+    nw = max(1, int(round(w * scale)))
+    nh = max(1, int(round(h * scale)))
+    if (nw, nh) != (w, h):
+        im = im.resize((nw, nh), Image.Resampling.LANCZOS)
+        im = snap_light_alpha(im)
+    canvas = Image.new("RGBA", (box_w, box_h), (0, 0, 0, 0))
+    canvas.paste(im, ((box_w - nw) // 2, (box_h - nh) // 2), im)
+    return canvas
+
+
+def prepare_transparent_wordmark_from_import(
+    img: Image.Image,
+    *,
+    allow_silver: bool = False,
+    fit_box: tuple[int, int] | None = None,
+) -> Image.Image:
+    """
+    Header wordmark from design import.
+
+    Transparent RGBA exports: trim + optional unified fit box + crisp upscale.
+    Opaque plate fallbacks: graphics-only knockout + soft alpha.
+    """
+    im = img.convert("RGBA")
+    if _has_meaningful_alpha(im):
+        out = _trim_snapped(im)
+    else:
+        out = prepare_wordmark_rgba(im, allow_silver=allow_silver)
+        out = _trim_snapped(out)
+    if fit_box:
+        out = _fit_in_box(out, fit_box[0], fit_box[1])
+    return _upscale_wordmark_clean(out)
+
+
+def prepare_dark_wordmark_from_import(img: Image.Image) -> Image.Image:
+    """Backward-compatible alias."""
+    return prepare_transparent_wordmark_from_import(img, allow_silver=True)
+
+
+def _unified_wordmark_fit_box(*sources: Image.Image) -> tuple[int, int]:
+    """Shared trim box so light/dark wordmarks render at the same header size."""
+    trims = [_trim_snapped(src) for src in sources]
+    return max(t.size[0] for t in trims), max(t.size[1] for t in trims)
 
 
 def light_variant(im: Image.Image) -> Image.Image:
@@ -369,29 +708,76 @@ def _trim_mark_margins(im: Image.Image, threshold: float = 0.05) -> Image.Image:
     return im.crop((left, top, right, bottom))
 
 
+def _maybe_upscale_wordmark(im: Image.Image, target_w: int = DARK_WORDMARK_TARGET_W) -> Image.Image:
+    """Upscale design imports to the master wordmark width for crisp header rendering."""
+    w, h = im.size
+    if w >= target_w:
+        return im
+    scale = target_w / w
+    return im.resize((target_w, max(1, int(round(h * scale)))), Image.Resampling.LANCZOS)
+
+
 def main() -> None:
-    if not SRC.exists():
-        raise SystemExit(f"Missing source logo: {SRC}")
+    mark_from_import = False
+    if MARK_IMPORT.exists():
+        mark = _trim_mark_margins(Image.open(MARK_IMPORT).convert("RGBA"))
+        mark.save(OUT_MARK_DARK, "PNG", optimize=True)
+        mark.save(OUT_MARK_LIGHT, "PNG", optimize=True)
+        mark_from_import = True
+        print("Mark logos: trimmed RGBA from brand-logo-mark-import.png")
 
-    base = Image.open(SRC)
+    wordmark_fit_box: tuple[int, int] | None = None
+    if DARK_IMPORT.exists() and LIGHT_IMPORT.exists():
+        wordmark_fit_box = _unified_wordmark_fit_box(
+            Image.open(DARK_IMPORT),
+            Image.open(LIGHT_IMPORT),
+        )
 
-    if _has_meaningful_alpha(base):
-        # Master is already `brand-logo-site.png`; only refresh the dark alias + mark.
-        if SRC.resolve() != OUT_DARK.resolve():
-            shutil.copyfile(SRC, OUT_DARK)
-        crop_mark(Image.open(SRC)).save(OUT_MARK_DARK, "PNG", optimize=True)
-        print("Dark logo: transparent master - copied to site-dark + mark (no knockout/blur)")
-    else:
-        raw = remove_outer_black(base)
-        dark = smooth_alpha_edges(raw, 0.35)
+    if DARK_IMPORT.exists():
+        dark = prepare_transparent_wordmark_from_import(
+            Image.open(DARK_IMPORT),
+            allow_silver=True,
+            fit_box=wordmark_fit_box,
+        )
         dark.save(OUT_DARK, "PNG", optimize=True)
-        crop_mark(dark).save(OUT_MARK_DARK, "PNG", optimize=True)
-        dark.save(ROOT / "public" / "brand-logo-site.png", "PNG", optimize=True)
+        if not mark_from_import:
+            crop_mark(dark).save(OUT_MARK_DARK, "PNG", optimize=True)
+        print(
+            "Dark logo: trimmed transparent import + crisp upscale"
+            + (f" (fit {wordmark_fit_box[0]}x{wordmark_fit_box[1]})" if wordmark_fit_box else "")
+        )
+    elif SRC.exists():
+        base = Image.open(SRC)
+
+        if _has_meaningful_alpha(base):
+            if SRC.resolve() != OUT_DARK.resolve():
+                shutil.copyfile(SRC, OUT_DARK)
+            if not mark_from_import:
+                crop_mark(Image.open(SRC)).save(OUT_MARK_DARK, "PNG", optimize=True)
+            print("Dark logo: transparent master - copied to site-dark" + ("" if mark_from_import else " + mark (no knockout/blur)"))
+        else:
+            raw = remove_outer_black(base)
+            dark = smooth_alpha_edges(raw, 0.35)
+            dark.save(OUT_DARK, "PNG", optimize=True)
+            if not mark_from_import:
+                crop_mark(dark).save(OUT_MARK_DARK, "PNG", optimize=True)
+            dark.save(ROOT / "public" / "brand-logo-site.png", "PNG", optimize=True)
+    else:
+        raise SystemExit(f"Missing dark logo import ({DARK_IMPORT}) or source ({SRC})")
 
     if LIGHT_IMPORT.exists():
-        shutil.copyfile(LIGHT_IMPORT, OUT_LIGHT)
-        crop_mark(Image.open(OUT_LIGHT)).save(OUT_MARK_LIGHT, "PNG", optimize=True)
-        print("Light logo: copied import + refreshed mark crop")
+        light = prepare_transparent_wordmark_from_import(
+            Image.open(LIGHT_IMPORT),
+            allow_silver=False,
+            fit_box=wordmark_fit_box,
+        )
+        light.save(OUT_LIGHT, "PNG", optimize=True)
+        if not mark_from_import:
+            crop_mark(light).save(OUT_MARK_LIGHT, "PNG", optimize=True)
+        print(
+            "Light logo: trimmed transparent import + crisp upscale"
+            + (f" (fit {wordmark_fit_box[0]}x{wordmark_fit_box[1]})" if wordmark_fit_box else "")
+        )
     else:
         print("Light logo: skipped (add brand-logo-site-light-import.png or run install-light-logo.py)")
 

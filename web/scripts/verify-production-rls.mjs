@@ -9,8 +9,45 @@
  */
 import { createClient } from "@supabase/supabase-js";
 
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const webRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
+
+function loadEnvFile(rel) {
+  const envPath = path.join(webRoot, rel);
+  if (!fs.existsSync(envPath)) return;
+  for (const line of fs.readFileSync(envPath, "utf8").split(/\r?\n/)) {
+    const t = line.trim();
+    if (!t || t.startsWith("#")) continue;
+    const i = t.indexOf("=");
+    if (i <= 0) continue;
+    const key = t.slice(0, i).trim();
+    let val = t.slice(i + 1).trim();
+    if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+      val = val.slice(1, -1);
+    }
+    val = val
+      .replace(/\\r\\n/g, "")
+      .replace(/\\n/g, "")
+      .replace(/\\r/g, "")
+      .replace(/[\r\n]+/g, "")
+      .trim();
+    if (!process.env[key]) process.env[key] = val;
+  }
+}
+
+loadEnvFile(".env.local");
+loadEnvFile(".env.vercel.production");
+
 function env(name) {
-  return String(process.env[name] || "").replace(/[\r\n]+/g, "").trim();
+  return String(process.env[name] || "")
+    .replace(/\\r\\n/g, "")
+    .replace(/\\n/g, "")
+    .replace(/\\r/g, "")
+    .replace(/[\r\n]+/g, "")
+    .trim();
 }
 
 const url = env("NEXT_PUBLIC_SUPABASE_URL");
@@ -113,7 +150,7 @@ if (anon) {
 
 if (auditRows.some((r) => r.status === "FAIL")) {
   console.error("\n[verify:production-rls] FAIL — run RLS hardening SQL in Supabase SQL editor:");
-  console.error("  web/supabase/supabase_public_rls_hardening_nondestructive_2026_06.sql");
+  console.error("  web/supabase/supabase_security_advisor_rls_2026_07.sql");
   console.error(`  https://supabase.com/dashboard/project/xbtfoundwmhrqrbcuqcw/sql/new`);
   exitCode = 1;
 }

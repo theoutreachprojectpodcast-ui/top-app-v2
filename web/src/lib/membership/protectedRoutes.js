@@ -1,9 +1,15 @@
 /**
  * Route policies for membership gating (web + Capacitor).
+ *
+ * Public home/directory remains open without Pro.
+ * All other product areas require Pro Membership ($5.99/yr).
+ * Support Membership availability is controlled by membershipConfiguration (feature flag).
  */
 
-/** Always reachable without membership (marketing, auth, checkout). */
+/** Always reachable without membership (marketing, auth, checkout, public directory). */
 export const MEMBERSHIP_EXEMPT_PATTERNS = [
+  /^\/$/,
+  /^\/nonprofit(\/|$)/,
   /^\/sign-in(\/|$)/,
   /^\/sign-up(\/|$)/,
   /^\/signup(\/|$)/,
@@ -26,38 +32,69 @@ export const MEMBERSHIP_EXEMPT_PATTERNS = [
   /^\/api\/auth\//,
   /^\/mobile\/auth\//,
   /^\/mobile-auth\//,
-];
-
-/** Support or Pro — directory home, profile (saved orgs), nonprofit detail. */
-export const SUPPORT_TIER_PATH_PATTERNS = [
-  /^\/$/,
-  /^\/profile(\/|$)/,
-  /^\/nonprofit(\/|$)/,
-];
-
-/** Pro only — community, trusted, podcast, sponsors, settings, etc. */
-export const PRO_MEMBERSHIP_PATH_PATTERNS = [
-  /^\/community(\/|$)/,
-  /^\/trusted(\/|$)/,
-  /^\/podcasts(\/|$)/,
-  /^\/notifications(\/|$)/,
+  /** Mission partner hub + profiles — linked from the public home page. */
   /^\/sponsors(\/|$)/,
   /^\/sponsor(\/|$)/,
+];
+
+/**
+ * Canonical public routes (home/directory + auth/legal/checkout).
+ * Kept as an explicit list for docs and tests.
+ */
+export const PUBLIC_ROUTES = [
+  "/",
+  "/nonprofit",
+  "/sign-in",
+  "/sign-up",
+  "/login",
+  "/access",
+  "/mobile/access",
+  "/mobile",
+  "/callback",
+  "/privacy",
+  "/terms",
+  "/download",
+  "/membership",
+  "/billing",
+  "/sponsors",
+];
+
+/**
+ * Legacy Support-tier paths — only used when Support Membership feature flag is enabled.
+ * While the flag is off, Support users do not gain these routes (Pro required).
+ */
+export const SUPPORT_TIER_PATH_PATTERNS = [
+  /^\/profile(\/|$)/,
+  /^\/podcasts\/?$/,
+  /^\/podcasts\/apply(\/|$)/,
+  /^\/podcasts\/guests(\/|$)/,
+];
+
+/** Pro Membership required for protected product routes (not public directory). */
+export const PRO_MEMBERSHIP_PATH_PATTERNS = [
+  /^\/profile(\/|$)/,
+  /^\/podcasts(\/|$)/,
+  /^\/community(\/|$)/,
+  /^\/trusted(\/|$)/,
+  /^\/notifications(\/|$)/,
   /^\/onboarding(\/|$)/,
   /^\/contact(\/|$)/,
   /^\/settings(\/|$)/,
 ];
 
-/** @deprecated Use SUPPORT_TIER_PATH_PATTERNS + PRO_MEMBERSHIP_PATH_PATTERNS */
-export const MEMBERSHIP_REQUIRED_PATTERNS = [
-  ...SUPPORT_TIER_PATH_PATTERNS,
-  ...PRO_MEMBERSHIP_PATH_PATTERNS,
-];
+/** @deprecated Use PRO_MEMBERSHIP_PATH_PATTERNS */
+export const MEMBERSHIP_REQUIRED_PATTERNS = [...PRO_MEMBERSHIP_PATH_PATTERNS];
 
 /** @param {string} pathname */
 export function isMembershipExemptPath(pathname) {
   const path = String(pathname || "/").trim() || "/";
   return MEMBERSHIP_EXEMPT_PATTERNS.some((re) => re.test(path));
+}
+
+/** Public home / nonprofit directory browsing (no membership required). */
+export function isPublicDirectoryPath(pathname) {
+  const path = String(pathname || "/").trim() || "/";
+  return path === "/" || /^\/nonprofit(\/|$)/.test(path);
 }
 
 /** @param {string} pathname */
@@ -73,6 +110,7 @@ export const requiresActiveMembershipPath = requiresAnyMembershipPath;
 /** @param {string} pathname */
 export function requiresProMembershipPath(pathname) {
   const path = String(pathname || "/").trim() || "/";
+  if (isMembershipExemptPath(path)) return false;
   return PRO_MEMBERSHIP_PATH_PATTERNS.some((re) => re.test(path));
 }
 

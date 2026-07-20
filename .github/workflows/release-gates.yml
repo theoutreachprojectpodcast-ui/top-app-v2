@@ -50,7 +50,8 @@ jobs:
         run: pnpm --dir web run smoke:qa:http
         env:
           QA_BASE_URL: https://qa-the-outreach-project.vercel.app
-          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+          # QA preview uses Deployment Protection; use QA-specific bypass when prod/QA secrets differ.
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET_QA || secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
 
   production-gates:
     runs-on: ubuntu-latest

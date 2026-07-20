@@ -301,15 +301,15 @@ main.topApp[data-page-atmosphere="podcast"] .siteMobileNavMore__entry:hover {
     grid-column: 2;
   }
 
-  .footerDock .bottomNav.bottomNav--withIcons.bottomNav--mobileDock .navItem[data-nav-key="community"] {
+  .footerDock .bottomNav.bottomNav--withIcons.bottomNav--mobileDock .navItem[data-nav-key="profile"] {
     grid-column: 3;
   }
 
-  .footerDock .bottomNav.bottomNav--withIcons.bottomNav--mobileDock .navItem[data-nav-key="podcast"] {
+  .footerDock .bottomNav.bottomNav--withIcons.bottomNav--mobileDock .navItem[data-nav-key="community"] {
     grid-column: 4;
   }
 
-  .footerDock .bottomNav.bottomNav--withIcons.bottomNav--mobileDock .navItem[data-nav-key="contact"] {
+  .footerDock .bottomNav.bottomNav--withIcons.bottomNav--mobileDock .navItem[data-nav-key="podcast"] {
     grid-column: 5;
   }
 

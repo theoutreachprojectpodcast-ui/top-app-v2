@@ -7,8 +7,6 @@ import { FormCheckbox } from "@/components/forms/FormChoice";
 import { emptyProfileAvatarUrl } from "@/lib/avatarFallback";
 import {
   PRO_MEMBERSHIP_PRICE_LABEL,
-  SUPPORT_MEMBERSHIP_DISPLAY_NAME,
-  SUPPORT_MEMBERSHIP_PRICE_LABEL,
 } from "@/features/membership/membershipTiers";
 import { defaultMembershipTierForIntent, normalizePublicAccountIntent } from "@/lib/account/accountModel";
 import {
@@ -20,14 +18,9 @@ import {
 
 const INTENT_CARDS = [
   {
-    id: "support_user",
-    title: "Support the Mission",
-    blurb: "Back the work with Support Membership ($0.99/year). Directory and community viewing included.",
-  },
-  {
     id: "member_user",
     title: "Become a Pro Member",
-    blurb: "Submit community stories for review and access member-only experiences as they roll out.",
+    blurb: "Full platform access — directory, community, podcast, and trusted resources ($5.99/year).",
   },
   {
     id: "sponsor_user",
@@ -38,18 +31,11 @@ const INTENT_CARDS = [
 
 const PLANS = [
   {
-    id: "support",
-    title: SUPPORT_MEMBERSHIP_DISPLAY_NAME,
-    price: SUPPORT_MEMBERSHIP_PRICE_LABEL.replace("/yr", ""),
-    cadence: "/year",
-    blurb: "Unlock the full platform with annual Support Membership.",
-  },
-  {
     id: "member",
     title: "Pro Membership",
     price: PRO_MEMBERSHIP_PRICE_LABEL.replace("/yr", ""),
     cadence: "/year",
-    blurb: "Community story submission and premium features as they roll out.",
+    blurb: "Full platform access — directory, community, podcast, and trusted resources.",
   },
 ];
 
@@ -162,7 +148,7 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
   const [error, setError] = useState("");
   const [draft, setDraft] = useState(() => draftFromProfile(initialProfile));
   const [selectedTier, setSelectedTier] = useState(() =>
-    normalizedInitialIntent ? defaultMembershipTierForIntent(normalizedInitialIntent) : "support",
+    normalizedInitialIntent ? defaultMembershipTierForIntent(normalizedInitialIntent) : "member",
   );
   const [autoFinalizing, setAutoFinalizing] = useState(false);
   const autoFinalizeRanRef = useRef(false);
@@ -218,7 +204,7 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
         if (cancelled || !data.authenticated || !data.profile) return;
         const st = String(data.profile.membershipBillingStatus || "").toLowerCase();
         const tier = String(data.profile.membershipTier || "").toLowerCase();
-        if (st !== "active" || !["support", "member", "sponsor"].includes(tier)) return;
+        if (st !== "active" || !["member", "sponsor"].includes(tier)) return;
         autoFinalizeRanRef.current = true;
         setAutoFinalizing(true);
         const res = await fetch("/api/me/onboarding/complete", {
@@ -438,7 +424,7 @@ export default function OnboardingFlow({ initialProfile, authBackend }) {
       setError("Sponsor subscription checkout requires STRIPE_PRICE_SPONSOR_MONTHLY in the server environment.");
       return;
     }
-    if (["support", "member"].includes(selectedTier) && !authBackend?.stripeMemberRecurring) {
+    if (["member"].includes(selectedTier) && !authBackend?.stripeMemberRecurring) {
       setError(
         "Support and Pro checkout require STRIPE_PRICE_SUPPORT_YEARLY and STRIPE_PRICE_PRO_YEARLY (or monthly fallbacks).",
       );

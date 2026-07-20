@@ -52,6 +52,21 @@ assert(
 );
 
 assert(
+  fs.existsSync(path.join(webRoot, "supabase/supabase_security_advisor_rls_2026_07.sql")),
+  "supabase_security_advisor_rls_2026_07.sql must exist",
+);
+
+assert(
+  fs.existsSync(path.join(webRoot, "scripts/security-rls-live-probe.mjs")),
+  "security-rls-live-probe.mjs must exist",
+);
+
+assert(
+  fs.existsSync(path.join(webRoot, "scripts/security-check.mjs")),
+  "security-check.mjs must exist",
+);
+
+assert(
   !read("src/lib/community/moderatorServer.js").includes("NEXT_PUBLIC_COMMUNITY_MODERATOR"),
   "moderator allowlist must use server-only env vars",
 );

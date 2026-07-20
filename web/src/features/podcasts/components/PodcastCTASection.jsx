@@ -7,7 +7,7 @@ export default function PodcastCTASection({ onApply }) {
         <a className="btnPrimary" href="https://www.youtube.com/@TheOutreachProjectHq" target="_blank" rel="noopener noreferrer">
           Watch Episodes
         </a>
-        <span className="btnSoft" aria-disabled="true">Members Only Content — Coming Soon</span>
+        <span className="btnSoft" aria-disabled="true">Pro-exclusive content — upgrade on Profile</span>
         <button className="btnSoft" type="button" onClick={onApply}>Apply to Be on the Podcast</button>
       </div>
     </section>

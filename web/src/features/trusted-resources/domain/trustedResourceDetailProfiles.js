@@ -224,6 +224,63 @@ export const TRUSTED_RESOURCE_DETAIL_BY_SLUG = {
       { type: "events", url: "https://sheepdogia.org/events/" },
     ],
   },
+  "the-rivetin-rosies-project": {
+    mission:
+      "Support veterans, active military, first responders, and their families with resources, information, and community connection—honoring the legacy of the original Rosie the Riveters.",
+    whoTheyServe: "Veterans, active-duty service members, first responders, and their families.",
+    services: [
+      "Community support and resource referrals",
+      "Event presence and outreach for service members and families",
+      "Donation drives and partner-led assistance initiatives",
+    ],
+    whyItMatters:
+      "Local, volunteer-led groups help bridge gaps between formal programs and the day-to-day needs of those who serve.",
+    serviceArea: "Utah and partner communities",
+    email: "info@therivetinrosiesproject.org",
+    phone: "+1 (385) 645-8285",
+    resourceLinks: [
+      { type: "volunteer", url: "https://form.jotform.com/250694916729168", label: "Join the organization" },
+      { type: "donate", url: "https://therivetinrosiesproject.org/", label: "Donate & get involved" },
+    ],
+  },
+  "changed-by-nature-outdoors": {
+    mission:
+      "Provide veterans, law enforcement officers, first responders, youth, and individuals with disabilities free outdoor experiences that rebuild confidence, strengthen community, and pass outdoor skills to the next generation.",
+    whoTheyServe:
+      "Disabled veterans, veterans, law enforcement, first responders, youth, and individuals with disabilities seeking outdoor connection.",
+    services: [
+      "Free outdoor events and adventures across the United States",
+      "Kayaking, fishing, boating, hunting, and trail-based outings",
+      "Wilderness skills, mentorship, and community outreach",
+    ],
+    whyItMatters:
+      "Accessible outdoor programs give members a practical path to healing and peer connection outside traditional clinical settings.",
+    serviceArea: "National (based in Flagstaff, AZ)",
+    email: "Info@changedbynatureoutdoors.org",
+    phone: "(928) 550-1111",
+    resourceLinks: [
+      { type: "events", url: "https://changedbynatureoutdoors.org/events", label: "Events" },
+      { type: "donate", url: "https://changedbynatureoutdoors.org/donations", label: "Donate" },
+      { type: "volunteer", url: "https://changedbynatureoutdoors.org/sponsors", label: "Sponsor or partner" },
+    ],
+  },
+  "shepherds-light-foundation": {
+    mission:
+      "Support veterans and first responders facing PTSD and personal struggles through faith-rooted peer-to-peer outdoor retreats that remove financial barriers to healing.",
+    whoTheyServe: "Veterans and first responders navigating PTSD, trauma, and related personal struggles.",
+    services: [
+      "The Shepherd's Journey — fully sponsored outdoor peer retreats",
+      "Peer-led processing, fellowship, and leadership growth",
+      "Training, meals, and lodging covered for participants",
+    ],
+    whyItMatters:
+      "Sponsored retreats let members focus on recovery without cost barriers while connecting with peers who understand service-related trauma.",
+    serviceArea: "North Georgia (Jasper, GA) and retreat locations as scheduled",
+    resourceLinks: [
+      { type: "intake", url: "https://shepherdslightfoundation.org/", label: "Program overview" },
+      { type: "contact", url: "https://shepherdslightfoundation.org/", label: "Contact & updates" },
+    ],
+  },
 };
 
 /**

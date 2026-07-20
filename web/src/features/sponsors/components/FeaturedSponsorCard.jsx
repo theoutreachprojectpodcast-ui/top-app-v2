@@ -76,14 +76,7 @@ function SocialIcon({ type }) {
   );
 }
 
-export default function FeaturedSponsorCard({
-  sponsor,
-  favoritesEnabled = false,
-  isFavorite = false,
-  onToggleFavorite,
-  onRequestSignIn,
-  hidePrimaryBadge = false,
-}) {
+export default function FeaturedSponsorCard({ sponsor, hidePrimaryBadge = false }) {
   const router = useRouter();
   const [logoIndex, setLogoIndex] = useState(0);
   const warm = sponsor.warmVariant || "gold";
@@ -127,7 +120,6 @@ export default function FeaturedSponsorCard({
   const logoSrc = logoCandidates[logoIndex] || "";
   const profileHref = `/sponsors/${encodeURIComponent(sponsor.slug || sponsor.id || "")}`;
   const pageSource = sponsor.isPodcastSponsor ? "podcast_sponsor_page" : "sponsor_hub_card";
-  const favoriteKey = String(sponsor.slug || sponsor.id || "").trim().toLowerCase();
   const logoPanel =
     sponsor.logoPanelMode === "light"
       ? "light"
@@ -141,8 +133,6 @@ export default function FeaturedSponsorCard({
     : undefined;
 
   const tierClass = sponsor.displayGroup ? ` sponsorPremiumCard--displayTier-${sponsor.displayGroup}` : "";
-  const showFavoriteControl = favoriteKey && (favoritesEnabled || onRequestSignIn);
-  const showCardTop = !hidePrimaryBadge || showFavoriteControl;
 
   return (
     <article
@@ -171,51 +161,17 @@ export default function FeaturedSponsorCard({
         aria-hidden
       />
       <div className="sponsorPremiumCardInner">
-        {showCardTop ? (
+        {!hidePrimaryBadge ? (
           <div className="sponsorPremiumCardTop">
-            {!hidePrimaryBadge ? (
-              <div className="sponsorPremiumCardBadges" aria-label="Sponsor recognition">
-                {sponsor.primaryBadge ? (
-                  <span
-                    className={`sponsorPremiumBadge sponsorPremiumBadge--primary sponsorPremiumBadge--${sponsor.primaryBadge.key}`}
-                  >
-                    {sponsor.primaryBadge.label}
-                  </span>
-                ) : null}
-              </div>
-            ) : null}
-            {showFavoriteControl ? (
-              <div className="sponsorPremiumCardTopActions">
-                {favoritesEnabled ? (
-                  <button
-                    type="button"
-                    className={`favBtn sponsorPremiumFavBtn${isFavorite ? " favBtn--on" : ""}`}
-                    onClick={(event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      onToggleFavorite?.(`sponsor:${favoriteKey}`);
-                    }}
-                    aria-pressed={isFavorite}
-                    aria-label={isFavorite ? "Remove sponsor from saved" : "Save sponsor"}
-                  >
-                    {isFavorite ? "★" : "☆"}
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    className="favBtn favBtn--muted sponsorPremiumFavBtn"
-                    onClick={(event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      onRequestSignIn();
-                    }}
-                    aria-label="Sign in to save sponsor"
-                  >
-                    ☆
-                  </button>
-                )}
-              </div>
-            ) : null}
+            <div className="sponsorPremiumCardBadges" aria-label="Sponsor recognition">
+              {sponsor.primaryBadge ? (
+                <span
+                  className={`sponsorPremiumBadge sponsorPremiumBadge--primary sponsorPremiumBadge--${sponsor.primaryBadge.key}`}
+                >
+                  {sponsor.primaryBadge.label}
+                </span>
+              ) : null}
+            </div>
           </div>
         ) : null}
         <div className="sponsorPremiumBrand">

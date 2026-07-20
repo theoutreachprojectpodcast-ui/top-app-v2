@@ -33,6 +33,7 @@ const DEFAULT_PRESENTATION = {
   tone: "normal",
   borderColor: "",
   minimalFrame: false,
+  frameShape: "circle",
   panel: "auto",
   focusX: 50,
   focusY: 50,
@@ -93,6 +94,7 @@ export default function OrganizationLogo({
     "organizationLogo__frame",
     mark.bgColor ? "organizationLogo__frame--matte" : "",
     mark.minimalFrame ? "organizationLogo__frame--minimal" : "",
+    mark.frameShape === "rounded" ? "organizationLogo__frame--rounded" : "",
     frameClassName,
   ]
     .filter(Boolean)

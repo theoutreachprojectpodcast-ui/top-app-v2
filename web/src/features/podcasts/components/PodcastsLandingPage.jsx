@@ -16,9 +16,14 @@ import EpisodeCard from "@/features/podcasts/components/EpisodeCard";
 import GuestCard from "@/features/podcasts/components/GuestCard";
 import PodcastSponsorFlowModal from "@/features/podcasts/components/PodcastSponsorFlowModal";
 import PodcastSectionHeader from "@/features/podcasts/components/PodcastSectionHeader";
-import PodcastSponsorsSection from "@/features/podcasts/components/PodcastSponsorsSection";
+import PodcastSponsorHubSection from "@/features/podcasts/components/PodcastSponsorHubSection";
 import PodcastCTASection from "@/features/podcasts/components/PodcastCTASection";
 import PodcastApplyGuestForm from "@/features/podcasts/components/PodcastApplyGuestForm";
+import MemberOnlyLockSection from "@/features/podcasts/components/MemberOnlyLockSection";
+import { listPodcastMemberContent } from "@/features/podcasts/api/podcastApi";
+import { useProfileData } from "@/features/profile/ProfileDataProvider";
+import ProUpgradeModal from "@/components/membership/ProUpgradeModal";
+import { getProUpgradeGateContent } from "@/lib/membership/proUpgradeGateCopy";
 import { PODCAST_LANDING_RECENT_EPISODE_COUNT } from "@/lib/podcast/podcastLandingCuratedEpisodes";
 
 const FULL_EPISODES_SECTION_COUNT = PODCAST_LANDING_RECENT_EPISODE_COUNT;
@@ -42,7 +47,6 @@ function mapUpcomingApiGuests(rows) {
 
 export default function PodcastsLandingPage({
   initialEpisodes = [],
-  initialFeaturedGuests = [],
   initialSponsors = [],
   initialUpcomingGuests = [],
   initialEpisodeGuests = [],
@@ -56,13 +60,13 @@ export default function PodcastsLandingPage({
   const heroBandFromServer = String(initialHeroBandImageUrl || "").trim();
 
   const supabase = useMemo(() => getSupabaseClient(), []);
+  const { entitlements } = useProfileData();
+  const hasProPodcastExtras = !!entitlements?.podcastMemberContent;
+  const [memberItems, setMemberItems] = useState([]);
   const [episodes, setEpisodes] = useState(() => {
     if (hasInitialBundle) return initialEpisodes;
     return isDevBuild ? FALLBACK_EPISODES : [];
   });
-  const [featuredVoices, setFeaturedVoices] = useState(
-    Array.isArray(initialFeaturedGuests) && initialFeaturedGuests.length ? initialFeaturedGuests : [],
-  );
   const [podcastSponsors, setPodcastSponsors] = useState(
     hasInitialSponsors ? initialSponsors : [],
   );
@@ -83,16 +87,37 @@ export default function PodcastsLandingPage({
 
   const [applyOpen, setApplyOpen] = useState(false);
   const [sponsorFlowOpen, setSponsorFlowOpen] = useState(false);
+  const [sponsorUpgradeOpen, setSponsorUpgradeOpen] = useState(false);
+  const sponsorUpgradeCopy = getProUpgradeGateContent("/podcasts/sponsor");
+
+  function openPodcastSponsorApply() {
+    if (hasProPodcastExtras) {
+      setSponsorFlowOpen(true);
+      return;
+    }
+    setSponsorUpgradeOpen(true);
+  }
   const searchParams = useSearchParams();
 
   useEffect(() => {
+    if (!hasProPodcastExtras) return;
     if (searchParams.get("sponsor") === "1") {
       setSponsorFlowOpen(true);
     }
     if (searchParams.get("sponsor_checkout") === "success" || searchParams.get("sponsor_checkout") === "cancel") {
       setSponsorFlowOpen(true);
     }
-  }, [searchParams]);
+  }, [searchParams, hasProPodcastExtras]);
+
+  useEffect(() => {
+    let cancelled = false;
+    listPodcastMemberContent(supabase, { canViewMemberContent: hasProPodcastExtras }).then((rows) => {
+      if (!cancelled) setMemberItems(Array.isArray(rows) ? rows : []);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [supabase, hasProPodcastExtras]);
 
   useEffect(() => {
     if (initialBundleMeta?.degraded) {
@@ -110,15 +135,9 @@ export default function PodcastsLandingPage({
       if (bundle.ok && nextEpisodes.length) {
         setEpisodeFetchError("");
         setEpisodes(nextEpisodes);
-        if (Array.isArray(bundle.featuredGuests) && bundle.featuredGuests.length) {
-          setFeaturedVoices(bundle.featuredGuests);
-        }
       } else if (nextEpisodes.length) {
         setEpisodeFetchError("");
         setEpisodes(nextEpisodes);
-        if (Array.isArray(bundle.featuredGuests) && bundle.featuredGuests.length) {
-          setFeaturedVoices(bundle.featuredGuests);
-        }
       } else if (!hasInitialBundle) {
         setEpisodes((prev) => (Array.isArray(prev) && prev.length ? prev : nextEpisodes));
         setEpisodeFetchError(
@@ -239,22 +258,11 @@ export default function PodcastsLandingPage({
   return (
     <>
     <div className="podcastScope">
-        <PodcastHero featured={featured} onApply={() => setApplyOpen(true)} />
-
-        <section className="podcastSection">
-          <PodcastSectionHeader
-            eyebrow="Featured guests"
-            title="Voices shaping service communities"
-            subtitle="Short pull-quotes from episode captions when available; otherwise curated public quotes or tight show-notes lines. Active voice cards: Admin → Podcasts."
-          />
-          {bundleNote ? <p className="podcastMuted">{bundleNote}</p> : null}
-          <div className="podcastGuestGrid">
-            {featuredVoices.slice(0, 4).map((guest) => (
-              <GuestCard key={guest.id || guest.slug} guest={guest} variant="voiceStrip" />
-            ))}
-          </div>
-          {!featuredVoices.length ? <p className="podcastMuted">Guest highlights will appear after the next successful sync.</p> : null}
-        </section>
+        <PodcastHero
+          featured={featured}
+          onApply={() => setApplyOpen(true)}
+          onSponsorApply={openPodcastSponsorApply}
+        />
 
         <section className="podcastSection">
           <PodcastSectionHeader
@@ -262,6 +270,7 @@ export default function PodcastsLandingPage({
             title="Latest full episodes"
             subtitle="The ten most recent episodes from our official YouTube full-episodes playlist, with thumbnails synced from YouTube."
           />
+          {bundleNote ? <p className="podcastMuted">{bundleNote}</p> : null}
           {episodeFetchError && !lastTenFullEpisodes.length ? (
             <p className="podcastMuted" role="alert">
               {episodeFetchError}
@@ -304,6 +313,8 @@ export default function PodcastsLandingPage({
           ) : null}
         </section>
 
+        <MemberOnlyLockSection canAccess={hasProPodcastExtras} items={memberItems} />
+
         <section className="podcastSection">
           <PodcastSectionHeader eyebrow="Guest Applications" title="Want to be on the show?" subtitle="Open the in-page application modal to apply." />
           <div className="row wrap">
@@ -312,27 +323,16 @@ export default function PodcastsLandingPage({
             </button>
           </div>
         </section>
-        <section className="podcastSection podcastSponsorCtaBand">
-          <PodcastSectionHeader
-            eyebrow="Podcast sponsors"
-            title="Sponsor the show"
-            subtitle="Community, Impact, and Foundational packages. Open the flow to compare tiers, review full placements and benefits, and apply—without leaving the podcast experience."
-          />
-          <div className="row wrap">
-            <button className="btnPrimary" type="button" onClick={() => setSponsorFlowOpen(true)}>
-              Sponsor the show
-            </button>
-            <Link className="btnSoft" href="/sponsors?packages=1">
-              Sponsor hub (main app)
-            </Link>
-          </div>
-          {!podcastSponsorBillingReady ? (
-            <p className="podcastMuted" role="status">
-              Podcast sponsor tiers use the in-page demo checkout for now. Membership Support and Pro use live Stripe when enabled on Profile.
-            </p>
-          ) : null}
-        </section>
-        <PodcastSponsorsSection sponsors={podcastSponsors} />
+        <PodcastSponsorHubSection
+          sponsors={podcastSponsors}
+          canAccess={hasProPodcastExtras}
+          onApply={openPodcastSponsorApply}
+          billingNote={
+            !podcastSponsorBillingReady && hasProPodcastExtras
+              ? "Podcast sponsor tiers use the in-page demo checkout for now. Membership Support and Pro use live Stripe when enabled on Profile."
+              : ""
+          }
+        />
         <PodcastCTASection onApply={() => setApplyOpen(true)} />
       </div>
       {applyOpen ? (
@@ -367,15 +367,24 @@ export default function PodcastsLandingPage({
           </div>
         </div>
       ) : null}
-      <PodcastSponsorFlowModal
-        open={sponsorFlowOpen}
-        onClose={() => setSponsorFlowOpen(false)}
-        supabase={supabase}
-        initialTierId={searchParams.get("tier") || undefined}
-        stripeReturn={{
-          checkout: searchParams.get("sponsor_checkout") || "",
-          sessionId: searchParams.get("session_id") || "",
-        }}
+      {hasProPodcastExtras ? (
+        <PodcastSponsorFlowModal
+          open={sponsorFlowOpen}
+          onClose={() => setSponsorFlowOpen(false)}
+          supabase={supabase}
+          initialTierId={searchParams.get("tier") || undefined}
+          stripeReturn={{
+            checkout: searchParams.get("sponsor_checkout") || "",
+            sessionId: searchParams.get("session_id") || "",
+          }}
+        />
+      ) : null}
+      <ProUpgradeModal
+        open={sponsorUpgradeOpen}
+        title={sponsorUpgradeCopy.title}
+        message={sponsorUpgradeCopy.message}
+        feature={sponsorUpgradeCopy.feature}
+        onBack={() => setSponsorUpgradeOpen(false)}
       />
     </>
   );

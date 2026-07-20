@@ -19,6 +19,7 @@ import { resolvePageAtmosphere } from "@/lib/design/pageAtmosphere";
 import { useImmersiveHeaderScroll } from "@/hooks/useImmersiveHeaderScroll";
 import CapacitorFooterPortal from "@/components/capacitor/CapacitorFooterPortal";
 import { isSiteDockNavActive, SITE_MOBILE_DOCK_ITEMS } from "@/components/navigation/siteBottomNavConfig";
+import { scrollToPageTop } from "@/lib/navigation/scrollToPageTop";
 
 const NAV_ITEMS = [
   { href: "/", key: "home", label: "Home", linkTitle: "Home" },
@@ -51,6 +52,11 @@ export default function AppShell({
 }) {
   const shellRef = useRef(null);
   const pathname = usePathname();
+
+  function scrollShellToTop() {
+    scrollToPageTop({ root: shellRef.current });
+  }
+
   const missionStripOnHome = pathname === "/";
   const items = Array.isArray(navItems) && navItems.length ? navItems : NAV_ITEMS;
   const RootTag = useTopAppStructure ? "main" : "div";
@@ -91,30 +97,38 @@ export default function AppShell({
       <div className={`appSiteHeader${podcastThemeShell ? " appSiteHeader--podcast" : ""}`}>
         {podcastThemeShell ? (
           <>
+            <AppHeaderBrand
+              brandSrc={brandSrc || undefined}
+              brandAlt={brandAlt}
+              brandClassName={brandClassName}
+              pageAtmosphere={pageAtmosphere}
+            />
             <header className={usePrimaryTopbarChrome ? "topbar" : "subpageTopbar"}>
               <HeaderInner className="topbarInner">
                 <div className="topbarZone topbarLeft">
                   <div className="topbarActionsCluster topbarActionsCluster--start">
-                    <SubpageTopbarActions section="authNotifications" />
+                    {useFooterDockChrome ? (
+                      <SiteHamburgerNavMenu tone="podcast" shellClass="siteMobileNavMore--phoneOnly" />
+                    ) : null}
+                    {isMobileShell && isLoggedIn ? <AdminConsoleLink /> : null}
                     <SubpageTopbarActions section="lead" />
                   </div>
                 </div>
                 <div className="topbarZone topbarCenter" aria-hidden="true" />
                 <div className="topbarZone topbarRight">
                   <div className="topbarActionsCluster">
-                    <SubpageTopbarActions section="authMenu" />
                     {useFooterDockChrome ? (
-                      <SiteHamburgerNavMenu tone="podcast" align="end" />
+                      <SiteHamburgerNavMenu
+                        tone="podcast"
+                        align="end"
+                        shellClass="siteMobileNavMore--desktopOnly"
+                      />
                     ) : null}
+                    <SubpageTopbarActions section="auth" />
                   </div>
                 </div>
               </HeaderInner>
             </header>
-            <AppHeaderBrand
-              brandSrc={brandSrc || undefined}
-              brandAlt={brandAlt}
-              brandClassName={brandClassName}
-            />
           </>
         ) : (
           <>
@@ -122,6 +136,7 @@ export default function AppShell({
               brandSrc={brandSrc || undefined}
               brandAlt={brandAlt}
               brandClassName={brandClassName}
+              pageAtmosphere={pageAtmosphere}
             />
             <header className={usePrimaryTopbarChrome ? "topbar" : "subpageTopbar"}>
               <HeaderInner className="topbarInner">
@@ -154,13 +169,17 @@ export default function AppShell({
 
       {useTopAppStructure ? (
         <section className="shell">
-          {showSiteFooter && missionStripOnHome ? <MissionPageTopStrip placement="top" /> : null}
+          {showSiteFooter && missionStripOnHome ? (
+            <MissionPageTopStrip placement="top" profileLinkInsteadOfContact />
+          ) : null}
           {children}
           {showSiteFooter && !missionStripOnHome ? <MissionPageTopStrip placement="bottom" /> : null}
         </section>
       ) : (
         <main className="content content--subpage">
-          {showSiteFooter && missionStripOnHome ? <MissionPageTopStrip placement="top" /> : null}
+          {showSiteFooter && missionStripOnHome ? (
+            <MissionPageTopStrip placement="top" profileLinkInsteadOfContact />
+          ) : null}
           {children}
           {showSiteFooter && !missionStripOnHome ? <MissionPageTopStrip placement="bottom" /> : null}
         </main>
@@ -183,6 +202,7 @@ export default function AppShell({
                     title={item.linkTitle || item.label}
                     data-nav-key={item.key}
                     className={`navItem navItem--dockCol navItem--dockPrimary ${isSiteDockNavActive(item.key, { nav: activeNav, pathname }) ? "isActive" : ""}`}
+                    onClick={() => scrollShellToTop()}
                   >
                     <SiteBottomNavGlyph navKey={item.key} className="navItemGlyph" />
                     <span className="navItemLabel">{item.label}</span>
@@ -203,6 +223,7 @@ export default function AppShell({
               href={item.href}
               title={item.linkTitle || item.label}
               className={`navItem navItem--dockCol ${activeNav === item.key ? "isActive" : ""}`}
+              onClick={() => scrollShellToTop()}
             >
               <SiteBottomNavGlyph navKey={item.key} className="navItemGlyph" />
               <span className="navItemLabel">{item.label}</span>

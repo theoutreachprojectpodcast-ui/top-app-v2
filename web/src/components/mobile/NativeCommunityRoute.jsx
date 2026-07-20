@@ -12,7 +12,7 @@ export default function NativeCommunityRoute() {
 
   useEffect(() => {
     if (isCapacitorNative()) {
-      router.replace("/");
+      router.replace("/?nav=community");
     }
   }, [router]);
 

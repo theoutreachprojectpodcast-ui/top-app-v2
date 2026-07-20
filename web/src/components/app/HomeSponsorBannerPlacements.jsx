@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import OrganizationLogo from "@/components/shared/OrganizationLogo";
+import { getHomepageFeaturedSponsorSeed } from "@/lib/sponsors/homepageFeaturedSponsors";
+import { canonicalSponsorHubSlug } from "@/features/sponsors/api/sponsorCatalogApi";
 import "./home-sponsor-banner.css";
 
 const MOBILE_CAROUSEL_MQ = "(max-width: 760px)";
@@ -23,13 +25,15 @@ function SponsorHomePlacement({ sponsor }) {
   const hasPhoto = !!photo;
   const eyebrow = sponsorEyebrow(sponsor);
   const tagline = sponsorTagline(sponsor);
-  const slug = String(sponsor.slug || sponsor.id || "").trim();
+  const slug = canonicalSponsorHubSlug(String(sponsor.slug || sponsor.id || "").trim());
+  const profileHref = slug ? `/sponsors/${encodeURIComponent(slug)}` : "/sponsors";
   const isGameday = slug === "gameday-mens-health";
+  const isRucking = slug === "rucking-realty-group";
 
   return (
     <Link
-      className={`homeSponsorBannerSlot${hasPhoto ? " homeSponsorBannerSlot--photo" : ""}${hasLogo ? " homeSponsorBannerSlot--hasLogo" : ""}${isGameday ? " homeSponsorBannerSlot--gameday" : ""}`}
-      href={`/sponsors/${slug}`}
+      className={`homeSponsorBannerSlot${hasPhoto ? " homeSponsorBannerSlot--photo" : ""}${hasLogo ? " homeSponsorBannerSlot--hasLogo" : ""}${isGameday ? " homeSponsorBannerSlot--gameday" : ""}${isRucking ? " homeSponsorBannerSlot--rucking" : ""}`}
+      href={profileHref}
     >
       {hasPhoto ? (
         <span className="homeSponsorBannerSlot__bg" style={{ backgroundImage: `url(${photo})` }} aria-hidden />
@@ -84,14 +88,16 @@ export default function HomeSponsorBannerPlacements() {
         const res = await fetch("/api/sponsors/homepage-featured", { cache: "no-store" });
         const data = await res.json().catch(() => ({}));
         if (cancelled) return;
-        if (res.ok && Array.isArray(data.sponsors)) {
+        if (res.ok && Array.isArray(data.sponsors) && data.sponsors.length) {
           setSpotlightSponsors(data.sponsors);
           if (data.settings?.carouselIntervalMs) {
             setCarouselIntervalMs(data.settings.carouselIntervalMs);
           }
+          return;
         }
+        setSpotlightSponsors(getHomepageFeaturedSponsorSeed());
       } catch {
-        if (!cancelled) setSpotlightSponsors([]);
+        if (!cancelled) setSpotlightSponsors(getHomepageFeaturedSponsorSeed());
       } finally {
         if (!cancelled) setLoading(false);
       }

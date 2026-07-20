@@ -20,6 +20,7 @@ const ASSETS = {
   "eduardo-pico-designs":
     "https://eduardopicodesigns.com/cdn/shop/files/eduardo_pico_logo.png?v=1775735693&width=240",
   "green-gorilla-land-management": "/sponsors/green-gorilla-land-management-logo.png?v=2",
+  "don-blas-cigars": "/sponsors/don-blas-cigars-logo.png?v=1",
   "say-when-and-remember-him": "/trusted/say-when-and-remember-him-org-logo.png",
   "back-country-heroes": "/trusted/back-country-heroes-org-logo.png",
   "hero-to-the-line": "/trusted/hero-to-the-line-org-logo.png",
@@ -34,6 +35,9 @@ const ASSETS = {
   "mos-veteran-adventures": "/trusted/mos-veteran-adventures-org-logo.png",
   "the-fallen-outdoors": "/trusted/the-fallen-outdoors-org-logo.png",
   "sheepdog-impact-assistance": "/trusted/sheepdog-impact-assistance-org-logo.png",
+  "the-rivetin-rosies-project": "/trusted/the-rivetin-rosies-project-org-logo.png?v=1",
+  "changed-by-nature-outdoors": "/trusted/changed-by-nature-outdoors-org-logo.png?v=1",
+  "shepherds-light-foundation": "/trusted/shepherds-light-foundation-org-logo.png?v=1",
 };
 
 async function analyze(url) {

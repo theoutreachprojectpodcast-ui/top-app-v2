@@ -21,30 +21,148 @@
   padding-bottom: var(--top-bottom-nav-reserve);
 }
 
-/* Home desktop: wordmark +75% vs prior compact home sizing. */
+/* Home desktop: stable wordmark size (pre-hero expansion). Header is in-flow (scrolls). */
 @media (min-width: 761px) {
-  main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) {
-    --header-floating-offset: 8px;
-    --header-floating-height: clamp(350px, 49vw, 476px);
-    --header-fade-height: 28px;
-    --home-logo-content-gap: 14px;
-  }
-
   main.topApp[data-page-atmosphere="home"] .headerBrandStack {
-    max-width: min(1092px, 92vw);
+    max-width: min(720px, 88vw);
   }
 
   main.topApp[data-page-atmosphere="home"] .shell.shell--home {
-    gap: var(--ds-space-4, 16px);
-    padding-top: calc(
-      var(--header-floating-offset) + var(--header-floating-height) + var(--header-fade-height) +
-        var(--home-logo-content-gap, 14px)
-    );
+    gap: var(--ds-space-2, 8px);
+    padding-top: var(--ds-space-2, 8px);
   }
 
   main.topApp[data-page-atmosphere="home"] img.brandMarkImg--header:not(.podcastBrandLogo) {
-    max-height: clamp(350px, 49vw, 476px);
-    max-width: min(1260px, 88vw);
+    max-height: clamp(200px, 28vw, 272px);
+    max-width: min(720px, 88vw);
+  }
+}
+
+/*
+ * Desktop (≥761px): header scrolls with page content (same in-flow model as mobile).
+ * Logo + left/right chrome live in `.appSiteHeader`; no fixed topbar / floating mark.
+ */
+@media (min-width: 761px) {
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) {
+    --header-floating-offset: 0px;
+    --header-floating-height: 0px;
+    --header-fade-height: 0px;
+  }
+
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .appSiteHeader {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: start;
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 0;
+    height: auto;
+    overflow: visible;
+    padding: 12px clamp(16px, 3vw, 40px) 10px;
+    z-index: 2;
+  }
+
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .headerBrandStack {
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
+    z-index: 0;
+    grid-column: 2;
+    grid-row: 1;
+    align-self: start;
+    justify-self: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: auto;
+    max-width: min(720px, 52vw);
+    padding: 0;
+    margin: 0;
+    pointer-events: none;
+  }
+
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .headerBrandStack > a {
+    pointer-events: auto;
+  }
+
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) header.topbar,
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbar {
+    position: static;
+    top: auto;
+    left: auto;
+    right: auto;
+    z-index: auto;
+    pointer-events: none;
+    background: transparent;
+  }
+
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbar,
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarInner {
+    display: contents;
+  }
+
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarLeft {
+    grid-column: 1;
+    grid-row: 1;
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    align-self: start;
+    justify-self: start;
+    width: auto;
+    min-width: 0;
+    pointer-events: auto;
+  }
+
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarRight {
+    grid-column: 3;
+    grid-row: 1;
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+    align-self: start;
+    justify-self: end;
+    width: auto;
+    min-width: 0;
+    pointer-events: auto;
+  }
+
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarCenter {
+    display: none;
+  }
+
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarLeft .topbarActionsCluster,
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarLeft .topbarActionsCluster--start,
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarRight .topbarActionsCluster {
+    width: auto;
+    flex-wrap: nowrap;
+    gap: 10px;
+    pointer-events: auto;
+  }
+
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarOcclusion {
+    position: static;
+    display: block;
+    height: 0;
+    min-height: 0;
+    overflow: hidden;
+    background: none;
+  }
+
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarOcclusion::before,
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarOcclusion::after {
+    content: none;
+    display: none;
+  }
+
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .shell {
+    padding-top: 8px;
   }
 }
 
@@ -224,7 +342,8 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])::after
   top: var(--header-floating-offset);
   left: 0;
   right: 0;
-  z-index: 95;
+  /* Above .headerBrandStack (97) so home chrome never paints under the wordmark. */
+  z-index: 110;
   background: transparent;
   border-bottom: 0;
   backdrop-filter: none;
@@ -583,7 +702,7 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topba
 .topbarLeft {
   justify-content: flex-start;
   grid-area: left;
-  /* Above .headerBrandStack (z-index 97) so left actions stay visible over the centered logo */
+  /* Local stacking inside .topbar (z-index 110); keeps left actions above in-bar peers. */
   position: relative;
   z-index: 100;
 }
@@ -609,6 +728,21 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topba
 }
 .topbarActionsCluster--start {
   justify-content: flex-start;
+}
+.topbarLeft .topbarActionsCluster,
+.topbarLeft .topbarActionsCluster--start {
+  justify-content: flex-start;
+}
+.topbarRight .topbarActionsCluster {
+  justify-content: flex-end;
+}
+.topbar .sponsorBtn,
+.topbar .btnSoft,
+.topbar .downloadMobileAppBtn,
+.topbar .themeToggle {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
 }
 .downloadMobileAppBtn {
   display: inline-flex;
@@ -983,8 +1117,8 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topba
   gap: 10px;
 }
 
-/* Fixed header logo column — OP/TOP mark (required). Desktop: centered fixed mark; mobile @760px: in-flow (scrolls).
-   Do not remove; responsive edits must keep .headerBrandStack above .topbar (see mobile z-index). */
+/* Header logo column — OP/TOP mark (required). Desktop + mobile: in-flow (scrolls with content).
+   Do not remove; responsive edits must keep .headerBrandStack in `.appSiteHeader` grid. */
 .headerBrandStack {
   position: fixed;
   top: calc(var(--header-floating-offset, 20px) + 4px + env(safe-area-inset-top, 0px));
@@ -999,6 +1133,10 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topba
   padding: 0 8px;
   box-sizing: border-box;
   pointer-events: none;
+}
+/* Subpage OP logomark — slight breathe below mark before controls / content. */
+.headerBrandStack--compactMark {
+  padding-bottom: clamp(4px, 0.6vw, 8px);
 }
 .headerBrandStack > a {
   pointer-events: auto;
@@ -1048,16 +1186,12 @@ img.brandMarkImg--header {
 }
 :root[data-color-scheme="light"] img.brandMarkImg--header:not(.podcastBrandLogo) {
   filter:
-    drop-shadow(0 2px 8px rgba(255, 255, 255, 0.92))
-    drop-shadow(0 4px 18px rgba(255, 255, 255, 0.55));
+    drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2))
+    drop-shadow(0 4px 14px rgba(0, 0, 0, 0.12));
 }
 :root[data-color-scheme="dark"] img.brandMarkImg--header:not(.podcastBrandLogo),
 .dark img.brandMarkImg--header:not(.podcastBrandLogo) {
-  /* Dark mode: brighter mark + dark edge separation over atmospheric header. */
   filter:
-    saturate(1.32)
-    contrast(1.05)
-    brightness(1.16)
     drop-shadow(0 2px 10px rgba(0, 0, 0, 0.52))
     drop-shadow(0 4px 20px rgba(0, 0, 0, 0.38));
 }
@@ -1110,7 +1244,7 @@ span.headerBrandMarkFallback {
   padding: 10px 14px;
 }
 .topbarRight .sponsorBtn {
-  margin-bottom: 3px;
+  margin-bottom: 0;
 }
 .themeToggle {
   min-width: 44px;
@@ -3495,6 +3629,25 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   z-index: 100;
   box-sizing: border-box;
 }
+.proUpgradeModalOverlay {
+  z-index: 120;
+}
+.proUpgradeModal__title {
+  margin: 0;
+}
+.proUpgradeModal__lead {
+  margin: 0;
+  color: color-mix(in srgb, var(--color-text-primary) 88%, var(--color-text-secondary) 12%);
+  line-height: 1.5;
+}
+.proUpgradeModal__meta {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-body-sm);
+}
+.proUpgradeModal__actions {
+  margin-top: var(--ds-space-2, 8px);
+}
 .modalOverlay--profileEdit {
   z-index: 500;
 }
@@ -3584,6 +3737,11 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   gap: 14px;
   padding: 18px 20px 14px;
   border-bottom: 1px solid var(--color-border-subtle);
+}
+.missionPartnerPackagesModal__head > div:first-child,
+.becomeSponsorModal__headCopy {
+  flex: 1;
+  min-width: 0;
 }
 .missionPartnerPackagesModal__head h3 {
   margin: 0;
@@ -3735,6 +3893,19 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   line-height: 1.5;
   max-width: 52ch;
 }
+.sponsorHero__actions {
+  margin-top: var(--ds-space-4, 16px);
+}
+.sponsorApplySection__actions {
+  margin-top: var(--ds-space-4, 16px);
+}
+.sponsorApplySection__actions--primary {
+  margin-bottom: var(--ds-space-2, 8px);
+}
+.sponsorApplySection__footNote {
+  margin-top: var(--ds-space-4, 16px);
+  margin-bottom: 0;
+}
 .sponsorSectionLead {
   margin: 0 0 14px;
   color: var(--color-text-secondary);
@@ -3833,10 +4004,28 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 .sponsorFeaturedSection {
   padding: 18px;
 }
+.sponsorApplySection .sponsorTierSection + .sponsorTierSection {
+  margin-top: var(--ds-space-4, 16px);
+}
+
 .sponsorRosterStack {
   display: flex;
   flex-direction: column;
   gap: var(--ds-section-gap, 24px);
+}
+.sponsorLandingClosing {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sponsorLanding .sponsorSection--why {
+  padding-bottom: var(--ds-space-4, 16px);
+}
+.sponsorLanding .sponsorSection--why .sponsorSectionLead--flush {
+  margin-bottom: 0;
+}
+.sponsorLandingClosing .sponsorCtaBand .sponsorSectionLead {
+  margin-bottom: 0;
 }
 .sponsorSectionHead {
   display: flex;
@@ -4178,6 +4367,63 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 }
 .sponsorCtaBand h3 {
   margin: 0 0 4px;
+}
+.sponsorCtaBand--become {
+  align-items: center;
+}
+.sponsorCtaBand--become .btnPrimary {
+  flex-shrink: 0;
+}
+.becomeSponsorModalOverlay {
+  z-index: 200;
+  align-items: flex-start;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.becomeSponsorModal.modalCard {
+  width: min(920px, 98vw);
+  max-height: min(calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)), 960px);
+  margin: max(12px, env(safe-area-inset-top, 0px)) auto max(12px, env(safe-area-inset-bottom, 0px));
+}
+.becomeSponsorModal__head {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  background: linear-gradient(180deg, var(--color-surface-elevated) 0%, var(--color-surface-card-deep) 100%);
+  box-shadow: 0 1px 0 var(--color-border-subtle);
+}
+.becomeSponsorModal__headCopy {
+  flex: 1;
+  min-width: 0;
+}
+.becomeSponsorModal__close {
+  position: relative;
+  z-index: 5;
+  flex-shrink: 0;
+}
+.becomeSponsorModal__body {
+  position: relative;
+  z-index: 1;
+}
+@media (max-width: 760px) {
+  .becomeSponsorModalOverlay {
+    padding-top: max(8px, env(safe-area-inset-top, 0px));
+    padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
+  }
+  .becomeSponsorModal.modalCard {
+    width: min(100%, calc(100vw - 16px));
+    max-height: calc(100dvh - 16px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    margin: 0 auto;
+  }
+  .becomeSponsorModal__head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .becomeSponsorModal__close {
+    width: 100%;
+    justify-content: center;
+  }
 }
 .sponsorFamilyBlock {
   margin-top: 16px;
@@ -4540,7 +4786,50 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   font-weight: 800;
 }
 .communityConnectionsPanel {
+  padding: 0;
+  overflow: hidden;
+}
+.communityConnectionsDisclosure > .communityConnectionsBody {
+  padding: 0 16px 14px;
+}
+.communityConnectionsSummary {
+  list-style: none;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
   padding: 14px 16px;
+  cursor: pointer;
+  transition: background 160ms ease;
+}
+.communityConnectionsSummary::-webkit-details-marker {
+  display: none;
+}
+.communityConnectionsSummary:hover {
+  background: var(--color-surface-muted);
+}
+.communityConnectionsSummaryMain {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+}
+.communityConnectionsSummaryTitle {
+  margin: 0;
+  font-size: var(--text-section-title);
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+.communityConnectionsChevron {
+  flex-shrink: 0;
+  color: var(--color-accent);
+  font-size: 17.5px;
+  line-height: 1;
+  margin-top: 4px;
+  transition: transform 180ms ease;
+}
+.communityConnectionsDisclosure[open] .communityConnectionsChevron {
+  transform: rotate(180deg);
 }
 .communityCollapseBtn {
   padding: 7px 12px;
@@ -4551,6 +4840,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   justify-content: space-between;
   gap: 12px;
 }
+.communityConnectionsPreviewText,
 .communityConnectionsPreview p {
   margin: 0;
   color: var(--color-text-secondary);
@@ -4559,6 +4849,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 .communityConnectionsPreviewAvatars {
   display: inline-flex;
   align-items: center;
+  flex-shrink: 0;
 }
 .communityConnectionsPreviewAvatars .communityMemberAvatarImg {
   width: 48px;
@@ -4566,8 +4857,14 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   margin-right: -12px;
   border: 2px solid var(--color-bg-secondary);
 }
+.communityConnectionsPreview--solo {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+
 .communityConnectionsBody {
-  margin-top: 12px;
+  margin-top: 0;
   display: grid;
   gap: 10px;
 }
@@ -6409,7 +6706,9 @@ html.dark .communityPostBodyGuideSteps li {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: center;
   gap: 8px;
+  width: 100%;
 }
 .sponsorProfileIconLink {
   display: inline-flex;
@@ -6529,6 +6828,9 @@ html.dark .communityPostBodyGuideSteps li {
 .sponsorProfileCtaRow {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
   gap: var(--ds-space-3, 12px);
 }
 .sponsorProfileCtaBtn {
@@ -6830,16 +7132,17 @@ html.dark .communityPostBodyGuideSteps li {
   }
 
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]):not([data-page-atmosphere="home"]) {
-    --mobile-site-header-logo-h: clamp(56px, 14vw, 72px);
-    --mobile-site-header-logo-max-w: min(180px, calc(100vw - 96px));
+    --mobile-site-header-logo-h: clamp(50px, 12.5vw, 64px);
+    --mobile-site-header-logo-max-w: min(168px, calc(100vw - 88px));
     --mobile-site-header-control-size: 44px;
     --mobile-site-header-control-pad-top: 2px;
     --mobile-site-header-pad-x: max(clamp(8px, 2.5vw, 12px), env(safe-area-inset-left, 0px));
   }
 
   main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) {
-    --mobile-site-header-logo-h: clamp(301px, 78.75vw, 399px);
-    --mobile-site-header-logo-max-w: min(910px, calc(100vw - 28px));
+    --mobile-home-header-layout-h: clamp(112px, 29vw, 148px);
+    --mobile-site-header-logo-h: clamp(137px, 36vw, 182px);
+    --mobile-site-header-logo-max-w: min(587px, calc(100vw - 24px));
     --mobile-site-header-control-size: 44px;
     --mobile-site-header-control-pad-top: 2px;
     --mobile-site-header-pad-x: max(clamp(8px, 2.5vw, 12px), env(safe-area-inset-left, 0px));
@@ -6879,7 +7182,7 @@ html.dark .communityPostBodyGuideSteps li {
     position: relative !important;
     top: auto !important;
     left: auto !important;
-    align-self: center;
+    align-self: start;
     transform: none !important;
     z-index: 0;
     flex: 0 0 auto;
@@ -6924,6 +7227,17 @@ html.dark .communityPostBodyGuideSteps li {
     object-position: center top;
     vertical-align: top;
     filter: none !important;
+  }
+
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .headerBrandStack--compactMark {
+    padding-bottom: clamp(4px, 1.2vw, 8px) !important;
+  }
+
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .headerBrandStack--compactMark .brandMarkImg,
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .headerBrandStack--compactMark .brandMarkImg--header,
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .headerBrandStack--compactMark img.brandMarkImg--header:not(.podcastBrandLogo),
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .headerBrandStack--compactMark .headerBrandMarkFallback {
+    margin-bottom: 0 !important;
   }
 
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]).header-at-top .headerBrandStack > a,
@@ -7397,28 +7711,6 @@ html.dark .communityPostBodyGuideSteps li {
     width: auto;
     justify-self: start;
   }
-  /* Podcast: one chrome row at top — theme/sponsor left | auth + menu right. */
-  main.topApp.appShell--podcast.topApp--auth-out .topbarInner,
-  main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarInner {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas: "left right";
-    gap: 8px 10px;
-    align-items: center;
-  }
-  main.topApp.appShell--podcast.topApp--auth-out .topbarLeft,
-  main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarLeft {
-    grid-area: left;
-    width: 100%;
-    justify-content: flex-start;
-  }
-  main.topApp.appShell--podcast.topApp--auth-out .topbarRight,
-  main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
-    grid-area: right;
-    justify-self: end;
-    width: auto;
-    justify-content: flex-end;
-  }
   /* Mobile hamburger: header top-right (`.topbarRight`), not bottom dock. */
   main.topApp.appShell--withMobileNavDock .topbarRight .topbarActionsCluster {
     justify-content: flex-end;
@@ -7855,4 +8147,100 @@ html.dark .communityPostBodyGuideSteps li {
 .topEntityNameDisplay {
   text-transform: uppercase;
   letter-spacing: 0.055em;
+}
+
+.savedOrganizationsPanel__headRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.savedOrganizationsPanel--collapsed .savedOrganizationsPanel__headRow {
+  margin-bottom: 0;
+}
+.savedOrganizationsPanel__head {
+  flex: 1;
+  min-width: 0;
+}
+.savedOrganizationsPanel__title {
+  margin: 0 0 4px;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+.savedOrganizationsPanel__lead {
+  margin: 0;
+}
+.savedOrganizationsPanel__toggle {
+  flex-shrink: 0;
+}
+.savedOrganizationsPanel__list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.savedOrgCollapsible {
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md, 12px);
+  background: linear-gradient(180deg, var(--color-bg-card) 0%, var(--color-bg-subtle) 100%);
+  overflow: hidden;
+}
+.savedOrgCollapsible__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  cursor: pointer;
+  list-style: none;
+  padding: 12px 14px;
+}
+.savedOrgCollapsible__summary::-webkit-details-marker {
+  display: none;
+}
+.savedOrgCollapsible__summaryMain {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.savedOrgCollapsible__name {
+  font-weight: 800;
+  color: var(--color-text-primary);
+  line-height: 1.25;
+}
+.savedOrgCollapsible__location {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.savedOrgCollapsible__fav {
+  flex-shrink: 0;
+}
+.savedOrgCollapsible__body {
+  padding: 0 14px 14px;
+  border-top: 1px solid var(--color-border-subtle);
+}
+.savedOrgCollapsible__body--card {
+  padding: 10px;
+  border-top: 1px solid var(--color-border-subtle);
+  background: var(--color-bg-subtle);
+}
+.savedOrgCollapsible__body--card .resultCard {
+  margin: 0;
+}
+.savedOrgCollapsible__body--card .resultCard--directoryListing {
+  border-radius: var(--radius-md, 12px);
+  box-shadow: var(--shadow-card);
+}
+.savedOrgCollapsible__body .nonprofitMetaRow {
+  margin-top: 10px;
+}
+.savedOrgCollapsible__body .nonprofitDescription {
+  margin-bottom: 10px;
+}
+.savedOrgCollapsible__actions {
+  margin-top: 10px;
+}
+.savedOrgCollapsible[open] > .savedOrgCollapsible__summary {
+  border-bottom: 1px solid var(--color-border-subtle);
 }

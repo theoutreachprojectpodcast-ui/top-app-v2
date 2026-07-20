@@ -1,4 +1,4 @@
--- Mission partner + foundational sponsor presentation copy (Apex, Gameday, Rope Solutions).
+-- Mission partner + foundational sponsor presentation copy (Apex, Gameday, ROPE Solutions).
 -- Idempotent. Run after sponsor_v20_curated_copy_enrichment.sql (or standalone — adds missing columns).
 
 begin;
@@ -39,10 +39,13 @@ where slug = 'apex-global-outdoors';
 -- Gameday Men's Health (Men's & Women's Wellness)
 update public.sponsors_catalog
 set
+  name = 'Gameday Men''s Health',
+  sponsor_scope = 'app',
   sponsor_category = 'Men''s & Women''s Wellness',
+  sponsor_type = 'mission_partner_sponsor',
   short_description = 'Men''s & Women''s Wellness',
   tagline =
-    'San Antonio — same-day visits, on-site labs, and physician-guided men''s & women''s health care in a private clinic.',
+    'San Antonio — same-day visits, on-site labs, and physician-guided men''s & Women''s health care in a private clinic.',
   long_description =
     $gd$
 Patients get same-day scheduling, on-site labs with rapid turnaround, and physician-guided treatment plans across testosterone therapy, weight management, sexual wellness, hair restoration, and recovery support.
@@ -51,9 +54,10 @@ $gd$,
   updated_at = now()
 where slug in ('gameday-mens-health', 'game-day-mens-health');
 
--- Rope Solutions (Elite Leadership Coaching)
+-- ROPE Solutions (Elite Leadership Coaching)
 update public.sponsors_catalog
 set
+  name = 'ROPE Solutions',
   sponsor_category = 'Elite Leadership Coaching',
   short_description = 'Elite Leadership Coaching',
   tagline = 'Leadership Development where it matters most: on the front lines of your operation.',

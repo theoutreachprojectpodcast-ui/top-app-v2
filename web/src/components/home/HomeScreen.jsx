@@ -24,6 +24,7 @@ export default function HomeScreen({
   onPodcasts,
   onProUpgrade,
   hasProAccess = true,
+  canSaveOrganizations = false,
   directoryProps,
   favoriteEinSet,
   onToggleFavorite,
@@ -56,13 +57,14 @@ export default function HomeScreen({
         <HomeDirectoryPanel
           {...directoryProps}
           isAuthenticated={isAuthenticated}
+          canSaveOrganizations={canSaveOrganizations}
           favoriteEinSet={favoriteEinSet}
           onToggleFavorite={onToggleFavorite}
           onRequestSignIn={onRequestSignIn}
         />
 
         <div className="homeMobile__missionStrip">
-          <MissionPageTopStrip placement="bottom" />
+          <MissionPageTopStrip placement="bottom" profileLinkInsteadOfContact />
         </div>
       </div>
     </>

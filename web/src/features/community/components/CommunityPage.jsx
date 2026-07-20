@@ -153,7 +153,11 @@ export default function CommunityPage({
       ) : null}
 
       {isAuthenticated ? (
-        <CommunityConnectionsPanel userId={userId} onOpenMember={setSelectedMemberId} />
+        <CommunityConnectionsPanel
+          userId={userId}
+          viewerProfileId={profile?.profileRecordId || ""}
+          onOpenMember={setSelectedMemberId}
+        />
       ) : (
         <section className="card communitySection communitySignedOutHint">
           <h3>Participation</h3>

@@ -1,6 +1,10 @@
 import { resolvePlatformRoleAfterTierChange } from "@/lib/account/accountModel";
 import { checkoutTierToDb, normalizeDbMembershipTier } from "@/lib/billing/membershipTierOrder";
 import { profileTableName } from "@/lib/supabase/admin";
+import {
+  SUPPORT_TO_PRO_MEMBERSHIP_SOURCE,
+  isPeriodStillActive,
+} from "@/lib/membership/supportToProMigrationShared";
 
 export function mapStripeSubStatus(status) {
   const statusMap = {
@@ -53,8 +57,18 @@ export async function fetchDefaultPaymentMethodSummary(stripe, customerId) {
   }
 }
 
+function hasActiveMigratedPro(existing) {
+  if (!existing) return false;
+  if (String(existing.membership_source || "").toLowerCase() !== SUPPORT_TO_PRO_MEMBERSHIP_SOURCE) {
+    return false;
+  }
+  return isPeriodStillActive(existing.migrated_to_pro_until || existing.renewal_date);
+}
+
 /**
  * Sync top_profiles billing columns from a Stripe subscription.
+ * Protects complimentary Support→Pro migrations from being overwritten by Support
+ * subscription updates/cancellations while migrated access is still active.
  * @param {import('@supabase/supabase-js').SupabaseClient} admin
  * @param {import('stripe').Stripe} stripe
  * @param {string} workosUserId
@@ -72,6 +86,31 @@ export async function syncProfileFromSubscription(admin, stripe, workosUserId, s
   if (cust && stripe) {
     const fresh = await fetchDefaultPaymentMethodSummary(stripe, cust);
     if (fresh) pmSummary = fresh;
+  }
+
+  const metaTier = String(sub.metadata?.membership_tier || "member").toLowerCase();
+  const isSupportLike = metaTier === "support" || metaTier === "access";
+  const migratedActive = hasActiveMigratedPro(existing);
+
+  // Complimentary migrated Pro: do not restore Support classification or wipe Pro early.
+  if (migratedActive && (ended || isSupportLike)) {
+    const patch = {
+      membership_tier: "member",
+      membership_status: "active",
+      billing_status: "active",
+      membership_source: SUPPORT_TO_PRO_MEMBERSHIP_SOURCE,
+      renewal_date: existing.migrated_to_pro_until || existing.renewal_date,
+      payment_method_summary: pmSummary || existing?.payment_method_summary || {},
+      updated_at: new Date().toISOString(),
+    };
+    if (cust) patch.stripe_customer_id = cust;
+    if (ended) {
+      patch.stripe_subscription_id = null;
+    } else if (sub?.id) {
+      patch.stripe_subscription_id = sub.id;
+    }
+    await admin.from(table).update(patch).eq("workos_user_id", workosUserId);
+    return;
   }
 
   if (ended) {
@@ -92,7 +131,6 @@ export async function syncProfileFromSubscription(admin, stripe, workosUserId, s
     return;
   }
 
-  const metaTier = String(sub.metadata?.membership_tier || "member").toLowerCase();
   const safeTier = checkoutTierToDb(metaTier);
   const billingStatus = mapStripeSubStatus(sub.status);
   const renewal = sub.current_period_end ? new Date(sub.current_period_end * 1000).toISOString() : null;

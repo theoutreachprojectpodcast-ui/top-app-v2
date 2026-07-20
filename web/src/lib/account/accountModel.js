@@ -37,14 +37,14 @@ export function normalizePublicAccountIntent(value) {
 export function defaultMembershipTierForIntent(intent) {
   switch (String(intent || "").toLowerCase()) {
     case "support_user":
-      return "support";
+      return "member";
     case "member_user":
       return "member";
     case "sponsor_user":
       return "sponsor";
     case "free_user":
     default:
-      return "support";
+      return "member";
   }
 }
 

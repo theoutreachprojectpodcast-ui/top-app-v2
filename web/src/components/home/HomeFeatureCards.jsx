@@ -58,6 +58,8 @@ export default function HomeFeatureCards({
     <div className="homeFeatureList welcomeActionList" role="navigation" aria-label="Explore The Outreach Project">
       {FEATURES.map((item) => {
         const locked = item.proOnly && !hasProAccess;
+        const lockedHint = locked ? "Upgrade to Pro to unlock this section." : item.hint;
+
         return (
           <button
             key={item.key}
@@ -73,13 +75,8 @@ export default function HomeFeatureCards({
           >
             <AppIcon name={item.icon} size={WELCOME_ACTION_ICON_SIZE} />
             <span className="welcomeActionText">
-              <span className="welcomeActionLabel">
-                {item.title}
-                {locked ? <span className="welcomeActionProBadge">Pro</span> : null}
-              </span>
-              <span className="welcomeActionHint">
-                {locked ? "Upgrade to Pro to unlock this section." : item.hint}
-              </span>
+              <span className="welcomeActionLabel">{item.title}</span>
+              <span className="welcomeActionHint">{locked ? lockedHint : item.hint}</span>
             </span>
           </button>
         );

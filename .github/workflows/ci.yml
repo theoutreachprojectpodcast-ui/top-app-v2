@@ -9,6 +9,12 @@ on:
 jobs:
   security:
     runs-on: ubuntu-latest
+    # Map secrets to job env so the live probe step can gate on `env.*`
+    # (GitHub forbids `secrets.*` in step `if:` expressions).
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -38,6 +44,10 @@ jobs:
 
       - name: Security posture checks
         run: pnpm --dir web run verify:security
+
+      - name: Live RLS exposure probe
+        if: ${{ env.SUPABASE_SERVICE_ROLE_KEY != '' && env.NEXT_PUBLIC_SUPABASE_URL != '' }}
+        run: pnpm --dir web run security:rls:live
 
   lint-and-build:
     runs-on: ubuntu-latest

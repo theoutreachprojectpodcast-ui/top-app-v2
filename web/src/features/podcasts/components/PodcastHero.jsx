@@ -11,7 +11,7 @@ function PodcastMicIcon() {
 /**
  * Page hero — same structure as Community / main app `cardHero` sections.
  */
-export default function PodcastHero({ featured, onApply }) {
+export default function PodcastHero({ featured, onApply, onSponsorApply }) {
   const watchHref = featured?.youtube_url || "https://www.youtube.com/@TheOutreachProjectHq";
 
   return (
@@ -38,9 +38,16 @@ export default function PodcastHero({ featured, onApply }) {
         <a className="btnPrimary" href={watchHref} target="_blank" rel="noopener noreferrer">
           Watch on YouTube
         </a>
-        <button className="btnSoft" type="button" onClick={onApply}>
-          Apply to be a guest
-        </button>
+        <div className="podcastPageHero__applyStack">
+          <button className="btnSoft" type="button" onClick={onApply}>
+            Apply to be a guest
+          </button>
+          {typeof onSponsorApply === "function" ? (
+            <button className="btnSoft" type="button" onClick={onSponsorApply}>
+              Apply to be a podcast sponsor
+            </button>
+          ) : null}
+        </div>
       </div>
     </section>
   );

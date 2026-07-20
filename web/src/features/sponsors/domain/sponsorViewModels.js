@@ -1,12 +1,28 @@
 import { resolveSponsorDisplayName } from "@/lib/entityDisplayName";
 import { resolveSponsorListingLogoUrl } from "@/lib/sponsors/resolveSponsorListingLogoUrl";
 import { normalizePublishStatus } from "@/lib/sponsors/sponsorVisibility";
-import { FEATURED_SPONSOR_CARD_BACKGROUNDS } from "@/features/sponsors/data/featuredSponsors";
+import { FEATURED_SPONSOR_CARD_BACKGROUNDS, FEATURED_SPONSORS } from "@/features/sponsors/data/featuredSponsors";
 import { getSponsorCardPresentation } from "@/features/sponsors/domain/sponsorCardPresentation";
 import { inferSponsorDisplayGroup } from "@/features/sponsors/domain/sponsorDisplayGroups";
+import {
+  applyMainAppMissionPartnerCatalogDefaults,
+  canonicalMissionPartnerSlug,
+  isMainAppMissionPartnerSlug,
+} from "@/features/sponsors/domain/sponsorMissionPartners";
 
 function clean(value) {
   return String(value ?? "").trim();
+}
+
+function validUrl(value) {
+  const raw = clean(value);
+  if (!raw) return false;
+  try {
+    const parsed = new URL(raw);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
 }
 
 function truncateSponsorLine(value, max = 140) {
@@ -93,6 +109,74 @@ function platformVerified(url, expectedHost) {
   return new URL(url).hostname.toLowerCase().includes(expectedHost);
 }
 
+function socialKeyFromUrl(url) {
+  if (!validUrl(url)) return "";
+  const host = new URL(url).hostname.toLowerCase();
+  if (host.includes("instagram.com")) return "instagram";
+  if (host.includes("facebook.com")) return "facebook";
+  if (host.includes("linkedin.com")) return "linkedin";
+  if (host.includes("youtube.com") || host.includes("youtu.be")) return "youtube";
+  if (host.includes("twitter.com") || host === "x.com") return "twitter";
+  return "";
+}
+
+const SOCIAL_LABELS = {
+  website: "Website",
+  instagram: "Instagram",
+  facebook: "Facebook",
+  linkedin: "LinkedIn",
+  twitter: "X",
+  youtube: "YouTube",
+};
+
+function featuredSeedSocialForSlug(slug) {
+  const canonical = canonicalMissionPartnerSlug(slug);
+  const item = FEATURED_SPONSORS.find((row) => {
+    const id = String(row.id || "").trim().toLowerCase();
+    return id && (id === canonical || id === String(slug || "").trim().toLowerCase());
+  });
+  const social = item?.socialLinks;
+  return social && typeof social === "object" && !Array.isArray(social) ? social : {};
+}
+
+function buildSponsorProfileSocialLinks(s, ctaUrl) {
+  const seedSocial = featuredSeedSocialForSlug(s.slug || s.id);
+  const byKey = new Map();
+  const add = (key, url, label) => {
+    const href = clean(url);
+    if (!validUrl(href)) return;
+    const resolvedKey = key || socialKeyFromUrl(href) || "website";
+    if (byKey.has(resolvedKey)) return;
+    byKey.set(resolvedKey, {
+      key: resolvedKey,
+      label: label || SOCIAL_LABELS[resolvedKey] || "Link",
+      url: href,
+    });
+  };
+
+  add("website", ctaUrl || s.website_url, "Website");
+  add("instagram", s.instagram_url || seedSocial.instagram, "Instagram");
+  add("facebook", s.facebook_url || seedSocial.facebook, "Facebook");
+  add("linkedin", s.linkedin_url || seedSocial.linkedin, "LinkedIn");
+  add("twitter", s.twitter_url || seedSocial.twitter || seedSocial.x, "X");
+  add("youtube", s.youtube_url || seedSocial.youtube, "YouTube");
+
+  for (const item of s.additional_links || []) {
+    const href = clean(item?.url);
+    const label = clean(item?.label);
+    const inferred = socialKeyFromUrl(href);
+    if (!inferred) continue;
+    add(inferred, href, label || SOCIAL_LABELS[inferred]);
+  }
+
+  return [...byKey.values()];
+}
+
+function isPodcastScopeSponsor(s) {
+  if (isMainAppMissionPartnerSlug(s.slug || s.id)) return false;
+  return String(s.sponsor_scope || "").trim().toLowerCase() === "podcast";
+}
+
 function mergeSocialLinksRow(row = {}) {
   const raw = row.social_links;
   const obj =
@@ -144,7 +228,7 @@ export function normalizeSponsorRecord(row = {}) {
   const rawTitle = clean(row.display_name) || clean(row.name);
   const name = resolveSponsorDisplayName(rawTitle) || rawTitle || "Partner";
 
-  return {
+  const base = {
     id: clean(row.id) || slug,
     slug,
     name,
@@ -200,10 +284,18 @@ export function normalizeSponsorRecord(row = {}) {
         : null,
     updated_at: row.updated_at ?? null,
   };
+  return applyMainAppMissionPartnerCatalogDefaults(base);
 }
 
 /** Single upper-left card badge — admin `primary_display_tag` or a safe default from sponsor_type. */
 function resolvePrimaryDisplayBadge(s) {
+  const canonical = canonicalMissionPartnerSlug(s.slug || s.id);
+  if (canonical === "gameday-mens-health" || canonical === "apex-global-outdoors") {
+    return { key: "mission-partner", label: "Mission Partner Sponsor" };
+  }
+  if (canonical === "rope-solutions") {
+    return { key: "foundational", label: "Foundational Sponsor" };
+  }
   const custom = String(s.primary_display_tag || "").trim();
   if (custom) {
     const key = custom
@@ -228,7 +320,7 @@ function resolvePrimaryDisplayBadge(s) {
   if (typeLc === "community_partner") {
     return { key: "community", label: "Community Partner" };
   }
-  if (typeLc === "podcast_sponsor" || typeLc === "podcast") {
+  if (typeLc === "podcast_sponsor" || typeLc === "podcast" || typeLc === "podcast sponsor") {
     return { key: "podcast", label: "Podcast Sponsor" };
   }
   return { key: "partner", label: "Partner Sponsor" };
@@ -295,10 +387,16 @@ export function getSponsorCardViewModel(row = {}) {
   const industryRaw =
     industryCat || (!sponsorTypeLooksLikeTierKey(industryType) ? industryType : "");
   const industry = isIndustryRedundantWithMissionPill(industryRaw, missionPill) ? "" : industryRaw;
-  const logoDisplay = resolveSponsorListingLogoUrl(s) || null;
+  const logoDisplay =
+    resolveSponsorListingLogoUrl(s) || clean(presentation.logoFallbackUrls?.[0]) || null;
   const veteranOwned = !!s.veteran_owned || !!presentation.veteranOwnedDefault;
   const locationChips = presentation.locationChips?.length ? presentation.locationChips : [];
   const ctaUrl = resolveSponsorCtaUrl(s);
+  const seedSocial = featuredSeedSocialForSlug(s.slug);
+  const pickSocial = (rowUrl, seedUrl, host) => {
+    const candidate = clean(rowUrl) || clean(seedUrl);
+    return platformVerified(candidate, host) ? candidate : "";
+  };
   return {
     id: s.id,
     slug: s.slug,
@@ -324,20 +422,18 @@ export function getSponsorCardViewModel(row = {}) {
     veteranOwned,
     locationChips,
     displayGroup: inferSponsorDisplayGroup(s),
-    isPodcastSponsor: String(s.sponsor_scope || "").trim().toLowerCase() === "podcast",
+    isPodcastSponsor: isPodcastScopeSponsor(s),
     socialLinks: {
       website: validUrl(s.website_url) ? s.website_url : "",
-      instagram: platformVerified(s.instagram_url, "instagram.com") ? s.instagram_url : "",
-      facebook: platformVerified(s.facebook_url, "facebook.com") ? s.facebook_url : "",
-      linkedin: platformVerified(s.linkedin_url, "linkedin.com") ? s.linkedin_url : "",
+      instagram: pickSocial(s.instagram_url, seedSocial.instagram, "instagram.com"),
+      facebook: pickSocial(s.facebook_url, seedSocial.facebook, "facebook.com"),
+      linkedin: pickSocial(s.linkedin_url, seedSocial.linkedin, "linkedin.com"),
       twitter:
-        platformVerified(s.twitter_url, "x.com") || platformVerified(s.twitter_url, "twitter.com")
-          ? s.twitter_url
-          : "",
+        pickSocial(s.twitter_url, seedSocial.twitter || seedSocial.x, "x.com") ||
+        pickSocial(s.twitter_url, seedSocial.twitter || seedSocial.x, "twitter.com"),
       youtube:
-        platformVerified(s.youtube_url, "youtube.com") || platformVerified(s.youtube_url, "youtu.be")
-          ? s.youtube_url
-          : "",
+        pickSocial(s.youtube_url, seedSocial.youtube, "youtube.com") ||
+        pickSocial(s.youtube_url, seedSocial.youtube, "youtu.be"),
     },
   };
 }
@@ -362,7 +458,7 @@ export function getSponsorProfileViewModel(row = {}) {
     FEATURED_SPONSOR_CARD_BACKGROUNDS[s.slug] || FEATURED_SPONSOR_CARD_BACKGROUNDS[s.id] || "";
   const heroImage = clean(s.background_image_url) || fallbackBg;
   const ctaUrl = resolveSponsorCtaUrl(s);
-  const isPodcastSponsor = String(s.sponsor_scope || "").trim().toLowerCase() === "podcast";
+  const isPodcastSponsor = isPodcastScopeSponsor(s);
   const lastUpdated = clean(s.published_at || s.last_enriched_at || s.updated_at);
 
   return {
@@ -378,19 +474,12 @@ export function getSponsorProfileViewModel(row = {}) {
     inquiryUrl: validUrl(s.inquiry_url) ? s.inquiry_url : "",
     featuredItems: s.featured_items || [],
     isPodcastSponsor,
-    profileBackHref: isPodcastSponsor ? "/podcasts" : "/sponsors",
-    profileBackLabel: isPodcastSponsor ? "← Podcast sponsors" : "← All sponsors",
+    profileBackHref: "/sponsors",
+    profileBackLabel: "← All sponsors",
     lastUpdatedLabel: lastUpdated
       ? new Date(lastUpdated).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })
       : "",
-    socialLinks: [
-      { key: "website", label: "Website", url: validUrl(ctaUrl || s.website_url) ? ctaUrl || s.website_url : "" },
-      { key: "instagram", label: "Instagram", url: platformVerified(s.instagram_url, "instagram.com") ? s.instagram_url : "" },
-      { key: "facebook", label: "Facebook", url: platformVerified(s.facebook_url, "facebook.com") ? s.facebook_url : "" },
-      { key: "linkedin", label: "LinkedIn", url: platformVerified(s.linkedin_url, "linkedin.com") ? s.linkedin_url : "" },
-      { key: "twitter", label: "X", url: platformVerified(s.twitter_url, "x.com") || platformVerified(s.twitter_url, "twitter.com") ? s.twitter_url : "" },
-      { key: "youtube", label: "YouTube", url: platformVerified(s.youtube_url, "youtube.com") || platformVerified(s.youtube_url, "youtu.be") ? s.youtube_url : "" },
-    ].filter((item) => item.url),
+    socialLinks: buildSponsorProfileSocialLinks(s, ctaUrl),
   };
 }
 

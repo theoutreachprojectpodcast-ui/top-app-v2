@@ -421,6 +421,81 @@ export const TRUSTED_RESOURCE_CANONICAL_RECORDS = [
       instagramUrl: "https://www.instagram.com/sheepdog_ia/",
     },
   },
+  {
+    eins: ["333897165"],
+    nameKeys: [
+      "the rivetin rosies project",
+      "the rivetin' rosies project",
+      "therivetinrosiesproject",
+      "rivetin rosies",
+      "rivetinrosies",
+    ],
+    slug: "the-rivetin-rosies-project",
+    displayName: "The Rivetin' Rosie's Project",
+    trustedResourceCategoryKey: "veteransMilitary",
+    shortDescription:
+      "Pin-up service organization supporting veterans, active military, first responders, and their families with resources, community events, and the spirit of the original Rosie the Riveters.",
+    locationLabel: "Utah",
+    website: "https://therivetinrosiesproject.org/",
+    nonprofit_type: "Veteran and first responder community support",
+    registryHeaderImageUrl: "/trusted/the-rivetin-rosies-project-hero.png?v=1",
+    registryLogoUrl: "/trusted/the-rivetin-rosies-project-org-logo.png?v=1",
+    clearUnlistedSocials: true,
+    socialOverrides: {
+      facebookUrl: "https://www.facebook.com/share/1EUwe1ECRd/?mibextid=wwXIfr",
+      instagramUrl: "https://www.instagram.com/therivetinrosiesproject/",
+    },
+  },
+  {
+    eins: ["822820269"],
+    nameKeys: [
+      "changed by nature outdoors",
+      "changedbynatureoutdoors",
+      "changed by nature",
+      "changedbynature",
+    ],
+    slug: "changed-by-nature-outdoors",
+    displayName: "Changed by Nature Outdoors",
+    trustedResourceCategoryKey: "veteransMilitary",
+    shortDescription:
+      "Provides free outdoor adventures nationwide for veterans, law enforcement, first responders, youth, and individuals with disabilities—kayaking, fishing, hunting, and more to reconnect and rebuild in nature.",
+    locationLabel: "Flagstaff, AZ",
+    website: "https://changedbynatureoutdoors.org/",
+    ntee_code: "C",
+    nonprofit_type: "Outdoor adventures for veterans, first responders, and youth",
+    registryHeaderImageUrl: "/trusted/changed-by-nature-outdoors-hero.png?v=1",
+    registryLogoUrl: "/trusted/changed-by-nature-outdoors-org-logo.png?v=1",
+    clearUnlistedSocials: true,
+    socialOverrides: {
+      facebookUrl: "https://www.facebook.com/share/1FB7U6LSea/?mibextid=wwXIfr",
+      instagramUrl: "https://www.instagram.com/changed_by_nature/",
+    },
+  },
+  {
+    eins: ["331313139"],
+    nameKeys: [
+      "shepherds light foundation",
+      "shepherd's light foundation",
+      "shepherdslightfoundation",
+      "shepherdslightfoundation",
+    ],
+    slug: "shepherds-light-foundation",
+    displayName: "Shepherd's Light Foundation",
+    trustedResourceCategoryKey: "healthWellness",
+    shortDescription:
+      "Faith-based nonprofit offering fully sponsored outdoor peer-to-peer retreats for veterans and first responders navigating PTSD and personal struggles through The Shepherd's Journey program.",
+    locationLabel: "Jasper, GA",
+    website: "https://shepherdslightfoundation.org/",
+    ntee_code: "F",
+    nonprofit_type: "Faith-based PTSD recovery for veterans and first responders",
+    registryHeaderImageUrl: "/trusted/shepherds-light-foundation-hero.png?v=1",
+    registryLogoUrl: "/trusted/shepherds-light-foundation-org-logo.png?v=1",
+    clearUnlistedSocials: true,
+    socialOverrides: {
+      facebookUrl: "https://www.facebook.com/share/1DAKRfo8Ro/?mibextid=wwXIfr",
+      instagramUrl: "https://www.instagram.com/shepherdslightfoundation/",
+    },
+  },
 ];
 
 const TRUSTED_RESOURCE_BY_HOST = new Map();

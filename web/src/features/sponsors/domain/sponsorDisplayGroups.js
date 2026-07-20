@@ -35,12 +35,12 @@ const SLUG_DEFAULT_GROUP = /** @type {Record<string, SponsorDisplayGroupKey>} */
   "apex-global-outdoors": "mission_partner",
   "gameday-mens-health": "mission_partner",
   "rope-solutions": "foundational",
-  "the-veterans-veteran": "foundational",
-  "iron-soldiers-coffee-company": "impact",
+  "iron-soldiers-coffee-company": "foundational",
   "rucking-realty-group": "impact",
   "vetnav-services": "impact",
   "eduardo-pico-designs": "community",
   "green-gorilla-land-management": "community",
+  "don-blas-cigars": "community",
 });
 
 /**

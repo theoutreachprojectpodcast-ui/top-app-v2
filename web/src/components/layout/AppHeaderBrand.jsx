@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useSyncExternalStore } from "react";
 import BrandMark from "@/components/BrandMark";
 import { useColorScheme } from "@/components/app/ColorSchemeRoot";
+import { resolvePageAtmosphere } from "@/lib/design/pageAtmosphere";
 import { resolvePodcastBrandLogoSrc } from "@/lib/podcast/podcastBrandLogo";
 
 const MOBILE_HEADER_MQ = "(max-width: 760px)";
@@ -33,14 +35,26 @@ export default function AppHeaderBrand({
   brandSrc,
   brandAlt = "The Outreach Project",
   brandClassName = "",
-  compactMark = false,
+  compactMark: compactMarkProp,
+  pageAtmosphere: pageAtmosphereProp,
 }) {
+  const pathname = usePathname();
   const { colorScheme } = useColorScheme();
   const mobileHeader = useSyncExternalStore(subscribeMobileHeader, getMobileHeaderSnapshot, () => false);
   const isPodcastMark = String(brandClassName || "").includes("podcastBrandLogo");
   const resolvedSrc = isPodcastMark ? resolvePodcastBrandLogoSrc(colorScheme) : brandSrc || undefined;
-  /* Full wordmark on mobile — mark assets crop “PROJECT” when height-capped. */
-  const useMobileFullWordmark = mobileHeader && !compactMark && !isPodcastMark && !brandSrc;
+  const pageAtmosphere = pageAtmosphereProp ?? resolvePageAtmosphere(pathname);
+  const compactMark =
+    compactMarkProp ??
+    (!isPodcastMark &&
+      !brandSrc &&
+      pageAtmosphere !== "home" &&
+      pageAtmosphere !== "podcast");
+  /* Home + podcast mobile: large centered header logo; other routes use the OP logomark at compact size. */
+  const useMobileHomeWordmark =
+    mobileHeader && pageAtmosphere === "home" && !compactMark && !isPodcastMark && !brandSrc;
+  const useMobilePodcastWordmark = mobileHeader && pageAtmosphere === "podcast" && isPodcastMark;
+  const useMobileFullWordmark = useMobileHomeWordmark || useMobilePodcastWordmark;
   const markVariant = compactMark && !isPodcastMark ? "mark" : "full";
 
   return (

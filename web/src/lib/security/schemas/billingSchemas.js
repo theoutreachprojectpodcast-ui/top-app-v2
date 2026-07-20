@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 export const membershipCheckoutSchema = z.object({
+  /** New checkout: `member` (Pro) or `sponsor`. Legacy `access`/`support` are rejected in the route. */
   tier: z.enum(["access", "support", "member", "sponsor"]),
   returnPath: z.string().max(500).optional(),
   sponsorPackageId: z.string().max(120).optional(),

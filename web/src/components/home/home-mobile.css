@@ -412,14 +412,6 @@
   cursor: pointer;
 }
 
-.homeDirectoryPanel__search {
-  display: block;
-}
-
-.homeDirectoryPanel__search:not(.isOpen) {
-  display: none;
-}
-
 .homeDirectoryPanel__meta {
   margin: 8px 0 0;
   font-size: var(--text-body-sm);
@@ -507,7 +499,7 @@
 
 @media (max-width: 760px) {
   .homeMobile {
-    --home-gap: clamp(7px, 2.1vw, 11px);
+    --home-gap: clamp(5px, 1.5vw, 9px);
     --home-header-content-breathe: clamp(6px, 1.4vw, 9px);
     --home-card-radius: clamp(14px, 3.5vw, 18px);
     --home-pad-x: var(--mobile-shell-pad-x, clamp(16px, 4.5vw, 20px));
@@ -702,6 +694,12 @@
     box-sizing: border-box;
   }
 
+  /* Prevent iOS Safari from zooming the page when directory filters receive focus. */
+  #home-directory input,
+  #home-directory select {
+    font-size: 16px;
+  }
+
   .homeDirectoryPanel__head {
     margin-bottom: 4px;
   }
@@ -786,10 +784,12 @@
     white-space: nowrap;
   }
 
-  /* Home wordmark: +75% vs prior compact band (still below full non-home mobile size). */
+  /* Home wordmark — +20% visual size; layout band frozen so content does not shift. */
   main.topApp[data-page-atmosphere="home"] {
-    --mobile-site-header-logo-h: clamp(301px, 78.75vw, 399px);
-    --mobile-site-header-logo-max-w: min(910px, calc(100vw - 28px));
+    --mobile-home-header-layout-h: clamp(112px, 29vw, 148px);
+    --mobile-site-header-logo-h: clamp(137px, 36vw, 182px);
+    --mobile-site-header-logo-max-w: min(587px, calc(100vw - 24px));
+    --mobile-home-header-content-gap: clamp(4px, 1.2vw, 8px);
   }
 
   main.topApp[data-page-atmosphere="home"] .headerNotificationBellBtn,
@@ -799,15 +799,23 @@
     height: var(--mobile-site-header-control-size, 44px);
   }
 
-  /* Home: breathing room between wordmark and first section (featured sponsors). */
+  /* Home: wordmark flush to Mission partners — reserve only visible logo height, not max-height slack. */
+  main.topApp[data-page-atmosphere="home"] .headerBrandStack {
+    align-self: start !important;
+    align-items: flex-start;
+    padding-top: 0;
+  }
+
   main.topApp[data-page-atmosphere="home"] .appSiteHeader {
-    margin-bottom: 0;
-    padding-bottom: clamp(10px, 2.2vw, 14px);
+    padding-bottom: 0;
   }
 
   main.topApp[data-page-atmosphere="home"] .headerBrandStack img.brandMarkImg--header:not(.podcastBrandLogo),
   main.topApp[data-page-atmosphere="home"] .headerBrandStack .brandMarkImg--header {
-    margin-bottom: clamp(-142px, -36vw, -176px);
+    margin-bottom: 0;
+    min-height: 0 !important;
+    min-width: 0 !important;
+    object-position: center top;
   }
 
   main.topApp[data-page-atmosphere="home"] .shell.shell--home {
@@ -823,12 +831,13 @@
 
   main.topApp[data-page-atmosphere="home"] .homeSponsorSpotlights {
     margin-top: 0;
-    padding-top: clamp(10px, 2.4vw, 16px);
+    padding-top: 0;
   }
 
   main.topApp[data-page-atmosphere="home"] .homeSponsorSpotlights__head {
-    gap: 4px;
-    margin-bottom: 6px;
+    gap: 2px;
+    margin-bottom: 4px;
+    margin-top: 0;
   }
 
   main.topApp[data-page-atmosphere="home"] {

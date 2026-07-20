@@ -69,6 +69,7 @@
 	"packageClassList": [
 		"AppPlugin",
 		"CAPBrowserPlugin",
+		"ScreenOrientationPlugin",
 		"SharePlugin",
 		"SplashScreenPlugin"
 	]

@@ -6,10 +6,6 @@ export default function FeaturedSponsorsSection({
   sponsors = [],
   sectionTitle = "Platform sponsors",
   sectionLead = "Curated sponsor spotlights with custom brand visuals, designed to honor each partner identity while staying mission-aligned.",
-  favoritesEnabled = false,
-  favoriteKeySet = new Set(),
-  onToggleFavorite,
-  onRequestSignIn,
 }) {
   const deduped = (() => {
     const seen = new Set();
@@ -34,14 +30,7 @@ export default function FeaturedSponsorsSection({
       <p className="sponsorSectionLead">{sectionLead}</p>
       <div className="sponsorFeaturedShowcase">
         {deduped.map((sponsor) => (
-          <FeaturedSponsorCard
-            key={sponsor.slug || sponsor.id}
-            sponsor={sponsor}
-            favoritesEnabled={favoritesEnabled}
-            isFavorite={favoriteKeySet.has(`sponsor:${String(sponsor.slug || sponsor.id || "").trim().toLowerCase()}`)}
-            onToggleFavorite={onToggleFavorite}
-            onRequestSignIn={onRequestSignIn}
-          />
+          <FeaturedSponsorCard key={sponsor.slug || sponsor.id} sponsor={sponsor} />
         ))}
       </div>
     </section>

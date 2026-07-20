@@ -2,22 +2,23 @@
  * Membership domain — tier definitions for UI and billing/entitlements.
  * Storage: profile.membershipStatus uses normalized keys from normalizeMembershipTierKey().
  *
- * User billing offers Support Membership ($0.99/yr) and Pro ($5.99/yr) only.
- * Legacy `access` tier remains in DB for existing subscribers.
+ * User billing offers Pro Membership ($5.99/yr) only.
+ * Legacy `support` / `access` tiers remain in DB for existing subscribers (display + upgrade).
  */
 
-/** Advanced optional tier — Stripe `STRIPE_PRICE_SUPPORT_YEARLY` (fallback: monthly / legacy access yearly). */
+/** Display name when Support is re-enabled via admin feature flag. */
 export const SUPPORT_MEMBERSHIP_DISPLAY_NAME = "Support Membership";
+/** @deprecated Historical Support price — purchasable only when feature flag is on. */
 export const SUPPORT_MEMBERSHIP_PRICE_LABEL = "$0.99/yr";
 
 /** Pro tier — Stripe `STRIPE_PRICE_PRO_YEARLY` (fallback: monthly). Stored as `member` in DB. */
 export const PRO_MEMBERSHIP_DISPLAY_NAME = "Pro Membership";
 export const PRO_MEMBERSHIP_PRICE_LABEL = "$5.99/yr";
 
-/** @deprecated Legacy app-access product label — use Support Membership for new checkouts. */
-export const APP_ACCESS_MEMBERSHIP_DISPLAY_NAME = SUPPORT_MEMBERSHIP_DISPLAY_NAME;
+/** @deprecated Legacy app-access product — retired with Support. */
+export const APP_ACCESS_MEMBERSHIP_DISPLAY_NAME = PRO_MEMBERSHIP_DISPLAY_NAME;
 /** @deprecated */
-export const APP_ACCESS_MEMBERSHIP_PRICE_LABEL = SUPPORT_MEMBERSHIP_PRICE_LABEL;
+export const APP_ACCESS_MEMBERSHIP_PRICE_LABEL = PRO_MEMBERSHIP_PRICE_LABEL;
 
 export const MEMBERSHIP_TIER_KEYS = {
   NONE: "none",
@@ -36,23 +37,23 @@ export const MEMBERSHIP_TIER_DEFINITIONS = [
     label: "No membership",
     shortLabel: "Free",
     benefits: [
-      "Sign in and choose Support or Pro to access the platform",
+      "Sign in and subscribe to Pro Membership to access the platform",
     ],
     isMember: false,
-    hint: "Support Membership ($0.99/year) unlocks the nonprofit directory and saved organizations.",
+    hint: "Pro Membership ($5.99/year) unlocks the full platform.",
   },
   {
     id: MEMBERSHIP_TIER_KEYS.SUPPORT,
-    label: SUPPORT_MEMBERSHIP_DISPLAY_NAME,
+    label: `${SUPPORT_MEMBERSHIP_DISPLAY_NAME} (legacy)`,
     shortLabel: "Support",
     priceLabel: SUPPORT_MEMBERSHIP_PRICE_LABEL,
+    legacy: true,
     benefits: [
-      "Nonprofit directory search and exploration",
-      "Save favorite nonprofits to your profile",
-      "Upgrade anytime to unlock community, podcast, and trusted resources",
+      "Legacy plan — no longer offered for new members",
+      "Upgrade to Pro for full platform access",
     ],
     isMember: false,
-    hint: "Entry-level paid membership — billed annually at $0.99/year.",
+    hint: "Retired product. Existing subscribers should upgrade to Pro Membership.",
   },
   {
     id: MEMBERSHIP_TIER_KEYS.MEMBER,
@@ -60,14 +61,17 @@ export const MEMBERSHIP_TIER_DEFINITIONS = [
     shortLabel: "Pro",
     priceLabel: PRO_MEMBERSHIP_PRICE_LABEL,
     benefits: [
-      "Everything in Support Membership",
+      "Nonprofit directory search and exploration",
+      "Save favorite nonprofits to your profile",
+      "Podcast episodes, guests, and guest applications",
       "Create and submit community posts",
-      "Premium podcast content",
+      "Pro-exclusive podcast content",
+      "Podcast sponsor opportunities",
       "Trusted resource discounts and partner offers",
-      "All current and future Pro-only features",
+      "All current and future Pro features",
     ],
     isMember: true,
-    hint: "Premium membership — billed annually at $5.99/year.",
+    hint: "Full platform membership — billed annually at $5.99/year.",
   },
   {
     id: MEMBERSHIP_TIER_KEYS.ACCESS,
@@ -75,9 +79,9 @@ export const MEMBERSHIP_TIER_DEFINITIONS = [
     shortLabel: "Access",
     priceLabel: SUPPORT_MEMBERSHIP_PRICE_LABEL,
     legacy: true,
-    benefits: ["Legacy annual access — same platform features as Support"],
-    isMember: true,
-    hint: "Existing subscribers keep access; new members choose Support Membership.",
+    benefits: ["Legacy annual access — upgrade to Pro Membership"],
+    isMember: false,
+    hint: "Existing subscribers keep billing history; new members choose Pro.",
   },
   {
     id: MEMBERSHIP_TIER_KEYS.SPONSOR,

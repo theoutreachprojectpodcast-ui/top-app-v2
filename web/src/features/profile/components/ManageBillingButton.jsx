@@ -4,6 +4,16 @@ import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { navigateToStripePortal } from "@/lib/capacitor/billingNavigation";
 
+function resolveBillingPortalReturnPath(pathname, explicitReturnPath) {
+  if (explicitReturnPath) return explicitReturnPath;
+  if (!pathname || !pathname.startsWith("/")) return "/settings";
+  if (pathname.startsWith("/settings")) return "/settings";
+  if (pathname.startsWith("/billing")) return "/billing";
+  if (pathname.startsWith("/profile")) return "/profile";
+  if (pathname.startsWith("/membership")) return "/membership";
+  return "/settings";
+}
+
 /**
  * Opens Stripe Customer Portal for the signed-in WorkOS user.
  * Server resolves or creates `top_profiles.stripe_customer_id` when missing.
@@ -15,6 +25,7 @@ export default function ManageBillingButton({
   variant = "soft",
   returnPath,
   onOpened,
+  onReturned,
 }) {
   const pathname = usePathname();
   const [busy, setBusy] = useState(false);
@@ -29,9 +40,7 @@ export default function ManageBillingButton({
     setBusy(true);
     setError("");
     try {
-      const portalReturnPath =
-        returnPath ||
-        (pathname && pathname.startsWith("/") ? pathname : "/profile");
+      const portalReturnPath = resolveBillingPortalReturnPath(pathname, returnPath);
       const res = await fetch("/api/billing/portal", {
         method: "POST",
         credentials: "include",
@@ -53,7 +62,7 @@ export default function ManageBillingButton({
         return;
       }
       onOpened?.();
-      await navigateToStripePortal(data.url);
+      await navigateToStripePortal(data.url, { onReturned });
     } catch {
       setError("Network error.");
     } finally {

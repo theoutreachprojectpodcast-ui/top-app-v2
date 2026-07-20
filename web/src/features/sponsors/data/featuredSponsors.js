@@ -10,8 +10,8 @@ export const EDUARDO_PICO_DESIGNS_LOGO_URL =
 /** Gameday Men's Health official horizontal wordmark (franchise brand kit). */
 export const GAMEDAY_MENS_HEALTH_LOGO_URL = "/sponsors/gameday-mens-health-wordmark.jpg";
 
-/** Rope Solutions official mark (square PNG, dark-friendly). */
-export const ROPE_SOLUTIONS_LOGO_URL = "/sponsors/rope-solutions-logo.png";
+/** ROPE Solutions official mark (square PNG, dark-friendly). */
+export const ROPE_SOLUTIONS_LOGO_URL = "/sponsors/rope-solutions-logo.png?v=4";
 
 /** Apex Global Outdoors — official circular wordmark PNG (card logo slot); hero art is `featured-bg-apex-global-outdoors.png`. */
 export const APEX_GLOBAL_OUTDOORS_LOGO_URL = "/sponsors/apex-global-outdoors-logo.png?v=2";
@@ -29,8 +29,11 @@ export const VET_NAV_SERVICES_LOGO_URL = "/sponsors/vetnav-services-logo.png";
 export const GREEN_GORILLA_LAND_MANAGEMENT_LOGO_URL =
   "/sponsors/green-gorilla-land-management-logo.png?v=2";
 
-/** Rucking Realty Group — circular wordmark (Mike & Natalie Evans, Texas). */
-export const RUCKING_REALTY_GROUP_LOGO_URL = "/sponsors/rucking-realty-group-logo.png";
+/** Rucking Realty Group — official badge mark (Mike & Natalie Evans, Texas). */
+export const RUCKING_REALTY_GROUP_LOGO_URL = "/sponsors/rucking-realty-group-logo.png?v=3";
+
+/** Don Blas Cigars — circular badge mark on white (veteran-owned premium cigars). */
+export const DON_BLAS_CIGARS_LOGO_URL = "/sponsors/don-blas-cigars-logo.png?v=1";
 
 export const FEATURED_SPONSORS = [
   {
@@ -54,7 +57,11 @@ export const FEATURED_SPONSORS = [
     missionPartner: true,
     veteranOwned: false,
     featured: true,
-    socialLinks: {},
+    socialLinks: {
+      instagram: "https://www.instagram.com/apex_global_outdoors/",
+      facebook: "https://www.facebook.com/apexglobaloutdoors",
+      youtube: "https://www.youtube.com/channel/UCW6eRLm7RTo8_iqcem6AweA",
+    },
   },
   {
     id: "gameday-mens-health",
@@ -65,8 +72,10 @@ export const FEATURED_SPONSORS = [
     tag: "Men's & Women's Wellness",
     industry: "Men's & Women's Wellness",
     tierLabel: "Featured sponsor",
+    tagline:
+      "San Antonio — same-day visits, on-site labs, and physician-guided men's & Women's health care in a private clinic.",
     subtitle:
-      "San Antonio — same-day visits, on-site labs, and physician-guided men's & women's health care in a private clinic.",
+      "San Antonio — same-day visits, on-site labs, and physician-guided men's & Women's health care in a private clinic.",
     longDescription:
       "Patients get same-day scheduling, on-site labs with rapid turnaround, and physician-guided treatment plans across testosterone therapy, weight management, sexual wellness, hair restoration, and recovery support.",
     ctaLabel: "Visit Website",
@@ -83,7 +92,7 @@ export const FEATURED_SPONSORS = [
   },
   {
     id: "rope-solutions",
-    name: "Rope Solutions",
+    name: "ROPE Solutions",
     sponsorType: "foundational_sponsor",
     sponsorDisplayGroup: "foundational",
     displayName: "",
@@ -108,29 +117,6 @@ export const FEATURED_SPONSORS = [
       instagram: "https://www.instagram.com/ropesolutionsofficial/",
       facebook: "https://www.facebook.com/ROPESolutionsLLC",
     },
-  },
-  {
-    id: "the-veterans-veteran",
-    name: "The Veterans Veteran",
-    sponsorType: "foundational_sponsor",
-    sponsorDisplayGroup: "foundational",
-    primaryDisplayTag: "Foundational Sponsor",
-    tag: "VA disability claims & post-service coaching",
-    industry: "Veteran benefits consulting",
-    tierLabel: "Foundational sponsor",
-    subtitle:
-      "Veteran-led guidance through VA disability claims, ratings, appeals, GI Bill planning, and post-service transition—so you do not navigate the system alone.",
-    longDescription:
-      "The Veterans Veteran, founded and led by Drew Jones, helps veterans move through the VA disability and benefits process with clarity and advocacy. The team provides educational and administrative support—not legal representation—including claims and ratings review, medical evidence organization, appeals guidance, and GI Bill maximization. Post-service coaching helps veterans set career goals and build a roadmap after the uniform. Fellow service members built this practice after walking the same transition; the mission is to ensure veterans understand their options and receive the benefits they earned.",
-    ctaLabel: "Visit Website",
-    ctaUrl: "https://thevetsvet.com/",
-    logoUrl: THE_VETERANS_VETERAN_LOGO_URL,
-    warmVariant: "rose",
-    backgroundImageUrl: "/sponsors/featured-bg-the-veterans-veteran.png",
-    missionPartner: true,
-    veteranOwned: true,
-    featured: true,
-    socialLinks: {},
   },
   {
     id: "rucking-realty-group",
@@ -161,12 +147,12 @@ export const FEATURED_SPONSORS = [
   {
     id: "iron-soldiers-coffee-company",
     name: "Iron Soldiers Coffee Company",
-    sponsorType: "impact_sponsor",
-    sponsorDisplayGroup: "impact",
-    primaryDisplayTag: "Impact Sponsor",
+    sponsorType: "foundational_sponsor",
+    sponsorDisplayGroup: "foundational",
+    primaryDisplayTag: "Foundational Sponsor",
     tag: "Veteran-owned coffee roaster",
     industry: "Food & beverage",
-    tierLabel: "Impact sponsor",
+    tierLabel: "Foundational sponsor",
     subtitle: "Small-batch roasts, wholesale programs, and retail for crews who live on coffee between missions.",
     longDescription:
       "Iron Soldiers Coffee Company is a veteran-owned specialty roaster focused on bold, consistent profiles for shift workers, athletes, and community fundraisers. Beans are roasted in small batches with transparent sourcing so wholesale partners, nonprofits, and local retailers can serve cups that taste as intentional as the mission behind the brand.",
@@ -193,8 +179,8 @@ export const FEATURED_SPONSORS = [
       "Human navigation that sequences VA benefits, healthcare, employment, and community programs without the runaround.",
     longDescription:
       "Vet Nav Services pairs veterans and military families with navigators who speak the language of DD-214s, disability claims, vocational rehab, and local aid networks. The focus is practical sequencing—what to file first, which clinic or VSO can help, and how to avoid dead ends—so people spend less time searching portals and more time moving toward stable housing, healthcare, and work.",
-    ctaLabel: "Website pending verification",
-    ctaUrl: "",
+    ctaLabel: "Visit Website",
+    ctaUrl: "https://www.vetnavservices.com/about",
     logoUrl: VET_NAV_SERVICES_LOGO_URL,
     warmVariant: "gold",
     backgroundImageUrl: "/sponsors/featured-bg-vetnav-services.png",
@@ -209,13 +195,13 @@ export const FEATURED_SPONSORS = [
     sponsorType: "community_sponsor",
     sponsorDisplayGroup: "community",
     primaryDisplayTag: "Community Sponsor",
-    tag: "Laser engraving & CNC fabrication",
-    industry: "Design & fabrication",
+    tag: "Woodworking & custom fabrication",
+    industry: "Woodworking & custom fabrication",
     tierLabel: "Featured sponsor",
     subtitle:
-      "Veteran-owned Texas studio for awards, signage, drinkware, and bespoke shop projects with museum-grade finishing.",
+      "Eduardo Pico Designs is a veteran-owned woodworking and custom fabrication studio serving San Antonio and beyond. Woodworking is at the heart of everything we build, with CNC routing, laser engraving, and UV printing allowing us to create premium custom pieces that stand out.",
     longDescription:
-      "Eduardo Pico Designs is a veteran-owned laser and CNC studio outside San Antonio, Texas. The team produces everything from personalized tumblers and ranch-style door hangers to unit coins, nonprofit gala awards, and full custom shop fit-outs. Expect collaborative proofs, disciplined timelines, and finishes that hold up to Texas heat, humidity, and the scrutiny of clients who care about detail.",
+      "We specialize in business branding, custom signs, military and nonprofit awards, golf tournament merchandise, whiskey and cigar accessories, personalized gifts, vendor displays, and home décor. Every project is designed with a focus on quality craftsmanship, clean design, and products that people are proud to display, use, or give as gifts.",
     ctaLabel: "Visit Website",
     ctaUrl: "https://eduardopicodesigns.com/",
     logoUrl: EDUARDO_PICO_DESIGNS_LOGO_URL,
@@ -251,6 +237,31 @@ export const FEATURED_SPONSORS = [
     veteranOwned: true,
     featured: true,
     socialLinks: {},
+  },
+  {
+    id: "don-blas-cigars",
+    name: "Don Blas Cigars",
+    sponsorType: "community_sponsor",
+    sponsorDisplayGroup: "community",
+    primaryDisplayTag: "Community Sponsor",
+    tag: "Premium Aged Cigars",
+    industry: "Premium cigars",
+    tierLabel: "Community sponsor",
+    subtitle: "Tune Out & Light Up",
+    tagline: "Tune Out & Light Up",
+    longDescription:
+      "Don Blas is more than a premium cigar company—it's a business built on service, craftsmanship, and community. As a Veteran-Owned company that is also owned and operated by an active-duty service member, Don Blas understands firsthand the values of commitment, sacrifice, and brotherhood that unite our military community.\n\nEvery handcrafted cigar reflects a dedication to quality, tradition, and bringing people together. Whether you're celebrating life's victories, sharing stories with friends, or simply taking a moment to slow down, Don Blas is about creating experiences that matter.",
+    ctaLabel: "Follow on Instagram",
+    ctaUrl: "https://www.instagram.com/db_premiumcigars/",
+    logoUrl: DON_BLAS_CIGARS_LOGO_URL,
+    warmVariant: "amber",
+    backgroundImageUrl: "",
+    missionPartner: false,
+    veteranOwned: true,
+    featured: true,
+    socialLinks: {
+      instagram: "https://www.instagram.com/db_premiumcigars/",
+    },
   },
 ];
 

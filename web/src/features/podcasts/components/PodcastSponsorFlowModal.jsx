@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import PodcastSectionHeader from "@/features/podcasts/components/PodcastSectionHeader";
 import SponsorApplicationForm from "@/features/sponsors/components/SponsorApplicationForm";
+import SponsorOpportunitiesPanel from "@/features/sponsors/components/SponsorOpportunitiesPanel";
 import SponsorTierComparison from "@/features/sponsors/components/SponsorTierComparison";
 import {
   PODCAST_PLACEMENT_OPTIONS,
@@ -61,6 +62,12 @@ export default function PodcastSponsorFlowModal({ open, onClose, supabase: supab
               compareHref="/podcasts"
             />
 
+            <SponsorOpportunitiesPanel
+              checkoutReturnPath="/podcasts"
+              onSelectTier={setTierId}
+              programScope="podcast"
+            />
+
             <SponsorApplicationForm
               supabase={supabase}
               selectedTierId={tierId}
@@ -76,10 +83,11 @@ export default function PodcastSponsorFlowModal({ open, onClose, supabase: supab
 
             <div className="podcastSponsorFlowModal__foot">
               <p className="podcastSponsorFlowModal__footNote">
-                Mission partner packages (website &amp; ecosystem) live on the main Outreach Project sponsors hub.
+                Mission partner, foundational, and impact packages for the main Outreach Project platform are on the
+                Sponsors hub — not podcast packages.
               </p>
-              <Link className="podcastSponsorFlowModal__missionLink" href="/sponsors?packages=1" onClick={onClose}>
-                Open mission partner packages
+              <Link className="podcastSponsorFlowModal__missionLink" href="/sponsors?apply=1" onClick={onClose}>
+                Open main platform sponsor application
               </Link>
             </div>
           </div>

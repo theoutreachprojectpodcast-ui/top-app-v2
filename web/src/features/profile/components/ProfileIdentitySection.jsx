@@ -7,7 +7,7 @@ function splitList(s) {
     .filter(Boolean);
 }
 
-export default function ProfileIdentitySection({ profile, onEdit, savedCount = 0 }) {
+export default function ProfileIdentitySection({ profile, onEdit, savedCount = 0, showSavedCount = true }) {
   const causes = splitList(profile.causes);
   const skills = splitList(profile.skills);
   const volunteer = splitList(profile.volunteerInterests);
@@ -99,10 +99,12 @@ export default function ProfileIdentitySection({ profile, onEdit, savedCount = 0
         </div>
       )}
 
-      <div className="profileIdentityField">
-        <span className="label">Engagement</span>
-        <span className="value">{savedCount} saved organization{savedCount === 1 ? "" : "s"}</span>
-      </div>
+      {showSavedCount ? (
+        <div className="profileIdentityField">
+          <span className="label">Engagement</span>
+          <span className="value">{savedCount} saved organization{savedCount === 1 ? "" : "s"}</span>
+        </div>
+      ) : null}
 
       <div className="row wrap">
         <button className="btnSoft" type="button" onClick={onEdit}>

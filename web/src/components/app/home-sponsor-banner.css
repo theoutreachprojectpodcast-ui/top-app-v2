@@ -1,13 +1,13 @@
 /* Home sponsor spotlight row — imported by HomeSponsorBannerPlacements.jsx (layout v2: logo left, details right). */
 
 .homeSponsorSpotlights {
-  margin: 0 0 var(--ds-space-3, 12px);
+  margin: 0 0 var(--ds-space-2, 8px);
 }
 .homeSponsorSpotlights__head {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin-bottom: var(--ds-space-2, 8px);
+  gap: 2px;
+  margin-bottom: var(--ds-space-1, 4px);
   text-align: left;
 }
 .homeSponsorSpotlights__eyebrow {
@@ -142,6 +142,25 @@
 }
 .homeSponsorBannerSlot--gameday .homeSponsorBannerSlot__logoCell .organizationLogo {
   --org-logo-size: 64px;
+}
+.homeSponsorSpotlights a.homeSponsorBannerSlot--rucking {
+  min-height: 164px;
+}
+/* Circular frame on OrganizationLogo only — avoid double rounded-rect wrapper that clips the badge */
+.homeSponsorBannerSlot--rucking .homeSponsorBannerSlot__logoCell {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+  max-width: none;
+}
+.homeSponsorBannerSlot--rucking .homeSponsorBannerSlot__logoCell .organizationLogo {
+  --org-logo-size: 88px;
 }
 .homeSponsorSpotlights a.homeSponsorBannerSlot--photo {
   flex-direction: column;
@@ -316,6 +335,9 @@
   }
   .homeSponsorBannerSlot--gameday .homeSponsorBannerSlot__logoCell .organizationLogo {
     --org-logo-size: 56px;
+  }
+  .homeSponsorBannerSlot--rucking .homeSponsorBannerSlot__logoCell .organizationLogo {
+    --org-logo-size: 76px;
   }
 }
 

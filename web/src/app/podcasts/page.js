@@ -19,7 +19,6 @@ export default async function PodcastsPageRoute() {
     <Suspense fallback={<PodcastsFallback />}>
       <PodcastsLandingPage
         initialEpisodes={data.episodes || []}
-        initialFeaturedGuests={data.featuredGuests || []}
         initialSponsors={data.sponsors || []}
         initialUpcomingGuests={data.upcomingGuests || []}
         initialEpisodeGuests={data.episodeGuests || []}

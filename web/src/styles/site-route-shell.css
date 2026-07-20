@@ -196,7 +196,11 @@
 /* Sponsors hub (`/sponsors`) — hero CTAs + channel chips stack cleanly */
 @media (max-width: 760px) {
   .appShell--siteChrome .sponsorLanding .sponsorHero .row.wrap,
-  .appShell--sponsors .sponsorLanding .sponsorHero .row.wrap {
+  .appShell--sponsors .sponsorLanding .sponsorHero .row.wrap,
+  .appShell--siteChrome .sponsorLanding .sponsorHero__actions,
+  .appShell--sponsors .sponsorLanding .sponsorHero__actions,
+  .appShell--siteChrome .sponsorApplySection__actions,
+  .appShell--sponsors .sponsorApplySection__actions {
     flex-direction: column;
     align-items: stretch;
     gap: 10px;
@@ -205,7 +209,11 @@
   .appShell--siteChrome .sponsorLanding .sponsorHero .row.wrap .btnPrimary,
   .appShell--siteChrome .sponsorLanding .sponsorHero .row.wrap .btnSoft,
   .appShell--sponsors .sponsorLanding .sponsorHero .row.wrap .btnPrimary,
-  .appShell--sponsors .sponsorLanding .sponsorHero .row.wrap .btnSoft {
+  .appShell--sponsors .sponsorLanding .sponsorHero .row.wrap .btnSoft,
+  .appShell--siteChrome .sponsorLanding .sponsorHero__actions .btnPrimary,
+  .appShell--sponsors .sponsorLanding .sponsorHero__actions .btnPrimary,
+  .appShell--siteChrome .sponsorApplySection__actions .btnPrimary,
+  .appShell--sponsors .sponsorApplySection__actions .btnPrimary {
     width: 100%;
     min-height: 44px;
     justify-content: center;
@@ -247,6 +255,31 @@
   .appShell--siteChrome .sponsorHeroBlurb,
   .appShell--sponsors .sponsorHeroBlurb {
     max-width: none;
+  }
+}
+
+/* Sponsors landing — tighter closing stack below tier roster */
+.appShell--siteChrome .shell:has(.sponsorLanding),
+.appShell--sponsors .shell:has(.sponsorLanding) {
+  gap: 12px;
+}
+
+.appShell--siteChrome .shell:has(.sponsorLanding) > .siteFooter.siteFooter--pageBottom,
+.appShell--sponsors .shell:has(.sponsorLanding) > .siteFooter.siteFooter--pageBottom {
+  margin-top: 4px;
+}
+
+@media (max-width: 760px) {
+  .appShell--siteChrome.appShell--subpage .shell:has(.sponsorLanding),
+  .appShell--sponsors.appShell--subpage .shell:has(.sponsorLanding) {
+    padding-bottom: calc(12px + 92px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@media (min-width: 761px) {
+  .appShell--siteChrome.appShell--subpage .shell:has(.sponsorLanding),
+  .appShell--sponsors.appShell--subpage .shell:has(.sponsorLanding) {
+    padding-bottom: calc(16px + 92px + env(safe-area-inset-bottom, 0px));
   }
 }
 

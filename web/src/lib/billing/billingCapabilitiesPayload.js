@@ -3,9 +3,13 @@ import {
   PRO_MEMBERSHIP_ANNUAL_CENTS,
   SUPPORT_MEMBERSHIP_ANNUAL_CENTS,
   membershipCheckoutHardBlock,
-  supportCheckoutTemporarilyDisabled,
+  supportCheckoutDisabledAsync,
 } from "@/lib/billing/membershipPricing";
 import { validateMembershipStripePrice } from "@/lib/billing/stripePriceValidation";
+import {
+  getMembershipConfiguration,
+  listPurchasableMembershipPlans,
+} from "@/lib/membership/membershipConfiguration";
 import {
   podcastSponsorCheckoutConfigured,
   podcastSponsorMissingPriceEnvKeys,
@@ -17,9 +21,14 @@ import {
   stripeSponsorSubscriptionConfigured,
   stripeWebhookConfigured,
 } from "@/lib/billing/stripeConfig";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 /** Shared JSON for GET /api/billing/capabilities. */
 export async function billingCapabilitiesPayload() {
+  const admin = createSupabaseAdminClient();
+  const cfg = await getMembershipConfiguration(admin);
+  const supportDisabled = await supportCheckoutDisabledAsync(admin);
+
   const base = {
     ok: true,
     membershipCheckout: stripeMemberRecurringConfigured(),
@@ -30,15 +39,33 @@ export async function billingCapabilitiesPayload() {
     podcastSponsorMissingEnv: podcastSponsorCheckoutConfigured() ? [] : podcastSponsorMissingPriceEnvKeys(),
     stripeWebhook: stripeWebhookConfigured(),
     membershipCheckoutDisabled: membershipCheckoutHardBlock(),
-    supportCheckoutDisabled: supportCheckoutTemporarilyDisabled(),
+    supportCheckoutDisabled: supportDisabled,
+    supportMembershipEnabled: cfg.supportMembershipEnabled === true,
+    purchasablePlans: listPurchasableMembershipPlans(cfg),
+    membershipConfiguration: {
+      supportMembershipEnabled: cfg.supportMembershipEnabled,
+      proMembershipEnabled: cfg.proMembershipEnabled,
+      updatedAt: cfg.updatedAt,
+      source: cfg.source,
+    },
     expectedPricing: {
-      supportAnnualCents: SUPPORT_MEMBERSHIP_ANNUAL_CENTS,
+      ...(cfg.supportMembershipEnabled
+        ? { supportAnnualCents: SUPPORT_MEMBERSHIP_ANNUAL_CENTS }
+        : {}),
       proAnnualCents: PRO_MEMBERSHIP_ANNUAL_CENTS,
       currency: "usd",
       interval: "year",
     },
     tierCheckout: {
-      support: { enabled: false, validated: false, priceId: priceIdForTier("support") || null },
+      support: {
+        enabled: false,
+        validated: false,
+        priceId: cfg.supportMembershipEnabled ? priceIdForTier("support") || null : null,
+        code: supportDisabled ? "support_checkout_disabled" : null,
+        message: supportDisabled
+          ? "Support Membership is not available. Choose Pro Membership."
+          : null,
+      },
       member: { enabled: false, validated: false, priceId: priceIdForTier("member") || null },
     },
   };
@@ -49,12 +76,14 @@ export async function billingCapabilitiesPayload() {
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-  for (const tier of ["support", "member"]) {
+  const tiersToValidate = cfg.supportMembershipEnabled ? ["support", "member"] : ["member"];
+  for (const tier of tiersToValidate) {
     const priceId = priceIdForTier(tier);
     if (!priceId) continue;
-    const v = await validateMembershipStripePrice(stripe, tier, priceId);
-    const tierDisabled =
-      tier === "support" && supportCheckoutTemporarilyDisabled();
+    const v = await validateMembershipStripePrice(stripe, tier, priceId, {
+      supportEnabled: cfg.supportMembershipEnabled,
+    });
+    const tierDisabled = tier === "support" && supportDisabled;
     base.tierCheckout[tier] = {
       enabled: v.ok && !tierDisabled,
       validated: v.ok,
@@ -63,7 +92,7 @@ export async function billingCapabilitiesPayload() {
       interval: v.interval,
       code: tierDisabled ? "support_checkout_disabled" : v.code || null,
       message: tierDisabled
-        ? "Support Membership checkout is temporarily disabled while pricing is verified."
+        ? "Support Membership is not available. Choose Pro Membership."
         : v.ok
           ? null
           : v.message || null,
@@ -71,7 +100,9 @@ export async function billingCapabilitiesPayload() {
   }
 
   base.membershipCheckout =
-    base.tierCheckout.support.enabled && base.tierCheckout.member.enabled && stripeMemberRecurringConfigured();
+    base.tierCheckout.member.enabled &&
+    stripeMemberRecurringConfigured() &&
+    (cfg.supportMembershipEnabled ? base.tierCheckout.support.enabled : true);
 
   return base;
 }

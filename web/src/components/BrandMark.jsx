@@ -3,10 +3,10 @@
 import { useCallback, useState } from "react";
 import { useColorScheme } from "@/components/app/ColorSchemeRoot";
 
-const DEFAULT_LOGO_DARK = "/brand-logo-site-dark.png";
-const DEFAULT_LOGO_LIGHT = "/brand-logo-site-light.png";
-const DEFAULT_MARK_DARK = "/brand-logo-mark-dark.png";
-const DEFAULT_MARK_LIGHT = "/brand-logo-mark-light.png";
+const DEFAULT_LOGO_DARK = "/brand-logo-site-dark.png?v=8";
+const DEFAULT_LOGO_LIGHT = "/brand-logo-site-light.png?v=8";
+const DEFAULT_MARK_DARK = "/brand-logo-mark-dark.png?v=7";
+const DEFAULT_MARK_LIGHT = "/brand-logo-mark-light.png?v=7";
 
 /** Committed under `web/public/`. Override with `NEXT_PUBLIC_BRAND_LOGO_PATH` or `src`. */
 export default function BrandMark({

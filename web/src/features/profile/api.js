@@ -77,16 +77,28 @@ export async function fetchSavedOrgEinList(supabase, userId) {
 
 export async function replaceSavedOrgEinList(supabase, userId, eins) {
   if (!supabase || !userId) return;
-  const { error: delErr } = await supabase.from(SAVED_EIN_TABLE).delete().eq("user_id", userId);
-  if (delErr && !isOptionalCloudError(delErr)) throw delErr;
-  const list = [...new Set((eins || []).map((e) => normalizeEinDigits(e)).filter((e) => e.length === 9))];
+  const list = orderUniqueEins(eins);
+  const { data: existingRows, error: readErr } = await supabase
+    .from(SAVED_EIN_TABLE)
+    .select("ein")
+    .eq("user_id", userId);
+  if (readErr && !isOptionalCloudError(readErr)) throw readErr;
+  const existing = new Set(
+    (existingRows || []).map((r) => normalizeEinDigits(r.ein)).filter((e) => e.length === 9),
+  );
+  const next = new Set(list);
+  const toRemove = [...existing].filter((e) => !next.has(e));
+  if (toRemove.length) {
+    const { error: delErr } = await supabase.from(SAVED_EIN_TABLE).delete().eq("user_id", userId).in("ein", toRemove);
+    if (delErr && !isOptionalCloudError(delErr)) throw delErr;
+  }
   if (!list.length) return;
   const rows = list.map((ein, i) => ({
     user_id: userId,
     ein,
     sort_order: i,
   }));
-  const { error } = await supabase.from(SAVED_EIN_TABLE).insert(rows);
+  const { error } = await supabase.from(SAVED_EIN_TABLE).upsert(rows, { onConflict: "user_id,ein" });
   if (error && !isOptionalCloudError(error)) throw error;
 }
 

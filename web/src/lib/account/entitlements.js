@@ -33,7 +33,7 @@ function profileShapeFromRow(row) {
   return {
     membershipTier: row.membership_tier,
     membership_tier: row.membership_tier,
-    membershipBillingStatus: row.membership_status,
+    membershipBillingStatus: row.billing_status ?? row.membership_status,
     membership_status: row.membership_status,
     billing_status: row.membership_status,
     membershipSource: row.membership_source,
@@ -43,6 +43,10 @@ function profileShapeFromRow(row) {
     platformRole: row.platform_role,
     platform_role: row.platform_role,
     email: row.email,
+    migratedToProUntil: row.migrated_to_pro_until,
+    migrated_to_pro_until: row.migrated_to_pro_until,
+    renewalDate: row.renewal_date,
+    renewal_date: row.renewal_date,
   };
 }
 
