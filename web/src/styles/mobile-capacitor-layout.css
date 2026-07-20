@@ -49,13 +49,12 @@ html[data-capacitor-native] .bottomNav.bottomNav--mobileDock .navItemLabel {
   font-size: clamp(9px, calc(var(--cap-vw, 1vw) * 2.4), 11px);
 }
 
-/* Wide WebView: match web home wordmark (stable pre-hero size). */
+/* Wide WebView: match web home wordmark; header scrolls in-flow like desktop web. */
 @media (min-width: 761px) {
-  html[data-capacitor-native] main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) {
-    --header-floating-offset: 8px;
-    --header-floating-height: clamp(200px, calc(var(--cap-vw, 1vw) * 28), 272px);
-    --header-fade-height: 20px;
-    --home-logo-content-gap: 8px;
+  html[data-capacitor-native] main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) {
+    --header-floating-offset: 0px;
+    --header-floating-height: 0px;
+    --header-fade-height: 0px;
   }
 
   html[data-capacitor-native] main.topApp[data-page-atmosphere="home"] .headerBrandStack {

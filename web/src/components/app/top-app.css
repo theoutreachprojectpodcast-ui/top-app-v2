@@ -21,30 +21,148 @@
   padding-bottom: var(--top-bottom-nav-reserve);
 }
 
-/* Home desktop: stable wordmark size (pre-hero expansion) — clears side chrome. */
+/* Home desktop: stable wordmark size (pre-hero expansion). Header is in-flow (scrolls). */
 @media (min-width: 761px) {
-  main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) {
-    --header-floating-offset: 8px;
-    --header-floating-height: clamp(200px, 28vw, 272px);
-    --header-fade-height: 20px;
-    --home-logo-content-gap: 8px;
-  }
-
   main.topApp[data-page-atmosphere="home"] .headerBrandStack {
     max-width: min(720px, 88vw);
   }
 
   main.topApp[data-page-atmosphere="home"] .shell.shell--home {
     gap: var(--ds-space-2, 8px);
-    padding-top: calc(
-      var(--header-floating-offset) + var(--header-floating-height) + var(--header-fade-height) +
-        var(--home-logo-content-gap, 14px)
-    );
+    padding-top: var(--ds-space-2, 8px);
   }
 
   main.topApp[data-page-atmosphere="home"] img.brandMarkImg--header:not(.podcastBrandLogo) {
     max-height: clamp(200px, 28vw, 272px);
     max-width: min(720px, 88vw);
+  }
+}
+
+/*
+ * Desktop (≥761px): header scrolls with page content (same in-flow model as mobile).
+ * Logo + left/right chrome live in `.appSiteHeader`; no fixed topbar / floating mark.
+ */
+@media (min-width: 761px) {
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) {
+    --header-floating-offset: 0px;
+    --header-floating-height: 0px;
+    --header-fade-height: 0px;
+  }
+
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .appSiteHeader {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: start;
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 0;
+    height: auto;
+    overflow: visible;
+    padding: 12px clamp(16px, 3vw, 40px) 10px;
+    z-index: 2;
+  }
+
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .headerBrandStack {
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
+    z-index: 0;
+    grid-column: 2;
+    grid-row: 1;
+    align-self: start;
+    justify-self: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: auto;
+    max-width: min(720px, 52vw);
+    padding: 0;
+    margin: 0;
+    pointer-events: none;
+  }
+
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .headerBrandStack > a {
+    pointer-events: auto;
+  }
+
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) header.topbar,
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbar {
+    position: static;
+    top: auto;
+    left: auto;
+    right: auto;
+    z-index: auto;
+    pointer-events: none;
+    background: transparent;
+  }
+
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbar,
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarInner {
+    display: contents;
+  }
+
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarLeft {
+    grid-column: 1;
+    grid-row: 1;
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    align-self: start;
+    justify-self: start;
+    width: auto;
+    min-width: 0;
+    pointer-events: auto;
+  }
+
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarRight {
+    grid-column: 3;
+    grid-row: 1;
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+    align-self: start;
+    justify-self: end;
+    width: auto;
+    min-width: 0;
+    pointer-events: auto;
+  }
+
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarCenter {
+    display: none;
+  }
+
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarLeft .topbarActionsCluster,
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarLeft .topbarActionsCluster--start,
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarRight .topbarActionsCluster {
+    width: auto;
+    flex-wrap: nowrap;
+    gap: 10px;
+    pointer-events: auto;
+  }
+
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarOcclusion {
+    position: static;
+    display: block;
+    height: 0;
+    min-height: 0;
+    overflow: hidden;
+    background: none;
+  }
+
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarOcclusion::before,
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarOcclusion::after {
+    content: none;
+    display: none;
+  }
+
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .shell {
+    padding-top: 8px;
   }
 }
 
@@ -999,8 +1117,8 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topba
   gap: 10px;
 }
 
-/* Fixed header logo column — OP/TOP mark (required). Desktop: centered fixed mark; mobile @760px: in-flow (scrolls).
-   Do not remove; responsive edits must keep .headerBrandStack above .topbar (see mobile z-index). */
+/* Header logo column — OP/TOP mark (required). Desktop + mobile: in-flow (scrolls with content).
+   Do not remove; responsive edits must keep .headerBrandStack in `.appSiteHeader` grid. */
 .headerBrandStack {
   position: fixed;
   top: calc(var(--header-floating-offset, 20px) + 4px + env(safe-area-inset-top, 0px));
