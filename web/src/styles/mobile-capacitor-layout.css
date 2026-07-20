@@ -49,23 +49,22 @@ html[data-capacitor-native] .bottomNav.bottomNav--mobileDock .navItemLabel {
   font-size: clamp(9px, calc(var(--cap-vw, 1vw) * 2.4), 11px);
 }
 
-/* Wide WebView: keep home wordmark clear of side chrome (match web home gutters). */
+/* Wide WebView: match web home wordmark (stable pre-hero size). */
 @media (min-width: 761px) {
   html[data-capacitor-native] main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) {
-    --header-floating-offset: 4px;
-    --header-floating-height: clamp(260px, calc(var(--cap-vw, 1vw) * 34), 380px);
-    --header-fade-height: 24px;
+    --header-floating-offset: 8px;
+    --header-floating-height: clamp(200px, calc(var(--cap-vw, 1vw) * 28), 272px);
+    --header-fade-height: 20px;
     --home-logo-content-gap: 8px;
-    --home-header-chrome-gutter: clamp(168px, calc(var(--cap-vw, 1vw) * 22), 280px);
   }
 
   html[data-capacitor-native] main.topApp[data-page-atmosphere="home"] .headerBrandStack {
-    max-width: min(920px, calc(var(--cap-portrait-width, 100vw) - (2 * var(--home-header-chrome-gutter))));
+    max-width: min(720px, calc(var(--cap-portrait-width, 100vw) * 0.88));
   }
 
   html[data-capacitor-native] main.topApp[data-page-atmosphere="home"] img.brandMarkImg--header:not(.podcastBrandLogo) {
-    max-height: clamp(260px, calc(var(--cap-vw, 1vw) * 34), 380px);
-    max-width: min(960px, calc(var(--cap-portrait-width, 100vw) - (2 * var(--home-header-chrome-gutter))));
+    max-height: clamp(200px, calc(var(--cap-vw, 1vw) * 28), 272px);
+    max-width: min(720px, calc(var(--cap-portrait-width, 100vw) * 0.88));
   }
 }
 

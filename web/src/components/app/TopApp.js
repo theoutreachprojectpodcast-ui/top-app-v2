@@ -896,20 +896,15 @@ function TopAppInner({ initialNav = "home" }) {
                   shellClass="siteMobileNavMore--phoneOnly"
                   onItemClick={handleHamburgerNav}
                 />
-                {isMobileShell && pageAtmosphere !== "podcast" ? <ColorSchemeToggle /> : null}
+                {pageAtmosphere === "home" && !isMobileShell ? <DownloadMobileAppButton /> : null}
+                {pageAtmosphere !== "podcast" ? <ColorSchemeToggle /> : null}
                 {isMobileShell && isLoggedIn ? <AdminConsoleLink /> : null}
               </div>
             </div>
             <div className="topbarZone topbarCenter" aria-hidden="true" />
             <div className="topbarZone topbarRight">
             <div className="topbarActionsCluster">
-              <SiteHamburgerNavMenu
-                shellClass="siteMobileNavMore--desktopOnly"
-                align="end"
-                onItemClick={handleHamburgerNav}
-              />
-              {pageAtmosphere === "home" ? <DownloadMobileAppButton /> : null}
-              {!isMobileShell && pageAtmosphere !== "podcast" ? <ColorSchemeToggle /> : null}
+              {pageAtmosphere === "home" && isMobileShell ? <DownloadMobileAppButton /> : null}
               {isLoggedIn ? (
                 <>
                   {!isMobileShell ? <AdminConsoleLink /> : null}
@@ -960,6 +955,11 @@ function TopAppInner({ initialNav = "home" }) {
                   </button>
                 </>
               )}
+              <SiteHamburgerNavMenu
+                shellClass="siteMobileNavMore--desktopOnly"
+                align="end"
+                onItemClick={handleHamburgerNav}
+              />
             </div>
           </div>
         </HeaderInner>

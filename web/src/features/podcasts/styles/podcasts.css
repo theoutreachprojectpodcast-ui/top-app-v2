@@ -90,7 +90,7 @@ html[data-use-podcast-theme="true"] {
   /* Match home header band sizing; podcast chrome wash stays on `.topbarOcclusion`. */
   --header-floating-offset: 4px;
   --header-fade-height: 24px;
-  --podcast-header-brand-band: clamp(260px, 34vw, 380px);
+  --podcast-header-brand-band: clamp(200px, 28vw, 272px);
   --podcast-header-chrome-height: calc(
     env(safe-area-inset-top, 0px) + var(--header-floating-offset, 4px) + var(--podcast-header-brand-band) +
       var(--header-fade-height, 24px)
@@ -401,8 +401,8 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
 
 @media (min-width: 761px) {
   .appShell--podcast .podcastBrandLogo {
-    max-height: clamp(260px, 34vw, 380px) !important;
-    max-width: min(960px, calc(100vw - clamp(336px, 44vw, 560px))) !important;
+    max-height: clamp(200px, 28vw, 272px) !important;
+    max-width: min(720px, 88vw) !important;
     width: auto;
   }
 }
@@ -425,7 +425,7 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  max-width: min(920px, calc(100vw - clamp(336px, 44vw, 560px)));
+  max-width: min(720px, 88vw);
   padding-left: max(10px, env(safe-area-inset-left, 0px));
   padding-right: max(10px, env(safe-area-inset-right, 0px));
   padding-bottom: clamp(4px, 0.6vw, 8px);

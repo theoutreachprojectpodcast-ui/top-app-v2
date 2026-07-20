@@ -21,19 +21,17 @@
   padding-bottom: var(--top-bottom-nav-reserve);
 }
 
-/* Home desktop: hero wordmark, capped so side chrome (Get the app / auth) stays clear. */
+/* Home desktop: stable wordmark size (pre-hero expansion) — clears side chrome. */
 @media (min-width: 761px) {
   main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) {
-    --header-floating-offset: 4px;
-    --header-floating-height: clamp(260px, 34vw, 380px);
-    --header-fade-height: 24px;
+    --header-floating-offset: 8px;
+    --header-floating-height: clamp(200px, 28vw, 272px);
+    --header-fade-height: 20px;
     --home-logo-content-gap: 8px;
-    /* Reserve left/right topbar clusters so the centered mark cannot cover them. */
-    --home-header-chrome-gutter: clamp(168px, 22vw, 280px);
   }
 
   main.topApp[data-page-atmosphere="home"] .headerBrandStack {
-    max-width: min(920px, calc(100vw - (2 * var(--home-header-chrome-gutter))));
+    max-width: min(720px, 88vw);
   }
 
   main.topApp[data-page-atmosphere="home"] .shell.shell--home {
@@ -45,8 +43,8 @@
   }
 
   main.topApp[data-page-atmosphere="home"] img.brandMarkImg--header:not(.podcastBrandLogo) {
-    max-height: clamp(260px, 34vw, 380px);
-    max-width: min(960px, calc(100vw - (2 * var(--home-header-chrome-gutter))));
+    max-height: clamp(200px, 28vw, 272px);
+    max-width: min(720px, 88vw);
   }
 }
 
@@ -613,6 +611,21 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topba
 .topbarActionsCluster--start {
   justify-content: flex-start;
 }
+.topbarLeft .topbarActionsCluster,
+.topbarLeft .topbarActionsCluster--start {
+  justify-content: flex-start;
+}
+.topbarRight .topbarActionsCluster {
+  justify-content: flex-end;
+}
+.topbar .sponsorBtn,
+.topbar .btnSoft,
+.topbar .downloadMobileAppBtn,
+.topbar .themeToggle {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+}
 .downloadMobileAppBtn {
   display: inline-flex;
   align-items: center;
@@ -1113,7 +1126,7 @@ span.headerBrandMarkFallback {
   padding: 10px 14px;
 }
 .topbarRight .sponsorBtn {
-  margin-bottom: 3px;
+  margin-bottom: 0;
 }
 .themeToggle {
   min-width: 44px;
