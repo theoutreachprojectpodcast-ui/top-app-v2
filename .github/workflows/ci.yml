@@ -139,10 +139,28 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Compile Android Java sources
+        id: android_compile
+        continue-on-error: true
         working-directory: web/android
         run: |
           chmod +x ./gradlew
-          ./gradlew :app:compileDebugJavaWithJavac --no-daemon --stacktrace
+          ./gradlew :app:compileDebugJavaWithJavac --no-daemon --stacktrace > android-compile.log 2>&1
+
+      - name: Upload Android compile log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-compile-log
+          path: web/android/android-compile.log
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Surface Android compile failure
+        if: steps.android_compile.outcome == 'failure'
+        working-directory: web/android
+        run: |
+          tail -n 200 android-compile.log
+          exit 1
 
   production-smoke:
     runs-on: ubuntu-latest
