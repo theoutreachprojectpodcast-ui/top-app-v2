@@ -5,6 +5,8 @@ export const membershipCheckoutSchema = z.object({
   tier: z.enum(["access", "support", "member", "sponsor"]),
   returnPath: z.string().max(500).optional(),
   sponsorPackageId: z.string().max(120).optional(),
+  /** Fresh token created by Play Billing immediately before Android external checkout. */
+  googlePlayExternalTransactionToken: z.string().min(1).max(6000).optional(),
 });
 
 export const billingPortalSchema = z.object({
