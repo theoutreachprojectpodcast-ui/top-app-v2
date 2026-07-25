@@ -89,11 +89,13 @@ export async function POST(request) {
     });
 
     if (session.url) {
-      const response = { url: session.url };
       if (googlePlayExternalTransactionToken) {
-        response.googlePlayExternalLinkUrl = createGooglePlayExternalCheckoutHandoffUrl(base, session.id);
+        return Response.json({
+          checkoutMode: "google_play_external_content_link",
+          googlePlayExternalLinkUrl: createGooglePlayExternalCheckoutHandoffUrl(base, session.id),
+        });
       }
-      return Response.json(response);
+      return Response.json({ checkoutMode: "stripe", url: session.url });
     }
     return Response.json({ error: "no_checkout_url" }, { status: 500 });
   } catch (e) {
