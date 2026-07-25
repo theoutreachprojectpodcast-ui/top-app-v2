@@ -48,16 +48,13 @@ export async function navigateToStripePortal(stripePortalUrl, options = {}) {
  * Navigate to Stripe Checkout.
  *
  * Android production builds must use Google Play's External Content Links API. Google Play shows
- * the required information screen and opens a short-lived TOP-owned handoff URL in the external
- * browser; that endpoint then redirects to the server-created Stripe Checkout Session.
+ * the required information screen and opens a short-lived TOP-owned landing page in the external
+ * browser; the user then deliberately continues to Stripe from that disclosed destination.
  *
  * @param {string} stripeCheckoutUrl
  * @param {{ googlePlayExternalLinkUrl?: string, externalTransactionToken?: string }} [options]
  */
 export async function navigateToStripeCheckout(stripeCheckoutUrl, options = {}) {
-  const url = String(stripeCheckoutUrl || "").trim();
-  if (!url) return { mode: "missing-url" };
-
   if (requiresGooglePlayExternalContentLink()) {
     const googlePlayExternalLinkUrl = String(options.googlePlayExternalLinkUrl || "").trim();
     const externalTransactionToken = String(options.externalTransactionToken || "").trim();
@@ -73,6 +70,8 @@ export async function navigateToStripeCheckout(stripeCheckoutUrl, options = {}) 
     return { mode: "google-play-external-content-link" };
   }
 
+  const url = String(stripeCheckoutUrl || "").trim();
+  if (!url) return { mode: "missing-url" };
   if (typeof window !== "undefined") {
     window.location.assign(url);
     return { mode: "same-window" };
