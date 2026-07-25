@@ -90,9 +90,11 @@ export async function POST(request) {
 
     if (session.url) {
       if (googlePlayExternalTransactionToken) {
+        const handoffUrl = createGooglePlayExternalCheckoutHandoffUrl(base, session.id);
         return Response.json({
           checkoutMode: "google_play_external_content_link",
-          googlePlayExternalLinkUrl: createGooglePlayExternalCheckoutHandoffUrl(base, session.id),
+          url: handoffUrl,
+          googlePlayExternalLinkUrl: handoffUrl,
         });
       }
       return Response.json({ checkoutMode: "stripe", url: session.url });
