@@ -8,10 +8,15 @@ on:
 
 jobs:
   lockfile-refresh:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/qa'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - name: Checkout
+      - name: Checkout qa
         uses: actions/checkout@v4
+        with:
+          ref: qa
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -27,13 +32,17 @@ jobs:
       - name: Refresh lockfile
         run: pnpm install --lockfile-only --no-frozen-lockfile
 
-      - name: Upload refreshed lockfile
-        uses: actions/upload-artifact@v4
-        with:
-          name: refreshed-pnpm-lock
-          path: pnpm-lock.yaml
-          if-no-files-found: error
-          retention-days: 2
+      - name: Commit refreshed lockfile
+        run: |
+          if git diff --quiet -- pnpm-lock.yaml; then
+            echo "pnpm-lock.yaml is already current"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pnpm-lock.yaml
+          git commit -m "Refresh pnpm lockfile for patched dependencies"
+          git push origin HEAD:qa
 
   security:
     runs-on: ubuntu-latest
