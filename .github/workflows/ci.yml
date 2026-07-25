@@ -155,6 +155,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Sync Capacitor Android project
+        run: pnpm --dir web exec cap sync android
+
       - name: Compile Android Java sources
         id: android_compile
         continue-on-error: true
