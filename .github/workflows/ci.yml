@@ -40,7 +40,24 @@ jobs:
         run: pnpm --dir web run verify:auth-freeze
 
       - name: Dependency audit (high+)
-        run: pnpm --dir web run security:audit:ci
+        id: dependency_audit
+        continue-on-error: true
+        run: pnpm --dir web run security:audit:ci > dependency-audit.log 2>&1
+
+      - name: Upload dependency audit log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-audit-log
+          path: dependency-audit.log
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Surface dependency audit failure
+        if: steps.dependency_audit.outcome == 'failure'
+        run: |
+          tail -n 200 dependency-audit.log
+          exit 1
 
       - name: Security posture checks
         run: pnpm --dir web run verify:security
