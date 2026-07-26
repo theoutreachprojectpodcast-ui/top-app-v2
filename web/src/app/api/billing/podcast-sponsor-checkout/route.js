@@ -7,6 +7,20 @@ import {
   requestOriginForStripeRedirects,
   safeAppReturnPath,
 } from "@/lib/billing/stripeConfig";
+import {
+  createGooglePlayExternalCheckoutHandoffUrl,
+  googlePlayExternalContentLinkMetadata,
+  normalizeGooglePlayExternalTransactionToken,
+} from "@/lib/billing/googlePlayExternalContentLinks.server";
+
+function isGooglePlayExternalContentLinksShell(request) {
+  const userAgent = String(request.headers.get("user-agent") || "");
+  return (
+    /Android/i.test(userAgent) &&
+    /TheOutreachProject\/Capacitor/i.test(userAgent) &&
+    /GooglePlayECL\/1/i.test(userAgent)
+  );
+}
 
 export async function POST(request) {
   const __guard = guardMutation(request, { rateKey: "billing-podcast-checkout", limit: 12 });
@@ -26,6 +40,30 @@ export async function POST(request) {
     return Response.json({ error: "invalid_json" }, { status: 400 });
   }
 
+  let googlePlayExternalTransactionToken = "";
+  try {
+    googlePlayExternalTransactionToken = normalizeGooglePlayExternalTransactionToken(
+      body.googlePlayExternalTransactionToken,
+    );
+  } catch {
+    return Response.json(
+      {
+        error: "invalid_google_play_external_transaction_token",
+        message: "Google Play returned an invalid external checkout token. Please try again.",
+      },
+      { status: 400 },
+    );
+  }
+  if (isGooglePlayExternalContentLinksShell(request) && !googlePlayExternalTransactionToken) {
+    return Response.json(
+      {
+        error: "google_play_external_transaction_token_required",
+        message: "Google Play must authorize external checkout before the payment page can open.",
+      },
+      { status: 400 },
+    );
+  }
+
   const podcastTierId = String(body.podcastTierId || "").trim();
   const priceId = podcastSponsorPriceIdForTier(podcastTierId);
   if (!priceId) {
@@ -40,6 +78,7 @@ export async function POST(request) {
     checkout_kind: "podcast_sponsor",
     podcast_tier_id: podcastTierId,
     workos_user_id: user.id,
+    ...googlePlayExternalContentLinkMetadata(googlePlayExternalTransactionToken),
   };
 
   try {
@@ -54,7 +93,15 @@ export async function POST(request) {
     });
 
     if (session.url) {
-      return Response.json({ url: session.url });
+      if (googlePlayExternalTransactionToken) {
+        const handoffUrl = createGooglePlayExternalCheckoutHandoffUrl(base, session.id);
+        return Response.json({
+          checkoutMode: "google_play_external_content_link",
+          url: handoffUrl,
+          googlePlayExternalLinkUrl: handoffUrl,
+        });
+      }
+      return Response.json({ checkoutMode: "stripe", url: session.url });
     }
     return Response.json({ error: "no_checkout_url" }, { status: 500 });
   } catch (e) {

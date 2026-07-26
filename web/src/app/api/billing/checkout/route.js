@@ -21,6 +21,20 @@ import { isUpgrade, membershipTierRank } from "@/lib/billing/membershipTierOrder
 import { tierFromProfileRow } from "@/lib/billing/stripeProfileSync";
 import { validateMembershipStripePrice } from "@/lib/billing/stripePriceValidation";
 import { isSupportMembershipEnabled } from "@/lib/membership/membershipConfiguration";
+import {
+  createGooglePlayExternalCheckoutHandoffUrl,
+  googlePlayExternalContentLinkMetadata,
+  normalizeGooglePlayExternalTransactionToken,
+} from "@/lib/billing/googlePlayExternalContentLinks.server";
+
+function isGooglePlayExternalContentLinksShell(request) {
+  const userAgent = String(request.headers.get("user-agent") || "");
+  return (
+    /Android/i.test(userAgent) &&
+    /TheOutreachProject\/Capacitor/i.test(userAgent) &&
+    /GooglePlayECL\/1/i.test(userAgent)
+  );
+}
 
 export async function POST(request) {
   const guard = guardMutation(request, { rateKey: "billing-checkout", limit: 20 });
@@ -50,6 +64,31 @@ export async function POST(request) {
   const body = parsed.data;
   const tier = body.tier;
   const sponsorPackageId = body.sponsorPackageId ? String(body.sponsorPackageId).trim() : "";
+
+  let googlePlayExternalTransactionToken = "";
+  try {
+    googlePlayExternalTransactionToken = normalizeGooglePlayExternalTransactionToken(
+      body.googlePlayExternalTransactionToken,
+    );
+  } catch {
+    return Response.json(
+      {
+        error: "invalid_google_play_external_transaction_token",
+        message: "Google Play returned an invalid external checkout token. Please try again.",
+      },
+      { status: 400 },
+    );
+  }
+
+  if (isGooglePlayExternalContentLinksShell(request) && !googlePlayExternalTransactionToken) {
+    return Response.json(
+      {
+        error: "google_play_external_transaction_token_required",
+        message: "Google Play must authorize external checkout before the payment page can open.",
+      },
+      { status: 400 },
+    );
+  }
 
   const supportEnabled = await isSupportMembershipEnabled(admin);
   if ((tier === "access" || tier === "support") && !supportEnabled) {
@@ -150,12 +189,14 @@ export async function POST(request) {
     );
   }
 
+  const googlePlayMetadata = googlePlayExternalContentLinkMetadata(googlePlayExternalTransactionToken);
   const metadata = {
     workos_user_id: user.id,
     membership_tier: tier,
     checkout_kind: "membership_subscription",
     ...(sponsorPackageId ? { sponsor_package_id: sponsorPackageId } : {}),
     ...(profileId ? { top_profile_id: profileId } : {}),
+    ...googlePlayMetadata,
   };
 
   try {
@@ -165,6 +206,7 @@ export async function POST(request) {
       priceId,
       returnPath,
       profileId: profileId || null,
+      googlePlayExternalContentLink: !!googlePlayExternalTransactionToken,
     });
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
@@ -185,8 +227,17 @@ export async function POST(request) {
         workosUserId: user.id,
         tier,
         sessionId: session.id,
+        googlePlayExternalContentLink: !!googlePlayExternalTransactionToken,
       });
-      return Response.json({ url: session.url });
+      if (googlePlayExternalTransactionToken) {
+        const handoffUrl = createGooglePlayExternalCheckoutHandoffUrl(base, session.id);
+        return Response.json({
+          checkoutMode: "google_play_external_content_link",
+          url: handoffUrl,
+          googlePlayExternalLinkUrl: handoffUrl,
+        });
+      }
+      return Response.json({ checkoutMode: "stripe", url: session.url });
     }
     return Response.json({ error: "no_checkout_url" }, { status: 500 });
   } catch (e) {

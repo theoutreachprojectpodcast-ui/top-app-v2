@@ -113,11 +113,10 @@
     "@supabase/ssr": "^0.10.0",
     "@supabase/supabase-js": "^2.101.0",
     "@workos-inc/authkit-nextjs": "^3.0.0",
-    "@sindresorhus/fnv1a": "^3.1.0",
     "iron-session": "^8.0.4",
     "jose": "^5.10.0",
     "lucide-react": "^0.469.0",
-    "next": "16.2.9",
+    "next": "16.2.11",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "stripe": "^22.0.1",
@@ -128,10 +127,10 @@
     "@capacitor/assets": "^3.0.5",
     "@tailwindcss/postcss": "^4",
     "eslint": "^9",
-    "eslint-config-next": "16.2.9",
+    "eslint-config-next": "16.2.11",
     "playwright": "^1.60.0",
     "postgres": "^3.4.9",
-    "sharp": "0.32.6",
+    "sharp": "0.35.3",
     "tailwindcss": "^4"
   }
 }
