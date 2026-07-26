@@ -2,13 +2,22 @@
 
 import { Capacitor, registerPlugin } from "@capacitor/core";
 
-const GooglePlayExternalContentLinks = registerPlugin("GooglePlayExternalContentLinks");
+const PLUGIN_NAME = "GooglePlayExternalContentLinks";
+const GooglePlayExternalContentLinks = registerPlugin(PLUGIN_NAME);
 
-/** True only inside the installed Android Capacitor app. */
+/**
+ * True only inside an Android shell that actually contains the native Play bridge.
+ * Version 6 does not contain it; version 7+ does. This keeps the closed-test rollout safe while
+ * the server independently fails closed for shells tagged `GooglePlayECL/1`.
+ */
 export function requiresGooglePlayExternalContentLink() {
   if (typeof window === "undefined") return false;
   try {
-    return Capacitor.isNativePlatform() && Capacitor.getPlatform() === "android";
+    return (
+      Capacitor.isNativePlatform() &&
+      Capacitor.getPlatform() === "android" &&
+      Capacitor.isPluginAvailable(PLUGIN_NAME)
+    );
   } catch {
     return false;
   }
