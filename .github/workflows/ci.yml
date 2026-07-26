@@ -7,43 +7,6 @@ on:
     branches: [QA, main, qa]
 
 jobs:
-  lockfile-refresh:
-    if: github.ref == 'refs/heads/qa' || github.head_ref == 'qa'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout qa
-        uses: actions/checkout@v4
-        with:
-          ref: qa
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.33.0
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
-
-      - name: Refresh lockfile
-        run: pnpm install --lockfile-only --no-frozen-lockfile
-
-      - name: Commit refreshed lockfile
-        run: |
-          if git diff --quiet -- pnpm-lock.yaml; then
-            echo "pnpm-lock.yaml is already current"
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add pnpm-lock.yaml
-          git commit -m "Refresh pnpm lockfile for patched dependencies"
-          git push origin HEAD:qa
-
   security:
     runs-on: ubuntu-latest
     # Map secrets to job env so the live probe step can gate on `env.*`
@@ -77,24 +40,7 @@ jobs:
         run: pnpm --dir web run verify:auth-freeze
 
       - name: Dependency audit (high+)
-        id: dependency_audit
-        continue-on-error: true
-        run: pnpm --dir web run security:audit:ci > dependency-audit.log 2>&1
-
-      - name: Upload dependency audit log
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: dependency-audit-log
-          path: dependency-audit.log
-          if-no-files-found: error
-          retention-days: 7
-
-      - name: Surface dependency audit failure
-        if: steps.dependency_audit.outcome == 'failure'
-        run: |
-          tail -n 200 dependency-audit.log
-          exit 1
+        run: pnpm --dir web run security:audit:ci
 
       - name: Security posture checks
         run: pnpm --dir web run verify:security
@@ -124,24 +70,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Lint
-        id: lint
-        continue-on-error: true
-        run: pnpm lint > lint.log 2>&1
-
-      - name: Upload lint log
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: lint-log
-          path: lint.log
-          if-no-files-found: error
-          retention-days: 7
-
-      - name: Surface lint failure
-        if: steps.lint.outcome == 'failure'
-        run: |
-          tail -n 200 lint.log
-          exit 1
+        run: pnpm lint
 
       - name: Route smoke check
         run: pnpm --dir web run smoke:routes
@@ -213,28 +142,10 @@ jobs:
         run: pnpm --dir web exec cap sync android
 
       - name: Compile Android Java sources
-        id: android_compile
-        continue-on-error: true
         working-directory: web/android
         run: |
           chmod +x ./gradlew
-          ./gradlew :app:compileDebugJavaWithJavac --no-daemon --stacktrace > android-compile.log 2>&1
-
-      - name: Upload Android compile log
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-compile-log
-          path: web/android/android-compile.log
-          if-no-files-found: error
-          retention-days: 7
-
-      - name: Surface Android compile failure
-        if: steps.android_compile.outcome == 'failure'
-        working-directory: web/android
-        run: |
-          tail -n 200 android-compile.log
-          exit 1
+          ./gradlew :app:compileDebugJavaWithJavac --no-daemon --stacktrace
 
   production-smoke:
     runs-on: ubuntu-latest
