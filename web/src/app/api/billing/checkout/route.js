@@ -27,9 +27,13 @@ import {
   normalizeGooglePlayExternalTransactionToken,
 } from "@/lib/billing/googlePlayExternalContentLinks.server";
 
-function isAndroidCapacitorRequest(request) {
+function isGooglePlayExternalContentLinksShell(request) {
   const userAgent = String(request.headers.get("user-agent") || "");
-  return /Android/i.test(userAgent) && /TheOutreachProject\/Capacitor/i.test(userAgent);
+  return (
+    /Android/i.test(userAgent) &&
+    /TheOutreachProject\/Capacitor/i.test(userAgent) &&
+    /GooglePlayECL\/1/i.test(userAgent)
+  );
 }
 
 export async function POST(request) {
@@ -76,7 +80,7 @@ export async function POST(request) {
     );
   }
 
-  if (isAndroidCapacitorRequest(request) && !googlePlayExternalTransactionToken) {
+  if (isGooglePlayExternalContentLinksShell(request) && !googlePlayExternalTransactionToken) {
     return Response.json(
       {
         error: "google_play_external_transaction_token_required",
