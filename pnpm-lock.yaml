@@ -20,6 +20,11 @@ overrides:
   ws: '>=8.21.0'
   form-data: '>=4.0.6'
 
+patchedDependencies:
+  minimatch@3.1.5:
+    hash: 924fc353765b809e0aa8c5e70f0edb7c539e1e4d7283d34f00892ebf33623884
+    path: patches/minimatch@3.1.5.patch
+
 importers:
 
   .:
@@ -4854,7 +4859,7 @@ snapshots:
     dependencies:
       '@eslint/object-schema': 2.1.7
       debug: 4.4.3
-      minimatch: 3.1.5
+      minimatch: 3.1.5(patch_hash=924fc353765b809e0aa8c5e70f0edb7c539e1e4d7283d34f00892ebf33623884)
     transitivePeerDependencies:
       - supports-color
 
@@ -4875,7 +4880,7 @@ snapshots:
       ignore: 5.3.2
       import-fresh: 3.3.1
       js-yaml: 4.3.0
-      minimatch: 3.1.5
+      minimatch: 3.1.5(patch_hash=924fc353765b809e0aa8c5e70f0edb7c539e1e4d7283d34f00892ebf33623884)
       strip-json-comments: 3.1.1
     transitivePeerDependencies:
       - supports-color
@@ -7041,7 +7046,7 @@ snapshots:
       is-glob: 4.0.3
       json-stable-stringify-without-jsonify: 1.0.1
       lodash.merge: 4.6.2
-      minimatch: 3.1.5
+      minimatch: 3.1.5(patch_hash=924fc353765b809e0aa8c5e70f0edb7c539e1e4d7283d34f00892ebf33623884)
       natural-compare: 1.4.0
       optionator: 0.9.4
     optionalDependencies:
@@ -7860,7 +7865,7 @@ snapshots:
     dependencies:
       brace-expansion: 5.0.8
 
-  minimatch@3.1.5:
+  minimatch@3.1.5(patch_hash=924fc353765b809e0aa8c5e70f0edb7c539e1e4d7283d34f00892ebf33623884):
     dependencies:
       brace-expansion: 5.0.8
 
