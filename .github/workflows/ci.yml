@@ -124,7 +124,24 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Lint
-        run: pnpm lint
+        id: lint
+        continue-on-error: true
+        run: pnpm lint > lint.log 2>&1
+
+      - name: Upload lint log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-log
+          path: lint.log
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Surface lint failure
+        if: steps.lint.outcome == 'failure'
+        run: |
+          tail -n 200 lint.log
+          exit 1
 
       - name: Route smoke check
         run: pnpm --dir web run smoke:routes
