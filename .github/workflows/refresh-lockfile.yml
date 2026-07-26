@@ -7,6 +7,7 @@ on:
       - package.json
       - web/package.json
       - pnpm-workspace.yaml
+      - patches/**
       - .github/workflows/refresh-lockfile.yml
 
 jobs:
