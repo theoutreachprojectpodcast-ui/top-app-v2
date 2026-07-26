@@ -6,6 +6,10 @@ const { CAPACITOR_ALLOW_NAVIGATION_HOSTS } = require("./src/lib/capacitor/allowN
  * Production `server.url` is ALWAYS embedded so TestFlight/Xcode archives connect without
  * remembering `CAP_SERVER_URL`. Override only for QA/local: CAP_SERVER_URL at `cap sync` time.
  *
+ * `GooglePlayECL/1` identifies Android shells that contain the native Google Play External
+ * Content Links bridge. The server uses it to fail closed for version 7+ without breaking the
+ * existing version 6 closed-test shell during the store rollout.
+ *
  * @type {import('@capacitor/cli').CapacitorConfig}
  */
 const config = {
@@ -45,7 +49,7 @@ config.server = {
   url: serverUrl,
   cleartext: serverOrigin.startsWith("http://"),
   errorPath: "error.html",
-  appendUserAgent: "TheOutreachProject/Capacitor",
+  appendUserAgent: "TheOutreachProject/Capacitor GooglePlayECL/1",
   allowNavigation: CAPACITOR_ALLOW_NAVIGATION_HOSTS,
 };
 
