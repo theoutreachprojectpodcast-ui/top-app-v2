@@ -6,7 +6,7 @@ This environment wraps the **production web app** at `https://theoutreachproject
 
 **Related:** [docs/MOBILE_READINESS.md](docs/MOBILE_READINESS.md) · [docs/MOBILE_LAUNCH_CHECKLIST.md](docs/MOBILE_LAUNCH_CHECKLIST.md) · [docs/MOBILE_ARCHITECTURE_GAPS.md](docs/MOBILE_ARCHITECTURE_GAPS.md)
 
-**Last updated:** 2026-06-23 (1.0 approved; availability cleared — release to App Store)
+**Last updated:** 2026-07-27 (prep for App Store **redeploy** — marketing **1.0** / build **7**; Drive pack in `docs/apple-app-store-upload/`)
 
 ---
 
@@ -47,7 +47,7 @@ If you previously saw **“This app was removed from sale”**, the fix is **Dis
 |------|--------|
 | App icon (1024×1024, dark bg, no alpha) | ✅ Generated and installed |
 | Capacitor production config | ✅ `https://theoutreachproject.app` embedded |
-| Xcode project / bundle ID | ✅ `com.theoutreachproject.theoutreachproject` v**1.0** build **1** |
+| Xcode project / bundle ID | ✅ `com.theoutreachproject.theoutreachproject` v**1.0** build **7** |
 | Production URL smoke (HTTP) | ✅ Passes |
 | WorkOS login on device | ✅ Working (2026-06-09) |
 | App Review | ✅ **1.0 approved** |

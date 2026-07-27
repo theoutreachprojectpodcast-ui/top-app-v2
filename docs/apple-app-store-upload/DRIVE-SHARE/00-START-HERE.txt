@@ -1,0 +1,22 @@
+THE OUTREACH PROJECT — Apple App Store upload pack
+==================================================
+Version 1.0 · Build 7
+Bundle ID: com.theoutreachproject.theoutreachproject
+
+Share this folder (or the ZIP) via Google Drive.
+
+This pack has listing assets + paste-ready copy.
+The signed IPA is built on a Mac with Xcode (see 06-mac-archive-runbook/).
+
+Folders
+-------
+01-xcode-project-notes/   Bundle ID, version, paths
+02-store-listing-assets/  App icon + iPhone/iPad screenshots
+03-listing-copy/          Name, description, keywords, What's New
+04-policy-and-review/     Privacy summary + App Review notes
+05-legal/                 Privacy/terms drafts + URLs
+06-mac-archive-runbook/   Exact Mac steps to archive & submit
+
+Do NOT put in Drive
+-------------------
+Apple certificates, provisioning profiles, or reviewer passwords.

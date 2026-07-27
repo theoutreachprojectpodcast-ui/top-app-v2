@@ -15,6 +15,10 @@ const config = {
   android: {
     allowMixedContent: false,
     androidScheme: "https",
+    // Next.js 16 supports Chromium 111+. Older Android System WebViews can
+    // render the server shell but fail before hydration, leaving a blank page.
+    // Capacitor sends unsupported devices to server.errorPath instead.
+    minWebViewVersion: 111,
   },
   ios: {
     contentInset: "never",

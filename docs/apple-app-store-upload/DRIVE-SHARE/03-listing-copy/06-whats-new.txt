@@ -1,0 +1,9 @@
+Version 1.0 (build 7)
+
+Improvements to the native app shell and production experience:
+• Portrait-focused mobile layout
+• Sign-in and session reliability updates
+• Sponsors, community, and directory experience polish
+• Membership billing continues via Stripe on our website (not Apple In-App Purchase)
+
+Thank you for supporting The Outreach Project.

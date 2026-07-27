@@ -1,0 +1,50 @@
+MAC ARCHIVE + APP STORE CONNECT RUNBOOK
+=======================================
+Repo must be current (git pull). Build in repo: Marketing 1.0 / Build 7
+
+1) Prep on Mac (repo root)
+   pnpm install
+   pnpm run mobile:store:prep
+   # Confirm:
+   grep url web/ios/App/App/capacitor.config.json
+   # Expect: "url": "https://theoutreachproject.app"
+
+2) Open Xcode
+   pnpm --dir web run cap:open:ios
+   # Prefer workspace if prompted: web/ios/TOP.xcworkspace
+
+3) Signing
+   Target App → Signing & Capabilities
+   Team = your Apple Developer team
+   Bundle ID = com.theoutreachproject.theoutreachproject
+   Automatic signing ON
+
+4) Version check
+   General → Version = 1.0
+   Build = 7
+   If App Store Connect already has build 7, increment CURRENT_PROJECT_VERSION and archive again.
+
+5) Archive
+   Product → Clean Build Folder
+   Destination: Any iOS Device (arm64)
+   Product → Archive
+   Organizer → Validate App → Distribute App → App Store Connect
+
+6) TestFlight
+   Wait for processing
+   Internal testers: install + smoke (sign-in, home, directory, community, profile, billing opens Safari)
+   Then submit for App Review from the version page
+
+7) App Store Connect listing
+   Paste copy from 03-listing-copy/
+   Upload screenshots from 02-store-listing-assets/
+   Paste review notes from 04-policy-and-review/review-notes.txt
+   Privacy URLs from 05-legal/URLS.txt
+
+8) After approval / Ready for Sale
+   Set Vercel production: NEXT_PUBLIC_IOS_APP_STORE_URL=https://apps.apple.com/app/idYOUR_APPLE_ID
+   Confirm https://theoutreachproject.app/download shows App Store badge
+
+Related docs in repo:
+  IOS_APP_STORE_RELEASE_CHECKLIST.md
+  docs/IOS_XCODE_SETUP.md
