@@ -1,0 +1,5 @@
+Welcome to The Outreach Project 1.0.
+
+Find trusted nonprofits and resources, join the community, explore sponsors and podcasts, and manage your membership — all in one place.
+
+Sign in with your TOP account. Membership purchases are completed securely on our website via Stripe.

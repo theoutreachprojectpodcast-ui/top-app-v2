@@ -1,0 +1,8 @@
+package: com.theoutreachproject
+versionName: 1.0
+versionCode: 6  (confirm against web/android/app/build.gradle — bump before each Play upload)
+
+AAB: not stored in git. Build with:
+  pnpm run mobile:android:bundle
+Output:
+  web/android/app/build/outputs/bundle/release/app-release.aab

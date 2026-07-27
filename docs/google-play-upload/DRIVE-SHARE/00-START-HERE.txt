@@ -1,0 +1,25 @@
+THE OUTREACH PROJECT — Google Play upload pack
+==============================================
+For engineers: see 06-ENGINEER-FROM-SOURCE.txt
+For Console paste/upload: folders 02–05 below
+
+Identity
+--------
+Package: com.theoutreachproject
+versionName: 1.0
+versionCode: see 01-app-bundle/VERSION.txt after local build (AAB not in git)
+
+Folders
+-------
+01-app-bundle/     AAB only after local build (gitignored). VERSION.txt explains.
+02-store-listing-assets/   Icon 512, feature graphic 1024x500, phone screenshots
+03-listing-copy/           App name, descriptions, release notes
+04-policy-and-review/      Data safety, ads, reviewer notes
+05-legal/                  Privacy/terms + URLs
+06-ENGINEER-FROM-SOURCE.txt  Rebuild & upload without release owner
+
+Rebuild AAB (requires upload keystore from secrets vault)
+---------------------------------------------------------
+pnpm run mobile:store:prep
+pnpm run mobile:android:bundle
+python web/scripts/assemble-google-play-drive-pack.py
