@@ -10,14 +10,13 @@ overrides:
   '@xmldom/xmldom': '>=0.8.13'
   undici: '>=7.28.0'
   path-to-regexp: '>=8.4.0'
-  minimatch@>=9: '>=10.2.3'
-  minimatch@<9: '>=3.1.4'
+  minimatch: '>=10.2.5'
+  brace-expansion: '>=5.0.8'
   esbuild: '>=0.28.1'
   ws: '>=8.21.0'
   form-data: '>=4.0.6'
   next: '>=16.2.12'
   postcss: '>=8.5.18'
-  brace-expansion: '>=5.0.8'
   js-yaml: '>=4.3.0'
   sharp: '>=0.35.0'
 
@@ -3241,9 +3240,6 @@ packages:
     resolution: {integrity: sha512-MULkVLfKGYDFYejP07QOurDLLQpcjk7Fw+7jXS2R2czRQzR56yHRveU5NDJEOviH+hETZKSkIk5c+T23GjFUMg==}
     engines: {node: 18 || 20 || >=22}
 
-  minimatch@3.1.5:
-    resolution: {integrity: sha512-VgjWUsnnT6n+NUk6eZq77zeFdpW2LWDzP6zFGrCbHXiYNul5Dzqk2HHQ5uFH2DNW5Xbp8+jVzaeNt94ssEEl4w==}
-
   minimist-options@4.1.0:
     resolution: {integrity: sha512-Q4r8ghd80yhO/0j1O3B2BjweX3fiHg9cdOwjJd2J76Q135c+NDxGCqdYKQ1SKBuFfgWbAUzBfvYjPUEeNgqN1A==}
     engines: {node: '>= 6'}
@@ -4846,7 +4842,7 @@ snapshots:
     dependencies:
       '@eslint/object-schema': 2.1.7
       debug: 4.4.3
-      minimatch: 3.1.5
+      minimatch: 10.2.5
     transitivePeerDependencies:
       - supports-color
 
@@ -4867,7 +4863,7 @@ snapshots:
       ignore: 5.3.2
       import-fresh: 3.3.1
       js-yaml: 5.2.2
-      minimatch: 3.1.5
+      minimatch: 10.2.5
       strip-json-comments: 3.1.1
     transitivePeerDependencies:
       - supports-color
@@ -7033,7 +7029,7 @@ snapshots:
       is-glob: 4.0.3
       json-stable-stringify-without-jsonify: 1.0.1
       lodash.merge: 4.6.2
-      minimatch: 3.1.5
+      minimatch: 10.2.5
       natural-compare: 1.4.0
       optionator: 0.9.4
     optionalDependencies:
@@ -7849,10 +7845,6 @@ snapshots:
   min-indent@1.0.1: {}
 
   minimatch@10.2.5:
-    dependencies:
-      brace-expansion: 5.0.8
-
-  minimatch@3.1.5:
     dependencies:
       brace-expansion: 5.0.8
 
