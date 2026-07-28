@@ -2,9 +2,10 @@
 
 import { createElement } from "react";
 import { ExternalLink } from "lucide-react";
+import { getProgramCardIcon } from "@/features/trusted-resources/domain/trustedResourceProgramCards";
 
 /**
- * @param {{ card: { title: string, description: string, url: string, ctaLabel: string, Icon: import("lucide-react").LucideIcon } }}
+ * @param {{ card: { title: string, description: string, url: string, ctaLabel: string, iconType?: string } }}
  */
 export default function TrustedResourceProgramCard({ card }) {
   const href = String(card?.url || "").trim();
@@ -17,7 +18,7 @@ export default function TrustedResourceProgramCard({ card }) {
       rel="noopener noreferrer"
     >
       <span className="trustedDetailProgramCard__icon" aria-hidden="true">
-        {card.Icon ? createElement(card.Icon, { strokeWidth: 2 }) : null}
+        {createElement(getProgramCardIcon(card.iconType), { strokeWidth: 2 })}
       </span>
       <span className="trustedDetailProgramCard__body">
         <span className="trustedDetailProgramCard__title">{card.title}</span>
