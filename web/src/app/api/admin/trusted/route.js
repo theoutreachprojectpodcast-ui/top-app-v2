@@ -1,5 +1,6 @@
 import { requirePlatformAdminRouteContext, requirePlatformAdminMutation } from "@/lib/admin/adminRouteContext";
 import { writeAdminAuditLog } from "@/lib/admin/adminAuditLog";
+import { uniqueTrustedResourceSlug } from "@/lib/trusted/trustedResourceSlug";
 
 export const runtime = "nodejs";
 
@@ -44,12 +45,24 @@ export async function POST(request) {
     return Response.json({ ok: false, error: "display_name_required" }, { status: 400 });
   }
 
+  const websiteUrl = String(body?.website_url || "").trim();
+  if (!websiteUrl && !String(body?.ein || "").trim()) {
+    return Response.json(
+      { ok: false, error: "website_or_ein_required", message: "Provide a verified website URL or EIN." },
+      { status: 400 },
+    );
+  }
+
   const ein = String(body?.ein || manualEin()).trim().slice(0, 32) || manualEin();
+  const slug =
+    String(body?.slug || "").trim().toLowerCase() ||
+    (await uniqueTrustedResourceSlug(ctx.admin, displayName));
   const now = new Date().toISOString();
   const row = {
     ein,
+    slug,
     display_name: displayName,
-    website_url: String(body?.website_url || "").trim() || null,
+    website_url: websiteUrl || null,
     logo_url: String(body?.logo_url || "").trim() || null,
     header_image_url: String(body?.header_image_url || "").trim() || null,
     short_description: String(body?.short_description || "").trim() || null,
@@ -66,6 +79,7 @@ export async function POST(request) {
     city: String(body?.city || "").trim() || null,
     state: String(body?.state || "").trim() || null,
     category_key: String(body?.category_key || "").trim() || null,
+    verification_status: "incomplete",
     created_at: now,
     updated_at: now,
   };
@@ -81,7 +95,7 @@ export async function POST(request) {
     action: "admin.trusted.POST",
     resourceType: "trusted_resources",
     resourceId: data?.id || null,
-    metadata: { ein },
+    metadata: { ein, slug },
   });
 
   return Response.json({ ok: true, row: data });

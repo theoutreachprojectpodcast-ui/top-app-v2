@@ -7,8 +7,9 @@
     "node": ">=20.20.0"
   },
   "scripts": {
-    "prebuild": "node scripts/sync-public-assets.mjs && node scripts/sync-pwa-icons.mjs && node scripts/validate-production-env.mjs && node scripts/test-membership-pricing.mjs && node scripts/test-membership-configuration.mjs && node scripts/test-support-to-pro-migration.mjs && node scripts/verify-trusted-resources-registry.mjs && node scripts/verify-entity-display-names.mjs && node scripts/verify-trusted-resources-titles.mjs",
+    "prebuild": "node scripts/sync-public-assets.mjs && node scripts/sync-pwa-icons.mjs && node scripts/validate-production-env.mjs && node scripts/test-membership-pricing.mjs && node scripts/test-membership-configuration.mjs && node scripts/test-support-to-pro-migration.mjs && node scripts/verify-trusted-resources-registry.mjs && node scripts/verify-trusted-resources-integrity.mjs && node scripts/verify-entity-display-names.mjs && node scripts/verify-trusted-resources-titles.mjs",
     "verify:trusted-resources": "node scripts/verify-trusted-resources-registry.mjs",
+    "verify:trusted-integrity": "node scripts/verify-trusted-resources-integrity.mjs",
     "smoke:routes": "node scripts/smoke-routes.mjs",
     "verify:workos-auth": "node scripts/verify-workos-auth.mjs",
     "verify:stripe-env": "node scripts/verify-stripe-env.mjs",
@@ -72,6 +73,7 @@
     "mobile:assets": "capacitor-assets generate --assetPath resources --ios --android",
     "mobile:splash": "node scripts/sync-native-splash.mjs",
     "validate:capacitor": "node scripts/validate-capacitor-config.mjs",
+    "validate:portrait-orientation": "node scripts/validate-portrait-orientation.mjs",
     "lint": "eslint",
     "enrich:logos": "node scripts/enrich-nonprofit-logos.js",
     "enrich:websites": "node scripts/discover-nonprofit-websites.js",

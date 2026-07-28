@@ -25,10 +25,18 @@ export default function NonprofitCard({
   const categoryKey = card.category?.key || "unknownGeneral";
   const einDigits =
     card.einNormalized?.length === 9 ? card.einNormalized : normalizeEinDigits(card.ein);
-  const profilePath = einDigits.length === 9 ? `/nonprofit/${einDigits}` : "";
+  const trustedSlug = String(card.trustedResourceSlug || "").trim().toLowerCase();
+  const trustedDetailPath = isTrustedResourcesCard && trustedSlug ? `/trusted/${trustedSlug}` : "";
+  const directoryProfilePath = einDigits.length === 9 ? `/nonprofit/${einDigits}` : "";
+  /** Trusted cards open the canonical trusted detail page — never the EIN directory profile. */
+  const profilePath = isTrustedResourcesCard
+    ? trustedDetailPath || (card.primaryLink ? "" : directoryProfilePath)
+    : directoryProfilePath;
   const externalFallback = isTrustedResourcesCard ? card.primaryLink : "";
   const useProfileLink =
-    !isDirectory && einDigits.length === 9 && card.einIdentityVerified !== false;
+    !isDirectory &&
+    (Boolean(trustedDetailPath) ||
+      (einDigits.length === 9 && card.einIdentityVerified !== false && !isTrustedResourcesCard));
   const activationTarget = isDirectory ? "" : profilePath || externalFallback;
 
   function onCardActivate() {

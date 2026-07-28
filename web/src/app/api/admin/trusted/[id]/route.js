@@ -5,6 +5,7 @@ export const runtime = "nodejs";
 
 const KEYS = new Set([
   "display_name",
+  "slug",
   "website_url",
   "logo_url",
   "header_image_url",
@@ -44,6 +45,10 @@ const KEYS = new Set([
   "detail_field_sources",
   "detail_review_status",
   "featured",
+  "verification_status",
+  "last_verified_at",
+  "field_locks",
+  "data_quality_status",
 ]);
 
 export async function PATCH(request, context) {
@@ -109,6 +114,56 @@ export async function PATCH(request, context) {
 
   if (Object.keys(patch).length <= 1) {
     return Response.json({ ok: false, error: "no_valid_fields" }, { status: 400 });
+  }
+
+  if (Object.prototype.hasOwnProperty.call(patch, "slug")) {
+    const nextSlug = String(patch.slug || "")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9-]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+    if (!nextSlug) {
+      return Response.json({ ok: false, error: "invalid_slug" }, { status: 400 });
+    }
+    const { data: existing } = await ctx.admin.from("trusted_resources").select("id, slug").eq("id", id).maybeSingle();
+    const prevSlug = String(existing?.slug || "").trim().toLowerCase();
+    const { data: clash } = await ctx.admin
+      .from("trusted_resources")
+      .select("id")
+      .eq("slug", nextSlug)
+      .neq("id", id)
+      .maybeSingle();
+    if (clash) {
+      return Response.json({ ok: false, error: "slug_taken" }, { status: 409 });
+    }
+    patch.slug = nextSlug;
+    if (prevSlug && prevSlug !== nextSlug) {
+      await ctx.admin.from("trusted_resource_slug_aliases").upsert(
+        { trusted_resource_id: id, legacy_slug: prevSlug },
+        { onConflict: "legacy_slug" },
+      );
+    }
+  }
+
+  if (Object.prototype.hasOwnProperty.call(patch, "field_locks")) {
+    const v = body?.field_locks;
+    if (v == null) patch.field_locks = {};
+    else if (typeof v === "object" && !Array.isArray(v)) patch.field_locks = v;
+    else if (typeof v === "string") {
+      try {
+        const parsed = JSON.parse(v);
+        if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) patch.field_locks = parsed;
+        else delete patch.field_locks;
+      } catch {
+        delete patch.field_locks;
+      }
+    } else delete patch.field_locks;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(patch, "last_verified_at")) {
+    const t = body?.last_verified_at ? new Date(body.last_verified_at) : null;
+    if (t && !Number.isNaN(t.getTime())) patch.last_verified_at = t.toISOString();
+    else if (body?.last_verified_at === null || body?.last_verified_at === "") patch.last_verified_at = null;
   }
 
   const { data, error } = await ctx.admin

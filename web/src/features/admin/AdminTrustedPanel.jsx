@@ -5,6 +5,7 @@ import AdminPanelShell from "@/components/admin/AdminPanelShell";
 
 const EDIT_KEYS = [
   "display_name",
+  "slug",
   "website_url",
   "logo_url",
   "header_image_url",
@@ -31,9 +32,12 @@ const EDIT_KEYS = [
   "listing_status",
   "sort_order",
   "last_reviewed_at",
+  "last_verified_at",
+  "verification_status",
   "source_notes",
   "detail_review_status",
   "detail_field_sources",
+  "field_locks",
   "featured",
   "admin_notes",
 ];
@@ -46,6 +50,7 @@ const TEXTAREA_KEYS = new Set([
   "services",
   "resource_links",
   "detail_field_sources",
+  "field_locks",
   "source_notes",
   "admin_notes",
 ]);
@@ -55,14 +60,14 @@ function hydrateForm(row) {
   for (const k of EDIT_KEYS) {
     if (k === "sort_order") next[k] = row[k] != null ? String(row[k]) : "0";
     else if (
-      (k === "resource_links" || k === "detail_field_sources") &&
+      (k === "resource_links" || k === "detail_field_sources" || k === "field_locks") &&
       row[k] != null &&
       typeof row[k] === "object"
     ) {
       next[k] = JSON.stringify(row[k], null, 2);
     } else if (k === "featured") {
       next[k] = row[k] ? "true" : "false";
-    } else if (k === "last_reviewed_at" && row[k]) {
+    } else if ((k === "last_reviewed_at" || k === "last_verified_at") && row[k]) {
       const d = new Date(row[k]);
       next[k] = Number.isNaN(d.getTime()) ? "" : d.toISOString().slice(0, 10);
     } else next[k] = row[k] != null ? String(row[k]) : "";
@@ -337,6 +342,23 @@ export default function AdminTrustedPanel() {
       ) : null}
       {selectedId ? (
         <div className="adminFieldStack">
+          {form.slug ? (
+            <p className="adminLead">
+              Public page:{" "}
+              <a
+                className="adminInlineLink"
+                href={`/trusted/${encodeURIComponent(String(form.slug).trim().toLowerCase())}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                /trusted/{String(form.slug).trim().toLowerCase()}
+              </a>
+              {form.last_verified_at ? ` · Last verified ${form.last_verified_at}` : ""}
+              {form.verification_status ? ` · ${form.verification_status}` : ""}
+            </p>
+          ) : (
+            <p className="adminLead">Save a unique slug to enable the public detail page.</p>
+          )}
           {EDIT_KEYS.map((key) => (
             <div key={key}>
               <label className="fieldLabel" htmlFor={`tr-${key}`}>
