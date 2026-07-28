@@ -5,7 +5,7 @@
   "pnpm": {
     "onlyBuiltDependencies": ["sharp"],
     "overrides": {
-      "tar": ">=7.5.11",
+      "tar": ">=7.5.19",
       "basic-ftp": ">=5.3.1",
       "@xmldom/xmldom": ">=0.8.13",
       "undici": ">=7.28.0",
@@ -14,7 +14,12 @@
       "minimatch@<9": ">=3.1.4",
       "esbuild": ">=0.28.1",
       "ws": ">=8.21.0",
-      "form-data": ">=4.0.6"
+      "form-data": ">=4.0.6",
+      "next": ">=16.2.12",
+      "postcss": ">=8.5.18",
+      "brace-expansion": ">=5.0.8",
+      "js-yaml": ">=4.3.0",
+      "sharp": ">=0.35.0"
     }
   },
   "scripts": {
@@ -36,6 +41,7 @@
     "mobile:store:prep": "pnpm --dir web run mobile:store:prep",
     "mobile:android:bundle": "pnpm --dir web run mobile:android:bundle",
     "validate:capacitor": "pnpm --dir web run validate:capacitor",
+    "validate:portrait-orientation": "pnpm --dir web run validate:portrait-orientation",
     "setup:github-auth": "bash scripts/setup-github-auth.sh",
     "verify:github-remote": "node scripts/verify-github-remote.mjs"
   },
