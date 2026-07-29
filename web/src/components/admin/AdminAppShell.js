@@ -10,6 +10,7 @@ import AdminConsoleLink from "@/components/admin/AdminConsoleLink";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useImmersiveHeaderScroll } from "@/hooks/useImmersiveHeaderScroll";
 import { useMobileShell } from "@/hooks/useMobileShell";
+import CapacitorHeaderPortal from "@/components/capacitor/CapacitorHeaderPortal";
 
 export default function AdminAppShell({ children, sessionEmail = "" }) {
   const shellRef = useRef(null);
@@ -26,27 +27,29 @@ export default function AdminAppShell({ children, sessionEmail = "" }) {
       className="topApp appShell appShell--subpage appShell--admin adminConsole header-at-top"
       data-page-atmosphere="admin"
     >
-      <div className="topbarOcclusion" aria-hidden="true" />
-      <div className="appSiteHeader">
-        <AppHeaderBrand homeHref="/admin" ariaLabel="Admin dashboard" />
-        <header className="topbar">
-          <HeaderInner className="topbarInner">
-            <div className="topbarZone topbarLeft">
-              <div className="topbarActionsCluster topbarActionsCluster--start">
-                <ColorSchemeToggle />
-                <AdminViewToggle />
-                {isMobileShell ? <AdminConsoleLink /> : null}
+      <CapacitorHeaderPortal shellRef={shellRef}>
+        <div className="topbarOcclusion" aria-hidden="true" />
+        <div className="appSiteHeader">
+          <AppHeaderBrand homeHref="/admin" ariaLabel="Admin dashboard" pageAtmosphere="admin" />
+          <header className="topbar">
+            <HeaderInner className="topbarInner">
+              <div className="topbarZone topbarLeft">
+                <div className="topbarActionsCluster topbarActionsCluster--start">
+                  <ColorSchemeToggle />
+                  <AdminViewToggle />
+                  {isMobileShell ? <AdminConsoleLink /> : null}
+                </div>
               </div>
-            </div>
-            <div className="topbarZone topbarCenter" aria-hidden="true" />
-            <div className="topbarZone topbarRight">
-              <div className="topbarActionsCluster">
-                <SubpageTopbarActions section="auth" />
+              <div className="topbarZone topbarCenter" aria-hidden="true" />
+              <div className="topbarZone topbarRight">
+                <div className="topbarActionsCluster">
+                  <SubpageTopbarActions section="auth" />
+                </div>
               </div>
-            </div>
-          </HeaderInner>
-        </header>
-      </div>
+            </HeaderInner>
+          </header>
+        </div>
+      </CapacitorHeaderPortal>
 
       <AdminLayout sessionEmail={sessionEmail}>{children}</AdminLayout>
     </main>

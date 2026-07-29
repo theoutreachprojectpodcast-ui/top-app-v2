@@ -81,6 +81,7 @@ import { resolvePageAtmosphere } from "@/lib/design/pageAtmosphere";
 import MissionPageTopStrip from "@/components/layout/MissionPageTopStrip";
 import NativeAccountBillingNotice from "@/components/capacitor/NativeAccountBillingNotice";
 import CapacitorFooterPortal from "@/components/capacitor/CapacitorFooterPortal";
+import CapacitorHeaderPortal from "@/components/capacitor/CapacitorHeaderPortal";
 import {
   openWebBilling,
   openWebMembership,
@@ -886,86 +887,88 @@ function TopAppInner({ initialNav = "home" }) {
       className={`topApp theme-${profile.theme}${immersiveHeaderScroll ? " header-at-top" : ""} ${isLoggedIn ? "topApp--auth-in" : "topApp--auth-out"} appShell--withMobileNavDock`}
       data-page-atmosphere={pageAtmosphere}
     >
-      <div className="appSiteHeader">
-        <AppHeaderBrand pageAtmosphere={pageAtmosphere} />
-        <header className="topbar">
-          <HeaderInner className="topbarInner">
-            <div className="topbarZone topbarLeft">
-              <div className="topbarActionsCluster topbarActionsCluster--start">
+      <CapacitorHeaderPortal shellRef={mainScrollRef} enabled={pageAtmosphere !== "podcast"}>
+        <div className="appSiteHeader">
+          <AppHeaderBrand pageAtmosphere={pageAtmosphere} />
+          <header className="topbar">
+            <HeaderInner className="topbarInner">
+              <div className="topbarZone topbarLeft">
+                <div className="topbarActionsCluster topbarActionsCluster--start">
+                  <SiteHamburgerNavMenu
+                    shellClass="siteMobileNavMore--phoneOnly"
+                    onItemClick={handleHamburgerNav}
+                  />
+                  {pageAtmosphere === "home" && !isMobileShell ? <DownloadMobileAppButton /> : null}
+                  {pageAtmosphere !== "podcast" ? <ColorSchemeToggle /> : null}
+                  {isMobileShell && isLoggedIn ? <AdminConsoleLink /> : null}
+                </div>
+              </div>
+              <div className="topbarZone topbarCenter" aria-hidden="true" />
+              <div className="topbarZone topbarRight">
+              <div className="topbarActionsCluster">
+                {pageAtmosphere === "home" && isMobileShell ? <DownloadMobileAppButton /> : null}
+                {isLoggedIn ? (
+                  <>
+                    {!isMobileShell ? <AdminConsoleLink /> : null}
+                    <HeaderNotificationBell skipSessionGate />
+                    <HeaderAccountMenu
+                      avatarSrc={profile.avatarUrl || emptyProfileAvatarUrl()}
+                      displayName={fullName}
+                      email={profile.email || workOSAccountEmail}
+                      membershipHint={membershipAccountMenuHint({
+                        isAuthenticated: isLoggedIn,
+                        tierKey: profile.membershipStatus,
+                        billingStatus: profile.membershipBillingStatus,
+                      })}
+                      ariaLabel={`Account menu for ${fullName || profile.email || workOSAccountEmail || "signed-in user"}`}
+                      onProfile={() => {
+                        if (pathname !== "/profile") router.push("/profile");
+                        else setNav("profile");
+                      }}
+                      onSettings={() => router.push("/settings")}
+                      onMembership={() => {
+                        if (pathname !== "/profile") router.push("/profile");
+                        else setNav("profile");
+                      }}
+                      onSavedItems={() => setNav("profile")}
+                      onSignOut={signOut}
+                    />
+                  </>
+                ) : hostedAuth ? (
+                  <>
+                    <button className="btnSoft sponsorBtn" type="button" onClick={openCreateAccountFlow}>
+                      <AppIcon name="profile" />
+                      Create account
+                    </button>
+                    <button className="btnSoft sponsorBtn" type="button" onClick={openSignInOverlay}>
+                      <AppIcon name="profile" />
+                      Sign in
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button className="btnSoft sponsorBtn" onClick={() => { setAuthMode("signup"); setOverlay("signin"); }} type="button">
+                      <AppIcon name="profile" />
+                      Create account
+                    </button>
+                    <button className="btnSoft sponsorBtn" onClick={() => { setAuthMode("signin"); setOverlay("signin"); }} type="button">
+                      <AppIcon name="profile" />
+                      Sign in
+                    </button>
+                  </>
+                )}
                 <SiteHamburgerNavMenu
-                  shellClass="siteMobileNavMore--phoneOnly"
+                  shellClass="siteMobileNavMore--desktopOnly"
+                  align="end"
                   onItemClick={handleHamburgerNav}
                 />
-                {pageAtmosphere === "home" && !isMobileShell ? <DownloadMobileAppButton /> : null}
-                {pageAtmosphere !== "podcast" ? <ColorSchemeToggle /> : null}
-                {isMobileShell && isLoggedIn ? <AdminConsoleLink /> : null}
               </div>
             </div>
-            <div className="topbarZone topbarCenter" aria-hidden="true" />
-            <div className="topbarZone topbarRight">
-            <div className="topbarActionsCluster">
-              {pageAtmosphere === "home" && isMobileShell ? <DownloadMobileAppButton /> : null}
-              {isLoggedIn ? (
-                <>
-                  {!isMobileShell ? <AdminConsoleLink /> : null}
-                  <HeaderNotificationBell skipSessionGate />
-                  <HeaderAccountMenu
-                    avatarSrc={profile.avatarUrl || emptyProfileAvatarUrl()}
-                    displayName={fullName}
-                    email={profile.email || workOSAccountEmail}
-                    membershipHint={membershipAccountMenuHint({
-                      isAuthenticated: isLoggedIn,
-                      tierKey: profile.membershipStatus,
-                      billingStatus: profile.membershipBillingStatus,
-                    })}
-                    ariaLabel={`Account menu for ${fullName || profile.email || workOSAccountEmail || "signed-in user"}`}
-                    onProfile={() => {
-                      if (pathname !== "/profile") router.push("/profile");
-                      else setNav("profile");
-                    }}
-                    onSettings={() => router.push("/settings")}
-                    onMembership={() => {
-                      if (pathname !== "/profile") router.push("/profile");
-                      else setNav("profile");
-                    }}
-                    onSavedItems={() => setNav("profile")}
-                    onSignOut={signOut}
-                  />
-                </>
-              ) : hostedAuth ? (
-                <>
-                  <button className="btnSoft sponsorBtn" type="button" onClick={openCreateAccountFlow}>
-                    <AppIcon name="profile" />
-                    Create account
-                  </button>
-                  <button className="btnSoft sponsorBtn" type="button" onClick={openSignInOverlay}>
-                    <AppIcon name="profile" />
-                    Sign in
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button className="btnSoft sponsorBtn" onClick={() => { setAuthMode("signup"); setOverlay("signin"); }} type="button">
-                    <AppIcon name="profile" />
-                    Create account
-                  </button>
-                  <button className="btnSoft sponsorBtn" onClick={() => { setAuthMode("signin"); setOverlay("signin"); }} type="button">
-                    <AppIcon name="profile" />
-                    Sign in
-                  </button>
-                </>
-              )}
-              <SiteHamburgerNavMenu
-                shellClass="siteMobileNavMore--desktopOnly"
-                align="end"
-                onItemClick={handleHamburgerNav}
-              />
-            </div>
-          </div>
-        </HeaderInner>
-      </header>
-      </div>
-      <div className="topbarOcclusion" aria-hidden="true" />
+          </HeaderInner>
+        </header>
+        </div>
+        <div className="topbarOcclusion" aria-hidden="true" />
+      </CapacitorHeaderPortal>
 
       {(nav === "home" || nav === "community") && (
         <section className={nav === "home" ? "shell shell--home" : "shell"}>

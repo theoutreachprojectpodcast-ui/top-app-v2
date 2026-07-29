@@ -784,8 +784,11 @@
     white-space: nowrap;
   }
 
-  /* Home wordmark — +20% visual size; layout band frozen so content does not shift. */
+  /* Home wordmark — fixed floating chrome; shell clears the logo band. */
   main.topApp[data-page-atmosphere="home"] {
+    --header-floating-offset: 8px;
+    --header-floating-height: clamp(137px, 36vw, 182px);
+    --header-fade-height: 36px;
     --mobile-home-header-layout-h: clamp(112px, 29vw, 148px);
     --mobile-site-header-logo-h: clamp(137px, 36vw, 182px);
     --mobile-site-header-logo-max-w: min(587px, calc(100vw - 24px));
@@ -799,19 +802,17 @@
     height: var(--mobile-site-header-control-size, 44px);
   }
 
-  /* Home: wordmark flush to Mission partners — reserve only visible logo height, not max-height slack. */
-  main.topApp[data-page-atmosphere="home"] .headerBrandStack {
-    align-self: start !important;
+  :is(main.topApp, .capacitorAppHeaderPortal)[data-page-atmosphere="home"] .headerBrandStack {
     align-items: flex-start;
     padding-top: 0;
   }
 
-  main.topApp[data-page-atmosphere="home"] .appSiteHeader {
+  :is(main.topApp, .capacitorAppHeaderPortal)[data-page-atmosphere="home"] .appSiteHeader {
     padding-bottom: 0;
   }
 
-  main.topApp[data-page-atmosphere="home"] .headerBrandStack img.brandMarkImg--header:not(.podcastBrandLogo),
-  main.topApp[data-page-atmosphere="home"] .headerBrandStack .brandMarkImg--header {
+  :is(main.topApp, .capacitorAppHeaderPortal)[data-page-atmosphere="home"] .headerBrandStack img.brandMarkImg--header:not(.podcastBrandLogo),
+  :is(main.topApp, .capacitorAppHeaderPortal)[data-page-atmosphere="home"] .headerBrandStack .brandMarkImg--header {
     margin-bottom: 0;
     min-height: 0 !important;
     min-width: 0 !important;
@@ -820,7 +821,9 @@
 
   main.topApp[data-page-atmosphere="home"] .shell.shell--home {
     gap: 0;
-    padding-top: 0;
+    padding-top: calc(
+      var(--app-header-total-height, var(--app-header-height)) + var(--mobile-home-header-content-gap, 6px)
+    );
     padding-bottom: 13px;
     margin-top: 0;
   }
