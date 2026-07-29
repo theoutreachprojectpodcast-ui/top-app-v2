@@ -9,6 +9,7 @@ Build it locally after obtaining the upload keystore from the team vault:
 
 Expected output:
   web/android/app/build/outputs/bundle/release/app-release.aab
+  (versionName 1.0.1 / versionCode 7 — portrait-locked MainActivity)
 
 Then either upload that path to Play Console, or run:
 

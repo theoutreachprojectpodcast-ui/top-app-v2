@@ -153,6 +153,30 @@ if (javaHome && (await ensureBundletool())) {
       );
       process.exit(1);
     }
+    // bundletool dumps portrait as android:screenOrientation="1" (enum), source uses "portrait"
+    const hasPortraitLock =
+      /android:screenOrientation="portrait"/.test(manifest) ||
+      /android:name="org\.theoutreachproject\.top\.MainActivity"[^>]*android:screenOrientation="1"/.test(manifest) ||
+      /android:screenOrientation="1"[^>]*android:name="org\.theoutreachproject\.top\.MainActivity"/.test(manifest);
+    if (!hasPortraitLock) {
+      console.error(
+        "[mobile:android:bundle] FAIL merged AAB manifest missing MainActivity portrait lock (expected screenOrientation portrait or 1)",
+      );
+      process.exit(1);
+    }
+    if (/android:screenOrientation="(?:sensor|fullSensor|user|unspecified|landscape|sensorLandscape|[04689]|1[0-4])"/.test(manifest)) {
+      // Allow "1" (portrait) and "portrait"; reject common non-portrait enums / names
+      const bad = [...manifest.matchAll(/android:screenOrientation="([^"]+)"/g)].map((m) => m[1]);
+      const allowed = new Set(["portrait", "1"]);
+      const offenders = bad.filter((v) => !allowed.has(v));
+      if (offenders.length) {
+        console.error(
+          `[mobile:android:bundle] FAIL AAB manifest contains non-portrait screenOrientation: ${offenders.join(", ")}`,
+        );
+        process.exit(1);
+      }
+    }
+    console.log("[mobile:android:bundle] Verified AAB portrait screenOrientation lock");
     verified = true;
   }
 }

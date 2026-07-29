@@ -15,8 +15,8 @@
 | Field | Value |
 |-------|--------|
 | Bundle ID | `com.theoutreachproject.theoutreachproject` |
-| Marketing version | `1.0` |
-| Build number | `7` (bumped for this redeploy) |
+| Marketing version | `1.0.1` |
+| Build number | `8` |
 | WebView URL | `https://theoutreachproject.app` |
 
 ### DRIVE-SHARE layout
@@ -35,7 +35,7 @@ Start with `DRIVE-SHARE/00-START-HERE.txt`.
 ## Important
 
 - The **IPA is not in this pack** — it must be archived on a **Mac with Xcode**.
-- If App Store Connect already has build **7**, bump `CURRENT_PROJECT_VERSION` again before uploading.
+- If App Store Connect already has build **8**, bump `CURRENT_PROJECT_VERSION` again before uploading.
 
 ## Rebuild the pack
 

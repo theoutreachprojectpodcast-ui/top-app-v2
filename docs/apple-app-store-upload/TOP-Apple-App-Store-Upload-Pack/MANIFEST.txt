@@ -1,0 +1,29 @@
+FILE MANIFEST
+=============
+
+         857  00-START-HERE.txt
+         826  01-xcode-project-notes/IDENTITY.txt
+      333331  02-store-listing-assets/app-icon-1024x1024.png
+     5181978  02-store-listing-assets/ipad-screenshots/01-home-ipad.png
+     3197618  02-store-listing-assets/iphone-screenshots/01-home.png
+     1535724  02-store-listing-assets/iphone-screenshots/02-directory.png
+     1886689  02-store-listing-assets/iphone-screenshots/03-trusted-resources.png
+     1949188  02-store-listing-assets/iphone-screenshots/04-podcast.png
+     1597056  02-store-listing-assets/iphone-screenshots/05-sponsors.png
+     1535268  02-store-listing-assets/iphone-screenshots/06-profile.png
+     1564524  02-store-listing-assets/iphone-screenshots/07-saved-organizations.png
+     1266227  02-store-listing-assets/iphone-screenshots/08-community.png
+          22  03-listing-copy/01-app-name.txt
+          26  03-listing-copy/02-subtitle.txt
+         137  03-listing-copy/03-promotional-text.txt
+        1162  03-listing-copy/04-description.txt
+          94  03-listing-copy/05-keywords.txt
+         367  03-listing-copy/06-whats-new.txt
+         207  03-listing-copy/07-support-and-marketing-urls.txt
+         610  04-policy-and-review/app-privacy-summary.txt
+         198  04-policy-and-review/export-compliance.txt
+        1425  04-policy-and-review/review-notes.txt
+       12672  05-legal/privacy-policy.md
+       12512  05-legal/terms-and-conditions.md
+         256  05-legal/URLS.txt
+        1721  06-mac-archive-runbook/ARCHIVE-AND-SUBMIT.txt

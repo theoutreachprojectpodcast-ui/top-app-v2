@@ -4,8 +4,8 @@
 |-------|--------|
 | **App name** | The Outreach Project |
 | **Package / applicationId** | `com.theoutreachproject` |
-| **versionName** | `1.0` |
-| **versionCode** | `6` (must increase every Play upload) |
+| **versionName** | `1.0.1` |
+| **versionCode** | `7` (must increase every Play upload) |
 | **Native shell** | Capacitor Android → production WebView |
 | **WebView URL** | `https://theoutreachproject.app` (routes into `/mobile`) |
 | **Default language** | English (United States) |

@@ -3,6 +3,7 @@
 import { useLayoutEffect } from "react";
 import { installCapacitorInAppNavigation } from "@/lib/capacitor/inAppNavigation";
 import { installCapacitorViewportSync } from "@/lib/capacitor/syncCapacitorViewport";
+import { installPortraitOrientationResumeLock } from "@/lib/capacitor/lockPortraitOrientation";
 import { capacitorPlatform, isCapacitorNative } from "@/lib/capacitor/platform";
 
 /**
@@ -21,9 +22,11 @@ export default function CapacitorNativeShell() {
     root.dataset.capacitorNative = capacitorPlatform();
     installCapacitorInAppNavigation();
     const teardownViewport = installCapacitorViewportSync();
+    const teardownPortrait = installPortraitOrientationResumeLock();
 
     return () => {
       teardownViewport();
+      teardownPortrait();
       delete root.dataset.capacitorNative;
       delete root.dataset.capOrientation;
     };

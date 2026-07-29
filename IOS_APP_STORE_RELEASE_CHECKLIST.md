@@ -6,7 +6,7 @@ This environment wraps the **production web app** at `https://theoutreachproject
 
 **Related:** [docs/MOBILE_READINESS.md](docs/MOBILE_READINESS.md) · [docs/MOBILE_LAUNCH_CHECKLIST.md](docs/MOBILE_LAUNCH_CHECKLIST.md) · [docs/MOBILE_ARCHITECTURE_GAPS.md](docs/MOBILE_ARCHITECTURE_GAPS.md)
 
-**Last updated:** 2026-07-27 (prep for App Store **redeploy** — marketing **1.0** / build **7**; Drive pack in `docs/apple-app-store-upload/`)
+**Last updated:** 2026-07-28 (App Store upload identity — marketing **1.0.1** / build **8**; Drive pack in `docs/apple-app-store-upload/`)
 
 ---
 
@@ -47,7 +47,7 @@ If you previously saw **“This app was removed from sale”**, the fix is **Dis
 |------|--------|
 | App icon (1024×1024, dark bg, no alpha) | ✅ Generated and installed |
 | Capacitor production config | ✅ `https://theoutreachproject.app` embedded |
-| Xcode project / bundle ID | ✅ `com.theoutreachproject.theoutreachproject` v**1.0** build **7** |
+| Xcode project / bundle ID | ✅ `com.theoutreachproject.theoutreachproject` v**1.0.1** build **8** |
 | Production URL smoke (HTTP) | ✅ Passes |
 | WorkOS login on device | ✅ Working (2026-06-09) |
 | App Review | ✅ **1.0 approved** |
@@ -128,11 +128,11 @@ pnpm --dir web exec cap sync ios
 | Project path | `web/ios/App/App.xcodeproj` |
 | Scheme | **App** (shared: `xcshareddata/xcschemes/App.xcscheme`) |
 | Bundle identifier | `com.theoutreachproject.theoutreachproject` |
-| Marketing version | **1.0** |
-| Build number | **1** (increment before each App Store upload) |
+| Marketing version | **1.0.1** |
+| Build number | **8** (increment before each App Store upload) |
 | Deployment target | iOS **15.0** |
 | Devices | iPhone + iPad (`TARGETED_DEVICE_FAMILY = 1,2`) |
-| Orientations | Portrait + landscape (phone); all orientations (iPad) |
+| Orientations | **Portrait only** (iPhone + iPad). Authoritative: `Info.plist` `UISupportedInterfaceOrientations` + `~ipad`. Do **not** enable landscape in Xcode General → Deployment Info. |
 | Signing | Automatic (team must be selected manually — see §8) |
 | App icon set | `AppIcon` |
 | Launch screen | `LaunchScreen.storyboard` → `Splash` imageset |

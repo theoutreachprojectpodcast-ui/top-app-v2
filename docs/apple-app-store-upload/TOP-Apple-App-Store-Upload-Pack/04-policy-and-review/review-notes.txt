@@ -1,0 +1,21 @@
+APP REVIEW NOTES (paste into App Store Connect)
+
+The Outreach Project iOS app (Capacitor) loads our production web application inside a native WebView.
+Sign-in uses WorkOS AuthKit inside the app.
+Account creation, membership purchases, sponsor packages, and all billing (Stripe Checkout and Customer Portal) happen only on https://theoutreachproject.app in the device system browser (Safari) — not inside the app WebView.
+The app does not collect payment details, does not show Apple In-App Purchase products, and does not embed Stripe checkout.
+
+Users share one account across web and mobile. After completing signup or payment on the web, they return to the app and tap Refresh account status (or use the deep link on the web success page) to sync membership.
+
+Test account: create a Production WorkOS user and paste email/password ONLY into App Store Connect Review Notes.
+Example mailbox: appreview+ios@theoutreachproject.app
+(Prefer a password manager — avoid putting real passwords in shared Drive docs.)
+
+Reviewer steps:
+1. Launch app → Sign in with test account
+2. Browse Home, Directory, Community, Profile
+3. Tap Upgrade / Manage billing → confirm Safari opens the website (no in-app payment form)
+4. Optional: complete membership on the website, return to app, refresh account status
+
+Short disclosure:
+Subscriptions are purchased on our website (Stripe); no in-app purchase products.

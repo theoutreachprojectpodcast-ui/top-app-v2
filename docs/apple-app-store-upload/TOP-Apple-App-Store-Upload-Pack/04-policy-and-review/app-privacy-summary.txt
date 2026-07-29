@@ -1,0 +1,14 @@
+APP STORE CONNECT — APP PRIVACY (summary)
+
+Data linked to you: Yes — account and user content
+Data used to track you: No
+
+Contact info: Email, name — App functionality / Account management
+User content: Photos (optional), posts — App functionality
+Identifiers: No advertising ID
+Purchases: Purchase history / subscription status — App functionality (via Stripe on web; card data held by Stripe)
+Location: Not collected
+Contacts / SMS / microphone: Not collected
+
+Third parties: WorkOS (auth), Stripe (checkout in browser), Supabase (data), Vercel (hosting)
+Encryption in transit: HTTPS

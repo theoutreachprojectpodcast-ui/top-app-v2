@@ -98,6 +98,9 @@ See **[store-policy-forms.md](./store-policy-forms.md)** for full Apple App Priv
 
 Data encrypted in transit (HTTPS). Users can request account help via contact form.
 
-## What's New (version 1.0)
+## What's New (version 1.0.1)
 
-Initial release of The Outreach Project mobile app — directory search, trusted resources, community, podcasts, and membership on iOS/Android.
+• Locks the app to portrait orientation on iPhone and iPad
+• Sign-in and session reliability updates
+• Sponsors, community, and directory experience polish
+• Membership billing continues via Stripe on our website (not Apple In-App Purchase)
