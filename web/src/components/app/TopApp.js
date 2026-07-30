@@ -658,16 +658,40 @@ function TopAppInner({ initialNav = "home" }) {
     dockNavCommunity();
   }
   const fallbackSavedOrganizations = useMemo(() => {
-    const byEin = new Map([...results, ...trusted].map((r) => [String(rowEin(r)), r]));
-    return favoriteEins.map((ein) => byEin.get(String(ein)) || { ein, orgName: "Saved organization", city: "", state: "" });
+    const byEin = new Map();
+    for (const r of [...results, ...trusted]) {
+      const key = normalizeEinDigits(rowEin(r));
+      if (key.length === 9 && !byEin.has(key)) byEin.set(key, r);
+    }
+    return favoriteEins.map((ein) => {
+      const key = normalizeEinDigits(ein);
+      const hit = key.length === 9 ? byEin.get(key) : null;
+      if (hit) return hit;
+      return {
+        ein: key || ein,
+        orgName: "",
+        city: "",
+        state: "",
+        savedResolutionStatus: "unavailable",
+      };
+    });
   }, [favoriteEins, results, trusted]);
   const savedOrgsToRender = useMemo(() => {
     if (!favoriteEins.length) return [];
     const byEin = new Map();
     for (const raw of fallbackSavedOrganizations) {
-      const card = mapNonprofitCardRow(raw, "directory");
+      const card = mapNonprofitCardRow(raw, "saved");
       const key = card.einNormalized || normalizeEinDigits(card.ein);
-      if (key.length === 9) byEin.set(key, card);
+      if (key.length === 9) {
+        const unresolved =
+          raw.savedResolutionStatus === "unavailable" || !String(raw.orgName || raw.name || "").trim();
+        byEin.set(key, {
+          ...card,
+          savedResolutionStatus: unresolved ? "unavailable" : "resolved",
+          organizationUnavailable: unresolved,
+          name: unresolved ? "" : card.name,
+        });
+      }
     }
     for (const card of savedOrganizations) {
       const key = card.einNormalized || normalizeEinDigits(card.ein);
@@ -677,10 +701,14 @@ function TopAppInner({ initialNav = "home" }) {
       .map((ein) => {
         const key = normalizeEinDigits(ein);
         if (key.length !== 9) return null;
-        return (
-          byEin.get(key) ||
-          mapNonprofitCardRow({ ein: key, orgName: "Saved organization", city: "", state: "" }, "directory")
-        );
+        const existing = byEin.get(key);
+        if (existing) return existing;
+        return {
+          ...mapNonprofitCardRow({ ein: key, orgName: "", city: "", state: "" }, "saved"),
+          savedResolutionStatus: "unavailable",
+          organizationUnavailable: true,
+          name: "",
+        };
       })
       .filter(Boolean);
   }, [savedOrganizations, fallbackSavedOrganizations, favoriteEins]);

@@ -192,7 +192,7 @@ export function mapNonprofitCardRow(row = {}, source = "directory") {
     candidateNames: titleCandidates,
     trustedResourceSlug: baseRow.trustedResourceSlug,
     websiteUrl: websiteForTitle,
-    emptyFallback: source === "saved" ? "Saved organization" : "Organization",
+    emptyFallback: source === "saved" ? "Organization unavailable" : "Organization",
   });
 
   const patchedRow = {

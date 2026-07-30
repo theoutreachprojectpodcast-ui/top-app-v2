@@ -3,6 +3,10 @@ import { authFailureJson, resolveWorkOSRouteUser } from "@/lib/auth/workosRouteA
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
 import { requireMembershipApi } from "@/lib/membership/membershipRouteGuard";
+import {
+  nonprofitExistsForSave,
+  resolveSavedOrganizationDirectoryRows,
+} from "@/lib/savedOrganizations/resolveSavedOrganizations";
 
 const SAVED_TABLE = process.env.NEXT_PUBLIC_SAVED_ORG_TABLE || "top_app_saved_org_eins";
 
@@ -52,6 +56,8 @@ export async function PUT(request) {
   const raw = Array.isArray(body.eins) ? body.eins : [];
   const list = [...new Set(raw.map((e) => normalizeEinDigits(e)).filter((e) => e.length === 9))];
 
+  // Reject brand-new EINs that do not exist in directory/enrichment/profile.
+  // Keep already-saved EINs so users never lose legacy favorites during sync.
   const { data: existingRows, error: readErr } = await admin
     .from(SAVED_TABLE)
     .select("ein")
@@ -62,7 +68,30 @@ export async function PUT(request) {
   const existing = new Set(
     (existingRows || []).map((r) => normalizeEinDigits(r.ein)).filter((e) => e.length === 9),
   );
-  const next = new Set(list);
+
+  const rejected = [];
+  const accepted = [];
+  for (const ein of list) {
+    if (existing.has(ein)) {
+      accepted.push(ein);
+      continue;
+    }
+    const ok = await nonprofitExistsForSave(admin, ein);
+    if (ok) accepted.push(ein);
+    else rejected.push(ein);
+  }
+  if (rejected.length && !accepted.length && list.length) {
+    return Response.json(
+      {
+        error: "nonprofit_not_found",
+        message: "One or more organizations could not be saved because they are not in the directory.",
+        rejectedEins: rejected,
+      },
+      { status: 400 },
+    );
+  }
+
+  const next = new Set(accepted);
   const toRemove = [...existing].filter((e) => !next.has(e));
   if (toRemove.length) {
     const { error: delErr } = await admin.from(SAVED_TABLE).delete().eq("user_id", user.id).in("ein", toRemove);
@@ -70,10 +99,10 @@ export async function PUT(request) {
       return Response.json({ error: "delete_failed", message: delErr.message }, { status: 500 });
     }
   }
-  if (!list.length) {
-    return Response.json({ eins: [] });
+  if (!accepted.length) {
+    return Response.json({ eins: [], rejectedEins: rejected });
   }
-  const rows = list.map((ein, i) => ({
+  const rows = accepted.map((ein, i) => ({
     user_id: user.id,
     ein,
     sort_order: i,
@@ -82,5 +111,11 @@ export async function PUT(request) {
   if (upsErr) {
     return Response.json({ error: "upsert_failed", message: upsErr.message }, { status: 500 });
   }
-  return Response.json({ eins: list });
+
+  const resolvedRows = await resolveSavedOrganizationDirectoryRows(admin, accepted);
+  return Response.json({
+    eins: accepted,
+    rejectedEins: rejected,
+    rows: resolvedRows,
+  });
 }

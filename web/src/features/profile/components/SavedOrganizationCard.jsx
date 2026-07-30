@@ -2,12 +2,19 @@
 
 import NonprofitCard from "@/features/nonprofits/components/NonprofitCard";
 import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
+import { ORGANIZATION_UNAVAILABLE_LABEL } from "@/lib/savedOrganizations/savedOrganizationLabels";
 
 export default function SavedOrganizationCard({ card, onToggleFavorite }) {
-  const displayName = String(card?.name || "").trim() || "Saved organization";
+  const unavailable =
+    card?.savedResolutionStatus === "unavailable" ||
+    card?.organizationUnavailable === true ||
+    !String(card?.name || "").trim();
+  const displayName = unavailable
+    ? ORGANIZATION_UNAVAILABLE_LABEL
+    : String(card?.name || "").trim();
   const einDigits = card.einNormalized?.length === 9 ? card.einNormalized : normalizeEinDigits(card.ein);
   const favoriteKey = String(card.ein || card.id || einDigits || "").trim();
-  const location = String(card.location || "").trim();
+  const location = unavailable ? "" : String(card.location || "").trim();
 
   function onFavoriteClick(event) {
     event.preventDefault();
@@ -16,11 +23,14 @@ export default function SavedOrganizationCard({ card, onToggleFavorite }) {
   }
 
   return (
-    <details className="savedOrgCollapsible">
+    <details className={`savedOrgCollapsible${unavailable ? " savedOrgCollapsible--unavailable" : ""}`}>
       <summary className="savedOrgCollapsible__summary">
         <span className="savedOrgCollapsible__summaryMain">
           <span className="savedOrgCollapsible__name">{displayName}</span>
           {location ? <span className="savedOrgCollapsible__location">{location}</span> : null}
+          {unavailable ? (
+            <span className="savedOrgCollapsible__unavailableHint">This organization is no longer available</span>
+          ) : null}
         </span>
         {favoriteKey && onToggleFavorite ? (
           <button
@@ -36,13 +46,20 @@ export default function SavedOrganizationCard({ card, onToggleFavorite }) {
         ) : null}
       </summary>
       <div className="savedOrgCollapsible__body savedOrgCollapsible__body--card">
-        <NonprofitCard
-          card={card}
-          actionMode="directory"
-          favoritesEnabled={true}
-          isFavorite={true}
-          onToggleFavorite={onToggleFavorite}
-        />
+        {unavailable ? (
+          <p className="sponsorSectionLead savedOrgCollapsible__unavailableBody">
+            This saved organization could not be matched to a current directory record. You can remove it from your
+            saved list.
+          </p>
+        ) : (
+          <NonprofitCard
+            card={card}
+            actionMode="directory"
+            favoritesEnabled={true}
+            isFavorite={true}
+            onToggleFavorite={onToggleFavorite}
+          />
+        )}
       </div>
     </details>
   );

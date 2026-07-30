@@ -24,19 +24,63 @@ export async function GET() {
   const user = auth.user;
   const admin = createSupabaseAdminClient();
   if (!admin) {
-    return Response.json({ rows: [] });
+    return Response.json({ rows: [], items: [], meta: { resolved: 0, unavailable: 0, total: 0 } });
   }
   const membership = await requireMembershipApi(admin, "save_organizations");
   if (!membership.ok) return membership.response;
+
   const { data, error } = await admin
     .from(SAVED_TABLE)
-    .select("ein,sort_order")
+    .select("ein,sort_order,created_at")
     .eq("user_id", user.id)
     .order("sort_order", { ascending: true });
+
   if (error || !Array.isArray(data)) {
-    return Response.json({ rows: [] });
+    return Response.json({ rows: [], items: [], meta: { resolved: 0, unavailable: 0, total: 0 } });
   }
+
+  const savedAtByEin = new Map();
+  for (const row of data) {
+    const k = normalizeEinDigits(row?.ein);
+    if (k.length === 9 && !savedAtByEin.has(k)) savedAtByEin.set(k, row.created_at || null);
+  }
+
   const ordered = orderUniqueFromRows(data);
   const rows = await resolveSavedOrganizationDirectoryRows(admin, ordered);
-  return Response.json({ rows });
+
+  let resolved = 0;
+  let unavailable = 0;
+  const items = rows.map((row) => {
+    const status = row.savedResolutionStatus === "unavailable" ? "unavailable" : "resolved";
+    if (status === "resolved") resolved += 1;
+    else unavailable += 1;
+    const nonprofitId = row.nonprofitId || normalizeEinDigits(row.ein);
+    return {
+      id: `${user.id}:${nonprofitId}`,
+      userId: user.id,
+      nonprofitId,
+      savedAt: savedAtByEin.get(nonprofitId) || null,
+      nonprofit:
+        status === "resolved"
+          ? {
+              id: nonprofitId,
+              name: row.orgName || row.canonicalDisplayName || "",
+              displayName: row.canonicalDisplayName || row.orgName || null,
+              slug: row.publicSlug || null,
+              logoUrl: row.logoUrl || null,
+              city: row.city || null,
+              state: row.state || null,
+              nteeCode: row.nteeCode || null,
+              shortDescription: row.shortDescription || null,
+            }
+          : null,
+      row,
+    };
+  });
+
+  return Response.json({
+    rows,
+    items,
+    meta: { resolved, unavailable, total: ordered.length },
+  });
 }

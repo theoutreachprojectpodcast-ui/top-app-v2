@@ -7,7 +7,7 @@
     "node": ">=20.20.0"
   },
   "scripts": {
-    "prebuild": "node scripts/sync-public-assets.mjs && node scripts/sync-pwa-icons.mjs && node scripts/validate-production-env.mjs && node scripts/test-membership-pricing.mjs && node scripts/test-membership-configuration.mjs && node scripts/test-support-to-pro-migration.mjs && node scripts/verify-trusted-resources-registry.mjs && node scripts/verify-trusted-resources-integrity.mjs && node scripts/verify-entity-display-names.mjs && node scripts/verify-trusted-resources-titles.mjs",
+    "prebuild": "node scripts/sync-public-assets.mjs && node scripts/sync-pwa-icons.mjs && node scripts/validate-production-env.mjs && node scripts/test-membership-pricing.mjs && node scripts/test-membership-configuration.mjs && node scripts/test-support-to-pro-migration.mjs && node --import ./scripts/register-at-alias.mjs scripts/test-saved-organization-resolution.mjs && node scripts/verify-trusted-resources-registry.mjs && node scripts/verify-trusted-resources-integrity.mjs && node scripts/verify-entity-display-names.mjs && node scripts/verify-trusted-resources-titles.mjs",
     "verify:trusted-resources": "node scripts/verify-trusted-resources-registry.mjs",
     "verify:trusted-integrity": "node scripts/verify-trusted-resources-integrity.mjs",
     "smoke:routes": "node scripts/smoke-routes.mjs",
@@ -34,6 +34,8 @@
     "security:check": "node scripts/security-check.mjs",
     "test:membership-config": "node scripts/test-membership-configuration.mjs",
     "test:support-to-pro-migration": "node scripts/test-support-to-pro-migration.mjs",
+    "test:saved-org-resolution": "node --import ./scripts/register-at-alias.mjs scripts/test-saved-organization-resolution.mjs",
+    "repair:saved-org-names": "node scripts/repair-saved-organization-names.mjs",
     "verify:auth-freeze": "node scripts/auth-production-guards.mjs",
     "verify:production-auth": "node scripts/verify-production-auth-flow.mjs",
     "verify:membership-access": "node scripts/verify-membership-access.mjs",

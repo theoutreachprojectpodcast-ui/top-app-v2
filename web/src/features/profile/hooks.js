@@ -96,11 +96,32 @@ function mergeSavedOrgCardRows(existingCards, rowInputs, eins) {
     if (key.length === 9 && allowed.has(key)) byEin.set(key, card);
   }
   for (const row of rowInputs || []) {
-    const card = mapNonprofitCardRow(row, "directory");
+    const card = mapNonprofitCardRow(row, "saved");
     const key = savedOrgCardEin(card);
-    if (key.length === 9 && allowed.has(key)) byEin.set(key, card);
+    if (key.length !== 9 || !allowed.has(key)) continue;
+    const hasRealName = Boolean(
+      String(row?.orgName || row?.canonicalDisplayName || row?.name || "").trim(),
+    );
+    const unresolved = row?.savedResolutionStatus === "unavailable" || !hasRealName;
+    byEin.set(key, {
+      ...card,
+      savedResolutionStatus: unresolved ? "unavailable" : row?.savedResolutionStatus || "resolved",
+      organizationUnavailable: unresolved,
+      nonprofitId: row?.nonprofitId || key,
+      name: unresolved ? "" : card.name,
+    });
   }
-  return order.map((key) => byEin.get(key)).filter(Boolean);
+  return order.map((key) => {
+    const existing = byEin.get(key);
+    if (existing) return existing;
+    return {
+      ...mapNonprofitCardRow({ ein: key, orgName: "", city: "", state: "" }, "saved"),
+      savedResolutionStatus: "unavailable",
+      organizationUnavailable: true,
+      nonprofitId: key,
+      name: "",
+    };
+  });
 }
 
 async function fetchWithTimeout(url, options = {}, timeoutMs = SESSION_FETCH_TIMEOUT_MS) {
@@ -501,10 +522,6 @@ export function useProfileDataState(supabase) {
           if (cancelled || savedEinsKey(favoriteEinsRef.current) !== requestKey) return;
           const j = await res.json().catch(() => ({}));
           const rows = Array.isArray(j.rows) ? j.rows : [];
-          if (!rows.length) {
-            setSavedOrganizations((prev) => filterSavedOrgCards(prev, targetEins));
-            return;
-          }
           setSavedOrganizations((prev) => mergeSavedOrgCardRows(prev, rows, targetEins));
           return;
         }
@@ -514,10 +531,6 @@ export function useProfileDataState(supabase) {
         }
         const rows = await fetchSavedOrganizationsByEin(supabase, targetEins);
         if (cancelled || savedEinsKey(favoriteEinsRef.current) !== requestKey) return;
-        if (!rows.length) {
-          setSavedOrganizations((prev) => filterSavedOrgCards(prev, targetEins));
-          return;
-        }
         setSavedOrganizations((prev) => mergeSavedOrgCardRows(prev, rows, targetEins));
       } catch {
         if (cancelled) return;
@@ -635,7 +648,20 @@ export function useProfileDataState(supabase) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ eins: normalized }),
         });
-        if (!res.ok) setProfileError("Saved organizations could not sync to the server.");
+        const payload = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          setProfileError(
+            payload?.message || "Saved organizations could not sync to the server.",
+          );
+          return;
+        }
+        const accepted = Array.isArray(payload.eins) ? payload.eins : normalized;
+        setFavoriteEins(accepted);
+        if (Array.isArray(payload.rows)) {
+          setSavedOrganizations((prev) => mergeSavedOrgCardRows(prev, payload.rows, accepted));
+        } else {
+          setSavedOrganizations((prev) => filterSavedOrgCards(prev, accepted));
+        }
       } catch {
         setProfileError("Saved organizations could not sync to the server.");
       } finally {

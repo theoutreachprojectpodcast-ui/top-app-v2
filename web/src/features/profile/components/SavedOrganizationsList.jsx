@@ -59,13 +59,16 @@ export default function SavedOrganizationsList({
           </p>
         ) : (
           <div className="savedOrganizationsPanel__list results" id="saved-organizations-list">
-            {orderedOrgs.map((card) => (
-              <SavedOrganizationCard
-                key={`saved-${String(card?.einNormalized || card?.ein || "")}`}
-                card={card}
-                onToggleFavorite={onToggleFavorite}
-              />
-            ))}
+            {orderedOrgs.map((card) => {
+              const key = String(card?.einNormalized || card?.ein || card?.nonprofitId || "");
+              return (
+                <SavedOrganizationCard
+                  key={`saved-${key}`}
+                  card={card}
+                  onToggleFavorite={onToggleFavorite}
+                />
+              );
+            })}
           </div>
         )
       ) : null}
