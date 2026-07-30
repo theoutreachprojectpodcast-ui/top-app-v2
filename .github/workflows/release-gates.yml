@@ -15,6 +15,9 @@ on:
 jobs:
   qa-gates:
     runs-on: ubuntu-latest
+    # Map secrets to env so step `if:` can gate on presence (secrets.* forbidden in if:).
+    env:
+      VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET_QA || secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
     if: github.ref == 'refs/heads/QA' || (github.event_name == 'pull_request' && github.base_ref == 'main')
     steps:
       - uses: actions/checkout@v4
@@ -33,9 +36,9 @@ jobs:
       - name: QA env validation (structure)
         run: pnpm --dir web exec node scripts/validate-environment.mjs --profile=qa --strict
         env:
-          APP_BASE_URL: https://qa-the-outreach-project.vercel.app
-          NEXT_PUBLIC_APP_URL: https://qa-the-outreach-project.vercel.app
-          NEXT_PUBLIC_WORKOS_REDIRECT_URI: https://qa-the-outreach-project.vercel.app/callback
+          APP_BASE_URL: https://qa.theoutreachproject.app
+          NEXT_PUBLIC_APP_URL: https://qa.theoutreachproject.app
+          NEXT_PUBLIC_WORKOS_REDIRECT_URI: https://qa.theoutreachproject.app/callback
           NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
           NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy-anon
           SUPABASE_SERVICE_ROLE_KEY: dummy-service
@@ -46,12 +49,16 @@ jobs:
           STRIPE_WEBHOOK_TEST_SECRET: whsec_dummy
 
       - name: QA HTTP smoke (live)
-        if: github.event_name == 'push' && github.ref == 'refs/heads/QA'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/QA' && env.VERCEL_AUTOMATION_BYPASS_SECRET != ''
         run: pnpm --dir web run smoke:qa:http
         env:
-          QA_BASE_URL: https://qa-the-outreach-project.vercel.app
-          # QA preview uses Deployment Protection; use QA-specific bypass when prod/QA secrets differ.
-          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET_QA || secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+          QA_BASE_URL: https://qa.theoutreachproject.app
+
+      - name: Note skipped QA HTTP smoke
+        if: github.event_name == 'push' && github.ref == 'refs/heads/QA' && env.VERCEL_AUTOMATION_BYPASS_SECRET == ''
+        run: |
+          echo "::warning::Skipped live QA HTTP smoke — set GitHub Actions secret VERCEL_AUTOMATION_BYPASS_SECRET_QA (or VERCEL_AUTOMATION_BYPASS_SECRET)."
+          echo "Source: Vercel → Project → Settings → Deployment Protection → Protection Bypass for Automation"
 
   production-gates:
     runs-on: ubuntu-latest
