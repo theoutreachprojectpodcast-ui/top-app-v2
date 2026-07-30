@@ -5,6 +5,10 @@ import { useCallback, useEffect, useState } from "react";
 import { MEMBERSHIP_TIER_DEFINITIONS, MEMBERSHIP_TIER_KEYS } from "@/features/membership/membershipTiers";
 import AdminScopeBanner from "@/components/admin/AdminScopeBanner";
 import AdminPanelShell from "@/components/admin/AdminPanelShell";
+import AdminSectionCard from "@/components/admin/AdminSectionCard";
+import AdminAdvancedSettings from "@/components/admin/AdminAdvancedSettings";
+import AdminHelpText from "@/components/admin/AdminHelpText";
+import AdminStatusBadge from "@/components/admin/AdminStatusBadge";
 
 export default function AdminMembershipCenter() {
   const [stats, setStats] = useState(null);
@@ -167,34 +171,54 @@ export default function AdminMembershipCenter() {
   });
 
   return (
-    <AdminPanelShell panelId="membership" error={error}>
+    <AdminPanelShell
+      panelId="membership"
+      title="Memberships"
+      description="Control which plans members can buy, upgrade existing Support members to Pro, and review membership counts."
+      status={supportEnabled ? "partial" : "live"}
+      statusLabel={supportEnabled ? "Support enabled" : "Pro-only"}
+      error={error}
+      message={status}
+      primaryAction={
+        <button type="button" className="btnSoft" onClick={() => void load()} disabled={loading || saving || migrationBusy}>
+          Refresh
+        </button>
+      }
+      secondaryActions={
+        <Link className="btnSoft" href="/admin/users">
+          Manage members
+        </Link>
+      }
+    >
       <AdminScopeBanner readiness="production" title="Plan availability">
-        Support Membership is controlled by a platform feature flag (default off). Pro Membership remains the active
-        paid product. Toggle changes are audited and do not delete users or billing history.
+        Support Membership is off by default. Turning it on makes the $0.99 plan visible at signup again. Changes are
+        audited and never delete billing history.
       </AdminScopeBanner>
 
-      <p className="adminLead">
-        Per-user membership changes are on the <Link href="/admin/users">Users</Link> screen. Stripe price IDs remain
-        environment-configured.
-      </p>
-
       {loading ? <p className="adminMuted">Loading…</p> : null}
-      {status ? <p className="applyStatus">{status}</p> : null}
 
-      <h2 className="adminSectionTitle">Plan availability</h2>
-      <div className="adminEntityCard adminMt4">
+      <AdminSectionCard
+        title="What members can buy"
+        description="Pro stays available. Support is hidden unless you explicitly enable it."
+      >
         <div className="adminToolbar" style={{ justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
           <div>
             <strong>Support Membership</strong>
             <p className="adminMuted" style={{ margin: "4px 0 0" }}>
-              Status: {supportEnabled ? "Enabled" : "Disabled"} · Environment: {environment || "unknown"}
-              {planConfig?.updatedAt ? ` · Updated ${new Date(planConfig.updatedAt).toLocaleString()}` : ""}
-              {planConfig?.updatedBy ? ` · by ${planConfig.updatedBy}` : ""}
+              <AdminStatusBadge status={supportEnabled ? "partial" : "disabled"}>
+                {supportEnabled ? "Enabled" : "Disabled"}
+              </AdminStatusBadge>
+              <span>
+                {" "}
+                · {environment || "unknown"}
+                {planConfig?.updatedAt ? ` · Updated ${new Date(planConfig.updatedAt).toLocaleString()}` : ""}
+                {planConfig?.updatedBy ? ` · ${planConfig.updatedBy}` : ""}
+              </span>
             </p>
-            <p className="adminMuted" style={{ margin: "4px 0 0" }}>
-              Stripe Support price: {planConfig?.supportStripePriceId || "(not set)"} · Pro price:{" "}
-              {planConfig?.proStripePriceId || "(not set)"}
-            </p>
+            <AdminHelpText>
+              Pro Membership ({planConfig?.proPriceLabel || "$5.99/yr"}) remains the active paid product for full platform
+              access.
+            </AdminHelpText>
           </div>
           <button
             type="button"
@@ -202,49 +226,41 @@ export default function AdminMembershipCenter() {
             disabled={saving || loading}
             onClick={() => void toggleSupport(!supportEnabled)}
           >
-            {saving ? "Saving…" : supportEnabled ? "Disable Support Membership" : "Enable Support Membership"}
+            {saving ? "Saving…" : supportEnabled ? "Disable Support" : "Enable Support"}
           </button>
         </div>
-        <div className="adminToolbar adminMt4">
-          <span className="adminMuted">Pro Membership: {planConfig?.proMembershipEnabled === false ? "Disabled" : "Enabled"}</span>
-          <span className="adminMuted">Display: {planConfig?.proDisplayName || "Pro Membership"} ({planConfig?.proPriceLabel || "$5.99/yr"})</span>
-        </div>
-      </div>
+      </AdminSectionCard>
 
       {supportReport ? (
-        <>
-          <h2 className="adminSectionTitle">Existing Support members (preserved)</h2>
-          <div className="adminMembershipGrid adminMt4">
+        <AdminSectionCard
+          title="Existing Support members"
+          description="Historical Support accounts stay preserved. Use migration below for complimentary Pro."
+        >
+          <div className="adminMembershipGrid">
             <div className="adminMembershipStat">
               <span className="adminMembershipStat__label">Support profiles</span>
               <strong>{supportReport.totalSupportProfiles}</strong>
             </div>
             <div className="adminMembershipStat">
-              <span className="adminMembershipStat__label">Active Support subs</span>
+              <span className="adminMembershipStat__label">Active Support</span>
               <strong>{supportReport.activeSupportSubscriptions}</strong>
             </div>
             <div className="adminMembershipStat">
-              <span className="adminMembershipStat__label">Canceled Support</span>
+              <span className="adminMembershipStat__label">Canceled</span>
               <strong>{supportReport.canceledSupportSubscriptions}</strong>
             </div>
             <div className="adminMembershipStat">
-              <span className="adminMembershipStat__label">Past due Support</span>
+              <span className="adminMembershipStat__label">Past due</span>
               <strong>{supportReport.pastDueSupportSubscriptions}</strong>
             </div>
           </div>
-          <p className="adminMuted adminMt4">
-            Use Support-to-Pro Migration below to grant complimentary Pro through each member&apos;s original paid
-            period end. Do not cancel or refund Stripe subscriptions outside that controlled migration.
-          </p>
-        </>
+        </AdminSectionCard>
       ) : null}
 
-      <h2 className="adminSectionTitle">Support-to-Pro Migration</h2>
-      <div className="adminEntityCard adminMt4">
-        <p className="adminMuted" style={{ marginTop: 0 }}>
-          Upgrades existing $0.99 Support members to complimentary Pro through the end of their original one-year paid
-          term. Idempotent. No new charges. Sets Support subscriptions to cancel at period end when still renewing.
-        </p>
+      <AdminSectionCard
+        title="Support → Pro migration"
+        description="Upgrade eligible Support members to complimentary Pro through their original paid year. No new charges."
+      >
         <div className="adminToolbar" style={{ gap: 12, flexWrap: "wrap" }}>
           <button
             type="button"
@@ -263,6 +279,9 @@ export default function AdminMembershipCenter() {
             {migrationBusy ? "Working…" : "Run migration"}
           </button>
         </div>
+        <AdminHelpText>
+          Always preview first. Migration is idempotent and emails members after a successful upgrade.
+        </AdminHelpText>
         {migrationDryRun?.summary ? (
           <div className="adminMembershipGrid adminMt4">
             <div className="adminMembershipStat">
@@ -286,7 +305,7 @@ export default function AdminMembershipCenter() {
               <strong>{migrationDryRun.summary.exceptions}</strong>
             </div>
             <div className="adminMembershipStat">
-              <span className="adminMembershipStat__label">Stripe cancel@period end</span>
+              <span className="adminMembershipStat__label">Cancel @ period end</span>
               <strong>{migrationDryRun.summary.proposedStripeCancelAtPeriodEnd}</strong>
             </div>
           </div>
@@ -321,12 +340,11 @@ export default function AdminMembershipCenter() {
             ))}
           </div>
         ) : null}
-      </div>
+      </AdminSectionCard>
 
       {stats ? (
-        <>
-          <h2 className="adminSectionTitle">Membership counts</h2>
-          <div className="adminMembershipGrid adminMt4">
+        <AdminSectionCard title="Membership counts" description="How accounts are classified today.">
+          <div className="adminMembershipGrid">
             <div className="adminMembershipStat">
               <span className="adminMembershipStat__label">Total accounts</span>
               <strong>{stats.totalMembers}</strong>
@@ -336,7 +354,7 @@ export default function AdminMembershipCenter() {
               <strong>{stats.freeMembers}</strong>
             </div>
             <div className="adminMembershipStat">
-              <span className="adminMembershipStat__label">Support (legacy/historical)</span>
+              <span className="adminMembershipStat__label">Support (historical)</span>
               <strong>{stats.supportMembers}</strong>
             </div>
             <div className="adminMembershipStat">
@@ -344,7 +362,7 @@ export default function AdminMembershipCenter() {
               <strong>{stats.proMembers}</strong>
             </div>
             <div className="adminMembershipStat">
-              <span className="adminMembershipStat__label">Sponsor tier</span>
+              <span className="adminMembershipStat__label">Sponsor</span>
               <strong>{stats.sponsorMembers}</strong>
             </div>
             <div className="adminMembershipStat">
@@ -352,29 +370,35 @@ export default function AdminMembershipCenter() {
               <strong>{stats.activeSubscriptions}</strong>
             </div>
           </div>
-        </>
+        </AdminSectionCard>
       ) : null}
 
-      <h2 className="adminSectionTitle">Tier catalog</h2>
-      <div className="adminPanelBody adminPanelBody--loose">
-        {visibleTiers.map((tier) => (
-          <article key={tier.id} className="adminEntityCard">
-            <strong>{tier.label}</strong>
-            {tier.priceLabel ? <span className="adminMuted"> — {tier.priceLabel}</span> : null}
-            {tier.legacy ? <span className="adminMuted"> (legacy / flag-gated)</span> : null}
-            <ul className="adminListPlain adminMt4">
-              {tier.benefits.map((b) => (
-                <li key={b}>{b}</li>
-              ))}
-            </ul>
-          </article>
-        ))}
-      </div>
-
-      {audit.length ? (
-        <>
-          <h2 className="adminSectionTitle">Configuration audit</h2>
+      <AdminAdvancedSettings
+        title="Technical configuration"
+        description="Stripe price IDs, tier catalog details, and configuration audit history."
+        warning="Changing Stripe IDs in the environment affects checkout. Prefer the Support toggle above for plan availability."
+      >
+        <p className="adminMuted">
+          Stripe Support price: {planConfig?.supportStripePriceId || "(not set)"} · Pro price:{" "}
+          {planConfig?.proStripePriceId || "(not set)"}
+        </p>
+        <div className="adminPanelBody adminPanelBody--loose">
+          {visibleTiers.map((tier) => (
+            <article key={tier.id} className="adminEntityCard">
+              <strong>{tier.label}</strong>
+              {tier.priceLabel ? <span className="adminMuted"> — {tier.priceLabel}</span> : null}
+              {tier.legacy ? <span className="adminMuted"> (legacy)</span> : null}
+              <ul className="adminListPlain adminMt4">
+                {tier.benefits.map((b) => (
+                  <li key={b}>{b}</li>
+                ))}
+              </ul>
+            </article>
+          ))}
+        </div>
+        {audit.length ? (
           <div className="adminPanelBody adminPanelBody--loose">
+            <strong>Configuration audit</strong>
             {audit.map((row) => (
               <article key={row.id} className="adminEntityCard adminEntityCard--compact">
                 <div className="adminMuted adminEntityCard__meta">
@@ -385,17 +409,13 @@ export default function AdminMembershipCenter() {
               </article>
             ))}
           </div>
-        </>
-      ) : null}
-
-      <div className="adminActions">
-        <Link className="btnSoft" href="/admin/billing">
-          Billing & forecasts
-        </Link>
-        <button type="button" className="btnSoft" onClick={() => void load()} disabled={loading || saving}>
-          Refresh
-        </button>
-      </div>
+        ) : null}
+        <div className="adminActions">
+          <Link className="btnSoft" href="/admin/billing">
+            Billing & forecasts
+          </Link>
+        </div>
+      </AdminAdvancedSettings>
     </AdminPanelShell>
   );
 }

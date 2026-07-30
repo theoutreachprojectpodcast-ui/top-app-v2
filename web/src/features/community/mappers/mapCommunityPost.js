@@ -71,5 +71,6 @@ export function mapCommunityPostRow(row) {
     publishedAt: row.published_at || row.publishedAt || null,
     isEdited: !!row.is_edited,
     viewerHasLiked: !!row.viewer_has_liked,
+    fromConnection: !!(row.from_connection || row.fromConnection),
   };
 }

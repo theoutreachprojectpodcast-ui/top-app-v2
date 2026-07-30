@@ -144,6 +144,7 @@ export default function CommunityPostCard({
               </div>
             )}
             {isModerator ? <span className="communityPostModeratorBadge">Outreach moderator</span> : null}
+            {post.fromConnection ? <span className="communityPostConnectionBadge">From your connections</span> : null}
             {post.isPinned ? <span className="communityPostPinnedBadge">Pinned</span> : null}
             {showModerationStatus && post.status && post.status !== "approved" ? (
               <span className="communityPostStatusBadge">{post.statusLabel || post.status}</span>

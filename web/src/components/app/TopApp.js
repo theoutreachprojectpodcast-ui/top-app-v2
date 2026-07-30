@@ -947,6 +947,12 @@ function TopAppInner({ initialNav = "home" }) {
                         billingStatus: profile.membershipBillingStatus,
                       })}
                       ariaLabel={`Account menu for ${fullName || profile.email || workOSAccountEmail || "signed-in user"}`}
+                      showAdminConsole={!!entitlements?.isPlatformAdmin}
+                      onAdminConsole={() => {
+                        const href = isCapacitorNative() ? "/admin" : adminConsoleHref();
+                        if (String(href).startsWith("http")) window.location.assign(href);
+                        else router.push(href);
+                      }}
                       onProfile={() => {
                         if (pathname !== "/profile") router.push("/profile");
                         else setNav("profile");
@@ -1444,7 +1450,10 @@ function TopAppInner({ initialNav = "home" }) {
 
       {isAuthenticated && entitlements?.isPlatformAdmin ? (
         <div className="adminUtilityEntry">
-          <Link className="adminUtilityEntryLink" href={adminConsoleHref()}>
+          <Link
+            className="adminUtilityEntryLink"
+            href={isCapacitorNative() ? "/admin" : adminConsoleHref()}
+          >
             Admin Console
           </Link>
         </div>

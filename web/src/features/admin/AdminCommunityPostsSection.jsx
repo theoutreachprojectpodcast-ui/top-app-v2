@@ -155,6 +155,9 @@ export default function AdminCommunityPostsSection() {
   const [showCreate, setShowCreate] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [draft, setDraft] = useState({ ...EMPTY_DRAFT });
+  const [postingMode, setPostingMode] = useState("open");
+  const [postingModeOptions, setPostingModeOptions] = useState([]);
+  const [postingModeBusy, setPostingModeBusy] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -182,6 +185,53 @@ export default function AdminCommunityPostsSection() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/admin/community/posting-mode", {
+          credentials: "include",
+          cache: "no-store",
+        });
+        const data = await res.json().catch(() => ({}));
+        if (cancelled || !res.ok) return;
+        setPostingMode(String(data.mode || "open"));
+        setPostingModeOptions(Array.isArray(data.options) ? data.options : []);
+      } catch {
+        /* keep defaults */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function savePostingMode(nextMode) {
+    setPostingModeBusy(true);
+    setError("");
+    setStatusMsg("");
+    try {
+      const res = await fetch("/api/admin/community/posting-mode", {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode: nextMode }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error || "Could not update posting mode.");
+        return;
+      }
+      setPostingMode(String(data.mode || nextMode));
+      if (Array.isArray(data.options)) setPostingModeOptions(data.options);
+      setStatusMsg("Member posting mode updated.");
+    } catch {
+      setError("Could not update posting mode.");
+    } finally {
+      setPostingModeBusy(false);
+    }
+  }
 
   async function act(id, action, extra = {}) {
     setBusy(id + action);
@@ -448,11 +498,59 @@ export default function AdminCommunityPostsSection() {
   }
 
   return (
-    <AdminPanelShell panelId="community" error={error} message={statusMsg}>
-      <p className="adminMuted adminMb4">
-        Community Management — create and publish moderator-led posts for the public feed. Member posting is disabled in
-        V1; use this builder for all community content.
-      </p>
+    <AdminPanelShell
+      panelId="community"
+      title="Community"
+      description="Review member posts, publish staff updates, and choose how community posting works for members."
+      status="live"
+      error={error}
+      message={statusMsg}
+      primaryAction={
+        <button type="button" className="btnPrimary" onClick={() => setShowCreate((v) => !v)}>
+          {showCreate ? "Close builder" : "New post"}
+        </button>
+      }
+      secondaryActions={
+        <button type="button" className="btnSoft" onClick={() => void load()} disabled={loading}>
+          Refresh
+        </button>
+      }
+    >
+      <div className="adminFieldStack adminFieldStack--bordered">
+        <h3 className="adminBlockTitle">Member posting mode</h3>
+        <p className="adminMuted">
+          Controls whether Pro members can publish immediately, wait for approval, or only staff can post. Default is open
+          posting.
+        </p>
+        <label className="fieldLabel" htmlFor="community-posting-mode">
+          How members post
+        </label>
+        <select
+          id="community-posting-mode"
+          className="adminConsoleInput"
+          value={postingMode}
+          disabled={postingModeBusy}
+          onChange={(e) => void savePostingMode(e.target.value)}
+        >
+          {(postingModeOptions.length
+            ? postingModeOptions
+            : [
+                { value: "open", label: "Open posting" },
+                { value: "post_review", label: "Post-review moderation" },
+                { value: "pre_approval", label: "Pre-approval moderation" },
+                { value: "admin_only", label: "Admin-only posting" },
+              ]
+          ).map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+        {postingModeOptions.find((o) => o.value === postingMode)?.description ? (
+          <p className="adminMuted">{postingModeOptions.find((o) => o.value === postingMode)?.description}</p>
+        ) : null}
+      </div>
+
       <div className="adminToolbar">
         {SCOPES.map((s) => (
           <button
@@ -464,12 +562,6 @@ export default function AdminCommunityPostsSection() {
             {s.label}
           </button>
         ))}
-        <button type="button" className="btnSoft" onClick={() => void load()} disabled={loading}>
-          Refresh
-        </button>
-        <button type="button" className="btnPrimary" onClick={() => setShowCreate((v) => !v)}>
-          {showCreate ? "Close builder" : "New post"}
-        </button>
       </div>
 
       {showCreate ? (
@@ -575,13 +667,26 @@ export default function AdminCommunityPostsSection() {
                     {p.comments_enabled === false ? "Enable comments" : "Disable comments"}
                   </button>
                   <button type="button" className="btnSoft" disabled={!!busy} onClick={() => void act(p.id, "hide")}>
-                    Archive
+                    Hide
                   </button>
+                  {st === "hidden" || st === "rejected" ? (
+                    <button type="button" className="btnPrimary" disabled={!!busy} onClick={() => void act(p.id, "restore")}>
+                      Restore
+                    </button>
+                  ) : null}
                   <button type="button" className="btnSoft" onClick={() => openEdit(p)}>
                     Edit
                   </button>
-                  <button type="button" className="btnSoft" disabled={!!busy} onClick={() => void act(p.id, "delete")}>
-                    Delete
+                  <button
+                    type="button"
+                    className="btnSoft"
+                    disabled={!!busy}
+                    onClick={() => {
+                      if (!window.confirm("Remove this post from the community? This keeps a soft-deleted record for audit.")) return;
+                      void act(p.id, "soft_delete");
+                    }}
+                  >
+                    Remove
                   </button>
                 </div>
               </div>

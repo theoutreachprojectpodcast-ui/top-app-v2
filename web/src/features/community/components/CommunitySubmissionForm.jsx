@@ -172,8 +172,8 @@ export default function CommunitySubmissionForm({
     <div className="communitySubmitModal">
       <p className="communitySubmitLead">
         {isEdit
-          ? "Update your story below. If it was already published, saving will send it back to moderators and hide it from the public feed until it is approved again."
-          : "Stories are read by our team first. Only approved, mission-aligned posts are published—keeping this space safe and useful."}
+          ? "Update your post below. Changes save to your story right away unless pre-approval moderation is turned on."
+          : "Share a story, photo, or link with the community. Posts from Pro members publish immediately unless an admin has enabled pre-approval review."}
       </p>
       <form className="communitySubmitForm communitySubmitForm--ds" onSubmit={onSubmit}>
         <label className="fieldLabel">Title <span className="fieldOptional">(optional)</span></label>
@@ -258,7 +258,7 @@ export default function CommunitySubmissionForm({
         <div className="row wrap communitySubmitActions">
           <button type="button" className="btnSoft" onClick={onClose}>Close</button>
           <button type="submit" className="btnPrimary" disabled={busy}>
-            {busy ? (isEdit ? "Saving…" : "Submitting…") : isEdit ? "Save changes" : "Submit for review"}
+            {busy ? (isEdit ? "Saving…" : "Publishing…") : isEdit ? "Save changes" : "Publish post"}
           </button>
         </div>
       </form>

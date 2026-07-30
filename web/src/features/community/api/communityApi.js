@@ -67,9 +67,11 @@ export function getRelativeTime(iso) {
   return new Date(iso).toLocaleDateString();
 }
 
-async function fetchPostsApi(scope) {
+async function fetchPostsApi(scope, { sort } = {}) {
   try {
-    const res = await fetch(`/api/community/posts?scope=${encodeURIComponent(scope)}`, {
+    const params = new URLSearchParams({ scope: String(scope || "public") });
+    if (sort === "chronological") params.set("sort", "chronological");
+    const res = await fetch(`/api/community/posts?${params.toString()}`, {
       credentials: "include",
     });
     const json = await res.json().catch(() => ({}));
@@ -82,8 +84,8 @@ async function fetchPostsApi(scope) {
 }
 
 /** Public approved feed — Supabase-backed via trusted API (RLS-safe). */
-export async function fetchApprovedFeedFromApi() {
-  return fetchPostsApi("public");
+export async function fetchApprovedFeedFromApi(opts = {}) {
+  return fetchPostsApi("public", opts);
 }
 
 /** @deprecated Prefer fetchApprovedFeedFromApi; anon client cannot satisfy new RLS write path. */
@@ -213,9 +215,9 @@ export function rejectPendingLocal(pendingId, reason = "") {
 /**
  * Public feed: approved posts from API (and RLS direct read when available), plus local demo approvals only when offline.
  */
-export async function fetchPublicCommunityFeed(supabase) {
+export async function fetchPublicCommunityFeed(supabase, opts = {}) {
   let posts = [];
-  const remote = await fetchApprovedFeedFromApi();
+  const remote = await fetchApprovedFeedFromApi(opts);
   if (remote.length) {
     posts = remote;
   } else {
@@ -226,7 +228,7 @@ export async function fetchPublicCommunityFeed(supabase) {
       posts = loadLocalApprovedPosts().filter((p) => p && p.status === "approved");
     }
   }
-  return sortCommunityFeedRows(posts);
+  return sortCommunityFeedRows(posts, { chronological: opts.sort === "chronological" });
 }
 
 export async function fetchApprovedPostsByMember(supabase, memberId) {
@@ -406,7 +408,12 @@ export function saveConnectionRequests(userId, requests) {
   writeJson(LS_CONNECTION_REQUESTS, all);
 }
 
-export function getConnectionState(userId, targetId, follows = []) {
+/** @deprecated Prefer fetchConnectionStateMap / mutateConnectionApi — localStorage is a fallback only. */
+export function getConnectionState(userId, targetId, follows = [], stateMap = null) {
+  if (stateMap && typeof stateMap === "object") {
+    const mapped = stateMap[String(targetId || "")];
+    if (mapped) return mapped;
+  }
   if (!userId || !targetId || userId === targetId) return "none";
   const requestState = loadConnectionRequests(userId)?.[targetId];
   if (requestState) return requestState;
@@ -414,6 +421,71 @@ export function getConnectionState(userId, targetId, follows = []) {
   return isConnected ? "connected" : "connect";
 }
 
+export async function fetchConnectionsBundle() {
+  try {
+    const res = await fetch("/api/community/connections", { credentials: "include", cache: "no-store" });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) return { ok: false, error: json.error || "load_failed", incoming: [], outgoing: [], connected: [], blocked: [] };
+    return {
+      ok: true,
+      viewerProfileId: json.viewerProfileId || "",
+      incoming: Array.isArray(json.incoming) ? json.incoming : [],
+      outgoing: Array.isArray(json.outgoing) ? json.outgoing : [],
+      connected: Array.isArray(json.connected) ? json.connected : [],
+      blocked: Array.isArray(json.blocked) ? json.blocked : [],
+      warning: json.warning || "",
+    };
+  } catch {
+    return { ok: false, error: "network", incoming: [], outgoing: [], connected: [], blocked: [] };
+  }
+}
+
+/** Build targetProfileId → uiState map for member list buttons. */
+export function connectionStateMapFromBundle(bundle) {
+  const map = {};
+  if (!bundle) return map;
+  for (const row of bundle.connected || []) {
+    if (row.otherProfileId) map[row.otherProfileId] = "connected";
+  }
+  for (const row of bundle.outgoing || []) {
+    if (row.otherProfileId) map[row.otherProfileId] = "requested";
+  }
+  for (const row of bundle.incoming || []) {
+    if (row.otherProfileId) map[row.otherProfileId] = "incoming";
+  }
+  for (const row of bundle.blocked || []) {
+    if (row.otherProfileId) map[row.otherProfileId] = "blocked";
+  }
+  return map;
+}
+
+export async function mutateConnectionApi({ action, targetProfileId, connectionId } = {}) {
+  try {
+    const res = await fetch("/api/community/connections", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action,
+        targetProfileId,
+        connectionId,
+      }),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) return { ok: false, message: json.message || "Could not update connection." };
+    return {
+      ok: true,
+      message: json.message,
+      state: json.state,
+      uiState: json.uiState,
+      connectionId: json.connectionId,
+    };
+  } catch {
+    return { ok: false, message: "Network error while updating connection." };
+  }
+}
+
+/** @deprecated Use mutateConnectionApi({ action: 'request', targetProfileId }) */
 export function sendConnectionRequest(userId, targetId) {
   if (!userId || !targetId || userId === targetId) return { ok: false };
   const current = loadConnectionRequests(userId);

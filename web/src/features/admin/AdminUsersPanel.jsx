@@ -1,20 +1,32 @@
 "use client";
 
 import AdminPanelShell from "@/components/admin/AdminPanelShell";
+import AdminEmptyState from "@/components/admin/AdminEmptyState";
 import { useCallback, useEffect, useState } from "react";
 
-const ROLE_OPTIONS = ["user", "support", "member", "sponsor", "moderator", "admin"];
-const USER_TYPE_OPTIONS = [
-  "member",
-  "admin",
-  "sponsor",
-  "resource_partner",
-  "podcast_guest",
-  "moderator",
-  "organization_owner",
-  "guest",
+const ROLE_OPTIONS = [
+  { value: "user", label: "User" },
+  { value: "support", label: "Support Member" },
+  { value: "member", label: "Pro Member" },
+  { value: "sponsor", label: "Sponsor" },
+  { value: "moderator", label: "Moderator" },
+  { value: "admin", label: "Admin" },
 ];
-const USER_STATUS_OPTIONS = ["active", "invited", "suspended"];
+const USER_TYPE_OPTIONS = [
+  { value: "member", label: "Member" },
+  { value: "admin", label: "Admin" },
+  { value: "sponsor", label: "Sponsor" },
+  { value: "resource_partner", label: "Trusted resource partner" },
+  { value: "podcast_guest", label: "Podcast guest" },
+  { value: "moderator", label: "Moderator" },
+  { value: "organization_owner", label: "Organization owner" },
+  { value: "guest", label: "Guest" },
+];
+const USER_STATUS_OPTIONS = [
+  { value: "active", label: "Active" },
+  { value: "invited", label: "Invited" },
+  { value: "suspended", label: "Suspended" },
+];
 
 export default function AdminUsersPanel() {
   const [qInput, setQInput] = useState("");
@@ -142,17 +154,22 @@ export default function AdminUsersPanel() {
   }
 
   return (
-    <AdminPanelShell panelId="users" error={error}>
-            <div className="adminToolbar">
+    <AdminPanelShell
+      panelId="users"
+      title="Members"
+      description="Search people, update roles and account status, and review membership activity — without needing database tools."
+      error={error}
+    >
+      <div className="adminToolbar">
         <label className="fieldLabel" htmlFor="admin-q">
-          Search
+          Search by name or email
         </label>
         <input
           id="admin-q"
           className="adminConsoleInput"
           value={qInput}
           onChange={(e) => setQInput(e.target.value)}
-          placeholder="email or name"
+          placeholder="Name or email"
           onKeyDown={(e) => {
             if (e.key === "Enter") void load();
           }}
@@ -160,27 +177,37 @@ export default function AdminUsersPanel() {
         <button type="button" className="btnSoft" onClick={() => void load()} disabled={loading}>
           Search
         </button>
-        <select className="adminConsoleInput" value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
+        <select className="adminConsoleInput" value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)} aria-label="Filter by role">
           <option value="">All roles</option>
           {ROLE_OPTIONS.map((opt) => (
-            <option key={opt} value={opt}>
-              {opt}
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
             </option>
           ))}
         </select>
-        <select className="adminConsoleInput" value={userTypeFilter} onChange={(e) => setUserTypeFilter(e.target.value)}>
-          <option value="">All user types</option>
+        <select
+          className="adminConsoleInput"
+          value={userTypeFilter}
+          onChange={(e) => setUserTypeFilter(e.target.value)}
+          aria-label="Filter by account type"
+        >
+          <option value="">All account types</option>
           {USER_TYPE_OPTIONS.map((opt) => (
-            <option key={opt} value={opt}>
-              {opt}
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
             </option>
           ))}
         </select>
-        <select className="adminConsoleInput" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+        <select
+          className="adminConsoleInput"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          aria-label="Filter by status"
+        >
           <option value="">All statuses</option>
           {USER_STATUS_OPTIONS.map((opt) => (
-            <option key={opt} value={opt}>
-              {opt}
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
             </option>
           ))}
         </select>
@@ -207,8 +234,13 @@ export default function AdminUsersPanel() {
           {error}
         </p>
       ) : null}
-      {loading ? <p className="adminMuted">Loading…</p> : null}
-      {(!loading && rows.length === 0) ? <p className="adminMuted">No users.</p> : null}
+      {loading ? <p className="adminMuted">Loading members…</p> : null}
+      {!loading && rows.length === 0 ? (
+        <AdminEmptyState
+          title="No members match"
+          description="Try a different search or clear the role and status filters."
+        />
+      ) : null}
       <div className="adminTableWrap">
         <table className="adminTable">
           <thead>
@@ -216,12 +248,12 @@ export default function AdminUsersPanel() {
               <th>Email</th>
               <th>Name</th>
               <th>Role</th>
-              <th>User Type</th>
+              <th>Account type</th>
               <th>Status</th>
               <th>Membership</th>
-              <th>Onboarding / profile</th>
-              <th>Last Login</th>
-              <th>Stripe</th>
+              <th>Profile</th>
+              <th>Last sign-in</th>
+              <th className="adminAdvancedOnly">Billing ID</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -238,9 +270,6 @@ export default function AdminUsersPanel() {
                 <td data-label="Email">{r.email || "—"}</td>
                 <td data-label="Name">
                   {(r.first_name || "") + " " + (r.last_name || "")}
-                  <div className="adminMuted adminMuted--xs">
-                    {r.workos_user_id}
-                  </div>
                 </td>
                 <td data-label="Role">
                   <select
@@ -252,7 +281,7 @@ export default function AdminUsersPanel() {
                       if (
                         nextRole === "admin" &&
                         !window.confirm(
-                          `Confirm admin promotion for ${r.email || r.workos_user_id}? This grants full admin access.`,
+                          `Give admin access to ${r.email || "this member"}? They will be able to open Admin Console.`,
                         )
                       ) {
                         return;
@@ -261,13 +290,13 @@ export default function AdminUsersPanel() {
                     }}
                   >
                     {ROLE_OPTIONS.map((opt) => (
-                      <option key={opt} value={opt}>
-                        {opt}
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
                       </option>
                     ))}
                   </select>
                 </td>
-                <td data-label="User Type">
+                <td data-label="Account type">
                   <select
                     className="adminConsoleInput"
                     value={String(r.user_type || "member")}
@@ -275,8 +304,8 @@ export default function AdminUsersPanel() {
                     onChange={(e) => void patchUser(r.workos_user_id, { user_type: e.target.value })}
                   >
                     {USER_TYPE_OPTIONS.map((opt) => (
-                      <option key={opt} value={opt}>
-                        {opt}
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
                       </option>
                     ))}
                   </select>
@@ -286,50 +315,39 @@ export default function AdminUsersPanel() {
                     className="adminConsoleInput"
                     value={String(r.user_status || "active")}
                     disabled={saving === r.workos_user_id}
-                    onChange={(e) => void patchUser(r.workos_user_id, { user_status: e.target.value })}
+                    onChange={(e) => {
+                      const next = e.target.value;
+                      if (
+                        next === "suspended" &&
+                        !window.confirm(`Suspend ${r.email || "this member"}? They will lose normal access until restored.`)
+                      ) {
+                        return;
+                      }
+                      void patchUser(r.workos_user_id, { user_status: next });
+                    }}
                   >
                     {USER_STATUS_OPTIONS.map((opt) => (
-                      <option key={opt} value={opt}>
-                        {opt}
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
                       </option>
                     ))}
                   </select>
                 </td>
                 <td data-label="Membership">
-                  {r.membership_tier} / {r.membership_status}
+                  {`${r.membership_tier || "—"} / ${r.membership_status || "—"}`}
                 </td>
-                <td data-label="Onboarding / profile">
+                <td data-label="Profile">
                   <div>
-                    <strong>{r.onboarding_completed ? "Wizard complete" : "Wizard incomplete"}</strong>
+                    <strong>{r.onboarding_completed ? "Setup complete" : "Setup incomplete"}</strong>
                     {r.onboarding_skipped ? <span className="adminMuted"> · skipped</span> : null}
-                  </div>
-                  <div className="adminMuted adminMuted--sm">
-                    Status: {r.onboarding_status || "—"}
-                  </div>
-                  <div className="adminMuted adminMuted--sm">
-                    Identity: {r.identity_segment || "—"} · User type: {r.user_type || "—"}
                   </div>
                   <div className="adminMuted adminMuted--sm">
                     Completeness:{" "}
                     {r.profile_completeness_percentage != null ? `${r.profile_completeness_percentage}%` : "—"}
                   </div>
-                  <div className="adminMuted adminMuted--xs adminMuted--clamp">
-                    Missing:{" "}
-                    {Array.isArray(r.profile_completeness_missing_fields) && r.profile_completeness_missing_fields.length
-                      ? r.profile_completeness_missing_fields.join(", ")
-                      : "—"}
-                  </div>
-                  <div className="adminMuted adminMuted--xs">
-                    Setup done:{" "}
-                    {r.account_setup_completed_at ? new Date(r.account_setup_completed_at).toLocaleString() : "—"}
-                  </div>
-                  <div className="adminMuted adminMuted--xs">
-                    Profile updated:{" "}
-                    {r.profile_last_updated_at ? new Date(r.profile_last_updated_at).toLocaleString() : "—"}
-                  </div>
                 </td>
-                <td data-label="Last Login">{r.last_login_at ? new Date(r.last_login_at).toLocaleString() : "—"}</td>
-                <td data-label="Stripe">{r.stripe_customer_id ? "yes" : "—"}</td>
+                <td data-label="Last sign-in">{r.last_login_at ? new Date(r.last_login_at).toLocaleString() : "—"}</td>
+                <td data-label="Billing ID">{r.stripe_customer_id ? "Linked" : "—"}</td>
                 <td data-label="Actions" className="adminActionCell" onClick={(e) => e.stopPropagation()}>
                   <select
                     className="adminConsoleInput"

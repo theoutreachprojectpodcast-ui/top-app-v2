@@ -63,7 +63,14 @@ export default function AdminHomepagePanel() {
   }
 
   return (
-    <AdminPanelShell panelId="homepage" nested error={error} message={status}>
+    <AdminPanelShell
+      panelId="homepage"
+      nested
+      title="Homepage settings"
+      description="Carousel and featured sponsor controls for the public home page."
+      error={error}
+      message={status}
+    >
       {loading ? <p className="adminMuted">Loading…</p> : null}
       {!loading ? (
         <>

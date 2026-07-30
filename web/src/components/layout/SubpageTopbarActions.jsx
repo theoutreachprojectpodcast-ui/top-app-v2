@@ -15,6 +15,7 @@ import { launchWorkOSAuth } from "@/lib/auth/workosNativeAuthLaunch";
 import { workosSignInLink, workosSignUpHref, workosMobileSignInHref, workosMobileSignUpHref } from "@/lib/auth/workosReturnTo";
 import { isCapacitorNative } from "@/lib/capacitor/platform";
 import { useMobileShell } from "@/hooks/useMobileShell";
+import { adminConsoleHref } from "@/lib/runtime/deploymentHosts";
 
 const SPONSOR_ICON = "M4 6h16v12H4z M4 10h16";
 
@@ -30,7 +31,7 @@ export default function SubpageTopbarActions({ section = "all" }) {
   const pathname = usePathname();
   const router = useRouter();
   const isMobileShell = useMobileShell();
-  const { profile, loadingProfile, fullName, signOut, workOSAccountEmail } = useProfileData();
+  const { profile, loadingProfile, fullName, signOut, workOSAccountEmail, entitlements } = useProfileData();
   /** Avoid useSearchParams here (static routes like /contact must not CSR-bailout without Suspense). */
   const rememberDevice = readRememberDevicePref();
   const signInReturnFallback = pathname?.startsWith("/podcasts") ? pathname : "/";
@@ -102,6 +103,12 @@ export default function SubpageTopbarActions({ section = "all" }) {
   });
   const accountEmail = profile?.email || workOSAccountEmail || "";
 
+  function goAdminConsole() {
+    const href = isCapacitorNative() ? "/admin" : adminConsoleHref();
+    if (String(href).startsWith("http")) window.location.assign(href);
+    else router.push(href);
+  }
+
   const authBlock =
     authLoading ? (
       <span className="subpageAuthActionsPlaceholder" aria-hidden="true" />
@@ -115,6 +122,8 @@ export default function SubpageTopbarActions({ section = "all" }) {
           email={accountEmail}
           membershipHint={accountMenuHint}
           ariaLabel={`Account menu for ${fullName || accountEmail || "signed-in user"}`}
+          showAdminConsole={!!entitlements?.isPlatformAdmin}
+          onAdminConsole={goAdminConsole}
           onProfile={() => router.push("/profile")}
           onSettings={() => router.push("/settings")}
           onMembership={() => router.push("/profile")}
@@ -155,6 +164,8 @@ export default function SubpageTopbarActions({ section = "all" }) {
         email={accountEmail}
         membershipHint={accountMenuHint}
         ariaLabel={`Account menu for ${fullName || accountEmail || "signed-in user"}`}
+        showAdminConsole={!!entitlements?.isPlatformAdmin}
+        onAdminConsole={goAdminConsole}
         onProfile={() => router.push("/profile")}
         onSettings={() => router.push("/settings")}
         onMembership={() => router.push("/profile")}

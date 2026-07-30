@@ -578,6 +578,35 @@ html[data-color-scheme="light"] .communityPostResource,
   color: var(--color-text-primary);
 }
 
+.communityPostConnectionBadge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-pill, 999px);
+  background: color-mix(in srgb, var(--color-info, #2c7be5) 16%, var(--color-bg-subtle));
+  color: var(--color-text-primary);
+}
+
+.communityFeedBand {
+  display: grid;
+  gap: var(--ds-space-3, 12px);
+  margin-top: var(--ds-space-3, 12px);
+}
+
+.communityFeedBandTitle {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.communityFeedSortRow .btnSoft.isActive {
+  border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-border));
+  background: color-mix(in srgb, var(--color-accent) 12%, var(--color-bg-card));
+}
+
 .communityPostCard--pinned {
   border-color: color-mix(in srgb, var(--color-accent) 28%, var(--color-border));
 }
