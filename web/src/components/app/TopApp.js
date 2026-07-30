@@ -962,24 +962,44 @@ function TopAppInner({ initialNav = "home" }) {
                   </>
                 ) : hostedAuth ? (
                   <>
-                    <button className="btnSoft sponsorBtn" type="button" onClick={openCreateAccountFlow}>
+                    <button
+                      className="btnSoft sponsorBtn"
+                      type="button"
+                      onClick={openCreateAccountFlow}
+                      aria-label="Create account"
+                    >
                       <AppIcon name="profile" />
-                      Create account
+                      <span className="topbarBtnLabel">Create account</span>
                     </button>
-                    <button className="btnSoft sponsorBtn" type="button" onClick={openSignInOverlay}>
+                    <button
+                      className="btnSoft sponsorBtn"
+                      type="button"
+                      onClick={openSignInOverlay}
+                      aria-label="Sign in"
+                    >
                       <AppIcon name="profile" />
-                      Sign in
+                      <span className="topbarBtnLabel">Sign in</span>
                     </button>
                   </>
                 ) : (
                   <>
-                    <button className="btnSoft sponsorBtn" onClick={() => { setAuthMode("signup"); setOverlay("signin"); }} type="button">
+                    <button
+                      className="btnSoft sponsorBtn"
+                      onClick={() => { setAuthMode("signup"); setOverlay("signin"); }}
+                      type="button"
+                      aria-label="Create account"
+                    >
                       <AppIcon name="profile" />
-                      Create account
+                      <span className="topbarBtnLabel">Create account</span>
                     </button>
-                    <button className="btnSoft sponsorBtn" onClick={() => { setAuthMode("signin"); setOverlay("signin"); }} type="button">
+                    <button
+                      className="btnSoft sponsorBtn"
+                      onClick={() => { setAuthMode("signin"); setOverlay("signin"); }}
+                      type="button"
+                      aria-label="Sign in"
+                    >
                       <AppIcon name="profile" />
-                      Sign in
+                      <span className="topbarBtnLabel">Sign in</span>
                     </button>
                   </>
                 )}

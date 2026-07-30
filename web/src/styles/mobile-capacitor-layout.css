@@ -103,6 +103,20 @@ html[data-capacitor-native] .bottomNav.bottomNav--mobileDock .navItemLabel {
   }
 }
 
+/* Capacitor iPad / tablet: same reserved-chrome wordmark as web tablet band. */
+@media (min-width: 761px) and (max-width: 1180px) {
+  html[data-capacitor-native] main.topApp[data-page-atmosphere="home"] .headerBrandStack {
+    max-width: min(440px, calc(var(--cap-portrait-width, 100vw) - 300px));
+  }
+
+  html[data-capacitor-native] main.topApp[data-page-atmosphere="home"] img.brandMarkImg--header:not(.podcastBrandLogo) {
+    max-height: clamp(108px, calc(var(--cap-vw, 1vw) * 15), 168px);
+    max-width: min(440px, calc(var(--cap-portrait-width, 100vw) - 300px));
+    min-width: 0;
+    min-height: 0;
+  }
+}
+
 html[data-capacitor-native][data-cap-orientation="landscape"] body {
   overflow: hidden;
 }
@@ -371,6 +385,21 @@ html[data-capacitor-native] .capacitorAppHeaderPortal {
     .brandMarkImg--header {
     max-height: clamp(40px, 4vw, 48px) !important;
     max-width: min(120px, 20vw) !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+  }
+}
+
+@media (min-width: 761px) and (max-width: 1180px) {
+  html[data-capacitor-native] main.topApp[data-page-atmosphere="home"] .headerBrandStack {
+    max-width: min(440px, calc(var(--cap-portrait-width, 100vw) - 300px)) !important;
+  }
+
+  html[data-capacitor-native]
+    main.topApp[data-page-atmosphere="home"]
+    img.brandMarkImg--header:not(.podcastBrandLogo) {
+    max-height: clamp(108px, calc(var(--cap-vw, 1vw) * 15), 168px) !important;
+    max-width: min(440px, calc(var(--cap-portrait-width, 100vw) - 300px)) !important;
     min-width: 0 !important;
     min-height: 0 !important;
   }

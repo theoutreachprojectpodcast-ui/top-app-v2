@@ -44,6 +44,122 @@
 }
 
 /*
+ * iPad / tablet band (761–1180): keep in-flow header + gradient unchanged, but reserve
+ * left/right chrome so the home wordmark cannot paint over Get the app / Admin / auth / Menu.
+ * Phone (≤760) and wide desktop (≥1181) are intentionally untouched.
+ */
+@media (min-width: 761px) and (max-width: 1180px) {
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .appSiteHeader,
+  .appShell.appShell--admin .appSiteHeader {
+    grid-template-columns: minmax(140px, 1fr) minmax(0, auto) minmax(140px, 1fr);
+    column-gap: 10px;
+  }
+
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .headerBrandStack,
+  .appShell.appShell--admin .headerBrandStack {
+    max-width: min(440px, calc(100vw - 300px));
+  }
+
+  main.topApp[data-page-atmosphere="home"] .headerBrandStack {
+    max-width: min(440px, calc(100vw - 300px));
+  }
+
+  main.topApp[data-page-atmosphere="home"] img.brandMarkImg--header:not(.podcastBrandLogo) {
+    max-height: clamp(108px, 15vw, 168px);
+    max-width: min(440px, calc(100vw - 300px));
+    min-width: 0;
+    min-height: 0;
+  }
+
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarLeft,
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarRight,
+  .appShell.appShell--admin .topbarLeft,
+  .appShell.appShell--admin .topbarRight {
+    max-width: min(46vw, 260px);
+  }
+
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarLeft .topbarActionsCluster,
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarLeft .topbarActionsCluster--start,
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarRight .topbarActionsCluster,
+  .appShell.appShell--admin .topbarActionsCluster {
+    flex-wrap: nowrap;
+    gap: 8px;
+    max-width: 100%;
+  }
+
+  /* Icon-first controls on home only: keep 44px touch targets, hide verbose labels that cause collision. */
+  main.topApp[data-page-atmosphere="home"] .topbar .downloadMobileAppBtn,
+  main.topApp[data-page-atmosphere="home"] .topbarRight > .topbarActionsCluster > .sponsorBtn:has(.iconWrap):not(.adminConsoleTopbarBtn):not(.headerNotificationBellBtn) {
+    min-width: 44px;
+    min-height: 44px;
+    width: auto;
+    max-width: 44px;
+    padding-inline: 0;
+    justify-content: center;
+    gap: 0;
+  }
+
+  main.topApp[data-page-atmosphere="home"] .topbar .downloadMobileAppBtn .topbarBtnLabel,
+  main.topApp[data-page-atmosphere="home"] .topbar .downloadMobileAppBtn > span:not([aria-hidden="true"]),
+  main.topApp[data-page-atmosphere="home"] .topbarRight > .topbarActionsCluster > .sponsorBtn .topbarBtnLabel {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* Hide raw text nodes next to icons via font-size; restore icon/svg size. */
+  main.topApp[data-page-atmosphere="home"] .topbarRight > .topbarActionsCluster > .sponsorBtn:has(.iconWrap):not(.adminConsoleTopbarBtn):not(.headerNotificationBellBtn) {
+    font-size: 0;
+    line-height: 0;
+  }
+
+  main.topApp[data-page-atmosphere="home"] .topbarRight > .topbarActionsCluster > .sponsorBtn:has(.iconWrap):not(.adminConsoleTopbarBtn):not(.headerNotificationBellBtn) .iconWrap,
+  main.topApp[data-page-atmosphere="home"] .topbarRight > .topbarActionsCluster > .sponsorBtn:has(.iconWrap):not(.adminConsoleTopbarBtn):not(.headerNotificationBellBtn) svg {
+    font-size: 14px;
+    line-height: 1;
+  }
+
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .siteMobileNavMore--desktopOnly .siteMobileNavMore__label,
+  .appShell.appShell--admin .siteMobileNavMore--desktopOnly .siteMobileNavMore__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .siteMobileNavMore--desktopOnly .siteMobileNavMore__trigger,
+  .appShell.appShell--admin .siteMobileNavMore--desktopOnly .siteMobileNavMore__trigger {
+    min-width: 44px;
+    min-height: 44px;
+    padding-inline: 10px;
+    justify-content: center;
+  }
+
+  /* Admin stays visible but compact so it does not crowd the logo. */
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbar .adminConsoleTopbarBtn,
+  .appShell.appShell--admin .topbar .adminConsoleTopbarBtn {
+    max-width: 5.5rem;
+    min-width: 44px;
+    min-height: 44px;
+    padding-inline: 10px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+/*
  * Primary header scrolls with page content (in-flow grid).
  * Logo + left/right chrome live in .appSiteHeader; no fixed topbar / floating mark.
  */
@@ -89,6 +205,22 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .heade
   padding: 0;
   margin: 0;
   pointer-events: none;
+}
+
+/* Re-assert tablet logo caps after the shared headerBrandStack max-width (cascade). */
+@media (min-width: 761px) and (max-width: 1180px) {
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .headerBrandStack,
+  main.topApp[data-page-atmosphere="home"] .headerBrandStack,
+  .appShell.appShell--admin .headerBrandStack {
+    max-width: min(440px, calc(100vw - 300px));
+  }
+
+  main.topApp[data-page-atmosphere="home"] img.brandMarkImg--header:not(.podcastBrandLogo) {
+    max-height: clamp(108px, 15vw, 168px);
+    max-width: min(440px, calc(100vw - 300px));
+    min-width: 0;
+    min-height: 0;
+  }
 }
 
 main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .headerBrandStack > a,
@@ -7575,6 +7707,13 @@ html.dark .communityPostBodyGuideSteps li {
   .topbarActionsCluster {
     flex-wrap: wrap;
     gap: 8px;
+  }
+  /* Site header on tablet: never wrap under the logo (overrides the generic cluster wrap). */
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarLeft .topbarActionsCluster,
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarLeft .topbarActionsCluster--start,
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarRight .topbarActionsCluster,
+  .appShell.appShell--admin .topbarActionsCluster {
+    flex-wrap: nowrap;
   }
   .shell,
   .content {

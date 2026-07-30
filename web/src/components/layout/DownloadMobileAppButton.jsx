@@ -19,7 +19,7 @@ export default function DownloadMobileAppButton({ className = "btnSoft downloadM
   const label = (
     <>
       <Smartphone size={16} strokeWidth={2} aria-hidden="true" />
-      <span>Get the app</span>
+      <span className="topbarBtnLabel">Get the app</span>
     </>
   );
 

@@ -124,20 +124,20 @@ export default function SubpageTopbarActions({ section = "all" }) {
       </>
     ) : authState.workos ? (
       <>
-        <button className="btnSoft sponsorBtn" type="button" onClick={openCreateAccount}>
-          Create account
+        <button className="btnSoft sponsorBtn" type="button" onClick={openCreateAccount} aria-label="Create account">
+          <span className="topbarBtnLabel">Create account</span>
         </button>
-        <button className="btnSoft sponsorBtn" type="button" onClick={openSignIn}>
-          Sign in
+        <button className="btnSoft sponsorBtn" type="button" onClick={openSignIn} aria-label="Sign in">
+          <span className="topbarBtnLabel">Sign in</span>
         </button>
       </>
     ) : (
       <>
-        <button className="btnSoft sponsorBtn" type="button" onClick={openCreateAccount}>
-          Create account
+        <button className="btnSoft sponsorBtn" type="button" onClick={openCreateAccount} aria-label="Create account">
+          <span className="topbarBtnLabel">Create account</span>
         </button>
-        <Link className="btnSoft sponsorBtn" href={legacySignInHref}>
-          Sign in
+        <Link className="btnSoft sponsorBtn" href={legacySignInHref} aria-label="Sign in">
+          <span className="topbarBtnLabel">Sign in</span>
         </Link>
       </>
     );
@@ -163,20 +163,20 @@ export default function SubpageTopbarActions({ section = "all" }) {
       />
     ) : authState.workos ? (
       <>
-        <button className="btnSoft sponsorBtn" type="button" onClick={openCreateAccount}>
-          Create account
+        <button className="btnSoft sponsorBtn" type="button" onClick={openCreateAccount} aria-label="Create account">
+          <span className="topbarBtnLabel">Create account</span>
         </button>
-        <button className="btnSoft sponsorBtn" type="button" onClick={openSignIn}>
-          Sign in
+        <button className="btnSoft sponsorBtn" type="button" onClick={openSignIn} aria-label="Sign in">
+          <span className="topbarBtnLabel">Sign in</span>
         </button>
       </>
     ) : (
       <>
-        <button className="btnSoft sponsorBtn" type="button" onClick={openCreateAccount}>
-          Create account
+        <button className="btnSoft sponsorBtn" type="button" onClick={openCreateAccount} aria-label="Create account">
+          <span className="topbarBtnLabel">Create account</span>
         </button>
-        <Link className="btnSoft sponsorBtn" href={legacySignInHref}>
-          Sign in
+        <Link className="btnSoft sponsorBtn" href={legacySignInHref} aria-label="Sign in">
+          <span className="topbarBtnLabel">Sign in</span>
         </Link>
       </>
     );
