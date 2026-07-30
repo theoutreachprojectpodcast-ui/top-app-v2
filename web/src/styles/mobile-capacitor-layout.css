@@ -15,6 +15,28 @@ html[data-capacitor-native] main.topApp {
   max-height: var(--cap-app-height, 100dvh);
 }
 
+/*
+ * Full-bleed WebView (contentInset: never): body skips top inset, so every native
+ * header must clear the status bar / Dynamic Island on phone and iPad.
+ */
+html[data-capacitor-native]
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])
+  .appSiteHeader,
+html[data-capacitor-native] .appShell:not(.appShell--podcast) .appSiteHeader {
+  padding-top: max(12px, env(safe-area-inset-top, 0px));
+  overflow: visible;
+}
+
+html[data-capacitor-native]
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])
+  .headerBrandStack,
+html[data-capacitor-native]
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])
+  .headerBrandStack
+  > a {
+  overflow: visible;
+}
+
 html[data-capacitor-native] main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]):not([data-page-atmosphere="home"]) {
   --header-floating-offset: 0px;
   --header-floating-height: 0px;
@@ -193,20 +215,45 @@ html[data-capacitor-native] main.topApp .siteFooter.siteFooter--pageBottom.siteF
 }
 
 @media (max-width: 760px) {
-  /* Native: header owns the top safe area (body omits top inset in layout.js). */
+  /*
+   * Native: body omits top inset (layout.js) so the in-flow header must clear the
+   * iOS status bar / notch. Do not zero this — that was only valid for fixed chrome.
+   */
   html[data-capacitor-native]
-    :is(main.topApp, .capacitorAppHeaderPortal):not(.appShell--podcast):not([data-page-atmosphere="podcast"])
+    main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])
     .appSiteHeader,
   html[data-capacitor-native] .appShell.appShell--subpage:not(.appShell--podcast) .appSiteHeader {
-    padding-top: 0;
+    padding-top: max(12px, env(safe-area-inset-top, 0px));
+  }
+
+  /* Match mobile web: no occlusion slab under the in-flow logo. */
+  html[data-capacitor-native] main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) > .topbarOcclusion {
+    position: static;
+    display: block;
+    height: 0;
+    min-height: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  html[data-capacitor-native] main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarOcclusion::before,
+  html[data-capacitor-native] main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarOcclusion::after {
+    display: none;
   }
 
   html[data-capacitor-native]
-    :is(main.topApp, .capacitorAppHeaderPortal):not(.appShell--podcast):not([data-page-atmosphere="podcast"]):not([data-page-atmosphere="home"])
+    main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]):not([data-page-atmosphere="home"])
+    .appSiteHeader {
+    margin-bottom: clamp(2px, calc(var(--cap-vw, 1vw) * 0.8), 6px);
+    padding-bottom: 0;
+  }
+
+  html[data-capacitor-native]
+    main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]):not([data-page-atmosphere="home"])
     .headerBrandStack
     .brandMarkImg,
   html[data-capacitor-native]
-    :is(main.topApp, .capacitorAppHeaderPortal):not(.appShell--podcast):not([data-page-atmosphere="podcast"]):not([data-page-atmosphere="home"])
+    main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]):not([data-page-atmosphere="home"])
     .headerBrandStack
     img.brandMarkImg--header:not(.podcastBrandLogo) {
     margin-bottom: 0 !important;

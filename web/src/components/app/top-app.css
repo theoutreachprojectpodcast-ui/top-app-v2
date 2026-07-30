@@ -65,6 +65,7 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .appSi
   min-height: 0;
   height: auto;
   overflow: visible;
+  /* Clear notch / status bar; mobile-shell may refine horizontal padding at ≤760px. */
   padding: max(12px, env(safe-area-inset-top, 0px)) clamp(12px, 3vw, 40px) 10px;
   z-index: 2;
 }
@@ -8132,6 +8133,20 @@ html.dark .communityPostBodyGuideSteps li {
 .savedOrgCollapsible__location {
   font-size: 13px;
   color: var(--color-text-secondary);
+}
+.savedOrgCollapsible__unavailableHint {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.savedOrgCollapsible--unavailable .savedOrgCollapsible__name {
+  font-style: italic;
+  color: var(--color-text-secondary);
+}
+.savedOrgCollapsible__unavailableBody {
+  margin: 0;
+  padding: 0.75rem 0.25rem 0.25rem;
 }
 .savedOrgCollapsible__fav {
   flex-shrink: 0;
