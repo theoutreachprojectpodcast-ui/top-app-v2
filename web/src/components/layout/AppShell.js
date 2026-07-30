@@ -18,7 +18,6 @@ import { usePodcastDarkSchemeLock } from "@/hooks/usePodcastDarkSchemeLock";
 import { resolvePageAtmosphere } from "@/lib/design/pageAtmosphere";
 import { useImmersiveHeaderScroll } from "@/hooks/useImmersiveHeaderScroll";
 import CapacitorFooterPortal from "@/components/capacitor/CapacitorFooterPortal";
-import CapacitorHeaderPortal from "@/components/capacitor/CapacitorHeaderPortal";
 import { isSiteDockNavActive, SITE_MOBILE_DOCK_ITEMS } from "@/components/navigation/siteBottomNavConfig";
 import { scrollToPageTop } from "@/lib/navigation/scrollToPageTop";
 
@@ -64,12 +63,13 @@ export default function AppShell({
   const pageAtmosphere = pageAtmosphereProp ?? resolvePageAtmosphere(pathname, activeNav);
   const podcastThemeShell =
     pageAtmosphere === "podcast" || String(shellClassName || "").includes("appShell--podcast");
-  const immersiveHeaderScroll = useTopAppStructure && !podcastThemeShell;
+  const immersiveHeaderScroll = false;
   const headerGradientBoost = usePrimaryTopbarChrome || useTopAppStructure;
+  /* Header stays in document flow — no fixed-veil / scroll-opacity. */
   useImmersiveHeaderScroll({
     rootRef: shellRef,
-    enabled: immersiveHeaderScroll,
-    gradientBoost: headerGradientBoost,
+    enabled: false,
+    gradientBoost: false,
   });
   usePodcastDarkSchemeLock(podcastThemeShell);
 
@@ -95,8 +95,7 @@ export default function AppShell({
       {...(useTopAppStructure ? { "data-page-atmosphere": pageAtmosphere } : {})}
       {...podcastRouteAttrs}
     >
-      <CapacitorHeaderPortal shellRef={shellRef} enabled={!podcastThemeShell}>
-        <div className={`appSiteHeader${podcastThemeShell ? " appSiteHeader--podcast" : ""}`}>
+      <div className={`appSiteHeader${podcastThemeShell ? " appSiteHeader--podcast" : ""}`}>
           {podcastThemeShell ? (
             <>
               <AppHeaderBrand
@@ -166,9 +165,7 @@ export default function AppShell({
               </header>
             </>
           )}
-        </div>
-        {usePrimaryTopbarChrome ? <div className="topbarOcclusion" aria-hidden="true" /> : null}
-      </CapacitorHeaderPortal>
+      </div>
 
       {useTopAppStructure ? (
         <section className="shell">

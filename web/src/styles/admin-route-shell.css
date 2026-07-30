@@ -1,4 +1,4 @@
-/* Admin console shell — shared site header + fixed chrome with gradient scroll. */
+/* Admin console shell — shared site header in normal document flow. */
 
 main.topApp.appShell--admin {
   min-height: 100vh;
@@ -11,7 +11,7 @@ main.topApp.appShell--admin .topbarOcclusion {
   pointer-events: none;
 }
 
-/* Content clears the fixed header band (same floating tokens as other non-home routes). */
+/* Content follows in-flow header (no fixed-header clearance). */
 main.topApp.appShell--admin .adminLayout {
   position: relative;
   z-index: 1;
@@ -19,7 +19,7 @@ main.topApp.appShell--admin .adminLayout {
   margin: 0 auto;
   box-sizing: border-box;
   padding:
-    calc(var(--app-header-total-height, var(--app-header-height)) + var(--ds-space-2, 8px))
+    var(--ds-space-2, 8px)
     max(12px, var(--content-gutter, 16px))
     calc(24px + env(safe-area-inset-bottom, 0px));
   display: flex;

@@ -784,11 +784,11 @@
     white-space: nowrap;
   }
 
-  /* Home wordmark — fixed floating chrome; shell clears the logo band. */
+  /* Home wordmark — in-flow header; logo sized via mobile tokens (no floating clearance). */
   main.topApp[data-page-atmosphere="home"] {
-    --header-floating-offset: 8px;
-    --header-floating-height: clamp(137px, 36vw, 182px);
-    --header-fade-height: 36px;
+    --header-floating-offset: 0px;
+    --header-floating-height: 0px;
+    --header-fade-height: 0px;
     --mobile-home-header-layout-h: clamp(112px, 29vw, 148px);
     --mobile-site-header-logo-h: clamp(137px, 36vw, 182px);
     --mobile-site-header-logo-max-w: min(587px, calc(100vw - 24px));
@@ -821,9 +821,7 @@
 
   main.topApp[data-page-atmosphere="home"] .shell.shell--home {
     gap: 0;
-    padding-top: calc(
-      var(--app-header-total-height, var(--app-header-height)) + var(--mobile-home-header-content-gap, 6px)
-    );
+    padding-top: var(--mobile-home-header-content-gap, 6px);
     padding-bottom: 13px;
     margin-top: 0;
   }

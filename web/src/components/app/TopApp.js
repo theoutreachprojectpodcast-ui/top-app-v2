@@ -81,7 +81,6 @@ import { resolvePageAtmosphere } from "@/lib/design/pageAtmosphere";
 import MissionPageTopStrip from "@/components/layout/MissionPageTopStrip";
 import NativeAccountBillingNotice from "@/components/capacitor/NativeAccountBillingNotice";
 import CapacitorFooterPortal from "@/components/capacitor/CapacitorFooterPortal";
-import CapacitorHeaderPortal from "@/components/capacitor/CapacitorHeaderPortal";
 import {
   openWebBilling,
   openWebMembership,
@@ -855,11 +854,11 @@ function TopAppInner({ initialNav = "home" }) {
   }
 
   const pageAtmosphere = useMemo(() => resolvePageAtmosphere(pathname, nav), [pathname, nav]);
-  const immersiveHeaderScroll = pageAtmosphere !== "podcast";
+  /* Header is in normal document flow (scrolls away). Do not drive fixed-veil opacity. */
   useImmersiveHeaderScroll({
     rootRef: mainScrollRef,
-    enabled: immersiveHeaderScroll,
-    gradientBoost: true,
+    enabled: false,
+    gradientBoost: false,
   });
 
   function onContactSubmit(e) {
@@ -884,11 +883,10 @@ function TopAppInner({ initialNav = "home" }) {
   return (
     <main
       ref={mainScrollRef}
-      className={`topApp theme-${profile.theme}${immersiveHeaderScroll ? " header-at-top" : ""} ${isLoggedIn ? "topApp--auth-in" : "topApp--auth-out"} appShell--withMobileNavDock`}
+      className={`topApp theme-${profile.theme} ${isLoggedIn ? "topApp--auth-in" : "topApp--auth-out"} appShell--withMobileNavDock`}
       data-page-atmosphere={pageAtmosphere}
     >
-      <CapacitorHeaderPortal shellRef={mainScrollRef} enabled={pageAtmosphere !== "podcast"}>
-        <div className="appSiteHeader">
+      <div className="appSiteHeader">
           <AppHeaderBrand pageAtmosphere={pageAtmosphere} />
           <header className="topbar">
             <HeaderInner className="topbarInner">
@@ -966,9 +964,7 @@ function TopAppInner({ initialNav = "home" }) {
             </div>
           </HeaderInner>
         </header>
-        </div>
-        <div className="topbarOcclusion" aria-hidden="true" />
-      </CapacitorHeaderPortal>
+      </div>
 
       {(nav === "home" || nav === "community") && (
         <section className={nav === "home" ? "shell shell--home" : "shell"}>
