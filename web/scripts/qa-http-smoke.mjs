@@ -6,7 +6,7 @@
 const baseRaw =
   process.env.QA_BASE_URL ||
   process.argv[2] ||
-  "https://qa-the-outreach-project.vercel.app";
+  "https://qa.theoutreachproject.app";
 const base = String(baseRaw).replace(/\/$/, "");
 const bypass = String(process.env.VERCEL_AUTOMATION_BYPASS_SECRET || "").trim();
 
@@ -30,8 +30,9 @@ function printDeploymentProtectionHelp() {
     "[smoke:qa] Set GitHub Actions secret VERCEL_AUTOMATION_BYPASS_SECRET_QA (or VERCEL_AUTOMATION_BYPASS_SECRET)",
   );
   console.error(
-    "[smoke:qa] Value: Vercel → qa-the-outreach-project → Settings → Deployment Protection → Protection Bypass for Automation",
+    "[smoke:qa] Value: Vercel → Project → Settings → Deployment Protection → Protection Bypass for Automation",
   );
+  console.error("[smoke:qa] Prefer QA_BASE_URL=https://qa.theoutreachproject.app for the custom-domain QA host.");
 }
 
 /** Fail fast when protection is on but CI has no working bypass. */
