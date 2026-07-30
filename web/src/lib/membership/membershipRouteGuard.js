@@ -1,6 +1,7 @@
 import { authFailureJson, resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
 import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
 import {
+  canCreateCommunityContent,
   canSaveOrganizations,
   canViewCommunity,
   requirePro,
@@ -23,13 +24,13 @@ export function profilePassesMembershipScope(profileRow, scope) {
     case "platform":
       return requirePro(profileRow, opts);
     case "directory":
-      return true;
+      return requirePro(profileRow, opts);
     case "save_organizations":
       return canSaveOrganizations(profileRow, opts);
     case "community_view":
       return canViewCommunity(profileRow, opts);
     case "community_post":
-      return requirePro(profileRow, opts);
+      return canCreateCommunityContent(profileRow, opts);
     case "podcast_premium":
       return requirePro(profileRow, opts);
     case "trusted_pro":
@@ -41,26 +42,17 @@ export function profilePassesMembershipScope(profileRow, scope) {
 
 /**
  * @param {string} scope
- * @param {{ upgrade?: string }} [extra]
+ * @param {{ upgrade?: string, message?: string }} [extra]
  */
 export function membershipDeniedResponse(scope, extra = {}) {
-  const upgrade =
-    extra.upgrade ||
-    (scope === "save_organizations" ||
-    scope.includes("pro") ||
-    scope === "community_post" ||
-    scope === "community_view" ||
-    scope === "podcast_premium" ||
-    scope === "trusted_pro"
-      ? "pro"
-      : "pro");
+  const upgrade = extra.upgrade || "pro";
   return Response.json(
     {
       ok: false,
       error: "membership_required",
       scope,
       upgrade,
-      message: "Pro Membership ($5.99/year) is required for this feature.",
+      message: extra.message || "Pro Membership ($5.99/year) is required for this feature.",
     },
     { status: 403 },
   );

@@ -1,3 +1,10 @@
 .vercel
 node_modules
 .pnpm-debug.log*
+
+# Google Play Drive handoff (large binaries — rebuild via assemble script)
+docs/google-play-upload/DRIVE-SHARE/01-app-bundle/*.aab
+docs/google-play-upload/*.zip
+
+# Apple App Store Drive handoff ZIP
+docs/apple-app-store-upload/*.zip

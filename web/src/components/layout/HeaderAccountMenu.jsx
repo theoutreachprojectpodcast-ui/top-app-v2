@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Bookmark, CreditCard, LogOut, Settings, UserRound } from "lucide-react";
+import { Bookmark, CreditCard, LogOut, Settings, Shield, UserRound } from "lucide-react";
 import Avatar from "@/components/shared/Avatar";
 import HeaderDropdownLayer from "@/components/layout/HeaderDropdownLayer";
 import { useMobileShell } from "@/hooks/useMobileShell";
@@ -31,6 +31,8 @@ export default function HeaderAccountMenu({
   displayName = "",
   email = "",
   membershipHint = "",
+  showAdminConsole = false,
+  onAdminConsole,
   onProfile,
   onSettings,
   onMembership,
@@ -73,10 +75,6 @@ export default function HeaderAccountMenu({
     };
   }
 
-  function toggleOpen() {
-    setOpen((v) => !v);
-  }
-
   return (
     <div className="headerAccountWrap" ref={wrapRef}>
       <button
@@ -85,7 +83,7 @@ export default function HeaderAccountMenu({
         aria-label={ariaLabel || "Account menu"}
         aria-expanded={open}
         aria-haspopup="true"
-        onClick={toggleOpen}
+        onClick={() => setOpen((v) => !v)}
       >
         <Avatar src={avatarSrc} alt="Account" className="headerAccountAvatar" sizes="40px" />
       </button>
@@ -112,6 +110,14 @@ export default function HeaderAccountMenu({
                 onClick={closeAnd(onMembership)}
               />
               <MenuRow icon={Bookmark} label="Saved organizations" onClick={closeAnd(onSavedItems)} />
+              {showAdminConsole && typeof onAdminConsole === "function" ? (
+                <MenuRow
+                  icon={Shield}
+                  label="Admin Console"
+                  hint="Manage the platform"
+                  onClick={closeAnd(onAdminConsole)}
+                />
+              ) : null}
             </div>
             <div className="headerAccountMenuRule" role="presentation" />
             <MenuRow icon={LogOut} label="Sign out" danger onClick={closeAnd(onSignOut)} />

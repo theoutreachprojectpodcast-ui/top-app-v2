@@ -27,10 +27,11 @@ The progress notice and welcome card sit in a shared **`.homeHeroBackdrop__conte
 
 ## Saved organizations data
 
-- **Root cause**: `fetchSavedOrganizationsByEin` previously used `nonprofits` only (`queryTrustedOrgsByEin`), so many directory-saved EINs had sparse/wrong rows; WorkOS users often fell back to client-side placeholder merging.
-- **Fix**: `resolveSavedOrganizationDirectoryRows` (`web/src/lib/savedOrganizations/resolveSavedOrganizations.js`) loads **`nonprofits_search_app_v1`**, merges **`nonprofit_directory_enrichment`**, overlays **`nonprofit_profiles`** for website/logo/socials, then `mapDirectoryRow`.
-- **WorkOS**: `GET /api/me/saved-orgs/cards` (admin client) returns the same row shape; `useProfileData` maps each with `mapNonprofitCardRow(..., "saved")`.
-- **Cards**: `SavedOrganizationCard` now takes a **pre-mapped `card`**; **NonprofitCard** shows a **Website** button for `actionMode === "saved"` when links include a site; socials use existing `NonprofitSocialLinks` + **curated** link rules.
+- **Root cause (2026-07)**: `resolveSavedOrganizationDirectoryRows` **skipped** EINs with no `nonprofits_search_app_v1` row or with `ein_identity_verified === false`. Profile UI then filled the intentional placeholder **"Saved organization"**. Accounts whose favorites were still in the session search cache looked fine; accounts loading profile cold with unverified/missing search-view rows looked broken.
+- **Fix**: Always return one row per saved EIN. Resolve names from directory → enrichment → `nonprofit_profiles.display_name_override`. Unverified identity no longer hides saved names. True misses use **"Organization unavailable"** with remove action.
+- **WorkOS**: `GET /api/me/saved-orgs/cards` (admin client) returns joined `rows` + typed `items`; `PUT /api/me/saved-orgs` validates new EINs and returns resolved rows for immediate UI update.
+- **Repair**: `pnpm --dir web run repair:saved-org-names` (optional `--apply-normalize`); SQL `saved_org_name_resolution_2026_07.sql`.
+- **Cards**: `SavedOrganizationCard` shows canonical name or unavailable state; **NonprofitCard** for resolved rows.
 
 ## Membership card on profile
 

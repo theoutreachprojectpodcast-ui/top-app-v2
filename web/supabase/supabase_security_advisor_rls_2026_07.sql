@@ -163,7 +163,7 @@ begin
       join pg_namespace n on n.oid = c.relnamespace
       where n.nspname = 'public' and c.relname = t.relname
     ) then
-      return query select 'table'::text, t.relname, 'FAIL'::text, 'rls_disabled'::text;
+      return query select 'table'::text, t.relname::text, 'FAIL'::text, 'rls_disabled'::text;
       continue;
     end if;
 
@@ -172,7 +172,7 @@ begin
       join pg_namespace n on n.oid = c.relnamespace
       where n.nspname = 'public' and c.relname = t.relname
     ) then
-      return query select 'table'::text, t.relname, 'WARN'::text, 'rls_not_forced'::text;
+      return query select 'table'::text, t.relname::text, 'WARN'::text, 'rls_not_forced'::text;
     end if;
 
     select exists (
@@ -185,9 +185,9 @@ begin
     ) into has_restrictive_deny;
 
     if not has_restrictive_deny then
-      return query select 'table'::text, t.relname, 'FAIL'::text, 'missing_restrictive_client_deny'::text;
+      return query select 'table'::text, t.relname::text, 'FAIL'::text, 'missing_restrictive_client_deny'::text;
     else
-      return query select 'table'::text, t.relname, 'OK'::text, 'rls_deny_clients'::text;
+      return query select 'table'::text, t.relname::text, 'OK'::text, 'rls_deny_clients'::text;
     end if;
   end loop;
 
@@ -206,9 +206,9 @@ begin
     where n.nspname = 'public' and c.relname = v.relname;
 
     if invoker_val = 'true' then
-      return query select 'view'::text, v.relname, 'OK'::text, 'security_invoker'::text;
+      return query select 'view'::text, v.relname::text, 'OK'::text, 'security_invoker'::text;
     else
-      return query select 'view'::text, v.relname, 'FAIL'::text, 'security_definer_or_default'::text;
+      return query select 'view'::text, v.relname::text, 'FAIL'::text, 'security_definer_or_default'::text;
     end if;
   end loop;
 
@@ -220,9 +220,9 @@ begin
   loop
     if has_table_privilege('anon', format('public.%I', m.relname), 'select')
        or has_table_privilege('authenticated', format('public.%I', m.relname), 'select') then
-      return query select 'materialized_view'::text, m.relname, 'FAIL'::text, 'client_select_granted'::text;
+      return query select 'materialized_view'::text, m.relname::text, 'FAIL'::text, 'client_select_granted'::text;
     else
-      return query select 'materialized_view'::text, m.relname, 'OK'::text, 'client_select_revoked'::text;
+      return query select 'materialized_view'::text, m.relname::text, 'OK'::text, 'client_select_revoked'::text;
     end if;
   end loop;
 end;

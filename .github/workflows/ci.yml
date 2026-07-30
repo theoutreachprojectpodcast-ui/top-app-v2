@@ -93,6 +93,9 @@ jobs:
       - name: Validate Capacitor config
         run: pnpm run validate:capacitor
 
+      - name: Validate portrait orientation lock
+        run: pnpm run validate:portrait-orientation
+
       - name: Production env structure (strict)
         run: pnpm --dir web exec node scripts/validate-environment.mjs --profile=production --strict
         env:

@@ -57,6 +57,11 @@ assert(
 );
 
 assert(
+  fs.existsSync(path.join(webRoot, "supabase/supabase_security_advisor_functions_2026_07.sql")),
+  "supabase_security_advisor_functions_2026_07.sql must exist",
+);
+
+assert(
   fs.existsSync(path.join(webRoot, "scripts/security-rls-live-probe.mjs")),
   "security-rls-live-probe.mjs must exist",
 );

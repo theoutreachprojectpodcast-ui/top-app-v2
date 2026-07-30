@@ -1,0 +1,8 @@
+Version 1.0.1 (build 8)
+
+• Locks the app to portrait orientation on iPhone and iPad
+• Sign-in and session reliability updates
+• Sponsors, community, and directory experience polish
+• Membership billing continues via Stripe on our website (not Apple In-App Purchase)
+
+Thank you for supporting The Outreach Project.

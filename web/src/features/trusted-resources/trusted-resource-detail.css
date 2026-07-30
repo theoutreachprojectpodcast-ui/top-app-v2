@@ -48,9 +48,44 @@
   gap: var(--ds-space-3, 12px);
 }
 
+.trustedDetailEmptyTitle {
+  margin: 0;
+  font-size: var(--text-title-sm, 1.25rem);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.trustedDetailEmptyCopy {
+  margin: 0;
+  max-width: 42rem;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
 .trustedDetailStatus {
   margin: 0 0 var(--ds-space-3, 12px);
   color: var(--color-text-secondary);
+}
+
+.trustedDetailPage--empty {
+  display: grid;
+  gap: var(--ds-space-3, 12px);
+  justify-items: start;
+  padding: var(--ds-space-4, 16px) 0 var(--ds-space-2, 8px);
+}
+
+.trustedDetailEmptyTitle {
+  margin: 0;
+  font-size: var(--text-title-sm, 1.25rem);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.trustedDetailEmptyCopy {
+  margin: 0;
+  max-width: 42rem;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
 }
 
 /* —— Hero: wide banner + logo badge overlay —— */

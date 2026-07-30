@@ -34,6 +34,7 @@
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
+	<!-- AUTHORITATIVE portrait lock (iPhone and iPad). Do not add Landscape keys. CI: validate:portrait-orientation. UIRequiresFullScreen keeps iPad from multitasking into landscape aspect. -->
 	<key>UIRequiresFullScreen</key>
 	<true/>
 	<key>UIRequiredDeviceCapabilities</key>

@@ -16,6 +16,12 @@ import {
 } from "@/server/notifications/notificationService";
 import { shouldHideDemoCommunitySeeds } from "@/lib/runtime/qaEnv";
 import { sanitizeCommunityStoryPhotoUrl } from "@/features/community/domain/communityStoryPhoto";
+import {
+  memberPostCreateFields,
+  membersMayCreatePosts,
+  resolveCommunityPostingMode,
+} from "@/lib/community/communityPostingMode";
+import { loadAcceptedFriendProfileIds } from "@/lib/community/memberConnections";
 
 const REACTIONS = "community_post_reactions";
 
@@ -62,6 +68,7 @@ export async function GET(request) {
       rows = rows.filter((r) => !r?.is_demo_seed);
     }
     let likedIds = new Set();
+    let friendIds = new Set();
     if (profileRow?.id) {
       const { data: likes } = await admin
         .from(REACTIONS)
@@ -69,16 +76,27 @@ export async function GET(request) {
         .eq("profile_id", profileRow.id)
         .eq("reaction_type", "like");
       likedIds = new Set((likes || []).map((r) => r.post_id));
+      try {
+        friendIds = await loadAcceptedFriendProfileIds(admin, profileRow.id);
+      } catch {
+        friendIds = new Set();
+      }
     }
 
-    const enriched = rows.map((row) => ({
-      ...row,
-      viewer_has_liked: likedIds.has(row.id),
-    }));
+    const chronological = url.searchParams.get("sort") === "chronological";
+    const enriched = rows.map((row) => {
+      const authorPid = row.author_profile_id ? String(row.author_profile_id) : "";
+      const fromConnection = !!(authorPid && friendIds.has(authorPid) && authorPid !== String(profileRow.id));
+      return {
+        ...row,
+        viewer_has_liked: likedIds.has(row.id),
+        from_connection: fromConnection,
+      };
+    });
 
-    const posts = sortCommunityFeedRows(enriched);
+    const posts = sortCommunityFeedRows(enriched, { chronological });
 
-    return Response.json({ posts });
+    return Response.json({ posts, sort: chronological ? "chronological" : "connections_first" });
   }
 
   const auth = await resolveWorkOSRouteUser();
@@ -178,12 +196,48 @@ export async function POST(request) {
 
   if (!profileMayCreateCommunityPost(profileRow)) {
     if (!profilePassesMembershipScope(profileRow, "community_post")) {
+      const status = String(profileRow.user_status || "active").toLowerCase();
+      if (status === "suspended") {
+        return Response.json(
+          { ok: false, message: "Suspended accounts cannot create community posts." },
+          { status: 403 },
+        );
+      }
+      if (profileRow.community_posting_disabled === true) {
+        return Response.json(
+          { ok: false, message: "Posting has been restricted on this account." },
+          { status: 403 },
+        );
+      }
       return membershipDeniedResponse("community_post");
     }
     return Response.json(
       {
         ok: false,
-        message: "Community posting requires Pro Membership.",
+        message: "You do not have permission to create community posts.",
+      },
+      { status: 403 },
+    );
+  }
+
+  const postingMode = await resolveCommunityPostingMode(admin);
+  const isStaff =
+    isCommunityModeratorServer({
+      email: user.email,
+      workosUserId: user.id,
+      profileRow,
+    }) ||
+    isPlatformAdminServer({
+      email: user.email,
+      workosUserId: user.id,
+      profileRow,
+    });
+
+  if (!isStaff && !membersMayCreatePosts(postingMode)) {
+    return Response.json(
+      {
+        ok: false,
+        message: "Community posting is currently limited to Outreach Project staff.",
       },
       { status: 403 },
     );
@@ -217,6 +271,10 @@ export async function POST(request) {
   }
 
   const photoRaw = sanitizeCommunityStoryPhotoUrl(body.photo_url);
+  const createFields = memberPostCreateFields(postingMode, { isStaff });
+  const taggedProfileIds = Array.isArray(body.tagged_profile_ids)
+    ? body.tagged_profile_ids.map((id) => String(id || "").trim()).filter(Boolean).slice(0, 20)
+    : [];
 
   const record = {
     author_profile_id: profileRow.id,
@@ -232,47 +290,112 @@ export async function POST(request) {
     show_author_name: body.show_author_name !== false,
     link_url: linkUrl,
     photo_url: photoRaw,
-    status: "pending_review",
+    status: createFields.status,
+    published_at: createFields.published_at || null,
+    reviewed_at: createFields.reviewed_at || null,
     visibility: "community",
     like_count: 0,
     share_count: 0,
+    tagged_profile_ids: taggedProfileIds,
     updated_at: new Date().toISOString(),
   };
 
-  const { data, error } = await admin.from(TABLE).insert(record).select("id,status,created_at").maybeSingle();
+  let data = null;
+  let { data: inserted, error } = await admin
+    .from(TABLE)
+    .insert(record)
+    .select("id,status,created_at,published_at")
+    .maybeSingle();
+  data = inserted;
+
+  if (error && /tagged_profile_ids/i.test(String(error.message || ""))) {
+    delete record.tagged_profile_ids;
+    const retry = await admin.from(TABLE).insert(record).select("id,status,created_at,published_at").maybeSingle();
+    error = retry.error;
+    data = retry.data;
+  }
 
   if (error) {
     return Response.json({ ok: false, message: error.message || "Could not save your story." }, { status: 500 });
   }
 
   const postId = data?.id ? String(data.id) : "";
+  const published = String(data?.status || createFields.status) === "approved";
+
   if (postId) {
-    await createPlatformNotification(admin, {
-      recipientProfileId: profileRow.id,
-      audienceScope: "user",
-      type: "community_post_submitted",
-      title: "Story submitted for review",
-      message: "Thanks for sharing — moderators will review your community post shortly.",
-      linkPath: "/community",
-      entityType: "community_post",
-      entityId: postId,
-      metadata: { post_id: postId },
-    });
-    await notifyStaffProfiles(admin, {
-      type: "community_post_submitted_for_review",
-      title: "New community post to review",
-      message: title ? `“${title.slice(0, 80)}${title.length > 80 ? "…" : ""}”` : "A member submitted a story for moderation.",
-      linkPath: "/admin/community",
-      entityType: "community_post",
-      entityId: postId,
-      dedupeHours: 12,
-      metadata: { post_id: postId, author_profile_id: profileRow.id },
-    });
+    if (published) {
+      await createPlatformNotification(admin, {
+        recipientProfileId: profileRow.id,
+        audienceScope: "user",
+        type: "community_post_published",
+        title: "Your post is live",
+        message: "Your community post is now visible to members.",
+        linkPath: "/community",
+        entityType: "community_post",
+        entityId: postId,
+        metadata: { post_id: postId },
+      });
+      if (postingMode === "post_review") {
+        await notifyStaffProfiles(admin, {
+          type: "community_post_published_for_review",
+          title: "New community post (review recommended)",
+          message: title
+            ? `“${title.slice(0, 80)}${title.length > 80 ? "…" : ""}”`
+            : "A member published a community post.",
+          linkPath: "/admin/community",
+          entityType: "community_post",
+          entityId: postId,
+          dedupeHours: 12,
+          metadata: { post_id: postId, author_profile_id: profileRow.id },
+        });
+      }
+    } else {
+      await createPlatformNotification(admin, {
+        recipientProfileId: profileRow.id,
+        audienceScope: "user",
+        type: "community_post_submitted",
+        title: "Story submitted for review",
+        message: "Thanks for sharing — moderators will review your community post shortly.",
+        linkPath: "/community",
+        entityType: "community_post",
+        entityId: postId,
+        metadata: { post_id: postId },
+      });
+      await notifyStaffProfiles(admin, {
+        type: "community_post_submitted_for_review",
+        title: "New community post to review",
+        message: title
+          ? `“${title.slice(0, 80)}${title.length > 80 ? "…" : ""}”`
+          : "A member submitted a story for moderation.",
+        linkPath: "/admin/community",
+        entityType: "community_post",
+        entityId: postId,
+        dedupeHours: 12,
+        metadata: { post_id: postId, author_profile_id: profileRow.id },
+      });
+    }
+
+    for (const taggedId of taggedProfileIds) {
+      if (taggedId === String(profileRow.id)) continue;
+      await createPlatformNotification(admin, {
+        recipientProfileId: taggedId,
+        audienceScope: "user",
+        type: "community_post_tag",
+        title: "You were tagged in a post",
+        message: `${displayName} tagged you in a community post.`,
+        linkPath: "/community",
+        entityType: "community_post",
+        entityId: postId,
+        metadata: { post_id: postId, tagged_by: profileRow.id },
+      });
+    }
   }
 
   return Response.json({
     ok: true,
     post: data,
-    message: "Your story was submitted for review. You will see it in the feed after a moderator approves it.",
+    message: published
+      ? "Your post is live in the community feed."
+      : "Your story was submitted for review. You will see it in the feed after a moderator approves it.",
   });
 }

@@ -73,7 +73,30 @@ export default function NonprofitProfilePage({ ein: einParam }) {
         digits
       );
       if (fetchError) {
-        setError("Could not load this organization.");
+        // Prefer curated trusted detail when this EIN belongs to a Trusted Resource.
+        try {
+          const trustedRes = await fetch(`/api/trusted/catalog?slug=${encodeURIComponent(digits)}`, {
+            credentials: "include",
+            cache: "no-store",
+          });
+          if (trustedRes.ok) {
+            const trustedData = await trustedRes.json().catch(() => ({}));
+            const trustedSlug = String(
+              trustedData?.canonicalSlug || trustedData?.row?.trustedResourceSlug || "",
+            )
+              .trim()
+              .toLowerCase();
+            if (trustedData?.ok && trustedSlug) {
+              router.replace(`/trusted/${trustedSlug}`);
+              return;
+            }
+          }
+        } catch {
+          /* continue with directory error */
+        }
+        setError(
+          "This organization profile could not be loaded from the directory. Try again later, or return to Trusted Resources if you arrived from that list.",
+        );
         setCard(null);
         setMergeBase(null);
         return;
@@ -94,7 +117,7 @@ export default function NonprofitProfilePage({ ein: einParam }) {
       setCard(next);
       setMergeBase(base || null);
     },
-    []
+    [router]
   );
 
   useEffect(() => {

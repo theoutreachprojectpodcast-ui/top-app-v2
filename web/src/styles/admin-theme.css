@@ -1,4 +1,4 @@
-/* Admin console — light/dark theme polish (scoped to .adminConsole). */
+/* Admin console ? light/dark theme polish (scoped to .adminConsole). */
 
 main.topApp.appShell--admin.adminConsole {
   --admin-shadow-dropdown: var(--shadow-card, 0 8px 24px rgb(0 0 0 / 12%));
@@ -577,4 +577,365 @@ main.topApp.appShell--admin.adminConsole {
 .adminConsole .adminTableWrap::-webkit-scrollbar-thumb {
   background: var(--color-scrollbar-thumb, var(--color-border-strong));
   border-radius: 999px;
+}
+
+
+/* Shared admin UX primitives */
+
+.adminPageHeader {
+  display: grid;
+  gap: var(--ds-space-3, 12px);
+  margin-bottom: var(--ds-space-4, 16px);
+  padding-bottom: var(--ds-space-3, 12px);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.adminPageHeader__main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--ds-space-3, 12px) var(--ds-space-5, 20px);
+}
+
+.adminPageHeader__titles {
+  min-width: 0;
+  flex: 1 1 220px;
+}
+
+.adminPageHeader__title {
+  margin: 0;
+  font-size: clamp(1.2rem, 2.5vw, 1.35rem);
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--color-text-primary);
+}
+
+.adminPageHeader__desc {
+  margin: var(--ds-space-2, 8px) 0 0;
+  max-width: 52rem;
+  font-size: var(--text-body-sm, 0.875rem);
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+.adminPageHeader__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ds-space-2, 8px) var(--ds-space-3, 12px);
+  margin-top: var(--ds-space-2, 8px);
+}
+
+.adminPageHeader__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-space-2, 8px);
+  align-items: center;
+}
+
+.adminPageHeader__actions .btnPrimary,
+.adminPageHeader__actions .btnSoft,
+.adminActionBar .btnPrimary,
+.adminActionBar .btnSoft,
+.adminFilterBar .btnPrimary,
+.adminFilterBar .btnSoft {
+  min-height: 44px;
+}
+
+.adminStatusBadge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.adminStatusBadge--live,
+.adminStatusBadge--published {
+  background: color-mix(in srgb, var(--color-success, #2f9e44) 16%, transparent);
+  color: var(--color-text-primary);
+  border-color: color-mix(in srgb, var(--color-success, #2f9e44) 30%, var(--color-border-subtle));
+}
+
+.adminStatusBadge--draft,
+.adminStatusBadge--partial,
+.adminStatusBadge--beta {
+  background: color-mix(in srgb, var(--color-warning, #c9842a) 16%, transparent);
+  color: var(--color-text-primary);
+}
+
+.adminStatusBadge--attention,
+.adminStatusBadge--disabled {
+  background: color-mix(in srgb, var(--color-danger, #c92a2a) 12%, transparent);
+  color: var(--color-text-primary);
+}
+
+.adminPanelShell__liveHint {
+  margin: 0;
+  font-size: 0.8125rem;
+}
+
+.adminPanelShell__body {
+  display: grid;
+  gap: var(--ds-space-4, 16px);
+}
+
+.adminSectionCard {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg, 12px);
+  background: var(--color-bg-elevated);
+  padding: var(--ds-space-4, 16px);
+  display: grid;
+  gap: var(--ds-space-3, 12px);
+  min-width: 0;
+}
+
+.adminSectionCard__header {
+  display: grid;
+  gap: var(--ds-space-1, 4px);
+}
+
+.adminSectionCard__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.adminSectionCard__desc {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--color-text-secondary);
+}
+
+.adminSectionCard__body {
+  display: grid;
+  gap: var(--ds-space-3, 12px);
+  min-width: 0;
+}
+
+.adminSectionCard .fieldLabel,
+.adminConsole .adminSectionCard .fieldLabel {
+  display: block;
+  margin-bottom: var(--ds-space-1, 4px);
+  font-size: var(--text-body-sm, 0.875rem);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.adminAdvancedSettings {
+  border: 1px dashed var(--color-border-subtle);
+  border-radius: var(--radius-lg, 12px);
+  overflow: hidden;
+}
+
+.adminAdvancedSettings__toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 0;
+  background: color-mix(in srgb, var(--color-bg-secondary) 70%, transparent);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.adminAdvancedSettings__toggleTitle {
+  font-weight: 700;
+  font-size: 0.875rem;
+}
+
+.adminAdvancedSettings__body {
+  padding: 12px 14px 16px;
+  display: grid;
+  gap: 12px;
+  border-top: 1px dashed var(--color-border-subtle);
+}
+
+.adminAdvancedSettings__warning {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: var(--radius-md, 8px);
+  background: color-mix(in srgb, var(--color-warning, #c9842a) 14%, transparent);
+  font-size: 0.8125rem;
+}
+
+.adminAdvancedSettings__fields {
+  display: grid;
+  gap: 12px;
+}
+
+.adminActionBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-space-2, 8px);
+  align-items: center;
+}
+
+.adminSaveBar {
+  position: sticky;
+  bottom: 12px;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ds-space-3, 12px);
+  padding: var(--ds-space-3, 12px) 14px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg, 12px);
+  background: var(--color-bg-elevated);
+  box-shadow: 0 8px 24px var(--color-shadow);
+}
+
+.adminSaveBar.isDirty {
+  border-color: color-mix(in srgb, var(--color-accent) 40%, var(--color-border-subtle));
+}
+
+.adminSaveBar__dirty {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.adminSaveBar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-space-2, 8px);
+}
+
+.adminEmptyState {
+  padding: var(--ds-space-6, 24px) var(--ds-space-4, 16px);
+  text-align: center;
+  border: 1px dashed var(--color-border-subtle);
+  border-radius: var(--radius-lg, 12px);
+  display: grid;
+  gap: var(--ds-space-2, 8px);
+  justify-items: center;
+}
+
+.adminEmptyState__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.adminEmptyState__desc {
+  margin: 0;
+  max-width: 28rem;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+.adminFilterBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-space-2, 8px);
+  align-items: center;
+  padding: var(--ds-space-3, 12px);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg, 12px);
+  background: color-mix(in srgb, var(--color-bg-elevated) 92%, transparent);
+  min-width: 0;
+}
+
+.adminFilterBar .adminConsoleInput,
+.adminFilterBar select.adminConsoleInput {
+  min-height: 44px;
+  min-width: 0;
+  flex: 1 1 160px;
+}
+
+.adminHelpText {
+  margin: 4px 0 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--color-text-secondary);
+}
+
+.adminPreviewPanel {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg, 12px);
+  background: var(--color-bg-elevated);
+  overflow: hidden;
+}
+
+.adminPreviewPanel__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.adminPreviewPanel__frame {
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.adminPreviewPanel__badge {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+.adminPreviewPanel--drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 70;
+  width: min(420px, 100vw);
+  box-shadow: -8px 0 32px var(--color-shadow);
+}
+
+.adminTaskGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.adminTaskCard {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg, 12px);
+  background: var(--color-bg-elevated);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.adminTaskCard:hover {
+  border-color: color-mix(in srgb, var(--color-accent) 35%, var(--color-border-subtle));
+  box-shadow: var(--admin-shadow-hover, 0 8px 20px rgb(0 0 0 / 8%));
+}
+
+.adminTaskCard strong {
+  font-size: 0.9375rem;
+}
+
+.adminAttentionList {
+  display: grid;
+  gap: 8px;
 }

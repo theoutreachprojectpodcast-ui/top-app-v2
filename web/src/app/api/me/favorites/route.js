@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { guardMutation, guardFailureResponse } from "@/lib/security/secureRoute";
 import { authFailureJson, resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -23,42 +24,91 @@ function listFromProfileRow(row) {
   return [...new Set(raw.map(normalizeFavoriteKey).filter(Boolean))];
 }
 
+function logFavorites(event, fields) {
+  console.info(
+    JSON.stringify({
+      scope: "saved_favorites",
+      event,
+      ts: new Date().toISOString(),
+      ...fields,
+    }),
+  );
+}
+
 export async function GET() {
+  const correlationId = randomUUID();
   const auth = await resolveWorkOSRouteUser();
   if (!auth.ok) return authFailureJson(auth);
   const admin = createSupabaseAdminClient();
-  if (!admin) return Response.json({ keys: [] });
+  if (!admin) return Response.json({ keys: [], correlationId });
   const row = await getProfileRowByWorkOSId(admin, auth.user.id);
-  return Response.json({ keys: listFromProfileRow(row) });
+  const keys = listFromProfileRow(row);
+  logFavorites("get_ok", {
+    correlationId,
+    workosUserId: auth.user.id,
+    profileId: row?.id || null,
+    count: keys.length,
+  });
+  return Response.json({ keys, correlationId });
 }
 
 export async function PUT(request) {
+  const correlationId = randomUUID();
   const __guard = guardMutation(request, { rateKey: "me-favorites", limit: 40 });
   if (!__guard.ok) return guardFailureResponse(__guard);
   const auth = await resolveWorkOSRouteUser();
   if (!auth.ok) return authFailureJson(auth);
   const admin = createSupabaseAdminClient();
   if (!admin) {
-    return Response.json({ error: "server_storage_unavailable" }, { status: 503 });
+    return Response.json({ error: "server_storage_unavailable", correlationId }, { status: 503 });
   }
 
   let body;
   try {
     body = await request.json();
   } catch {
-    return Response.json({ error: "invalid_json" }, { status: 400 });
+    return Response.json({ error: "invalid_json", correlationId }, { status: 400 });
   }
   const keys = normalizedListFromBody(body);
   const membership = await requireMembershipApi(admin, "save_organizations");
-  if (!membership.ok) return membership.response;
+  if (!membership.ok) {
+    logFavorites("put_denied", {
+      correlationId,
+      workosUserId: auth.user.id,
+      status: membership.response?.status || 403,
+    });
+    return membership.response;
+  }
   const hasTrustedKey = keys.some((k) => k.startsWith("trusted:"));
   if (hasTrustedKey) {
     const proCheck = await requireMembershipApi(admin, "trusted_pro");
-    if (!proCheck.ok) return proCheck.response;
+    if (!proCheck.ok) {
+      logFavorites("put_trusted_denied", {
+        correlationId,
+        workosUserId: auth.user.id,
+        profileId: membership.profileRow?.id || null,
+      });
+      return proCheck.response;
+    }
   }
   const merged = await mergeProfileMetadataByWorkOSId(admin, auth.user.id, { favoriteEntityKeys: keys });
   if (!merged.ok) {
-    return Response.json({ error: "update_failed", message: merged.reason || "Could not save favorites." }, { status: 500 });
+    logFavorites("put_failed", {
+      correlationId,
+      workosUserId: auth.user.id,
+      profileId: membership.profileRow?.id || null,
+      reason: merged.reason || "update_failed",
+    });
+    return Response.json(
+      { error: "update_failed", message: merged.reason || "Could not save favorites.", correlationId },
+      { status: 500 },
+    );
   }
-  return Response.json({ keys });
+  logFavorites("put_ok", {
+    correlationId,
+    workosUserId: auth.user.id,
+    profileId: membership.profileRow?.id || null,
+    count: keys.length,
+  });
+  return Response.json({ keys, correlationId });
 }

@@ -9,8 +9,6 @@ import { readNavAuthCache } from "@/lib/auth/navAuthCache";
 import {
   PRO_MEMBERSHIP_DISPLAY_NAME,
   PRO_MEMBERSHIP_PRICE_LABEL,
-  SUPPORT_MEMBERSHIP_DISPLAY_NAME,
-  SUPPORT_MEMBERSHIP_PRICE_LABEL,
 } from "@/features/membership/membershipTiers";
 import { hasMobileAppAccess, navCacheHasFreeAccess } from "@/lib/membership/appAccess";
 import { sanitizeAuthReturnPath } from "@/lib/auth/authReturnPath";
@@ -20,15 +18,25 @@ const SESSION_WAIT_MAX_MS = 10_000;
 const CHECKOUT_POLL_MS = 1_500;
 const CHECKOUT_POLL_MAX_MS = 45_000;
 
+const PRO_BENEFITS = [
+  "Full nonprofit directory access",
+  "Community access and posting",
+  "Saved organizations",
+  "Member connections",
+  "Trusted resources",
+  "Podcast and sponsor content",
+  "Full profile and app access",
+];
+
 /**
- * App Access paywall — Pro Membership ($5.99/yr) required before using the product.
+ * Pro Membership purchase screen ($5.99/yr). No skip into the main app.
  * @param {{ checkoutReturnPath: string, postAccessPath: string, backHref?: string, backLabel?: string }} props
  */
 export default function AppAccessPaywall({
   checkoutReturnPath,
   postAccessPath,
   backHref = "/",
-  backLabel = "Not now",
+  backLabel = "Sign out",
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -43,10 +51,6 @@ export default function AppAccessPaywall({
   const checkoutPollStartedRef = useRef(0);
 
   const proCheckoutEnabled = billingCapabilities?.tierCheckout?.member?.enabled === true;
-  const supportCheckoutEnabled =
-    billingCapabilities?.supportMembershipEnabled === true &&
-    billingCapabilities?.tierCheckout?.support?.enabled === true;
-
   const checkoutResult = searchParams.get("checkout");
 
   useEffect(() => {
@@ -89,17 +93,26 @@ export default function AppAccessPaywall({
     const sessionHint = !!cache?.authenticated;
     const signedIn = isAuthenticated || authAuthenticated || sessionHint;
     if (!signedIn) {
-      const loginReturn = sanitizeAuthReturnPath(checkoutReturnPath, "/");
-      router.replace(backHref === "/mobile" ? "/mobile" : `/sign-in?returnTo=${encodeURIComponent(loginReturn)}`);
+      router.replace("/");
       return;
     }
 
+    const profileHydrated = !!String(profile?.profileRecordId || "").trim();
     const hasAccess =
-      navCacheHasFreeAccess(profile, entitlements) ||
-      hasMobileAppAccess(profile, {
-        isPlatformAdmin: !!entitlements?.isPlatformAdmin,
-        isPrivilegedStaff: !!entitlements?.isPrivilegedStaff,
-      });
+      !!cache?.hasFreeAccess ||
+      !!entitlements?.fullPlatformAccess ||
+      !!entitlements?.isPlatformAdmin ||
+      !!entitlements?.isPrivilegedStaff ||
+      (profileHydrated &&
+        (navCacheHasFreeAccess(profile, entitlements) ||
+          hasMobileAppAccess(profile, {
+            isPlatformAdmin: !!entitlements?.isPlatformAdmin,
+            isPrivilegedStaff: !!entitlements?.isPrivilegedStaff,
+          })));
+
+    // Wait for profile hydration before deciding the user still needs checkout.
+    if (!hasAccess && !profileHydrated && !sessionWaitTimedOut) return;
+
     if (hasAccess && checkoutResult !== "cancel") {
       router.replace(postAccessPath);
     }
@@ -111,13 +124,10 @@ export default function AppAccessPaywall({
     isAuthenticated,
     authAuthenticated,
     profile,
-    entitlements?.isPlatformAdmin,
-    entitlements?.isPrivilegedStaff,
+    entitlements,
     checkoutResult,
     router,
-    checkoutReturnPath,
     postAccessPath,
-    backHref,
   ]);
 
   useEffect(() => {
@@ -145,7 +155,12 @@ export default function AppAccessPaywall({
         }
         await new Promise((r) => setTimeout(r, CHECKOUT_POLL_MS));
       }
-      if (!cancelled) setCheckoutPolling(false);
+      if (!cancelled) {
+        setCheckoutPolling(false);
+        setError(
+          "Payment may still be processing. Tap Refresh access in a moment, or contact support if this continues.",
+        );
+      }
     };
 
     void poll();
@@ -154,16 +169,16 @@ export default function AppAccessPaywall({
     };
   }, [checkoutResult, checkoutPolling, postAccessPath, refreshAuth, refreshWorkOSProfile, router]);
 
-  async function startCheckout(tier = "member") {
+  async function startCheckout() {
     setError("");
-    setBusyTier(tier);
+    setBusyTier("member");
     try {
       const res = await fetch("/api/billing/checkout", {
         method: "POST",
         credentials: "include",
         cache: "no-store",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tier, returnPath: checkoutReturnPath }),
+        body: JSON.stringify({ tier: "member", returnPath: checkoutReturnPath }),
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.url) {
@@ -183,7 +198,7 @@ export default function AppAccessPaywall({
       ) {
         setError(
           data.message ||
-            "Membership checkout is temporarily unavailable while we verify billing. Please try again shortly or contact support@theoutreachproject.app.",
+            "Membership checkout is temporarily unavailable. Please try again shortly or contact support@theoutreachproject.app.",
         );
         return;
       }
@@ -195,16 +210,32 @@ export default function AppAccessPaywall({
     }
   }
 
-  function handleDecline() {
-    const dest = sanitizeAuthReturnPath(backHref, "/");
-    const cache = readNavAuthCache();
-    const sessionHint = !!cache?.authenticated;
-    const signedIn = isAuthenticated || authAuthenticated || sessionHint;
-    if (signedIn) {
-      window.location.assign(`/sign-out?returnTo=${encodeURIComponent(dest)}`);
-      return;
+  async function refreshAccess() {
+    setError("");
+    setBusyTier("refresh");
+    try {
+      await Promise.all([refreshAuth({ soft: false }), refreshWorkOSProfile()]);
+      const res = await fetch("/api/me", { credentials: "include", cache: "no-store" });
+      const data = await res.json().catch(() => ({}));
+      if (data.authenticated && data.profile) {
+        const st = String(data.profile.membershipBillingStatus || "").toLowerCase();
+        const tier = String(data.profile.membershipTier || "").toLowerCase();
+        if (st === "active" && ["member", "sponsor"].includes(tier)) {
+          router.replace(postAccessPath);
+          return;
+        }
+      }
+      setError("Membership is not active yet. Complete checkout, then tap Refresh access.");
+    } catch {
+      setError("Could not refresh membership. Try again.");
+    } finally {
+      setBusyTier("");
     }
-    router.push(dest);
+  }
+
+  function handleSignOut() {
+    const dest = sanitizeAuthReturnPath(backHref, "/");
+    window.location.assign(`/sign-out?returnTo=${encodeURIComponent(dest)}`);
   }
 
   const cache = readNavAuthCache();
@@ -222,8 +253,8 @@ export default function AppAccessPaywall({
         variant={checkoutResult === "success" || checkoutPolling ? "authVerify" : "session"}
         loadingLabel={
           checkoutResult === "success" || checkoutPolling
-            ? "Activating your membership…"
-            : undefined
+            ? "Activating your access…"
+            : "Checking your membership…"
         }
         error={sessionWaitTimedOut && signedInHint && loadingProfile}
         errorMessage="Your profile is taking longer than expected to load."
@@ -240,96 +271,71 @@ export default function AppAccessPaywall({
   }
 
   return (
-    <div className="mobileSplashPage mobileSplashPage--access">
-      <div className="mobileSplashPage__topBar">
-        <button type="button" className="mobileSplashPage__backBtn" onClick={handleDecline}>
-          ← {backLabel}
-        </button>
-      </div>
-      <div className="mobileSplashPage__inner">
-        <div className="mobileSplashPage__brand mobileSplashPage__brand--small">
-          <BrandMark variant="mark" size="splash" alt="The Outreach Project" />
-        </div>
-        <h1 className="mobileSplashPage__title">
-          {supportCheckoutEnabled ? "Choose your membership" : "Pro Membership required"}
-        </h1>
-        <p className="mobileSplashPage__lead">
-          {supportCheckoutEnabled
-            ? "Select Support or Pro Membership to continue."
-            : "The Outreach Project requires an active Pro Membership to continue. The public directory remains available without a membership."}
-        </p>
-        <div className="mobileSplashPage__tierGrid">
-          {supportCheckoutEnabled ? (
-            <section className="mobileSplashPage__tierCard" aria-labelledby="support-tier-heading">
-              <h2 id="support-tier-heading" className="mobileSplashPage__tierTitle">
-                {SUPPORT_MEMBERSHIP_DISPLAY_NAME}
-              </h2>
-              <p className="mobileSplashPage__tierPrice">{SUPPORT_MEMBERSHIP_PRICE_LABEL}</p>
-              <ul className="mobileSplashPage__benefits">
-                <li>Nonprofit directory search and exploration</li>
-                <li>Podcast episodes, guests, and guest applications</li>
-              </ul>
-            </section>
-          ) : null}
+    <div className="authEntryShell" data-auth-entry="membership">
+      <div className="mobileSplashPage mobileSplashPage--access">
+        <div className="mobileSplashPage__inner">
+          <div className="mobileSplashPage__brand mobileSplashPage__brand--small">
+            <BrandMark variant="mark" size="splash" alt="The Outreach Project" />
+          </div>
+          <h1 className="mobileSplashPage__title">{PRO_MEMBERSHIP_DISPLAY_NAME}</h1>
+          <p className="mobileSplashPage__lead">
+            Activate your annual membership to enter the Outreach Project. Secure checkout is handled by Stripe.
+          </p>
           <section className="mobileSplashPage__tierCard mobileSplashPage__tierCard--pro" aria-labelledby="pro-tier-heading">
             <h2 id="pro-tier-heading" className="mobileSplashPage__tierTitle">
               {PRO_MEMBERSHIP_DISPLAY_NAME}
             </h2>
             <p className="mobileSplashPage__tierPrice">{PRO_MEMBERSHIP_PRICE_LABEL}</p>
             <ul className="mobileSplashPage__benefits">
-              <li>Nonprofit directory search and exploration</li>
-              <li>Save favorite nonprofits</li>
-              <li>Podcast episodes, guests, and guest applications</li>
-              <li>Create and submit community posts</li>
-              <li>Pro-exclusive podcast content</li>
-              <li>Trusted resource discounts and partner offers</li>
+              {PRO_BENEFITS.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
             </ul>
           </section>
-        </div>
-        {checkoutResult === "success" ? (
-          <p className="mobileSplashPage__notice" role="status">
-            Payment received — finishing setup…
-          </p>
-        ) : null}
-        {checkoutResult === "cancel" ? (
-          <p className="mobileSplashPage__notice mobileSplashPage__notice--warn" role="status">
-            Checkout was canceled. Subscribe to continue.
-          </p>
-        ) : null}
-        {error ? (
-          <p className="mobileSplashPage__notice mobileSplashPage__notice--warn" role="alert">
-            {error}
-          </p>
-        ) : null}
-        <div className="mobileSplashPage__actions">
-          {supportCheckoutEnabled ? (
+          {checkoutResult === "success" ? (
+            <p className="mobileSplashPage__notice" role="status">
+              Payment received — activating your access…
+            </p>
+          ) : null}
+          {checkoutResult === "cancel" ? (
+            <p className="mobileSplashPage__notice mobileSplashPage__notice--warn" role="status">
+              Checkout was canceled. Complete purchase to continue.
+            </p>
+          ) : null}
+          {error ? (
+            <p className="mobileSplashPage__notice mobileSplashPage__notice--warn" role="alert">
+              {error}
+            </p>
+          ) : null}
+          <div className="mobileSplashPage__actions">
+            <button
+              type="button"
+              className="btnPrimary mobileSplashPage__btn"
+              onClick={() => void startCheckout()}
+              disabled={!!busyTier || billingCapabilities === null || !proCheckoutEnabled}
+              title={!proCheckoutEnabled ? "Checkout unavailable" : undefined}
+            >
+              {busyTier === "member"
+                ? "Preparing secure checkout…"
+                : billingCapabilities === null
+                  ? "Loading checkout…"
+                  : `Continue — ${PRO_MEMBERSHIP_PRICE_LABEL}`}
+            </button>
             <button
               type="button"
               className="btnSoft mobileSplashPage__btn"
-              onClick={() => void startCheckout("support")}
-              disabled={!!busyTier || billingCapabilities === null || !supportCheckoutEnabled}
+              onClick={() => void refreshAccess()}
+              disabled={!!busyTier}
             >
-              {busyTier === "support"
-                ? "Redirecting to checkout…"
-                : `${SUPPORT_MEMBERSHIP_DISPLAY_NAME} — ${SUPPORT_MEMBERSHIP_PRICE_LABEL}`}
+              {busyTier === "refresh" ? "Refreshing…" : "Refresh access"}
             </button>
-          ) : null}
-          <button
-            type="button"
-            className="btnPrimary mobileSplashPage__btn"
-            onClick={() => void startCheckout("member")}
-            disabled={!!busyTier || billingCapabilities === null || !proCheckoutEnabled}
-            title={!proCheckoutEnabled ? "Pro checkout unavailable" : undefined}
-          >
-            {busyTier === "member"
-              ? "Redirecting to checkout…"
-              : billingCapabilities === null
-                ? "Loading checkout…"
-                : `${PRO_MEMBERSHIP_DISPLAY_NAME} — ${PRO_MEMBERSHIP_PRICE_LABEL}`}
-          </button>
-          <button type="button" className="btnSoft mobileSplashPage__btn" onClick={handleDecline}>
-            {backLabel}
-          </button>
+            <button type="button" className="btnSoft mobileSplashPage__btn" onClick={handleSignOut} disabled={!!busyTier}>
+              {backLabel}
+            </button>
+          </div>
+          <p className="mobileSplashPage__legal">
+            Membership renews annually. You can manage billing from your profile after access is active.
+          </p>
         </div>
       </div>
     </div>

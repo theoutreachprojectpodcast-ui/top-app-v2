@@ -9,7 +9,6 @@ import SiteBottomNavGlyph from "@/components/navigation/SiteBottomNavGlyph";
 import { SiteHamburgerNavMenu } from "@/components/navigation/SiteMobileNavHamburgerEntries";
 import HeaderInner from "@/components/layout/HeaderInner";
 import SubpageTopbarActions from "@/components/layout/SubpageTopbarActions";
-import AdminConsoleLink from "@/components/admin/AdminConsoleLink";
 import FooterInner from "@/components/layout/FooterInner";
 import MissionPageTopStrip from "@/components/layout/MissionPageTopStrip";
 import { useNavAuthState } from "@/hooks/useNavAuthState";
@@ -63,12 +62,13 @@ export default function AppShell({
   const pageAtmosphere = pageAtmosphereProp ?? resolvePageAtmosphere(pathname, activeNav);
   const podcastThemeShell =
     pageAtmosphere === "podcast" || String(shellClassName || "").includes("appShell--podcast");
-  const immersiveHeaderScroll = useTopAppStructure && !podcastThemeShell;
+  const immersiveHeaderScroll = false;
   const headerGradientBoost = usePrimaryTopbarChrome || useTopAppStructure;
+  /* Header stays in document flow — no fixed-veil / scroll-opacity. */
   useImmersiveHeaderScroll({
     rootRef: shellRef,
-    enabled: immersiveHeaderScroll,
-    gradientBoost: headerGradientBoost,
+    enabled: false,
+    gradientBoost: false,
   });
   usePodcastDarkSchemeLock(podcastThemeShell);
 
@@ -95,77 +95,74 @@ export default function AppShell({
       {...podcastRouteAttrs}
     >
       <div className={`appSiteHeader${podcastThemeShell ? " appSiteHeader--podcast" : ""}`}>
-        {podcastThemeShell ? (
-          <>
-            <AppHeaderBrand
-              brandSrc={brandSrc || undefined}
-              brandAlt={brandAlt}
-              brandClassName={brandClassName}
-              pageAtmosphere={pageAtmosphere}
-            />
-            <header className={usePrimaryTopbarChrome ? "topbar" : "subpageTopbar"}>
-              <HeaderInner className="topbarInner">
-                <div className="topbarZone topbarLeft">
-                  <div className="topbarActionsCluster topbarActionsCluster--start">
-                    {useFooterDockChrome ? (
-                      <SiteHamburgerNavMenu tone="podcast" shellClass="siteMobileNavMore--phoneOnly" />
-                    ) : null}
-                    {isMobileShell && isLoggedIn ? <AdminConsoleLink /> : null}
-                    <SubpageTopbarActions section="lead" />
+          {podcastThemeShell ? (
+            <>
+              <AppHeaderBrand
+                brandSrc={brandSrc || undefined}
+                brandAlt={brandAlt}
+                brandClassName={brandClassName}
+                pageAtmosphere={pageAtmosphere}
+              />
+              <header className={usePrimaryTopbarChrome ? "topbar" : "subpageTopbar"}>
+                <HeaderInner className="topbarInner">
+                  <div className="topbarZone topbarLeft">
+                    <div className="topbarActionsCluster topbarActionsCluster--start">
+                      {useFooterDockChrome ? (
+                        <SiteHamburgerNavMenu tone="podcast" shellClass="siteMobileNavMore--phoneOnly" />
+                      ) : null}
+                      <SubpageTopbarActions section="lead" />
+                    </div>
                   </div>
-                </div>
-                <div className="topbarZone topbarCenter" aria-hidden="true" />
-                <div className="topbarZone topbarRight">
-                  <div className="topbarActionsCluster">
-                    {useFooterDockChrome ? (
-                      <SiteHamburgerNavMenu
-                        tone="podcast"
-                        align="end"
-                        shellClass="siteMobileNavMore--desktopOnly"
-                      />
-                    ) : null}
-                    <SubpageTopbarActions section="auth" />
+                  <div className="topbarZone topbarCenter" aria-hidden="true" />
+                  <div className="topbarZone topbarRight">
+                    <div className="topbarActionsCluster">
+                      {useFooterDockChrome ? (
+                        <SiteHamburgerNavMenu
+                          tone="podcast"
+                          align="end"
+                          shellClass="siteMobileNavMore--desktopOnly"
+                        />
+                      ) : null}
+                      <SubpageTopbarActions section="auth" />
+                    </div>
                   </div>
-                </div>
-              </HeaderInner>
-            </header>
-          </>
-        ) : (
-          <>
-            <AppHeaderBrand
-              brandSrc={brandSrc || undefined}
-              brandAlt={brandAlt}
-              brandClassName={brandClassName}
-              pageAtmosphere={pageAtmosphere}
-            />
-            <header className={usePrimaryTopbarChrome ? "topbar" : "subpageTopbar"}>
-              <HeaderInner className="topbarInner">
-                <div className="topbarZone topbarLeft">
-                  <div className="topbarActionsCluster topbarActionsCluster--start">
-                    {useFooterDockChrome ? (
-                      <SiteHamburgerNavMenu shellClass="siteMobileNavMore--phoneOnly" />
-                    ) : null}
-                    {isMobileShell && !podcastThemeShell && showThemeToggle ? <ColorSchemeToggle /> : null}
-                    {isMobileShell && isLoggedIn ? <AdminConsoleLink /> : null}
-                    <SubpageTopbarActions section="lead" />
+                </HeaderInner>
+              </header>
+            </>
+          ) : (
+            <>
+              <AppHeaderBrand
+                brandSrc={brandSrc || undefined}
+                brandAlt={brandAlt}
+                brandClassName={brandClassName}
+                pageAtmosphere={pageAtmosphere}
+              />
+              <header className={usePrimaryTopbarChrome ? "topbar" : "subpageTopbar"}>
+                <HeaderInner className="topbarInner">
+                  <div className="topbarZone topbarLeft">
+                    <div className="topbarActionsCluster topbarActionsCluster--start">
+                      {useFooterDockChrome ? (
+                        <SiteHamburgerNavMenu shellClass="siteMobileNavMore--phoneOnly" />
+                      ) : null}
+                      {isMobileShell && !podcastThemeShell && showThemeToggle ? <ColorSchemeToggle /> : null}
+                      <SubpageTopbarActions section="lead" />
+                    </div>
                   </div>
-                </div>
-                <div className="topbarZone topbarCenter" aria-hidden="true" />
-                <div className="topbarZone topbarRight">
-                  <div className="topbarActionsCluster">
-                    {!isMobileShell && !podcastThemeShell && showThemeToggle ? <ColorSchemeToggle /> : null}
-                    {useFooterDockChrome ? (
-                      <SiteHamburgerNavMenu align="end" shellClass="siteMobileNavMore--desktopOnly" />
-                    ) : null}
-                    <SubpageTopbarActions section="auth" />
+                  <div className="topbarZone topbarCenter" aria-hidden="true" />
+                  <div className="topbarZone topbarRight">
+                    <div className="topbarActionsCluster">
+                      {!isMobileShell && !podcastThemeShell && showThemeToggle ? <ColorSchemeToggle /> : null}
+                      {useFooterDockChrome ? (
+                        <SiteHamburgerNavMenu align="end" shellClass="siteMobileNavMore--desktopOnly" />
+                      ) : null}
+                      <SubpageTopbarActions section="auth" />
+                    </div>
                   </div>
-                </div>
-              </HeaderInner>
-            </header>
-          </>
-        )}
+                </HeaderInner>
+              </header>
+            </>
+          )}
       </div>
-      {usePrimaryTopbarChrome ? <div className="topbarOcclusion" aria-hidden="true" /> : null}
 
       {useTopAppStructure ? (
         <section className="shell">

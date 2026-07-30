@@ -3,9 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import Avatar from "@/components/shared/Avatar";
 import {
+  connectionStateMapFromBundle,
   fetchCommunityMembers,
-  getConnectionState,
-  sendConnectionRequest,
+  fetchConnectionsBundle,
+  mutateConnectionApi,
 } from "@/features/community/api/communityApi";
 import { emptyProfileAvatarUrl } from "@/lib/avatarFallback";
 
@@ -29,7 +30,12 @@ export default function CommunityConnectionsPanel({ userId, viewerProfileId = ""
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [busyId, setBusyId] = useState("");
+  const [actionMessage, setActionMessage] = useState("");
+  const [bundle, setBundle] = useState(null);
   const [version, setVersion] = useState(0);
+
+  const stateMap = useMemo(() => connectionStateMapFromBundle(bundle), [bundle]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setDebouncedSearch(search.trim()), 280);
@@ -42,17 +48,25 @@ export default function CommunityConnectionsPanel({ userId, viewerProfileId = ""
     (async () => {
       setLoading(true);
       setError("");
-      const result = await fetchCommunityMembers({ q: debouncedSearch, limit: debouncedSearch ? 40 : 24 });
+      const [memberResult, connectionResult] = await Promise.all([
+        fetchCommunityMembers({ q: debouncedSearch, limit: debouncedSearch ? 40 : 24 }),
+        fetchConnectionsBundle(),
+      ]);
       if (cancelled) return;
-      if (!result.ok) {
+      if (!memberResult.ok) {
         setMembers([]);
         setTotal(0);
-        setError(result.error === "membership_required" ? "Pro membership is required to browse members." : "Could not load members right now.");
+        setError(
+          memberResult.error === "membership_required"
+            ? "Pro membership is required to browse members."
+            : "Could not load members right now.",
+        );
       } else {
-        setMembers(result.members);
-        setTotal(result.total || result.members.length);
+        setMembers(memberResult.members);
+        setTotal(memberResult.total || memberResult.members.length);
         setError("");
       }
+      if (connectionResult.ok) setBundle(connectionResult);
       setLoading(false);
     })();
 
@@ -61,18 +75,35 @@ export default function CommunityConnectionsPanel({ userId, viewerProfileId = ""
     };
   }, [debouncedSearch, version]);
 
+  async function runConnectionAction(action, targetProfileId, connectionId) {
+    setBusyId(targetProfileId || connectionId || "busy");
+    setActionMessage("");
+    const result = await mutateConnectionApi({ action, targetProfileId, connectionId });
+    setBusyId("");
+    if (!result.ok) {
+      setActionMessage(result.message || "Could not update connection.");
+      return;
+    }
+    setActionMessage(result.message || "Updated.");
+    setVersion((v) => v + 1);
+  }
+
   const preview = useMemo(() => members.slice(0, 3), [members]);
+  const incomingCount = bundle?.incoming?.length || 0;
+  const connectedCount = bundle?.connected?.length || 0;
   const summary = loading
     ? "Loading members…"
     : total > 0
-      ? `${total} member${total === 1 ? "" : "s"} on the platform`
+      ? `${total} member${total === 1 ? "" : "s"} · ${connectedCount} connection${connectedCount === 1 ? "" : "s"}${
+          incomingCount ? ` · ${incomingCount} request${incomingCount === 1 ? "" : "s"}` : ""
+        }`
       : "No members match yet";
 
   return (
     <details className="card communitySection communityConnectionsPanel communityConnectionsDisclosure">
       <summary className="communityConnectionsSummary">
         <span className="communityConnectionsSummaryMain">
-          <span className="communityConnectionsSummaryTitle">Member connections</span>
+          <span className="communityConnectionsSummaryTitle">Friend connections</span>
           {preview.length ? (
             <span className="communityConnectionsPreview">
               <span className="communityConnectionsPreviewAvatars">
@@ -97,6 +128,49 @@ export default function CommunityConnectionsPanel({ userId, viewerProfileId = ""
       </summary>
 
       <div className="communityConnectionsBody">
+        {incomingCount ? (
+          <div className="communityIncomingRequests" aria-label="Incoming connection requests">
+            <h4 className="communityFeedBandTitle">Requests waiting for you</h4>
+            {bundle.incoming.map((row) => (
+              <div key={row.id} className="communitySearchResultRow">
+                <button
+                  type="button"
+                  className="communityMemberMini communityMemberMiniBtn"
+                  onClick={() => onOpenMember?.(row.otherProfileId)}
+                >
+                  <Avatar
+                    src={memberAvatarSrc(row.other)}
+                    alt={row.other?.name || "Member"}
+                    className="communityMemberAvatarImg"
+                  />
+                  <div>
+                    <strong>{row.other?.name || "Member"}</strong>
+                    <p>Wants to connect</p>
+                  </div>
+                </button>
+                <div className="row wrap">
+                  <button
+                    type="button"
+                    className="btnPrimary"
+                    disabled={busyId === row.id}
+                    onClick={() => void runConnectionAction("accept", row.otherProfileId, row.id)}
+                  >
+                    Accept
+                  </button>
+                  <button
+                    type="button"
+                    className="btnSoft"
+                    disabled={busyId === row.id}
+                    onClick={() => void runConnectionAction("decline", row.otherProfileId, row.id)}
+                  >
+                    Decline
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : null}
+
         <div className="communitySearchBar">
           <label className="fieldLabel" htmlFor="community-member-search">
             Search members
@@ -115,17 +189,22 @@ export default function CommunityConnectionsPanel({ userId, viewerProfileId = ""
             {error}
           </p>
         ) : null}
+        {actionMessage ? <p className="applyStatus">{actionMessage}</p> : null}
 
         <div className="communitySearchResults">
           {loading ? <p className="communityFeedStatus">Searching members…</p> : null}
           {!loading &&
             members.map((m) => {
-              const state = getConnectionState(userId, m.id);
+              const state = stateMap[String(m.id)] || "connect";
               const isSelf = memberIsSelf(m, { viewerProfileId, viewerUserId: userId });
               const subtitle = [m.role, m.location].filter(Boolean).join(" · ");
               return (
                 <div key={m.id} className="communitySearchResultRow">
-                  <button type="button" className="communityMemberMini communityMemberMiniBtn" onClick={() => onOpenMember?.(m.id)}>
+                  <button
+                    type="button"
+                    className="communityMemberMini communityMemberMiniBtn"
+                    onClick={() => onOpenMember?.(m.id)}
+                  >
                     <Avatar src={memberAvatarSrc(m)} alt={m.name} className="communityMemberAvatarImg" />
                     <div>
                       <strong>{m.name}</strong>
@@ -135,17 +214,44 @@ export default function CommunityConnectionsPanel({ userId, viewerProfileId = ""
                   {isSelf ? (
                     <span className="communityRequestPill">You</span>
                   ) : state === "connected" ? (
-                    <span className="communityRequestPill isConnected">Connected</span>
+                    <button
+                      type="button"
+                      className="btnSoft"
+                      disabled={busyId === m.id}
+                      onClick={() => {
+                        if (window.confirm(`Remove your connection with ${m.name}?`)) {
+                          void runConnectionAction("remove", m.id);
+                        }
+                      }}
+                    >
+                      Connected · Remove
+                    </button>
                   ) : state === "requested" ? (
-                    <span className="communityRequestPill isRequested">Requested</span>
+                    <button
+                      type="button"
+                      className="btnSoft"
+                      disabled={busyId === m.id}
+                      onClick={() => void runConnectionAction("cancel", m.id)}
+                    >
+                      Cancel request
+                    </button>
+                  ) : state === "incoming" ? (
+                    <button
+                      type="button"
+                      className="btnPrimary"
+                      disabled={busyId === m.id}
+                      onClick={() => void runConnectionAction("accept", m.id)}
+                    >
+                      Accept
+                    </button>
+                  ) : state === "blocked" ? (
+                    <span className="communityRequestPill">Blocked</span>
                   ) : (
                     <button
                       type="button"
                       className="btnSoft"
-                      onClick={() => {
-                        sendConnectionRequest(userId, m.id);
-                        setVersion((v) => v + 1);
-                      }}
+                      disabled={!!busyId}
+                      onClick={() => void runConnectionAction("request", m.id)}
                     >
                       Connect
                     </button>

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Heart, MapPin, ShieldCheck } from "lucide-react";
 import NonprofitIcon from "@/features/nonprofits/components/NonprofitIcon";
 import OrganizationLogo from "@/components/shared/OrganizationLogo";
@@ -36,13 +36,21 @@ function FavoriteButton({ active, busy, onClick, className = "" }) {
   );
 }
 
-export default function TrustedResourceDetailPage({ slug }) {
+export default function TrustedResourceDetailPage({ slug, initialDetail = null }) {
   const pathname = usePathname();
+  const router = useRouter();
   const supabase = useMemo(() => getSupabaseClient(), []);
-  const { isAuthenticated, favoriteEntityKeys, toggleFavoriteEntityKey } = useProfileData();
-  const [resource, setResource] = useState(null);
-  const [status, setStatus] = useState("Loading trusted resource…");
+  const {
+    isAuthenticated,
+    favoriteEins,
+    favoriteEntityKeys,
+    toggleFavoriteEin,
+    toggleFavoriteEntityKey,
+  } = useProfileData();
+  const [resource, setResource] = useState(initialDetail);
+  const [status, setStatus] = useState(initialDetail ? "" : "Loading trusted resource…");
   const [favBusy, setFavBusy] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
 
   const returnPath = `/trusted/${slug}`;
   const signInHref = workosSignInLink(pathname || returnPath, null, returnPath);
@@ -51,33 +59,74 @@ export default function TrustedResourceDetailPage({ slug }) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      setStatus("Loading trusted resource…");
-      const row = await getTrustedResourceDetailForSlug(supabase, slug);
-      if (cancelled) return;
-      setResource(row);
-      setStatus(row ? "" : "Trusted resource not found.");
+      if (!initialDetail) setStatus("Loading trusted resource…");
+      setLoadFailed(false);
+      try {
+        const { detail, canonicalSlug, redirectedFrom } = await getTrustedResourceDetailForSlug(
+          supabase,
+          slug,
+        );
+        if (cancelled) return;
+        if (canonicalSlug && redirectedFrom && canonicalSlug !== String(slug || "").trim().toLowerCase()) {
+          router.replace(`/trusted/${canonicalSlug}`);
+          return;
+        }
+        if (canonicalSlug && canonicalSlug !== String(slug || "").trim().toLowerCase() && detail) {
+          router.replace(`/trusted/${canonicalSlug}`);
+          return;
+        }
+        setResource(detail);
+        setStatus(detail ? "" : "");
+        setLoadFailed(!detail);
+      } catch (err) {
+        if (cancelled) return;
+        console.warn("[trusted-detail] load failed", {
+          slug,
+          err: String(err?.message || err),
+        });
+        setResource(null);
+        setLoadFailed(true);
+        setStatus("");
+      }
     })();
     return () => {
       cancelled = true;
     };
-  }, [supabase, slug]);
+  }, [supabase, slug, router, initialDetail]);
 
   const favoriteKey = resource?.trustedResourceSlug ? `trusted:${resource.trustedResourceSlug}` : "";
-  const isFavorited = favoriteKey && favoriteEntityKeys.includes(favoriteKey);
+  const einDigits = String(resource?.ein || "").replace(/\D/g, "");
+  const hasEin = einDigits.length === 9;
+  const isFavorited =
+    (hasEin && favoriteEins.includes(einDigits)) ||
+    (favoriteKey && favoriteEntityKeys.includes(favoriteKey));
 
   const onFavorite = useCallback(() => {
-    if (!favoriteKey) return;
+    if (!favoriteKey && !hasEin) return;
     if (!isAuthenticated) {
       window.location.assign(signInHref);
       return;
     }
     setFavBusy(true);
     try {
-      toggleFavoriteEntityKey(favoriteKey);
+      // Prefer canonical EIN save so the org appears in Profile → Saved Organizations.
+      if (hasEin) {
+        toggleFavoriteEin(einDigits);
+        return;
+      }
+      if (favoriteKey) toggleFavoriteEntityKey(favoriteKey);
     } finally {
       setFavBusy(false);
     }
-  }, [favoriteKey, isAuthenticated, signInHref, toggleFavoriteEntityKey]);
+  }, [
+    favoriteKey,
+    hasEin,
+    einDigits,
+    isAuthenticated,
+    signInHref,
+    toggleFavoriteEin,
+    toggleFavoriteEntityKey,
+  ]);
 
   const primaryCta = resource?.helpfulLinks?.[0] || resource?.connectLinks?.[0];
   const cat = resource?.trustedResourceCategory || resource?.category;
@@ -122,7 +171,16 @@ export default function TrustedResourceDetailPage({ slug }) {
 
       {!resource ? (
         <div className="trustedDetailPage trustedDetailPage--empty">
-          <p className="trustedDetailStatus">{status}</p>
+          {status ? <p className="trustedDetailStatus">{status}</p> : null}
+          {loadFailed || !status ? (
+            <>
+              <h1 className="trustedDetailEmptyTitle">Trusted resource not available</h1>
+              <p className="trustedDetailEmptyCopy">
+                This organization is not in the published Trusted Resources directory, or the link may be
+                outdated. Browse the directory to find curated partners.
+              </p>
+            </>
+          ) : null}
           <Link className="btnSoft" href="/trusted">
             ← Back to Trusted Resources
           </Link>

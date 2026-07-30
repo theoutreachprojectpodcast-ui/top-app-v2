@@ -1,0 +1,8 @@
+The Outreach Project 1.0 — closed test build.
+
+• Sign in with your TOP account (WorkOS)
+• Browse directory, trusted resources, sponsors, community & podcasts
+• Profile sync across web and mobile
+• Membership and billing via Stripe on our website (not Google Play Billing)
+
+Please report crashes, login issues, or layout problems on your device.

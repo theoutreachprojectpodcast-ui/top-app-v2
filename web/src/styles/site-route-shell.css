@@ -9,7 +9,7 @@
 .appShell--sponsors.appShell--subpage .shell {
   width: min(var(--content-max-width), calc(100% - var(--content-gutter)));
   margin: 0 auto;
-  padding: calc(var(--header-floating-offset) + var(--header-floating-height) + var(--header-fade-height) + 8px) 0
+  padding: 8px 0
     calc(24px + env(safe-area-inset-bottom, 0px));
   display: grid;
   gap: var(--ds-section-gap, 24px);
@@ -110,7 +110,7 @@
 @media (max-width: 1024px) {
   .appShell--siteChrome.appShell--subpage .shell,
   .appShell--sponsors.appShell--subpage .shell {
-    padding-top: calc(var(--header-floating-offset) + var(--header-floating-height) + var(--header-fade-height));
+    padding-top: 8px;
   }
 }
 
@@ -136,7 +136,7 @@
   }
 
   .appShell--siteChrome.appShell--subpage .shell:has(.nonprofitProfileShell) {
-    padding-top: 0;
+    padding-top: 8px;
   }
 }
 

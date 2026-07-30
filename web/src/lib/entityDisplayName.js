@@ -55,6 +55,7 @@ export function isBannedGenericOrganizationTitle(value = "") {
   if (t === "trusted resources") return true;
   if (t === "directory organization") return true;
   if (t === "unknown organization") return true;
+  if (t === "saved organization") return true;
   return false;
 }
 

@@ -5,6 +5,7 @@
  */
 import fs from "node:fs";
 import path from "node:path";
+import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const webRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -59,6 +60,11 @@ for (const rel of ["ios/App/App/capacitor.config.json", "android/app/src/main/as
   const blob = JSON.stringify(cfg);
   for (const re of forbidden) {
     if (re.test(blob)) fail(`${rel} contains forbidden host pattern ${re}`);
+  }
+  if (rel.startsWith("android/") && Number(cfg?.android?.minWebViewVersion) !== 111) {
+    fail(`${rel} android.minWebViewVersion must be 111 (Next.js 16 browser floor)`);
+  } else if (rel.startsWith("android/")) {
+    ok(`${rel} Android WebView 111+`);
   }
   if (cfg?.server?.cleartext === true) fail(`${rel} cleartext must be false for production`);
   if (!cfg?.server?.errorPath) fail(`${rel} server.errorPath must be set (offline recovery)`);
@@ -151,6 +157,20 @@ if (!fs.existsSync(path.join(webRoot, "src/lib/capacitor/mobilePostLoginReturn.j
   fail("missing mobilePostLoginReturn.js");
 } else {
   ok("mobilePostLoginReturn.js");
+}
+
+// --- Portrait orientation (authoritative native lock) ---
+{
+  const portrait = spawnSync(
+    process.execPath,
+    [path.join(webRoot, "scripts/validate-portrait-orientation.mjs")],
+    { cwd: webRoot, stdio: "inherit" },
+  );
+  if (portrait.status !== 0) {
+    fail("portrait orientation validation failed");
+  } else {
+    ok("portrait orientation lock");
+  }
 }
 
 // --- Live production auth endpoints ---

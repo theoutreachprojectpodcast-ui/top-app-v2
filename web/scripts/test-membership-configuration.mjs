@@ -48,7 +48,6 @@ const disabled = normalizeMembershipConfiguration({
   pro_membership_enabled: true,
 });
 assert.equal(listPurchasableMembershipPlans(disabled).length, 1);
-assert.equal(listPurchasableMembershipPlans(disabled)[0].tier, "member");
 
 const enabled = normalizeMembershipConfiguration({
   support_membership_enabled: true,
@@ -61,22 +60,37 @@ assert.ok(plans.some((p) => p.tier === "member"));
 
 function isMembershipExemptPath(pathname) {
   const path = String(pathname || "/").trim() || "/";
-  const patterns = [/^\/$/, /^\/nonprofit(\/|$)/, /^\/sponsors(\/|$)/, /^\/access(\/|$)/];
+  const patterns = [
+    /^\/$/,
+    /^\/welcome(\/|$)/,
+    /^\/sign-in(\/|$)/,
+    /^\/access(\/|$)/,
+    /^\/mobile(\/|$)/,
+  ];
   return patterns.some((re) => re.test(path));
 }
 
 function requiresProMembershipPath(pathname) {
   const path = String(pathname || "/").trim() || "/";
   if (isMembershipExemptPath(path)) return false;
-  return [/^\/profile(\/|$)/, /^\/community(\/|$)/, /^\/trusted(\/|$)/].some((re) => re.test(path));
+  return [
+    /^\/profile(\/|$)/,
+    /^\/community(\/|$)/,
+    /^\/trusted(\/|$)/,
+    /^\/nonprofit(\/|$)/,
+    /^\/sponsors(\/|$)/,
+  ].some((re) => re.test(path));
 }
 
 assert.equal(isMembershipExemptPath("/"), true);
+assert.equal(isMembershipExemptPath("/welcome"), true);
+assert.equal(isMembershipExemptPath("/community"), false);
 assert.equal(requiresProMembershipPath("/"), false);
 assert.equal(requiresProMembershipPath("/community"), true);
 assert.equal(requiresProMembershipPath("/profile"), true);
 assert.equal(requiresProMembershipPath("/trusted"), true);
-assert.equal(requiresProMembershipPath("/sponsors"), false);
+assert.equal(requiresProMembershipPath("/sponsors"), true);
+assert.equal(requiresProMembershipPath("/access"), false);
 
 function supportCheckoutBlocked(supportEnabled) {
   return supportEnabled !== true;

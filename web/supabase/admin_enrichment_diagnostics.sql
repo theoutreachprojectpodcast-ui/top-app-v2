@@ -117,6 +117,9 @@ begin
 end;
 $$;
 
+revoke all on function public._top_admin_enrichment_metrics() from public, anon, authenticated;
+grant execute on function public._top_admin_enrichment_metrics() to service_role;
+
 select m.metric, m.value
 from public._top_admin_enrichment_metrics() as m
 order by m.metric;

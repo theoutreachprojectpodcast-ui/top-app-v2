@@ -86,6 +86,7 @@ where platform_role is null
 | 7 | `community.sql` | Community posts |
 | 8 | `community_v03_data_model.sql` | Community v3 extensions |
 | 9 | `top_app_saved_org_eins.sql` | Saved organizations |
+| 9.1 | `saved_org_name_resolution_2026_07.sql` | Saved-org EIN index + normalize + RLS confirm |
 | 10 | `top_platform_notifications.sql` | Notifications |
 | 11 | `trusted_resources.sql` | Trusted resources catalog |
 | 12 | `trusted_resource_applications.sql` | Trusted resource applications |

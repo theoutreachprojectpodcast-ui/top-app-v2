@@ -414,9 +414,24 @@ export default function AdminSponsorsPanel() {
   const activeFields = TAB_FIELDS[tab] || [];
 
   return (
-    <AdminPanelShell panelId="sponsors" error={error} message={status}>
+    <AdminPanelShell
+      panelId="sponsors"
+      title="Sponsors"
+      description="Add and edit sponsor branding, links, offers, and publish visibility for the live Sponsors experience."
+      status="live"
+      error={error}
+      message={status}
+      primaryAction={
+        <button type="button" className="btnSoft" onClick={() => void load()} disabled={loading}>
+          Refresh
+        </button>
+      }
+    >
       <div className="adminFieldStack adminFieldStack--bordered">
-        <h3 className="adminBlockTitle">Add sponsor</h3>
+        <h3 className="adminBlockTitle">Add a sponsor</h3>
+        <p className="adminMuted" style={{ margin: 0 }}>
+          Start with a display name. You can add logo, description, and links next.
+        </p>
         <div className="adminToolbar">
           <input
             className="adminConsoleInput adminConsoleInput--grow"
@@ -429,22 +444,17 @@ export default function AdminSponsorsPanel() {
           </button>
         </div>
       </div>
-      <div className="adminToolbar">
-        <button type="button" className="btnSoft" onClick={() => void load()} disabled={loading}>
-          Refresh
-        </button>
-      </div>
       {loading ? <p className="adminMuted">Loading…</p> : null}
-      {!loading && rows.length === 0 ? <p className="adminMuted">No sponsors.</p> : null}
+      {!loading && rows.length === 0 ? <p className="adminMuted">No sponsors yet. Add one above to get started.</p> : null}
       {rows.length > 0 ? (
         <div className="adminSelectField">
           <label className="fieldLabel" htmlFor="sp-select">
-            Sponsor
+            Choose a sponsor to edit
           </label>
           <select id="sp-select" className="adminConsoleInput" value={slug} onChange={(e) => setSlug(e.target.value)}>
             {rows.map((r) => (
               <option key={r.slug} value={r.slug}>
-                {r.name} ({r.slug}) · {r.publish_status || "published"}
+                {r.name} · {r.publish_status || "published"}
               </option>
             ))}
           </select>

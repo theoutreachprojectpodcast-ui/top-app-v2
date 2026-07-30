@@ -85,10 +85,10 @@ const resolved2 = resolveOrganizationCardTitle({
   trustCanonical: false,
   candidateNames: [],
   trustedResourceSlug: "",
-  emptyFallback: "Saved organization",
+  emptyFallback: "Organization unavailable",
 });
-if (resolved2 !== "Saved organization") {
-  fail(`expected Saved organization fallback, got "${resolved2}"`);
+if (resolved2 !== "Organization unavailable") {
+  fail(`expected Organization unavailable fallback, got "${resolved2}"`);
 }
 
 const badTitles = [

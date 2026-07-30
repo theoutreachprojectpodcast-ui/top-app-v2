@@ -1,0 +1,24 @@
+Apple App Store identity
+=======================
+App name (Connect): The Outreach Project. Nonprofit Directory
+Display name: The Outreach Project
+Bundle ID: com.theoutreachproject.theoutreachproject
+Marketing version (CFBundleShortVersionString): 1.0.1
+Build number (CFBundleVersion): 8
+Deployment target: iOS 15.0
+Devices: iPhone + iPad
+Orientations: Portrait only (iPhone + iPad) — Info.plist is authoritative
+Xcode project: web/ios/App/App.xcodeproj
+Workspace (prefer): web/ios/TOP.xcworkspace
+Scheme: App
+WebView URL: https://theoutreachproject.app
+Embedded config: web/ios/App/App/capacitor.config.json
+
+IMPORTANT
+---------
+- IPA is produced on a Mac with Xcode — not included in this pack.
+- Before each upload, build number must be HIGHER than any build already in App Store Connect.
+- Current repo build is 8 (1.0.1). If Connect already has 8, bump CURRENT_PROJECT_VERSION first.
+- Portrait lock is compiled into the binary. A Vercel/web deploy cannot change orientation for installed apps.
+- After archive, confirm Xcode General → Deployment Info shows Portrait only for iPhone and iPad.
+- Run: pnpm --dir web run validate:portrait-orientation

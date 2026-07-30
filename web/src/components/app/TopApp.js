@@ -233,7 +233,6 @@ function TopAppInner({ initialNav = "home" }) {
     () =>
       !!(
         entitlements?.fullPlatformAccess ||
-        entitlements?.communityViewAccess ||
         entitlements?.isPlatformAdmin ||
         entitlements?.isPrivilegedStaff
       ),
@@ -439,11 +438,17 @@ function TopAppInner({ initialNav = "home" }) {
 
   function dockNavItem(item) {
     const key = String(item?.key || "");
-    if (["community", "trusted", "settings"].includes(key) && !hasProAccess) {
+    if (["trusted", "settings", "community"].includes(key) && !hasProAccess) {
       if (!isAuthenticated) {
         openSignInOverlay();
         return;
       }
+      openProUpgradeModal(key);
+      return;
+    }
+    if (key === "community" && !isAuthenticated) {
+      openSignInOverlay();
+      return;
     }
     if (key === "home") {
       dockNavHome();
@@ -473,11 +478,17 @@ function TopAppInner({ initialNav = "home" }) {
   function hamburgerNavItem(item) {
     const key = String(item?.key || "");
     const href = String(item?.href || "").trim() || "/";
-    if (["community", "trusted", "contact", "settings"].includes(key) && !hasProAccess) {
+    if (["trusted", "contact", "settings", "community"].includes(key) && !hasProAccess) {
       if (!isAuthenticated) {
         openSignInOverlay();
         return;
       }
+      openProUpgradeModal(key);
+      return;
+    }
+    if (key === "community" && !isAuthenticated) {
+      openSignInOverlay();
+      return;
     }
     if (key === "sponsors") {
       goToSponsorsHub();
@@ -655,19 +666,47 @@ function TopAppInner({ initialNav = "home" }) {
       openSignInOverlay();
       return;
     }
+    if (!hasProAccess) {
+      openProUpgradeModal("community");
+      return;
+    }
     dockNavCommunity();
   }
   const fallbackSavedOrganizations = useMemo(() => {
-    const byEin = new Map([...results, ...trusted].map((r) => [String(rowEin(r)), r]));
-    return favoriteEins.map((ein) => byEin.get(String(ein)) || { ein, orgName: "Saved organization", city: "", state: "" });
+    const byEin = new Map();
+    for (const r of [...results, ...trusted]) {
+      const key = normalizeEinDigits(rowEin(r));
+      if (key.length === 9 && !byEin.has(key)) byEin.set(key, r);
+    }
+    return favoriteEins.map((ein) => {
+      const key = normalizeEinDigits(ein);
+      const hit = key.length === 9 ? byEin.get(key) : null;
+      if (hit) return hit;
+      return {
+        ein: key || ein,
+        orgName: "",
+        city: "",
+        state: "",
+        savedResolutionStatus: "unavailable",
+      };
+    });
   }, [favoriteEins, results, trusted]);
   const savedOrgsToRender = useMemo(() => {
     if (!favoriteEins.length) return [];
     const byEin = new Map();
     for (const raw of fallbackSavedOrganizations) {
-      const card = mapNonprofitCardRow(raw, "directory");
+      const card = mapNonprofitCardRow(raw, "saved");
       const key = card.einNormalized || normalizeEinDigits(card.ein);
-      if (key.length === 9) byEin.set(key, card);
+      if (key.length === 9) {
+        const unresolved =
+          raw.savedResolutionStatus === "unavailable" || !String(raw.orgName || raw.name || "").trim();
+        byEin.set(key, {
+          ...card,
+          savedResolutionStatus: unresolved ? "unavailable" : "resolved",
+          organizationUnavailable: unresolved,
+          name: unresolved ? "" : card.name,
+        });
+      }
     }
     for (const card of savedOrganizations) {
       const key = card.einNormalized || normalizeEinDigits(card.ein);
@@ -677,10 +716,14 @@ function TopAppInner({ initialNav = "home" }) {
       .map((ein) => {
         const key = normalizeEinDigits(ein);
         if (key.length !== 9) return null;
-        return (
-          byEin.get(key) ||
-          mapNonprofitCardRow({ ein: key, orgName: "Saved organization", city: "", state: "" }, "directory")
-        );
+        const existing = byEin.get(key);
+        if (existing) return existing;
+        return {
+          ...mapNonprofitCardRow({ ein: key, orgName: "", city: "", state: "" }, "saved"),
+          savedResolutionStatus: "unavailable",
+          organizationUnavailable: true,
+          name: "",
+        };
       })
       .filter(Boolean);
   }, [savedOrganizations, fallbackSavedOrganizations, favoriteEins]);
@@ -854,11 +897,11 @@ function TopAppInner({ initialNav = "home" }) {
   }
 
   const pageAtmosphere = useMemo(() => resolvePageAtmosphere(pathname, nav), [pathname, nav]);
-  const immersiveHeaderScroll = pageAtmosphere !== "podcast";
+  /* Header is in normal document flow (scrolls away). Do not drive fixed-veil opacity. */
   useImmersiveHeaderScroll({
     rootRef: mainScrollRef,
-    enabled: immersiveHeaderScroll,
-    gradientBoost: true,
+    enabled: false,
+    gradientBoost: false,
   });
 
   function onContactSubmit(e) {
@@ -883,89 +926,113 @@ function TopAppInner({ initialNav = "home" }) {
   return (
     <main
       ref={mainScrollRef}
-      className={`topApp theme-${profile.theme}${immersiveHeaderScroll ? " header-at-top" : ""} ${isLoggedIn ? "topApp--auth-in" : "topApp--auth-out"} appShell--withMobileNavDock`}
+      className={`topApp theme-${profile.theme} ${isLoggedIn ? "topApp--auth-in" : "topApp--auth-out"} appShell--withMobileNavDock`}
       data-page-atmosphere={pageAtmosphere}
     >
       <div className="appSiteHeader">
-        <AppHeaderBrand pageAtmosphere={pageAtmosphere} />
-        <header className="topbar">
-          <HeaderInner className="topbarInner">
-            <div className="topbarZone topbarLeft">
-              <div className="topbarActionsCluster topbarActionsCluster--start">
+          <AppHeaderBrand pageAtmosphere={pageAtmosphere} />
+          <header className="topbar">
+            <HeaderInner className="topbarInner">
+              <div className="topbarZone topbarLeft">
+                <div className="topbarActionsCluster topbarActionsCluster--start">
+                  <SiteHamburgerNavMenu
+                    shellClass="siteMobileNavMore--phoneOnly"
+                    onItemClick={handleHamburgerNav}
+                  />
+                  {pageAtmosphere === "home" && !isMobileShell ? <DownloadMobileAppButton /> : null}
+                  {pageAtmosphere !== "podcast" ? <ColorSchemeToggle /> : null}
+                </div>
+              </div>
+              <div className="topbarZone topbarCenter" aria-hidden="true" />
+              <div className="topbarZone topbarRight">
+              <div className="topbarActionsCluster">
+                {pageAtmosphere === "home" && isMobileShell ? <DownloadMobileAppButton /> : null}
+                {isLoggedIn ? (
+                  <>
+                    {!isMobileShell ? <AdminConsoleLink /> : null}
+                    <HeaderNotificationBell skipSessionGate />
+                    <HeaderAccountMenu
+                      avatarSrc={profile.avatarUrl || emptyProfileAvatarUrl()}
+                      displayName={fullName}
+                      email={profile.email || workOSAccountEmail}
+                      membershipHint={membershipAccountMenuHint({
+                        isAuthenticated: isLoggedIn,
+                        tierKey: profile.membershipStatus,
+                        billingStatus: profile.membershipBillingStatus,
+                      })}
+                      ariaLabel={`Account menu for ${fullName || profile.email || workOSAccountEmail || "signed-in user"}`}
+                      showAdminConsole={!!entitlements?.isPlatformAdmin}
+                      onAdminConsole={() => {
+                        const href = isCapacitorNative() ? "/admin" : adminConsoleHref();
+                        if (String(href).startsWith("http")) window.location.assign(href);
+                        else router.push(href);
+                      }}
+                      onProfile={() => {
+                        if (pathname !== "/profile") router.push("/profile");
+                        else setNav("profile");
+                      }}
+                      onSettings={() => router.push("/settings")}
+                      onMembership={() => {
+                        if (pathname !== "/profile") router.push("/profile");
+                        else setNav("profile");
+                      }}
+                      onSavedItems={() => setNav("profile")}
+                      onSignOut={signOut}
+                    />
+                  </>
+                ) : hostedAuth ? (
+                  <>
+                    <button
+                      className="btnSoft sponsorBtn"
+                      type="button"
+                      onClick={openCreateAccountFlow}
+                      aria-label="Create account"
+                    >
+                      <AppIcon name="profile" />
+                      <span className="topbarBtnLabel">Create account</span>
+                    </button>
+                    <button
+                      className="btnSoft sponsorBtn"
+                      type="button"
+                      onClick={openSignInOverlay}
+                      aria-label="Sign in"
+                    >
+                      <AppIcon name="profile" />
+                      <span className="topbarBtnLabel">Sign in</span>
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      className="btnSoft sponsorBtn"
+                      onClick={() => { setAuthMode("signup"); setOverlay("signin"); }}
+                      type="button"
+                      aria-label="Create account"
+                    >
+                      <AppIcon name="profile" />
+                      <span className="topbarBtnLabel">Create account</span>
+                    </button>
+                    <button
+                      className="btnSoft sponsorBtn"
+                      onClick={() => { setAuthMode("signin"); setOverlay("signin"); }}
+                      type="button"
+                      aria-label="Sign in"
+                    >
+                      <AppIcon name="profile" />
+                      <span className="topbarBtnLabel">Sign in</span>
+                    </button>
+                  </>
+                )}
                 <SiteHamburgerNavMenu
-                  shellClass="siteMobileNavMore--phoneOnly"
+                  shellClass="siteMobileNavMore--desktopOnly"
+                  align="end"
                   onItemClick={handleHamburgerNav}
                 />
-                {pageAtmosphere === "home" && !isMobileShell ? <DownloadMobileAppButton /> : null}
-                {pageAtmosphere !== "podcast" ? <ColorSchemeToggle /> : null}
-                {isMobileShell && isLoggedIn ? <AdminConsoleLink /> : null}
               </div>
             </div>
-            <div className="topbarZone topbarCenter" aria-hidden="true" />
-            <div className="topbarZone topbarRight">
-            <div className="topbarActionsCluster">
-              {pageAtmosphere === "home" && isMobileShell ? <DownloadMobileAppButton /> : null}
-              {isLoggedIn ? (
-                <>
-                  {!isMobileShell ? <AdminConsoleLink /> : null}
-                  <HeaderNotificationBell skipSessionGate />
-                  <HeaderAccountMenu
-                    avatarSrc={profile.avatarUrl || emptyProfileAvatarUrl()}
-                    displayName={fullName}
-                    email={profile.email || workOSAccountEmail}
-                    membershipHint={membershipAccountMenuHint({
-                      isAuthenticated: isLoggedIn,
-                      tierKey: profile.membershipStatus,
-                      billingStatus: profile.membershipBillingStatus,
-                    })}
-                    ariaLabel={`Account menu for ${fullName || profile.email || workOSAccountEmail || "signed-in user"}`}
-                    onProfile={() => {
-                      if (pathname !== "/profile") router.push("/profile");
-                      else setNav("profile");
-                    }}
-                    onSettings={() => router.push("/settings")}
-                    onMembership={() => {
-                      if (pathname !== "/profile") router.push("/profile");
-                      else setNav("profile");
-                    }}
-                    onSavedItems={() => setNav("profile")}
-                    onSignOut={signOut}
-                  />
-                </>
-              ) : hostedAuth ? (
-                <>
-                  <button className="btnSoft sponsorBtn" type="button" onClick={openCreateAccountFlow}>
-                    <AppIcon name="profile" />
-                    Create account
-                  </button>
-                  <button className="btnSoft sponsorBtn" type="button" onClick={openSignInOverlay}>
-                    <AppIcon name="profile" />
-                    Sign in
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button className="btnSoft sponsorBtn" onClick={() => { setAuthMode("signup"); setOverlay("signin"); }} type="button">
-                    <AppIcon name="profile" />
-                    Create account
-                  </button>
-                  <button className="btnSoft sponsorBtn" onClick={() => { setAuthMode("signin"); setOverlay("signin"); }} type="button">
-                    <AppIcon name="profile" />
-                    Sign in
-                  </button>
-                </>
-              )}
-              <SiteHamburgerNavMenu
-                shellClass="siteMobileNavMore--desktopOnly"
-                align="end"
-                onItemClick={handleHamburgerNav}
-              />
-            </div>
-          </div>
-        </HeaderInner>
-      </header>
+          </HeaderInner>
+        </header>
       </div>
-      <div className="topbarOcclusion" aria-hidden="true" />
 
       {(nav === "home" || nav === "community") && (
         <section className={nav === "home" ? "shell shell--home" : "shell"}>
@@ -1026,7 +1093,7 @@ function TopAppInner({ initialNav = "home" }) {
             />
           )}
 
-          {nav === "community" && hasProAccess ? (
+          {nav === "community" ? (
             <CommunityPage
               supabase={sb}
               userId={userId}
@@ -1034,7 +1101,7 @@ function TopAppInner({ initialNav = "home" }) {
               isAuthenticated={isAuthenticated}
               authLoading={loadingProfile}
               authBackend={authBackend}
-              canCreatePost={!!entitlements?.communityPostCreate}
+              canCreatePost={!!isAuthenticated && !!entitlements?.communityPostCreate}
               isPlatformAdmin={!!entitlements?.isPlatformAdmin}
               profile={profile}
               onRequestSignIn={() => {
@@ -1404,7 +1471,10 @@ function TopAppInner({ initialNav = "home" }) {
 
       {isAuthenticated && entitlements?.isPlatformAdmin ? (
         <div className="adminUtilityEntry">
-          <Link className="adminUtilityEntryLink" href={adminConsoleHref()}>
+          <Link
+            className="adminUtilityEntryLink"
+            href={isCapacitorNative() ? "/admin" : adminConsoleHref()}
+          >
             Admin Console
           </Link>
         </div>

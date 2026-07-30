@@ -412,20 +412,40 @@ def _upscale_wordmark_clean(im: Image.Image, target_w: int = DARK_WORDMARK_TARGE
     nw = target_w
     nh = max(1, int(round(h * (target_w / w))))
     r, g, b, a = im.split()
+    # Soften only near-invisible alpha before resize; keep mid AA so thin tips (T) survive.
     apx = a.load()
     aw, ah = a.size
     for y in range(ah):
         for x in range(aw):
-            apx[x, y] = 255 if apx[x, y] >= 128 else 0
+            v = apx[x, y]
+            if v <= 20:
+                apx[x, y] = 0
     rgb = Image.merge("RGB", (r, g, b)).resize((nw, nh), Image.Resampling.LANCZOS)
-    alpha = a.resize((nw, nh), Image.Resampling.NEAREST)
+    alpha = a.resize((nw, nh), Image.Resampling.LANCZOS)
     out = rgb.convert("RGBA")
     out.putalpha(alpha)
-    return out
+    return snap_light_alpha(out)
 
 
-def _trim_snapped(im: Image.Image, *, threshold: float = 0.03) -> Image.Image:
+def _trim_snapped(im: Image.Image, *, threshold: float = 0.0) -> Image.Image:
+    """
+    Tight-trim transparent artwork.
+
+    Default threshold is 0 — a small % cut (e.g. 0.03) removes the left tip of the
+    “T” in THE OUTREACH (only ~10 opaque rows in that column).
+    """
     return snap_light_alpha(_trim_mark_margins(im.convert("RGBA"), threshold=threshold))
+
+
+def _pad_rgba(im: Image.Image, pad: int) -> Image.Image:
+    """Transparent margin so stroke tips are not flush with the bitmap edge."""
+    if pad <= 0:
+        return im.convert("RGBA")
+    im = im.convert("RGBA")
+    w, h = im.size
+    canvas = Image.new("RGBA", (w + pad * 2, h + pad * 2), (0, 0, 0, 0))
+    canvas.paste(im, (pad, pad), im)
+    return canvas
 
 
 def _fit_in_box(im: Image.Image, box_w: int, box_h: int) -> Image.Image:
@@ -457,12 +477,16 @@ def prepare_transparent_wordmark_from_import(
     """
     im = img.convert("RGBA")
     if _has_meaningful_alpha(im):
-        out = _trim_snapped(im)
+        out = _trim_snapped(im, threshold=0.0)
     else:
         out = prepare_wordmark_rgba(im, allow_silver=allow_silver)
-        out = _trim_snapped(out)
+        out = _trim_snapped(out, threshold=0.0)
+    # Keep monogram/wordmark stroke tips inside the bitmap (CSS overflow can clip flush edges).
+    out = _pad_rgba(out, 48)
     if fit_box:
-        out = _fit_in_box(out, fit_box[0], fit_box[1])
+        # Fit box is pre-pad content size; enlarge canvas to preserve padding ratio.
+        fw, fh = fit_box
+        out = _fit_in_box(out, fw + 96, fh + 96)
     return _upscale_wordmark_clean(out)
 
 
@@ -473,7 +497,7 @@ def prepare_dark_wordmark_from_import(img: Image.Image) -> Image.Image:
 
 def _unified_wordmark_fit_box(*sources: Image.Image) -> tuple[int, int]:
     """Shared trim box so light/dark wordmarks render at the same header size."""
-    trims = [_trim_snapped(src) for src in sources]
+    trims = [_trim_snapped(src, threshold=0.0) for src in sources]
     return max(t.size[0] for t in trims), max(t.size[1] for t in trims)
 
 

@@ -1,0 +1,35 @@
+UPLOAD THIS PACK TO GOOGLE DRIVE
+================================
+File to upload:
+  docs/apple-app-store-upload/TOP-Apple-App-Store-Upload-Pack.zip
+
+Or upload the whole folder:
+  docs/apple-app-store-upload/DRIVE-SHARE/
+
+Version 1.0.1 · Build 8
+Bundle ID: com.theoutreachproject.theoutreachproject
+
+WHAT IS INCLUDED (App Store Connect assets)
+-------------------------------------------
+02-store-listing-assets/
+  app-icon-1024x1024.png          REQUIRED (RGB, no alpha)
+  iphone-screenshots/ (8 PNGs)    1284×2778 → iPhone 6.7" display
+  ipad-screenshots/ (1 PNG)       2064×2752 → iPad 13" class
+
+03-listing-copy/                  Paste into App Information / Version
+04-policy-and-review/             App Privacy + Review Notes
+05-legal/                         Privacy/terms + live URLs
+06-mac-archive-runbook/           How to Archive in Xcode (IPA not in this ZIP)
+
+NOT IN THIS ZIP (by design)
+---------------------------
+- Signed IPA / Archive → built on Mac with Xcode after git pull
+- Apple certificates / provisioning profiles
+- Reviewer passwords
+
+App Store Connect screenshot tip
+--------------------------------
+Primary phone set: use iphone-screenshots (6.7").
+If Connect asks for another size (e.g. 6.5" or 5.5"), you can often
+reuse scaled screenshots or capture from Simulator on the Mac.
+iPad: upload 01-home-ipad.png; add more iPad shots from Simulator if required.

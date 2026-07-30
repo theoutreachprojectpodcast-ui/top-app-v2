@@ -15,7 +15,32 @@ html[data-capacitor-native] main.topApp {
   max-height: var(--cap-app-height, 100dvh);
 }
 
+/*
+ * Full-bleed WebView (contentInset: never): body skips top inset, so every native
+ * header must clear the status bar / Dynamic Island on phone and iPad.
+ */
+html[data-capacitor-native]
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])
+  .appSiteHeader,
+html[data-capacitor-native] .appShell:not(.appShell--podcast) .appSiteHeader {
+  padding-top: max(12px, env(safe-area-inset-top, 0px));
+  overflow: visible;
+}
+
+html[data-capacitor-native]
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])
+  .headerBrandStack,
+html[data-capacitor-native]
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])
+  .headerBrandStack
+  > a {
+  overflow: visible;
+}
+
 html[data-capacitor-native] main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]):not([data-page-atmosphere="home"]) {
+  --header-floating-offset: 0px;
+  --header-floating-height: 0px;
+  --header-fade-height: 0px;
   --mobile-site-header-logo-h: clamp(50px, calc(var(--cap-vw, 1vw) * 12.5), 64px);
   --mobile-site-header-logo-max-w: min(168px, calc(var(--cap-portrait-width, 100vw) - 88px));
   --mobile-site-header-control-size: 44px;
@@ -27,10 +52,13 @@ html[data-capacitor-native] main.topApp:not(.appShell--podcast):not([data-page-a
 }
 
 html[data-capacitor-native] main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) {
-  --mobile-home-header-content-gap: clamp(4px, calc(var(--cap-vw, 1vw) * 1.2), 8px);
-  --mobile-home-header-layout-h: clamp(112px, calc(var(--cap-vw, 1vw) * 29), 148px);
-  --mobile-site-header-logo-h: clamp(137px, calc(var(--cap-vw, 1vw) * 36), 182px);
-  --mobile-site-header-logo-max-w: min(587px, calc(var(--cap-portrait-width, 100vw) - 24px));
+  --mobile-home-header-content-gap: clamp(16px, calc(var(--cap-vw, 1vw) * 4), 28px);
+  --header-floating-offset: 0px;
+  --header-floating-height: 0px;
+  --header-fade-height: 0px;
+  --mobile-home-header-layout-h: clamp(137px, calc(var(--cap-vw, 1vw) * 36), 182px);
+  --mobile-site-header-logo-h: clamp(123px, calc(var(--cap-vw, 1vw) * 32.4), 164px);
+  --mobile-site-header-logo-max-w: min(528px, calc(var(--cap-portrait-width, 100vw) - 96px));
   --mobile-site-header-control-size: 44px;
   --mobile-site-header-control-pad-top: 2px;
   --mobile-site-header-pad-x: max(
@@ -40,7 +68,39 @@ html[data-capacitor-native] main.topApp[data-page-atmosphere="home"]:not(.appShe
   );
 }
 
+/* Phone native home: match web border-box wordmark (do not use tablet content-box). */
+@media (max-width: 760px) {
+  html[data-capacitor-native] main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) .headerBrandStack,
+  html[data-capacitor-native] main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) .headerBrandStack--mobileWordmark {
+    max-width: 100%;
+    width: 100%;
+    padding: 0 8px;
+    box-sizing: border-box;
+    overflow: visible;
+    margin-bottom: 0;
+  }
+
+  html[data-capacitor-native]
+    main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast)
+    .headerBrandStack
+    img.brandMarkImg--header:not(.podcastBrandLogo) {
+    max-width: 100% !important;
+    max-height: var(--mobile-site-header-logo-h) !important;
+    width: 100% !important;
+    height: auto !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+  }
+
+  html[data-capacitor-native] main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) .appSiteHeader {
+    margin-bottom: var(--mobile-home-header-content-gap, 20px);
+    padding-bottom: clamp(6px, calc(var(--cap-vw, 1vw) * 1.5), 10px);
+  }
+}
+
 html[data-capacitor-native] main.topApp.topApp--mobileHomeEntrance[data-page-atmosphere="home"]:not(.appShell--podcast) {
+  --header-floating-height: 0px;
+  --header-fade-height: 0px;
   --mobile-site-header-logo-h: clamp(52px, calc(var(--cap-vw, 1vw) * 13.5), 64px);
   --mobile-site-header-logo-max-w: min(168px, calc(var(--cap-portrait-width, 100vw) - 120px));
 }
@@ -49,9 +109,15 @@ html[data-capacitor-native] .bottomNav.bottomNav--mobileDock .navItemLabel {
   font-size: clamp(9px, calc(var(--cap-vw, 1vw) * 2.4), 11px);
 }
 
-/* Wide WebView: match web home wordmark; header scrolls in-flow like desktop web. */
+/* Wide WebView: match web home wordmark; header remains in-flow. */
 @media (min-width: 761px) {
-  html[data-capacitor-native] main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) {
+  html[data-capacitor-native] main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) {
+    --header-floating-offset: 0px;
+    --header-floating-height: 0px;
+    --header-fade-height: 0px;
+  }
+
+  html[data-capacitor-native] main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]):not([data-page-atmosphere="home"]) {
     --header-floating-offset: 0px;
     --header-floating-height: 0px;
     --header-fade-height: 0px;
@@ -59,11 +125,31 @@ html[data-capacitor-native] .bottomNav.bottomNav--mobileDock .navItemLabel {
 
   html[data-capacitor-native] main.topApp[data-page-atmosphere="home"] .headerBrandStack {
     max-width: min(720px, calc(var(--cap-portrait-width, 100vw) * 0.88));
+    padding-inline: 10px;
+    box-sizing: content-box;
+    overflow: visible;
   }
 
   html[data-capacitor-native] main.topApp[data-page-atmosphere="home"] img.brandMarkImg--header:not(.podcastBrandLogo) {
     max-height: clamp(200px, calc(var(--cap-vw, 1vw) * 28), 272px);
     max-width: min(720px, calc(var(--cap-portrait-width, 100vw) * 0.88));
+  }
+}
+
+/* Capacitor iPad / tablet: same reserved-chrome wordmark as web tablet band. */
+@media (min-width: 761px) and (max-width: 1180px) {
+  html[data-capacitor-native] main.topApp[data-page-atmosphere="home"] .headerBrandStack {
+    max-width: min(440px, calc(var(--cap-portrait-width, 100vw) - 300px));
+    padding-inline: 10px;
+    box-sizing: content-box;
+    overflow: visible;
+  }
+
+  html[data-capacitor-native] main.topApp[data-page-atmosphere="home"] img.brandMarkImg--header:not(.podcastBrandLogo) {
+    max-height: clamp(108px, calc(var(--cap-vw, 1vw) * 15), 168px);
+    max-width: min(440px, calc(var(--cap-portrait-width, 100vw) - 300px));
+    min-width: 0;
+    min-height: 0;
   }
 }
 
@@ -179,15 +265,18 @@ html[data-capacitor-native] main.topApp .siteFooter.siteFooter--pageBottom.siteF
 }
 
 @media (max-width: 760px) {
-  /* Native: header owns the top safe area (body omits top inset in layout.js). */
+  /*
+   * Native: body omits top inset (layout.js) so the in-flow header must clear the
+   * iOS status bar / notch. Do not zero this — that was only valid for fixed chrome.
+   */
   html[data-capacitor-native]
     main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"])
     .appSiteHeader,
   html[data-capacitor-native] .appShell.appShell--subpage:not(.appShell--podcast) .appSiteHeader {
-    padding-top: env(safe-area-inset-top, 0px);
+    padding-top: max(12px, env(safe-area-inset-top, 0px));
   }
 
-  /* Match mobile web: in-flow header band — no extra occlusion layer under the logo. */
+  /* Match mobile web: no occlusion slab under the in-flow logo. */
   html[data-capacitor-native] main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) > .topbarOcclusion {
     position: static;
     display: block;
@@ -202,7 +291,6 @@ html[data-capacitor-native] main.topApp .siteFooter.siteFooter--pageBottom.siteF
     display: none;
   }
 
-  /* In-app tabs (non-home): keep logo band from overlapping first card row. */
   html[data-capacitor-native]
     main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]):not([data-page-atmosphere="home"])
     .appSiteHeader {
@@ -219,12 +307,6 @@ html[data-capacitor-native] main.topApp .siteFooter.siteFooter--pageBottom.siteF
     .headerBrandStack
     img.brandMarkImg--header:not(.podcastBrandLogo) {
     margin-bottom: 0 !important;
-  }
-
-  html[data-capacitor-native]
-    main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]):not([data-page-atmosphere="home"])
-    > .shell:not(.shell--home) {
-    padding-top: clamp(2px, calc(var(--cap-vw, 1vw) * 0.6), 6px);
   }
 
   /* Header corner controls — wins over `top-app.css` @520px dock rules (loads last). */
@@ -306,5 +388,58 @@ html[data-capacitor-native] main.topApp .siteFooter.siteFooter--pageBottom.siteF
     display: flex;
     align-items: center;
     flex-shrink: 0;
+  }
+}
+
+/*
+ * CapacitorHeaderPortal is unused — primary header stays in document flow and scrolls away.
+ */
+html[data-capacitor-native] .capacitorAppHeaderPortal {
+  display: contents;
+}
+
+/* Wide native (iPad): keep home wordmark within the shared clamp — do not let tablet width inflate past design. */
+@media (min-width: 761px) {
+  html[data-capacitor-native] main.topApp[data-page-atmosphere="home"] .headerBrandStack {
+    max-width: min(720px, calc(var(--cap-portrait-width, 100vw) * 0.88));
+    padding-inline: 10px;
+    box-sizing: content-box;
+    overflow: visible;
+  }
+
+  html[data-capacitor-native]
+    main.topApp[data-page-atmosphere="home"]
+    img.brandMarkImg--header:not(.podcastBrandLogo) {
+    max-height: clamp(200px, calc(var(--cap-vw, 1vw) * 28), 272px);
+    max-width: min(720px, calc(var(--cap-portrait-width, 100vw) * 0.88));
+  }
+
+  html[data-capacitor-native]
+    main.topApp:not([data-page-atmosphere="home"]):not([data-page-atmosphere="podcast"])
+    .headerBrandStack--compactMark
+    img.brandMarkImg--header:not(.podcastBrandLogo),
+  html[data-capacitor-native]
+    main.topApp:not([data-page-atmosphere="home"]):not([data-page-atmosphere="podcast"])
+    .headerBrandStack--compactMark
+    .brandMarkImg--header {
+    max-height: clamp(40px, 4vw, 48px) !important;
+    max-width: min(120px, 20vw) !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+  }
+}
+
+@media (min-width: 761px) and (max-width: 1180px) {
+  html[data-capacitor-native] main.topApp[data-page-atmosphere="home"] .headerBrandStack {
+    max-width: min(440px, calc(var(--cap-portrait-width, 100vw) - 300px)) !important;
+  }
+
+  html[data-capacitor-native]
+    main.topApp[data-page-atmosphere="home"]
+    img.brandMarkImg--header:not(.podcastBrandLogo) {
+    max-height: clamp(108px, calc(var(--cap-vw, 1vw) * 15), 168px) !important;
+    max-width: min(440px, calc(var(--cap-portrait-width, 100vw) - 300px)) !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
   }
 }

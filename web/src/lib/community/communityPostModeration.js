@@ -14,10 +14,11 @@ export function buildCommunityModerationPatch(action, body, reviewerId) {
     reviewed_at: now,
   };
 
-  if (action === "approve") {
+  if (action === "approve" || action === "restore" || action === "publish") {
     patch.status = "approved";
     patch.published_at = now;
     patch.rejection_reason = null;
+    patch.deleted_at = null;
   } else if (action === "reject") {
     patch.status = "rejected";
     patch.published_at = null;
@@ -25,10 +26,18 @@ export function buildCommunityModerationPatch(action, body, reviewerId) {
       String(body?.rejectionReason || body?.rejection_reason || "").trim() ||
       "Did not meet moderation guidelines.";
     patch.moderation_notes = String(body?.moderationNotes || body?.moderation_notes || "").trim() || null;
-  } else if (action === "hide") {
+  } else if (action === "hide" || action === "remove") {
     patch.status = "hidden";
     patch.published_at = null;
-    patch.moderation_notes = String(body?.moderationNotes || body?.moderation_notes || "").trim() || null;
+    patch.moderation_notes =
+      String(body?.moderationNotes || body?.moderation_notes || body?.reason || "").trim() || null;
+  } else if (action === "soft_delete" || action === "delete") {
+    patch.status = "hidden";
+    patch.published_at = null;
+    patch.deleted_at = now;
+    patch.moderation_notes =
+      String(body?.moderationNotes || body?.moderation_notes || body?.reason || "").trim() ||
+      "Removed by moderator";
   } else {
     return null;
   }

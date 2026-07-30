@@ -1,0 +1,56 @@
+# Store listing copy — Google Play (paste-ready)
+
+## App name
+
+```
+The Outreach Project
+```
+
+## Short description (max 80 characters)
+
+```
+Mission-first resources for veterans, first responders, and supporters.
+```
+
+## Full description
+
+```
+The Outreach Project (TOP) connects veterans, first responders, and supporters with trusted nonprofits, community stories, podcasts, and membership benefits — in one clear, mobile-first experience.
+
+Discover
+• Search the nonprofit directory by cause, location, and need
+• Browse trusted resource partners vetted for the TOP community
+• Explore sponsor organizations supporting the mission
+
+Connect
+• Join community conversations and share stories
+• Save organizations and favorites to your profile
+• Stay informed with in-app notifications
+
+Membership
+• Support the mission with optional Support or Pro membership tiers
+• Manage billing securely through Stripe on our website
+
+Built for clarity under pressure
+TOP is designed for quick navigation when it matters most — with a trust-driven approach to resource discovery.
+
+Sign in with your TOP account to sync profile, saved items, and membership across web and mobile.
+
+Questions? Contact us at support@theoutreachproject.app or via the in-app contact form.
+
+Privacy Policy: https://theoutreachproject.app/privacy
+Terms of Use: https://theoutreachproject.app/terms
+```
+
+## Category
+
+- Primary: **Lifestyle** (or Social Networking)
+- Secondary (optional): Health & Fitness
+
+## Contact details
+
+| Field | Value |
+|-------|--------|
+| Email | support@theoutreachproject.app |
+| Website | https://theoutreachproject.app |
+| Privacy policy | https://theoutreachproject.app/privacy |

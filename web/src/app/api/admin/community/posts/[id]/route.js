@@ -40,7 +40,10 @@ export async function PATCH(request, context) {
     .select("id,author_profile_id,title,body,status,deleted_at")
     .eq("id", postId)
     .maybeSingle();
-  if (loadErr || !existingPost || existingPost.deleted_at) {
+  if (loadErr || !existingPost) {
+    return Response.json({ ok: false, error: "not_found" }, { status: 404 });
+  }
+  if (existingPost.deleted_at && action !== "restore" && action !== "approve" && action !== "publish") {
     return Response.json({ ok: false, error: "not_found" }, { status: 404 });
   }
 

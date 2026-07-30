@@ -137,9 +137,9 @@ export function requirePro(profile, opts = {}) {
   return true;
 }
 
-/** Public directory browsing — no membership required (home/directory is public). */
-export function canViewDirectory(_profile, _opts = {}) {
-  return true;
+/** Nonprofit directory — Pro Membership (or staff). */
+export function canViewDirectory(profile, opts = {}) {
+  return requirePro(profile, opts);
 }
 
 /** Save nonprofit directory favorites (Pro + sponsor / staff). */
@@ -157,12 +157,40 @@ export function canAccessFullPlatform(profile, opts = {}) {
   return requirePro(profile, opts);
 }
 
-export function canViewCommunity(profile, opts = {}) {
-  return requirePro(profile, opts);
+/**
+ * Authenticated profile that is not suspended.
+ * Kept for callers that need a non-billing activity check.
+ * @param {Record<string, unknown> | null | undefined} profile
+ * @param {{ isPlatformAdmin?: boolean, isPrivilegedStaff?: boolean }} [opts]
+ */
+export function isActiveCommunityMember(profile, opts = {}) {
+  if (hasStaffBypass(profile, opts)) return true;
+  if (!profile) return false;
+  const status = String(profile.userStatus ?? profile.user_status ?? "active")
+    .trim()
+    .toLowerCase();
+  if (status === "suspended") return false;
+  return true;
 }
 
+/** Community feed — Pro Membership (or staff); suspended denied. */
+export function canViewCommunity(profile, opts = {}) {
+  if (!requirePro(profile, opts)) return false;
+  if (hasStaffBypass(profile, opts)) return true;
+  return isActiveCommunityMember(profile, opts);
+}
+
+/** Create / edit own community posts — Pro Membership (or staff); posting-restricted denied. */
 export function canCreateCommunityContent(profile, opts = {}) {
-  return requirePro(profile, opts);
+  if (!canViewCommunity(profile, opts)) return false;
+  if (hasStaffBypass(profile, opts)) return true;
+  if (
+    profile?.communityPostingDisabled === true ||
+    profile?.community_posting_disabled === true
+  ) {
+    return false;
+  }
+  return true;
 }
 
 export function canAccessPremiumPodcast(profile, opts = {}) {

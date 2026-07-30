@@ -88,10 +88,9 @@ html {
   }
 }
 
-/* Mobile site header: corner controls · logo centered (non-podcast routes). */
+/* Mobile site header: in-flow corner controls + centered logo (scrolls with page). */
 @media (max-width: 760px) {
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]):not([data-page-atmosphere="home"]) {
-    /* In-app tabs: compact mark (Capacitor gets tighter overrides in mobile-capacitor-layout.css). */
     --mobile-site-header-logo-h: clamp(50px, 12.5vw, 64px);
     --mobile-site-header-logo-max-w: min(168px, calc(100vw - 88px));
     --mobile-site-header-control-size: 44px;
@@ -104,11 +103,12 @@ html {
   }
 
   main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) {
-    --mobile-home-header-content-gap: clamp(4px, 1.2vw, 8px);
-    /* Layout band stays fixed; logo renders larger and overhang is collapsed via stack margin. */
-    --mobile-home-header-layout-h: clamp(112px, 29vw, 148px);
-    --mobile-site-header-logo-h: clamp(137px, 36vw, 182px);
-    --mobile-site-header-logo-max-w: min(587px, calc(100vw - 24px));
+    --mobile-home-header-content-gap: clamp(16px, 4vw, 28px);
+    /* Layout band stays full size; artwork is 10% smaller so “The” is not edge-clipped. */
+    --mobile-home-header-layout-h: clamp(137px, 36vw, 182px);
+    --mobile-site-header-logo-h: clamp(123px, 32.4vw, 164px);
+    /* Leave room for side chrome; center column is minmax(0,…) so logo cannot overflow viewport. */
+    --mobile-site-header-logo-max-w: min(528px, calc(100vw - 96px));
     --mobile-site-header-control-size: 44px;
     --mobile-site-header-control-pad-top: 2px;
     --mobile-site-header-pad-x: max(
@@ -120,39 +120,17 @@ html {
 
   main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) .appSiteHeader {
     align-items: start;
-    margin-bottom: var(--mobile-home-header-content-gap, 6px);
+    margin-bottom: var(--mobile-home-header-content-gap, 20px);
+    padding-bottom: clamp(6px, 1.5vw, 10px);
     overflow: visible;
   }
 
-  main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) .headerBrandStack--mobileWordmark {
-    align-self: start;
-    height: fit-content;
-    max-height: var(--mobile-site-header-logo-h);
-    margin-bottom: calc(
-      -1 * max(0px, var(--mobile-site-header-logo-h) - var(--mobile-home-header-layout-h))
-    );
-  }
-
-  main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) .headerBrandStack--mobileWordmark .brandMarkImg,
-  main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast)
-    .headerBrandStack--mobileWordmark
-    img.brandMarkImg--header:not(.podcastBrandLogo) {
-    margin-bottom: 0 !important;
-    min-height: 0 !important;
-    min-width: 0 !important;
-  }
-
-  /* Guest mobile home: compact header mark — splash panel carries branding + auth CTAs. */
   main.topApp.topApp--mobileHomeEntrance[data-page-atmosphere="home"]:not(.appShell--podcast) {
     --mobile-site-header-logo-h: clamp(52px, 13.5vw, 64px);
     --mobile-site-header-logo-max-w: min(168px, calc(100vw - 120px));
   }
 
-  main.topApp.topApp--mobileHomeEntrance[data-page-atmosphere="home"]:not(.appShell--podcast) .headerBrandStack .brandMarkImg,
-  main.topApp.topApp--mobileHomeEntrance[data-page-atmosphere="home"]:not(.appShell--podcast) .headerBrandStack img.brandMarkImg--header:not(.podcastBrandLogo) {
-    margin-bottom: 0 !important;
-  }
-
+  /* Mobile in-flow header: clear iOS status bar; logo stays fully visible. */
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .appSiteHeader {
     position: relative;
     z-index: 120;
@@ -163,7 +141,6 @@ html {
     align-items: start;
     box-sizing: border-box;
     width: 100%;
-    /* Fit logo — avoid min-height tied to max logo size (left a large dead zone). */
     min-height: 0;
     height: auto;
     overflow: visible;
@@ -174,138 +151,93 @@ html {
       max(var(--mobile-site-header-pad-x, clamp(8px, 2.5vw, 12px)), env(safe-area-inset-left, 0px));
   }
 
-  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) header.topbar {
-    position: static;
-    top: auto;
-    left: auto;
-    right: auto;
-    z-index: auto;
-  }
-
-  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbar,
-  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarInner {
-    display: contents;
+  /* Home: center track must shrink — `auto` grew past the viewport and html overflow-x clipped the T. */
+  main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) .appSiteHeader {
+    grid-template-columns:
+      minmax(var(--mobile-site-header-control-size, 44px), 1fr)
+      minmax(0, min(100%, var(--mobile-site-header-logo-max-w)))
+      minmax(var(--mobile-site-header-control-size, 44px), 1fr);
+    column-gap: 4px;
   }
 
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .headerBrandStack {
-    position: relative;
-    top: auto;
-    left: auto;
-    grid-column: 2;
-    grid-row: 1;
-    justify-self: center;
-    transform: none;
-    z-index: 0;
-    width: auto;
-    min-width: 0;
-    max-width: 100%;
-    padding: 0 !important;
-    margin: 0;
+    /* Non-home compact marks: content-box frame so artwork is not squeezed. */
+    max-width: var(--mobile-site-header-logo-max-w, 168px);
+    padding: 8px 12px;
+    box-sizing: content-box;
     overflow: visible;
-    pointer-events: none;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
+    align-items: center;
   }
 
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .headerBrandStack > a {
     display: block;
-    flex-shrink: 0;
     max-width: 100%;
     overflow: visible;
     line-height: 0;
-    pointer-events: auto;
-    filter: none !important;
   }
 
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .headerBrandStack .brandMarkImg,
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .headerBrandStack .brandMarkImg--header,
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .headerBrandStack img.brandMarkImg--header:not(.podcastBrandLogo),
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .headerBrandStack .headerBrandMarkFallback {
-    display: block;
-    flex-shrink: 0;
-    box-sizing: border-box;
-    padding: 0 !important;
-    margin: 0 0 clamp(-8px, -2vw, -12px);
+    max-width: var(--mobile-site-header-logo-max-w) !important;
+    max-height: var(--mobile-site-header-logo-h) !important;
     width: auto !important;
     height: auto !important;
     min-width: 0 !important;
     min-height: 0 !important;
-    max-width: var(--mobile-site-header-logo-max-w) !important;
+    object-fit: contain !important;
+    object-position: center center !important;
+    overflow: visible;
+  }
+
+  /*
+   * Home full wordmark — MUST follow the compact max-width:!important rules above.
+   * border-box + img max-width:100% keeps “The” inside the viewport (overflow-x: clip on shell).
+   */
+  main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) .headerBrandStack,
+  main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) .headerBrandStack--mobileWordmark {
+    align-self: start;
+    justify-self: center;
+    height: fit-content;
+    max-height: none;
+    max-width: 100%;
+    width: 100%;
+    padding: 0 8px;
+    box-sizing: border-box;
+    overflow: visible;
+    margin-bottom: 0;
+  }
+
+  main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) .headerBrandStack .brandMarkImg,
+  main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) .headerBrandStack .brandMarkImg--header,
+  main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast)
+    .headerBrandStack
+    img.brandMarkImg--header:not(.podcastBrandLogo),
+  main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) .headerBrandStack .headerBrandMarkFallback,
+  main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast)
+    .headerBrandStack--mobileWordmark
+    img.brandMarkImg--header:not(.podcastBrandLogo) {
+    margin-bottom: 0 !important;
+    max-width: 100% !important;
     max-height: var(--mobile-site-header-logo-h) !important;
-    object-fit: contain;
-    object-position: center top;
-    filter: none !important;
+    width: 100% !important;
+    height: auto !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    object-fit: contain !important;
+    object-position: center center !important;
   }
 
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .headerBrandStack--compactMark {
     padding-bottom: clamp(4px, 1.2vw, 8px) !important;
   }
 
-  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .headerBrandStack--compactMark .brandMarkImg,
-  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .headerBrandStack--compactMark .brandMarkImg--header,
-  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .headerBrandStack--compactMark img.brandMarkImg--header:not(.podcastBrandLogo),
-  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .headerBrandStack--compactMark .headerBrandMarkFallback {
-    margin-bottom: 0 !important;
-  }
-
-  /* Corner controls: equal grid columns keep the logo on true header center. */
-  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarLeft {
-    grid-column: 1;
-    grid-row: 1;
-    position: relative;
-    top: auto;
-    left: auto;
-    z-index: 2;
-    display: flex;
-    align-items: flex-start;
-    justify-content: flex-start;
-    align-self: start;
-    justify-self: start;
-    width: auto;
-    min-width: 0;
-    padding: var(--mobile-site-header-control-pad-top, 4px) 0 0;
-    margin: 0;
-  }
-
+  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarLeft,
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarRight {
-    grid-column: 3;
-    grid-row: 1;
-    position: relative;
-    top: auto;
-    right: auto;
-    z-index: 2;
-    display: flex;
-    align-items: flex-start;
-    justify-content: flex-end;
-    align-self: start;
-    justify-self: end;
-    width: auto;
-    min-width: 0;
-    padding: var(--mobile-site-header-control-pad-top, 4px) 0 0;
-    margin: 0;
+    padding-top: var(--mobile-site-header-control-pad-top, 2px);
   }
 
-  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarCenter {
-    display: none;
-  }
-
-  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbar {
-    padding: 0;
-    background: transparent;
-    border-bottom: 0;
-  }
-
-  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarLeft .topbarActionsCluster,
-  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarRight .topbarActionsCluster {
-    width: auto;
-    flex-wrap: nowrap;
-    gap: 8px;
-    align-items: center;
-    justify-content: flex-end;
-  }
-
-  /* Bell · avatar · menu — equal 44px targets and matching chrome (see mobile-nav-dock.css). */
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .headerNotificationBellBtn,
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .headerAccountTrigger,
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .headerAccountAvatar.profileAvatarShell {
@@ -364,8 +296,8 @@ html {
     max-height: min(70vh, 480px);
   }
 
-  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarLeft .topbarActionsCluster,
-  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarLeft .topbarActionsCluster--start {
+  :is(main.topApp, .capacitorAppHeaderPortal):not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarLeft .topbarActionsCluster,
+  :is(main.topApp, .capacitorAppHeaderPortal):not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarLeft .topbarActionsCluster--start {
     justify-content: flex-start;
     flex-direction: row;
     flex-wrap: nowrap;
@@ -374,25 +306,14 @@ html {
     max-width: min(100%, calc(50vw - 12px));
   }
 
-  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarRight .adminConsoleTopbarBtn {
+  :is(main.topApp, .capacitorAppHeaderPortal):not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarRight .adminConsoleTopbarBtn,
+  :is(main.topApp, .capacitorAppHeaderPortal):not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarLeft .adminConsoleTopbarBtn {
+    /* Phone: Account menu is the Admin Console entry — avoid clipped topbar pill. */
     display: none !important;
   }
 
-  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarLeft .adminConsoleTopbarBtn {
-    min-width: 0;
-    min-height: var(--mobile-site-header-control-size, 44px);
-    max-width: 5.5rem;
-    padding: 0 10px;
-    font-size: 12px;
-    font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    flex-shrink: 1;
-  }
-
-  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .themeToggle,
-  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .siteMobileNavMore__trigger {
+  :is(main.topApp, .capacitorAppHeaderPortal):not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .themeToggle,
+  :is(main.topApp, .capacitorAppHeaderPortal):not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .siteMobileNavMore__trigger {
     box-sizing: border-box;
     width: var(--mobile-site-header-control-size);
     min-width: var(--mobile-site-header-control-size);
@@ -407,8 +328,8 @@ html {
 }
 
 @media (max-width: 520px) {
-  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarLeft .topbarActionsCluster,
-  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarRight .topbarActionsCluster {
+  :is(main.topApp, .capacitorAppHeaderPortal):not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarLeft .topbarActionsCluster,
+  :is(main.topApp, .capacitorAppHeaderPortal):not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarRight .topbarActionsCluster {
     width: auto;
   }
 }

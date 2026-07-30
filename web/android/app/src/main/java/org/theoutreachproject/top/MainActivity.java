@@ -5,12 +5,18 @@ import android.content.res.Configuration;
 import android.os.Bundle;
 import com.getcapacitor.BridgeActivity;
 
+/**
+ * Portrait-only Capacitor shell. Manifest screenOrientation=portrait is primary;
+ * this re-applies the lock after resume / focus / config changes so plugins cannot
+ * leave SCREEN_ORIENTATION_UNSPECIFIED (e.g. ScreenOrientation.unlock).
+ */
 public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(GooglePlayExternalContentLinksPlugin.class);
         lockPortrait();
         super.onCreate(savedInstanceState);
+        lockPortrait();
     }
 
     @Override

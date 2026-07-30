@@ -1,0 +1,16 @@
+GOOGLE PLAY — DATA SAFETY (paste into Console)
+
+Email address: Collected=Yes, Shared=No, Purpose=Account, Required for sign-in
+Name: Collected=Yes, Shared=No, Purpose=Profile, Optional
+Photos: Collected=Yes, Shared=No, Purpose=Profile/community, Optional
+User-generated content: Collected=Yes, Shared=No, Purpose=Community, Optional
+Purchase history: Collected=Yes, Shared=No, Purpose=Membership status, Optional
+Device or other IDs: No
+Location: No
+
+Data encrypted in transit: Yes (HTTPS)
+Users can request deletion: Yes — Settings / support@theoutreachproject.app
+Ads: No
+Account required: Yes for most features
+
+Payments: Memberships and sponsor packages via Stripe on the website — NOT Google Play Billing.

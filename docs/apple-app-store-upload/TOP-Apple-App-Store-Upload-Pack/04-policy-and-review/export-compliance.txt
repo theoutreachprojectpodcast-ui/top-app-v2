@@ -1,0 +1,5 @@
+Export compliance
+
+Info.plist: ITSAppUsesNonExemptEncryption = false
+Uses only standard HTTPS / TLS. No custom crypto.
+Answer App Store Connect accordingly (exempt / standard encryption only).

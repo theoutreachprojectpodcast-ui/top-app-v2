@@ -4,7 +4,8 @@
 	"webDir": "capacitor-www",
 	"android": {
 		"allowMixedContent": false,
-		"androidScheme": "https"
+		"androidScheme": "https",
+		"minWebViewVersion": 111
 	},
 	"ios": {
 		"contentInset": "never",

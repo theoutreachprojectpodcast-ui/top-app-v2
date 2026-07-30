@@ -17,7 +17,12 @@ import { sortCommunityFeedRows } from "@/lib/community/communityFeedSort";
  * @param {{ feedScope?: 'public' | 'mine', sessionKind?: string, isAuthenticated?: boolean }} [options]
  */
 export function useCommunityFeed(supabase, userId, options = {}) {
-  const { feedScope = "public", sessionKind = "none", isAuthenticated = false } = options;
+  const {
+    feedScope = "public",
+    sessionKind = "none",
+    isAuthenticated = false,
+    sort = "connections_first",
+  } = options;
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -31,7 +36,7 @@ export function useCommunityFeed(supabase, userId, options = {}) {
       if (feedScope === "mine" && isAuthenticated && sessionKind === "workos") {
         rows = await fetchMyPostsFromApi();
       } else {
-        rows = await fetchPublicCommunityFeed(supabase);
+        rows = await fetchPublicCommunityFeed(supabase, { sort });
       }
       setPosts(rows);
       const next = {};
@@ -49,21 +54,21 @@ export function useCommunityFeed(supabase, userId, options = {}) {
     } finally {
       setLoading(false);
     }
-  }, [supabase, userId, feedScope, isAuthenticated, sessionKind]);
+  }, [supabase, userId, feedScope, isAuthenticated, sessionKind, sort]);
 
   useEffect(() => {
     refresh();
   }, [refresh]);
 
   const postsWithMeta = useMemo(() => {
-    const sorted = sortCommunityFeedRows(posts);
+    const sorted = sortCommunityFeedRows(posts, { chronological: sort === "chronological" });
     return sorted.map((p) => ({
       ...p,
       relativeTime: getRelativeTime(p.createdAt),
       likeDisplay: likeUi[p.id]?.count ?? (Number(p.likeCount) || 0),
       userLiked: likeUi[p.id]?.liked ?? false,
     }));
-  }, [posts, likeUi]);
+  }, [posts, likeUi, sort]);
 
   const onToggleLike = useCallback(
     async (postId, baseLikeCount) => {

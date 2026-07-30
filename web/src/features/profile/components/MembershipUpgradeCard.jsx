@@ -13,7 +13,7 @@ export default function MembershipUpgradeCard({ isMember, membershipLabel, membe
   return (
     <div className="card">
       <h3>Upgrade to Member</h3>
-      <p>{membershipHint || "Unlock sponsor benefits, community stories, and saved nonprofit lists."}</p>
+      <p>{membershipHint || "Unlock sponsor benefits, Trusted Resources, and saved nonprofit lists."}</p>
       <div className="row wrap">
         <button type="button" className="btnPrimary" onClick={onUpgrade}>
           View membership options

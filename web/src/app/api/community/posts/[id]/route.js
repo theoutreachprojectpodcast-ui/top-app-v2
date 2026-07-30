@@ -11,6 +11,10 @@ import {
   notifyAuthorPostApproved,
 } from "@/lib/community/communityPostModeration";
 import { sanitizeCommunityStoryPhotoUrl } from "@/features/community/domain/communityStoryPhoto";
+import {
+  authorEditRequiresReapproval,
+  resolveCommunityPostingMode,
+} from "@/lib/community/communityPostingMode";
 
 const TABLE = "community_posts";
 
@@ -79,8 +83,7 @@ export async function PATCH(request, context) {
       return Response.json(
         {
           ok: false,
-          message:
-            "Community posting is moderator-led for launch. Member story editing is not available in V1.",
+          message: "Community posting requires Pro Membership.",
         },
         { status: 403 },
       );
@@ -101,6 +104,8 @@ export async function PATCH(request, context) {
       return Response.json({ ok: false, message: "Your story is too long (max 20,000 characters)." }, { status: 400 });
     }
     const wasApproved = st === "approved";
+    const postingMode = await resolveCommunityPostingMode(admin);
+    const needsReapproval = wasApproved && authorEditRequiresReapproval(postingMode);
     const editPatch = {
       title,
       body: text,
@@ -114,7 +119,7 @@ export async function PATCH(request, context) {
       is_edited: true,
       updated_at: now,
     };
-    if (wasApproved) {
+    if (needsReapproval) {
       editPatch.status = "pending_review";
       editPatch.published_at = null;
       editPatch.reviewed_by = null;
@@ -125,7 +130,7 @@ export async function PATCH(request, context) {
     if (error) {
       return Response.json({ ok: false, message: error.message || "Update failed." }, { status: 500 });
     }
-    if (wasApproved && profileRow?.id) {
+    if (needsReapproval && profileRow?.id) {
       await createPlatformNotification(admin, {
         recipientProfileId: profileRow.id,
         audienceScope: "user",
@@ -153,10 +158,34 @@ export async function PATCH(request, context) {
     }
     return Response.json({
       ok: true,
-      message: wasApproved
+      message: needsReapproval
         ? "Your changes were saved. The story is back in the review queue and hidden from the public feed until approved again."
-        : "Your changes were saved. Moderators will still review before publishing.",
+        : "Your changes were saved.",
     });
+  }
+
+  if (action === "author_delete") {
+    const pid = profileRow?.id ? String(profileRow.id) : "";
+    const authorPid = existingPost.author_profile_id ? String(existingPost.author_profile_id) : "";
+    const isAuthor =
+      (pid && authorPid && pid === authorPid) ||
+      (!authorPid && String(existingPost.author_id || "") === String(user.id));
+    if (!isAuthor) {
+      return Response.json({ ok: false, message: "You can only delete your own posts." }, { status: 403 });
+    }
+    const { error } = await admin
+      .from(TABLE)
+      .update({
+        deleted_at: now,
+        status: "hidden",
+        updated_at: now,
+        moderation_notes: "Removed by author",
+      })
+      .eq("id", postId);
+    if (error) {
+      return Response.json({ ok: false, message: error.message || "Could not delete post." }, { status: 500 });
+    }
+    return Response.json({ ok: true, message: "Your post was removed." });
   }
 
   if (action === "bookmark" || action === "unbookmark") {

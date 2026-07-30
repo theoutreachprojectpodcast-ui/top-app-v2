@@ -49,6 +49,7 @@ export default function SiteMobileNavMoreMenu({ tone = "app", children, align = 
       <button
         type="button"
         className="siteMobileNavMore__trigger"
+        aria-label="Menu"
         aria-expanded={open}
         aria-controls={menuId}
         aria-haspopup="true"

@@ -12,8 +12,8 @@ import { navigateToStripeCheckout } from "@/lib/capacitor/billingNavigation";
  */
 export default function ProMembershipUpgradeCard({
   title = "Pro membership unlocks this feature",
-  lead = "Upgrade to post in the community, use premium tools, and access future Pro-exclusive content.",
-  returnPath = "/community",
+  lead = "Upgrade for premium tools, Trusted Resources, and future Pro-exclusive content.",
+  returnPath = "/profile",
   onDismiss,
   className = "",
 }) {

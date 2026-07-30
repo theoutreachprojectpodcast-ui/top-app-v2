@@ -14,6 +14,7 @@ Step-by-step guide for building and submitting **The Outreach Project** iOS app 
 | Display name | The Outreach Project |
 | WebView URL | `https://theoutreachproject.app` |
 | Xcode project | `web/ios/App/App.xcodeproj` |
+| Current store version | **1.0.1** (build **8**) |
 | First release version | **1.0** (build **1**) |
 | Config | `web/capacitor.config.js` |
 

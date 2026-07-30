@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import AdminPanelShell from "@/components/admin/AdminPanelShell";
+import AdminSectionCard from "@/components/admin/AdminSectionCard";
+import AdminActionBar from "@/components/admin/AdminActionBar";
 
 export default function AdminHomepagePanel() {
   const [settings, setSettings] = useState({ carouselLimit: 3, carouselIntervalMs: 3000 });
@@ -63,11 +65,21 @@ export default function AdminHomepagePanel() {
   }
 
   return (
-    <AdminPanelShell panelId="homepage" nested error={error} message={status}>
+    <AdminPanelShell
+      panelId="homepage"
+      nested
+      title="Homepage settings"
+      description="Carousel and featured sponsor controls for the public home page."
+      error={error}
+      message={status}
+    >
       {loading ? <p className="adminMuted">Loading…</p> : null}
       {!loading ? (
         <>
-          <div className="adminFieldStack">
+          <AdminSectionCard
+            title="Carousel"
+            description="How many Mission Partners show in the home carousel, and how fast it advances on phones."
+          >
             <label className="fieldLabel" htmlFor="hp-limit">
               Carousel item count (max shown)
             </label>
@@ -93,11 +105,13 @@ export default function AdminHomepagePanel() {
               value={settings.carouselIntervalMs}
               onChange={(e) => setSettings((s) => ({ ...s, carouselIntervalMs: Number(e.target.value) }))}
             />
-            <button type="button" className="btnPrimary" disabled={saving} onClick={() => void save()}>
-              Save homepage settings
-            </button>
-          </div>
-          <h3 className="adminBlockTitle adminMt4">Live preview (published Mission Partners)</h3>
+            <AdminActionBar>
+              <button type="button" className="btnPrimary" disabled={saving} onClick={() => void save()}>
+                Save homepage settings
+              </button>
+            </AdminActionBar>
+          </AdminSectionCard>
+          <AdminSectionCard title="Live preview" description="Published Mission Partners currently featured on home.">
           {preview.length === 0 ? (
             <p className="adminMuted">No homepage featured sponsors in the database. Mark Mission Partners as featured in Sponsors admin.</p>
           ) : (
@@ -109,6 +123,7 @@ export default function AdminHomepagePanel() {
               ))}
             </ol>
           )}
+          </AdminSectionCard>
         </>
       ) : null}
       <p className="adminMuted adminMuted--sm">

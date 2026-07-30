@@ -11,7 +11,7 @@ function WebAccessPaywallInner() {
       checkoutReturnPath="/access"
       postAccessPath="/"
       backHref="/"
-      backLabel="Not now"
+      backLabel="Sign out"
     />
   );
 }

@@ -3,14 +3,18 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import AdminPanelShell from "@/components/admin/AdminPanelShell";
+import AdminSectionCard from "@/components/admin/AdminSectionCard";
+import AdminAdvancedSettings from "@/components/admin/AdminAdvancedSettings";
+import AdminEmptyState from "@/components/admin/AdminEmptyState";
+import AdminStatusBadge from "@/components/admin/AdminStatusBadge";
 
-const ACTIONS = [
-  { href: "/admin/content/create", label: "Create content", desc: "Guided wizard" },
-  { href: "/admin/community", label: "Moderation queue", desc: "Pending community posts" },
-  { href: "/admin/podcasts", label: "Podcast applications", desc: "Review guest intake" },
-  { href: "/admin/users", label: "Users", desc: "Search and manage accounts" },
-  { href: "/admin/sponsors", label: "Sponsors", desc: "Catalog and featured flags" },
-  { href: "/admin/billing", label: "Billing ops", desc: "Revenue and forecasts" },
+const QUICK_CREATE = [
+  { href: "/admin/content/create", label: "Create content", desc: "Guided draft wizard" },
+  { href: "/admin/community", label: "Community post", desc: "Write or moderate posts" },
+  { href: "/admin/sponsors", label: "Add sponsor", desc: "Catalog and branding" },
+  { href: "/admin/podcasts", label: "Podcast tools", desc: "Episodes and guests" },
+  { href: "/admin/nonprofits", label: "Nonprofit", desc: "Directory enrichment" },
+  { href: "/admin/users", label: "Review members", desc: "Accounts and roles" },
 ];
 
 export default function AdminCommandCenterDashboard() {
@@ -48,98 +52,113 @@ export default function AdminCommandCenterDashboard() {
 
   const q = data?.queues || {};
   const s = data?.snapshots || {};
+  const needsAttention = [
+    { href: "/admin/community", label: "Community pending", count: q.communityPending ?? 0 },
+    { href: "/admin/community", label: "Draft posts", count: q.communityDrafts ?? 0 },
+    { href: "/admin/podcasts", label: "Podcast applications", count: q.podcastApplications ?? 0 },
+    { href: "/admin/applications", label: "Sponsor applications", count: q.sponsorAppsNew ?? 0 },
+  ].filter((item) => Number(item.count) > 0);
 
   return (
-    <AdminPanelShell panelId="dashboard" error={error}>
-      {loading ? <p className="adminMuted">Loading…</p> : null}
+    <AdminPanelShell
+      panelId="dashboard"
+      title="Overview"
+      description="See what needs attention, jump into common edits, and scan recent platform activity."
+      status={needsAttention.length ? "attention" : "live"}
+      statusLabel={needsAttention.length ? "Needs attention" : "All clear"}
+      error={error}
+      primaryAction={
+        <button type="button" className="btnSoft" onClick={() => void load()} disabled={loading}>
+          {loading ? "Refreshing…" : "Refresh"}
+        </button>
+      }
+      secondaryActions={
+        <Link className="btnSoft" href="/admin/analytics">
+          View reports
+        </Link>
+      }
+    >
+      {loading && !data ? <p className="adminMuted">Loading overview…</p> : null}
 
-      <h2 className="adminSectionTitle">Quick actions</h2>
-      <div className="adminDashboardGrid">
-        {ACTIONS.map((a) => (
-          <Link key={a.href} className="adminDashboardCard" href={a.href}>
-            <strong>{a.label}</strong>
-            <span className="adminMuted">{a.desc}</span>
-          </Link>
-        ))}
-      </div>
+      <AdminSectionCard
+        title="Needs attention"
+        description="Queues that usually require an admin decision today."
+      >
+        {needsAttention.length ? (
+          <div className="adminAttentionList">
+            {needsAttention.map((item) => (
+              <Link key={`${item.href}-${item.label}`} className="adminTaskCard" href={item.href}>
+                <strong>{item.label}</strong>
+                <span className="adminDashboardStat">{item.count}</span>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <AdminEmptyState
+            title="Nothing waiting"
+            description="No pending community posts, podcast applications, or new sponsor applications."
+          />
+        )}
+      </AdminSectionCard>
+
+      <AdminSectionCard title="Quick create" description="Start the most common content and member tasks.">
+        <div className="adminTaskGrid">
+          {QUICK_CREATE.map((a) => (
+            <Link key={a.href} className="adminTaskCard" href={a.href}>
+              <strong>{a.label}</strong>
+              <span className="adminMuted">{a.desc}</span>
+            </Link>
+          ))}
+        </div>
+      </AdminSectionCard>
 
       {!loading && data ? (
         <>
-          <h2 className="adminSectionTitle">Moderation & intake</h2>
-          <div className="adminDashboardGrid">
-            <Link className="adminDashboardCard" href="/admin/community">
-              <span className="adminMuted">Community pending</span>
-              <span className="adminDashboardStat">{q.communityPending ?? 0}</span>
-            </Link>
-            <Link className="adminDashboardCard" href="/admin/community">
-              <span className="adminMuted">Draft posts</span>
-              <span className="adminDashboardStat">{q.communityDrafts ?? 0}</span>
-            </Link>
-            <Link className="adminDashboardCard" href="/admin/podcasts">
-              <span className="adminMuted">Podcast applications</span>
-              <span className="adminDashboardStat">{q.podcastApplications ?? 0}</span>
-            </Link>
-            <Link className="adminDashboardCard" href="/admin/applications">
-              <span className="adminMuted">New sponsor applications</span>
-              <span className="adminDashboardStat">{q.sponsorAppsNew ?? 0}</span>
-            </Link>
-          </div>
+          <AdminSectionCard title="At a glance" description="High-level platform counts — open a card to manage that area.">
+            <div className="adminDashboardGrid">
+              <Link className="adminDashboardCard" href="/admin/users">
+                <span className="adminMuted">Members</span>
+                <span className="adminDashboardStat">{s.usersTotal ?? 0}</span>
+                <span className="adminMuted">+{s.usersNewWeek ?? 0} this week</span>
+              </Link>
+              <Link className="adminDashboardCard" href="/admin/billing">
+                <span className="adminMuted">Est. MRR</span>
+                <span className="adminDashboardStat">${s.estimatedMrrUsd ?? 0}</span>
+              </Link>
+              <Link className="adminDashboardCard" href="/admin/sponsors">
+                <span className="adminMuted">Active sponsors</span>
+                <span className="adminDashboardStat">{s.sponsorsActive ?? 0}</span>
+              </Link>
+              <Link className="adminDashboardCard" href="/admin/trusted">
+                <span className="adminMuted">Trusted resources</span>
+                <span className="adminDashboardStat">{s.trustedActive ?? 0}</span>
+              </Link>
+            </div>
+          </AdminSectionCard>
 
-          <h2 className="adminSectionTitle">Platform snapshots</h2>
-          <div className="adminDashboardGrid">
-            <Link className="adminDashboardCard" href="/admin/users">
-              <span className="adminMuted">Total users</span>
-              <span className="adminDashboardStat">{s.usersTotal ?? 0}</span>
-              <span className="adminMuted">+{s.usersNewWeek ?? 0} this week</span>
-            </Link>
-            <Link className="adminDashboardCard" href="/admin/billing">
-              <span className="adminMuted">Est. MRR (tiers)</span>
-              <span className="adminDashboardStat">${s.estimatedMrrUsd ?? 0}</span>
-            </Link>
-            <Link className="adminDashboardCard" href="/admin/sponsors">
-              <span className="adminMuted">Active sponsors</span>
-              <span className="adminDashboardStat">{s.sponsorsActive ?? 0}</span>
-            </Link>
-            <Link className="adminDashboardCard" href="/admin/trusted">
-              <span className="adminMuted">Trusted resources</span>
-              <span className="adminDashboardStat">{s.trustedActive ?? 0}</span>
-            </Link>
-          </div>
-
-          <h2 className="adminSectionTitle">Recent admin activity</h2>
-          {activities.length ? (
-            <ul className="adminActivityFeed">
-              {activities.map((a) => (
-                <li key={a.id}>
-                  <span className="adminActivityFeed__when">
-                    {String(a.createdAt || "").slice(0, 16).replace("T", " ")}
-                  </span>
-                  <strong>{a.summary}</strong>
-                  <span className="adminMuted">
-                    {a.actorEmail ? ` · ${a.actorEmail}` : ""}
-                    {a.resourceId ? ` · ${String(a.resourceId).slice(0, 8)}…` : ""}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="adminMuted">No audit log entries yet. Actions across sponsors, community, billing, and content will appear here.</p>
-          )}
-
-          <h2 className="adminSectionTitle">System health</h2>
-          <ul className="adminMuted adminProse">
-            <li>
-              Stripe secret: {data.stripe?.secretConfigured ? "configured" : "missing"}
-            </li>
-            <li>
-              Member recurring checkout: {data.stripe?.memberRecurring ? "yes" : "no"}
-            </li>
-            <li>Webhook: {data.stripe?.webhook ? "configured" : "missing"}</li>
-          </ul>
+          <AdminSectionCard title="Recent activity" description="Latest admin actions across the console.">
+            {activities.length ? (
+              <ul className="adminActivityFeed">
+                {activities.map((a) => (
+                  <li key={a.id}>
+                    <span className="adminActivityFeed__when">
+                      {String(a.createdAt || "").slice(0, 16).replace("T", " ")}
+                    </span>
+                    <strong>{a.summary}</strong>
+                    <span className="adminMuted">{a.actorEmail ? ` · ${a.actorEmail}` : ""}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <AdminEmptyState
+                title="No activity yet"
+                description="Actions across sponsors, community, billing, and content will appear here."
+              />
+            )}
+          </AdminSectionCard>
 
           {data.recentBilling?.length ? (
-            <>
-              <h2 className="adminSectionTitle">Recent invoice records</h2>
+            <AdminSectionCard title="Recent invoices" description="Latest recorded billing activity.">
               <div className="adminTableWrap">
                 <table className="adminTable">
                   <thead>
@@ -153,28 +172,33 @@ export default function AdminCommandCenterDashboard() {
                     {data.recentBilling.map((r) => (
                       <tr key={r.id}>
                         <td>${r.amountUsd}</td>
-                        <td>{r.status}</td>
+                        <td>
+                          <AdminStatusBadge status={r.status === "paid" ? "live" : "draft"}>
+                            {r.status}
+                          </AdminStatusBadge>
+                        </td>
                         <td>{String(r.createdAt || "").slice(0, 10)}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-            </>
+            </AdminSectionCard>
           ) : null}
 
-          <p className="adminMuted adminDisclaimer">{data.disclaimer}</p>
+          <AdminAdvancedSettings
+            title="Integrations & health"
+            description="Technical billing configuration checks. Members never see this."
+          >
+            <ul className="adminMuted adminProse">
+              <li>Stripe secret: {data.stripe?.secretConfigured ? "configured" : "missing"}</li>
+              <li>Member recurring checkout: {data.stripe?.memberRecurring ? "yes" : "no"}</li>
+              <li>Webhook: {data.stripe?.webhook ? "configured" : "missing"}</li>
+            </ul>
+            {data.disclaimer ? <p className="adminMuted">{data.disclaimer}</p> : null}
+          </AdminAdvancedSettings>
         </>
       ) : null}
-
-      <div className="adminActions">
-        <button type="button" className="btnSoft" onClick={() => void load()}>
-          Refresh
-        </button>
-        <Link className="btnSoft" href="/admin/analytics">
-          Full analytics
-        </Link>
-      </div>
     </AdminPanelShell>
   );
 }

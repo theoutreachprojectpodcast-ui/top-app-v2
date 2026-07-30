@@ -147,6 +147,14 @@ async function eraseCommunityPresence(admin, { workosUserId, profileId }, warnin
     .or(`follower_id.eq.${workosUserId},following_id.eq.${workosUserId}`);
   if (followsErr) warnings.push(`community_follows:${followsErr.message}`);
 
+  if (profileId) {
+    const { error: connectionsErr } = await admin
+      .from("member_connections")
+      .delete()
+      .or(`requester_profile_id.eq.${profileId},recipient_profile_id.eq.${profileId}`);
+    if (connectionsErr) warnings.push(`member_connections:${connectionsErr.message}`);
+  }
+
   const postPatch = {
     deleted_at: now,
     status: "hidden",

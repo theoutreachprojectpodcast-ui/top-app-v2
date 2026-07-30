@@ -193,6 +193,18 @@ for (const table of tables) {
   }
 }
 
+/** Privileged / extension RPCs must not be executable with the publishable key. */
+const MUST_BLOCK_RPC = ["_top_admin_enrichment_metrics", "_top_rls_security_audit", "show_limit"];
+
+for (const rpc of MUST_BLOCK_RPC) {
+  const { data, error } = await pub.rpc(rpc);
+  if (!error) {
+    failures.push(`RPC_LEAK ${rpc}: anon EXECUTE succeeded (${JSON.stringify(data)?.slice(0, 80) || "ok"})`);
+  } else if (!/42501|permission denied|PGRST301|not find|404/i.test(`${error.code || ""} ${error.message || ""}`)) {
+    warnings.push(`RPC ${rpc}: unexpected anon error ${error.code || ""} ${String(error.message || "").slice(0, 80)}`);
+  }
+}
+
 if (warnings.length) {
   console.log("\nWarnings:");
   for (const w of warnings.slice(0, 40)) console.log(" ", w);

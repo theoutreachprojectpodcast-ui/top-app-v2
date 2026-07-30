@@ -18,6 +18,7 @@ export {
   canViewDirectory,
   canViewCommunity,
   canCreateCommunityContent,
+  isActiveCommunityMember,
   canAccessPremiumPodcast,
   canAccessTrustedPartnerOffers,
   hasMobileAppAccess,

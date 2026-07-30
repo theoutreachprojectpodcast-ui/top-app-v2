@@ -1,5 +1,5 @@
-import TopApp from "@/components/app/TopApp";
+import AppEntryBootstrap from "@/components/membership/AppEntryBootstrap";
 
 export default function HomePage() {
-  return <TopApp />;
+  return <AppEntryBootstrap />;
 }

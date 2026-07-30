@@ -1,0 +1,52 @@
+ENGINEER FROM SOURCE — Google Play (owner unavailable)
+======================================================
+Repo: https://github.com/theoutreachprojectpodcast-ui/top-app-v2
+Branch: main
+Package: com.theoutreachproject
+
+1) Pull
+   git pull origin main
+   pnpm install
+
+2) Signing secrets (NOT in git)
+   Obtain from team password manager / release vault:
+   - web/android/keystores/top-upload.keystore
+   - web/android/keystore.properties
+   Template: web/android/keystore.properties.example
+   NEVER commit keystore or keystore.properties.
+
+3) Confirm / bump versionCode
+   Edit web/android/app/build.gradle → versionCode
+   Must be HIGHER than any version already uploaded to Play Console.
+   Check Play Console → Release → App bundle explorer if unsure.
+
+4) Build signed AAB
+   pnpm run mobile:store:prep
+   pnpm run mobile:android:bundle
+   Output:
+     web/android/app/build/outputs/bundle/release/app-release.aab
+   Script prints verified package + versionCode — confirm before upload.
+
+5) Optional: refresh listing pack from repo assets
+   python web/scripts/assemble-google-play-drive-pack.py
+   Materials land in docs/google-play-upload/DRIVE-SHARE/
+
+6) Play Console upload
+   Testing → Closed testing → Create new release → upload AAB
+   Release notes: DRIVE-SHARE/03-listing-copy/04-release-notes-closed-testing.txt
+   Listing graphics: DRIVE-SHARE/02-store-listing-assets/
+   Policy forms: DRIVE-SHARE/04-policy-and-review/
+
+7) Production gate (personal accounts)
+   Need 12 opted-in closed testers for 14 continuous days, then
+   Dashboard → Apply for production.
+   See: docs/google-play-upload/06-CLOSED-TESTING-TO-PRODUCTION.md
+
+8) After public listing
+   Set Vercel production: NEXT_PUBLIC_ANDROID_PLAY_STORE_URL=<Play Store URL>
+
+Related
+-------
+ANDROID_PLAY_STORE_RELEASE_CHECKLIST.md
+docs/ANDROID_PLAY_STORE_STATUS.md
+docs/google-play-upload/README.md

@@ -1,0 +1,30 @@
+FILE MANIFEST
+=============
+
+        1164  00-START-HERE.txt
+    31002381  01-app-bundle/app-release-v1.0-versionCode-6.aab
+         109  01-app-bundle/VERSION.txt
+     1418240  02-store-listing-assets/app-icon-1024x1024-source.png
+      131383  02-store-listing-assets/app-icon-512x512.png
+      494153  02-store-listing-assets/feature-graphic-1024x500.png
+     3197618  02-store-listing-assets/phone-screenshots/01-home.png
+     1535724  02-store-listing-assets/phone-screenshots/02-directory.png
+     1886689  02-store-listing-assets/phone-screenshots/03-trusted-resources.png
+     1949188  02-store-listing-assets/phone-screenshots/04-podcast.png
+     1597056  02-store-listing-assets/phone-screenshots/05-sponsors.png
+     1535268  02-store-listing-assets/phone-screenshots/06-profile.png
+     1564524  02-store-listing-assets/phone-screenshots/07-saved-organizations.png
+     1266227  02-store-listing-assets/phone-screenshots/08-community.png
+     5181978  02-store-listing-assets/tablet-screenshots-optional/01-home-tablet.png
+          22  03-listing-copy/01-app-name.txt
+          73  03-listing-copy/02-short-description.txt
+        1162  03-listing-copy/03-full-description.txt
+         363  03-listing-copy/04-release-notes-closed-testing.txt
+         285  03-listing-copy/05-release-notes-production.txt
+         275  03-listing-copy/06-category-and-contacts.txt
+         273  04-policy-and-review/ads-content-audience.txt
+         733  04-policy-and-review/data-safety.txt
+        1004  04-policy-and-review/reviewer-notes-and-billing.txt
+       12672  05-legal/privacy-policy.md
+       12512  05-legal/terms-and-conditions.md
+         295  05-legal/URLS.txt

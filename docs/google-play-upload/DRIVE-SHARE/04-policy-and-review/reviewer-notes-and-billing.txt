@@ -1,0 +1,19 @@
+APP ACCESS / REVIEW NOTES
+
+The Outreach Project Android app (Capacitor) loads our production web app in a native WebView.
+Sign-in: WorkOS AuthKit in-app.
+Membership / sponsor billing: Stripe Checkout + Customer Portal on https://theoutreachproject.app in Chrome (system browser).
+This app does NOT use Google Play Billing and does NOT collect card details.
+
+Test account: create a Production WorkOS user and paste email/password ONLY into Play Console App access.
+Example mailbox pattern: appreview+android@theoutreachproject.app
+(Prefer a password manager — avoid putting real passwords in shared Drive docs.)
+
+Reviewer steps:
+1. Launch → Sign in
+2. Browse Home, Directory, Community, Profile
+3. Tap Upgrade / Manage billing → Chrome opens website
+4. Optional: complete membership on web, return, refresh account status
+
+Short billing disclosure:
+Subscriptions and sponsor packages are purchased through our website (Stripe). The app does not offer Google Play in-app products.

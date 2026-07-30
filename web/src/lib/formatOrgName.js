@@ -18,6 +18,8 @@ export function isPlaceholderOrgName(value = "") {
   if (!t) return true;
   if (/^unknown organization$/i.test(t)) return true;
   if (/^trusted\s+resource$/i.test(t)) return true;
+  if (/^saved organization$/i.test(t)) return true;
+  if (/^organization unavailable$/i.test(t)) return true;
   return false;
 }
 
