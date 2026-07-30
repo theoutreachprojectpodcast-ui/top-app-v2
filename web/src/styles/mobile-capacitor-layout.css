@@ -95,6 +95,9 @@ html[data-capacitor-native] .bottomNav.bottomNav--mobileDock .navItemLabel {
 
   html[data-capacitor-native] main.topApp[data-page-atmosphere="home"] .headerBrandStack {
     max-width: min(720px, calc(var(--cap-portrait-width, 100vw) * 0.88));
+    padding-inline: 10px;
+    box-sizing: content-box;
+    overflow: visible;
   }
 
   html[data-capacitor-native] main.topApp[data-page-atmosphere="home"] img.brandMarkImg--header:not(.podcastBrandLogo) {
@@ -107,6 +110,9 @@ html[data-capacitor-native] .bottomNav.bottomNav--mobileDock .navItemLabel {
 @media (min-width: 761px) and (max-width: 1180px) {
   html[data-capacitor-native] main.topApp[data-page-atmosphere="home"] .headerBrandStack {
     max-width: min(440px, calc(var(--cap-portrait-width, 100vw) - 300px));
+    padding-inline: 10px;
+    box-sizing: content-box;
+    overflow: visible;
   }
 
   html[data-capacitor-native] main.topApp[data-page-atmosphere="home"] img.brandMarkImg--header:not(.podcastBrandLogo) {
@@ -366,6 +372,9 @@ html[data-capacitor-native] .capacitorAppHeaderPortal {
 @media (min-width: 761px) {
   html[data-capacitor-native] main.topApp[data-page-atmosphere="home"] .headerBrandStack {
     max-width: min(720px, calc(var(--cap-portrait-width, 100vw) * 0.88));
+    padding-inline: 10px;
+    box-sizing: content-box;
+    overflow: visible;
   }
 
   html[data-capacitor-native]

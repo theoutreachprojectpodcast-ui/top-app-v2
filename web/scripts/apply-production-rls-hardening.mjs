@@ -18,6 +18,7 @@ import { createClient } from "@supabase/supabase-js";
 
 const webRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const sqlPath = path.join(webRoot, "supabase/supabase_security_advisor_rls_2026_07.sql");
+const functionsSqlPath = path.join(webRoot, "supabase/supabase_security_advisor_functions_2026_07.sql");
 const apply = process.argv.includes("--apply");
 const PROJECT_REF = "xbtfoundwmhrqrbcuqcw";
 
@@ -126,31 +127,50 @@ async function applyViaPostgres(sql) {
 }
 
 async function applySql() {
-  const sql = fs.readFileSync(sqlPath, "utf8");
-
-  if (accessToken) {
-    try {
-      return (await applyViaManagementApi(sql)).ok;
-    } catch (e) {
-      console.error("[apply-production-rls] Management API apply failed:", e.message);
-    }
+  const files = [sqlPath, functionsSqlPath].filter((p) => fs.existsSync(p));
+  if (!files.length) {
+    console.error("[apply-production-rls] No SQL files found");
+    return false;
   }
 
-  if (databaseUrl) {
-    try {
-      return (await applyViaPostgres(sql)).ok;
-    } catch (e) {
-      console.error("[apply-production-rls] Postgres apply failed:", e.message);
+  const applyOne = async (file) => {
+    const sql = fs.readFileSync(file, "utf8");
+    console.log(`[apply-production-rls] Applying ${path.basename(file)}…`);
+
+    if (accessToken) {
+      try {
+        return (await applyViaManagementApi(sql)).ok;
+      } catch (e) {
+        console.error("[apply-production-rls] Management API apply failed:", e.message);
+      }
     }
+
+    if (databaseUrl) {
+      try {
+        return (await applyViaPostgres(sql)).ok;
+      } catch (e) {
+        console.error("[apply-production-rls] Postgres apply failed:", e.message);
+      }
+    }
+
+    return null;
+  };
+
+  if (!accessToken && !databaseUrl) {
+    console.log("[apply-production-rls] No apply credentials — run in Production Supabase SQL editor:");
+    console.log(`  https://supabase.com/dashboard/project/${projectRefFromUrl(url)}/sql/new`);
+    for (const f of files) console.log(`  File: ${f}`);
+    console.log("\nOr set one of:");
+    console.log("  SUPABASE_ACCESS_TOKEN  (from https://supabase.com/dashboard/account/tokens)");
+    console.log("  DATABASE_URL           (Postgres connection string from project Settings → Database)");
+    return false;
   }
 
-  console.log("[apply-production-rls] No apply credentials — run in Production Supabase SQL editor:");
-  console.log(`  https://supabase.com/dashboard/project/${projectRefFromUrl(url)}/sql/new`);
-  console.log(`  File: ${sqlPath}`);
-  console.log("\nOr set one of:");
-  console.log("  SUPABASE_ACCESS_TOKEN  (from https://supabase.com/dashboard/account/tokens)");
-  console.log("  DATABASE_URL           (Postgres connection string from project Settings → Database)");
-  return false;
+  for (const file of files) {
+    const ok = await applyOne(file);
+    if (!ok) return false;
+  }
+  return true;
 }
 
 let success = true;
@@ -159,12 +179,14 @@ if (apply) {
     success = await applySql();
   } catch (e) {
     console.error("[apply-production-rls] apply failed:", e.message);
-    console.log("[apply-production-rls] Paste SQL manually:", sqlPath);
+    console.log("[apply-production-rls] Paste SQL manually:");
+    console.log(" ", sqlPath);
+    console.log(" ", functionsSqlPath);
     success = false;
   }
 } else {
   console.log("[apply-production-rls] Probe mode (pass --apply to run SQL)");
-  console.log(`[apply-production-rls] SQL file: ${sqlPath}`);
+  console.log(`[apply-production-rls] SQL files:\n  ${sqlPath}\n  ${functionsSqlPath}`);
 }
 
 const audit = await runAudit();
@@ -184,9 +206,9 @@ if (audit) {
   }
 }
 
-if (!apply && audit && audit.rows.some((r) => r.status === "FAIL")) {
-  console.log("\n[apply-production-rls] Fix: run this file in Production Supabase SQL editor:");
-  console.log("  web/supabase/supabase_security_advisor_rls_2026_07.sql");
+if (!apply) {
+  console.log("\n[apply-production-rls] If Advisors still show function/RPC issues, run:");
+  console.log("  web/supabase/supabase_security_advisor_functions_2026_07.sql");
 }
 
 const auditOk = !audit || audit.rows.every((r) => r.status !== "FAIL");

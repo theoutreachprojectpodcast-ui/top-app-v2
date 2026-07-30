@@ -1,0 +1,550 @@
+{
+  "project": "xbtfoundwmhrqrbcuqcw",
+  "generatedAt": "2026-07-16T15:57:58.094Z",
+  "rows": [
+    {
+      "table": "admin_audit_logs",
+      "svcN": 54,
+      "pubN": 0,
+      "insertClass": "RLS_BLOCK",
+      "pubErr": ""
+    },
+    {
+      "table": "admin_media_assets",
+      "svcN": 20,
+      "pubN": 0,
+      "insertClass": "RLS_BLOCK",
+      "pubErr": ""
+    },
+    {
+      "table": "admin_settings",
+      "svcN": 1,
+      "pubN": 0,
+      "insertClass": "RLS_BLOCK",
+      "pubErr": ""
+    },
+    {
+      "table": "billing_records",
+      "svcN": 0,
+      "pubN": 0,
+      "insertClass": "RLS_BLOCK",
+      "pubErr": ""
+    },
+    {
+      "table": "billing_remediation_log",
+      "svcN": 0,
+      "pubN": 0,
+      "insertClass": "RLS_BLOCK",
+      "pubErr": ""
+    },
+    {
+      "table": "community_follows",
+      "svcN": 0,
+      "pubN": 0,
+      "insertClass": "RLS_BLOCK",
+      "pubErr": ""
+    },
+    {
+      "table": "community_post_comments",
+      "svcN": 14,
+      "pubN": 0,
+      "insertClass": "RLS_BLOCK",
+      "pubErr": ""
+    },
+    {
+      "table": "community_post_likes",
+      "svcN": 0,
+      "pubN": 0,
+      "insertClass": "RLS_BLOCK",
+      "pubErr": ""
+    },
+    {
+      "table": "community_post_reactions",
+      "svcN": 62,
+      "pubN": 0,
+      "insertClass": "RLS_BLOCK",
+      "pubErr": ""
+    },
+    {
+      "table": "community_posts",
+      "svcN": 26,
+      "pubN": 13,
+      "insertClass": "RLS_BLOCK",
+      "pubErr": ""
+    },
+    {
+      "table": "curated_orgs",
+      "svcN": 40,
+      "pubN": 40,
+      "insertClass": "INSERT_OK",
+      "pubErr": ""
+    },
+    {
+      "table": "entity_social_links",
+      "svcN": 0,
+      "pubN": 0,
+      "insertClass": "RLS_BLOCK",
+      "pubErr": ""
+    },
+    {
+      "table": "favorites",
+      "svcN": 0,
+      "pubN": 0,
+      "insertClass": "INSERT_OK",
+      "pubErr": ""
+    },
+    {
+      "table": "form_submissions",
+      "svcN": 0,
+      "pubN": 0,
+      "insertClass": "RLS_BLOCK",
+      "pubErr": ""
+    },
+    {
+      "table": "irs_veterans_orgs",
+      "svcN": 0,
+      "pubN": 0,
+      "insertClass": "REACHED",
+      "pubErr": ""
+    },
+    {
+      "table": "messages",
+      "svcN": 0,
+      "pubN": 0,
+      "insertClass": "INSERT_OK",
+      "pubErr": ""
+    },
+    {
+      "table": "nonprofit_audience_flags",
+      "svcN": 0,
+      "pubN": 0,
+      "insertClass": "REACHED",
+      "pubErr": ""
+    },
+    {
+      "table": "nonprofit_audience_tags",
+      "svcN": 16857,
+      "pubN": 16857,
+      "insertClass": "REACHED",
+      "pubErr": ""
+    },
+    {
+      "table": "nonprofit_directory_enrichment",
+      "svcN": 0,
+      "pubN": 0,
+      "insertClass": "RLS_BLOCK",
+      "pubErr": ""
+    },
+    {
+      "table": "nonprofit_overrides",
+      "svcN": 1,
+      "pubN": 1,
+      "insertClass": "REACHED",
+      "pubErr": ""
+    },
+    {
+      "table": "nonprofit_profiles",
+      "svcN": 8,
+      "pubN": 8,
+      "insertClass": "REACHED",
+      "pubErr": ""
+    },
+    {
+      "table": "nonprofit_websites",
+      "svcN": 8164,
+      "pubN": 8164,
+      "insertClass": "REACHED",
+      "pubErr": ""
+    },
+    {
+      "table": "nonprofit_websites_stage",
+      "svcN": 13702,
+      "pubN": 13702,
+      "insertClass": "INSERT_OK",
+      "pubErr": ""
+    },
+    {
+      "table": "nonprofits",
+      "svcN": 1920053,
+      "pubN": 1920053,
+      "insertClass": "RLS_BLOCK",
+      "pubErr": ""
+    },
+    {
+      "table": "nonprofits_directory",
+      "svcN": 7502,
+      "pubN": 7502,
+      "insertClass": "OTHER:55000",
+      "pubErr": ""
+    },
+    {
+      "table": "nonprofits_search_all",
+      "status": "svc_error",
+      "detail": ""
+    },
+    {
+      "table": "nonprofits_search_all_v2",
+      "svcN": 1920053,
+      "pubN": 1920053,
+      "insertClass": "OTHER:55000",
+      "pubErr": ""
+    },
+    {
+      "table": "nonprofits_search_app_v1",
+      "svcN": 1920053,
+      "pubN": 1920053,
+      "insertClass": "OTHER:42809",
+      "pubErr": ""
+    },
+    {
+      "table": "nonprofits_with_audience",
+      "svcN": 1920053,
+      "pubN": 1920053,
+      "insertClass": "OTHER:55000",
+      "pubErr": ""
+    },
+    {
+      "table": "nonprofits_with_websites",
+      "svcN": 1920053,
+      "pubN": 1920053,
+      "insertClass": "OTHER:55000",
+      "pubErr": ""
+    },
+    {
+      "table": "nonprofits_with_websites_v2",
+      "svcN": 1920053,
+      "pubN": 1920053,
+      "insertClass": "OTHER:55000",
+      "pubErr": ""
+    },
+    {
+      "table": "ntee_categories",
+      "svcN": 26,
+      "pubN": 26,
+      "insertClass": "REACHED",
+      "pubErr": ""
+    },
+    {
+      "table": "page_content_blocks",
+      "svcN": 0,
+      "pubN": 0,
+      "insertClass": "RLS_BLOCK",
+      "pubErr": ""
+    },
+    {
+      "table": "page_images",
+      "svcN": 0,
+      "pubN": 0,
+      "insertClass": "RLS_BLOCK",
+      "pubErr": ""
+    },
+    {
+      "table": "podcast_episode_featured_guest",
+      "svcN": 0,
+      "pubN": 0,
+      "insertClass": "RLS_BLOCK",
+      "pubErr": ""
+    },
+    {
+      "table": "podcast_episode_guests",
+      "svcN": 0,
+      "pubN": 0,
+      "insertClass": "RLS_BLOCK",
+      "pubErr": ""
+    },
+    {
+      "table": "podcast_episodes",
+      "svcN": 0,
+      "pubN": 0,
+      "insertClass": "RLS_BLOCK",
+      "pubErr": ""
+    },
+    {
+      "table": "podcast_guest_applications",
+      "svcN": 0,
+      "pubN": 0,
+      "insertClass": "RLS_BLOCK",
+      "pubErr": ""
+    },
+    {
+      "table": "podcast_guests",
+      "svcN": 0,
+      "pubN": 0,
+      "insertClass": "RLS_BLOCK",
+      "pubErr": ""
+    },
+    {
+      "table": "podcast_landing_curated_slots",
+      "svcN": 0,
+      "pubN": 0,
+      "insertClass": "RLS_BLOCK",
+      "pubErr": ""
+    },
+    {
+      "table": "podcast_member_content",
+      "svcN": 0,
+      "pubN": 0,
+      "insertClass": "RLS_BLOCK",
+      "pubErr": ""
+    },
+    {
+      "table": "podcast_sponsor_checkout_events",
+      "svcN": 0,
+      "pubN": 0,
+      "insertClass": "RLS_BLOCK",
+      "pubErr": ""
+    },
+    {
+      "table": "podcast_sync_logs",
+      "svcN": 0,
+      "pubN": 0,
+      "insertClass": "RLS_BLOCK",
+      "pubErr": ""
+    },
+    {
+      "table": "podcast_upcoming_guests",
+      "svcN": 0,
+      "pubN": 0,
+      "insertClass": "RLS_BLOCK",
+      "pubErr": ""
+    },
+    {
+      "table": "profiles",
+      "svcN": 0,
+      "pubN": 0,
+      "insertClass": "REACHED",
+      "pubErr": ""
+    },
+    {
+      "table": "sponsor_applications",
+      "svcN": 2,
+      "pubN": 0,
+      "insertClass": "RLS_BLOCK",
+      "pubErr": ""
+    },
+    {
+      "table": "sponsor_enrichment",
+      "svcN": 9,
+      "pubN": 0,
+      "insertClass": "RLS_BLOCK",
+      "pubErr": ""
+    },
+    {
+      "table": "sponsors_catalog",
+      "svcN": 9,
+      "pubN": 9,
+      "insertClass": "RLS_BLOCK",
+      "pubErr": ""
+    },
+    {
+      "table": "stg_us_vet_connect",
+      "svcN": 0,
+      "pubN": 0,
+      "insertClass": "INSERT_OK",
+      "pubErr": ""
+    },
+    {
+      "table": "support_to_pro_migration_emails",
+      "svcN": 0,
+      "pubN": 0,
+      "insertClass": "RLS_BLOCK",
+      "pubErr": ""
+    },
+    {
+      "table": "support_to_pro_migration_records",
+      "svcN": 0,
+      "pubN": 0,
+      "insertClass": "RLS_BLOCK",
+      "pubErr": ""
+    },
+    {
+      "table": "threads",
+      "svcN": 0,
+      "pubN": 0,
+      "insertClass": "INSERT_OK",
+      "pubErr": ""
+    },
+    {
+      "table": "top_app_saved_org_eins",
+      "svcN": 83,
+      "pubN": 83,
+      "insertClass": "REACHED",
+      "pubErr": ""
+    },
+    {
+      "table": "top_oauth_mobile_handoffs",
+      "svcN": 53,
+      "pubN": 0,
+      "insertClass": "RLS_BLOCK",
+      "pubErr": ""
+    },
+    {
+      "table": "top_org_public_updates",
+      "svcN": 0,
+      "pubN": 0,
+      "insertClass": "RLS_BLOCK",
+      "pubErr": ""
+    },
+    {
+      "table": "top_platform_notifications",
+      "svcN": 124,
+      "pubN": 0,
+      "insertClass": "RLS_BLOCK",
+      "pubErr": ""
+    },
+    {
+      "table": "top_profiles",
+      "svcN": 144,
+      "pubN": 0,
+      "insertClass": "RLS_BLOCK",
+      "pubErr": ""
+    },
+    {
+      "table": "top_qa_profiles",
+      "svcN": 0,
+      "pubN": 0,
+      "insertClass": "RLS_BLOCK",
+      "pubErr": ""
+    },
+    {
+      "table": "trusted_resource_applications",
+      "svcN": 0,
+      "pubN": 0,
+      "insertClass": "RLS_BLOCK",
+      "pubErr": ""
+    },
+    {
+      "table": "trusted_resource_nonprofit_links",
+      "svcN": 1,
+      "pubN": 0,
+      "insertClass": "RLS_BLOCK",
+      "pubErr": ""
+    },
+    {
+      "table": "trusted_resources",
+      "svcN": 1,
+      "pubN": 1,
+      "insertClass": "RLS_BLOCK",
+      "pubErr": ""
+    },
+    {
+      "table": "trusted_resources_mv",
+      "svcN": 6,
+      "pubN": 6,
+      "insertClass": "OTHER:42809",
+      "pubErr": ""
+    },
+    {
+      "table": "trusted_resources_v",
+      "svcN": 41,
+      "pubN": 41,
+      "insertClass": "OTHER:55000",
+      "pubErr": ""
+    },
+    {
+      "table": "user_profiles",
+      "svcN": 0,
+      "pubN": 0,
+      "insertClass": "RLS_BLOCK",
+      "pubErr": ""
+    },
+    {
+      "table": "veteran_org_seed",
+      "svcN": 28,
+      "pubN": 28,
+      "insertClass": "REACHED",
+      "pubErr": ""
+    },
+    {
+      "table": "vw_aud_basic_needs",
+      "svcN": 20439,
+      "pubN": 20439,
+      "insertClass": "REACHED",
+      "pubErr": ""
+    },
+    {
+      "table": "vw_aud_children_families",
+      "svcN": 61297,
+      "pubN": 61297,
+      "insertClass": "REACHED",
+      "pubErr": ""
+    },
+    {
+      "table": "vw_aud_first_responders",
+      "svcN": 36459,
+      "pubN": 36459,
+      "insertClass": "REACHED",
+      "pubErr": ""
+    },
+    {
+      "table": "vw_aud_housing",
+      "svcN": 29875,
+      "pubN": 29875,
+      "insertClass": "REACHED",
+      "pubErr": ""
+    },
+    {
+      "table": "vw_aud_mental_health",
+      "svcN": 26242,
+      "pubN": 26242,
+      "insertClass": "REACHED",
+      "pubErr": ""
+    },
+    {
+      "table": "vw_aud_veterans",
+      "svcN": 48926,
+      "pubN": 48926,
+      "insertClass": "REACHED",
+      "pubErr": ""
+    },
+    {
+      "table": "vw_basic_needs_geo",
+      "svcN": 20439,
+      "pubN": 20439,
+      "insertClass": "REACHED",
+      "pubErr": ""
+    },
+    {
+      "table": "vw_children_families_geo",
+      "svcN": 61297,
+      "pubN": 61297,
+      "insertClass": "REACHED",
+      "pubErr": ""
+    },
+    {
+      "table": "vw_first_responders_geo",
+      "svcN": 36459,
+      "pubN": 36459,
+      "insertClass": "REACHED",
+      "pubErr": ""
+    },
+    {
+      "table": "vw_housing_geo",
+      "svcN": 29875,
+      "pubN": 29875,
+      "insertClass": "REACHED",
+      "pubErr": ""
+    },
+    {
+      "table": "vw_mental_health_geo",
+      "svcN": 26242,
+      "pubN": 26242,
+      "insertClass": "REACHED",
+      "pubErr": ""
+    },
+    {
+      "table": "vw_veterans_geo",
+      "svcN": 48926,
+      "pubN": 48926,
+      "insertClass": "REACHED",
+      "pubErr": ""
+    },
+    {
+      "table": "vw_veterans_geo_enriched",
+      "svcN": 48926,
+      "pubN": 48926,
+      "insertClass": "OTHER:55000",
+      "pubErr": ""
+    }
+  ]
+}

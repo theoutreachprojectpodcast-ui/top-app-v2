@@ -140,7 +140,7 @@ html {
     min-height: 0 !important;
     min-width: 0 !important;
     object-fit: contain;
-    object-position: center top;
+    object-position: center center;
   }
 
   main.topApp.topApp--mobileHomeEntrance[data-page-atmosphere="home"]:not(.appShell--podcast) {
@@ -170,11 +170,17 @@ html {
   }
 
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .headerBrandStack {
+    /* Frame inset expands outside the logo max-width (content-box) — no artwork shrink. */
+    max-width: var(--mobile-site-header-logo-max-w, 168px);
+    padding-inline: 10px;
+    box-sizing: content-box;
     overflow: visible;
+    align-items: center;
   }
 
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .headerBrandStack > a {
     display: block;
+    max-width: 100%;
     overflow: visible;
     line-height: 0;
   }
@@ -185,9 +191,12 @@ html {
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .headerBrandStack .headerBrandMarkFallback {
     max-width: var(--mobile-site-header-logo-max-w) !important;
     max-height: var(--mobile-site-header-logo-h) !important;
+    width: auto !important;
+    height: auto !important;
     min-width: 0 !important;
     min-height: 0 !important;
     object-fit: contain !important;
+    object-position: center center !important;
     overflow: visible;
   }
 

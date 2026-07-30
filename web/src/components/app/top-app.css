@@ -28,8 +28,15 @@
 
 /* Home desktop: stable wordmark size. Header is in-flow (scrolls with page). */
 @media (min-width: 761px) {
+  /*
+   * Frame padding uses content-box so it expands outside max-width — matching
+   * the image cap — instead of eating into the artwork (border-box clipping).
+   */
   main.topApp[data-page-atmosphere="home"] .headerBrandStack {
     max-width: min(720px, 88vw);
+    padding-inline: 10px;
+    box-sizing: content-box;
+    overflow: visible;
   }
 
   main.topApp[data-page-atmosphere="home"] .shell.shell--home {
@@ -41,6 +48,11 @@
     max-height: clamp(200px, 28vw, 272px);
     max-width: min(720px, 88vw);
   }
+
+  /* Subtle separation: header → Mission Partners (first home content block). */
+  main.topApp[data-page-atmosphere="home"] .homeSponsorSpotlights {
+    padding-top: var(--ds-space-3, 12px);
+  }
 }
 
 /*
@@ -51,13 +63,17 @@
 @media (min-width: 761px) and (max-width: 1180px) {
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .appSiteHeader,
   .appShell.appShell--admin .appSiteHeader {
-    grid-template-columns: minmax(140px, 1fr) minmax(0, auto) minmax(140px, 1fr);
+    /* `auto` (not minmax(0, auto)) so the logo column cannot shrink below its content. */
+    grid-template-columns: minmax(140px, 1fr) auto minmax(140px, 1fr);
     column-gap: 10px;
   }
 
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .headerBrandStack,
   .appShell.appShell--admin .headerBrandStack {
     max-width: min(440px, calc(100vw - 300px));
+    padding-inline: 10px;
+    box-sizing: content-box;
+    overflow: visible;
   }
 
   main.topApp[data-page-atmosphere="home"] .headerBrandStack {
@@ -202,30 +218,21 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .heade
   align-items: center;
   width: auto;
   max-width: min(720px, 88vw);
-  padding: 0;
+  /* content-box: horizontal padding expands the frame without shrinking the logo. */
+  padding: 0 10px;
   margin: 0;
+  box-sizing: content-box;
+  overflow: visible;
   pointer-events: none;
-}
-
-/* Re-assert tablet logo caps after the shared headerBrandStack max-width (cascade). */
-@media (min-width: 761px) and (max-width: 1180px) {
-  main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .headerBrandStack,
-  main.topApp[data-page-atmosphere="home"] .headerBrandStack,
-  .appShell.appShell--admin .headerBrandStack {
-    max-width: min(440px, calc(100vw - 300px));
-  }
-
-  main.topApp[data-page-atmosphere="home"] img.brandMarkImg--header:not(.podcastBrandLogo) {
-    max-height: clamp(108px, 15vw, 168px);
-    max-width: min(440px, calc(100vw - 300px));
-    min-width: 0;
-    min-height: 0;
-  }
 }
 
 main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .headerBrandStack > a,
 .appShell.appShell--admin .headerBrandStack > a {
   pointer-events: auto;
+  display: block;
+  max-width: 100%;
+  overflow: visible;
+  line-height: 0;
 }
 
 main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) header.topbar,
@@ -1316,8 +1323,10 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]),
   align-items: center;
   width: max-content;
   max-width: min(624px, 92vw);
-  padding: 0 8px;
-  box-sizing: border-box;
+  /* content-box keeps padding outside max-width so the mark is not side-clipped. */
+  padding: 0 10px;
+  box-sizing: content-box;
+  overflow: visible;
   pointer-events: none;
 }
 .headerBrandStack > a {

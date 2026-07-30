@@ -1,15 +1,15 @@
 -- =============================================================================
--- PRODUCTION RLS HOTFIX — pointer (do not run this file)
+-- PRODUCTION SECURITY HOTFIX — pointer (do not run this file)
 -- =============================================================================
 -- Supabase SQL Editor does not support \i includes.
--- Paste and run the FULL contents of:
---   web/supabase/supabase_security_advisor_rls_2026_07.sql
+-- Run these in order (paste full file contents into SQL editor):
+--
+--   1) web/supabase/supabase_security_advisor_rls_2026_07.sql
+--        ENABLE+FORCE RLS, restrictive client denies, security_invoker views
+--   2) web/supabase/supabase_security_advisor_functions_2026_07.sql
+--        Pin function search_path; revoke anon/authenticated EXECUTE on RPCs
 --
 -- Dashboard: https://supabase.com/dashboard/project/xbtfoundwmhrqrbcuqcw/sql/new
---
--- Closes anon leaks on top_app_saved_org_eins (user favorites), curated_orgs,
--- nonprofit_* ETL tables, staging tables, and all other public heap tables.
--- Also sets security_invoker on views and revokes client access to MVs.
 --
 -- CLI (no DB password): set SUPABASE_ACCESS_TOKEN then:
 --   pnpm --dir web run apply:production:rls:apply

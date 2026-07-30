@@ -49,6 +49,22 @@
         cursor: pointer;
         width: 100%;
       }
+      .update {
+        display: block;
+        box-sizing: border-box;
+        margin-bottom: 0.75rem;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        border-radius: 999px;
+        padding: 0.75rem 1.25rem;
+        color: #fff;
+        background: #22a52b;
+        font-weight: 700;
+        text-decoration: none;
+      }
+      .secondary {
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        background: transparent;
+      }
       .hint {
         margin-top: 1rem;
         font-size: 0.85rem;
@@ -59,6 +75,18 @@
       (function () {
         var PROD = "https://theoutreachproject.app/";
         var HEALTH = "https://theoutreachproject.app/api/health/mobile";
+        var MIN_CHROMIUM = 111;
+
+        function chromiumMajor() {
+          var match = navigator.userAgent.match(/(?:Chrome|Chromium)\/(\d+)/i);
+          return match ? parseInt(match[1], 10) : 0;
+        }
+
+        function setText(id, value) {
+          var node = document.getElementById(id);
+          if (node) node.textContent = value;
+        }
+
         function go() {
           try {
             window.location.replace(PROD);
@@ -68,26 +96,44 @@
             } catch (e2) {}
           }
         }
-        function checkThenGo() {
+
+        function checkThenGo(retryEvenIfOld) {
+          var major = chromiumMajor();
+          if (!retryEvenIfOld && major && major < MIN_CHROMIUM) return;
           fetch(HEALTH, { cache: "no-store" })
             .then(function (r) {
-              return r.json().catch(function () {
-                return {};
-              });
+              if (!r.ok) throw new Error("health");
+              return r.json();
             })
             .then(function (body) {
               if (body && body.ok) go();
             })
             .catch(function () {});
         }
-        checkThenGo();
-        setTimeout(go, 1200);
-        setTimeout(go, 4000);
+
         window.addEventListener("load", function () {
+          var major = chromiumMajor();
+          if (major && major < MIN_CHROMIUM) {
+            setText("title", "Update Android System WebView");
+            setText(
+              "message",
+              "This tablet uses Chromium " + major + ". The Outreach Project requires version " +
+                MIN_CHROMIUM + " or newer. Update Android System WebView (or Chrome), then reopen the app."
+            );
+            setText("version", "Detected WebView: " + major + " · Required: " + MIN_CHROMIUM + "+");
+          } else {
+            setText("title", "Unable to connect");
+            setText(
+              "message",
+              "Check this device’s internet connection, update Android System WebView, then try again."
+            );
+            setText("version", major ? "Detected WebView: " + major : "WebView version unavailable");
+            checkThenGo(false);
+          }
+
           var btn = document.getElementById("retry");
           if (btn) btn.addEventListener("click", function () {
-            checkThenGo();
-            go();
+            checkThenGo(true);
           });
         });
       })();
@@ -96,10 +142,18 @@
   <body>
     <div class="panel" role="alert">
       <div class="inner">
-        <h1>Connecting&hellip;</h1>
-        <p>Loading The Outreach Project from the server. Tap below if this screen stays.</p>
-        <button type="button" id="retry">Try again</button>
-        <p class="hint">Use <strong>theoutreachproject.app</strong> (with &ldquo;the&rdquo;).</p>
+        <h1 id="title">Checking compatibility&hellip;</h1>
+        <p id="message">Checking the tablet’s WebView and connection.</p>
+        <a
+          class="update"
+          href="market://details?id=com.google.android.webview"
+        >Update Android System WebView</a>
+        <a
+          class="update secondary"
+          href="market://details?id=com.android.chrome"
+        >Update Google Chrome</a>
+        <button class="secondary" type="button" id="retry">Try again</button>
+        <p class="hint" id="version">WebView version unavailable</p>
       </div>
     </div>
   </body>
