@@ -196,12 +196,25 @@ export async function POST(request) {
 
   if (!profileMayCreateCommunityPost(profileRow)) {
     if (!profilePassesMembershipScope(profileRow, "community_post")) {
+      const status = String(profileRow.user_status || "active").toLowerCase();
+      if (status === "suspended") {
+        return Response.json(
+          { ok: false, message: "Suspended accounts cannot create community posts." },
+          { status: 403 },
+        );
+      }
+      if (profileRow.community_posting_disabled === true) {
+        return Response.json(
+          { ok: false, message: "Posting has been restricted on this account." },
+          { status: 403 },
+        );
+      }
       return membershipDeniedResponse("community_post");
     }
     return Response.json(
       {
         ok: false,
-        message: "Community posting requires Pro Membership.",
+        message: "You do not have permission to create community posts.",
       },
       { status: 403 },
     );

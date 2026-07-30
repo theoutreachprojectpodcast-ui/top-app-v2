@@ -9,7 +9,10 @@ import CommunityConnectionsPanel from "@/features/community/components/Community
 import CommunityMemberProfileModal from "@/features/community/components/CommunityMemberProfileModal";
 import CommunityPostCard from "@/features/community/components/CommunityPostCard";
 import CommunitySubmissionForm from "@/features/community/components/CommunitySubmissionForm";
-import { isModeratorUser } from "@/features/community/api/communityApi";
+import {
+  deleteAuthorCommunityPost,
+  isModeratorUser,
+} from "@/features/community/api/communityApi";
 import { useCommunityFeed } from "@/features/community/hooks/useCommunityFeed";
 import { readRememberDevicePref } from "@/lib/auth/lastUsedEmail";
 import { workosSignUpHref } from "@/lib/auth/workosReturnTo";
@@ -42,6 +45,7 @@ export default function CommunityPage({
 }) {
   const [selectedMemberId, setSelectedMemberId] = useState("");
   const [composerOpen, setComposerOpen] = useState(false);
+  const [editingPost, setEditingPost] = useState(null);
   const [feedSort, setFeedSort] = useState("connections_first");
 
   const { posts, loading, error, refresh, onToggleLike } = useCommunityFeed(supabase, userId, {
@@ -62,6 +66,56 @@ export default function CommunityPage({
 
   const friendPosts = useMemo(() => posts.filter((p) => p.fromConnection), [posts]);
   const otherPosts = useMemo(() => posts.filter((p) => !p.fromConnection), [posts]);
+  const viewerProfileId = String(profile?.profileRecordId || "").trim();
+
+  function isOwnPost(post) {
+    if (!viewerProfileId) return false;
+    return String(post?.authorProfileId || "").trim() === viewerProfileId;
+  }
+
+  function openCreateComposer() {
+    setEditingPost(null);
+    setComposerOpen(true);
+  }
+
+  function openEditComposer(post) {
+    setEditingPost(post);
+    setComposerOpen(true);
+  }
+
+  function closeComposer() {
+    setComposerOpen(false);
+    setEditingPost(null);
+  }
+
+  async function handleAuthorDelete(post) {
+    const result = await deleteAuthorCommunityPost(post?.id);
+    if (!result.ok) {
+      window.alert(result.message || "Could not delete post.");
+      return;
+    }
+    refresh();
+  }
+
+  function renderPostCard(p) {
+    return (
+      <CommunityPostCard
+        key={p.id}
+        post={p}
+        isAuthenticated={isAuthenticated}
+        canModerate={canModerate}
+        isOwnPost={isOwnPost(p)}
+        onOpenAuthor={(key) => setSelectedMemberId(String(key || "").trim())}
+        onRequestAuthorEdit={canCreatePost ? openEditComposer : undefined}
+        onRequestAuthorDelete={canCreatePost ? handleAuthorDelete : undefined}
+        onToggleLike={
+          isAuthenticated && (sessionKind === "workos" || typeof onToggleLike === "function")
+            ? onToggleLike
+            : undefined
+        }
+      />
+    );
+  }
 
   function handleCreateAccount() {
     if (requiresExternalWebAccountFlow() && hostedAuth) {
@@ -142,8 +196,8 @@ export default function CommunityPage({
         ) : (
           <div className="row wrap">
             {canCreatePost ? (
-              <button type="button" className="btnPrimary" onClick={() => setComposerOpen(true)}>
-                Create a post
+              <button type="button" className="btnPrimary" onClick={openCreateComposer}>
+                Create a Post
               </button>
             ) : null}
             {isPlatformAdmin ? (
@@ -161,17 +215,18 @@ export default function CommunityPage({
       <CommunityTrustDisclosure />
 
       {isAuthenticated && canCreatePost && composerOpen ? (
-        <section className="card communitySection" aria-label="Create a community post">
-          <h3>Create a post</h3>
+        <section className="card communitySection" aria-label={editingPost ? "Edit post" : "Create a Post"}>
+          <h3>{editingPost ? "Edit post" : "Create a Post"}</h3>
           <CommunitySubmissionForm
             supabase={supabase}
             userId={userId}
             authorName={authorName}
             authorAvatarUrl={profile?.avatarUrl || ""}
             useWorkOSApi={useWorkOSApi}
-            onClose={() => setComposerOpen(false)}
+            editPost={editingPost}
+            onClose={closeComposer}
             onSubmitted={() => {
-              setComposerOpen(false);
+              closeComposer();
               refresh();
             }}
           />
@@ -181,12 +236,9 @@ export default function CommunityPage({
       {isAuthenticated && !canCreatePost ? (
         <section className="card communitySection communityV1Notice" aria-label="Community posting">
           <p className="communityV1NoticeText">
-            Community posting is available with Pro Membership. You can still browse the feed, react, and comment when
-            signed in with access.
+            Community posting requires an active Pro Membership. If posting was restricted on your account, contact
+            support.
           </p>
-          <Link className="btnSoft" href="/profile">
-            View membership
-          </Link>
         </section>
       ) : null}
 
@@ -271,22 +323,7 @@ export default function CommunityPage({
         {feedSort === "connections_first" && friendPosts.length ? (
           <div className="communityFeedBand">
             <h4 className="communityFeedBandTitle">From your connections</h4>
-            <div className="communityFeed">
-              {friendPosts.map((p) => (
-                <CommunityPostCard
-                  key={p.id}
-                  post={p}
-                  isAuthenticated={isAuthenticated}
-                  canModerate={canModerate}
-                  onOpenAuthor={(key) => setSelectedMemberId(String(key || "").trim())}
-                  onToggleLike={
-                    isAuthenticated && (sessionKind === "workos" || typeof onToggleLike === "function")
-                      ? onToggleLike
-                      : undefined
-                  }
-                />
-              ))}
-            </div>
+            <div className="communityFeed">{friendPosts.map(renderPostCard)}</div>
           </div>
         ) : null}
 
@@ -295,20 +332,7 @@ export default function CommunityPage({
             <h4 className="communityFeedBandTitle">Community updates</h4>
           ) : null}
           <div className="communityFeed">
-            {(feedSort === "connections_first" ? otherPosts : posts).map((p) => (
-              <CommunityPostCard
-                key={p.id}
-                post={p}
-                isAuthenticated={isAuthenticated}
-                canModerate={canModerate}
-                onOpenAuthor={(key) => setSelectedMemberId(String(key || "").trim())}
-                onToggleLike={
-                  isAuthenticated && (sessionKind === "workos" || typeof onToggleLike === "function")
-                    ? onToggleLike
-                    : undefined
-                }
-              />
-            ))}
+            {(feedSort === "connections_first" ? otherPosts : posts).map(renderPostCard)}
           </div>
         </div>
       </section>

@@ -133,7 +133,7 @@ export default function MobileNativeGate() {
     }
 
     if (guest && requiresActiveMembershipPath(path) && !isMembershipExemptPath(path)) {
-      const target = `/sign-in?returnTo=${encodeURIComponent(path)}`;
+      const target = "/";
       if (lastRedirectRef.current !== target) {
         lastRedirectRef.current = target;
         router.replace(target);
@@ -227,8 +227,16 @@ export default function MobileNativeGate() {
           return;
         }
       }
-      if (path === "/" || path === "") {
-        // Public home/directory — guests and non-Pro users may stay.
+      if (path === "/" || path === "" || path === "/welcome") {
+        if (guest) return;
+        if (access === "pending") return;
+        if (access === "denied") {
+          const target = membershipTarget;
+          if (lastRedirectRef.current !== target) {
+            lastRedirectRef.current = target;
+            router.replace(target);
+          }
+        }
         return;
       }
       if (isMembershipExemptPath(path)) return;

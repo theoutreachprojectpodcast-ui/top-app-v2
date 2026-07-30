@@ -1,24 +1,16 @@
 "use client";
 
-import { Suspense } from "react";
-import AuthLoadingOverlay from "@/components/auth/AuthLoadingOverlay";
 import AppAccessPaywall from "@/components/membership/AppAccessPaywall";
+import "@/styles/mobile-splash-page.css";
 
-function MobileAccessPaywallInner() {
+/** Native Capacitor membership purchase screen — no skip into the app. */
+export default function MobileAccessPaywall() {
   return (
     <AppAccessPaywall
       checkoutReturnPath="/mobile/access"
       postAccessPath="/"
       backHref="/"
-      backLabel="Not now"
+      backLabel="Sign out"
     />
-  );
-}
-
-export default function MobileAccessPaywall() {
-  return (
-    <Suspense fallback={<AuthLoadingOverlay visible variant="generic" />}>
-      <MobileAccessPaywallInner />
-    </Suspense>
   );
 }

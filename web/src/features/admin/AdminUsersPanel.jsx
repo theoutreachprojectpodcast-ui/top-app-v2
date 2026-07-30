@@ -2,6 +2,9 @@
 
 import AdminPanelShell from "@/components/admin/AdminPanelShell";
 import AdminEmptyState from "@/components/admin/AdminEmptyState";
+import AdminFilterBar from "@/components/admin/AdminFilterBar";
+import AdminSectionCard from "@/components/admin/AdminSectionCard";
+import AdminActionBar from "@/components/admin/AdminActionBar";
 import { useCallback, useEffect, useState } from "react";
 
 const ROLE_OPTIONS = [
@@ -160,7 +163,7 @@ export default function AdminUsersPanel() {
       description="Search people, update roles and account status, and review membership activity — without needing database tools."
       error={error}
     >
-      <div className="adminToolbar">
+      <AdminFilterBar>
         <label className="fieldLabel" htmlFor="admin-q">
           Search by name or email
         </label>
@@ -211,24 +214,30 @@ export default function AdminUsersPanel() {
             </option>
           ))}
         </select>
-      </div>
-      <div className="adminToolbar">
+      </AdminFilterBar>
+
+      <AdminSectionCard
+        title="Send admin sign-in link"
+        description="Email a magic link so a teammate can open Admin Console without sharing passwords."
+      >
         <label className="fieldLabel" htmlFor="admin-invite-email">
-          Admin Sign In
+          Admin email
         </label>
-        <input
-          id="admin-invite-email"
-          className="adminConsoleInput"
-          type="email"
-          value={inviteEmail}
-          onChange={(e) => setInviteEmail(e.target.value)}
-          placeholder="admin email"
-        />
-        <button type="button" className="btnSoft" onClick={() => void sendInviteMagicLink()}>
-          Send Magic Link
-        </button>
-        {inviteInfo ? <span className="adminMuted">{inviteInfo}</span> : null}
-      </div>
+        <AdminActionBar>
+          <input
+            id="admin-invite-email"
+            className="adminConsoleInput"
+            type="email"
+            value={inviteEmail}
+            onChange={(e) => setInviteEmail(e.target.value)}
+            placeholder="admin@example.com"
+          />
+          <button type="button" className="btnSoft" onClick={() => void sendInviteMagicLink()}>
+            Send magic link
+          </button>
+          {inviteInfo ? <span className="adminMuted">{inviteInfo}</span> : null}
+        </AdminActionBar>
+      </AdminSectionCard>
       {error ? (
         <p className="adminFeedback adminFeedback--error" role="alert">
           {error}

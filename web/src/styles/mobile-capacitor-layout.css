@@ -52,13 +52,13 @@ html[data-capacitor-native] main.topApp:not(.appShell--podcast):not([data-page-a
 }
 
 html[data-capacitor-native] main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) {
-  --mobile-home-header-content-gap: clamp(4px, calc(var(--cap-vw, 1vw) * 1.2), 8px);
+  --mobile-home-header-content-gap: clamp(16px, calc(var(--cap-vw, 1vw) * 4), 28px);
   --header-floating-offset: 0px;
   --header-floating-height: 0px;
   --header-fade-height: 0px;
-  --mobile-home-header-layout-h: clamp(112px, calc(var(--cap-vw, 1vw) * 29), 148px);
-  --mobile-site-header-logo-h: clamp(137px, calc(var(--cap-vw, 1vw) * 36), 182px);
-  --mobile-site-header-logo-max-w: min(587px, calc(var(--cap-portrait-width, 100vw) - 24px));
+  --mobile-home-header-layout-h: clamp(137px, calc(var(--cap-vw, 1vw) * 36), 182px);
+  --mobile-site-header-logo-h: clamp(123px, calc(var(--cap-vw, 1vw) * 32.4), 164px);
+  --mobile-site-header-logo-max-w: min(528px, calc(var(--cap-portrait-width, 100vw) - 96px));
   --mobile-site-header-control-size: 44px;
   --mobile-site-header-control-pad-top: 2px;
   --mobile-site-header-pad-x: max(
@@ -66,6 +66,36 @@ html[data-capacitor-native] main.topApp[data-page-atmosphere="home"]:not(.appShe
     env(safe-area-inset-left, 0px),
     env(safe-area-inset-right, 0px)
   );
+}
+
+/* Phone native home: match web border-box wordmark (do not use tablet content-box). */
+@media (max-width: 760px) {
+  html[data-capacitor-native] main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) .headerBrandStack,
+  html[data-capacitor-native] main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) .headerBrandStack--mobileWordmark {
+    max-width: 100%;
+    width: 100%;
+    padding: 0 8px;
+    box-sizing: border-box;
+    overflow: visible;
+    margin-bottom: 0;
+  }
+
+  html[data-capacitor-native]
+    main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast)
+    .headerBrandStack
+    img.brandMarkImg--header:not(.podcastBrandLogo) {
+    max-width: 100% !important;
+    max-height: var(--mobile-site-header-logo-h) !important;
+    width: 100% !important;
+    height: auto !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+  }
+
+  html[data-capacitor-native] main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) .appSiteHeader {
+    margin-bottom: var(--mobile-home-header-content-gap, 20px);
+    padding-bottom: clamp(6px, calc(var(--cap-vw, 1vw) * 1.5), 10px);
+  }
 }
 
 html[data-capacitor-native] main.topApp.topApp--mobileHomeEntrance[data-page-atmosphere="home"]:not(.appShell--podcast) {

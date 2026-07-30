@@ -789,10 +789,10 @@
     --header-floating-offset: 0px;
     --header-floating-height: 0px;
     --header-fade-height: 0px;
-    --mobile-home-header-layout-h: clamp(112px, 29vw, 148px);
-    --mobile-site-header-logo-h: clamp(137px, 36vw, 182px);
-    --mobile-site-header-logo-max-w: min(587px, calc(100vw - 24px));
-    --mobile-home-header-content-gap: clamp(4px, 1.2vw, 8px);
+    --mobile-home-header-layout-h: clamp(137px, 36vw, 182px);
+    --mobile-site-header-logo-h: clamp(123px, 32.4vw, 164px);
+    --mobile-site-header-logo-max-w: min(528px, calc(100vw - 96px));
+    --mobile-home-header-content-gap: clamp(16px, 4vw, 28px);
   }
 
   main.topApp[data-page-atmosphere="home"] .headerNotificationBellBtn,
@@ -806,10 +806,15 @@
     align-items: center;
     padding-top: 0;
     overflow: visible;
+    box-sizing: border-box;
+    max-width: 100%;
+    width: 100%;
+    padding-inline: 8px;
   }
 
   :is(main.topApp, .capacitorAppHeaderPortal)[data-page-atmosphere="home"] .appSiteHeader {
-    padding-bottom: 0;
+    padding-bottom: clamp(6px, 1.5vw, 10px);
+    margin-bottom: var(--mobile-home-header-content-gap, 20px);
   }
 
   :is(main.topApp, .capacitorAppHeaderPortal)[data-page-atmosphere="home"] .headerBrandStack img.brandMarkImg--header:not(.podcastBrandLogo),
@@ -817,12 +822,14 @@
     margin-bottom: 0;
     min-height: 0 !important;
     min-width: 0 !important;
+    max-width: 100% !important;
+    object-fit: contain;
     object-position: center center;
   }
 
   main.topApp[data-page-atmosphere="home"] .shell.shell--home {
     gap: 0;
-    padding-top: var(--mobile-home-header-content-gap, 6px);
+    padding-top: clamp(4px, 1vw, 8px);
     padding-bottom: 13px;
     margin-top: 0;
   }
@@ -831,10 +838,10 @@
     padding-top: 0;
   }
 
-  /* Small intentional gap between header and Mission Partners — homepage only. */
+  /* Clear breathing room between header bottom and Mission Partners. */
   main.topApp[data-page-atmosphere="home"] .homeSponsorSpotlights {
     margin-top: 0;
-    padding-top: var(--ds-space-3, 12px);
+    padding-top: clamp(12px, 3vw, 20px);
   }
 
   main.topApp[data-page-atmosphere="home"] .homeSponsorSpotlights__head {

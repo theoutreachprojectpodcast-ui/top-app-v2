@@ -5,7 +5,7 @@ import {
 } from "@/features/membership/membershipTiers";
 
 /**
- * Pro tier (`member` in DB) — same gate as community story submission (see /api/community/posts).
+ * Pro tier (`member` in DB) — used for premium podcast / trusted surfaces.
  */
 export function tierAllowsPodcastMemberContent(tierValue) {
   return normalizeMembershipTierKey(tierValue) === MEMBERSHIP_TIER_KEYS.MEMBER;

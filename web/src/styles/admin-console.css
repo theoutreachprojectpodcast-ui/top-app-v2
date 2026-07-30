@@ -91,11 +91,13 @@
 .adminConsole select.adminConsoleInput {
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-md, 8px);
-  padding: 8px 10px;
+  padding: 10px 12px;
+  min-height: 44px;
   background: var(--color-bg-primary);
   color: var(--color-text-primary);
   font: inherit;
   max-width: 100%;
+  box-sizing: border-box;
 }
 
 .adminConsole textarea.adminConsoleInput {
@@ -220,8 +222,31 @@
   }
 }
 
+/* Desktop / tablet topbar entry — content-sized, never clip the label. */
 .adminConsoleTopbarBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: auto;
+  max-width: none;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
   white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+  flex-shrink: 0;
+}
+
+@media (max-width: 760px) {
+  /* Phone uses Account menu → Admin Console; hide any leftover topbar chip. */
+  .adminConsoleTopbarBtn {
+    display: none !important;
+  }
 }
 
 .adminContentHubGrid {

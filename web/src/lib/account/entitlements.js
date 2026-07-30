@@ -47,6 +47,10 @@ function profileShapeFromRow(row) {
     migrated_to_pro_until: row.migrated_to_pro_until,
     renewalDate: row.renewal_date,
     renewal_date: row.renewal_date,
+    userStatus: row.user_status,
+    user_status: row.user_status,
+    communityPostingDisabled: row.community_posting_disabled,
+    community_posting_disabled: row.community_posting_disabled,
   };
 }
 
@@ -114,7 +118,8 @@ export function profileMaySubmitCommunityStory(row) {
 }
 
 /**
- * Pro members (and staff) may create community posts.
+ * Active members (and staff) may create community posts.
+ * Suspended / posting-restricted profiles are denied.
  * @param {Record<string, unknown> | null | undefined} row
  */
 export function profileMayCreateCommunityPost(row) {

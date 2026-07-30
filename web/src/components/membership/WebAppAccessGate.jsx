@@ -8,6 +8,7 @@ import {
   isMembershipExemptPath,
   requiresActiveMembershipPath,
   WEB_MEMBERSHIP_PAYWALL_PATH,
+  WELCOME_PATH,
 } from "@/lib/membership/protectedRoutes";
 import { readNavAuthCache } from "@/lib/auth/navAuthCache";
 import { useAuthSession } from "@/components/auth/AuthSessionProvider";
@@ -21,8 +22,8 @@ function accessOpts(entitlements) {
 }
 
 /**
- * Web browser gate: guests on protected routes → sign-in; signed-in without Pro → paywall.
- * Public home/directory stays open without membership.
+ * Web browser gate: guests on protected routes → welcome; signed-in without Pro → paywall.
+ * `/` is owned by AppEntryBootstrap (welcome vs home).
  */
 export default function WebAppAccessGate() {
   const router = useRouter();
@@ -36,8 +37,8 @@ export default function WebAppAccessGate() {
   useEffect(() => {
     if (isCapacitorNative()) return;
     const path = pathname || "/";
-    if (isMembershipExemptPath(path)) return;
-    if (!requiresActiveMembershipPath(path)) return;
+    if (path === "/" || path === "/welcome") return;
+    if (isMembershipExemptPath(path) && !requiresActiveMembershipPath(path)) return;
 
     if (loadingProfile || authLoading) return;
 
@@ -47,7 +48,8 @@ export default function WebAppAccessGate() {
       navCacheHasFreeAccess(profile, entitlements) || hasMobileAppAccess(profile, opts);
 
     if (!signedIn) {
-      const target = `/sign-in?returnTo=${encodeURIComponent(path)}`;
+      if (!requiresActiveMembershipPath(path)) return;
+      const target = WELCOME_PATH;
       if (lastRedirectRef.current !== target) {
         lastRedirectRef.current = target;
         router.replace(target);
@@ -56,6 +58,7 @@ export default function WebAppAccessGate() {
     }
 
     if (hasAccess) return;
+    if (!requiresActiveMembershipPath(path) && isMembershipExemptPath(path)) return;
 
     const target = WEB_MEMBERSHIP_PAYWALL_PATH;
     if (lastRedirectRef.current !== target) {

@@ -547,6 +547,27 @@ export async function updateAuthorCommunityPost(postId, payload) {
   }
 }
 
+/** Author soft-deletes their own post. */
+export async function deleteAuthorCommunityPost(postId) {
+  const id = String(postId || "").trim();
+  if (!id) return { ok: false, message: "Missing post." };
+  try {
+    const res = await fetch(`/api/community/posts/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "author_delete" }),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      return { ok: false, message: json.message || "Could not delete post." };
+    }
+    return { ok: true, message: json.message };
+  } catch {
+    return { ok: false, message: "Network error." };
+  }
+}
+
 export async function reviewSubmission(supabase, { postId, action, reviewerId, rejectionReason = "" }) {
   if (!postId) return { ok: false, message: "Missing post." };
   const apiAction = action === "reject" ? "reject" : "approve";

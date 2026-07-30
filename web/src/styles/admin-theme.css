@@ -1,4 +1,4 @@
-/* Admin console â€” light/dark theme polish (scoped to .adminConsole). */
+/* Admin console ? light/dark theme polish (scoped to .adminConsole). */
 
 main.topApp.appShell--admin.adminConsole {
   --admin-shadow-dropdown: var(--shadow-card, 0 8px 24px rgb(0 0 0 / 12%));
@@ -579,11 +579,12 @@ main.topApp.appShell--admin.adminConsole {
   border-radius: 999px;
 }
 
-/* ——— Premier admin UX components (Phase 1) ——— */
+
+/* Shared admin UX primitives */
 
 .adminPageHeader {
   display: grid;
-  gap: 12px;
+  gap: var(--ds-space-3, 12px);
   margin-bottom: var(--ds-space-4, 16px);
   padding-bottom: var(--ds-space-3, 12px);
   border-bottom: 1px solid var(--color-border-subtle);
@@ -594,22 +595,27 @@ main.topApp.appShell--admin.adminConsole {
   flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px 20px;
+  gap: var(--ds-space-3, 12px) var(--ds-space-5, 20px);
+}
+
+.adminPageHeader__titles {
+  min-width: 0;
+  flex: 1 1 220px;
 }
 
 .adminPageHeader__title {
   margin: 0;
-  font-size: 1.35rem;
+  font-size: clamp(1.2rem, 2.5vw, 1.35rem);
   font-weight: 700;
   line-height: 1.25;
   color: var(--color-text-primary);
 }
 
 .adminPageHeader__desc {
-  margin: 6px 0 0;
+  margin: var(--ds-space-2, 8px) 0 0;
   max-width: 52rem;
-  font-size: 0.9375rem;
-  line-height: 1.45;
+  font-size: var(--text-body-sm, 0.875rem);
+  line-height: 1.5;
   color: var(--color-text-secondary);
 }
 
@@ -617,15 +623,24 @@ main.topApp.appShell--admin.adminConsole {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 12px;
-  margin-top: 8px;
+  gap: var(--ds-space-2, 8px) var(--ds-space-3, 12px);
+  margin-top: var(--ds-space-2, 8px);
 }
 
 .adminPageHeader__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--ds-space-2, 8px);
   align-items: center;
+}
+
+.adminPageHeader__actions .btnPrimary,
+.adminPageHeader__actions .btnSoft,
+.adminActionBar .btnPrimary,
+.adminActionBar .btnSoft,
+.adminFilterBar .btnPrimary,
+.adminFilterBar .btnSoft {
+  min-height: 44px;
 }
 
 .adminStatusBadge {
@@ -677,26 +692,44 @@ main.topApp.appShell--admin.adminConsole {
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-lg, 12px);
   background: var(--color-bg-elevated);
-  padding: 16px;
+  padding: var(--ds-space-4, 16px);
   display: grid;
-  gap: 12px;
+  gap: var(--ds-space-3, 12px);
+  min-width: 0;
 }
 
 .adminSectionCard__header {
   display: grid;
-  gap: 4px;
+  gap: var(--ds-space-1, 4px);
 }
 
 .adminSectionCard__title {
   margin: 0;
   font-size: 1rem;
   font-weight: 700;
+  color: var(--color-text-primary);
 }
 
 .adminSectionCard__desc {
   margin: 0;
   font-size: 0.8125rem;
-  line-height: 1.4;
+  line-height: 1.45;
+  color: var(--color-text-secondary);
+}
+
+.adminSectionCard__body {
+  display: grid;
+  gap: var(--ds-space-3, 12px);
+  min-width: 0;
+}
+
+.adminSectionCard .fieldLabel,
+.adminConsole .adminSectionCard .fieldLabel {
+  display: block;
+  margin-bottom: var(--ds-space-1, 4px);
+  font-size: var(--text-body-sm, 0.875rem);
+  font-weight: 600;
+  color: var(--color-text-primary);
 }
 
 .adminAdvancedSettings {
@@ -748,7 +781,7 @@ main.topApp.appShell--admin.adminConsole {
 .adminActionBar {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--ds-space-2, 8px);
   align-items: center;
 }
 
@@ -760,8 +793,8 @@ main.topApp.appShell--admin.adminConsole {
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 12px 14px;
+  gap: var(--ds-space-3, 12px);
+  padding: var(--ds-space-3, 12px) 14px;
   border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-lg, 12px);
   background: var(--color-bg-elevated);
@@ -781,40 +814,57 @@ main.topApp.appShell--admin.adminConsole {
 .adminSaveBar__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--ds-space-2, 8px);
 }
 
 .adminEmptyState {
-  padding: 28px 16px;
+  padding: var(--ds-space-6, 24px) var(--ds-space-4, 16px);
   text-align: center;
   border: 1px dashed var(--color-border-subtle);
   border-radius: var(--radius-lg, 12px);
   display: grid;
-  gap: 8px;
+  gap: var(--ds-space-2, 8px);
   justify-items: center;
 }
 
 .adminEmptyState__title {
+  margin: 0;
   font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
 }
 
 .adminEmptyState__desc {
   margin: 0;
   max-width: 28rem;
   font-size: 0.875rem;
+  color: var(--color-text-secondary);
 }
 
 .adminFilterBar {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--ds-space-2, 8px);
   align-items: center;
+  padding: var(--ds-space-3, 12px);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-lg, 12px);
+  background: color-mix(in srgb, var(--color-bg-elevated) 92%, transparent);
+  min-width: 0;
+}
+
+.adminFilterBar .adminConsoleInput,
+.adminFilterBar select.adminConsoleInput {
+  min-height: 44px;
+  min-width: 0;
+  flex: 1 1 160px;
 }
 
 .adminHelpText {
   margin: 4px 0 0;
   font-size: 0.75rem;
   line-height: 1.4;
+  color: var(--color-text-secondary);
 }
 
 .adminPreviewPanel {

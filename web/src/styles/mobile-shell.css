@@ -103,10 +103,12 @@ html {
   }
 
   main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) {
-    --mobile-home-header-content-gap: clamp(4px, 1.2vw, 8px);
-    --mobile-home-header-layout-h: clamp(112px, 29vw, 148px);
-    --mobile-site-header-logo-h: clamp(137px, 36vw, 182px);
-    --mobile-site-header-logo-max-w: min(587px, calc(100vw - 24px));
+    --mobile-home-header-content-gap: clamp(16px, 4vw, 28px);
+    /* Layout band stays full size; artwork is 10% smaller so “The” is not edge-clipped. */
+    --mobile-home-header-layout-h: clamp(137px, 36vw, 182px);
+    --mobile-site-header-logo-h: clamp(123px, 32.4vw, 164px);
+    /* Leave room for side chrome; center column is minmax(0,…) so logo cannot overflow viewport. */
+    --mobile-site-header-logo-max-w: min(528px, calc(100vw - 96px));
     --mobile-site-header-control-size: 44px;
     --mobile-site-header-control-pad-top: 2px;
     --mobile-site-header-pad-x: max(
@@ -118,29 +120,9 @@ html {
 
   main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) .appSiteHeader {
     align-items: start;
-    margin-bottom: var(--mobile-home-header-content-gap, 6px);
+    margin-bottom: var(--mobile-home-header-content-gap, 20px);
+    padding-bottom: clamp(6px, 1.5vw, 10px);
     overflow: visible;
-  }
-
-  main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) .headerBrandStack--mobileWordmark {
-    align-self: start;
-    height: fit-content;
-    max-height: none;
-    overflow: visible;
-    margin-bottom: calc(
-      -1 * max(0px, var(--mobile-site-header-logo-h) - var(--mobile-home-header-layout-h))
-    );
-  }
-
-  main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) .headerBrandStack--mobileWordmark .brandMarkImg,
-  main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast)
-    .headerBrandStack--mobileWordmark
-    img.brandMarkImg--header:not(.podcastBrandLogo) {
-    margin-bottom: 0 !important;
-    min-height: 0 !important;
-    min-width: 0 !important;
-    object-fit: contain;
-    object-position: center center;
   }
 
   main.topApp.topApp--mobileHomeEntrance[data-page-atmosphere="home"]:not(.appShell--podcast) {
@@ -169,10 +151,19 @@ html {
       max(var(--mobile-site-header-pad-x, clamp(8px, 2.5vw, 12px)), env(safe-area-inset-left, 0px));
   }
 
+  /* Home: center track must shrink — `auto` grew past the viewport and html overflow-x clipped the T. */
+  main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) .appSiteHeader {
+    grid-template-columns:
+      minmax(var(--mobile-site-header-control-size, 44px), 1fr)
+      minmax(0, min(100%, var(--mobile-site-header-logo-max-w)))
+      minmax(var(--mobile-site-header-control-size, 44px), 1fr);
+    column-gap: 4px;
+  }
+
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .headerBrandStack {
-    /* Frame inset expands outside the logo max-width (content-box) — no artwork shrink. */
+    /* Non-home compact marks: content-box frame so artwork is not squeezed. */
     max-width: var(--mobile-site-header-logo-max-w, 168px);
-    padding-inline: 10px;
+    padding: 8px 12px;
     box-sizing: content-box;
     overflow: visible;
     align-items: center;
@@ -198,6 +189,44 @@ html {
     object-fit: contain !important;
     object-position: center center !important;
     overflow: visible;
+  }
+
+  /*
+   * Home full wordmark — MUST follow the compact max-width:!important rules above.
+   * border-box + img max-width:100% keeps “The” inside the viewport (overflow-x: clip on shell).
+   */
+  main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) .headerBrandStack,
+  main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) .headerBrandStack--mobileWordmark {
+    align-self: start;
+    justify-self: center;
+    height: fit-content;
+    max-height: none;
+    max-width: 100%;
+    width: 100%;
+    padding: 0 8px;
+    box-sizing: border-box;
+    overflow: visible;
+    margin-bottom: 0;
+  }
+
+  main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) .headerBrandStack .brandMarkImg,
+  main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) .headerBrandStack .brandMarkImg--header,
+  main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast)
+    .headerBrandStack
+    img.brandMarkImg--header:not(.podcastBrandLogo),
+  main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast) .headerBrandStack .headerBrandMarkFallback,
+  main.topApp[data-page-atmosphere="home"]:not(.appShell--podcast)
+    .headerBrandStack--mobileWordmark
+    img.brandMarkImg--header:not(.podcastBrandLogo) {
+    margin-bottom: 0 !important;
+    max-width: 100% !important;
+    max-height: var(--mobile-site-header-logo-h) !important;
+    width: 100% !important;
+    height: auto !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    object-fit: contain !important;
+    object-position: center center !important;
   }
 
   main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .headerBrandStack--compactMark {
@@ -277,21 +306,10 @@ html {
     max-width: min(100%, calc(50vw - 12px));
   }
 
-  :is(main.topApp, .capacitorAppHeaderPortal):not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarRight .adminConsoleTopbarBtn {
-    display: none !important;
-  }
-
+  :is(main.topApp, .capacitorAppHeaderPortal):not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarRight .adminConsoleTopbarBtn,
   :is(main.topApp, .capacitorAppHeaderPortal):not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarLeft .adminConsoleTopbarBtn {
-    min-width: 0;
-    min-height: var(--mobile-site-header-control-size, 44px);
-    max-width: 5.5rem;
-    padding: 0 10px;
-    font-size: 12px;
-    font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    flex-shrink: 1;
+    /* Phone: Account menu is the Admin Console entry — avoid clipped topbar pill. */
+    display: none !important;
   }
 
   :is(main.topApp, .capacitorAppHeaderPortal):not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .themeToggle,

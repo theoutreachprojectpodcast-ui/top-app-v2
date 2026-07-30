@@ -1,5 +1,7 @@
 /**
- * Standalone mobile splash + access paywall (Capacitor / phone only).
+ * Welcome landing + membership entry (phone, tablet, desktop, Capacitor).
+ * `.mobileRouteShell` remains for `/mobile` routes; `.authEntryShell` is the
+ * cross-device wrapper used by `/` welcome and `/access` paywalls.
  */
 
 .mobileRouteShell {
@@ -58,6 +60,69 @@ html:not(.dark) .mobileRouteShell::before {
   -webkit-filter: var(--mobile-splash-topo-filter-light);
 }
 
+/* Cross-device entry shell (welcome + membership) — never hidden on desktop */
+.authEntryShell {
+  --auth-entry-topo-light: url("/home/app-page-background-light-mobile.png?v=3");
+  --auth-entry-topo-filter: contrast(1.04) saturate(1.06) brightness(1.02);
+  position: relative;
+  isolation: isolate;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 100dvh;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding:
+    max(env(safe-area-inset-top, 0px), clamp(12px, 3vh, 28px))
+    max(env(safe-area-inset-right, 0px), clamp(12px, 4vw, 32px))
+    max(env(safe-area-inset-bottom, 0px), clamp(12px, 3vh, 28px))
+    max(env(safe-area-inset-left, 0px), clamp(12px, 4vw, 32px));
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgba(34, 165, 43, 0.16), transparent 58%),
+    linear-gradient(168deg, #1a241c 0%, #101814 42%, #0c1210 100%);
+  color: var(--color-text-primary, #f8fcfa);
+}
+
+.authEntryShell > * {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: min(100%, 28rem);
+}
+
+:root[data-color-scheme="light"] .authEntryShell,
+html:not(.dark) .authEntryShell {
+  background-color: #e0e8cf;
+  background-image:
+    radial-gradient(120% 80% at 50% 0%, rgba(34, 165, 43, 0.12), transparent 58%),
+    linear-gradient(168deg, #eef3ef 0%, #e8ece8 48%, #e0e8cf 100%);
+  color: var(--color-text-primary, #111814);
+}
+
+:root[data-color-scheme="light"] .authEntryShell::before,
+html:not(.dark) .authEntryShell::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-color: #e0e8cf;
+  background-image: var(--auth-entry-topo-light);
+  background-repeat: no-repeat;
+  background-position: center top;
+  background-size: cover;
+  filter: var(--auth-entry-topo-filter);
+  -webkit-filter: var(--auth-entry-topo-filter);
+  opacity: 0.55;
+}
+
 .mobileSplashPage {
   flex: 1;
   display: flex;
@@ -66,13 +131,19 @@ html:not(.dark) .mobileRouteShell::before {
   justify-content: center;
   width: 100%;
   min-width: 0;
+  max-width: 100%;
+}
+
+.authEntryShell .mobileSplashPage {
+  flex: 0 1 auto;
+  width: 100%;
 }
 
 .mobileSplashPage__topBar {
   width: 100%;
-  max-width: 420px;
+  max-width: 28rem;
   margin: 0 auto var(--ds-space-2, 8px);
-  padding: 0 clamp(16px, 4vw, 24px);
+  padding: 0 clamp(4px, 2vw, 8px);
   box-sizing: border-box;
 }
 
@@ -87,6 +158,7 @@ html:not(.dark) .mobileRouteShell::before {
   padding: var(--ds-space-2, 8px) 0;
   cursor: pointer;
   text-align: left;
+  min-height: 44px;
 }
 
 .mobileSplashPage__backBtn:hover,
@@ -98,16 +170,18 @@ html:not(.dark) .mobileRouteShell::before {
 
 .mobileSplashPage__inner {
   width: 100%;
-  max-width: 420px;
+  max-width: 28rem;
+  margin-inline: auto;
   display: flex;
   flex-direction: column;
   align-items: stretch;
   gap: var(--ds-space-3, 12px);
-  padding: clamp(16px, 4vw, 24px);
+  padding: clamp(16px, 3.5vw, 28px);
   border-radius: var(--radius-card, 16px);
   border: 1px solid color-mix(in srgb, var(--color-border-soft, #3a4a40) 45%, transparent);
   background: color-mix(in srgb, #101814 88%, transparent);
   box-shadow: 0 16px 40px color-mix(in srgb, #000 28%, transparent);
+  box-sizing: border-box;
 }
 
 :root[data-color-scheme="light"] .mobileSplashPage__inner,
@@ -122,38 +196,41 @@ html:not(.dark) .mobileSplashPage__inner {
 }
 
 .mobileSplashPage__brand--small .brandMarkImg--splash {
-  max-height: clamp(108px, 27vw, 144px);
+  max-height: clamp(88px, 22vw, 132px);
 }
 
 .mobileSplashPage__brand .brandMarkImg--splash {
   display: block;
-  width: min(102vw, 390px);
+  width: min(72vw, 320px);
   max-width: 100%;
   height: auto;
-  max-height: clamp(132px, 33vw, 180px);
+  max-height: clamp(112px, 28vw, 168px);
   object-fit: contain;
 }
 
 .mobileSplashPage__title {
   margin: 0;
   text-align: center;
-  font-size: clamp(1.15rem, 4.5vw, 1.35rem);
+  font-size: clamp(1.2rem, 2.8vw + 0.7rem, 1.65rem);
   font-weight: 800;
   line-height: 1.2;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
 }
 
 .mobileSplashPage__lead {
   margin: 0;
   text-align: center;
-  font-size: clamp(0.88rem, 3.5vw, 0.96rem);
-  line-height: 1.45;
+  font-size: clamp(0.9rem, 1.2vw + 0.7rem, 1.02rem);
+  line-height: 1.5;
   color: var(--color-text-secondary, #b8c4bc);
+  text-wrap: pretty;
 }
 
 .mobileSplashPage__pricing {
   margin: 0;
   text-align: center;
-  font-size: clamp(0.82rem, 3.2vw, 0.9rem);
+  font-size: clamp(0.84rem, 1vw + 0.7rem, 0.95rem);
   line-height: 1.45;
   color: var(--color-text-secondary, #b8c4bc);
   padding: 10px 12px;
@@ -162,10 +239,37 @@ html:not(.dark) .mobileSplashPage__inner {
   border: 1px solid color-mix(in srgb, var(--color-accent, #3d9e5a) 28%, transparent);
 }
 
+.mobileSplashPage__tierCard {
+  margin: 0;
+  padding: clamp(12px, 2.5vw, 16px);
+  border-radius: var(--radius-card, 14px);
+  border: 1px solid color-mix(in srgb, var(--color-border-soft, #3a4a40) 55%, transparent);
+  background: color-mix(in srgb, currentColor 4%, transparent);
+}
+
+.mobileSplashPage__tierCard--pro {
+  border-color: color-mix(in srgb, var(--color-accent, #3d9e5a) 40%, transparent);
+  background: color-mix(in srgb, var(--color-accent, #3d9e5a) 8%, transparent);
+}
+
+.mobileSplashPage__tierTitle {
+  margin: 0 0 4px;
+  font-size: clamp(1rem, 1.5vw + 0.75rem, 1.15rem);
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.mobileSplashPage__tierPrice {
+  margin: 0 0 10px;
+  font-size: clamp(1.05rem, 1.8vw + 0.7rem, 1.25rem);
+  font-weight: 700;
+  color: var(--color-accent, #3d9e5a);
+}
+
 .mobileSplashPage__benefits {
   margin: 0;
   padding-left: 1.15rem;
-  font-size: clamp(0.84rem, 3.2vw, 0.92rem);
+  font-size: clamp(0.84rem, 1vw + 0.7rem, 0.95rem);
   line-height: 1.5;
   color: var(--color-text-secondary, #b8c4bc);
 }
@@ -186,19 +290,27 @@ html:not(.dark) .mobileSplashPage__inner {
   min-height: 48px;
   justify-content: center;
   font-weight: 700;
+  box-sizing: border-box;
 }
 
 .mobileSplashPage__legal {
   margin: 0;
   text-align: center;
-  font-size: 0.78rem;
-  line-height: 1.4;
+  font-size: clamp(0.75rem, 0.8vw + 0.65rem, 0.82rem);
+  line-height: 1.45;
   color: var(--color-text-secondary, #b8c4bc);
 }
 
 .mobileSplashPage__legal a {
   color: inherit;
   text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.mobileSplashPage__legal a:focus-visible {
+  outline: 2px solid var(--color-focus-ring, #3d9e5a);
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
 .mobileSplashPage__notice {
@@ -213,28 +325,150 @@ html:not(.dark) .mobileSplashPage__inner {
   color: #e8b86d;
 }
 
+/* Tablet — slightly wider card, more breathing room */
+@media (min-width: 600px) {
+  .authEntryShell > * {
+    max-width: min(100%, 32rem);
+  }
+
+  .mobileSplashPage__inner,
+  .mobileSplashPage__topBar {
+    max-width: 32rem;
+  }
+
+  .mobileSplashPage__brand .brandMarkImg--splash {
+    width: min(52vw, 340px);
+    max-height: clamp(140px, 22vh, 180px);
+  }
+}
+
+/* Desktop / large tablet landscape — centered composition, never clipped */
+@media (min-width: 900px) {
+  .authEntryShell {
+    padding:
+      max(env(safe-area-inset-top, 0px), 32px)
+      max(env(safe-area-inset-right, 0px), 40px)
+      max(env(safe-area-inset-bottom, 0px), 32px)
+      max(env(safe-area-inset-left, 0px), 40px);
+  }
+
+  .authEntryShell > * {
+    max-width: min(100%, 26rem);
+  }
+
+  .mobileSplashPage__inner {
+    max-width: 26rem;
+    gap: var(--ds-space-4, 16px);
+    padding: 28px 32px;
+  }
+
+  .mobileSplashPage__actions {
+    gap: 10px;
+  }
+}
+
+/* Short / landscape phones — shrink logo, allow scroll, keep CTAs reachable */
+@media (max-height: 640px), (orientation: landscape) and (max-height: 500px) {
+  .authEntryShell {
+    justify-content: flex-start;
+    padding-top: max(env(safe-area-inset-top, 0px), 10px);
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 10px);
+  }
+
+  .mobileSplashPage__inner {
+    gap: 8px;
+    padding: 14px 16px;
+  }
+
+  .mobileSplashPage__brand .brandMarkImg--splash {
+    max-height: clamp(72px, 18vh, 110px);
+    width: min(48vw, 220px);
+  }
+
+  .mobileSplashPage__brand--small .brandMarkImg--splash {
+    max-height: clamp(64px, 16vh, 96px);
+  }
+
+  .mobileSplashPage__title {
+    font-size: clamp(1.05rem, 3.5vw, 1.25rem);
+  }
+
+  .mobileSplashPage__btn {
+    min-height: 44px;
+  }
+}
+
+/* Wide landscape tablets — keep card readable without stretching edge-to-edge */
+@media (orientation: landscape) and (min-width: 900px) and (max-height: 820px) {
+  .authEntryShell {
+    justify-content: center;
+  }
+
+  .authEntryShell > *,
+  .mobileSplashPage__inner {
+    max-width: min(100%, 28rem);
+  }
+}
+
+/* Legacy /mobile shell: hide on wide web browsers (route redirects to `/`) */
 @media (min-width: 761px) {
   html:not([data-capacitor-native]) .mobileRouteShell {
     display: none;
   }
 }
 
-html[data-capacitor-native] .mobileRouteShell {
+html[data-capacitor-native] .mobileRouteShell,
+html[data-capacitor-native] .authEntryShell {
   min-height: 100dvh;
+}
+
+/* Nested welcome inside `/mobile` layout — reuse parent atmosphere */
+.mobileRouteShell .authEntryShell {
+  min-height: 0;
+  flex: 1;
+  width: 100%;
+  padding: 0;
+  background: transparent;
+  background-image: none;
+  overflow: visible;
+}
+
+.mobileRouteShell .authEntryShell::before {
+  content: none;
+  display: none;
+}
+
+.mobileRouteShell .authEntryShell > * {
+  max-width: 100%;
+}
+
+html[data-capacitor-native] .mobileRouteShell {
   height: 100dvh;
   max-height: 100dvh;
 }
 
 /* Access paywall can scroll when content is taller than the viewport */
-.mobileRouteShell:has(.mobileSplashPage--access) {
+.mobileRouteShell:has(.mobileSplashPage--access),
+.authEntryShell:has(.mobileSplashPage--access) {
   height: auto;
   max-height: none;
   min-height: 100dvh;
   overflow: auto;
   -webkit-overflow-scrolling: touch;
+  justify-content: flex-start;
+  padding-top: max(env(safe-area-inset-top, 0px), clamp(16px, 4vh, 36px));
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), clamp(16px, 4vh, 36px));
 }
 
-body:has(.mobileSplashPage--access) {
+@media (min-height: 900px) {
+  .authEntryShell:has(.mobileSplashPage--access) {
+    justify-content: center;
+  }
+}
+
+body:has(.mobileSplashPage--access),
+body:has(.mobileSplashPage--landing),
+body:has(.welcomeLandingPage) {
   height: auto;
   max-height: none;
   overflow: auto;
@@ -263,4 +497,12 @@ body:has(.mobileSplashPage--access) {
   display: flex;
   flex-wrap: wrap;
   gap: var(--ds-space-2, 0.5rem);
+}
+
+/* Prefer reduced motion for atmosphere only */
+@media (prefers-reduced-motion: reduce) {
+  .authEntryShell,
+  .mobileRouteShell {
+    scroll-behavior: auto;
+  }
 }

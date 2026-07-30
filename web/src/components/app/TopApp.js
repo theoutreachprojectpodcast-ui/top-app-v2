@@ -233,7 +233,6 @@ function TopAppInner({ initialNav = "home" }) {
     () =>
       !!(
         entitlements?.fullPlatformAccess ||
-        entitlements?.communityViewAccess ||
         entitlements?.isPlatformAdmin ||
         entitlements?.isPrivilegedStaff
       ),
@@ -439,11 +438,17 @@ function TopAppInner({ initialNav = "home" }) {
 
   function dockNavItem(item) {
     const key = String(item?.key || "");
-    if (["community", "trusted", "settings"].includes(key) && !hasProAccess) {
+    if (["trusted", "settings", "community"].includes(key) && !hasProAccess) {
       if (!isAuthenticated) {
         openSignInOverlay();
         return;
       }
+      openProUpgradeModal(key);
+      return;
+    }
+    if (key === "community" && !isAuthenticated) {
+      openSignInOverlay();
+      return;
     }
     if (key === "home") {
       dockNavHome();
@@ -473,11 +478,17 @@ function TopAppInner({ initialNav = "home" }) {
   function hamburgerNavItem(item) {
     const key = String(item?.key || "");
     const href = String(item?.href || "").trim() || "/";
-    if (["community", "trusted", "contact", "settings"].includes(key) && !hasProAccess) {
+    if (["trusted", "contact", "settings", "community"].includes(key) && !hasProAccess) {
       if (!isAuthenticated) {
         openSignInOverlay();
         return;
       }
+      openProUpgradeModal(key);
+      return;
+    }
+    if (key === "community" && !isAuthenticated) {
+      openSignInOverlay();
+      return;
     }
     if (key === "sponsors") {
       goToSponsorsHub();
@@ -653,6 +664,10 @@ function TopAppInner({ initialNav = "home" }) {
   function openCommunity() {
     if (!isAuthenticated) {
       openSignInOverlay();
+      return;
+    }
+    if (!hasProAccess) {
+      openProUpgradeModal("community");
       return;
     }
     dockNavCommunity();
@@ -926,7 +941,6 @@ function TopAppInner({ initialNav = "home" }) {
                   />
                   {pageAtmosphere === "home" && !isMobileShell ? <DownloadMobileAppButton /> : null}
                   {pageAtmosphere !== "podcast" ? <ColorSchemeToggle /> : null}
-                  {isMobileShell && isLoggedIn ? <AdminConsoleLink /> : null}
                 </div>
               </div>
               <div className="topbarZone topbarCenter" aria-hidden="true" />
@@ -1072,7 +1086,7 @@ function TopAppInner({ initialNav = "home" }) {
             />
           )}
 
-          {nav === "community" && hasProAccess ? (
+          {nav === "community" ? (
             <CommunityPage
               supabase={sb}
               userId={userId}
@@ -1080,7 +1094,7 @@ function TopAppInner({ initialNav = "home" }) {
               isAuthenticated={isAuthenticated}
               authLoading={loadingProfile}
               authBackend={authBackend}
-              canCreatePost={!!entitlements?.communityPostCreate}
+              canCreatePost={!!isAuthenticated && !!entitlements?.communityPostCreate}
               isPlatformAdmin={!!entitlements?.isPlatformAdmin}
               profile={profile}
               onRequestSignIn={() => {

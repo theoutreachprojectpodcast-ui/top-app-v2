@@ -7,7 +7,7 @@
     "node": ">=20.20.0"
   },
   "scripts": {
-    "prebuild": "node scripts/sync-public-assets.mjs && node scripts/sync-pwa-icons.mjs && node scripts/validate-production-env.mjs && node scripts/test-membership-pricing.mjs && node scripts/test-membership-configuration.mjs && node scripts/test-support-to-pro-migration.mjs && node --import ./scripts/register-at-alias.mjs scripts/test-saved-organization-resolution.mjs && node scripts/verify-trusted-resources-registry.mjs && node scripts/verify-trusted-resources-integrity.mjs && node scripts/verify-entity-display-names.mjs && node scripts/verify-trusted-resources-titles.mjs",
+    "prebuild": "node scripts/sync-public-assets.mjs && node scripts/sync-pwa-icons.mjs && node scripts/validate-production-env.mjs && node scripts/test-membership-pricing.mjs && node scripts/test-membership-configuration.mjs && node scripts/test-support-to-pro-migration.mjs && node --import ./scripts/register-at-alias.mjs scripts/test-saved-organization-resolution.mjs && node --import ./scripts/register-at-alias.mjs scripts/test-community-member-posting.mjs && node --import ./scripts/register-at-alias.mjs scripts/test-app-entry-access.mjs && node scripts/verify-trusted-resources-registry.mjs && node scripts/verify-trusted-resources-integrity.mjs && node scripts/verify-entity-display-names.mjs && node scripts/verify-trusted-resources-titles.mjs",
     "verify:trusted-resources": "node scripts/verify-trusted-resources-registry.mjs",
     "verify:trusted-integrity": "node scripts/verify-trusted-resources-integrity.mjs",
     "smoke:routes": "node scripts/smoke-routes.mjs",
@@ -32,6 +32,8 @@
     "verify:production-rls": "node scripts/verify-production-rls.mjs",
     "security:rls:live": "node scripts/security-rls-live-probe.mjs",
     "security:check": "node scripts/security-check.mjs",
+    "test:app-entry-access": "node --import ./scripts/register-at-alias.mjs scripts/test-app-entry-access.mjs",
+    "test:community-member-posting": "node --import ./scripts/register-at-alias.mjs scripts/test-community-member-posting.mjs",
     "test:membership-config": "node scripts/test-membership-configuration.mjs",
     "test:support-to-pro-migration": "node scripts/test-support-to-pro-migration.mjs",
     "test:saved-org-resolution": "node --import ./scripts/register-at-alias.mjs scripts/test-saved-organization-resolution.mjs",

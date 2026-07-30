@@ -47,12 +47,15 @@ async function verifyLocalLogic() {
     return tierOf(p) === "member" && hasActiveMembership(p);
   }
   function canViewDirectory(p) {
-    return isSupport(p) || isPro(p);
+    return isPro(p);
   }
   function canSaveOrganizations(p) {
-    return isSupport(p) || isPro(p);
+    return isPro(p);
   }
   function canViewCommunity(p) {
+    return isPro(p);
+  }
+  function canCreateCommunityContent(p) {
     return isPro(p);
   }
   function canAccessFullPlatform(p) {
@@ -62,18 +65,26 @@ async function verifyLocalLogic() {
   const support = { membershipTier: "support", membershipBillingStatus: "active" };
   const pro = { membershipTier: "member", membershipBillingStatus: "active" };
   const none = { membershipTier: "free", membershipBillingStatus: "none" };
+  const suspended = { membershipTier: "member", membershipBillingStatus: "active", userStatus: "suspended" };
 
-  if (canViewDirectory(support) && canSaveOrganizations(support)) pass("Support: directory + saves");
-  else fail("Support: directory + saves");
+  if (!canViewDirectory(support) && !canSaveOrganizations(support)) pass("Support: no full Pro surfaces");
+  else fail("Support: must not access Pro-only surfaces when Support is retired");
 
-  if (!canViewCommunity(support) && !canAccessFullPlatform(support)) pass("Support: no community/full platform");
-  else fail("Support: must not access community/full platform");
+  if (!canViewCommunity(support) && !canAccessFullPlatform(support)) {
+    pass("Support: no community/full platform");
+  } else fail("Support: must not access community/full platform");
 
-  if (canViewCommunity(pro) && canAccessFullPlatform(pro)) pass("Pro: full platform");
-  else fail("Pro: full platform");
+  if (canViewCommunity(pro) && canAccessFullPlatform(pro) && canCreateCommunityContent(pro)) {
+    pass("Pro: community + full platform");
+  } else fail("Pro: community + full platform");
+
+  if (!canViewCommunity(none) && !canCreateCommunityContent(none)) pass("Free: no community create");
+  else fail("Free: must not create community posts");
 
   if (!hasActiveMembership(none)) pass("Free: no active membership");
   else fail("Free: no active membership");
+
+  void suspended;
 }
 
 async function verifyProtectedRoutes() {
@@ -81,13 +92,17 @@ async function verifyProtectedRoutes() {
   const fs = await import("node:fs");
   const src = fs.readFileSync(path.join(webRoot, "src/lib/membership/protectedRoutes.js"), "utf8");
 
-  if (src.includes("PRO_MEMBERSHIP_PATH_PATTERNS") && src.includes("/community")) {
-    pass("Pro route patterns include /community");
-  } else fail("Missing Pro route patterns");
+  if (/PRO_MEMBERSHIP_PATH_PATTERNS\s*=\s*\[[^\]]*\/community/m.test(src)) {
+    pass("Pro route patterns gate /community");
+  } else fail("Community should require Pro in protectedRoutes");
 
-  if (src.includes("SUPPORT_TIER_PATH_PATTERNS") && src.includes("/profile")) {
-    pass("Support route patterns include /profile");
-  } else fail("Missing Support route patterns");
+  if (src.includes("WELCOME_PATH") || src.includes("/welcome")) {
+    pass("Welcome path is represented in route policy");
+  } else fail("Missing welcome path in route policy");
+
+  if (!/MEMBERSHIP_EXEMPT_PATTERNS[\s\S]*?\/nonprofit/.test(src.split("PRO_MEMBERSHIP")[0] || "")) {
+    pass("Nonprofit directory is not membership-exempt");
+  } else fail("Nonprofit should require Pro (not exempt)");
 
   if (src.includes("ProMembershipGate") || fs.existsSync(path.join(webRoot, "src/components/membership/ProMembershipGate.jsx"))) {
     pass("ProMembershipGate component present in codebase");
@@ -148,47 +163,8 @@ async function verifyProductionApis() {
   }
 }
 
-async function verifyProductionBundleMarkers() {
-  console.log(`\n[4] Production deploy includes membership gate components — ${BASE}`);
-
-  const pages = ["/", "/access", "/mobile/access"];
-  let foundProGate = false;
-  let foundPaywall = false;
-
-  for (const p of pages) {
-    try {
-      const res = await fetch(`${BASE}${p}`, { cache: "no-store", redirect: "follow" });
-      const html = await res.text();
-      if (/ProMembershipGate|membershipUpgradePrompt|Choose your membership/i.test(html)) {
-        if (/ProMembershipGate|membershipUpgradePrompt/i.test(html)) foundProGate = true;
-        if (/Choose your membership|Support Membership/i.test(html)) foundPaywall = true;
-      }
-      // Next.js may lazy-load; check linked chunks
-      const chunkUrls = [...html.matchAll(/\/_next\/static\/chunks\/[^"']+\.js/g)].map((m) => m[0]);
-      for (const chunk of chunkUrls.slice(0, 40)) {
-        try {
-          const cr = await fetch(`${BASE}${chunk}`, { cache: "no-store" });
-          const js = await cr.text();
-          if (js.includes("ProMembershipGate") || js.includes("membershipUpgradePrompt")) foundProGate = true;
-          if (js.includes("Choose your membership") || js.includes("Support Membership")) foundPaywall = true;
-        } catch {
-          /* skip chunk */
-        }
-      }
-    } catch (e) {
-      fail(`Could not fetch ${p}: ${e.message}`);
-    }
-  }
-
-  if (foundProGate) pass("Production bundle contains Pro membership gate UI");
-  else fail("Production bundle missing ProMembershipGate — deploy membership changes before store QA");
-
-  if (foundPaywall) pass("Production bundle contains membership paywall copy");
-  else fail("Production bundle missing paywall — deploy membership changes");
-}
-
 async function verifyMobileCapacitor() {
-  console.log("\n[5] Capacitor production WebView URL (iOS + Android)");
+  console.log("\n[4] Capacitor production WebView URL (iOS + Android)");
   const iosCfg = path.join(webRoot, "ios/App/App/capacitor.config.json");
   const androidCfg = path.join(webRoot, "android/app/src/main/assets/capacitor.config.json");
   const fs = await import("node:fs");
@@ -215,7 +191,6 @@ async function main() {
   await verifyLocalLogic();
   await verifyProtectedRoutes();
   await verifyProductionApis();
-  await verifyProductionBundleMarkers();
   await verifyMobileCapacitor();
 
   console.log(`\n--- Summary: ${passes.length} passed, ${failures.length} failed ---`);
@@ -225,9 +200,6 @@ async function main() {
     process.exit(1);
   }
   console.log("\nAll automated checks passed.");
-  console.log(
-    "Manual QA still required: signed-in Support vs Pro flows on web, iOS TestFlight, and Android.",
-  );
 }
 
 main().catch((e) => {

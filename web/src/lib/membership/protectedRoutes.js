@@ -1,15 +1,15 @@
 /**
  * Route policies for membership gating (web + Capacitor).
  *
- * Public home/directory remains open without Pro.
- * All other product areas require Pro Membership ($5.99/yr).
+ * Unauthenticated users land on the welcome experience at `/` (AppEntryBootstrap).
+ * Main product surfaces require Pro Membership ($5.99/yr).
  * Support Membership availability is controlled by membershipConfiguration (feature flag).
  */
 
-/** Always reachable without membership (marketing, auth, checkout, public directory). */
+/** Auth, legal, checkout, and health — reachable without Pro. `/` is handled by AppEntryBootstrap. */
 export const MEMBERSHIP_EXEMPT_PATTERNS = [
   /^\/$/,
-  /^\/nonprofit(\/|$)/,
+  /^\/welcome(\/|$)/,
   /^\/sign-in(\/|$)/,
   /^\/sign-up(\/|$)/,
   /^\/signup(\/|$)/,
@@ -22,28 +22,24 @@ export const MEMBERSHIP_EXEMPT_PATTERNS = [
   /^\/privacy(\/|$)/,
   /^\/terms(\/|$)/,
   /^\/download(\/|$)/,
-  /^\/membership(\/|$)/,
   /^\/membership\/success(\/|$)/,
   /^\/membership\/cancel(\/|$)/,
   /^\/billing(\/|$)/,
   /^\/admin-login(\/|$)/,
+  /^\/sign-out(\/|$)/,
   /^\/api\/billing\//,
   /^\/api\/health(\/|$)/,
   /^\/api\/auth\//,
   /^\/mobile\/auth\//,
   /^\/mobile-auth\//,
-  /** Mission partner hub + profiles — linked from the public home page. */
-  /^\/sponsors(\/|$)/,
-  /^\/sponsor(\/|$)/,
 ];
 
 /**
- * Canonical public routes (home/directory + auth/legal/checkout).
- * Kept as an explicit list for docs and tests.
+ * Canonical pre-auth / legal / checkout routes (not the main app shell).
  */
 export const PUBLIC_ROUTES = [
   "/",
-  "/nonprofit",
+  "/welcome",
   "/sign-in",
   "/sign-up",
   "/login",
@@ -54,9 +50,7 @@ export const PUBLIC_ROUTES = [
   "/privacy",
   "/terms",
   "/download",
-  "/membership",
   "/billing",
-  "/sponsors",
 ];
 
 /**
@@ -70,20 +64,30 @@ export const SUPPORT_TIER_PATH_PATTERNS = [
   /^\/podcasts\/guests(\/|$)/,
 ];
 
-/** Pro Membership required for protected product routes (not public directory). */
+/** Pro Membership required for all main product routes. */
 export const PRO_MEMBERSHIP_PATH_PATTERNS = [
+  /^\/nonprofit(\/|$)/,
+  /^\/community(\/|$)/,
+  /^\/sponsors(\/|$)/,
+  /^\/sponsor(\/|$)/,
   /^\/profile(\/|$)/,
   /^\/podcasts(\/|$)/,
-  /^\/community(\/|$)/,
   /^\/trusted(\/|$)/,
   /^\/notifications(\/|$)/,
   /^\/onboarding(\/|$)/,
   /^\/contact(\/|$)/,
   /^\/settings(\/|$)/,
+  /^\/membership(\/|$)/,
 ];
+
+/** @deprecated Community requires Pro with the rest of the app. */
+export const COMMUNITY_MEMBER_PATH_PATTERNS = [/^\/community(\/|$)/];
 
 /** @deprecated Use PRO_MEMBERSHIP_PATH_PATTERNS */
 export const MEMBERSHIP_REQUIRED_PATTERNS = [...PRO_MEMBERSHIP_PATH_PATTERNS];
+
+/** Welcome / unauthenticated landing (same UI as `/` for guests). */
+export const WELCOME_PATH = "/";
 
 /** @param {string} pathname */
 export function isMembershipExemptPath(pathname) {
@@ -91,10 +95,13 @@ export function isMembershipExemptPath(pathname) {
   return MEMBERSHIP_EXEMPT_PATTERNS.some((re) => re.test(path));
 }
 
-/** Public home / nonprofit directory browsing (no membership required). */
+/**
+ * Formerly public directory browsing. Directory now requires Pro — kept for callers
+ * that still distinguish home vs other routes.
+ */
 export function isPublicDirectoryPath(pathname) {
   const path = String(pathname || "/").trim() || "/";
-  return path === "/" || /^\/nonprofit(\/|$)/.test(path);
+  return path === "/" || path === "/welcome";
 }
 
 /** @param {string} pathname */

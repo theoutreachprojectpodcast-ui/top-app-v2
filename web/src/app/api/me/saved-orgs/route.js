@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { guardMutation, guardFailureResponse } from "@/lib/security/secureRoute";
 import { authFailureJson, resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -10,17 +11,36 @@ import {
 
 const SAVED_TABLE = process.env.NEXT_PUBLIC_SAVED_ORG_TABLE || "top_app_saved_org_eins";
 
+function logSavedOrgs(event, fields) {
+  console.info(
+    JSON.stringify({
+      scope: "saved_orgs",
+      event,
+      ts: new Date().toISOString(),
+      ...fields,
+    }),
+  );
+}
+
 export async function GET() {
+  const correlationId = randomUUID();
   const auth = await resolveWorkOSRouteUser();
   if (!auth.ok) return authFailureJson(auth);
   const admin = createSupabaseAdminClient();
   if (admin) {
     const membership = await requireMembershipApi(admin, "save_organizations");
-    if (!membership.ok) return membership.response;
+    if (!membership.ok) {
+      logSavedOrgs("get_denied", {
+        correlationId,
+        workosUserId: auth.user?.id || null,
+        status: membership.response?.status || 403,
+      });
+      return membership.response;
+    }
   }
   const user = auth.user;
   if (!admin) {
-    return Response.json({ eins: [] });
+    return Response.json({ eins: [], correlationId });
   }
   const { data, error } = await admin
     .from(SAVED_TABLE)
@@ -28,13 +48,24 @@ export async function GET() {
     .eq("user_id", user.id)
     .order("sort_order", { ascending: true });
   if (error || !Array.isArray(data)) {
-    return Response.json({ eins: [] });
+    logSavedOrgs("get_failed", {
+      correlationId,
+      workosUserId: user.id,
+      dbError: error?.code || error?.message || "empty",
+    });
+    return Response.json({ eins: [], correlationId });
   }
   const eins = [...new Set(data.map((r) => normalizeEinDigits(r.ein)).filter((e) => e.length === 9))];
-  return Response.json({ eins });
+  logSavedOrgs("get_ok", {
+    correlationId,
+    workosUserId: user.id,
+    count: eins.length,
+  });
+  return Response.json({ eins, correlationId });
 }
 
 export async function PUT(request) {
+  const correlationId = randomUUID();
   const __guard = guardMutation(request, { rateKey: "me-saved-orgs", limit: 40 });
   if (!__guard.ok) return guardFailureResponse(__guard);
   const auth = await resolveWorkOSRouteUser();
@@ -42,16 +73,25 @@ export async function PUT(request) {
   const user = auth.user;
   const admin = createSupabaseAdminClient();
   if (!admin) {
-    return Response.json({ error: "server_storage_unavailable" }, { status: 503 });
+    return Response.json({ error: "server_storage_unavailable", correlationId }, { status: 503 });
   }
   const membership = await requireMembershipApi(admin, "save_organizations");
-  if (!membership.ok) return membership.response;
+  if (!membership.ok) {
+    logSavedOrgs("put_denied", {
+      correlationId,
+      workosUserId: user.id,
+      profileId: null,
+      status: membership.response?.status || 403,
+    });
+    return membership.response;
+  }
+  const profileId = membership.profileRow?.id || null;
 
   let body;
   try {
     body = await request.json();
   } catch {
-    return Response.json({ error: "invalid_json" }, { status: 400 });
+    return Response.json({ error: "invalid_json", correlationId }, { status: 400 });
   }
   const raw = Array.isArray(body.eins) ? body.eins : [];
   const list = [...new Set(raw.map((e) => normalizeEinDigits(e)).filter((e) => e.length === 9))];
@@ -63,7 +103,13 @@ export async function PUT(request) {
     .select("ein")
     .eq("user_id", user.id);
   if (readErr) {
-    return Response.json({ error: "read_failed", message: readErr.message }, { status: 500 });
+    logSavedOrgs("put_read_failed", {
+      correlationId,
+      workosUserId: user.id,
+      profileId,
+      dbError: readErr.code || readErr.message,
+    });
+    return Response.json({ error: "read_failed", message: readErr.message, correlationId }, { status: 500 });
   }
   const existing = new Set(
     (existingRows || []).map((r) => normalizeEinDigits(r.ein)).filter((e) => e.length === 9),
@@ -81,11 +127,19 @@ export async function PUT(request) {
     else rejected.push(ein);
   }
   if (rejected.length && !accepted.length && list.length) {
+    logSavedOrgs("put_all_rejected", {
+      correlationId,
+      workosUserId: user.id,
+      profileId,
+      rejectedCount: rejected.length,
+      rejectedEins: rejected.slice(0, 20),
+    });
     return Response.json(
       {
         error: "nonprofit_not_found",
         message: "One or more organizations could not be saved because they are not in the directory.",
         rejectedEins: rejected,
+        correlationId,
       },
       { status: 400 },
     );
@@ -96,11 +150,23 @@ export async function PUT(request) {
   if (toRemove.length) {
     const { error: delErr } = await admin.from(SAVED_TABLE).delete().eq("user_id", user.id).in("ein", toRemove);
     if (delErr) {
-      return Response.json({ error: "delete_failed", message: delErr.message }, { status: 500 });
+      logSavedOrgs("put_delete_failed", {
+        correlationId,
+        workosUserId: user.id,
+        profileId,
+        dbError: delErr.code || delErr.message,
+      });
+      return Response.json({ error: "delete_failed", message: delErr.message, correlationId }, { status: 500 });
     }
   }
   if (!accepted.length) {
-    return Response.json({ eins: [], rejectedEins: rejected });
+    logSavedOrgs("put_cleared", {
+      correlationId,
+      workosUserId: user.id,
+      profileId,
+      rejectedCount: rejected.length,
+    });
+    return Response.json({ eins: [], rejectedEins: rejected, correlationId });
   }
   const rows = accepted.map((ein, i) => ({
     user_id: user.id,
@@ -109,13 +175,28 @@ export async function PUT(request) {
   }));
   const { error: upsErr } = await admin.from(SAVED_TABLE).upsert(rows, { onConflict: "user_id,ein" });
   if (upsErr) {
-    return Response.json({ error: "upsert_failed", message: upsErr.message }, { status: 500 });
+    logSavedOrgs("put_upsert_failed", {
+      correlationId,
+      workosUserId: user.id,
+      profileId,
+      dbError: upsErr.code || upsErr.message,
+    });
+    return Response.json({ error: "upsert_failed", message: upsErr.message, correlationId }, { status: 500 });
   }
 
   const resolvedRows = await resolveSavedOrganizationDirectoryRows(admin, accepted);
+  logSavedOrgs("put_ok", {
+    correlationId,
+    workosUserId: user.id,
+    profileId,
+    acceptedCount: accepted.length,
+    rejectedCount: rejected.length,
+    removedCount: toRemove.length,
+  });
   return Response.json({
     eins: accepted,
     rejectedEins: rejected,
     rows: resolvedRows,
+    correlationId,
   });
 }

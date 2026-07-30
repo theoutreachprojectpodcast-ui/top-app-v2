@@ -173,7 +173,7 @@ export default function CommunitySubmissionForm({
       <p className="communitySubmitLead">
         {isEdit
           ? "Update your post below. Changes save to your story right away unless pre-approval moderation is turned on."
-          : "Share a story, photo, or link with the community. Posts from Pro members publish immediately unless an admin has enabled pre-approval review."}
+          : "Share a story, photo, or link with the community. Posts publish immediately unless an admin has enabled pre-approval review."}
       </p>
       <form className="communitySubmitForm communitySubmitForm--ds" onSubmit={onSubmit}>
         <label className="fieldLabel">Title <span className="fieldOptional">(optional)</span></label>

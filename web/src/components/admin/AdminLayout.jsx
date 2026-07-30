@@ -12,6 +12,7 @@ import { adminBreadcrumbs, matchAdminNavPath } from "@/lib/admin/adminNavConfig"
 
 /**
  * Admin chrome: section tabs + left subnav + search + page content.
+ * Phone: Menu + breadcrumbs + search + current-page hint (no stacked “Admin Console” title noise).
  */
 export default function AdminLayout({ children, sessionEmail = "" }) {
   const pathname = usePathname() || "";
@@ -19,16 +20,25 @@ export default function AdminLayout({ children, sessionEmail = "" }) {
   const closeDrawer = useCallback(() => setDrawerOpen(false), []);
   const crumbs = adminBreadcrumbs(pathname);
   const current = matchAdminNavPath(pathname);
+  const pageTitle = current?.label || "Dashboard";
 
   return (
     <div className="adminLayout">
       <div className="adminLayout__intro">
         <div className="adminLayout__introMain">
-          <h1 className="adminLayout__title">Admin Console</h1>
-          <p className="adminLayout__lede adminMuted">
+          <h1 className="adminLayout__title adminLayout__title--desktop">Admin Console</h1>
+          <h1 className="adminLayout__title adminLayout__title--mobile">{pageTitle}</h1>
+          <p className="adminLayout__lede adminMuted adminLayout__lede--desktop">
             Manage community, members, nonprofits, sponsors, and site content — without needing backend tools.
           </p>
-          {sessionEmail ? <span className="adminLayout__session adminMuted">Signed in as {sessionEmail}</span> : null}
+          {current?.description ? (
+            <p className="adminLayout__lede adminMuted adminLayout__lede--mobile">{current.description}</p>
+          ) : null}
+          {sessionEmail ? (
+            <span className="adminLayout__session adminMuted adminLayout__session--desktop">
+              Signed in as {sessionEmail}
+            </span>
+          ) : null}
         </div>
         <button
           type="button"
@@ -60,9 +70,6 @@ export default function AdminLayout({ children, sessionEmail = "" }) {
         </div>
         <div className="adminLayout__main">
           <AdminSearch />
-          {current?.description ? (
-            <p className="adminLayout__pageHint adminMuted adminLayout__pageHint--mobile">{current.description}</p>
-          ) : null}
           <AdminContentContainer>{children}</AdminContentContainer>
         </div>
       </div>

@@ -5,13 +5,6 @@
 export function getProUpgradeGateContent(pathname) {
   const path = String(pathname || "/").trim() || "/";
 
-  if (/^\/community(\/|$)/.test(path)) {
-    return {
-      title: "Community is a Pro feature",
-      message: "Upgrade to Pro to view and participate in community discussions.",
-      feature: "Community",
-    };
-  }
   if (/^\/trusted(\/|$)/.test(path)) {
     return {
       title: "Trusted Resources are a Pro feature",
@@ -72,7 +65,6 @@ export function getProUpgradeGateContent(pathname) {
 /** @param {string} navKey TopApp dock tab key on `/` */
 export function getProUpgradeGateContentForNav(navKey) {
   const key = String(navKey || "").trim().toLowerCase();
-  if (key === "community") return getProUpgradeGateContent("/community");
   if (key === "trusted") return getProUpgradeGateContent("/trusted");
   if (key === "settings") return getProUpgradeGateContent("/settings");
   if (key === "contact") return getProUpgradeGateContent("/contact");

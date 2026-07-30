@@ -289,6 +289,15 @@ main.topApp.appShell--admin .adminLayout {
 
 .adminLayout__menuBtn {
   display: none;
+  min-height: 44px;
+  min-width: 44px;
+  padding-inline: 14px;
+  flex-shrink: 0;
+}
+
+.adminLayout__title--mobile,
+.adminLayout__lede--mobile {
+  display: none;
 }
 
 .adminLayout__tabsDesktop {
@@ -339,7 +348,7 @@ main.topApp.appShell--admin .adminLayout {
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
-  min-height: 40px;
+  min-height: 44px;
   padding: 8px 14px;
   border-radius: var(--radius-md, 8px) var(--radius-md, 8px) 0 0;
   border: 1px solid transparent;
@@ -394,7 +403,7 @@ main.topApp.appShell--admin .adminLayout {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  min-height: 40px;
+  min-height: 44px;
   padding: 8px 10px;
   border-radius: var(--radius-md, 8px);
   color: var(--color-text-secondary);
@@ -494,16 +503,54 @@ main.topApp.appShell--admin .adminLayout {
 
   .adminLayout__menuBtn {
     display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .adminLayout__title--desktop,
+  .adminLayout__lede--desktop,
+  .adminLayout__session--desktop {
+    display: none;
+  }
+
+  .adminLayout__title--mobile,
+  .adminLayout__lede--mobile {
+    display: block;
+  }
+
+  .adminLayout__intro {
+    align-items: center;
+    gap: var(--ds-space-2, 8px) var(--ds-space-3, 12px);
+  }
+
+  .adminLayout__title--mobile {
+    font-size: 1.25rem;
+    letter-spacing: 0;
   }
 
   .adminLayout__pageHint--mobile {
-    display: block;
+    display: none;
   }
 }
 
 @media (max-width: 640px) {
   .adminLayout__tabsDesktop {
     display: none;
+  }
+
+  main.topApp.appShell--admin .adminLayout {
+    gap: var(--ds-space-2, 8px);
+    padding-top: var(--ds-space-1, 4px);
+  }
+
+  .adminLayout__breadcrumbs {
+    font-size: 0.75rem;
+  }
+
+  .adminHorizontalNav__link,
+  .adminSectionTabs__tab {
+    min-height: 44px;
+    overflow: visible;
   }
 }
 

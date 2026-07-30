@@ -32,7 +32,7 @@ export async function POST(request) {
     return Response.json(
       {
         ok: false,
-        message: "Only moderators can upload images for new community posts in V1.",
+        message: "You do not have permission to upload images for community posts.",
       },
       { status: 403 },
     );

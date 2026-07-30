@@ -79,10 +79,13 @@ export default function CommunityPostCard({
   showModerationStatus = false,
   onOpenAuthor,
   onRequestAuthorEdit,
+  onRequestAuthorDelete,
   isAuthenticated = false,
   canModerate = false,
+  isOwnPost = false,
 }) {
   const [shareBusy, setShareBusy] = useState(false);
+  const [deleteBusy, setDeleteBusy] = useState(false);
   const isModerator = isOutreachModeratorPost(post);
   const isGuide = isGuidePost(post);
   const layout = resolveCommunityPostLayout(post.postType, post.layout);
@@ -95,8 +98,9 @@ export default function CommunityPostCard({
   const cta = post.cta || parsePostCta(post.linkUrl);
   const canEditStory =
     typeof onRequestAuthorEdit === "function" &&
-    showModerationStatus &&
-    (post.status === "pending_review" || post.status === "approved");
+    (isOwnPost || showModerationStatus) &&
+    (post.status === "pending_review" || post.status === "approved" || !post.status);
+  const canDeleteStory = typeof onRequestAuthorDelete === "function" && isOwnPost;
 
   const showHeroImage =
     post.photoUrl &&
@@ -198,11 +202,31 @@ export default function CommunityPostCard({
           {post.nonprofitName}
         </p>
       ) : null}
-      {canEditStory ? (
+      {canEditStory || canDeleteStory ? (
         <div className="communityPostAuthorEditRow">
-          <button type="button" className="btnSoft communityPostEditBtn" onClick={() => onRequestAuthorEdit(post)}>
-            Edit story
-          </button>
+          {canEditStory ? (
+            <button type="button" className="btnSoft communityPostEditBtn" onClick={() => onRequestAuthorEdit(post)}>
+              Edit post
+            </button>
+          ) : null}
+          {canDeleteStory ? (
+            <button
+              type="button"
+              className="btnSoft communityPostEditBtn"
+              disabled={deleteBusy}
+              onClick={async () => {
+                if (!window.confirm("Remove this post from the community feed?")) return;
+                setDeleteBusy(true);
+                try {
+                  await onRequestAuthorDelete(post);
+                } finally {
+                  setDeleteBusy(false);
+                }
+              }}
+            >
+              {deleteBusy ? "Removing…" : "Delete post"}
+            </button>
+          ) : null}
         </div>
       ) : null}
       <CommunitySocialActions

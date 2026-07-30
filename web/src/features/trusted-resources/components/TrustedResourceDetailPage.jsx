@@ -40,7 +40,13 @@ export default function TrustedResourceDetailPage({ slug, initialDetail = null }
   const pathname = usePathname();
   const router = useRouter();
   const supabase = useMemo(() => getSupabaseClient(), []);
-  const { isAuthenticated, favoriteEntityKeys, toggleFavoriteEntityKey } = useProfileData();
+  const {
+    isAuthenticated,
+    favoriteEins,
+    favoriteEntityKeys,
+    toggleFavoriteEin,
+    toggleFavoriteEntityKey,
+  } = useProfileData();
   const [resource, setResource] = useState(initialDetail);
   const [status, setStatus] = useState(initialDetail ? "" : "Loading trusted resource…");
   const [favBusy, setFavBusy] = useState(false);
@@ -89,21 +95,38 @@ export default function TrustedResourceDetailPage({ slug, initialDetail = null }
   }, [supabase, slug, router, initialDetail]);
 
   const favoriteKey = resource?.trustedResourceSlug ? `trusted:${resource.trustedResourceSlug}` : "";
-  const isFavorited = favoriteKey && favoriteEntityKeys.includes(favoriteKey);
+  const einDigits = String(resource?.ein || "").replace(/\D/g, "");
+  const hasEin = einDigits.length === 9;
+  const isFavorited =
+    (hasEin && favoriteEins.includes(einDigits)) ||
+    (favoriteKey && favoriteEntityKeys.includes(favoriteKey));
 
   const onFavorite = useCallback(() => {
-    if (!favoriteKey) return;
+    if (!favoriteKey && !hasEin) return;
     if (!isAuthenticated) {
       window.location.assign(signInHref);
       return;
     }
     setFavBusy(true);
     try {
-      toggleFavoriteEntityKey(favoriteKey);
+      // Prefer canonical EIN save so the org appears in Profile → Saved Organizations.
+      if (hasEin) {
+        toggleFavoriteEin(einDigits);
+        return;
+      }
+      if (favoriteKey) toggleFavoriteEntityKey(favoriteKey);
     } finally {
       setFavBusy(false);
     }
-  }, [favoriteKey, isAuthenticated, signInHref, toggleFavoriteEntityKey]);
+  }, [
+    favoriteKey,
+    hasEin,
+    einDigits,
+    isAuthenticated,
+    signInHref,
+    toggleFavoriteEin,
+    toggleFavoriteEntityKey,
+  ]);
 
   const primaryCta = resource?.helpfulLinks?.[0] || resource?.connectLinks?.[0];
   const cat = resource?.trustedResourceCategory || resource?.category;

@@ -9,7 +9,6 @@ import SiteBottomNavGlyph from "@/components/navigation/SiteBottomNavGlyph";
 import { SiteHamburgerNavMenu } from "@/components/navigation/SiteMobileNavHamburgerEntries";
 import HeaderInner from "@/components/layout/HeaderInner";
 import SubpageTopbarActions from "@/components/layout/SubpageTopbarActions";
-import AdminConsoleLink from "@/components/admin/AdminConsoleLink";
 import FooterInner from "@/components/layout/FooterInner";
 import MissionPageTopStrip from "@/components/layout/MissionPageTopStrip";
 import { useNavAuthState } from "@/hooks/useNavAuthState";
@@ -111,7 +110,6 @@ export default function AppShell({
                       {useFooterDockChrome ? (
                         <SiteHamburgerNavMenu tone="podcast" shellClass="siteMobileNavMore--phoneOnly" />
                       ) : null}
-                      {isMobileShell && isLoggedIn ? <AdminConsoleLink /> : null}
                       <SubpageTopbarActions section="lead" />
                     </div>
                   </div>
@@ -147,7 +145,6 @@ export default function AppShell({
                         <SiteHamburgerNavMenu shellClass="siteMobileNavMore--phoneOnly" />
                       ) : null}
                       {isMobileShell && !podcastThemeShell && showThemeToggle ? <ColorSchemeToggle /> : null}
-                      {isMobileShell && isLoggedIn ? <AdminConsoleLink /> : null}
                       <SubpageTopbarActions section="lead" />
                     </div>
                   </div>

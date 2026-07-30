@@ -4,6 +4,9 @@ import { useCallback, useEffect, useState } from "react";
 import AdminRichTextEditor from "@/components/admin/AdminRichTextEditor";
 import AdminMediaUploadField from "@/components/admin/AdminMediaUploadField";
 import AdminPanelShell from "@/components/admin/AdminPanelShell";
+import AdminSectionCard from "@/components/admin/AdminSectionCard";
+import AdminFilterBar from "@/components/admin/AdminFilterBar";
+import AdminActionBar from "@/components/admin/AdminActionBar";
 import { isLikelyHtml, sanitizeAdminHtml } from "@/lib/admin/sanitizeHtml";
 
 const POST_TYPES = [
@@ -516,12 +519,10 @@ export default function AdminCommunityPostsSection() {
         </button>
       }
     >
-      <div className="adminFieldStack adminFieldStack--bordered">
-        <h3 className="adminBlockTitle">Member posting mode</h3>
-        <p className="adminMuted">
-          Controls whether Pro members can publish immediately, wait for approval, or only staff can post. Default is open
-          posting.
-        </p>
+      <AdminSectionCard
+        title="Member posting mode"
+        description="Controls whether Pro members can publish immediately, wait for approval, or only staff can post. Default is open posting."
+      >
         <label className="fieldLabel" htmlFor="community-posting-mode">
           How members post
         </label>
@@ -549,9 +550,9 @@ export default function AdminCommunityPostsSection() {
         {postingModeOptions.find((o) => o.value === postingMode)?.description ? (
           <p className="adminMuted">{postingModeOptions.find((o) => o.value === postingMode)?.description}</p>
         ) : null}
-      </div>
+      </AdminSectionCard>
 
-      <div className="adminToolbar">
+      <AdminFilterBar>
         {SCOPES.map((s) => (
           <button
             key={s.id}
@@ -562,20 +563,19 @@ export default function AdminCommunityPostsSection() {
             {s.label}
           </button>
         ))}
-      </div>
+      </AdminFilterBar>
 
       {showCreate ? (
-        <div className="adminFieldStack adminFieldStack--bordered adminCommunityBuilder">
-          <h3 className="adminBlockTitle">Post builder</h3>
+        <AdminSectionCard title="Post builder" description="Write a staff update for the community feed.">
           {renderPostBuilderForm(draft, setDraft, "create")}
-          <div className="adminToolbar">
+          <AdminActionBar>
             <button type="button" className="btnSoft" onClick={() => setShowPreview((v) => !v)}>
               {showPreview ? "Hide preview" : "Preview"}
             </button>
             <button type="button" className="btnPrimary" disabled={busy === "create"} onClick={() => void createPost()}>
               {draft.publish ? "Publish post" : "Save draft"}
             </button>
-          </div>
+          </AdminActionBar>
           {showPreview ? (
             <div className="adminCommunityPreview card">
               <h4>{draft.title || "Untitled post"}</h4>
@@ -593,14 +593,13 @@ export default function AdminCommunityPostsSection() {
               ) : null}
             </div>
           ) : null}
-        </div>
+        </AdminSectionCard>
       ) : null}
 
-      <h2 className="adminSectionTitle">
-        {SCOPES.find((s) => s.id === scope)?.label || "Posts"}
-        {!loading ? ` (${posts.length})` : ""}
-      </h2>
-
+      <AdminSectionCard
+        title={`${SCOPES.find((s) => s.id === scope)?.label || "Posts"}${!loading ? ` (${posts.length})` : ""}`}
+        description="Moderate, edit, or remove posts in this view."
+      >
       {loading ? <p className="adminMuted">Loading…</p> : null}
       {!loading && posts.length === 0 ? (
         <p className="adminMuted">No posts in this view. Create a draft or publish a post to get started.</p>
@@ -723,6 +722,7 @@ export default function AdminCommunityPostsSection() {
           );
         })}
       </div>
+      </AdminSectionCard>
     </AdminPanelShell>
   );
 }

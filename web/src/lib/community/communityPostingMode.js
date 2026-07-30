@@ -8,7 +8,7 @@ export const COMMUNITY_POSTING_MODE_OPTIONS = [
   {
     value: "open",
     label: "Open posting",
-    description: "Members with access can publish immediately. Moderators can still hide or remove posts.",
+    description: "Authenticated members can publish immediately. Moderators can still hide or remove posts.",
   },
   {
     value: "post_review",
@@ -70,7 +70,7 @@ export async function saveCommunityPostingMode(admin, mode, updatedBy = "") {
 }
 
 /**
- * Whether a Pro member (non-staff) may create posts under the current mode.
+ * Whether a non-staff member may create posts under the current mode.
  * @param {CommunityPostingMode} mode
  */
 export function membersMayCreatePosts(mode) {
