@@ -7,14 +7,99 @@ const IRS_TABLE = "irs_eo_organizations";
 const BATCH_TABLE = "irs_nonprofit_import_batches";
 const ERROR_TABLE = "irs_nonprofit_import_errors";
 const DIRECTORY_TABLE = "nonprofits_search_app_v1";
+const NONPROFITS_BASE_TABLE = "nonprofits";
 
 /** Profile / curated fields we never overwrite when the existing value is non-empty. */
 const CURATED_DIRECTORY_FIELDS = ["website", "phone", "description", "logo_url", "domain"];
+
+/**
+ * Columns known to exist on production `nonprofits_search_app_v1` (view/table).
+ * Do not send IRS-only metadata columns here — they are stored on irs_eo_organizations.
+ */
+const DIRECTORY_SAFE_COLUMNS = new Set([
+  "ein",
+  "org_name",
+  "city",
+  "state",
+  "ntee_code",
+  "serves_veterans",
+  "serves_first_responders",
+  "is_trusted",
+  "website",
+  "phone",
+]);
 
 function emptyToNull(v) {
   if (v == null) return null;
   if (typeof v === "string" && !v.trim()) return null;
   return v;
+}
+
+function pickSafeDirectoryPayload(payload) {
+  const out = {};
+  for (const [k, v] of Object.entries(payload || {})) {
+    if (DIRECTORY_SAFE_COLUMNS.has(k)) out[k] = v;
+  }
+  return out;
+}
+
+function nonprofitsBasePayload(record) {
+  return {
+    ein: record.ein,
+    name: record.org_name,
+    city: record.city,
+    state: record.state,
+    ntee_code: record.ntee_code,
+    subsection: record.irs_subsection,
+    is_veteran_org: !!record.serves_veterans,
+    is_first_responder_org: !!record.serves_first_responders,
+    updated_at: new Date().toISOString(),
+  };
+}
+
+/**
+ * Download + filter + plan without touching the database.
+ * Use this before the migration is applied, or for offline QA of IRS pulls.
+ */
+export async function reportIrsNonprofitImport(options = {}) {
+  const subsection = options.subsection || DEFAULT_SUBSECTION_FILTER;
+  const states = options.states || ["dc"];
+  const classification = classificationSummary();
+  const loaded = await loadMatchingOrganizations({
+    states,
+    subsection,
+    limit: options.limit ?? null,
+    fetchImpl: options.fetchImpl,
+  });
+  const records = loaded.records || [];
+  const existingByEin = new Map();
+  const actions = planImportActions(records, existingByEin, new Map());
+  const counts = summarizeActions(actions);
+  return {
+    ok: (loaded.errors || []).filter((e) => e.stage === "download").length === 0 || records.length > 0,
+    mode: "report_only",
+    batch: null,
+    summary: {
+      recordsFound: records.length,
+      recordsAdded: counts.added,
+      recordsUpdated: counts.updated,
+      recordsSkipped: counts.skipped,
+      recordsFailed: counts.failed,
+      errors: (loaded.errors || []).length,
+    },
+    classification,
+    files: loaded.files,
+    loadErrors: loaded.errors,
+    sample: records.slice(0, 15).map((r) => ({
+      ein: r.ein,
+      org_name: r.org_name,
+      city: r.city,
+      state: r.state,
+      irs_subsection: r.irs_subsection,
+      ntee_code: r.ntee_code,
+      serves_veterans: r.serves_veterans,
+    })),
+  };
 }
 
 function pickIrsPayload(record, batchId) {
@@ -57,43 +142,71 @@ function directoryMirrorPayload(record, batchId, existing = null) {
     org_name: record.org_name,
     city: record.city,
     state: record.state,
-    zip: record.zip,
     ntee_code: record.ntee_code,
     serves_veterans: !!record.serves_veterans,
     serves_first_responders: !!record.serves_first_responders,
-    irs_subsection: record.irs_subsection,
-    irs_classification: record.irs_classification,
-    foundation_code: record.foundation_code,
-    deductibility_code: record.deductibility_code,
-    deductibility_status: record.deductibility_status,
-    ruling_date: record.ruling_date,
-    country: record.country,
-    category_tags: record.category_tags || [],
-    audience_tags: record.audience_tags || [],
-    irs_source_file: record.irs_source_file,
-    irs_source_date: record.irs_source_date,
-    last_verified_at: record.last_verified_at,
-    import_batch_id: batchId,
-    data_origin: existing?.data_origin || "irs_eo_bmf",
-    updated_at: new Date().toISOString(),
   };
 
-  // Never auto-feature or mark trusted on import.
+  // Never auto-mark trusted on import.
   if (!existing) {
-    base.directory_status = "pending_review";
-    base.is_featured = false;
     base.is_trusted = false;
   }
 
   // Preserve curated profile content when present.
   for (const field of CURATED_DIRECTORY_FIELDS) {
+    if (!DIRECTORY_SAFE_COLUMNS.has(field)) continue;
     const incoming = emptyToNull(record[field]);
     const prior = emptyToNull(existing?.[field]);
     if (prior) base[field] = prior;
     else if (incoming) base[field] = incoming;
   }
 
-  return base;
+  return pickSafeDirectoryPayload(base);
+}
+
+async function mirrorToDirectoryAndBase(supabase, action, batchId, directoryByEin) {
+  const errors = [];
+  // `nonprofits_search_app_v1` is a MATERIALIZED VIEW — never UPDATE it directly.
+  // Write to underlying `nonprofits`, then refresh the matview after the batch.
+  void batchId;
+  void directoryByEin;
+
+  const basePayload = nonprofitsBasePayload(action.record);
+  const { data: existingBase, error: lookupErr } = await supabase
+    .from(NONPROFITS_BASE_TABLE)
+    .select("ein")
+    .eq("ein", action.record.ein)
+    .maybeSingle();
+  if (lookupErr) {
+    errors.push({ stage: "nonprofits_lookup", ein: action.record.ein, error: lookupErr.message });
+    return errors;
+  }
+
+  if (existingBase?.ein) {
+    const { error: bErr } = await supabase
+      .from(NONPROFITS_BASE_TABLE)
+      .update(basePayload)
+      .eq("ein", action.record.ein);
+    if (bErr) {
+      errors.push({ stage: "nonprofits_update", ein: action.record.ein, error: bErr.message });
+    }
+  } else if (action.type === "add") {
+    // Brand-new IRS orgs stay in irs_eo_organizations until admin approves.
+  }
+
+  return errors;
+}
+
+async function refreshDirectoryMaterializedView(supabase) {
+  // Prefer a DB RPC if present; otherwise caller refreshes via SQL editor.
+  const { error } = await supabase.rpc("refresh_nonprofits_search_app_v1");
+  if (!error) return { ok: true, method: "rpc" };
+  return {
+    ok: false,
+    method: null,
+    error: error.message,
+    sqlHint: "refresh materialized view concurrently public.nonprofits_search_app_v1;",
+  };
 }
 
 async function fetchExistingByEins(supabase, eins) {
@@ -321,36 +434,13 @@ export async function runIrsNonprofitImport(supabase, options = {}) {
             if (error) throw error;
           }
 
-          if (directoryWritable) {
-            const existingDir = directoryByEin.get(action.record.ein) || null;
-            const dirPayload = directoryMirrorPayload(action.record, batchId, existingDir);
-            if (existingDir) {
-              // Preserve existing directory_status / featured / trusted.
-              delete dirPayload.directory_status;
-              delete dirPayload.is_featured;
-              delete dirPayload.is_trusted;
-              const { error: dErr } = await supabase
-                .from(DIRECTORY_TABLE)
-                .update(dirPayload)
-                .eq("ein", existingDir.ein);
-              if (dErr) {
-                applyErrors.push({
-                  stage: "directory_update",
-                  ein: action.record.ein,
-                  error: dErr.message,
-                });
-              }
-            } else {
-              const { error: dErr } = await supabase.from(DIRECTORY_TABLE).insert(dirPayload);
-              if (dErr) {
-                applyErrors.push({
-                  stage: "directory_insert",
-                  ein: action.record.ein,
-                  error: dErr.message,
-                });
-              }
-            }
-          }
+          const mirrorErrors = await mirrorToDirectoryAndBase(
+            supabase,
+            action,
+            batchId,
+            directoryByEin,
+          );
+          applyErrors.push(...mirrorErrors);
         } catch (err) {
           counts.failed += 1;
           if (action.type === "add") counts.added = Math.max(0, counts.added - 1);
@@ -370,11 +460,17 @@ export async function runIrsNonprofitImport(supabase, options = {}) {
     const sourceDates = (loaded.files || []).map((f) => f.sourceDate).filter(Boolean);
     const sourceDate = sourceDates.sort().slice(-1)[0] || null;
 
+    let matviewRefresh = null;
+    if (mode === "apply") {
+      matviewRefresh = await refreshDirectoryMaterializedView(supabase);
+    }
+
     const report = {
       classification,
       files: loaded.files,
       directoryWritable,
       directoryError,
+      matviewRefresh,
       sampleAdds: actions.filter((a) => a.type === "add").slice(0, 10).map((a) => ({
         ein: a.record.ein,
         org_name: a.record.org_name,

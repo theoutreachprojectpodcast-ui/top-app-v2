@@ -195,12 +195,8 @@ begin
     alter table public.nonprofits_search_app_v1 add column if not exists data_origin text;
     alter table public.nonprofits_search_app_v1 add column if not exists updated_at timestamptz default now();
 
-    -- Legacy rows without status remain publicly visible (NULL = approved legacy).
-    update public.nonprofits_search_app_v1
-    set directory_status = 'approved'
-    where directory_status is null
-      and coalesce(data_origin, '') <> 'irs_eo_bmf';
-
+    -- Legacy rows keep directory_status NULL (= publicly visible in app filters).
+    -- Do NOT backfill 1.9M+ rows here; NULL is intentional for pre-import catalog data.
     create index if not exists idx_np_search_status on public.nonprofits_search_app_v1 (directory_status);
     create index if not exists idx_np_search_irs_sub on public.nonprofits_search_app_v1 (irs_subsection);
   end if;
@@ -214,6 +210,18 @@ end $$;
 alter table public.irs_eo_organizations enable row level security;
 alter table public.irs_nonprofit_import_batches enable row level security;
 alter table public.irs_nonprofit_import_errors enable row level security;
+
+-- Service role must be able to read/write (RLS still blocks anon/authenticated).
+revoke all on table public.irs_eo_organizations from anon, authenticated, public;
+revoke all on table public.irs_nonprofit_import_batches from anon, authenticated, public;
+revoke all on table public.irs_nonprofit_import_errors from anon, authenticated, public;
+grant select, insert, update, delete on table public.irs_eo_organizations to service_role;
+grant select, insert, update, delete on table public.irs_nonprofit_import_batches to service_role;
+grant select, insert, update, delete on table public.irs_nonprofit_import_errors to service_role;
+grant usage, select on sequence public.irs_nonprofit_import_errors_id_seq to service_role;
+grant all on table public.irs_eo_organizations to postgres;
+grant all on table public.irs_nonprofit_import_batches to postgres;
+grant all on table public.irs_nonprofit_import_errors to postgres;
 
 do $$
 begin

@@ -46,8 +46,9 @@ export function partitionForSidebar(outbound) {
   const contact = [];
   const quick = [];
   const socialTypes = new Set(["facebook", "instagram", "linkedin", "youtube", "twitter", "tiktok"]);
-  const contactTypes = new Set(["email", "phone"]);
-  const quickTypes = new Set(["website", "donate", "volunteer", "intake"]);
+  const contactTypes = new Set(["email", "phone", "contact"]);
+  // Website is the primary CTA (hero + aside button) — do not repeat as a link card.
+  const quickTypes = new Set(["donate", "volunteer", "intake"]);
 
   for (const link of outbound || []) {
     if (!link?.url) continue;

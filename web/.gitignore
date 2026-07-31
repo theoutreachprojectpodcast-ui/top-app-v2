@@ -3,13 +3,18 @@ node_modules
 .env*.local
 .env.vercel.production
 .env.vercel.preview
+.env.vercel.development
+.env.vercel.qa
 .env.vercel*.pull
+next-start.log
+../next-start.log
 
 # Generated from repo-root ../assets by scripts/sync-public-assets.mjs
 public/assets
 
 # Capacitor native build outputs (keep android/ ios/ source; ignore local build cruft)
 android/.gradle/
+android/.idea/
 android/app/build/
 android/build/
 android/local.properties

@@ -56,7 +56,17 @@ Optional related filter (not default): subsection `23` = 501(c)(23) veterans ass
 # Unit tests (no DB)
 pnpm --dir web run test:irs-import
 
-# Dry-run (QA) — DC sample (~33 subsection-19 orgs)
+# Report-only (no DB) — validates IRS download/filter
+pnpm --dir web run irs:import:report -- --state=dc
+
+# Apply schema (needs SUPABASE_ACCESS_TOKEN or DATABASE_URL / DB password)
+pnpm --dir web run apply:irs-import-schema
+pnpm --dir web run apply:irs-import-schema:apply
+
+# Or paste into Supabase SQL editor:
+#   web/supabase/irs_nonprofit_import_2026_07.sql
+
+# Dry-run (QA) — DC sample (~33 subsection-19 orgs) — requires schema
 pnpm --dir web run irs:import:dry -- --state=dc
 
 # Apply after dry-run succeeds
@@ -68,22 +78,37 @@ pnpm --dir web run irs:import:dry -- --state=va,md,dc
 
 Admin UI: **Admin → Nonprofit Directory** — dry-run / apply, review queue, import logs.
 
+### Schema apply blocker
+
+Service-role keys alone cannot run DDL. To apply the migration you need one of:
+
+1. Paste `web/supabase/irs_nonprofit_import_2026_07.sql` in the [Supabase SQL editor](https://supabase.com/dashboard/project/xbtfoundwmhrqrbcuqcw/sql/new), or
+2. Set `SUPABASE_ACCESS_TOKEN` (Account → Access Tokens) and run `pnpm --dir web run apply:irs-import-schema:apply`, or
+3. Set `DATABASE_URL` / `SUPABASE_DB_PASSWORD` and run the same apply script.
+
+The migration is additive (no full-table backfill on the ~1.9M directory rows). Legacy rows keep `directory_status = NULL` (treated as public).
+
+If dry-run fails with `permission denied for table irs_nonprofit_import_batches`, paste  
+`web/supabase/irs_nonprofit_import_grant_service_role_2026_07.sql` and re-run.
+
 ---
 
 ## QA validation checklist
 
-1. [ ] Apply `web/supabase/irs_nonprofit_import_2026_07.sql` on **QA** Supabase.
-2. [ ] (Optional) Apply `qa_irs_nonprofit_import_seed_2026_07.sql`.
-3. [ ] Run `pnpm --dir web run test:irs-import`.
-4. [ ] Dry-run `--state=dc` — confirm ~30+ subsection 19 matches; zero writes except batch log.
-5. [ ] Apply with `--from-dry-run=<id>` — confirm adds/updates; no deletes.
-6. [ ] Re-run apply — duplicates skipped / EIN updates only; counts look sane.
-7. [ ] Admin review: pending rows visible; **Approve** one org.
-8. [ ] Public directory search (approved EIN / veteran audience) shows approved org; pending org **not** listed.
-9. [ ] Confirm approved org is **not** featured and **not** in Trusted Resources unless manually added.
-10. [ ] Import log shows batch id, source file/date, classification, counts, actor.
-11. [ ] Force a bad state key / offline case — batch `failed` or errors recorded; existing orgs untouched.
-12. [ ] Spot-check performance on a multi-state dry-run (`va,md,dc` or a region) before nation-wide apply.
+1. [ ] Apply `web/supabase/irs_nonprofit_import_2026_07.sql` on the target Supabase project (SQL editor or `apply:irs-import-schema:apply`).
+2. [ ] Confirm probe: `irs_eo_organizations` exists and `nonprofits_search_app_v1.directory_status` exists.
+3. [ ] (Optional) Apply `qa_irs_nonprofit_import_seed_2026_07.sql`.
+4. [ ] Run `pnpm --dir web run test:irs-import`.
+5. [ ] Run `pnpm --dir web run irs:import:report -- --state=dc` — expect ~33 subsection-19 matches (validated 2026-07-30 against EO BMF dated 2026-07-13).
+6. [ ] Dry-run `--state=dc` — confirm batch log row; zero org writes except batch metadata.
+7. [ ] Apply with `--from-dry-run=<id>` — confirm adds; no deletes.
+8. [ ] Re-run apply — EIN updates / skips look sane.
+9. [ ] Admin review: pending rows visible; **Approve** one org.
+10. [ ] Public directory search shows approved org; pending org **not** listed.
+11. [ ] Confirm approved org is **not** featured and **not** in Trusted Resources unless manually added.
+12. [ ] Import log shows batch id, source file/date, classification, counts, actor.
+13. [ ] Force a bad state key — errors recorded; existing orgs untouched.
+14. [ ] Spot-check multi-state (`--state="va,md,dc"`) before nation-wide apply. VA alone has ~698 subsection-19 orgs.
 
 ---
 

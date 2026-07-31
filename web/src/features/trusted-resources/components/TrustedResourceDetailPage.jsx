@@ -21,6 +21,14 @@ function formatReviewDate(iso) {
   return t.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
 }
 
+function normalizeHref(url) {
+  return String(url || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\/+$/, "")
+    .replace(/^https?:\/\//, "");
+}
+
 function FavoriteButton({ active, busy, onClick, className = "" }) {
   return (
     <button
@@ -129,6 +137,7 @@ export default function TrustedResourceDetailPage({ slug, initialDetail = null }
   ]);
 
   const primaryCta = resource?.helpfulLinks?.[0] || resource?.connectLinks?.[0];
+  const primaryHrefNorm = normalizeHref(primaryCta?.url || resource?.websiteUrl);
   const cat = resource?.trustedResourceCategory || resource?.category;
   const heroSrc = resource?.headerImage?.replace(/'/g, "%27") || "";
   const locationLabel =
@@ -147,13 +156,35 @@ export default function TrustedResourceDetailPage({ slug, initialDetail = null }
     shortLead &&
     shortLead !== String(overviewText).trim() &&
     shortLead.length < String(overviewText).length - 24;
-  const helpfulLinks = resource?.helpfulLinks || [];
+  const keyLinks = useMemo(() => {
+    const links = resource?.helpfulLinks || [];
+    return links.filter(
+      (link) => link?.type !== "website" && normalizeHref(link?.url) !== primaryHrefNorm,
+    );
+  }, [resource?.helpfulLinks, primaryHrefNorm]);
+  const programCards = useMemo(() => {
+    const cards = resource?.programCards || [];
+    const keyUrls = new Set(keyLinks.map((l) => normalizeHref(l.url)));
+    return cards.filter((card) => {
+      const href = normalizeHref(card?.url);
+      if (!href || href === primaryHrefNorm) return false;
+      if (keyUrls.has(href)) return false;
+      return true;
+    });
+  }, [resource?.programCards, keyLinks, primaryHrefNorm]);
   const showWebsiteFallback =
-    !hasOverview && !resource?.whoTheyServe && !resource?.programCards?.length && resource?.websiteUrl;
+    !hasOverview && !resource?.whoTheyServe && !programCards.length && !keyLinks.length && resource?.websiteUrl;
   const einLabel =
     resource?.einIdentityVerified && resource?.directoryNonprofitId
       ? formatEinDashed(resource.directoryNonprofitId)
       : "";
+  const sidebarQuickLinks = useMemo(
+    () =>
+      sidebarParts.quick.filter(
+        (link) => link?.type !== "website" && normalizeHref(link?.url) !== primaryHrefNorm,
+      ),
+    [sidebarParts.quick, primaryHrefNorm],
+  );
 
   return (
     <section className="card trustedDetailRoute" aria-label="Trusted resource profile">
@@ -280,7 +311,7 @@ export default function TrustedResourceDetailPage({ slug, initialDetail = null }
                 </div>
               ) : null}
               {resource.websiteUrl ? (
-                <div className="trustedDetailAtAGlance__item trustedDetailAtAGlance__item--wide">
+                <div className="trustedDetailAtAGlance__item">
                   <dt>Website</dt>
                   <dd>
                     <a href={resource.websiteUrl} target="_blank" rel="noopener noreferrer">
@@ -311,18 +342,6 @@ export default function TrustedResourceDetailPage({ slug, initialDetail = null }
                 <section className="card trustedDetailCard">
                   <h2 className="trustedDetailSectionTitle">Organization overview</h2>
                   <p className="trustedDetailProse trustedDetailProse--lead">{overviewText}</p>
-                  {resource.websiteUrl ? (
-                    <p className="trustedDetailInlineCta">
-                      <a
-                        className="btnSoft"
-                        href={resource.websiteUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        Official website
-                      </a>
-                    </p>
-                  ) : null}
                 </section>
               ) : null}
 
@@ -344,44 +363,29 @@ export default function TrustedResourceDetailPage({ slug, initialDetail = null }
                 </section>
               ) : null}
 
-              {helpfulLinks.length ? (
+              {keyLinks.length ? (
                 <section className="card trustedDetailCard">
                   <h2 className="trustedDetailSectionTitle">Key links</h2>
                   <p className="trustedDetailSectionLead">
-                    Primary ways to get help, volunteer, donate, or learn more on the organization&apos;s official
-                    channels.
+                    Ways to get help, volunteer, donate, or learn more on the organization&apos;s official channels.
                   </p>
                   <div className="trustedDetailLinkGrid trustedDetailLinkGrid--key">
-                    {helpfulLinks.map((link) => (
+                    {keyLinks.map((link) => (
                       <TrustedResourceLinkCard key={`helpful-${link.type}-${link.url}`} link={link} />
                     ))}
                   </div>
                 </section>
               ) : null}
 
-              {resource.programCards?.length ? (
+              {programCards.length ? (
                 <section className="card trustedDetailCard">
                   <h2 className="trustedDetailSectionTitle">Explore resources</h2>
                   <p className="trustedDetailSectionLead">
                     Key pages and programs from this organization — each opens on their official site.
                   </p>
                   <div className="trustedDetailProgramGrid">
-                    {resource.programCards.map((card) => (
+                    {programCards.map((card) => (
                       <TrustedResourceProgramCard key={card.id} card={card} />
-                    ))}
-                  </div>
-                </section>
-              ) : null}
-
-              {resource.connectLinks?.length ? (
-                <section className="card trustedDetailCard">
-                  <h2 className="trustedDetailSectionTitle">Connect with this organization</h2>
-                  <p className="trustedDetailSectionLead">
-                    Official ways to learn more, get support, volunteer, or follow their work.
-                  </p>
-                  <div className="trustedDetailLinkGrid">
-                    {resource.connectLinks.map((link) => (
-                      <TrustedResourceLinkCard key={`${link.type}-${link.url}`} link={link} />
                     ))}
                   </div>
                 </section>
@@ -410,7 +414,12 @@ export default function TrustedResourceDetailPage({ slug, initialDetail = null }
                 </section>
               ) : null}
 
-              {!hasOverview && !showWebsiteFallback && !resource.connectLinks?.length ? (
+              {!hasOverview &&
+              !showWebsiteFallback &&
+              !keyLinks.length &&
+              !programCards.length &&
+              !resource?.whoTheyServe &&
+              !resource?.services?.length ? (
                 <section className="card trustedDetailCard trustedDetailCard--muted">
                   <p className="trustedDetailProse">More information coming soon for this trusted resource.</p>
                 </section>
@@ -453,7 +462,7 @@ export default function TrustedResourceDetailPage({ slug, initialDetail = null }
                         Visit website
                       </a>
                     ) : null}
-                    {sidebarParts.quick.map((link) => (
+                    {sidebarQuickLinks.map((link) => (
                       <TrustedResourceLinkCard key={`quick-${link.type}-${link.url}`} link={link} />
                     ))}
                   </div>

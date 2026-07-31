@@ -5,7 +5,6 @@ import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
 export const runtime = "nodejs";
 
 const IRS_TABLE = "irs_eo_organizations";
-const DIRECTORY_TABLE = "nonprofits_search_app_v1";
 const ALLOWED_STATUS = new Set(["pending_review", "approved", "hidden", "rejected"]);
 
 export async function GET(_request, context) {
@@ -59,21 +58,27 @@ export async function PATCH(request, context) {
   if (error) return Response.json({ ok: false, error: error.message }, { status: 500 });
   if (!data) return Response.json({ ok: false, error: "not_found" }, { status: 404 });
 
-  // Mirror review status into public directory table (best-effort).
-  const dirPatch = {
-    directory_status: data.directory_status,
-    is_featured: data.is_featured,
-    is_trusted: data.is_trusted,
-    last_verified_at: data.last_verified_at,
-    updated_at: data.updated_at,
-  };
-  if (patch.website !== undefined) dirPatch.website = data.website;
-  if (patch.phone !== undefined) dirPatch.phone = data.phone;
-  if (patch.description !== undefined) dirPatch.description = data.description;
-
-  const dashed = `${ein.slice(0, 2)}-${ein.slice(2)}`;
-  await ctx.admin.from(DIRECTORY_TABLE).update(dirPatch).eq("ein", ein);
-  await ctx.admin.from(DIRECTORY_TABLE).update(dirPatch).eq("ein", dashed);
+  // `nonprofits_search_app_v1` is a materialized view — write `nonprofits`, then refresh.
+  if (patch.directory_status === "approved") {
+    const basePayload = {
+      ein,
+      name: data.org_name,
+      city: data.city,
+      state: data.state,
+      ntee_code: data.ntee_code,
+      subsection: data.irs_subsection,
+      is_veteran_org: !!data.serves_veterans,
+      is_first_responder_org: !!data.serves_first_responders,
+      updated_at: new Date().toISOString(),
+    };
+    const existing = await ctx.admin.from("nonprofits").select("ein").eq("ein", ein).maybeSingle();
+    if (existing.data?.ein) {
+      await ctx.admin.from("nonprofits").update(basePayload).eq("ein", ein);
+    } else {
+      await ctx.admin.from("nonprofits").insert(basePayload);
+    }
+    await ctx.admin.rpc("refresh_nonprofits_search_app_v1");
+  }
 
   await writeAdminAuditLog(ctx.admin, request, {
     actorWorkosUserId: String(ctx.user?.id || ""),

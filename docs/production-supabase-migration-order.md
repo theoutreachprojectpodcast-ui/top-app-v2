@@ -120,11 +120,14 @@ where platform_role is null
 | 39 | `safe_alignment_extension_2026_04.sql` | Safe alignment patch |
 | **40** | `supabase_public_rls_hardening_2026_06.sql` | **Required** — RLS on all public tables + `security_invoker` on all views (fixes Supabase linter 0013 + 0010) |
 | 41 | `irs_nonprofit_import_2026_07.sql` | IRS EO BMF import tables + directory IRS metadata columns (501(c)(19)) |
+| 41.1 | `irs_nonprofit_import_grant_service_role_2026_07.sql` | **Required if IRS import gets `permission denied`** — restores `service_role` GRANTs |
+| 41.2 | `irs_refresh_nonprofits_search_app_v1_2026_07.sql` | Refresh helper so IRS updates appear in directory search |
 | **42** | `member_connections_2026_07.sql` | Canonical friend/connection table + RLS deny for browser roles |
 | **42.1** | `member_connections_grant_service_role_2026_07.sql` | **Required if API gets `permission denied for table member_connections`** — restores `service_role` GRANTs |
 | **42.2** | `member_connections_migrate_follows_2026_07.sql` | Backfill pending/accepted/blocked from legacy `community_follows` encodings |
+| **42.3** | `member_connections_ONE_PASTE_grant_and_migrate_2026_07.sql` | **Preferred Production paste** — grant + migrate in one run |
 
-**Friend connections fix (run on Production when Community Connect is broken):** paste **42.1** then **42.2** in the SQL editor (or `pnpm --dir web run apply:member-connections:full:apply` with `SUPABASE_ACCESS_TOKEN` / `DATABASE_URL`). Until 42.1 is applied, app code falls back to `community_follows`.
+**Friend connections fix (run on Production when Community Connect is broken):** paste **42.3** (or **42.1** then **42.2**) in the SQL editor (or `pnpm --dir web run apply:member-connections:full:apply` with `SUPABASE_ACCESS_TOKEN` / `DATABASE_URL`). Until grants are applied, app code falls back to `community_follows`.
 
 **QA only (do not run on production):** `qa_irs_nonprofit_import_seed_2026_07.sql` — sample IRS import rows for admin review UI. See `docs/IRS_NONPROFIT_IMPORT.md`.
 
