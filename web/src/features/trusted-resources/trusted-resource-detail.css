@@ -713,7 +713,7 @@
 
   /*
    * Mobile header only: badge + title share one row; description/chips span full width below.
-   * Desktop/tablet (≥761px) keep the absolute logo overlay layout unchanged.
+   * Avoid display:contents (unreliable in mobile WebKit). Desktop/tablet overlay unchanged.
    */
   .trustedDetailHero {
     --trusted-detail-banner-h: 148px;
@@ -723,8 +723,9 @@
     border-radius: var(--radius-card, 16px) var(--radius-card, 16px) 0 0;
   }
 
-  .trustedDetailHero__panel {
+  .trustedDetailRoute .trustedDetailHero .trustedDetailHero__panel.card {
     padding: var(--ds-space-3, 12px) var(--ds-space-3, 12px) var(--ds-space-4, 16px);
+    padding-left: var(--ds-space-3, 12px);
     border-radius: 0 0 var(--radius-card, 16px) var(--radius-card, 16px);
   }
 
@@ -735,33 +736,32 @@
 
   .trustedDetailHero__copy {
     flex: 1 1 auto;
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    column-gap: var(--ds-space-3, 12px);
-    row-gap: var(--ds-space-2, 8px);
-    align-items: center;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--ds-space-2, 8px);
     padding-top: 0;
     min-width: 0;
   }
 
   .trustedDetailHero__eyebrow {
-    grid-column: 1 / -1;
     margin: 0;
   }
 
-  /* Promote logo + title into the copy grid so chips/mission cannot sit beside the badge. */
   .trustedDetailHero__identity {
-    display: contents;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--ds-space-3, 12px);
+    min-width: 0;
+    width: 100%;
   }
 
-  .trustedDetailHero__logoSlot {
+  .trustedDetailRoute .trustedDetailHero .trustedDetailHero__logoSlot {
     position: relative;
     left: auto;
     top: auto;
-    grid-column: 1;
-    grid-row: 2;
-    align-self: center;
-    justify-self: start;
+    bottom: auto;
     margin: 0;
     flex: 0 0 auto;
   }
@@ -777,8 +777,7 @@
   }
 
   .trustedDetailHero__title {
-    grid-column: 2;
-    grid-row: 2;
+    flex: 1 1 auto;
     align-self: center;
     min-width: 0;
     overflow-wrap: anywhere;
@@ -787,7 +786,6 @@
 
   .trustedDetailHero__chips,
   .trustedDetailHero__mission {
-    grid-column: 1 / -1;
     width: 100%;
     max-width: none;
     margin-top: 0;

@@ -136,12 +136,7 @@
   z-index: 3;
 }
 
-.trustedDetailHero__logoSlot {
-  position: absolute;
-  left: var(--ds-space-5, 20px);
-  bottom: -44px;
-  z-index: 2;
-}
+/* Detail hero logo positioning lives in trusted-resource-detail.css only. */
 
 .sponsorPremiumLogoShell {
   width: var(--org-logo-size, 144px);

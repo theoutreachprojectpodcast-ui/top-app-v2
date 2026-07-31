@@ -1143,16 +1143,16 @@ function TopAppInner({ initialNav = "home" }) {
               className="ds-page-intro ds-page-intro--withTrustedBadge"
               style={{ borderBottom: "none", marginBottom: 0, paddingBottom: 0 }}
             >
-              <AppIcon name="trusted" size={162} />
-              <div className="ds-page-intro__copy">
+              <div className="ds-page-intro__headline">
+                <AppIcon name="trusted" size={162} />
                 <h2>Trusted Resources</h2>
-                <p className="ds-page-intro__lead">
-                  Our Trusted Resource vetting process uses structured research, human review, and service validation to
-                  evaluate nonprofits that serve veterans, first responders, and their families. The result is clear Trust
-                  Scores and evidence-based reports that help families, donors, sponsors, and community partners identify
-                  credible organizations with confidence.
-                </p>
               </div>
+              <p className="ds-page-intro__lead">
+                Our Trusted Resource vetting process uses structured research, human review, and service validation to
+                evaluate nonprofits that serve veterans, first responders, and their families. The result is clear Trust
+                Scores and evidence-based reports that help families, donors, sponsors, and community partners identify
+                credible organizations with confidence.
+              </p>
             </div>
             <div className="row">
               <button className="btnSoft" onClick={() => setOverlay("applyTrustedResource")} type="button">Apply to Become a Trusted Resource</button>
