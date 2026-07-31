@@ -1,9 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import TrustedResourceCard from "@/features/trusted-resources/components/TrustedResourceCard";
 import { buildTrustedResourceViewModel } from "@/features/trusted-resources/domain/trustedResourceViewModel";
+import {
+  isTrustedResourceFavorited,
+  toggleTrustedResourceFavorite,
+} from "@/features/trusted-resources/domain/trustedFavoriteKeys";
 import { fetchTrustedResources } from "@/features/trusted-resources/api";
+import { useProfileData } from "@/features/profile/ProfileDataProvider";
+import { workosSignInLink } from "@/lib/auth/workosReturnTo";
 import { getSupabaseClient } from "@/lib/supabase/client";
 
 const SHIELD = "M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6z";
@@ -17,9 +23,25 @@ const SHIELD = "M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6z";
  */
 export default function TrustedPage() {
   const supabase = useMemo(() => getSupabaseClient(), []);
+  const {
+    isAuthenticated,
+    favoriteEins,
+    favoriteEntityKeys,
+    toggleFavoriteEin,
+    toggleFavoriteEntityKey,
+    entitlements,
+  } = useProfileData();
   const [rows, setRows] = useState([]);
   const [status, setStatus] = useState("Loading trusted resources...");
+  const [busyId, setBusyId] = useState("");
   const loadGeneration = useRef(0);
+
+  const canSave =
+    !!entitlements?.saveOrganizationsAccess ||
+    !!entitlements?.isPlatformAdmin ||
+    !!entitlements?.isPrivilegedStaff;
+
+  const signInHref = workosSignInLink("/trusted", null, "/trusted");
 
   async function loadTrusted() {
     const gen = (loadGeneration.current += 1);
@@ -51,6 +73,27 @@ export default function TrustedPage() {
       });
   }, [rows]);
 
+  const onToggleFavorite = useCallback(
+    (resource) => {
+      setBusyId(String(resource.id || resource.trustedResourceSlug || ""));
+      try {
+        toggleTrustedResourceFavorite({
+          resource,
+          isAuthenticated,
+          canSave,
+          toggleFavoriteEin,
+          toggleFavoriteEntityKey,
+          onRequestSignIn: () => {
+            window.location.assign(signInHref);
+          },
+        });
+      } finally {
+        window.setTimeout(() => setBusyId(""), 350);
+      }
+    },
+    [isAuthenticated, canSave, toggleFavoriteEin, toggleFavoriteEntityKey, signInHref],
+  );
+
   return (
     <section className="card trustedRouteCard">
       <div className="ds-page-intro" style={{ borderBottom: "none", marginBottom: 0, paddingBottom: 0 }}>
@@ -75,9 +118,26 @@ export default function TrustedPage() {
       </div>
       {status ? <p className="trustedRouteStatus">{status}</p> : null}
       <div className="results results--trustedBranded">
-        {resources.map((resource) => (
-          <TrustedResourceCard key={`trusted-resource-${resource.id}`} resource={resource} />
-        ))}
+        {resources.map((resource) => {
+          const id = String(resource.id || resource.trustedResourceSlug || "");
+          return (
+            <TrustedResourceCard
+              key={`trusted-resource-${id}`}
+              resource={resource}
+              favoritesEnabled={isAuthenticated && canSave}
+              isFavorite={isTrustedResourceFavorited(resource, favoriteEins, favoriteEntityKeys)}
+              onToggleFavorite={() => onToggleFavorite(resource)}
+              onRequestSignIn={
+                !isAuthenticated
+                  ? () => {
+                      window.location.assign(signInHref);
+                    }
+                  : undefined
+              }
+              favoriteBusy={busyId === id}
+            />
+          );
+        })}
       </div>
     </section>
   );

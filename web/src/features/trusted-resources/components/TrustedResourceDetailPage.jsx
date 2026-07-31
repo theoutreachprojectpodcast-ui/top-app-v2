@@ -1,15 +1,19 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Heart, MapPin, ShieldCheck } from "lucide-react";
 import NonprofitIcon from "@/features/nonprofits/components/NonprofitIcon";
 import OrganizationLogo from "@/components/shared/OrganizationLogo";
+import FavoriteStarButton from "@/components/shared/FavoriteStarButton";
 import { formatEinDashed } from "@/features/nonprofits/lib/einUtils";
 import TrustedResourceLinkCard from "@/features/trusted-resources/components/TrustedResourceLinkCard";
 import TrustedResourceProgramCard from "@/features/trusted-resources/components/TrustedResourceProgramCard";
 import { partitionForSidebar } from "@/features/trusted-resources/domain/trustedResourceConnectLinks";
+import {
+  isTrustedResourceFavorited,
+  toggleTrustedResourceFavorite,
+} from "@/features/trusted-resources/domain/trustedFavoriteKeys";
 import { getTrustedResourceDetailForSlug } from "@/features/trusted-resources/api/trustedResourceCatalogApi";
 import { useProfileData } from "@/features/profile/ProfileDataProvider";
 import { workosSignInLink, workosSignUpHref } from "@/lib/auth/workosReturnTo";
@@ -18,7 +22,7 @@ import { getSupabaseClient } from "@/lib/supabase/client";
 function formatReviewDate(iso) {
   const t = new Date(iso);
   if (Number.isNaN(t.getTime())) return "";
-  return t.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+  return t.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
 function normalizeHref(url) {
@@ -29,20 +33,9 @@ function normalizeHref(url) {
     .replace(/^https?:\/\//, "");
 }
 
-function FavoriteButton({ active, busy, onClick, className = "" }) {
-  return (
-    <button
-      type="button"
-      className={`btnSoft trustedDetailFavBtn${active ? " isActive" : ""}${className ? ` ${className}` : ""}`}
-      onClick={onClick}
-      disabled={busy}
-      aria-pressed={active}
-    >
-      <Heart className="trustedDetailFavBtn__icon" strokeWidth={2} fill={active ? "currentColor" : "none"} />
-      {active ? "Saved" : "Add to favorites"}
-    </button>
-  );
-}
+const PIN_PATH =
+  "M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z";
+const SHIELD_PATH = "M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6z";
 
 export default function TrustedResourceDetailPage({ slug, initialDetail = null }) {
   const pathname = usePathname();
@@ -54,15 +47,21 @@ export default function TrustedResourceDetailPage({ slug, initialDetail = null }
     favoriteEntityKeys,
     toggleFavoriteEin,
     toggleFavoriteEntityKey,
+    entitlements,
   } = useProfileData();
   const [resource, setResource] = useState(initialDetail);
   const [status, setStatus] = useState(initialDetail ? "" : "Loading trusted resource…");
   const [favBusy, setFavBusy] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
+  const favLock = useRef(false);
 
   const returnPath = `/trusted/${slug}`;
   const signInHref = workosSignInLink(pathname || returnPath, null, returnPath);
   const signUpHref = workosSignUpHref(returnPath);
+  const canSave =
+    !!entitlements?.saveOrganizationsAccess ||
+    !!entitlements?.isPlatformAdmin ||
+    !!entitlements?.isPrivilegedStaff;
 
   useEffect(() => {
     let cancelled = false;
@@ -102,35 +101,34 @@ export default function TrustedResourceDetailPage({ slug, initialDetail = null }
     };
   }, [supabase, slug, router, initialDetail]);
 
-  const favoriteKey = resource?.trustedResourceSlug ? `trusted:${resource.trustedResourceSlug}` : "";
-  const einDigits = String(resource?.ein || "").replace(/\D/g, "");
-  const hasEin = einDigits.length === 9;
-  const isFavorited =
-    (hasEin && favoriteEins.includes(einDigits)) ||
-    (favoriteKey && favoriteEntityKeys.includes(favoriteKey));
+  const isFavorited = isTrustedResourceFavorited(resource, favoriteEins, favoriteEntityKeys);
 
   const onFavorite = useCallback(() => {
-    if (!favoriteKey && !hasEin) return;
-    if (!isAuthenticated) {
-      window.location.assign(signInHref);
-      return;
-    }
+    if (!resource || favLock.current || favBusy) return;
+    favLock.current = true;
     setFavBusy(true);
     try {
-      // Prefer canonical EIN save so the org appears in Profile → Saved Organizations.
-      if (hasEin) {
-        toggleFavoriteEin(einDigits);
-        return;
-      }
-      if (favoriteKey) toggleFavoriteEntityKey(favoriteKey);
+      toggleTrustedResourceFavorite({
+        resource,
+        isAuthenticated,
+        canSave,
+        toggleFavoriteEin,
+        toggleFavoriteEntityKey,
+        onRequestSignIn: () => {
+          window.location.assign(signInHref);
+        },
+      });
     } finally {
-      setFavBusy(false);
+      window.setTimeout(() => {
+        favLock.current = false;
+        setFavBusy(false);
+      }, 400);
     }
   }, [
-    favoriteKey,
-    hasEin,
-    einDigits,
+    resource,
+    favBusy,
     isAuthenticated,
+    canSave,
     signInHref,
     toggleFavoriteEin,
     toggleFavoriteEntityKey,
@@ -184,6 +182,26 @@ export default function TrustedResourceDetailPage({ slug, initialDetail = null }
         (link) => link?.type !== "website" && normalizeHref(link?.url) !== primaryHrefNorm,
       ),
     [sidebarParts.quick, primaryHrefNorm],
+  );
+
+  const favoriteControl = (
+    <FavoriteStarButton
+      isFavorite={!!isFavorited}
+      busy={favBusy}
+      favoritesEnabled={isAuthenticated && canSave}
+      onToggle={onFavorite}
+      onRequestSignIn={
+        !isAuthenticated
+          ? () => {
+              window.location.assign(signInHref);
+            }
+          : undefined
+      }
+      labeled
+      organizationName={resource?.name || ""}
+      savedLabel="Saved"
+      unsavedLabel="Save"
+    />
   );
 
   return (
@@ -250,20 +268,31 @@ export default function TrustedResourceDetailPage({ slug, initialDetail = null }
               <div className="trustedDetailHero__panelInner">
                 <div className="trustedDetailHero__copy">
                   <p className="trustedDetailHero__eyebrow">
-                    <ShieldCheck className="trustedDetailHero__eyebrowIcon" aria-hidden strokeWidth={2} />
+                    <span className="iconWrap trustedDetailHero__eyebrowIcon" aria-hidden="true">
+                      <svg className="iconStroke" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                        <path d={SHIELD_PATH} />
+                      </svg>
+                    </span>
                     Curated Trusted Resource
                   </p>
                   <h1 className="trustedDetailHero__title">{resource.name}</h1>
                   <div className="trustedDetailHero__chips">
                     <span
                       className="trustedDetailHero__chip"
-                      style={{ "--tr-chip-tint": cat?.tint || "rgba(110, 168, 207, 0.22)" }}
+                      style={{
+                        "--tr-chip-tint":
+                          cat?.tint || "color-mix(in srgb, var(--color-accent) 22%, transparent)",
+                      }}
                     >
                       {cat?.label || "Trusted resource"}
                     </span>
                     {locationLabel ? (
                       <span className="trustedDetailHero__chip trustedDetailHero__chip--muted">
-                        <MapPin className="trustedDetailHero__chipIcon" aria-hidden strokeWidth={2} />
+                        <span className="iconWrap trustedDetailHero__chipIcon" aria-hidden="true">
+                          <svg className="iconStroke" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+                            <path d={PIN_PATH} />
+                          </svg>
+                        </span>
                         {locationLabel}
                       </span>
                     ) : null}
@@ -273,7 +302,7 @@ export default function TrustedResourceDetailPage({ slug, initialDetail = null }
                   ) : null}
                 </div>
                 <div className="trustedDetailHero__actions">
-                  <FavoriteButton active={!!isFavorited} busy={favBusy} onClick={onFavorite} />
+                  {favoriteControl}
                   {primaryCta ? (
                     <a
                       className="btnPrimary trustedDetailHero__cta"
@@ -385,7 +414,7 @@ export default function TrustedResourceDetailPage({ slug, initialDetail = null }
                   </p>
                   <div className="trustedDetailProgramGrid">
                     {programCards.map((card) => (
-                      <TrustedResourceProgramCard key={card.id} card={card} />
+                      <TrustedResourceProgramCard key={`${card.title}-${card.url || card.id}`} card={card} />
                     ))}
                   </div>
                 </section>
@@ -399,23 +428,19 @@ export default function TrustedResourceDetailPage({ slug, initialDetail = null }
               ) : null}
 
               {showWebsiteFallback ? (
-                <section className="card trustedDetailCard trustedDetailCard--muted">
+                <section className="card trustedDetailCard">
+                  <h2 className="trustedDetailSectionTitle">Website</h2>
                   <p className="trustedDetailProse">
-                    More information is available on the organization&apos;s official website.
+                    Visit the organization&apos;s official site for the latest programs and contact options.
                   </p>
-                  <a
-                    className="btnSoft"
-                    href={resource.websiteUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
+                  <a className="btnSoft" href={resource.websiteUrl} target="_blank" rel="noopener noreferrer">
                     Visit website
                   </a>
                 </section>
               ) : null}
 
               {!hasOverview &&
-              !showWebsiteFallback &&
+              !showShortLead &&
               !keyLinks.length &&
               !programCards.length &&
               !resource?.whoTheyServe &&
@@ -431,12 +456,7 @@ export default function TrustedResourceDetailPage({ slug, initialDetail = null }
                 <section className="card trustedDetailCard trustedDetailAsideActions">
                   <h2 className="trustedDetailSectionTitle">Quick actions</h2>
                   <div className="trustedDetailAsideActionStack">
-                    <FavoriteButton
-                      active={!!isFavorited}
-                      busy={favBusy}
-                      onClick={onFavorite}
-                      className="trustedDetailFavBtn--block"
-                    />
+                    <div className="trustedDetailAsideFav">{favoriteControl}</div>
                     {!isAuthenticated ? (
                       <p className="trustedDetailSignInHint">
                         <a href={signInHref}>Sign in</a> or{" "}
@@ -499,18 +519,6 @@ export default function TrustedResourceDetailPage({ slug, initialDetail = null }
                         <dd>{locationLabel}</dd>
                       </>
                     ) : null}
-                    {cat?.label ? (
-                      <>
-                        <dt>Focus area</dt>
-                        <dd>{cat.label}</dd>
-                      </>
-                    ) : null}
-                    {resource.isVerified ? (
-                      <>
-                        <dt>Listing</dt>
-                        <dd>Curated Trusted Resource</dd>
-                      </>
-                    ) : null}
                     {einLabel ? (
                       <>
                         <dt>EIN</dt>
@@ -523,31 +531,16 @@ export default function TrustedResourceDetailPage({ slug, initialDetail = null }
                         <dd>{formatReviewDate(resource.lastReviewedAt)}</dd>
                       </>
                     ) : null}
-                    {resource.detailReviewStatus ? (
-                      <>
-                        <dt>Review status</dt>
-                        <dd>{resource.detailReviewStatus}</dd>
-                      </>
-                    ) : null}
                   </dl>
                   {resource.einIdentityVerified && resource.directoryNonprofitId ? (
-                    <Link
-                      className="trustedDetailDirectoryLink"
-                      href={`/nonprofit/${resource.directoryNonprofitId}`}
-                    >
-                      View nonprofit directory profile →
+                    <Link className="btnSoft" href={`/nonprofit/${resource.directoryNonprofitId}`}>
+                      View directory profile
                     </Link>
                   ) : null}
                 </section>
               </div>
             </aside>
           </div>
-
-          <p className="trustedDetailBackRow">
-            <Link className="trustedDetailBackLink" href="/trusted">
-              ← All Trusted Resources
-            </Link>
-          </p>
         </div>
       )}
     </section>

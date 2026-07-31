@@ -1,14 +1,32 @@
 "use client";
 
-import { useId, useMemo } from "react";
+import { useId, useMemo, useRef } from "react";
 import Link from "next/link";
 import OrganizationLogo from "@/components/shared/OrganizationLogo";
+import FavoriteStarButton from "@/components/shared/FavoriteStarButton";
 import NonprofitIcon from "@/features/nonprofits/components/NonprofitIcon";
 import NonprofitSocialLinks from "@/features/nonprofits/components/NonprofitSocialLinks";
 
-/** @param {{ resource: object }} props */
-export default function TrustedResourceCard({ resource }) {
+/**
+ * @param {{
+ *   resource: object,
+ *   favoritesEnabled?: boolean,
+ *   isFavorite?: boolean,
+ *   onToggleFavorite?: () => void,
+ *   onRequestSignIn?: () => void,
+ *   favoriteBusy?: boolean,
+ * }} props
+ */
+export default function TrustedResourceCard({
+  resource,
+  favoritesEnabled = false,
+  isFavorite = false,
+  onToggleFavorite,
+  onRequestSignIn,
+  favoriteBusy = false,
+}) {
   const titleId = useId();
+  const clickLock = useRef(false);
   const {
     id,
     name,
@@ -61,6 +79,19 @@ export default function TrustedResourceCard({ resource }) {
 
   const safeHero = headerImage ? headerImage.replace(/'/g, "%27") : "";
   const resourceHref = detailPath || (trustedResourceSlug ? `/trusted/${trustedResourceSlug}` : "");
+  const showFavorite = favoritesEnabled || !!onRequestSignIn;
+
+  function handleToggle() {
+    if (clickLock.current || favoriteBusy) return;
+    clickLock.current = true;
+    try {
+      onToggleFavorite?.();
+    } finally {
+      window.setTimeout(() => {
+        clickLock.current = false;
+      }, 400);
+    }
+  }
 
   return (
     <article
@@ -106,13 +137,27 @@ export default function TrustedResourceCard({ resource }) {
             />
           </div>
           <div className="trustedResourceCard__titleBlock">
-            <h3 className="trustedResourceCard__title" id={titleId}>
-              <span className="trustedResourceCard__titleText">{name}</span>
-            </h3>
+            <div className="trustedResourceCard__titleRow">
+              <h3 className="trustedResourceCard__title" id={titleId}>
+                <span className="trustedResourceCard__titleText">{name}</span>
+              </h3>
+              {showFavorite ? (
+                <div className="trustedResourceCard__favSlot">
+                  <FavoriteStarButton
+                    isFavorite={!!isFavorite}
+                    busy={favoriteBusy}
+                    favoritesEnabled={favoritesEnabled}
+                    onToggle={handleToggle}
+                    onRequestSignIn={onRequestSignIn}
+                    organizationName={name}
+                  />
+                </div>
+              ) : null}
+            </div>
             <div className="trustedResourceCard__chipRow">
               <span
                 className="trustedResourceCard__categoryChip"
-                style={{ "--tr-chip-tint": cat?.tint || "rgba(110, 168, 207, 0.22)" }}
+                style={{ "--tr-chip-tint": cat?.tint || "color-mix(in srgb, var(--color-accent) 22%, transparent)" }}
               >
                 {cat?.label || "Trusted resource"}
               </span>
