@@ -3457,6 +3457,29 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   opacity: 1;
   border-color: var(--color-border-active);
 }
+.favBtn--labeled {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ds-space-2, 8px);
+  font-size: var(--text-body-sm);
+  font-weight: 700;
+  padding: 0 var(--ds-space-3, 12px);
+}
+.favBtn__glyph {
+  line-height: 1;
+}
+.favBtn__text {
+  line-height: 1.2;
+}
+.favBtn--block {
+  width: 100%;
+  justify-content: center;
+}
+.favBtn--busy,
+.favBtn:disabled {
+  opacity: 0.72;
+  cursor: wait;
+}
 .nonprofitCardTagline {
   margin: 6px 0 0;
   font-size: var(--text-caption);

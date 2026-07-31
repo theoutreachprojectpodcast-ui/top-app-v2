@@ -191,6 +191,30 @@
   min-width: 0;
 }
 
+.trustedResourceCard__titleRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--ds-space-2, 8px);
+}
+
+.trustedResourceCard__title {
+  margin: 0;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.trustedResourceCard__favSlot {
+  position: relative;
+  z-index: 3;
+  flex-shrink: 0;
+  pointer-events: auto;
+}
+
+.trustedResourceCard--navigable .trustedResourceCard__favSlot {
+  pointer-events: auto;
+}
+
 .trustedResourceCard__chipRow {
   display: flex;
   flex-wrap: wrap;

@@ -238,24 +238,13 @@
   text-decoration: none;
 }
 
-.trustedDetailFavBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 44px;
+.trustedDetailAsideFav .favBtn--labeled,
+.trustedDetailHero__actions .favBtn--labeled {
+  gap: var(--ds-space-2, 8px);
 }
 
-.trustedDetailFavBtn__icon {
-  width: 18px;
-  height: 18px;
-}
-
-.trustedDetailFavBtn.isActive {
-  border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-border));
-  color: var(--color-accent);
-}
-
-.trustedDetailFavBtn--block {
+.trustedDetailAsideFav .favBtn--block,
+.trustedDetailAsideFav .favBtn {
   width: 100%;
   justify-content: center;
 }
@@ -752,13 +741,13 @@
   }
 
   .trustedDetailHero__actions .btnPrimary,
-  .trustedDetailFavBtn {
+  .trustedDetailHero__actions .favBtn {
     width: 100%;
     justify-content: center;
   }
 
   .trustedDetailAsideCta,
-  .trustedDetailFavBtn--block {
+  .trustedDetailAsideFav .favBtn {
     min-height: 44px;
   }
 }

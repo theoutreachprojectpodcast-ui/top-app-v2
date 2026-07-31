@@ -172,6 +172,7 @@ export function buildTrustedResourceViewModel(row = {}) {
 
   return {
     id,
+    ein: einIdentityVerified ? einNorm : "",
     directoryNonprofitId: einNorm,
     sourceOrganizationId,
     trustedResourceSlug: slug,
