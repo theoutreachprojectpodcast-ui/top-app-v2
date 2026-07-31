@@ -17,16 +17,19 @@ import {
 
 function profileSummary(row) {
   if (!row) return null;
+  const meta = row.metadata && typeof row.metadata === "object" ? row.metadata : {};
   const name =
     [row.first_name, row.last_name].filter(Boolean).join(" ").trim() ||
     String(row.display_name || "").trim() ||
     "Member";
+  const role = String(row.job_title || meta.identityRole || meta.role || "").trim();
+  const location = [meta.city || row.city, meta.state || row.state].filter(Boolean).join(", ");
   return {
     id: row.id,
     name,
     avatar_url: row.profile_photo_url || "",
-    role: row.role_title || row.occupation || "",
-    location: [row.city, row.state].filter(Boolean).join(", "),
+    role,
+    location,
   };
 }
 
@@ -44,7 +47,7 @@ async function loadProfilesByIds(admin, ids) {
   if (!unique.length) return new Map();
   const { data, error } = await admin
     .from("top_profiles")
-    .select("id,first_name,last_name,display_name,profile_photo_url,role_title,occupation,city,state")
+    .select("id,first_name,last_name,display_name,profile_photo_url,job_title,metadata")
     .in("id", unique);
   if (error) throw error;
   const map = new Map();
