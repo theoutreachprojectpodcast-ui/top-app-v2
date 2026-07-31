@@ -117,12 +117,15 @@ export default function CommunityConnectionsPanel({
         }
       } else {
         setBundle(null);
+        const apiMessage = String(connectionResult.message || "").trim();
         setConnectionsError(
           connectionResult.error === "membership_required"
             ? "Pro membership is required to manage connections."
             : connectionResult.error === "profile_required"
               ? "Your profile is still setting up. Refresh in a moment to manage connections."
-              : "Could not load your connections. Try again.",
+              : connectionResult.error === "unauthorized" || connectionResult.error === "unauthenticated"
+                ? "Sign in again to manage connections."
+                : apiMessage || "Could not load your connections. Try again.",
         );
       }
       setLoading(false);
@@ -170,7 +173,7 @@ export default function CommunityConnectionsPanel({
   const summary = loading
     ? "Loading members…"
     : connectionsError
-      ? "Connections unavailable"
+      ? connectionsError
       : [
           `${connectedCount} friend${connectedCount === 1 ? "" : "s"}`,
           incomingCount ? `${incomingCount} incoming` : "",

@@ -1,12 +1,15 @@
 -- ============================================================
--- SAFE TO RUN in Supabase SQL Editor (non-destructive)
--- Member connections workflow completion:
---   * Explicit status timestamps on member_connections
---   * friends visibility for community_posts
--- Idempotent — safe to re-run.
+-- PRODUCTION FIX — paste ALL of this into Supabase SQL Editor → Run
+-- Project: https://supabase.com/dashboard/project/xbtfoundwmhrqrbcuqcw/sql/new
+--
+-- Why the previous paste failed:
+--   The DO $$ … END $$ block hit a parser error and the editor rolled
+--   the whole script back (including grants + timestamp columns).
+--
+-- This version uses only plain ALTER/GRANT statements.
 -- ============================================================
 
--- Status-specific timestamps (responded_at remains for backwards compatibility).
+-- A) Timestamp columns
 alter table public.member_connections
   add column if not exists accepted_at timestamptz;
 
@@ -19,12 +22,9 @@ alter table public.member_connections
 alter table public.member_connections
   add column if not exists removed_at timestamptz;
 
-comment on column public.member_connections.accepted_at is 'When status became accepted.';
-comment on column public.member_connections.declined_at is 'When status became declined.';
-comment on column public.member_connections.cancelled_at is 'When status became cancelled by requester.';
-comment on column public.member_connections.removed_at is 'When an accepted friendship was removed.';
+alter table public.member_connections
+  add column if not exists blocked_by_profile_id uuid references public.top_profiles (id) on delete set null;
 
--- Backfill timestamps from responded_at where possible.
 update public.member_connections
 set accepted_at = coalesce(accepted_at, responded_at, updated_at)
 where status = 'accepted' and accepted_at is null;
@@ -41,39 +41,33 @@ update public.member_connections
 set removed_at = coalesce(removed_at, responded_at, updated_at)
 where status = 'removed' and removed_at is null;
 
--- Ensure service_role can manage connections (documented production failure mode).
+-- B) CRITICAL: service_role must read/write this table (API uses it)
 grant select, insert, update, delete on table public.member_connections to service_role;
 grant all on table public.member_connections to postgres;
+alter table public.member_connections enable row level security;
 
--- Friends-only post visibility (in addition to community | private | public).
-do $$
-declare
-  conname text;
-begin
-  select c.conname into conname
-  from pg_catalog.pg_constraint c
-  join pg_catalog.pg_class t on c.conrelid = t.oid
-  join pg_catalog.pg_namespace n on t.relnamespace = n.oid
-  where n.nspname = 'public'
-    and t.relname = 'community_posts'
-    and c.conname = 'community_posts_visibility_chk';
+-- C) Friends post visibility (no DO block)
+alter table public.community_posts
+  drop constraint if exists community_posts_visibility_chk;
 
-  if conname is not null then
-    execute format('alter table public.community_posts drop constraint %I', conname);
-  end if;
-
-  alter table public.community_posts
-    add constraint community_posts_visibility_chk check (
-      visibility in ('community', 'private', 'public', 'friends')
-    );
-exception
-  when duplicate_object then
-    null;
-end
-$$;
+alter table public.community_posts
+  add constraint community_posts_visibility_chk
+  check (visibility in ('community', 'private', 'public', 'friends'));
 
 comment on column public.community_posts.visibility is 'community | private | public | friends';
 
 create index if not exists community_posts_friends_visibility_idx
   on public.community_posts (author_profile_id, created_at desc)
   where deleted_at is null and status = 'approved' and visibility = 'friends';
+
+-- D) Quick verification (should return true / column names)
+select
+  has_table_privilege('service_role', 'public.member_connections', 'SELECT') as service_can_select,
+  has_table_privilege('service_role', 'public.member_connections', 'INSERT') as service_can_insert;
+
+select column_name
+from information_schema.columns
+where table_schema = 'public'
+  and table_name = 'member_connections'
+  and column_name in ('accepted_at', 'declined_at', 'cancelled_at', 'removed_at')
+order by column_name;
