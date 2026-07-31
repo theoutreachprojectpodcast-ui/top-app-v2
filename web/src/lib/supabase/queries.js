@@ -79,10 +79,62 @@ export async function queryTrustedOrgsByEin(supabase, eins) {
     .in("ein", eins);
 }
 
-/** Normalized 9-digit EINs only */
+/**
+ * Batch fetch legacy `nonprofits` rows by normalized EIN (digits + dashed).
+ * Used when the search materialized view is stale or missing a row that still exists upstream.
+ */
+export async function queryLegacyOrgsByEins(supabase, normalizedEins = []) {
+  const uniq = [...new Set(normalizedEins.map((e) => normalizeEinDigits(e)).filter((e) => e.length === 9))];
+  if (!uniq.length) return { data: [], byEin: new Map(), error: null };
+  const variants = [...new Set(uniq.flatMap((e) => [e, `${e.slice(0, 2)}-${e.slice(2)}`]))];
+  const res = await supabase
+    .from(TRUSTED_ORGS_SOURCE)
+    .select("ein,name,org_name,city,state,ntee_code,logo_url,website,directory_status")
+    .in("ein", variants);
+  if (res.error) {
+    // Older schemas may lack org_name / directory_status — retry minimal columns.
+    const msg = String(res.error.message || "").toLowerCase();
+    if (/org_name|directory_status|schema cache|could not find/i.test(msg)) {
+      const retry = await supabase
+        .from(TRUSTED_ORGS_SOURCE)
+        .select("ein,name,city,state,ntee_code,logo_url,website")
+        .in("ein", variants);
+      if (retry.error) return { data: [], byEin: new Map(), error: retry.error };
+      const byEin = new Map();
+      for (const row of retry.data || []) {
+        const k = normalizeEinDigits(row?.ein);
+        if (k.length === 9 && !byEin.has(k)) {
+          byEin.set(k, {
+            ...row,
+            org_name: row.name || "",
+            ein_identity_verified: true,
+          });
+        }
+      }
+      return { data: uniq.map((k) => byEin.get(k)).filter(Boolean), byEin, error: null };
+    }
+    return { data: [], byEin: new Map(), error: res.error };
+  }
+  const byEin = new Map();
+  for (const row of res.data || []) {
+    const k = normalizeEinDigits(row?.ein);
+    if (k.length === 9 && !byEin.has(k)) {
+      byEin.set(k, {
+        ...row,
+        org_name: row.org_name || row.name || "",
+        ein_identity_verified: true,
+      });
+    }
+  }
+  return { data: uniq.map((k) => byEin.get(k)).filter(Boolean), byEin, error: null };
+}
+
+/** Normalized 9-digit EINs (also matches dashed EIN column values). */
 export async function queryDirectoryEnrichmentByEins(supabase, normalizedEins = []) {
-  if (!normalizedEins.length) return { data: [], error: null };
-  return supabase.from(DIRECTORY_ENRICHMENT_SOURCE).select("*").in("ein", normalizedEins);
+  const uniq = [...new Set(normalizedEins.map((e) => normalizeEinDigits(e)).filter((e) => e.length === 9))];
+  if (!uniq.length) return { data: [], error: null };
+  const variants = [...new Set(uniq.flatMap((e) => [e, `${e.slice(0, 2)}-${e.slice(2)}`]))];
+  return supabase.from(DIRECTORY_ENRICHMENT_SOURCE).select("*").in("ein", variants);
 }
 
 export async function queryDirectoryEnrichmentByEin(supabase, normalizedEin) {

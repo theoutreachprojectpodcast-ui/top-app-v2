@@ -60,7 +60,7 @@ export function toggleTrustedResourceFavorite({
   }
   if (!canSave) return { ok: false, reason: "membership_required" };
   if (hasEin) {
-    toggleFavoriteEin(ein);
+    toggleFavoriteEin(ein, resource);
     return { ok: true, mode: "ein", key: ein };
   }
   toggleFavoriteEntityKey(entityKey);

@@ -87,6 +87,10 @@ function filterSavedOrgCards(cards, eins) {
   });
 }
 
+function cardHasRealOrgName(card) {
+  return Boolean(String(card?.name || card?.orgName || "").trim()) && !card?.organizationUnavailable;
+}
+
 function mergeSavedOrgCardRows(existingCards, rowInputs, eins) {
   const order = orderSavedEins(eins);
   const allowed = new Set(order);
@@ -103,6 +107,9 @@ function mergeSavedOrgCardRows(existingCards, rowInputs, eins) {
       String(row?.orgName || row?.canonicalDisplayName || row?.name || "").trim(),
     );
     const unresolved = row?.savedResolutionStatus === "unavailable" || !hasRealName;
+    const prev = byEin.get(key);
+    // Don't replace a known good name with a transient unavailable stub (cards fetch can race POST).
+    if (unresolved && prev && cardHasRealOrgName(prev)) continue;
     byEin.set(key, {
       ...card,
       savedResolutionStatus: unresolved ? "unavailable" : row?.savedResolutionStatus || "resolved",
@@ -1126,7 +1133,7 @@ export function useProfileDataState(supabase) {
     }
   }
 
-  function toggleFavoriteEin(ein) {
+  function toggleFavoriteEin(ein, sourceRow = null) {
     const id = normalizeEinDigits(ein);
     if (id.length !== 9) return;
     if (
@@ -1137,7 +1144,34 @@ export function useProfileDataState(supabase) {
     ) {
       return;
     }
-    const next = favoriteEins.includes(id) ? favoriteEins.filter((x) => x !== id) : [id, ...favoriteEins];
+    const adding = !favoriteEins.includes(id);
+    const next = adding ? [id, ...favoriteEins] : favoriteEins.filter((x) => x !== id);
+    // Seed a named card immediately so Profile never flashes "Saved organization" / unavailable
+    // while the save POST and cards GET race.
+    if (adding && sourceRow && typeof sourceRow === "object") {
+      const seedName = String(
+        sourceRow.orgName || sourceRow.name || sourceRow.canonicalDisplayName || "",
+      ).trim();
+      if (seedName) {
+        setSavedOrganizations((prev) =>
+          mergeSavedOrgCardRows(
+            prev,
+            [
+              {
+                ...sourceRow,
+                ein: id,
+                einNormalized: id,
+                orgName: seedName,
+                nonprofitId: id,
+                savedResolutionStatus: "resolved",
+                einIdentityVerified: true,
+              },
+            ],
+            next,
+          ),
+        );
+      }
+    }
     setFavoriteEinList(next);
   }
 

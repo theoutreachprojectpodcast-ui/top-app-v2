@@ -5,13 +5,14 @@
 import assert from "node:assert/strict";
 import {
   buildSavedOrgFallbackRow,
+  nonprofitExistsForSave,
   overlayNonprofitProfileOnDirectoryRow,
   resolveSavedOrganizationDirectoryRows,
 } from "../src/lib/savedOrganizations/resolveSavedOrganizations.js";
 import { ORGANIZATION_UNAVAILABLE_LABEL } from "../src/lib/savedOrganizations/savedOrganizationLabels.js";
 import { mapNonprofitCardRow } from "../src/features/nonprofits/mappers/nonprofitCardMapper.js";
 
-function mockSupabase({ directory = [], enrichment = [], profiles = [] } = {}) {
+function mockSupabase({ directory = [], enrichment = [], profiles = [], legacy = [], trusted = [] } = {}) {
   return {
     from(table) {
       const rows =
@@ -21,7 +22,11 @@ function mockSupabase({ directory = [], enrichment = [], profiles = [] } = {}) {
             ? enrichment
             : table === "nonprofits_search_app_v1"
               ? directory
-              : [];
+              : table === "nonprofits"
+                ? legacy
+                : table === "trusted_resources"
+                  ? trusted
+                  : [];
       const state = { filters: [] };
       const api = {
         select() {
@@ -111,6 +116,41 @@ function filterRows(rows, filters) {
   assert.equal(rows[0].savedResolutionStatus, "resolved");
   assert.match(String(rows[0].orgName), /Red Cross/i);
 }
+
+// --- resolve: legacy nonprofits table when search view misses ---
+{
+  const sb = mockSupabase({
+    directory: [],
+    legacy: [{ ein: "987654321", name: "Legacy Food Bank", city: "Austin", state: "TX" }],
+  });
+  const rows = await resolveSavedOrganizationDirectoryRows(sb, ["987654321"]);
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].savedResolutionStatus, "resolved");
+  assert.match(String(rows[0].orgName), /Food Bank/i);
+}
+
+// --- resolve: trusted catalog when only curated listing has the EIN ---
+{
+  const sb = mockSupabase({
+    directory: [],
+    trusted: [{ ein: "112233445", display_name: "Shepherds Light Foundation", slug: "shepherds-light" }],
+  });
+  const rows = await resolveSavedOrganizationDirectoryRows(sb, ["112233445"]);
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].savedResolutionStatus, "resolved");
+  assert.match(String(rows[0].orgName), /Shepherds/i);
+}
+
+// --- exists: legacy nonprofits count as saveable ---
+{
+  const sb = mockSupabase({
+    directory: [],
+    legacy: [{ ein: "555666777", name: "Only In Legacy Table" }],
+  });
+  assert.equal(await nonprofitExistsForSave(sb, "555666777"), true);
+  assert.equal(await nonprofitExistsForSave(sb, "000000000"), false);
+}
+
 
 // --- resolve: profile override when directory missing ---
 {

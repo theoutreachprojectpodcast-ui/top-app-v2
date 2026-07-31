@@ -710,7 +710,20 @@ function TopAppInner({ initialNav = "home" }) {
     }
     for (const card of savedOrganizations) {
       const key = card.einNormalized || normalizeEinDigits(card.ein);
-      if (key.length === 9) byEin.set(key, card);
+      if (key.length !== 9) continue;
+      const existing = byEin.get(key);
+      const incomingUnavailable =
+        card.organizationUnavailable === true ||
+        card.savedResolutionStatus === "unavailable" ||
+        !String(card.name || "").trim();
+      const existingNamed =
+        existing &&
+        existing.organizationUnavailable !== true &&
+        existing.savedResolutionStatus !== "unavailable" &&
+        String(existing.name || "").trim();
+      // Prefer a named directory/trusted fallback over a transient unresolved API stub.
+      if (incomingUnavailable && existingNamed) continue;
+      byEin.set(key, card);
     }
     return favoriteEins
       .map((ein) => {
@@ -1159,10 +1172,10 @@ function TopAppInner({ initialNav = "home" }) {
                     actionMode="trustedResource"
                     favoritesEnabled={isAuthenticated && canSaveOrganizations}
                     isFavorite={trustedIsFavorite}
-                    onToggleFavorite={(key) => {
+                    onToggleFavorite={(key, sourceCard) => {
                       const normalizedEin = normalizeEinDigits(key);
                       if (normalizedEin.length === 9) {
-                        toggleFavoriteEin(normalizedEin);
+                        toggleFavoriteEin(normalizedEin, sourceCard || card);
                         return;
                       }
                       if (trustedFavoriteKey) toggleFavoriteEntityKey(trustedFavoriteKey);

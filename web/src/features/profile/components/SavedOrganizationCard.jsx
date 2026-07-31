@@ -13,13 +13,13 @@ export default function SavedOrganizationCard({ card, onToggleFavorite }) {
     ? ORGANIZATION_UNAVAILABLE_LABEL
     : String(card?.name || "").trim();
   const einDigits = card.einNormalized?.length === 9 ? card.einNormalized : normalizeEinDigits(card.ein);
-  const favoriteKey = String(card.ein || card.id || einDigits || "").trim();
+  const favoriteKey = einDigits.length === 9 ? einDigits : String(card.ein || card.id || "").trim();
   const location = unavailable ? "" : String(card.location || "").trim();
 
   function onFavoriteClick(event) {
     event.preventDefault();
     event.stopPropagation();
-    if (favoriteKey && onToggleFavorite) onToggleFavorite(favoriteKey);
+    if (favoriteKey && onToggleFavorite) onToggleFavorite(favoriteKey, card);
   }
 
   return (

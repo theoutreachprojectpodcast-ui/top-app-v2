@@ -16,15 +16,18 @@ export default function NonprofitCard({
   onRequestSignIn,
   actionMode = "directory",
 }) {
-  const favoriteKey = String(card.ein || card.id || "").trim();
+  const einDigits =
+    card.einNormalized?.length === 9 ? card.einNormalized : normalizeEinDigits(card.ein);
+  const favoriteKey =
+    einDigits.length === 9
+      ? einDigits
+      : String(card.einNormalized || card.ein || card.id || "").trim();
   const isDirectory = actionMode === "directory";
   const isTrustedResourcesCard = actionMode === "trustedResource";
   const listingPhoto = isTrustedResourcesCard
     ? String(card.heroImageUrl || "").trim()
     : String(card.heroImageUrl || card.thumbnailUrl || "").trim();
   const categoryKey = card.category?.key || "unknownGeneral";
-  const einDigits =
-    card.einNormalized?.length === 9 ? card.einNormalized : normalizeEinDigits(card.ein);
   const trustedSlug = String(card.trustedResourceSlug || "").trim().toLowerCase();
   const trustedDetailPath = isTrustedResourcesCard && trustedSlug ? `/trusted/${trustedSlug}` : "";
   const directoryProfilePath = einDigits.length === 9 ? `/nonprofit/${einDigits}` : "";
@@ -68,7 +71,7 @@ export default function NonprofitCard({
   function onFavoriteClick(event) {
     event.preventDefault();
     event.stopPropagation();
-    if (favoriteKey && onToggleFavorite) onToggleFavorite(favoriteKey);
+    if (favoriteKey && onToggleFavorite) onToggleFavorite(favoriteKey, card);
   }
 
   function onGuestFavoriteClick(event) {

@@ -4,7 +4,9 @@ import { mapDirectoryRow } from "@/lib/supabase/mappers";
 import {
   queryDirectoryEnrichmentByEins,
   queryDirectoryOrgsByEins,
+  queryLegacyOrgsByEins,
 } from "@/lib/supabase/queries";
+import { TRUSTED_RESOURCES_TABLE } from "@/lib/supabase/trustedResourcesCatalog";
 import { isPlaceholderOrgName } from "@/lib/formatOrgName";
 
 const TRUSTED_PROFILES_SOURCE = "nonprofit_profiles";
@@ -41,6 +43,8 @@ export function overlayNonprofitProfileOnDirectoryRow(row = {}, prof) {
     x_url: firstNonEmpty(prof.x_url, row.x_url, row.twitter),
     linkedin_url: firstNonEmpty(prof.linkedin_url, row.linkedin_url, row.linkedin),
     short_description: firstNonEmpty(prof.description, row.short_description, row.description),
+    city: firstNonEmpty(row.city, prof.city, prof.address_city),
+    state: firstNonEmpty(row.state, prof.state, prof.address_state),
   };
 }
 
@@ -66,8 +70,8 @@ export function buildSavedOrgFallbackRow(ein, enrich = null, prof = null) {
     org_name: name,
     display_name: name,
     canonical_display_name: firstNonEmpty(e?.canonical_display_name, name),
-    city: firstNonEmpty(e?.city),
-    state: firstNonEmpty(e?.state),
+    city: firstNonEmpty(e?.city, p?.city, p?.address_city),
+    state: firstNonEmpty(e?.state, p?.state, p?.address_state),
     ntee_code: firstNonEmpty(e?.ntee_code),
     website: firstNonEmpty(e?.website_url, p?.website),
     logo_url: firstNonEmpty(e?.logo_url, p?.logo_url),
@@ -90,6 +94,54 @@ function mappedName(mapped) {
   );
 }
 
+async function queryNonprofitProfilesByEins(supabase, variants) {
+  const fullSelect =
+    "ein,website,logo_url,facebook_url,instagram_url,youtube_url,x_url,linkedin_url,display_name_override,organization_name,legal_name,description,city,state,address_city,address_state";
+  const full = await supabase.from(TRUSTED_PROFILES_SOURCE).select(fullSelect).in("ein", variants);
+  if (!full.error) return full;
+  const msg = String(full.error.message || "").toLowerCase();
+  if (!/organization_name|legal_name|address_city|address_state|schema cache|could not find/i.test(msg)) {
+    return full;
+  }
+  return supabase
+    .from(TRUSTED_PROFILES_SOURCE)
+    .select(
+      "ein,website,logo_url,facebook_url,instagram_url,youtube_url,x_url,linkedin_url,display_name_override,description",
+    )
+    .in("ein", variants);
+}
+
+async function queryTrustedCatalogByEins(supabase, variants) {
+  const table =
+    (typeof process !== "undefined" && process.env.NEXT_PUBLIC_TRUSTED_RESOURCES_TABLE) ||
+    TRUSTED_RESOURCES_TABLE ||
+    "trusted_resources";
+  return supabase
+    .from(table)
+    .select("ein,display_name,slug,website_url,logo_url,city,state,location_label")
+    .in("ein", variants);
+}
+
+function trustedCatalogToFallbackRow(ein, trusted) {
+  if (!trusted) return null;
+  const name = firstNonEmpty(trusted.display_name);
+  if (!name) return null;
+  return {
+    ein,
+    org_name: name,
+    display_name: name,
+    canonical_display_name: name,
+    city: firstNonEmpty(trusted.city),
+    state: firstNonEmpty(trusted.state),
+    website: firstNonEmpty(trusted.website_url),
+    logo_url: firstNonEmpty(trusted.logo_url),
+    public_slug: firstNonEmpty(trusted.slug),
+    ein_identity_verified: true,
+    _savedOrgFallback: true,
+    _trustedCatalogFallback: true,
+  };
+}
+
 /**
  * Ordered list of mapDirectoryRow outputs for saved EINs (directory + enrichment + profile overlay).
  * Always returns one row per requested EIN (after normalization). Unresolvable EINs get an empty
@@ -105,9 +157,11 @@ export async function resolveSavedOrganizationDirectoryRows(supabase, einOrdered
   if (!normalized.length || !supabase) return [];
 
   const uniq = [...new Set(normalized)];
+  const variants = einVariants(uniq);
+
   const { byEin: dirByEin, error: dirErr } = await queryDirectoryOrgsByEins(supabase, uniq);
   if (dirErr) {
-    // Soft-fail: still try enrichment/profiles so existing saves are not blanked by a transient error.
+    // Soft-fail: still try enrichment/profiles/legacy so existing saves are not blanked by a transient error.
     console.warn?.("[saved-orgs] directory lookup failed:", dirErr.message || dirErr);
   }
 
@@ -115,18 +169,38 @@ export async function resolveSavedOrganizationDirectoryRows(supabase, einOrdered
   const { data: enrichData, error: enrichErr } = await queryDirectoryEnrichmentByEins(supabase, uniq);
   if (!enrichErr && enrichData?.length) enrichMap = enrichmentRowsByEin(enrichData);
 
-  const profVariants = einVariants(uniq);
-  const { data: profData, error: profErr } = await supabase
-    .from(TRUSTED_PROFILES_SOURCE)
-    .select(
-      "ein,website,logo_url,facebook_url,instagram_url,youtube_url,x_url,linkedin_url,display_name_override,description",
-    )
-    .in("ein", profVariants);
+  const { data: profData, error: profErr } = await queryNonprofitProfilesByEins(supabase, variants);
   const profByEin = new Map();
   if (!profErr && Array.isArray(profData)) {
     for (const p of profData) {
       const k = normalizeEinDigits(p?.ein);
       if (k.length === 9 && !profByEin.has(k)) profByEin.set(k, p);
+    }
+  }
+
+  const missingAfterDir = uniq.filter((ein) => !dirByEin?.has(ein));
+  let legacyByEin = new Map();
+  if (missingAfterDir.length) {
+    const legacy = await queryLegacyOrgsByEins(supabase, missingAfterDir);
+    if (legacy.error) {
+      console.warn?.("[saved-orgs] legacy nonprofits lookup failed:", legacy.error.message || legacy.error);
+    } else {
+      legacyByEin = legacy.byEin || new Map();
+    }
+  }
+
+  const stillMissing = uniq.filter((ein) => !dirByEin?.has(ein) && !legacyByEin.has(ein) && !enrichMap.has(ein) && !profByEin.has(ein));
+  const trustedByEin = new Map();
+  if (stillMissing.length) {
+    const { data: trustedData, error: trustedErr } = await queryTrustedCatalogByEins(
+      supabase,
+      einVariants(stillMissing),
+    );
+    if (!trustedErr && Array.isArray(trustedData)) {
+      for (const t of trustedData) {
+        const k = normalizeEinDigits(t?.ein);
+        if (k.length === 9 && !trustedByEin.has(k)) trustedByEin.set(k, t);
+      }
     }
   }
 
@@ -136,7 +210,7 @@ export async function resolveSavedOrganizationDirectoryRows(supabase, einOrdered
   for (const ein of uniq) {
     const enrich = enrichMap.get(ein) || null;
     const prof = profByEin.get(ein) || null;
-    let raw = dirByEin?.get(ein) || null;
+    let raw = dirByEin?.get(ein) || legacyByEin.get(ein) || null;
 
     if (raw) {
       let merged = mergeDirectoryRowWithEnrichment(raw, enrich);
@@ -152,6 +226,8 @@ export async function resolveSavedOrganizationDirectoryRows(supabase, einOrdered
           enrich?.canonical_display_name,
           enrich?.irs_name,
           prof?.display_name_override,
+          prof?.organization_name,
+          prof?.legal_name,
         );
         if (fallbackName) {
           merged = {
@@ -167,6 +243,8 @@ export async function resolveSavedOrganizationDirectoryRows(supabase, einOrdered
     } else if (enrich || prof) {
       raw = buildSavedOrgFallbackRow(ein, enrich, prof);
       if (enrich) raw = mergeDirectoryRowWithEnrichment(raw, enrich);
+    } else if (trustedByEin.has(ein)) {
+      raw = trustedCatalogToFallbackRow(ein, trustedByEin.get(ein));
     }
 
     if (!raw) {
@@ -196,7 +274,8 @@ export async function resolveSavedOrganizationDirectoryRows(supabase, einOrdered
 }
 
 /**
- * Confirm a nonprofit exists for save/favorite (directory, enrichment, curated profile, or trusted catalog).
+ * Confirm a nonprofit exists for save/favorite (directory, legacy table, enrichment, curated profile, or trusted catalog).
+ * Must stay aligned with sources that can appear in Directory / Trusted Resources UI.
  * @param {import('@supabase/supabase-js').SupabaseClient} supabase
  * @param {string} einRaw
  */
@@ -205,20 +284,19 @@ export async function nonprofitExistsForSave(supabase, einRaw) {
   if (ein.length !== 9 || !supabase) return false;
   const { byEin } = await queryDirectoryOrgsByEins(supabase, [ein]);
   if (byEin?.has(ein)) return true;
+
+  const legacy = await queryLegacyOrgsByEins(supabase, [ein]);
+  if (legacy.byEin?.has(ein)) return true;
+
   const { data: enrich } = await queryDirectoryEnrichmentByEins(supabase, [ein]);
   if (Array.isArray(enrich) && enrich.length) return true;
+
   const variants = einVariants([ein]);
   const { data: prof } = await supabase.from(TRUSTED_PROFILES_SOURCE).select("ein").in("ein", variants).limit(1);
   if (Array.isArray(prof) && prof.length > 0) return true;
 
   // Trusted Resources catalog (service-role) — same EIN may appear only here for curated orgs.
-  const trustedTable =
-    (typeof process !== "undefined" && process.env.NEXT_PUBLIC_TRUSTED_RESOURCES_TABLE) || "trusted_resources";
-  const { data: trusted, error: trustedErr } = await supabase
-    .from(trustedTable)
-    .select("ein")
-    .in("ein", variants)
-    .limit(1);
+  const { data: trusted, error: trustedErr } = await queryTrustedCatalogByEins(supabase, variants);
   if (!trustedErr && Array.isArray(trusted) && trusted.length > 0) return true;
 
   return false;
