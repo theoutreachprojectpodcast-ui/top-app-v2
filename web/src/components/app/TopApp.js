@@ -1143,10 +1143,8 @@ function TopAppInner({ initialNav = "home" }) {
               className="ds-page-intro ds-page-intro--withTrustedBadge"
               style={{ borderBottom: "none", marginBottom: 0, paddingBottom: 0 }}
             >
-              <div className="ds-page-intro__headline">
-                <AppIcon name="trusted" size={162} />
-                <h2>Trusted Resources</h2>
-              </div>
+              <AppIcon name="trusted" size={162} />
+              <h2>Trusted Resources</h2>
               <p className="ds-page-intro__lead">
                 Our Trusted Resource vetting process uses structured research, human review, and service validation to
                 evaluate nonprofits that serve veterans, first responders, and their families. The result is clear Trust

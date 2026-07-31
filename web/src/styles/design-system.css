@@ -45,70 +45,61 @@
   --trusted-intro-badge-gap: var(--ds-space-4, 16px);
   display: grid;
   grid-template-columns: var(--trusted-intro-badge-size) minmax(0, 1fr);
+  grid-template-areas:
+    "badge title"
+    "badge lead";
   column-gap: var(--trusted-intro-badge-gap);
   row-gap: var(--ds-space-2, 8px);
   align-items: start;
 }
 
-/* Desktop/tablet: badge spans title+lead; lead stays under the title. */
-.ds-page-intro--withTrustedBadge .ds-page-intro__headline {
-  display: contents;
-}
-
-.ds-page-intro--withTrustedBadge .ds-page-intro__headline > .trustedBrandMark {
+.ds-page-intro--withTrustedBadge > .trustedBrandMark {
+  grid-area: badge;
   width: var(--trusted-intro-badge-size) !important;
   height: var(--trusted-intro-badge-size) !important;
-  grid-column: 1;
-  grid-row: 1 / -1;
   align-self: start;
   flex-shrink: 0;
 }
 
-.ds-page-intro--withTrustedBadge .ds-page-intro__headline h2,
-.ds-page-intro--withTrustedBadge .ds-page-intro__headline > h3 {
+.ds-page-intro--withTrustedBadge > h2,
+.ds-page-intro--withTrustedBadge > h3 {
+  grid-area: title;
   display: block;
   margin: 0;
-  grid-column: 2;
-  grid-row: 1;
   min-width: 0;
+  align-self: start;
 }
 
 .ds-page-intro--withTrustedBadge > .ds-page-intro__lead {
-  grid-column: 2;
-  grid-row: 2;
+  grid-area: lead;
+  margin: 0;
   max-width: none;
+  min-width: 0;
 }
 
+/* Mobile: badge + title one row; description full width on the next line. */
 @media (max-width: 760px) {
   .ds-page-intro--withTrustedBadge {
     --trusted-intro-badge-size: 96px;
     --trusted-intro-badge-gap: var(--ds-space-3, 12px);
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  /* Badge + title on one row; description on the next full-width line. */
-  .ds-page-intro--withTrustedBadge .ds-page-intro__headline {
-    display: flex;
+    grid-template-columns: var(--trusted-intro-badge-size) minmax(0, 1fr);
+    grid-template-areas:
+      "badge title"
+      "lead lead";
     align-items: center;
-    gap: var(--trusted-intro-badge-gap);
-    min-width: 0;
-    grid-column: 1;
   }
 
-  .ds-page-intro--withTrustedBadge .ds-page-intro__headline > .trustedBrandMark {
-    width: var(--trusted-intro-badge-size) !important;
-    height: var(--trusted-intro-badge-size) !important;
-    flex-shrink: 0;
+  .ds-page-intro--withTrustedBadge > .trustedBrandMark {
+    align-self: center;
   }
 
-  .ds-page-intro--withTrustedBadge .ds-page-intro__headline h2,
-  .ds-page-intro--withTrustedBadge .ds-page-intro__headline > h3 {
-    flex: 1 1 auto;
-    min-width: 0;
+  .ds-page-intro--withTrustedBadge > h2,
+  .ds-page-intro--withTrustedBadge > h3 {
+    align-self: center;
   }
 
   .ds-page-intro--withTrustedBadge > .ds-page-intro__lead {
-    grid-column: 1;
+    align-self: start;
     width: 100%;
   }
 }
