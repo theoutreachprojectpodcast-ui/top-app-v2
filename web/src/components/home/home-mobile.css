@@ -633,16 +633,15 @@
     margin: 0;
   }
 
-  .homeFeatureList .card.action.welcomeActionCard--uniform .trustedBrandMark--home {
+  .homeFeatureList .card.action.welcomeActionCard--uniform .iconWrap .trustedBrandMark--home,
+  .homeFeatureList .card.action.welcomeActionCard--uniform .iconStroke {
     width: 42px !important;
     height: 42px !important;
-    flex-shrink: 0;
-    margin: 0;
   }
 
-  .homeFeatureList .card.action.welcomeActionCard--uniform .iconStroke {
-    width: 42px;
-    height: 42px;
+  .homeFeatureList .card.action.welcomeActionCard--uniform .iconWrap .trustedBrandMark--home .trustedBrandMarkImg {
+    width: 80%;
+    height: 80%;
   }
 
   .homeFeatureList .welcomeActionText {

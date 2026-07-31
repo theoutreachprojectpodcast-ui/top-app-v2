@@ -60,11 +60,13 @@ export default function AppIcon({ name, size = DEFAULT_SIZE }) {
       );
     case "trustedHome":
       return (
-        <TrustedBrandMark
-          src={TRUSTED_HOME_ICON_SRC}
-          size={size === DEFAULT_SIZE ? 63 : size}
-          className="trustedBrandMark trustedBrandMark--home"
-        />
+        <AppIconShell>
+          <TrustedBrandMark
+            src={TRUSTED_HOME_ICON_SRC}
+            size={size}
+            className="trustedBrandMark trustedBrandMark--home"
+          />
+        </AppIconShell>
       );
     case "community":
       return (
