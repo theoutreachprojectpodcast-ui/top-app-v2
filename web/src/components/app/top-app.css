@@ -2513,8 +2513,8 @@ span.headerBrandMarkFallback {
   flex-shrink: 0;
 }
 .card.action.welcomeActionCard--uniform .trustedBrandMark--home {
-  width: 99px;
-  height: 99px;
+  width: 63px !important;
+  height: 63px !important;
   flex-shrink: 0;
 }
 .card.action.welcomeActionCard--uniform .iconStroke {

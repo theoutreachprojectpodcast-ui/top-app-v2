@@ -62,7 +62,7 @@ export default function AppIcon({ name, size = DEFAULT_SIZE }) {
       return (
         <TrustedBrandMark
           src={TRUSTED_HOME_ICON_SRC}
-          size={size === DEFAULT_SIZE ? 99 : size}
+          size={size === DEFAULT_SIZE ? 63 : size}
           className="trustedBrandMark trustedBrandMark--home"
         />
       );

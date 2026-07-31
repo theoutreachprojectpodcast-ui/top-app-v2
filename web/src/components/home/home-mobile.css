@@ -634,8 +634,8 @@
   }
 
   .homeFeatureList .card.action.welcomeActionCard--uniform .trustedBrandMark--home {
-    width: 66px;
-    height: 66px;
+    width: 42px !important;
+    height: 42px !important;
     flex-shrink: 0;
     margin: 0;
   }
