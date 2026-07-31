@@ -112,16 +112,73 @@ html[data-use-podcast-theme="true"] {
   flex-shrink: 0;
 }
 
-.topApp.appShell--podcast .appSiteHeader {
+/*
+ * Single-row podcast header: left actions · centered logo · right actions.
+ * AppShell renders these as direct `.appSiteHeader` children (no nested topbar).
+ */
+.topApp.appShell--podcast .appSiteHeader,
+.topApp.appShell--podcast .appSiteHeader--podcast,
+main.topApp[data-page-atmosphere="podcast"] .appSiteHeader,
+main.topApp[data-page-atmosphere="podcast"] .appSiteHeader--podcast {
   position: relative;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: start;
+  box-sizing: border-box;
   width: 100%;
+  min-height: 0;
+  height: auto;
+  overflow: visible;
+  padding: max(12px, env(safe-area-inset-top, 0px)) clamp(12px, 3vw, 40px) 10px;
+  z-index: 2;
+}
+
+.topApp.appShell--podcast .appSiteHeader > .topbarLeft,
+main.topApp[data-page-atmosphere="podcast"] .appSiteHeader > .topbarLeft {
+  grid-area: unset;
+  grid-column: 1;
+  grid-row: 1;
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  align-self: start;
+  justify-self: start;
+  width: auto;
+  min-width: 0;
+  pointer-events: auto;
+}
+
+.topApp.appShell--podcast .appSiteHeader > .topbarRight,
+main.topApp[data-page-atmosphere="podcast"] .appSiteHeader > .topbarRight {
+  grid-area: unset;
+  grid-column: 3;
+  grid-row: 1;
+  position: relative;
+  z-index: 5;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  align-self: start;
+  justify-self: end;
+  width: auto;
+  min-width: 0;
+  pointer-events: auto;
+}
+
+.topApp.appShell--podcast .appSiteHeader > .headerBrandStack,
+main.topApp[data-page-atmosphere="podcast"] .appSiteHeader > .headerBrandStack {
+  grid-column: 2;
+  grid-row: 1;
 }
 
 .topApp.appShell--podcast .shell {
   flex: 1 1 auto;
   min-height: 0;
   background: transparent;
-  padding-top: calc(var(--podcast-header-chrome-height) + var(--podcast-logo-content-gap, 12px));
+  /* Header is in-flow — only a small gap under the mark (not a second chrome-height spacer). */
+  padding-top: var(--podcast-logo-content-gap, 12px);
 }
 /* Mission strip: home uses top placement under the bar; other routes use bottom placement (see `MissionPageTopStrip`). */
 .topApp.appShell--podcast .siteFooter.siteFooter--pageTop,
@@ -174,19 +231,9 @@ html[data-use-podcast-theme="true"] {
   display: none;
 }
 
-/* Guest chrome: hamburger left, auth right — same 3-column row as main app home header. */
-main.topApp.appShell--podcast.topApp--auth-out .topbarInner,
-main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarInner {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
-  grid-template-areas: "left center right";
-  gap: 8px 16px;
-  align-items: center;
-}
-
+/* Guest chrome: keep left/right zones visible; row layout comes from `.appSiteHeader` grid above. */
 main.topApp.appShell--podcast.topApp--auth-out .topbarLeft,
 main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarLeft {
-  grid-area: left;
   display: flex !important;
   width: auto;
   justify-content: flex-start;
@@ -194,7 +241,6 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarLeft {
 
 main.topApp.appShell--podcast.topApp--auth-out .topbarRight,
 main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
-  grid-area: right;
   justify-self: end;
   width: auto;
   justify-content: flex-end;
@@ -419,25 +465,72 @@ main.topApp[data-page-atmosphere="podcast"].topApp--auth-out .topbarRight {
   padding: 10px 14px;
 }
 
-/* Keep the mark centered but inset from viewport edges so wide assets never sit under corner controls. */
-.topApp.appShell--podcast .headerBrandStack {
+/* Center mark in the header grid; inset so wide assets stay clear of corner controls. */
+.topApp.appShell--podcast .headerBrandStack,
+main.topApp[data-page-atmosphere="podcast"] .headerBrandStack {
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  transform: none !important;
+  z-index: 0;
+  grid-column: 2;
+  grid-row: 1;
+  align-self: start;
+  justify-self: center;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
+  width: auto;
   max-width: min(720px, 88vw);
-  padding-left: max(10px, env(safe-area-inset-left, 0px));
-  padding-right: max(10px, env(safe-area-inset-right, 0px));
-  padding-bottom: clamp(4px, 0.6vw, 8px);
+  padding: 8px max(12px, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px))
+    clamp(4px, 0.6vw, 8px);
+  margin: 0;
   box-sizing: border-box;
+  overflow: visible;
+  pointer-events: none;
 }
 
-.topApp.appShell--podcast .headerBrandStack > a {
+.topApp.appShell--podcast .headerBrandStack > a,
+main.topApp[data-page-atmosphere="podcast"] .headerBrandStack > a {
+  pointer-events: auto;
   display: inline-flex;
   max-width: 100%;
   justify-content: center;
   align-items: flex-start;
   line-height: 0;
+}
+
+/* Tablet: reserve side chrome so logo + Admin / auth / Menu stay on one row. */
+@media (min-width: 761px) and (max-width: 1180px) {
+  .topApp.appShell--podcast {
+    --podcast-header-brand-band: clamp(148px, 20vw, 200px);
+  }
+
+  .topApp.appShell--podcast .appSiteHeader,
+  main.topApp[data-page-atmosphere="podcast"] .appSiteHeader {
+    grid-template-columns: minmax(140px, 1fr) auto minmax(140px, 1fr);
+  }
+
+  .topApp.appShell--podcast .headerBrandStack,
+  main.topApp[data-page-atmosphere="podcast"] .headerBrandStack {
+    max-width: min(440px, calc(100vw - 300px));
+  }
+
+  .topApp.appShell--podcast .podcastBrandLogo,
+  .topApp.appShell--podcast .headerBrandStack img.podcastBrandLogo,
+  main.topApp[data-page-atmosphere="podcast"] .podcastBrandLogo,
+  main.topApp[data-page-atmosphere="podcast"] .headerBrandStack img.podcastBrandLogo {
+    max-height: clamp(148px, 20vw, 200px) !important;
+    max-width: min(440px, calc(100vw - 300px)) !important;
+  }
+
+  .topApp.appShell--podcast .topbarLeft .topbarActionsCluster,
+  .topApp.appShell--podcast .topbarRight .topbarActionsCluster,
+  main.topApp[data-page-atmosphere="podcast"] .topbarLeft .topbarActionsCluster,
+  main.topApp[data-page-atmosphere="podcast"] .topbarRight .topbarActionsCluster {
+    flex-wrap: nowrap;
+  }
 }
 
 /* Home-aligned stack: logo centered with corner controls (see AppShell DOM + `mobile-shell.css`). */

@@ -94,43 +94,38 @@ export default function AppShell({
       {...(useTopAppStructure ? { "data-page-atmosphere": pageAtmosphere } : {})}
       {...podcastRouteAttrs}
     >
-      <div className={`appSiteHeader${podcastThemeShell ? " appSiteHeader--podcast" : ""}`}>
-          {podcastThemeShell ? (
-            <>
-              <AppHeaderBrand
-                brandSrc={brandSrc || undefined}
-                brandAlt={brandAlt}
-                brandClassName={brandClassName}
-                pageAtmosphere={pageAtmosphere}
-              />
-              <header className={usePrimaryTopbarChrome ? "topbar" : "subpageTopbar"}>
-                <HeaderInner className="topbarInner">
-                  <div className="topbarZone topbarLeft">
-                    <div className="topbarActionsCluster topbarActionsCluster--start">
-                      {useFooterDockChrome ? (
-                        <SiteHamburgerNavMenu tone="podcast" shellClass="siteMobileNavMore--phoneOnly" />
-                      ) : null}
-                      <SubpageTopbarActions section="lead" />
-                    </div>
-                  </div>
-                  <div className="topbarZone topbarCenter" aria-hidden="true" />
-                  <div className="topbarZone topbarRight">
-                    <div className="topbarActionsCluster">
-                      {useFooterDockChrome ? (
-                        <SiteHamburgerNavMenu
-                          tone="podcast"
-                          align="end"
-                          shellClass="siteMobileNavMore--desktopOnly"
-                        />
-                      ) : null}
-                      <SubpageTopbarActions section="auth" />
-                    </div>
-                  </div>
-                </HeaderInner>
-              </header>
-            </>
-          ) : (
-            <>
+      {podcastThemeShell ? (
+        <div className="appSiteHeader appSiteHeader--podcast">
+          {/* Flat 3-column DOM (no nested topbar/Container) — logo + actions share one row. */}
+          <div className="topbarZone topbarLeft">
+            <div className="topbarActionsCluster topbarActionsCluster--start">
+              {useFooterDockChrome ? (
+                <SiteHamburgerNavMenu tone="podcast" shellClass="siteMobileNavMore--phoneOnly" />
+              ) : null}
+              <SubpageTopbarActions section="lead" />
+            </div>
+          </div>
+          <AppHeaderBrand
+            brandSrc={brandSrc || undefined}
+            brandAlt={brandAlt}
+            brandClassName={brandClassName}
+            pageAtmosphere={pageAtmosphere}
+          />
+          <div className="topbarZone topbarRight">
+            <div className="topbarActionsCluster">
+              {useFooterDockChrome ? (
+                <SiteHamburgerNavMenu
+                  tone="podcast"
+                  align="end"
+                  shellClass="siteMobileNavMore--desktopOnly"
+                />
+              ) : null}
+              <SubpageTopbarActions section="auth" />
+            </div>
+          </div>
+        </div>
+      ) : (
+      <div className="appSiteHeader">
               <AppHeaderBrand
                 brandSrc={brandSrc || undefined}
                 brandAlt={brandAlt}
@@ -144,14 +139,14 @@ export default function AppShell({
                       {useFooterDockChrome ? (
                         <SiteHamburgerNavMenu shellClass="siteMobileNavMore--phoneOnly" />
                       ) : null}
-                      {isMobileShell && !podcastThemeShell && showThemeToggle ? <ColorSchemeToggle /> : null}
+                      {isMobileShell && showThemeToggle ? <ColorSchemeToggle /> : null}
                       <SubpageTopbarActions section="lead" />
                     </div>
                   </div>
                   <div className="topbarZone topbarCenter" aria-hidden="true" />
                   <div className="topbarZone topbarRight">
                     <div className="topbarActionsCluster">
-                      {!isMobileShell && !podcastThemeShell && showThemeToggle ? <ColorSchemeToggle /> : null}
+                      {!isMobileShell && showThemeToggle ? <ColorSchemeToggle /> : null}
                       {useFooterDockChrome ? (
                         <SiteHamburgerNavMenu align="end" shellClass="siteMobileNavMore--desktopOnly" />
                       ) : null}
@@ -160,9 +155,8 @@ export default function AppShell({
                   </div>
                 </HeaderInner>
               </header>
-            </>
-          )}
       </div>
+      )}
 
       {useTopAppStructure ? (
         <section className="shell">

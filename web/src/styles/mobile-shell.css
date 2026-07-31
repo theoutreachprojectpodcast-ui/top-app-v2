@@ -258,7 +258,10 @@ html {
     margin-left: 0;
   }
 
-  /* Portaled on phone — stack above home cards / auth panels (see HeaderDropdownLayer). */
+  /* Portaled header menus: base layer + sheet positioning live in top-app.css
+     (`.headerDropdownLayer*`) so tablet/desktop also escape sponsor stacking. */
+
+  /* Legacy selectors kept for safety if layer class is missing */
   .headerDropdownBackdrop {
     position: fixed;
     inset: 0;
@@ -266,7 +269,7 @@ html {
     margin: 0;
     padding: 0;
     border: none;
-    background: color-mix(in srgb, #000 52%, transparent);
+    background: rgba(0, 0, 0, 0.58);
     cursor: default;
     -webkit-tap-highlight-color: transparent;
   }
@@ -286,14 +289,17 @@ html {
     max-height: min(58vh, 400px);
     z-index: 390;
     isolation: isolate;
-    background: var(--color-bg-card);
+    background: var(--color-bg-elevated, var(--color-bg-card));
+    background-image: none;
     box-shadow:
       var(--shadow-card),
-      0 16px 48px color-mix(in srgb, #000 28%, transparent);
+      0 16px 48px rgba(0, 0, 0, 0.35);
   }
 
   .headerAccountDropdown--mobileSheet {
-    max-height: min(70vh, 480px);
+    max-height: min(70vh, 520px);
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 
   :is(main.topApp, .capacitorAppHeaderPortal):not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topbarLeft .topbarActionsCluster,
@@ -391,7 +397,7 @@ html {
     position: relative;
     z-index: 120;
     isolation: isolate;
-    display: grid;
+    display: grid !important;
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     grid-template-rows: auto;
     align-items: start;
@@ -408,15 +414,10 @@ html {
       max(var(--mobile-site-header-pad-x), env(safe-area-inset-left, 0px));
   }
 
+  /* Flat podcast header — no nested topbar; keep selectors for older markup harmless. */
   main.topApp.appShell--podcast header.topbar,
   main.topApp[data-page-atmosphere="podcast"] header.topbar {
-    position: static;
-    top: auto;
-    left: auto;
-    right: auto;
-    z-index: auto;
-    padding: 0;
-    width: auto;
+    display: none;
   }
 
   main.topApp.appShell--podcast .topbar,

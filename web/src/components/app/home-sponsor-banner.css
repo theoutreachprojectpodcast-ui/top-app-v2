@@ -53,6 +53,9 @@
     0 14px 28px color-mix(in srgb, #000 24%, transparent),
     inset 0 0 0 1px color-mix(in srgb, #ffffff 8%, transparent);
   transition: transform 160ms ease, box-shadow 200ms ease, border-color 200ms ease;
+  /* Keep sponsor cards below portaled header menus (z-index 520). */
+  z-index: 0;
+  isolation: isolate;
 }
 .homeSponsorSpotlights a.homeSponsorBannerSlot:hover {
   transform: translateY(-2px);

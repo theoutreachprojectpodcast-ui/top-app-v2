@@ -138,7 +138,12 @@ export default function HeaderNotificationBell({ variant = "topbar", skipSession
           </span>
         ) : null}
       </button>
-      <HeaderDropdownLayer open={open} onClose={() => setOpen(false)} ariaLabel="Close notifications">
+      <HeaderDropdownLayer
+        open={open}
+        onClose={() => setOpen(false)}
+        ariaLabel="Close notifications"
+        anchorRef={wrapRef}
+      >
         {open ? (
           <div
             className={`headerNotificationDropdown${mobileShell ? " headerNotificationDropdown--mobileSheet" : ""}`}
