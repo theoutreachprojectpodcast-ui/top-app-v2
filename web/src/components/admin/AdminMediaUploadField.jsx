@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
+import AdminHelpText from "@/components/admin/AdminHelpText";
 
 /**
  * @param {{ label?: string, onUploaded: (url: string) => void, hint?: string }}
  */
 export default function AdminMediaUploadField({ label = "Upload image", onUploaded, hint }) {
+  const inputId = useId();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -38,14 +40,19 @@ export default function AdminMediaUploadField({ label = "Upload image", onUpload
 
   return (
     <div className="adminMediaUpload">
-      <label className="profilePhotoUploadLabel">
-        <span className="profilePhotoUploadTitle">{label}</span>
-        {hint ? <span className="profilePhotoUploadHint">{hint}</span> : null}
-        <span className="btnSoft adminMediaUploadField__trigger">
-          {busy ? "Uploading…" : "Choose file"}
-        </span>
-        <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="profileFileInput" onChange={(e) => void onFileChange(e)} disabled={busy} />
+      <label className="fieldLabel" htmlFor={inputId}>
+        {label}
+        <input
+          id={inputId}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          className="profileFileInput"
+          onChange={(e) => void onFileChange(e)}
+          disabled={busy}
+        />
       </label>
+      {hint ? <AdminHelpText>{hint}</AdminHelpText> : null}
+      {busy ? <p className="adminMuted adminMuted--sm">Uploading…</p> : null}
       {error ? (
         <p className="adminFeedback adminFeedback--error adminMuted--sm" role="alert">
           {error}

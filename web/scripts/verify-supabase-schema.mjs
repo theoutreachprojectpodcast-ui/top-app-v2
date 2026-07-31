@@ -102,6 +102,14 @@ const REQUIRED = {
   sponsor_applications: ["company_name", "sponsor_slug", "sponsor_catalog_id"],
   trusted_resources: ["ein", "listing_status", "display_name"],
   community_posts: ["author_profile_id", "status", "visibility", "deleted_at"],
+  member_connections: [
+    "requester_profile_id",
+    "recipient_profile_id",
+    "status",
+    "created_at",
+    "updated_at",
+    "responded_at",
+  ],
   nonprofit_directory_enrichment: ["ein", "logo_url", "header_image_url"],
   admin_settings: ["setting_key", "setting_value"],
   billing_records: ["workos_user_id", "status", "amount_cents"],
@@ -110,6 +118,24 @@ const REQUIRED = {
   podcast_episodes: ["youtube_video_id", "title"],
   podcast_episode_featured_guest: ["youtube_video_id"],
   admin_audit_logs: ["action", "resource_type"],
+  irs_eo_organizations: [
+    "ein",
+    "org_name",
+    "irs_subsection",
+    "directory_status",
+    "irs_source_file",
+    "last_verified_at",
+  ],
+  irs_nonprofit_import_batches: [
+    "mode",
+    "status",
+    "classification_filter",
+    "records_found",
+    "records_added",
+    "records_updated",
+    "records_skipped",
+    "records_failed",
+  ],
 };
 
 /** Tables probed with select head (may be views). */
@@ -120,6 +146,8 @@ const TABLE_PROBE = [
   "sponsors_catalog",
   "trusted_resources",
   "community_posts",
+  "member_connections",
+  "community_follows",
   "nonprofit_directory_enrichment",
   "admin_settings",
   "billing_records",
@@ -134,6 +162,9 @@ const TABLE_PROBE = [
   "podcast_sponsor_checkout_events",
   "top_platform_notifications",
   "top_app_saved_org_eins",
+  "irs_eo_organizations",
+  "irs_nonprofit_import_batches",
+  "irs_nonprofit_import_errors",
 ];
 
 async function probeTable(admin, table) {
@@ -181,6 +212,12 @@ async function main() {
       console.log(`MISS table ${table} — ${r.message}`);
       if (REQUIRED[table]) errors += 1;
       else warnings += 1;
+    } else if (/permission denied/i.test(r.message || "")) {
+      console.log(`DENY table ${table} — ${r.message}`);
+      if (table === "member_connections") {
+        console.log("     Fix: run web/supabase/member_connections_grant_service_role_2026_07.sql");
+      }
+      errors += 1;
     } else {
       console.log(`ERR table ${table} — ${r.message}`);
       errors += 1;

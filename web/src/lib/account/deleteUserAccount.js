@@ -144,7 +144,18 @@ async function eraseCommunityPresence(admin, { workosUserId, profileId }, warnin
   const { error: followsErr } = await admin
     .from("community_follows")
     .delete()
-    .or(`follower_id.eq.${workosUserId},following_id.eq.${workosUserId}`);
+    .or(
+      [
+        `follower_id.eq.${workosUserId}`,
+        `following_id.eq.${workosUserId}`,
+        profileId ? `follower_id.eq.${profileId}` : "",
+        profileId ? `following_id.eq.${profileId}` : "",
+        profileId ? `following_id.eq.pending:${profileId}` : "",
+        profileId ? `following_id.eq.blocked:${profileId}` : "",
+      ]
+        .filter(Boolean)
+        .join(","),
+    );
   if (followsErr) warnings.push(`community_follows:${followsErr.message}`);
 
   if (profileId) {

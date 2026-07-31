@@ -45,7 +45,10 @@
 }
 
 .trustedDetailPage--empty {
+  display: grid;
   gap: var(--ds-space-3, 12px);
+  justify-items: start;
+  padding: var(--ds-space-4, 16px) 0 var(--ds-space-2, 8px);
 }
 
 .trustedDetailEmptyTitle {
@@ -67,27 +70,6 @@
   color: var(--color-text-secondary);
 }
 
-.trustedDetailPage--empty {
-  display: grid;
-  gap: var(--ds-space-3, 12px);
-  justify-items: start;
-  padding: var(--ds-space-4, 16px) 0 var(--ds-space-2, 8px);
-}
-
-.trustedDetailEmptyTitle {
-  margin: 0;
-  font-size: var(--text-title-sm, 1.25rem);
-  font-weight: 700;
-  color: var(--color-text-primary);
-}
-
-.trustedDetailEmptyCopy {
-  margin: 0;
-  max-width: 42rem;
-  color: var(--color-text-secondary);
-  line-height: 1.5;
-}
-
 /* —— Hero: wide banner + logo badge overlay —— */
 .trustedDetailHero {
   display: grid;
@@ -98,12 +80,14 @@
   position: relative;
   min-height: 200px;
   border-radius: var(--radius-card, 16px) var(--radius-card, 16px) 0 0;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .trustedDetailHero__banner {
   position: absolute;
   inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -124,12 +108,32 @@
 .trustedDetailHero__bannerScrim {
   position: absolute;
   inset: 0;
+  border-radius: inherit;
   background: linear-gradient(
     180deg,
     color-mix(in srgb, var(--color-bg-app) 8%, transparent) 0%,
     color-mix(in srgb, var(--color-bg-app) 55%, transparent) 100%
   );
   pointer-events: none;
+}
+
+.trustedDetailHero__logoSlot {
+  position: absolute;
+  left: var(--ds-space-5, 20px);
+  bottom: -44px;
+  z-index: 2;
+}
+
+.trustedDetailHero__logoSlot .organizationLogo {
+  --org-logo-size: 96px;
+}
+
+.trustedDetailHero__logoSlot .organizationLogo__frame {
+  background: var(--color-bg-card);
+  border-color: color-mix(in srgb, var(--color-border-subtle) 70%, var(--color-bg-card));
+  box-shadow:
+    0 0 0 3px var(--color-bg-card),
+    0 8px 20px color-mix(in srgb, var(--color-shadow) 35%, transparent);
 }
 
 .trustedDetailHero__panel {
@@ -274,13 +278,13 @@
 }
 
 .trustedDetailAtAGlance__item--wide {
-  grid-column: 1 / -1;
+  grid-column: span 1;
 }
 
 .trustedDetailAtAGlance__item dt {
   margin: 0;
-  font-size: var(--text-eyebrow);
-  font-weight: 800;
+  font-size: 11px;
+  font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--color-text-muted);
@@ -295,8 +299,13 @@
 }
 
 .trustedDetailAtAGlance__item dd a {
-  font-weight: 700;
+  font-weight: 650;
   color: var(--color-accent);
+  text-decoration: none;
+}
+
+.trustedDetailAtAGlance__item dd a:hover,
+.trustedDetailAtAGlance__item dd a:focus-visible {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
@@ -420,25 +429,24 @@
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   gap: var(--ds-space-3, 12px);
-  align-items: start;
+  align-items: center;
+  min-height: 44px;
   padding: var(--ds-space-3, 12px) var(--ds-space-4, 16px);
   border-radius: var(--radius-input);
   border: 1px solid var(--color-border-subtle);
-  background: var(--color-bg-subtle);
+  background: var(--color-surface-muted);
   text-decoration: none;
   color: inherit;
   transition:
     border-color 0.15s ease,
-    box-shadow 0.15s ease,
-    transform 0.15s ease;
+    background 0.15s ease;
 }
 
 .trustedDetailLinkCard:hover,
 .trustedDetailLinkCard:focus-visible {
   outline: none;
-  border-color: color-mix(in srgb, var(--color-accent) 40%, var(--color-border));
-  box-shadow: 0 6px 18px color-mix(in srgb, var(--color-shadow) 70%, transparent);
-  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--color-accent) 36%, var(--color-border));
+  background: color-mix(in srgb, var(--color-accent-soft) 35%, var(--color-surface-muted));
 }
 
 .trustedDetailLinkCard__icon {
@@ -492,22 +500,20 @@
   padding: var(--ds-space-4, 16px);
   border-radius: var(--radius-input);
   border: 1px solid var(--color-border-subtle);
-  background: var(--color-bg-subtle);
+  background: var(--color-surface-muted);
   text-decoration: none;
   color: inherit;
   min-height: 100%;
   transition:
     border-color 0.15s ease,
-    box-shadow 0.15s ease,
-    transform 0.15s ease;
+    background 0.15s ease;
 }
 
 .trustedDetailProgramCard:hover,
 .trustedDetailProgramCard:focus-visible {
   outline: none;
-  border-color: color-mix(in srgb, var(--color-accent) 38%, var(--color-border));
-  box-shadow: 0 8px 22px color-mix(in srgb, var(--color-shadow) 65%, transparent);
-  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--color-accent) 36%, var(--color-border));
+  background: color-mix(in srgb, var(--color-accent-soft) 35%, var(--color-surface-muted));
 }
 
 .trustedDetailProgramCard__icon {
@@ -565,8 +571,8 @@
 }
 
 .trustedDetailFacts dt {
-  font-size: var(--text-eyebrow);
-  font-weight: 800;
+  font-size: 11px;
+  font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--color-text-muted);
@@ -708,6 +714,12 @@
 
   .trustedDetailHero__logoSlot .organizationLogo {
     --org-logo-size: 64px;
+  }
+
+  .trustedDetailHero__logoSlot .organizationLogo__frame {
+    box-shadow:
+      0 0 0 2px var(--color-bg-card),
+      0 6px 14px color-mix(in srgb, var(--color-shadow) 30%, transparent);
   }
 
   .trustedDetailHero__panel {

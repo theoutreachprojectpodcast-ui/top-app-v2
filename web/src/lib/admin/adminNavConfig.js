@@ -101,8 +101,8 @@ export const ADMIN_SECTIONS = [
         href: "/admin/nonprofits",
         readiness: "partial",
         matchPrefix: "/admin/nonprofits",
-        keywords: ["ein", "directory", "orgs", "header image"],
-        description: "Nonprofit directory enrichment and header images.",
+        keywords: ["ein", "directory", "orgs", "header image", "irs", "501c19", "import"],
+        description: "Directory enrichment, IRS EO BMF import review, and import logs.",
       },
       {
         id: "content-blocks",

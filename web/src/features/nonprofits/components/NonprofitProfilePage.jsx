@@ -68,10 +68,8 @@ export default function NonprofitProfilePage({ ein: einParam }) {
         setMergeBase(null);
         return;
       }
-      const { card: next, error: fetchError, mergeBase: base, identityRejected } = await fetchNonprofitProfileDetail(
-        supabase,
-        digits
-      );
+      const { card: next, error: fetchError, mergeBase: base, identityRejected, notPublic } =
+        await fetchNonprofitProfileDetail(supabase, digits);
       if (fetchError) {
         // Prefer curated trusted detail when this EIN belongs to a Trusted Resource.
         try {
@@ -101,7 +99,7 @@ export default function NonprofitProfilePage({ ein: einParam }) {
         setMergeBase(null);
         return;
       }
-      if (identityRejected) {
+      if (identityRejected || notPublic) {
         setError("This organization is not available as a verified directory profile.");
         setCard(null);
         setMergeBase(null);

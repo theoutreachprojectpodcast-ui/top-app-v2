@@ -1,11 +1,6 @@
 import { guardMutation, guardFailureResponse } from "@/lib/security/secureRoute";
-import { authFailureJson, resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
-import {
-  membershipDeniedResponse,
-  profilePassesMembershipScope,
-} from "@/lib/membership/membershipRouteGuard";
+import { requireMembershipApi } from "@/lib/membership/membershipRouteGuard";
 import {
   acceptConnectionRequest,
   connectionStateForUi,
@@ -14,7 +9,7 @@ import {
   sendConnectionRequest,
   viewerConnectionState,
 } from "@/lib/community/memberConnections";
-import { createPlatformNotification } from "@/server/notifications/notificationService";
+import { createNotificationDeduped } from "@/server/notifications/notificationService";
 
 function profileSummary(row) {
   if (!row) return null;
@@ -29,6 +24,15 @@ function profileSummary(row) {
     role: row.role_title || row.occupation || "",
     location: [row.city, row.state].filter(Boolean).join(", "),
   };
+}
+
+function displayNameFromProfile(row) {
+  if (!row) return "A community member";
+  return (
+    [row.first_name, row.last_name].filter(Boolean).join(" ").trim() ||
+    String(row.display_name || "").trim() ||
+    "A community member"
+  );
 }
 
 async function loadProfilesByIds(admin, ids) {
@@ -63,19 +67,23 @@ function serializeConnection(row, viewerProfileId, profiles) {
   };
 }
 
-export async function GET() {
-  const auth = await resolveWorkOSRouteUser();
-  if (!auth.ok) return authFailureJson(auth);
+function logConnectionFailure(action, err, meta = {}) {
+  console.error("[community/connections]", {
+    action,
+    message: err instanceof Error ? err.message : String(err || "unknown"),
+    ...meta,
+  });
+}
 
+export async function GET() {
   const admin = createSupabaseAdminClient();
   if (!admin) {
     return Response.json({ ok: false, error: "storage_unavailable" }, { status: 503 });
   }
 
-  const profileRow = await getProfileRowByWorkOSId(admin, auth.user.id);
-  if (!profileRow?.id || !profilePassesMembershipScope(profileRow, "community_view")) {
-    return membershipDeniedResponse("community_view");
-  }
+  const gate = await requireMembershipApi(admin, "community_view");
+  if (!gate.ok) return gate.response;
+  const profileRow = gate.profileRow;
 
   try {
     const lists = await listConnectionsForViewer(admin, profileRow.id);
@@ -100,6 +108,7 @@ export async function GET() {
       blocked: lists.blocked.map((row) => serializeConnection(row, profileRow.id, profiles)),
     });
   } catch (err) {
+    logConnectionFailure("list", err, { viewerProfileId: profileRow.id });
     const message = err instanceof Error ? err.message : "Could not load connections.";
     return Response.json({ ok: false, error: message }, { status: 500 });
   }
@@ -109,18 +118,14 @@ export async function POST(request) {
   const __guard = guardMutation(request, { rateKey: "community-connections", limit: 40 });
   if (!__guard.ok) return guardFailureResponse(__guard);
 
-  const auth = await resolveWorkOSRouteUser();
-  if (!auth.ok) return authFailureJson(auth);
-
   const admin = createSupabaseAdminClient();
   if (!admin) {
     return Response.json({ ok: false, message: "Storage unavailable." }, { status: 503 });
   }
 
-  const profileRow = await getProfileRowByWorkOSId(admin, auth.user.id);
-  if (!profileRow?.id || !profilePassesMembershipScope(profileRow, "community_view")) {
-    return membershipDeniedResponse("community_view");
-  }
+  const gate = await requireMembershipApi(admin, "community_view");
+  if (!gate.ok) return gate.response;
+  const profileRow = gate.profileRow;
 
   let body;
   try {
@@ -144,32 +149,39 @@ export async function POST(request) {
         targetProfileId,
       });
       if (result.ok && result.state === "request_sent" && result.row) {
-        await createPlatformNotification(admin, {
+        const senderName = displayNameFromProfile(profileRow);
+        const notif = await createNotificationDeduped(admin, {
           recipientProfileId: targetProfileId,
           audienceScope: "user",
           type: "connection_request",
           title: "New connection request",
-          message: "Someone in the Outreach Project community wants to connect with you.",
+          message: `${senderName} wants to connect with you in the Outreach Project community.`,
           linkPath: "/community",
           entityType: "member_connection",
           entityId: String(result.row.id),
           metadata: { requester_profile_id: profileRow.id },
+          dedupeHours: 24,
         });
+        if (!notif?.ok && !notif?.skipped) {
+          console.warn("[community/connections] notification failed:", notif?.reason || "unknown");
+        }
       }
       if (result.ok && result.state === "connected" && result.row) {
         const otherId =
           String(result.row.requester_profile_id) === String(profileRow.id)
             ? result.row.recipient_profile_id
             : result.row.requester_profile_id;
-        await createPlatformNotification(admin, {
+        const acceptorName = displayNameFromProfile(profileRow);
+        await createNotificationDeduped(admin, {
           recipientProfileId: otherId,
           audienceScope: "user",
           type: "connection_accepted",
           title: "Connection accepted",
-          message: "You’re now connected in the Outreach Project community.",
+          message: `${acceptorName} accepted your connection request.`,
           linkPath: "/community",
           entityType: "member_connection",
           entityId: String(result.row.id),
+          dedupeHours: 24,
         });
       }
     } else if (action === "accept") {
@@ -183,18 +195,26 @@ export async function POST(request) {
           String(result.row.requester_profile_id) === String(profileRow.id)
             ? result.row.recipient_profile_id
             : result.row.requester_profile_id;
-        await createPlatformNotification(admin, {
+        const acceptorName = displayNameFromProfile(profileRow);
+        await createNotificationDeduped(admin, {
           recipientProfileId: otherId,
           audienceScope: "user",
           type: "connection_accepted",
           title: "Connection accepted",
-          message: "You’re now connected in the Outreach Project community.",
+          message: `${acceptorName} accepted your connection request.`,
           linkPath: "/community",
           entityType: "member_connection",
           entityId: String(result.row.id),
+          dedupeHours: 24,
         });
       }
-    } else if (action === "decline" || action === "cancel" || action === "remove" || action === "block") {
+    } else if (
+      action === "decline" ||
+      action === "cancel" ||
+      action === "remove" ||
+      action === "block" ||
+      action === "unblock"
+    ) {
       result = await mutateConnectionStatus(admin, {
         viewerProfileId: profileRow.id,
         connectionId: connectionId || undefined,
@@ -217,6 +237,10 @@ export async function POST(request) {
       connectionId: result.row?.id || null,
     });
   } catch (err) {
+    logConnectionFailure(action, err, {
+      viewerProfileId: profileRow.id,
+      targetProfileId: targetProfileId || null,
+    });
     const message = err instanceof Error ? err.message : "Could not update connection.";
     return Response.json({ ok: false, message }, { status: 500 });
   }

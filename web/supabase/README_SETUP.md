@@ -80,6 +80,11 @@ Run at least one base enrichment definition; both are safe together if both use 
 |------:|------|
 | 20 | `community.sql` |
 | 21 | `community_v03_data_model.sql` | Requires `top_profiles` (step 1) |
+| 21.1 | `member_connections_2026_07.sql` | Canonical friend / connection requests |
+| 21.2 | `member_connections_grant_service_role_2026_07.sql` | **Required** if API returns `permission denied for table member_connections` |
+| 21.3 | `member_connections_migrate_follows_2026_07.sql` | Backfill from legacy `community_follows` encodings |
+
+**If Connect / friend requests appear to send but recipients never see them:** run **21.2** then **21.3** in the SQL editor. Until grants are restored, the app falls back to `community_follows`.
 
 **Optional seed data:** `community_seed_stories.sql` (only if you want demo stories)
 
@@ -161,5 +166,14 @@ If you want the shortest path to a working app shell + profiles + admin bootstra
 9. `sponsors_catalog.sql` + `sponsor_applications.sql` + checkout/invite columns + `sponsor_logo_enrichment.sql` + `safe_alignment_extension_2026_04.sql` (as needed)  
 10. `community.sql` → `community_v03_data_model.sql`  
 11. `admin_platform_rbac_v04.sql`  
+
+**Optional — IRS EO BMF import (501(c)(19) veterans orgs):**
+
+| Order | File | Notes |
+|------:|------|--------|
+| — | `irs_nonprofit_import_2026_07.sql` | Import tables + directory IRS columns |
+| — | `qa_irs_nonprofit_import_seed_2026_07.sql` | **QA only** sample rows |
+
+See `docs/IRS_NONPROFIT_IMPORT.md` for dry-run / apply CLI and admin review.
 
 Then add **`nonprofits_search_app_v1`** in Supabase when you are ready for directory search data.

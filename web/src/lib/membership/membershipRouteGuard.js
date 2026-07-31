@@ -1,5 +1,5 @@
 import { authFailureJson, resolveWorkOSRouteUser } from "@/lib/auth/workosRouteAuth";
-import { getProfileRowByWorkOSId } from "@/lib/profile/serverProfile";
+import { getProfileRowByWorkOSId, upsertProfileFromWorkOSUser } from "@/lib/profile/serverProfile";
 import {
   canCreateCommunityContent,
   canSaveOrganizations,
@@ -60,6 +60,7 @@ export function membershipDeniedResponse(scope, extra = {}) {
 
 /**
  * Resolve authenticated user + profile and enforce a membership scope on API routes.
+ * Ensures a profile row exists for WorkOS users (idempotent upsert) before gating.
  * @param {import('@supabase/supabase-js').SupabaseClient} admin
  * @param {'platform' | 'directory' | 'save_organizations' | 'community_view' | 'community_post' | 'podcast_premium' | 'trusted_pro'} scope
  */
@@ -67,11 +68,22 @@ export async function requireMembershipApi(admin, scope) {
   const auth = await resolveWorkOSRouteUser();
   if (!auth.ok) return { ok: false, response: authFailureJson(auth) };
 
-  const profileRow = await getProfileRowByWorkOSId(admin, auth.user.id);
+  let profileRow = await getProfileRowByWorkOSId(admin, auth.user.id);
+  if (!profileRow?.id) {
+    await upsertProfileFromWorkOSUser(admin, auth.user);
+    profileRow = await getProfileRowByWorkOSId(admin, auth.user.id);
+  }
   if (!profileRow?.id) {
     return {
       ok: false,
-      response: Response.json({ ok: false, error: "profile_required" }, { status: 403 }),
+      response: Response.json(
+        {
+          ok: false,
+          error: "profile_required",
+          message: "Your profile is still setting up. Try again in a moment.",
+        },
+        { status: 403 },
+      ),
     };
   }
 

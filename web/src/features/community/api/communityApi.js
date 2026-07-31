@@ -425,7 +425,7 @@ export async function fetchConnectionsBundle() {
   try {
     const res = await fetch("/api/community/connections", { credentials: "include", cache: "no-store" });
     const json = await res.json().catch(() => ({}));
-    if (!res.ok) return { ok: false, error: json.error || "load_failed", incoming: [], outgoing: [], connected: [], blocked: [] };
+    if (!res.ok) return { ok: false, error: json.error || "load_failed", message: json.message || "", incoming: [], outgoing: [], connected: [], blocked: [] };
     return {
       ok: true,
       viewerProfileId: json.viewerProfileId || "",
