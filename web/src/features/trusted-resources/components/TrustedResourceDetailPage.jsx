@@ -249,19 +249,6 @@ export default function TrustedResourceDetailPage({ slug, initialDetail = null }
                 <div className="trustedDetailHero__banner trustedDetailHero__banner--empty" aria-hidden="true" />
               )}
               <div className="trustedDetailHero__bannerScrim" aria-hidden="true" />
-              <div className="trustedDetailHero__logoSlot">
-                <OrganizationLogo
-                  src={resource.logoImage || ""}
-                  alt=""
-                  name={resource.name}
-                  entityKey={resource.trustedResourceSlug || resource.id}
-                  size="card"
-                  surface="page"
-                  panel="auto"
-                  fallback="icon"
-                  fallbackIcon={<NonprofitIcon category={cat} size={48} variant="default" />}
-                />
-              </div>
             </div>
 
             <div className="trustedDetailHero__panel card">
@@ -275,7 +262,22 @@ export default function TrustedResourceDetailPage({ slug, initialDetail = null }
                     </span>
                     Curated Trusted Resource
                   </p>
-                  <h1 className="trustedDetailHero__title">{resource.name}</h1>
+                  <div className="trustedDetailHero__identity">
+                    <div className="trustedDetailHero__logoSlot">
+                      <OrganizationLogo
+                        src={resource.logoImage || ""}
+                        alt=""
+                        name={resource.name}
+                        entityKey={resource.trustedResourceSlug || resource.id}
+                        size="card"
+                        surface="page"
+                        panel="auto"
+                        fallback="icon"
+                        fallbackIcon={<NonprofitIcon category={cat} size={48} variant="default" />}
+                      />
+                    </div>
+                    <h1 className="trustedDetailHero__title">{resource.name}</h1>
+                  </div>
                   <div className="trustedDetailHero__chips">
                     <span
                       className="trustedDetailHero__chip"
