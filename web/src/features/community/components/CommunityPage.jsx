@@ -66,6 +66,7 @@ export default function CommunityPage({
     feedScope: "public",
     sessionKind,
     isAuthenticated,
+    authLoading,
     sort: feedSort,
   });
   const canModerate = isAuthenticated && isModeratorUser({ userId, profile });

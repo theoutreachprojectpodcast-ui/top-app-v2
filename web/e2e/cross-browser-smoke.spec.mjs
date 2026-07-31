@@ -54,9 +54,11 @@ test.describe("cross-browser production smoke", () => {
         expect(String(commitHeader).toLowerCase()).toBe(expectCommit);
       }
 
+      // Ignore known-benign noise: browser CSP report-only (AuthKit), and
+      // membership-gated API 401/403 console lines from anonymous smoke.
       const critical = consoleErrors.filter(
         (e) =>
-          !/favicon|ResizeObserver|net::ERR_|hydration|third-party|chrome-extension|interactive-widget|Viewport argument key|upgrade-insecure-requests|Content Security Policy/i.test(
+          !/favicon|ResizeObserver|net::ERR_|hydration|third-party|chrome-extension|interactive-widget|Viewport argument key|upgrade-insecure-requests|Content[- ]Security[- ]Policy|Report-Only policy|status of 401|status of 403|Failed to load resource:.*\b40[13]\b|authkit\.app/i.test(
             e,
           ),
       );
