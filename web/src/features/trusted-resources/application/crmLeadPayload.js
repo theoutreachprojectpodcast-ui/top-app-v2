@@ -44,7 +44,7 @@ export function buildTrustedResourceCrmLeadPayload(applicationPayload = {}, meta
     },
     payment: {
       /** Reserved for CRM opportunity stage when billing connects */
-      feeStatus: String(p.application_fee_status || "unpaid"),
+      feeStatus: String(p.application_fee_status || "not_required"),
       demoStatus: String(p.payment_demo_status || "unpaid"),
     },
   };

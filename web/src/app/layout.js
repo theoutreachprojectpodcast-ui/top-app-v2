@@ -23,6 +23,7 @@ import AuthSessionProvider from "@/components/auth/AuthSessionProvider";
 import { ProfileDataProvider } from "@/features/profile/ProfileDataProvider";
 import { ProfileEditProvider } from "@/features/profile/ProfileEditProvider";
 import ScrollToTopOnNavigate from "@/components/navigation/ScrollToTopOnNavigate";
+import AppErrorBoundary from "@/components/app/AppErrorBoundary";
 import { PORTRAIT_LOCK_BOOTSTRAP_SCRIPT } from "@/lib/capacitor/portraitLockBootstrapScript";
 
 /** Mobile WebView + PWA safe areas (notches, home indicator). */
@@ -30,6 +31,8 @@ export const viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  // Android Chrome: resize layout with soft keyboard so fixed sheets stay usable.
+  interactiveWidget: "resizes-content",
 };
 
 const roboto = Roboto({
@@ -43,7 +46,7 @@ export const metadata = {
   title: "The Outreach Project",
   description: "Veteran and first responder resource network",
   applicationName: "The Outreach Project",
-  manifest: "/manifest.webmanifest?v=5",
+  manifest: "/manifest.webmanifest?v=6",
   appleWebApp: {
     capable: true,
     title: "TOP",
@@ -109,6 +112,7 @@ html[data-capacitor-native], html[data-capacitor-native] body {
                 <CapacitorNativeShell />
                 <MobileCapacitorSplashDismiss />
         <ColorSchemeRoot>
+          <AppErrorBoundary>
           <AuthSessionProvider>
             <ProfileDataProvider>
               <ProfileEditProvider>
@@ -133,6 +137,7 @@ html[data-capacitor-native], html[data-capacitor-native] body {
               </ProfileEditProvider>
             </ProfileDataProvider>
           </AuthSessionProvider>
+          </AppErrorBoundary>
         </ColorSchemeRoot>
       </body>
     </html>

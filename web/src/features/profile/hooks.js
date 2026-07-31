@@ -551,21 +551,53 @@ export function useProfileDataState(supabase) {
       }
       const targetEins = orderSavedEins(favoriteEins);
       const requestKey = savedEinsKey(targetEins);
-      if (!targetEins.length) {
-        setSavedOrganizations([]);
-        return;
-      }
+      const entityKeySnapshot = [...(favoriteEntityKeysRef.current || [])].join(",");
       try {
         if (workosRef.current) {
-          const res = await fetch("/api/me/saved-orgs/cards", { credentials: "include" });
-          if (cancelled || savedEinsKey(favoriteEinsRef.current) !== requestKey) return;
+          const res = await fetch("/api/me/saved-orgs/cards", { credentials: "include", cache: "no-store" });
+          if (cancelled) return;
           const j = await res.json().catch(() => ({}));
+          if (savedEinsKey(favoriteEinsRef.current) !== requestKey) return;
+          if ([...(favoriteEntityKeysRef.current || [])].join(",") !== entityKeySnapshot) {
+            /* entity keys changed mid-flight — still apply EIN rows; entity effect will refresh */
+          }
           const rows = Array.isArray(j.rows) ? j.rows : [];
-          setSavedOrganizations((prev) => mergeSavedOrgCardRows(prev, rows, targetEins));
+          const trustedCards = Array.isArray(j.trustedCards) ? j.trustedCards : [];
+          setSavedOrganizations((prev) => {
+            const einCards = mergeSavedOrgCardRows(prev, rows, targetEins);
+            const withoutStaleTrusted = (einCards || []).filter((c) => !c?.entityKey);
+            const mergedTrusted = trustedCards.map((card) => ({
+              ...mapNonprofitCardRow(
+                {
+                  ein: card.einNormalized || card.ein || "",
+                  orgName: card.orgName || card.name || "",
+                  city: card.city || "",
+                  state: card.state || "",
+                  logoUrl: card.logoUrl || "",
+                  website: card.website || "",
+                  shortDescription: card.shortDescription || "",
+                },
+                "saved",
+              ),
+              ...card,
+              name: card.name || card.orgName || "",
+              organizationUnavailable: card.organizationUnavailable === true,
+              savedResolutionStatus: card.savedResolutionStatus || "resolved",
+              entityKey: card.entityKey,
+              entityType: "trusted_resource",
+              detailPath: card.detailPath,
+              trustedResourceSlug: card.trustedResourceSlug,
+            }));
+            return [...withoutStaleTrusted, ...mergedTrusted];
+          });
           return;
         }
         if (!supabase) {
           setSavedOrganizations((prev) => filterSavedOrgCards(prev, targetEins));
+          return;
+        }
+        if (!targetEins.length) {
+          setSavedOrganizations([]);
           return;
         }
         const rows = await fetchSavedOrganizationsByEin(supabase, targetEins);
@@ -580,7 +612,7 @@ export function useProfileDataState(supabase) {
     return () => {
       cancelled = true;
     };
-  }, [supabase, favoriteEins, isAuthenticated]);
+  }, [supabase, favoriteEins, favoriteEntityKeys, isAuthenticated]);
 
   /**
    * @returns {Promise<{ ok: true, profile?: Record<string, unknown>, localOnly?: boolean } | { ok: false, message: string }>}
@@ -833,6 +865,14 @@ export function useProfileDataState(supabase) {
         entityFavoritesDirtyRef.current = false;
       } else {
         pendingEntityFlushRef.current = true;
+      }
+      // Slug→EIN promotion: merge newly saved EINs into the favorite EIN list.
+      const promoted = orderSavedEins(payload.promotedEins || []);
+      if (promoted.length) {
+        const merged = orderSavedEins([...favoriteEinsRef.current, ...promoted]);
+        einBaselineRef.current = merged;
+        favoriteEinsRef.current = merged;
+        setFavoriteEins(merged);
       }
     } catch {
       setProfileError("Saved favorites could not sync to the server. Check your connection and try again.");

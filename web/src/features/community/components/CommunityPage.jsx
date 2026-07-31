@@ -1,8 +1,9 @@
 "use client";
 
 import "@/features/community/community-feed.css";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import IconWrap from "@/components/shared/IconWrap";
 import CommunityTrustDisclosure from "@/features/community/components/CommunityTrustDisclosure";
 import CommunityConnectionsPanel from "@/features/community/components/CommunityConnectionsPanel";
@@ -22,6 +23,10 @@ import {
   openWebSignup,
   requiresExternalWebAccountFlow,
 } from "@/lib/capacitor/webAccountRedirects";
+import {
+  useScrollFocusedFieldIntoView,
+  useVisualViewportOverlay,
+} from "@/hooks/useVisualViewportOverlay";
 
 function CommunityIcon() {
   const path = "M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6m8 0a3 3 0 1 1 0-6 3 3 0 0 1 0 6M3 19c0-2.8 2.8-4 5-4s5 1.2 5 4m3 0c0-2.4 2.3-3.5 5-3.5 2.1 0 5 1 5 3.5";
@@ -43,11 +48,19 @@ export default function CommunityPage({
   profile,
   onRequestSignIn,
 }) {
+  const searchParams = useSearchParams();
   const [selectedMemberId, setSelectedMemberId] = useState("");
   const [composerOpen, setComposerOpen] = useState(false);
   const [editingPost, setEditingPost] = useState(null);
   const [feedSort, setFeedSort] = useState("connections_first");
   const [connectionsRefreshKey, setConnectionsRefreshKey] = useState(0);
+  const composerScrollRef = useRef(null);
+  const focusConnections =
+    String(searchParams.get("connections") || "").trim() === "1" ||
+    String(searchParams.get("tab") || "").trim().toLowerCase() === "connections";
+
+  useVisualViewportOverlay(composerOpen);
+  useScrollFocusedFieldIntoView(composerOpen, composerScrollRef);
 
   const { posts, loading, error, refresh, onToggleLike } = useCommunityFeed(supabase, userId, {
     feedScope: "public",
@@ -88,6 +101,15 @@ export default function CommunityPage({
     setComposerOpen(false);
     setEditingPost(null);
   }
+
+  useEffect(() => {
+    if (!composerOpen) return undefined;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [composerOpen]);
 
   async function handleAuthorDelete(post) {
     const result = await deleteAuthorCommunityPost(post?.id);
@@ -216,22 +238,41 @@ export default function CommunityPage({
       <CommunityTrustDisclosure />
 
       {isAuthenticated && canCreatePost && composerOpen ? (
-        <section className="card communitySection" aria-label={editingPost ? "Edit post" : "Create a Post"}>
-          <h3>{editingPost ? "Edit post" : "Create a Post"}</h3>
-          <CommunitySubmissionForm
-            supabase={supabase}
-            userId={userId}
-            authorName={authorName}
-            authorAvatarUrl={profile?.avatarUrl || ""}
-            useWorkOSApi={useWorkOSApi}
-            editPost={editingPost}
-            onClose={closeComposer}
-            onSubmitted={() => {
-              closeComposer();
-              refresh();
-            }}
-          />
-        </section>
+        <div
+          className="modalOverlay modalOverlay--communitySubmit"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="community-compose-title"
+          onClick={closeComposer}
+        >
+          <div
+            className="modalCard communitySubmitModalCard"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <header className="communitySubmitModalHead">
+              <h3 id="community-compose-title">{editingPost ? "Edit post" : "Create a Post"}</h3>
+              <button type="button" className="btnSoft sponsorModalClose" onClick={closeComposer}>
+                Close
+              </button>
+            </header>
+            <div className="communitySubmitModalBody">
+              <CommunitySubmissionForm
+                supabase={supabase}
+                userId={userId}
+                authorName={authorName}
+                authorAvatarUrl={profile?.avatarUrl || ""}
+                useWorkOSApi={useWorkOSApi}
+                editPost={editingPost}
+                scrollRef={composerScrollRef}
+                onClose={closeComposer}
+                onSubmitted={() => {
+                  closeComposer();
+                  refresh();
+                }}
+              />
+            </div>
+          </div>
+        </div>
       ) : null}
 
       {isAuthenticated && !canCreatePost ? (
@@ -249,6 +290,7 @@ export default function CommunityPage({
           viewerProfileId={profile?.profileRecordId || ""}
           refreshKey={connectionsRefreshKey}
           onOpenMember={setSelectedMemberId}
+          focusRequests={focusConnections}
         />
       ) : (
         <section className="card communitySection communitySignedOutHint">

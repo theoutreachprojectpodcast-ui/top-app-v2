@@ -11,6 +11,7 @@ import {
   mobileWebEntryUrl,
   webBaseUrl,
 } from "@/lib/runtime/appUrls";
+import { getPublicBuildIdentity } from "@/lib/runtime/buildIdentity";
 
 export function buildAuthHealth() {
   const issues = workOSEnvironmentIssues();
@@ -86,6 +87,7 @@ export async function buildFullProductionHealth() {
     supabaseAdmin: db.supabaseAdmin,
     oauthHandoffTable: db.oauthHandoffTable,
     timestamp: new Date().toISOString(),
+    build: getPublicBuildIdentity(),
     checks: { auth, db, env, mobile, stripe },
   };
 }

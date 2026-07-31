@@ -2,7 +2,7 @@
 
 import AppIcon from "@/components/shared/AppIcon";
 
-const WELCOME_ACTION_ICON_SIZE = 42;
+const WELCOME_ACTION_ICON_SIZE = 63;
 
 const FEATURES = [
   {

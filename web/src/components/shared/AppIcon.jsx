@@ -2,37 +2,33 @@
 
 import { Handshake, Mail, Mic, Search, UserRound, Users } from "lucide-react";
 
-const DEFAULT_SIZE = 14;
+const DEFAULT_SIZE = 21;
+/** Official curated badge asset (transparent PNG under /public/brand). */
+const TRUSTED_BADGE_SRC = "/brand/trusted-resource-badge.png";
+/** Default display size — 50% larger than the prior 72px mark. */
+const TRUSTED_BADGE_DEFAULT_SIZE = 108;
 
-function AppIconShell({ children }) {
+function AppIconShell({ children, className = "" }) {
   return (
-    <span className="iconWrap" aria-hidden="true">
+    <span className={`iconWrap${className ? ` ${className}` : ""}`} aria-hidden="true">
       {children}
     </span>
   );
 }
 
-/** Shield outline with centered cross (trusted resources). */
-function TrustedShieldCrossIcon({ size = DEFAULT_SIZE }) {
+/** Official Trusted Resource badge — standalone mark, no icon frame. */
+function TrustedBrandMark({ size = TRUSTED_BADGE_DEFAULT_SIZE }) {
   return (
-    <AppIconShell>
-      <svg
-        viewBox="0 0 24 24"
-        className="iconStroke"
+    <span className="trustedBrandMark" aria-hidden="true" style={{ width: size, height: size }}>
+      <img
+        src={TRUSTED_BADGE_SRC}
+        alt=""
         width={size}
         height={size}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-        focusable="false"
-      >
-        <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" />
-        <path d="M12 8v8M8 12h8" />
-      </svg>
-    </AppIconShell>
+        className="trustedBrandMarkImg"
+        decoding="async"
+      />
+    </span>
   );
 }
 
@@ -54,7 +50,7 @@ export default function AppIcon({ name, size = DEFAULT_SIZE }) {
         </AppIconShell>
       );
     case "trusted":
-      return <TrustedShieldCrossIcon size={size} />;
+      return <TrustedBrandMark size={size === DEFAULT_SIZE ? TRUSTED_BADGE_DEFAULT_SIZE : size} />;
     case "community":
       return (
         <AppIconShell>

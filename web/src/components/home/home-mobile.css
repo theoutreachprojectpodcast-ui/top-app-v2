@@ -627,15 +627,15 @@
   }
 
   .homeFeatureList .card.action.welcomeActionCard--uniform .iconWrap {
-    width: 44px;
-    height: 44px;
+    width: 66px;
+    height: 66px;
     flex-shrink: 0;
     margin: 0;
   }
 
   .homeFeatureList .card.action.welcomeActionCard--uniform .iconStroke {
-    width: 28px;
-    height: 28px;
+    width: 42px;
+    height: 42px;
   }
 
   .homeFeatureList .welcomeActionText {

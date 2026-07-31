@@ -71,6 +71,17 @@ export function syncCapacitorViewport({ lockPortrait = true } = {}) {
   root.style.setProperty("--cap-portrait-height", `${layoutHeight}px`);
   root.style.setProperty("--cap-app-height", `${isPortrait ? window.innerHeight : layoutHeight}px`);
 
+  // Soft keyboard: track visual viewport so overlays can avoid being covered.
+  const vv = window.visualViewport;
+  if (vv) {
+    root.style.setProperty("--vv-top", `${Math.max(0, vv.offsetTop || 0)}px`);
+    root.style.setProperty("--vv-left", `${Math.max(0, vv.offsetLeft || 0)}px`);
+    root.style.setProperty("--vv-width", `${Math.max(0, vv.width || window.innerWidth || 0)}px`);
+    root.style.setProperty("--vv-height", `${Math.max(0, vv.height || window.innerHeight || 0)}px`);
+    const keyboardOpen = (window.innerHeight || 0) > 0 && vv.height < window.innerHeight * 0.85;
+    root.dataset.keyboardOpen = keyboardOpen ? "1" : "0";
+  }
+
   // Force style/layout recalc after orientation transitions.
   void root.offsetHeight;
   window.dispatchEvent(new Event("resize"));

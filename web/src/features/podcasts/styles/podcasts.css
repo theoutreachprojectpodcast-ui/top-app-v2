@@ -1196,6 +1196,7 @@ main.topApp[data-page-atmosphere="podcast"] .headerBrandStack > a {
 }
 .podcastModalOverlay {
   background: rgba(2, 4, 9, 0.92);
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
 }
 .podcastSponsorFlowOverlay {

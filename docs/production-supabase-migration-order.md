@@ -87,6 +87,8 @@ where platform_role is null
 | 8 | `community_v03_data_model.sql` | Community v3 extensions |
 | 9 | `top_app_saved_org_eins.sql` | Saved organizations |
 | 9.1 | `saved_org_name_resolution_2026_07.sql` | Saved-org EIN index + normalize + RLS confirm |
+| 9.2 | `saved_orgs_profile_id_2026_07.sql` | Optional profile_id for reconciliation |
+| 9.3 | `saved_orgs_incident_repair_2026_07.sql` | Incident repair: profile_id backfill + Support report + MV refresh |
 | 10 | `top_platform_notifications.sql` | Notifications |
 | 11 | `trusted_resources.sql` | Trusted resources catalog |
 | 12 | `trusted_resource_applications.sql` | Trusted resource applications |

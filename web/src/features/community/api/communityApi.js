@@ -472,7 +472,24 @@ export async function mutateConnectionApi({ action, targetProfileId, connectionI
       }),
     });
     const json = await res.json().catch(() => ({}));
-    if (!res.ok) return { ok: false, message: json.message || "Could not update connection." };
+    if (!res.ok) {
+      const errCode = String(json.error || "").trim();
+      const friendly =
+        errCode === "membership_required"
+          ? "Pro membership is required to manage connections."
+          : errCode === "profile_required"
+            ? "Your profile is still setting up. Refresh and try again."
+            : errCode === "missing_origin" || errCode === "origin_mismatch"
+              ? "Could not verify this request. Refresh the page and try again."
+              : errCode === "rate_limited"
+                ? "Too many connection actions. Wait a moment and try again."
+                : "";
+      return {
+        ok: false,
+        message: json.message || friendly || "Could not update connection.",
+        error: errCode || "request_failed",
+      };
+    }
     return {
       ok: true,
       message: json.message,

@@ -585,10 +585,12 @@ export async function acceptConnectionRequest(admin, { viewerProfileId, connecti
   const viewer = String(viewerProfileId || "").trim();
   let row = null;
 
-  if (otherProfileId) {
-    row = await findActiveConnectionBetween(admin, viewer, otherProfileId);
-  } else if (connectionId) {
+  // Prefer explicit connection id (UI inbox), then pair lookup.
+  if (connectionId) {
     row = await findConnectionById(admin, viewer, connectionId);
+  }
+  if ((!row || String(row.status) !== "pending") && otherProfileId) {
+    row = await findActiveConnectionBetween(admin, viewer, otherProfileId);
   }
 
   if (!row || String(row.status) !== "pending") {
@@ -637,10 +639,11 @@ export async function mutateConnectionStatus(admin, { viewerProfileId, connectio
   let row = null;
   const targetOther = String(otherProfileId || "").trim();
 
-  if (targetOther) {
-    row = await findActiveConnectionBetween(admin, viewer, targetOther);
-  } else if (connectionId) {
+  if (connectionId) {
     row = await findConnectionById(admin, viewer, connectionId);
+  }
+  if (!row && targetOther) {
+    row = await findActiveConnectionBetween(admin, viewer, targetOther);
   }
 
   // Block may create a new relationship when none exists.

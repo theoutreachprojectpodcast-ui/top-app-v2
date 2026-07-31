@@ -17,7 +17,13 @@ function getSnapshot() {
   return window.matchMedia(MOBILE_SHELL_MQ).matches;
 }
 
-/** True on phone-sized viewports (≤760px), including Capacitor iOS WebView. */
+/**
+ * True on phone-sized viewports (≤760px), including Capacitor iOS WebView.
+ *
+ * Server snapshot is always `false` so SSR HTML matches the first hydrated paint.
+ * Prefer CSS media-query slots (`.topbarDownloadSlot--phoneOnly` / `--desktopOnly`)
+ * for chrome placement so browsers do not flash alternate header trees.
+ */
 export function useMobileShell() {
   return useSyncExternalStore(subscribe, getSnapshot, () => false);
 }

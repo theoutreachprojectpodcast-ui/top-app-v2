@@ -6,15 +6,8 @@ import {
   searchDirectoryOrganizations,
   submitTrustedResourceApplication,
 } from "@/features/trusted-resources/application/trustedResourceApplicationApi";
-import {
-  completeTrustedResourceApplicationFeeDemo,
-  startTrustedResourceApplicationPayment,
-} from "@/features/trusted-resources/application/applicationPaymentAdapter";
 import { SERVICE_OPTIONS, STATES } from "@/lib/constants";
 import { parseEinStrict } from "@/lib/supabase/trustedResourcesCatalog";
-import { isDemoModeEnabled } from "@/lib/runtime/launchMode";
-
-const FEE_AMOUNT = 49;
 
 const INITIAL_FORM = {
   applicant_first_name: "",
@@ -40,12 +33,11 @@ const INITIAL_FORM = {
   agreed_to_values: false,
   agreed_info_accuracy: false,
   acknowledged_review_process: false,
-  application_fee_status: "unpaid",
-  payment_demo_status: "unpaid",
+  application_fee_status: "not_required",
+  payment_demo_status: "not_required",
 };
 
 export default function TrustedResourceApplicationForm({ supabase, onClose }) {
-  const demoModeEnabled = isDemoModeEnabled();
   const [form, setForm] = useState(INITIAL_FORM);
   const [searchTerm, setSearchTerm] = useState("");
   const [searching, setSearching] = useState(false);
@@ -53,7 +45,6 @@ export default function TrustedResourceApplicationForm({ supabase, onClose }) {
   const [submitting, setSubmitting] = useState(false);
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
-  const [feePaid, setFeePaid] = useState(false);
 
   const canSubmit = useMemo(() => {
     const baseValid =
@@ -74,8 +65,8 @@ export default function TrustedResourceApplicationForm({ supabase, onClose }) {
     if (!baseValid) return false;
     if (form.organization_path === "existing" && !form.organization_id) return false;
     if (form.organization_path === "new" && !parseEinStrict(form.organization_ein)) return false;
-    return demoModeEnabled ? feePaid : true;
-  }, [demoModeEnabled, form, feePaid]);
+    return true;
+  }, [form]);
 
   async function runSearch() {
     setSearching(true);
@@ -104,31 +95,6 @@ export default function TrustedResourceApplicationForm({ supabase, onClose }) {
     setStatus(`Selected ${org.name}.`);
   }
 
-  /**
-   * FUTURE_PAYMENT_PROVIDER: startTrustedResourceApplicationPayment will call your backend to create a charge/session.
-   * Today we complete the demo ledger only after the adapter reports readiness.
-   */
-  async function payApplicationFee() {
-    if (!demoModeEnabled) {
-      setStatus("Live payment collection is not configured yet. Submit will be recorded for manual billing follow-up.");
-      return;
-    }
-    setStatus("");
-    await startTrustedResourceApplicationPayment({ amountUsd: FEE_AMOUNT, applicationDraft: form });
-    const result = await completeTrustedResourceApplicationFeeDemo({ amountUsd: FEE_AMOUNT });
-    if (!result.ok) {
-      setError("Could not record fee status.");
-      return;
-    }
-    setFeePaid(true);
-    setForm((f) => ({
-      ...f,
-      application_fee_status: result.application_fee_status,
-      payment_demo_status: result.payment_demo_status,
-    }));
-    setStatus("Application fee recorded (demo). Connect Stripe or another provider to collect live payments.");
-  }
-
   async function onSubmit(e) {
     e.preventDefault();
     if (!canSubmit) return;
@@ -138,8 +104,8 @@ export default function TrustedResourceApplicationForm({ supabase, onClose }) {
     try {
       const payload = {
         ...form,
-        application_fee_status: demoModeEnabled ? form.application_fee_status : "pending_review_no_live_checkout",
-        payment_demo_status: demoModeEnabled ? form.payment_demo_status : "provider_not_configured",
+        application_fee_status: "not_required",
+        payment_demo_status: "not_required",
         organization_id: form.organization_id || null,
         review_status: "submitted",
       };
@@ -154,7 +120,6 @@ export default function TrustedResourceApplicationForm({ supabase, onClose }) {
         }).catch(() => {});
       }
       if (result.ok) setForm(INITIAL_FORM);
-      if (result.ok) setFeePaid(false);
     } catch {
       setError("Submission failed. Please retry.");
     } finally {
@@ -286,25 +251,9 @@ export default function TrustedResourceApplicationForm({ supabase, onClose }) {
             </div>
           </section>
 
-          <section className="applySection applyFeeCard" data-integration="payment-placeholder">
-            <h4>Application fee</h4>
-            <p className="applyFeeAmount">Amount: ${FEE_AMOUNT} USD</p>
-            <p className="applyFeeStatus">Status: {demoModeEnabled ? (feePaid ? "Recorded (demo)" : "Unpaid") : "Pending manual billing follow-up"}</p>
-            <p className="applyFeeNote">
-              {demoModeEnabled
-                ? "FUTURE_PAYMENT_PROVIDER: this will open hosted checkout when wired. The payment adapter module is the integration seam for Stripe or another provider."
-                : "Live payment provider is not connected in this environment. Submission is captured for review and billing follow-up."}
-            </p>
-            {demoModeEnabled && !feePaid && (
-              <button className="btnPrimary" type="button" onClick={() => void payApplicationFee()}>
-                Pay application fee (demo)
-              </button>
-            )}
-          </section>
-
           <section className="applySection">
             <h4>Review & Submit</h4>
-            <p>Please review your details before submitting. Applications enter `submitted` status and are queued for internal review.</p>
+            <p>Please review your details before submitting. Applications enter `submitted` status and are queued for internal review. There is no application fee.</p>
           </section>
 
           {error ? <p className="applyError">{error}</p> : null}

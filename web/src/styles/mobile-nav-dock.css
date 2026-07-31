@@ -159,7 +159,8 @@ main.topApp[data-page-atmosphere="podcast"] .siteMobileNavMore__entry:hover {
 }
 
 @media (min-width: 761px) {
-  .siteMobileNavMore--phoneOnly {
+  .siteMobileNavMore--phoneOnly,
+  .topbarDownloadSlot--phoneOnly {
     display: none !important;
   }
 
@@ -169,7 +170,9 @@ main.topApp[data-page-atmosphere="podcast"] .siteMobileNavMore__entry:hover {
 }
 
 @media (max-width: 760px) {
-  .siteMobileNavMore--desktopOnly {
+  .siteMobileNavMore--desktopOnly,
+  .topbarDownloadSlot--desktopOnly,
+  .topbarAdminSlot--desktopOnly {
     display: none !important;
   }
 

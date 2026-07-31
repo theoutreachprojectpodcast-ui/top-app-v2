@@ -60,7 +60,9 @@ export default function SavedOrganizationsList({
         ) : (
           <div className="savedOrganizationsPanel__list results" id="saved-organizations-list">
             {orderedOrgs.map((card) => {
-              const key = String(card?.einNormalized || card?.ein || card?.nonprofitId || "");
+              const key = String(
+                card?.entityKey || card?.einNormalized || card?.ein || card?.nonprofitId || "",
+              );
               return (
                 <SavedOrganizationCard
                   key={`saved-${key}`}

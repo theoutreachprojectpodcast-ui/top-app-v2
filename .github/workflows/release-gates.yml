@@ -103,6 +103,17 @@ jobs:
           PRODUCTION_BASE_URL: https://theoutreachproject.app
           VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
 
+      - name: Install Playwright browsers
+        run: pnpm --dir web exec playwright install --with-deps chromium firefox webkit
+
+      - name: Cross-browser Playwright smoke (production)
+        run: pnpm --dir web run test:e2e:smoke
+        env:
+          PLAYWRIGHT_BASE_URL: https://theoutreachproject.app
+          PRODUCTION_BASE_URL: https://theoutreachproject.app
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+          CI: "true"
+
   production-smoke-manual:
     runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch' && inputs.run_production_smoke

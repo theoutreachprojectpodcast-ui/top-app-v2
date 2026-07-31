@@ -8,8 +8,21 @@ import {
 } from "@/lib/supabase/queries";
 import { TRUSTED_RESOURCES_TABLE } from "@/lib/supabase/trustedResourcesCatalog";
 import { isPlaceholderOrgName } from "@/lib/formatOrgName";
+import {
+  TRUSTED_RESOURCE_CANONICAL_RECORDS,
+  normalizeTrustedResourceEin,
+} from "@/features/trusted-resources/trustedResourcesRegistry";
 
 const TRUSTED_PROFILES_SOURCE = "nonprofit_profiles";
+
+function trustedRegistryHasEin(ein) {
+  for (const rec of TRUSTED_RESOURCE_CANONICAL_RECORDS || []) {
+    for (const raw of rec.eins || []) {
+      if (normalizeTrustedResourceEin(raw) === ein) return true;
+    }
+  }
+  return false;
+}
 
 /** @typedef {'resolved' | 'unavailable'} SavedOrgResolutionStatus */
 
@@ -274,7 +287,8 @@ export async function resolveSavedOrganizationDirectoryRows(supabase, einOrdered
 }
 
 /**
- * Confirm a nonprofit exists for save/favorite (directory, legacy table, enrichment, curated profile, or trusted catalog).
+ * Confirm a nonprofit exists for save/favorite (directory, legacy table, enrichment, curated profile,
+ * trusted catalog, or curated trusted-resources registry).
  * Must stay aligned with sources that can appear in Directory / Trusted Resources UI.
  * @param {import('@supabase/supabase-js').SupabaseClient} supabase
  * @param {string} einRaw
@@ -282,6 +296,10 @@ export async function resolveSavedOrganizationDirectoryRows(supabase, einOrdered
 export async function nonprofitExistsForSave(supabase, einRaw) {
   const ein = normalizeEinDigits(einRaw);
   if (ein.length !== 9 || !supabase) return false;
+
+  // Curated Trusted Resources registry (in-code) — never reject an org the Trusted UI can show.
+  if (trustedRegistryHasEin(ein)) return true;
+
   const { byEin } = await queryDirectoryOrgsByEins(supabase, [ein]);
   if (byEin?.has(ein)) return true;
 

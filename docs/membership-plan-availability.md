@@ -39,6 +39,7 @@ Run in Supabase SQL Editor:
 - Use **Admin → Memberships → Support-to-Pro Migration** to grant complimentary Pro through the original paid period end
 - See `docs/support-to-pro-migration.md`
 - While Support is disabled: new Support purchases remain blocked
+- **Saved organizations:** active Support subscribers retain save/unsave access (`requireSupportOrPro`) so existing accounts are not locked out while migration completes. Directory, community, trusted catalog browsing gates remain Pro-only.
 
 ## Rollback
 

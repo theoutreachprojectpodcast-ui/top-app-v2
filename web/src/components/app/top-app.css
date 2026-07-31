@@ -287,7 +287,7 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topba
   grid-column: 3;
   grid-row: 1;
   position: relative;
-  z-index: 2;
+  z-index: 5;
   display: flex;
   align-items: flex-start;
   justify-content: flex-end;
@@ -1271,6 +1271,8 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]),
   border-radius: 14px;
   border: 1px solid var(--color-border-subtle);
   overflow: hidden;
+  background-color: var(--color-bg-elevated, var(--color-bg-card));
+  background-image: none;
 }
 .headerNotificationDropdown__head {
   display: flex;
@@ -2496,15 +2498,15 @@ span.headerBrandMarkFallback {
   display: block;
   width: 100%;
 }
-/* Home main action buttons: icon plate + glyph at 200% of prior size (33→66, 21→42). */
+/* Home main action buttons: icon plate + glyph (~1.5× prior uniform size). */
 .card.action.welcomeActionCard--uniform .iconWrap {
-  width: 66px;
-  height: 66px;
+  width: 99px;
+  height: 99px;
   flex-shrink: 0;
 }
 .card.action.welcomeActionCard--uniform .iconStroke {
-  width: 42px;
-  height: 42px;
+  width: 63px;
+  height: 63px;
 }
 .card.action.welcomeActionCard--uniform .welcomeActionHint {
   width: 100%;
@@ -2953,8 +2955,8 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   border-color: color-mix(in srgb, var(--color-accent) 28%, var(--color-border) 72%);
 }
 .iconWrap {
-  width: 22px;
-  height: 22px;
+  width: 33px;
+  height: 33px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2962,9 +2964,30 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   border-radius: var(--radius-pill);
   background: var(--color-accent-soft);
 }
+.trustedBrandMark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
+  border-radius: 0;
+  overflow: visible;
+  line-height: 0;
+}
+.trustedBrandMarkImg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  background: transparent;
+}
 .iconStroke {
-  width: 14px;
-  height: 14px;
+  width: 21px;
+  height: 21px;
   fill: none;
   stroke: var(--color-accent);
   stroke-width: 2;
@@ -3940,6 +3963,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   position: fixed;
   inset: 0;
   background: var(--color-overlay-backdrop);
+  -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
   display: grid;
   place-items: center;
@@ -5106,6 +5130,16 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   font-size: var(--text-section-title);
   font-weight: 800;
 }
+.communityConnectionsStack {
+  display: grid;
+  gap: var(--ds-space-3, 12px);
+}
+.communityConnectionsRequestsCard {
+  border-color: color-mix(in srgb, var(--color-accent) 28%, var(--color-border));
+}
+.communityConnectionsRequestsCard .communitySectionHead {
+  margin-bottom: var(--ds-space-2, 8px);
+}
 .communityConnectionsPanel {
   padding: 0;
   overflow: hidden;
@@ -5560,7 +5594,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 }
 
 .communitySubmitModalCard {
-  width: min(760px, 96vw);
+  width: min(760px, calc(100vw - 24px));
   max-height: min(92dvh, 900px);
   padding: 0;
   gap: 0;
@@ -5568,23 +5602,123 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   display: flex;
   flex-direction: column;
   align-items: stretch;
+  min-width: 0;
+  box-sizing: border-box;
 }
 .communitySubmitModalHead {
   flex-shrink: 0;
-  padding: var(--ds-space-5, 20px) var(--ds-space-5, 20px) var(--ds-space-3, 12px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ds-space-3, 12px);
+  padding: var(--ds-space-4, 16px) var(--ds-space-5, 20px);
   border-bottom: 1px solid var(--color-border-subtle);
+}
+.communitySubmitModalHead h3 {
+  margin: 0;
+  font-size: var(--text-section-title, 1.125rem);
+  font-weight: 800;
+  min-width: 0;
 }
 .communitySubmitModalBody {
   flex: 1 1 auto;
   min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-  padding: var(--ds-space-4, 16px) var(--ds-space-5, 20px) var(--ds-space-5, 20px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
 }
 .modalOverlay--communitySubmit {
   overflow: hidden;
   overscroll-behavior: none;
+  z-index: 140;
+  /* Prefer visual viewport so soft keyboards do not cover the sheet */
+  inset: auto;
+  top: var(--vv-top, 0px);
+  left: var(--vv-left, 0px);
+  width: var(--vv-width, 100%);
+  height: var(--vv-height, 100dvh);
+  max-height: var(--vv-height, 100dvh);
+  box-sizing: border-box;
+}
+.communitySubmitModal {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+  height: 100%;
+}
+.communitySubmitModalScroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: var(--ds-space-4, 16px) var(--ds-space-5, 20px);
+  display: grid;
+  gap: var(--ds-space-3, 12px);
+  align-content: start;
+}
+.communitySubmitLead {
+  margin: 0;
+  font-size: var(--text-body-sm);
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+.communitySubmitForm--ds {
+  display: grid;
+  gap: var(--ds-space-3, 12px);
+  min-width: 0;
+}
+.communitySubmitForm--ds .fieldLabel {
+  display: grid;
+  gap: var(--ds-space-1, 4px);
+  margin: 0;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+.communitySubmitForm--ds .dsChoiceGroup {
+  margin-top: 4px;
+}
+/* 16px+ prevents iOS Safari focus zoom */
+.communitySubmitForm--ds .communitySubmitInput,
+.communitySubmitForm--ds input.communitySubmitInput,
+.communitySubmitForm--ds select.communitySubmitInput,
+.communitySubmitForm--ds textarea.communitySubmitInput {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  min-height: 44px;
+  font-size: 16px;
+  line-height: 1.4;
+  border-radius: var(--radius-input, 12px);
+  border: 1px solid var(--color-input-border, var(--color-border-subtle));
+  background: var(--color-input, var(--color-bg-card));
+  color: var(--color-text-primary);
+  padding: 11px 14px;
+}
+.communitySubmitForm--ds textarea.communitySubmitInput--body {
+  min-height: 132px;
+  resize: vertical;
+  /* Keep focused field from expanding the sheet while typing */
+  max-height: min(40vh, 280px);
+}
+.communityStoryPhotoField {
+  display: grid;
+  gap: var(--ds-space-2, 8px);
+  min-width: 0;
+}
+.communityStoryPhotoHint {
+  margin: 0;
+  font-size: var(--text-caption, 12px);
+  line-height: 1.45;
+  color: var(--color-text-muted);
 }
 .communityStoryPhotoLabel {
   margin-top: 4px;
@@ -5602,11 +5736,31 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   border: 0;
 }
 .communityStoryPhotoTrigger {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   justify-self: start;
-  margin-top: 2px;
+  cursor: pointer;
+  margin: 0;
 }
 .communityStoryPhotoRemove {
   justify-self: start;
+}
+.communitySubmitModalFoot {
+  flex-shrink: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-space-2, 8px);
+  justify-content: flex-end;
+  padding: var(--ds-space-3, 12px) var(--ds-space-5, 20px)
+    max(var(--ds-space-3, 12px), env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--color-border-subtle);
+  background: var(--color-bg-card);
+}
+.communitySubmitModalFoot .btnPrimary,
+.communitySubmitModalFoot .btnSoft {
+  min-height: 44px;
 }
 .communityPostCard {
   border: 1px solid var(--color-border);
@@ -5999,9 +6153,12 @@ html.dark .communityPostBodyGuideSteps li {
   border-radius: 12px;
   overflow: hidden;
   padding: 10px;
+  min-width: 0;
+  max-width: 100%;
 }
 .communityUploadPreview img {
   width: 100%;
+  max-width: 100%;
   height: auto;
   display: block;
   max-height: 200px;
@@ -7864,12 +8021,53 @@ html.dark .communityPostBodyGuideSteps li {
     grid-template-columns: 1fr;
   }
   .communitySubmitModalCard {
-    width: min(100%, 100%);
-    max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 20px);
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    max-height: 100%;
+    border-radius: 0;
+    margin: 0;
   }
   .modalOverlay--communitySubmit {
+    display: flex;
+    align-items: stretch;
+    justify-content: stretch;
+    place-items: unset;
+    padding: 0;
     overflow: hidden;
-    place-items: center;
+    inset: auto;
+    top: var(--vv-top, 0px);
+    left: var(--vv-left, 0px);
+    width: var(--vv-width, 100%);
+    height: var(--vv-height, 100dvh);
+    max-height: var(--vv-height, 100dvh);
+  }
+  .communitySubmitModalHead {
+    padding: max(12px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 12px
+      max(16px, env(safe-area-inset-left, 0px));
+  }
+  html[data-keyboard-open="1"] .communitySubmitModalHead {
+    padding-top: 12px;
+  }
+  .communitySubmitModalScroll {
+    padding: 12px max(16px, env(safe-area-inset-right, 0px)) 12px max(16px, env(safe-area-inset-left, 0px));
+  }
+  .communitySubmitModalFoot {
+    padding: 12px max(16px, env(safe-area-inset-right, 0px)) max(12px, env(safe-area-inset-bottom, 0px))
+      max(16px, env(safe-area-inset-left, 0px));
+  }
+  html[data-keyboard-open="1"] .communitySubmitModalFoot {
+    /* Keyboard already insets the visual viewport — avoid double bottom gap */
+    padding-bottom: 12px;
+  }
+  html[data-keyboard-open="1"] .communitySubmitForm--ds textarea.communitySubmitInput--body {
+    max-height: min(28vh, 180px);
+    resize: none;
+  }
+  .communitySubmitModalFoot .btnPrimary,
+  .communitySubmitModalFoot .btnSoft {
+    flex: 1 1 calc(50% - 4px);
+    justify-content: center;
   }
   .communitySectionHead {
     align-items: flex-start;
@@ -8124,6 +8322,8 @@ html.dark .communityPostBodyGuideSteps li {
 }
 .nonprofitProfileShell {
   min-height: 100vh;
+  min-height: 100dvh;
+  min-height: 100svh;
   padding-bottom: var(--ds-space-10, 40px);
 }
 .nonprofitProfileTopbarInner.topbarInner {
