@@ -22,6 +22,19 @@ function logSavedOrgs(event, fields) {
   );
 }
 
+async function listEinsForUser(admin, workosUserId) {
+  const { data, error } = await admin
+    .from(SAVED_TABLE)
+    .select("ein,sort_order")
+    .eq("user_id", workosUserId)
+    .order("sort_order", { ascending: true });
+  if (error) return { ok: false, error, eins: [] };
+  const eins = [
+    ...new Set((data || []).map((r) => normalizeEinDigits(r.ein)).filter((e) => e.length === 9)),
+  ];
+  return { ok: true, eins };
+}
+
 export async function GET() {
   const correlationId = randomUUID();
   const auth = await resolveWorkOSRouteUser();
@@ -40,28 +53,217 @@ export async function GET() {
   }
   const user = auth.user;
   if (!admin) {
-    return Response.json({ eins: [], correlationId });
+    return Response.json({ ok: true, eins: [], correlationId });
   }
-  const { data, error } = await admin
-    .from(SAVED_TABLE)
-    .select("ein,sort_order")
-    .eq("user_id", user.id)
-    .order("sort_order", { ascending: true });
-  if (error || !Array.isArray(data)) {
+  const listed = await listEinsForUser(admin, user.id);
+  if (!listed.ok) {
     logSavedOrgs("get_failed", {
       correlationId,
       workosUserId: user.id,
-      dbError: error?.code || error?.message || "empty",
+      dbError: listed.error?.code || listed.error?.message || "empty",
     });
-    return Response.json({ eins: [], correlationId });
+    // Do not soft-return [] — clients treat empty as authoritative wipe.
+    return Response.json(
+      {
+        ok: false,
+        error: "read_failed",
+        message: listed.error?.message || "Could not load saved organizations.",
+        correlationId,
+      },
+      { status: 500 },
+    );
   }
-  const eins = [...new Set(data.map((r) => normalizeEinDigits(r.ein)).filter((e) => e.length === 9))];
   logSavedOrgs("get_ok", {
     correlationId,
     workosUserId: user.id,
-    count: eins.length,
+    count: listed.eins.length,
   });
-  return Response.json({ eins, correlationId });
+  return Response.json({ ok: true, eins: listed.eins, correlationId });
+}
+
+/**
+ * Idempotent single-EIN save / unsave.
+ * Body: { action: "save" | "unsave", ein: string }
+ */
+export async function POST(request) {
+  const correlationId = randomUUID();
+  const mutationId = randomUUID();
+  const __guard = guardMutation(request, { rateKey: "me-saved-orgs-toggle", limit: 60 });
+  if (!__guard.ok) return guardFailureResponse(__guard);
+  const auth = await resolveWorkOSRouteUser();
+  if (!auth.ok) return authFailureJson(auth);
+  const user = auth.user;
+  const admin = createSupabaseAdminClient();
+  if (!admin) {
+    return Response.json({ error: "server_storage_unavailable", correlationId, mutationId }, { status: 503 });
+  }
+  const membership = await requireMembershipApi(admin, "save_organizations");
+  if (!membership.ok) {
+    logSavedOrgs("toggle_denied", {
+      correlationId,
+      mutationId,
+      workosUserId: user.id,
+      status: membership.response?.status || 403,
+    });
+    return membership.response;
+  }
+  const profileId = membership.profileRow?.id || null;
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json({ error: "invalid_json", correlationId, mutationId }, { status: 400 });
+  }
+
+  const action = String(body?.action || "").trim().toLowerCase();
+  const ein = normalizeEinDigits(body?.ein);
+  if (ein.length !== 9) {
+    return Response.json(
+      { error: "invalid_ein", message: "A valid 9-digit EIN is required.", correlationId, mutationId },
+      { status: 400 },
+    );
+  }
+  if (action !== "save" && action !== "unsave") {
+    return Response.json(
+      { error: "invalid_action", message: 'action must be "save" or "unsave".', correlationId, mutationId },
+      { status: 400 },
+    );
+  }
+
+  if (action === "unsave") {
+    const { error: delErr } = await admin.from(SAVED_TABLE).delete().eq("user_id", user.id).eq("ein", ein);
+    if (delErr) {
+      logSavedOrgs("toggle_unsave_failed", {
+        correlationId,
+        mutationId,
+        workosUserId: user.id,
+        profileId,
+        organizationId: ein,
+        dbError: delErr.code || delErr.message,
+      });
+      return Response.json(
+        { error: "delete_failed", message: delErr.message, correlationId, mutationId },
+        { status: 500 },
+      );
+    }
+    const listed = await listEinsForUser(admin, user.id);
+    logSavedOrgs("toggle_unsave_ok", {
+      correlationId,
+      mutationId,
+      workosUserId: user.id,
+      profileId,
+      organizationId: ein,
+      entityType: "nonprofit_ein",
+      action: "unsave",
+      count: listed.eins.length,
+    });
+    return Response.json({
+      ok: true,
+      saved: false,
+      ein,
+      eins: listed.ok ? listed.eins : [],
+      correlationId,
+      mutationId,
+    });
+  }
+
+  // save
+  const exists = await nonprofitExistsForSave(admin, ein);
+  if (!exists) {
+    logSavedOrgs("toggle_save_rejected", {
+      correlationId,
+      mutationId,
+      workosUserId: user.id,
+      profileId,
+      organizationId: ein,
+      entityType: "nonprofit_ein",
+      action: "save",
+    });
+    return Response.json(
+      {
+        error: "nonprofit_not_found",
+        message: "This organization could not be saved because it is not in the directory.",
+        rejectedEins: [ein],
+        correlationId,
+        mutationId,
+      },
+      { status: 400 },
+    );
+  }
+
+  const listedBefore = await listEinsForUser(admin, user.id);
+  const sortOrder = listedBefore.ok ? listedBefore.eins.length : 0;
+  const { error: upsErr } = await admin.from(SAVED_TABLE).upsert(
+    {
+      user_id: user.id,
+      ein,
+      sort_order: sortOrder,
+      ...(profileId ? { profile_id: profileId } : {}),
+    },
+    { onConflict: "user_id,ein" },
+  );
+  if (upsErr) {
+    // profile_id column may not exist yet — retry without it.
+    const missingCol =
+      String(upsErr.message || "").toLowerCase().includes("profile_id") ||
+      String(upsErr.code || "") === "PGRST204";
+    if (missingCol) {
+      const { error: upsErr2 } = await admin.from(SAVED_TABLE).upsert(
+        { user_id: user.id, ein, sort_order: sortOrder },
+        { onConflict: "user_id,ein" },
+      );
+      if (upsErr2) {
+        logSavedOrgs("toggle_save_failed", {
+          correlationId,
+          mutationId,
+          workosUserId: user.id,
+          profileId,
+          organizationId: ein,
+          dbError: upsErr2.code || upsErr2.message,
+        });
+        return Response.json(
+          { error: "upsert_failed", message: upsErr2.message, correlationId, mutationId },
+          { status: 500 },
+        );
+      }
+    } else {
+      logSavedOrgs("toggle_save_failed", {
+        correlationId,
+        mutationId,
+        workosUserId: user.id,
+        profileId,
+        organizationId: ein,
+        dbError: upsErr.code || upsErr.message,
+      });
+      return Response.json(
+        { error: "upsert_failed", message: upsErr.message, correlationId, mutationId },
+        { status: 500 },
+      );
+    }
+  }
+
+  const listed = await listEinsForUser(admin, user.id);
+  const resolvedRows = await resolveSavedOrganizationDirectoryRows(admin, [ein]);
+  logSavedOrgs("toggle_save_ok", {
+    correlationId,
+    mutationId,
+    workosUserId: user.id,
+    profileId,
+    organizationId: ein,
+    entityType: "nonprofit_ein",
+    action: "save",
+    count: listed.eins.length,
+  });
+  return Response.json({
+    ok: true,
+    saved: true,
+    ein,
+    eins: listed.ok ? listed.eins : [ein],
+    rows: resolvedRows,
+    correlationId,
+    mutationId,
+  });
 }
 
 export async function PUT(request) {
@@ -96,8 +298,6 @@ export async function PUT(request) {
   const raw = Array.isArray(body.eins) ? body.eins : [];
   const list = [...new Set(raw.map((e) => normalizeEinDigits(e)).filter((e) => e.length === 9))];
 
-  // Reject brand-new EINs that do not exist in directory/enrichment/profile.
-  // Keep already-saved EINs so users never lose legacy favorites during sync.
   const { data: existingRows, error: readErr } = await admin
     .from(SAVED_TABLE)
     .select("ein")

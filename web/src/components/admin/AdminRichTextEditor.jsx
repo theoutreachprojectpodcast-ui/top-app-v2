@@ -82,7 +82,7 @@ export default function AdminRichTextEditor({ value, onChange, placeholder = "Wr
       ) : null}
       <div
         ref={editorRef}
-        className="adminRichText__editor adminConsoleInput"
+        className="adminRichText__editor"
         contentEditable
         role="textbox"
         aria-multiline="true"

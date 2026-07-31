@@ -7,6 +7,8 @@ import AdminPanelShell from "@/components/admin/AdminPanelShell";
 import AdminSectionCard from "@/components/admin/AdminSectionCard";
 import AdminFilterBar from "@/components/admin/AdminFilterBar";
 import AdminActionBar from "@/components/admin/AdminActionBar";
+import AdminHelpText from "@/components/admin/AdminHelpText";
+import { FormCheckbox } from "@/components/forms/FormChoice";
 import { isLikelyHtml, sanitizeAdminHtml } from "@/lib/admin/sanitizeHtml";
 
 const POST_TYPES = [
@@ -343,160 +345,157 @@ export default function AdminCommunityPostsSection() {
 
   function renderPostBuilderForm(state, setState, idPrefix = "create") {
     return (
-      <>
+      <div className="adminFieldStack">
         <label className="fieldLabel" htmlFor={`${idPrefix}-title`}>
           Title
+          <input
+            id={`${idPrefix}-title`}
+            className="adminConsoleInput"
+            value={state.title}
+            onChange={(e) => setState((d) => ({ ...d, title: e.target.value }))}
+          />
         </label>
-        <input
-          id={`${idPrefix}-title`}
-          className="adminConsoleInput"
-          value={state.title}
-          onChange={(e) => setState((d) => ({ ...d, title: e.target.value }))}
-        />
-        <label className="fieldLabel">Body</label>
-        <AdminRichTextEditor value={state.body} onChange={(html) => setState((d) => ({ ...d, body: html }))} />
+        <div className="fieldLabel">
+          Body
+          <AdminRichTextEditor value={state.body} onChange={(html) => setState((d) => ({ ...d, body: html }))} />
+        </div>
         <label className="fieldLabel" htmlFor={`${idPrefix}-type`}>
           Post format
+          <select
+            id={`${idPrefix}-type`}
+            className="adminConsoleInput"
+            value={state.post_type}
+            onChange={(e) => setState((d) => ({ ...d, post_type: e.target.value }))}
+          >
+            {POST_TYPES.map((t) => (
+              <option key={t.value} value={t.value}>
+                {t.label}
+              </option>
+            ))}
+          </select>
         </label>
-        <select
-          id={`${idPrefix}-type`}
-          className="adminConsoleInput"
-          value={state.post_type}
-          onChange={(e) => setState((d) => ({ ...d, post_type: e.target.value }))}
-        >
-          {POST_TYPES.map((t) => (
-            <option key={t.value} value={t.value}>
-              {t.label}
-            </option>
-          ))}
-        </select>
         <label className="fieldLabel" htmlFor={`${idPrefix}-author`}>
           Moderator display name
+          <input
+            id={`${idPrefix}-author`}
+            className="adminConsoleInput"
+            value={state.author_name || ""}
+            onChange={(e) => setState((d) => ({ ...d, author_name: e.target.value }))}
+            placeholder="Josh, Hodge, or The Outreach Project"
+          />
         </label>
-        <input
-          id={`${idPrefix}-author`}
-          className="adminConsoleInput"
-          value={state.author_name || ""}
-          onChange={(e) => setState((d) => ({ ...d, author_name: e.target.value }))}
-          placeholder="Josh, Hodge, or The Outreach Project"
-        />
         <label className="fieldLabel" htmlFor={`${idPrefix}-photo`}>
           Feature image URL
+          <input
+            id={`${idPrefix}-photo`}
+            className="adminConsoleInput"
+            value={state.photo_url || ""}
+            onChange={(e) => setState((d) => ({ ...d, photo_url: e.target.value }))}
+          />
         </label>
-        <input
-          id={`${idPrefix}-photo`}
-          className="adminConsoleInput"
-          value={state.photo_url || ""}
-          onChange={(e) => setState((d) => ({ ...d, photo_url: e.target.value }))}
-        />
         <AdminMediaUploadField label="Upload feature image" onUploaded={(url) => setState((d) => ({ ...d, photo_url: url }))} />
-        <label className="fieldLabel">Carousel images (one URL per line)</label>
-        <textarea
-          className="adminConsoleInput"
-          rows={3}
-          value={(state.carousel_images || []).join("\n")}
-          onChange={(e) =>
-            setState((d) => ({
-              ...d,
-              carousel_images: e.target.value.split("\n").map((s) => s.trim()).filter(Boolean),
-            }))
-          }
-        />
+        <label className="fieldLabel" htmlFor={`${idPrefix}-carousel`}>
+          Carousel images (one URL per line)
+          <textarea
+            id={`${idPrefix}-carousel`}
+            className="adminConsoleInput"
+            rows={3}
+            value={(state.carousel_images || []).join("\n")}
+            onChange={(e) =>
+              setState((d) => ({
+                ...d,
+                carousel_images: e.target.value.split("\n").map((s) => s.trim()).filter(Boolean),
+              }))
+            }
+          />
+        </label>
         <AdminMediaUploadField
           label="Upload carousel image"
           onUploaded={(url) => setState((d) => ({ ...d, carousel_images: [...(d.carousel_images || []), url] }))}
         />
         <label className="fieldLabel" htmlFor={`${idPrefix}-video`}>
           Video URL
+          <input
+            id={`${idPrefix}-video`}
+            className="adminConsoleInput"
+            value={state.video_url || ""}
+            onChange={(e) => setState((d) => ({ ...d, video_url: e.target.value }))}
+          />
         </label>
-        <input
-          id={`${idPrefix}-video`}
-          className="adminConsoleInput"
-          value={state.video_url || ""}
-          onChange={(e) => setState((d) => ({ ...d, video_url: e.target.value }))}
-        />
         <label className="fieldLabel" htmlFor={`${idPrefix}-podcast`}>
           Podcast episode URL
+          <input
+            id={`${idPrefix}-podcast`}
+            className="adminConsoleInput"
+            value={state.podcast_url || ""}
+            onChange={(e) => setState((d) => ({ ...d, podcast_url: e.target.value }))}
+          />
         </label>
-        <input
-          id={`${idPrefix}-podcast`}
-          className="adminConsoleInput"
-          value={state.podcast_url || ""}
-          onChange={(e) => setState((d) => ({ ...d, podcast_url: e.target.value }))}
-        />
         <label className="fieldLabel" htmlFor={`${idPrefix}-resource`}>
           Resource / external link URL
+          <input
+            id={`${idPrefix}-resource`}
+            className="adminConsoleInput"
+            value={state.resource_url || ""}
+            onChange={(e) => setState((d) => ({ ...d, resource_url: e.target.value }))}
+          />
         </label>
-        <input
-          id={`${idPrefix}-resource`}
-          className="adminConsoleInput"
-          value={state.resource_url || ""}
-          onChange={(e) => setState((d) => ({ ...d, resource_url: e.target.value }))}
-        />
         <label className="fieldLabel" htmlFor={`${idPrefix}-cta-label`}>
           CTA button label (optional)
+          <input
+            id={`${idPrefix}-cta-label`}
+            className="adminConsoleInput"
+            value={state.cta_label || ""}
+            onChange={(e) => setState((d) => ({ ...d, cta_label: e.target.value }))}
+          />
         </label>
-        <input
-          id={`${idPrefix}-cta-label`}
-          className="adminConsoleInput"
-          value={state.cta_label || ""}
-          onChange={(e) => setState((d) => ({ ...d, cta_label: e.target.value }))}
-        />
         <label className="fieldLabel" htmlFor={`${idPrefix}-cta-url`}>
           CTA URL (optional)
+          <input
+            id={`${idPrefix}-cta-url`}
+            className="adminConsoleInput"
+            value={state.cta_url || ""}
+            onChange={(e) => setState((d) => ({ ...d, cta_url: e.target.value }))}
+          />
         </label>
-        <input
-          id={`${idPrefix}-cta-url`}
-          className="adminConsoleInput"
-          value={state.cta_url || ""}
-          onChange={(e) => setState((d) => ({ ...d, cta_url: e.target.value }))}
-        />
         <label className="fieldLabel" htmlFor={`${idPrefix}-tags`}>
           Tags (comma-separated)
+          <input
+            id={`${idPrefix}-tags`}
+            className="adminConsoleInput"
+            value={state.tags || ""}
+            onChange={(e) => setState((d) => ({ ...d, tags: e.target.value }))}
+          />
         </label>
-        <input
-          id={`${idPrefix}-tags`}
-          className="adminConsoleInput"
-          value={state.tags || ""}
-          onChange={(e) => setState((d) => ({ ...d, tags: e.target.value }))}
-        />
-        <div className="adminCheckboxRow">
-          <label className="fieldLabel">
-            <input
-              type="checkbox"
-              checked={!!state.is_pinned}
-              onChange={(e) => setState((d) => ({ ...d, is_pinned: e.target.checked }))}
-            />{" "}
+        <div className="adminCheckboxRow dsChoiceGroup" role="group" aria-label="Post options">
+          <FormCheckbox
+            checked={!!state.is_pinned}
+            onChange={(e) => setState((d) => ({ ...d, is_pinned: e.target.checked }))}
+          >
             Pin to top of feed
-          </label>
-          <label className="fieldLabel">
-            <input
-              type="checkbox"
-              checked={state.comments_enabled !== false}
-              onChange={(e) => setState((d) => ({ ...d, comments_enabled: e.target.checked }))}
-            />{" "}
+          </FormCheckbox>
+          <FormCheckbox
+            checked={state.comments_enabled !== false}
+            onChange={(e) => setState((d) => ({ ...d, comments_enabled: e.target.checked }))}
+          >
             Comments enabled
-          </label>
-          <label className="fieldLabel">
-            <input
-              type="checkbox"
-              checked={!!state.featured}
-              onChange={(e) => setState((d) => ({ ...d, featured: e.target.checked }))}
-            />{" "}
+          </FormCheckbox>
+          <FormCheckbox
+            checked={!!state.featured}
+            onChange={(e) => setState((d) => ({ ...d, featured: e.target.checked }))}
+          >
             Featured
-          </label>
+          </FormCheckbox>
           {idPrefix === "create" ? (
-            <label className="fieldLabel">
-              <input
-                type="checkbox"
-                checked={!!state.publish}
-                onChange={(e) => setState((d) => ({ ...d, publish: e.target.checked }))}
-              />{" "}
+            <FormCheckbox
+              checked={!!state.publish}
+              onChange={(e) => setState((d) => ({ ...d, publish: e.target.checked }))}
+            >
               Publish immediately
-            </label>
+            </FormCheckbox>
           ) : null}
         </div>
-      </>
+      </div>
     );
   }
 
@@ -523,33 +522,36 @@ export default function AdminCommunityPostsSection() {
         title="Member posting mode"
         description="Controls whether Pro members can publish immediately, wait for approval, or only staff can post. Default is open posting."
       >
-        <label className="fieldLabel" htmlFor="community-posting-mode">
-          How members post
-        </label>
-        <select
-          id="community-posting-mode"
-          className="adminConsoleInput"
-          value={postingMode}
-          disabled={postingModeBusy}
-          onChange={(e) => void savePostingMode(e.target.value)}
-        >
-          {(postingModeOptions.length
-            ? postingModeOptions
-            : [
-                { value: "open", label: "Open posting" },
-                { value: "post_review", label: "Post-review moderation" },
-                { value: "pre_approval", label: "Pre-approval moderation" },
-                { value: "admin_only", label: "Admin-only posting" },
-              ]
-          ).map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-        {postingModeOptions.find((o) => o.value === postingMode)?.description ? (
-          <p className="adminMuted">{postingModeOptions.find((o) => o.value === postingMode)?.description}</p>
-        ) : null}
+        <div className="adminFieldStack">
+          <label className="fieldLabel" htmlFor="community-posting-mode">
+            How members post
+            <select
+              id="community-posting-mode"
+              className="adminConsoleInput"
+              value={postingMode}
+              disabled={postingModeBusy}
+              onChange={(e) => void savePostingMode(e.target.value)}
+            >
+              {(postingModeOptions.length
+                ? postingModeOptions
+                : [
+                    { value: "open", label: "Open posting" },
+                    { value: "post_review", label: "Post-review moderation" },
+                    { value: "pre_approval", label: "Pre-approval moderation" },
+                    { value: "admin_only", label: "Admin-only posting" },
+                  ]
+              ).map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <AdminHelpText>
+            {postingModeOptions.find((o) => o.value === postingMode)?.description ||
+              "Open posting lets Pro members publish to the feed without waiting for staff approval."}
+          </AdminHelpText>
+        </div>
       </AdminSectionCard>
 
       <AdminFilterBar>

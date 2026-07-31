@@ -212,7 +212,7 @@ main.topApp.appShell--admin.adminConsole {
   margin-top: var(--ds-space-2, 8px);
 }
 
-/* Field labels — stacked control spacing */
+/* Field labels ? stacked control spacing */
 .adminConsole .fieldLabel > .input,
 .adminConsole .fieldLabel > .adminConsoleInput,
 .adminConsole .fieldLabel > input:not([type="checkbox"]):not([type="radio"]),
@@ -273,8 +273,11 @@ main.topApp.appShell--admin.adminConsole {
 }
 
 .adminConsole .adminMediaUploadField__trigger {
-  display: inline-block;
-  margin-top: var(--ds-space-2, 8px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin: 0;
 }
 
 .adminConsole .adminMediaCard--static {
@@ -476,13 +479,13 @@ main.topApp.appShell--admin.adminConsole {
   color: var(--color-text-primary);
 }
 
-/* --- Inputs & rich text --- */
+/* --- Inputs & rich text (match brand form controls) --- */
 .adminConsole .adminConsoleInput:focus-visible,
 .adminConsole select.adminConsoleInput:focus-visible,
 .adminConsole .adminRichText__editor:focus-visible {
-  outline: 2px solid var(--color-focus-ring);
-  outline-offset: 2px;
-  border-color: var(--color-border-active);
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-focus-ring);
 }
 
 .adminConsole .adminConsoleInput::placeholder,
@@ -490,18 +493,59 @@ main.topApp.appShell--admin.adminConsole {
   color: var(--color-text-muted);
 }
 
+.adminConsole .adminRichText {
+  display: grid;
+  gap: var(--ds-space-2, 8px);
+}
+
+.adminConsole .adminRichText__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-space-2, 8px);
+  margin-bottom: 0;
+}
+
 .adminConsole .adminRichText__editor {
-  background: var(--color-bg-primary);
+  background: var(--color-input, var(--color-bg-card));
   color: var(--color-text-primary);
+  border: 1px solid var(--color-input-border, var(--color-border-subtle));
+  border-radius: var(--radius-input, 12px);
+  padding: 11px 14px;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.adminConsole .adminRichText__editor:hover {
+  border-color: color-mix(in srgb, var(--color-accent) 22%, var(--color-border-subtle));
 }
 
 .adminConsole .adminRichText__emojiPanel {
-  background: var(--color-bg-secondary);
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-input, 12px);
 }
 
 .adminConsole .adminRichText__emoji:hover {
   background: color-mix(in srgb, var(--color-accent) 12%, transparent);
-  border-radius: 4px;
+  border-radius: var(--radius-sm, 6px);
+}
+
+.adminConsole .adminMediaUpload {
+  display: grid;
+  gap: var(--ds-space-2, 8px);
+}
+
+.adminConsole .adminMediaUpload .fieldLabel {
+  margin-bottom: 0;
+}
+
+.adminConsole .adminMediaUpload .profileFileInput {
+  margin-top: 0;
+}
+
+.adminConsole .adminCheckboxRow,
+.adminConsole .adminCheckboxRow.dsChoiceGroup {
+  display: grid;
+  gap: var(--ds-space-2, 8px);
+  margin-top: var(--ds-space-1, 4px);
 }
 
 /* --- Tables (including legacy inline podcast tables) --- */
@@ -725,11 +769,19 @@ main.topApp.appShell--admin.adminConsole {
 
 .adminSectionCard .fieldLabel,
 .adminConsole .adminSectionCard .fieldLabel {
-  display: block;
-  margin-bottom: var(--ds-space-1, 4px);
-  font-size: var(--text-body-sm, 0.875rem);
+  display: grid;
+  gap: var(--ds-space-1, 4px);
+  margin-bottom: 0;
+  font-size: 12px;
   font-weight: 600;
-  color: var(--color-text-primary);
+  color: var(--color-text-secondary);
+}
+
+.adminConsole .adminSectionCard .fieldLabel > .adminConsoleInput,
+.adminConsole .adminSectionCard .fieldLabel > select.adminConsoleInput,
+.adminConsole .adminSectionCard .fieldLabel > textarea.adminConsoleInput,
+.adminConsole .adminSectionCard .fieldLabel > .adminRichText {
+  margin-top: 0;
 }
 
 .adminAdvancedSettings {
@@ -846,11 +898,17 @@ main.topApp.appShell--admin.adminConsole {
   flex-wrap: wrap;
   gap: var(--ds-space-2, 8px);
   align-items: center;
-  padding: var(--ds-space-3, 12px);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-lg, 12px);
-  background: color-mix(in srgb, var(--color-bg-elevated) 92%, transparent);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   min-width: 0;
+}
+
+.adminFilterBar .btnPrimary,
+.adminFilterBar .btnSoft {
+  border-radius: 999px;
+  padding-inline: 14px;
 }
 
 .adminFilterBar .adminConsoleInput,

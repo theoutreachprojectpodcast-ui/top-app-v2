@@ -171,6 +171,7 @@ export function useProfileDataState(supabase) {
   const einSyncingRef = useRef(false);
   const entitySyncingRef = useRef(false);
   const pendingEinFlushRef = useRef(false);
+  const pendingEinTogglesRef = useRef([]);
   const pendingEntityFlushRef = useRef(false);
   const favoritesDirtyRef = useRef(false);
   const favoritesEpochRef = useRef(0);
@@ -357,6 +358,7 @@ export function useProfileDataState(supabase) {
               const favRes = await fetch("/api/me/saved-orgs", { credentials: "include", cache: "no-store" });
               const favJson = await favRes.json().catch(() => ({}));
               if (
+                favRes.ok &&
                 Array.isArray(favJson.eins) &&
                 !favoritesDirtyRef.current &&
                 favoritesEpochRef.current === epochAtStart
@@ -368,6 +370,7 @@ export function useProfileDataState(supabase) {
               const entityFavRes = await fetch("/api/me/favorites", { credentials: "include", cache: "no-store" });
               const entityFavJson = await entityFavRes.json().catch(() => ({}));
               if (
+                entityFavRes.ok &&
                 Array.isArray(entityFavJson.keys) &&
                 !entityFavoritesDirtyRef.current &&
                 entityFavoritesEpochRef.current === entityEpochAtStart
@@ -654,74 +657,124 @@ export function useProfileDataState(supabase) {
     });
   }
 
-  async function flushFavoriteEinsToServer() {
+  async function flushFavoriteEinTogglesToServer() {
     if (!workosRef.current || !isAuthenticated) return;
     if (einSyncingRef.current) {
       pendingEinFlushRef.current = true;
       return;
     }
     einSyncingRef.current = true;
-    const epochAtStart = favoritesEpochRef.current;
-    const baseline = [...einBaselineRef.current];
-    const toSend = orderSavedEins(favoriteEinsRef.current);
     try {
-      const res = await fetch("/api/me/saved-orgs", {
-        method: "PUT",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ eins: toSend }),
-      });
-      const payload = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        const message =
-          payload?.message ||
-          (payload?.error === "membership_required"
-            ? "Saving organizations requires an active membership."
-            : payload?.error === "profile_required"
-              ? "Your profile is still setting up. Try saving again in a moment."
-              : "Saved organizations could not sync to the server.");
-        setProfileError(message);
-        if (favoritesEpochRef.current === epochAtStart) {
-          favoriteEinsRef.current = baseline;
-          setFavoriteEins(baseline);
-          setSavedOrganizations((prev) => filterSavedOrgCards(prev, baseline));
-          favoritesDirtyRef.current = false;
+      while (pendingEinTogglesRef.current.length) {
+        const batch = pendingEinTogglesRef.current.splice(0, pendingEinTogglesRef.current.length);
+        // Collapse to last action per EIN.
+        const byEin = new Map();
+        for (const item of batch) byEin.set(item.ein, item);
+        for (const { ein, action, epoch } of byEin.values()) {
+          const baseline = [...einBaselineRef.current];
+          try {
+            const res = await fetch("/api/me/saved-orgs", {
+              method: "POST",
+              credentials: "include",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ action, ein }),
+            });
+            const payload = await res.json().catch(() => ({}));
+            if (!res.ok) {
+              const message =
+                payload?.message ||
+                (payload?.error === "membership_required"
+                  ? "Saving organizations requires an active membership."
+                  : payload?.error === "profile_required"
+                    ? "Your profile is still setting up. Try saving again in a moment."
+                    : payload?.error === "nonprofit_not_found"
+                      ? "This organization could not be saved because it is not in the directory."
+                      : "Saved organizations could not sync to the server.");
+              setProfileError(message);
+              if (favoritesEpochRef.current === epoch) {
+                favoriteEinsRef.current = baseline;
+                setFavoriteEins(baseline);
+                setSavedOrganizations((prev) => filterSavedOrgCards(prev, baseline));
+                favoritesDirtyRef.current = false;
+              }
+              continue;
+            }
+            const accepted = orderSavedEins(
+              Array.isArray(payload.eins) ? payload.eins : favoriteEinsRef.current,
+            );
+            einBaselineRef.current = accepted;
+            if (favoritesEpochRef.current === epoch) {
+              favoriteEinsRef.current = accepted;
+              setFavoriteEins(accepted);
+              favoritesDirtyRef.current = false;
+              if (Array.isArray(payload.rows) && payload.rows.length) {
+                setSavedOrganizations((prev) => mergeSavedOrgCardRows(prev, payload.rows, accepted));
+              } else {
+                setSavedOrganizations((prev) => filterSavedOrgCards(prev, accepted));
+              }
+            }
+          } catch {
+            setProfileError("Saved organizations could not sync to the server. Check your connection and try again.");
+            if (favoritesEpochRef.current === epoch) {
+              favoriteEinsRef.current = baseline;
+              setFavoriteEins(baseline);
+              setSavedOrganizations((prev) => filterSavedOrgCards(prev, baseline));
+              favoritesDirtyRef.current = false;
+            }
+          }
         }
-        return;
-      }
-      const accepted = orderSavedEins(Array.isArray(payload.eins) ? payload.eins : toSend);
-      einBaselineRef.current = accepted;
-      if (favoritesEpochRef.current === epochAtStart) {
-        favoriteEinsRef.current = accepted;
-        setFavoriteEins(accepted);
-        favoritesDirtyRef.current = false;
-        if (Array.isArray(payload.rows)) {
-          setSavedOrganizations((prev) => mergeSavedOrgCardRows(prev, payload.rows, accepted));
-        } else {
-          setSavedOrganizations((prev) => filterSavedOrgCards(prev, accepted));
-        }
-        if (Array.isArray(payload.rejectedEins) && payload.rejectedEins.length) {
-          setProfileError(
-            "Some organizations could not be saved because they are not in the directory. Others were kept.",
-          );
-        }
-      } else {
-        pendingEinFlushRef.current = true;
-      }
-    } catch {
-      setProfileError("Saved organizations could not sync to the server. Check your connection and try again.");
-      if (favoritesEpochRef.current === epochAtStart) {
-        favoriteEinsRef.current = baseline;
-        setFavoriteEins(baseline);
-        setSavedOrganizations((prev) => filterSavedOrgCards(prev, baseline));
-        favoritesDirtyRef.current = false;
       }
     } finally {
       einSyncingRef.current = false;
-      if (pendingEinFlushRef.current) {
+      if (pendingEinFlushRef.current || pendingEinTogglesRef.current.length) {
         pendingEinFlushRef.current = false;
-        void flushFavoriteEinsToServer();
+        void flushFavoriteEinTogglesToServer();
       }
+    }
+  }
+
+  async function setFavoriteEinList(nextEins) {
+    const normalized = orderSavedEins(nextEins);
+    if (
+      isAuthenticated &&
+      !entitlements.saveOrganizationsAccess &&
+      !entitlements.isPlatformAdmin &&
+      !entitlements.isPrivilegedStaff
+    ) {
+      return;
+    }
+    const previous = new Set(orderSavedEins(favoriteEinsRef.current));
+    const next = new Set(normalized);
+    const added = [...next].filter((e) => !previous.has(e));
+    const removed = [...previous].filter((e) => !next.has(e));
+
+    favoritesDirtyRef.current = true;
+    favoritesEpochRef.current += 1;
+    const epoch = favoritesEpochRef.current;
+    favoriteEinsRef.current = normalized;
+    setFavoriteEins(normalized);
+    setSavedOrganizations((prev) => filterSavedOrgCards(prev, normalized));
+    if (!isAuthenticated) return;
+
+    if (workosRef.current) {
+      for (const ein of added) pendingEinTogglesRef.current.push({ ein, action: "save", epoch });
+      for (const ein of removed) pendingEinTogglesRef.current.push({ ein, action: "unsave", epoch });
+      void flushFavoriteEinTogglesToServer();
+      return;
+    }
+    if (!supabase || einSyncingRef.current) {
+      if (einSyncingRef.current) pendingEinFlushRef.current = true;
+      return;
+    }
+    einSyncingRef.current = true;
+    try {
+      await replaceSavedOrgEinList(supabase, userId, normalized);
+      einBaselineRef.current = normalized;
+      favoritesDirtyRef.current = false;
+    } catch {
+      setProfileError("Saved organizations updated locally, but cloud sync failed.");
+    } finally {
+      einSyncingRef.current = false;
     }
   }
 
@@ -787,39 +840,6 @@ export function useProfileDataState(supabase) {
         pendingEntityFlushRef.current = false;
         void flushFavoriteEntityKeysToServer();
       }
-    }
-  }
-
-  async function setFavoriteEinList(nextEins) {
-    const normalized = orderSavedEins(nextEins);
-    if (
-      isAuthenticated &&
-      !entitlements.saveOrganizationsAccess &&
-      !entitlements.isPlatformAdmin &&
-      !entitlements.isPrivilegedStaff
-    ) {
-      return;
-    }
-    favoritesDirtyRef.current = true;
-    favoritesEpochRef.current += 1;
-    favoriteEinsRef.current = normalized;
-    setFavoriteEins(normalized);
-    setSavedOrganizations((prev) => filterSavedOrgCards(prev, normalized));
-    if (!isAuthenticated) return;
-    if (workosRef.current) {
-      void flushFavoriteEinsToServer();
-      return;
-    }
-    if (!supabase || einSyncingRef.current) return;
-    einSyncingRef.current = true;
-    try {
-      await replaceSavedOrgEinList(supabase, userId, normalized);
-      einBaselineRef.current = normalized;
-      favoritesDirtyRef.current = false;
-    } catch {
-      setProfileError("Saved organizations updated locally, but cloud sync failed.");
-    } finally {
-      einSyncingRef.current = false;
     }
   }
 
@@ -1124,7 +1144,12 @@ export function useProfileDataState(supabase) {
   function toggleFavoriteEntityKey(key) {
     const id = String(key || "").trim().toLowerCase();
     if (!id.startsWith("trusted:")) return;
-    if (!entitlements.fullPlatformAccess && !entitlements.isPlatformAdmin && !entitlements.isPrivilegedStaff) {
+    if (
+      isAuthenticated &&
+      !entitlements.saveOrganizationsAccess &&
+      !entitlements.isPlatformAdmin &&
+      !entitlements.isPrivilegedStaff
+    ) {
       return;
     }
     const next = favoriteEntityKeys.includes(id)

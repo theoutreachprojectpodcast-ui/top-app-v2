@@ -196,7 +196,7 @@ export async function resolveSavedOrganizationDirectoryRows(supabase, einOrdered
 }
 
 /**
- * Confirm a nonprofit exists for save/favorite (directory, enrichment, or curated profile).
+ * Confirm a nonprofit exists for save/favorite (directory, enrichment, curated profile, or trusted catalog).
  * @param {import('@supabase/supabase-js').SupabaseClient} supabase
  * @param {string} einRaw
  */
@@ -209,5 +209,17 @@ export async function nonprofitExistsForSave(supabase, einRaw) {
   if (Array.isArray(enrich) && enrich.length) return true;
   const variants = einVariants([ein]);
   const { data: prof } = await supabase.from(TRUSTED_PROFILES_SOURCE).select("ein").in("ein", variants).limit(1);
-  return Array.isArray(prof) && prof.length > 0;
+  if (Array.isArray(prof) && prof.length > 0) return true;
+
+  // Trusted Resources catalog (service-role) — same EIN may appear only here for curated orgs.
+  const trustedTable =
+    (typeof process !== "undefined" && process.env.NEXT_PUBLIC_TRUSTED_RESOURCES_TABLE) || "trusted_resources";
+  const { data: trusted, error: trustedErr } = await supabase
+    .from(trustedTable)
+    .select("ein")
+    .in("ein", variants)
+    .limit(1);
+  if (!trustedErr && Array.isArray(trusted) && trusted.length > 0) return true;
+
+  return false;
 }

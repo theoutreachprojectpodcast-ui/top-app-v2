@@ -1576,8 +1576,8 @@ function TopAppInner({ initialNav = "home" }) {
                   ? "Create your account with WorkOS (email or Google, depending on what your administrator enabled)."
                   : "Sign in securely with WorkOS. Password reset and additional providers are managed in the hosted auth experience."
                 : authMode === "signup"
-                  ? "Start with a simple local demo account. Production sign-in is not connected yet."
-                  : "Demo sign-in uses email and password stored on this device only."}
+                  ? "Create a local demo account on this device (email + password, min 6 characters). This is separate from production WorkOS."
+                  : "Use the local demo account created on this device. Production WorkOS passwords will not work here — choose Create account first if you have not signed up locally."}
             </p>
             {hostedAuth ? (
               <div className="demoAuthModal__providers">
