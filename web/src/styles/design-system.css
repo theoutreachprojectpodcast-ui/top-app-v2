@@ -50,7 +50,12 @@
   align-items: start;
 }
 
-.ds-page-intro--withTrustedBadge > .trustedBrandMark {
+/* Desktop/tablet: badge spans title+lead; lead stays under the title. */
+.ds-page-intro--withTrustedBadge .ds-page-intro__headline {
+  display: contents;
+}
+
+.ds-page-intro--withTrustedBadge .ds-page-intro__headline > .trustedBrandMark {
   width: var(--trusted-intro-badge-size) !important;
   height: var(--trusted-intro-badge-size) !important;
   grid-column: 1;
@@ -59,21 +64,18 @@
   flex-shrink: 0;
 }
 
-.ds-page-intro--withTrustedBadge .ds-page-intro__copy {
-  grid-column: 2;
-  display: grid;
-  gap: var(--ds-space-2, 8px);
-  min-width: 0;
-  align-content: start;
-}
-
-.ds-page-intro--withTrustedBadge h2,
-.ds-page-intro--withTrustedBadge > h3 {
+.ds-page-intro--withTrustedBadge .ds-page-intro__headline h2,
+.ds-page-intro--withTrustedBadge .ds-page-intro__headline > h3 {
   display: block;
   margin: 0;
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
 }
 
-.ds-page-intro--withTrustedBadge .ds-page-intro__lead {
+.ds-page-intro--withTrustedBadge > .ds-page-intro__lead {
+  grid-column: 2;
+  grid-row: 2;
   max-width: none;
 }
 
@@ -81,6 +83,33 @@
   .ds-page-intro--withTrustedBadge {
     --trusted-intro-badge-size: 96px;
     --trusted-intro-badge-gap: var(--ds-space-3, 12px);
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* Badge + title on one row; description on the next full-width line. */
+  .ds-page-intro--withTrustedBadge .ds-page-intro__headline {
+    display: flex;
+    align-items: center;
+    gap: var(--trusted-intro-badge-gap);
+    min-width: 0;
+    grid-column: 1;
+  }
+
+  .ds-page-intro--withTrustedBadge .ds-page-intro__headline > .trustedBrandMark {
+    width: var(--trusted-intro-badge-size) !important;
+    height: var(--trusted-intro-badge-size) !important;
+    flex-shrink: 0;
+  }
+
+  .ds-page-intro--withTrustedBadge .ds-page-intro__headline h2,
+  .ds-page-intro--withTrustedBadge .ds-page-intro__headline > h3 {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .ds-page-intro--withTrustedBadge > .ds-page-intro__lead {
+    grid-column: 1;
+    width: 100%;
   }
 }
 
