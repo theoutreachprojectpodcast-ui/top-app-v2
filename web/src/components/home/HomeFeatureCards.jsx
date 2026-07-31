@@ -73,7 +73,10 @@ export default function HomeFeatureCards({
               handlers[item.key]?.();
             }}
           >
-            <AppIcon name={item.icon} size={WELCOME_ACTION_ICON_SIZE} />
+            <AppIcon
+              name={item.icon}
+              size={item.icon === "trustedHome" ? 99 : WELCOME_ACTION_ICON_SIZE}
+            />
             <span className="welcomeActionText">
               <span className="welcomeActionLabel">{item.title}</span>
               <span className="welcomeActionHint">{locked ? lockedHint : item.hint}</span>

@@ -2449,16 +2449,6 @@ span.headerBrandMarkFallback {
   border-radius: 0;
   overflow: visible;
 }
-.welcomeActionCard .iconWrap .trustedBrandMark--home {
-  width: auto;
-  height: auto;
-}
-.welcomeActionCard .iconWrap .trustedBrandMarkImg {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
 .welcomeActionCard .iconStroke {
   stroke: #f8fcff;
 }
@@ -2522,23 +2512,15 @@ span.headerBrandMarkFallback {
   height: 99px;
   flex-shrink: 0;
 }
-.card.action.welcomeActionCard--uniform .iconWrap .trustedBrandMark--home,
+/* No shell on Trusted — size the bare mark to the other icons' full plate. */
+.card.action.welcomeActionCard--uniform .trustedBrandMark--home {
+  width: 99px !important;
+  height: 99px !important;
+  flex-shrink: 0;
+}
 .card.action.welcomeActionCard--uniform .iconStroke {
-  width: 63px !important;
-  height: 63px !important;
-}
-/*
- * Home mono badge ink fills ~93% of its canvas; Lucide strokes fill ~75% of their box.
- * Scale the img so the visible shield matches the other glyphs' optical size.
- */
-.card.action.welcomeActionCard--uniform .iconWrap .trustedBrandMark--home {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-.card.action.welcomeActionCard--uniform .iconWrap .trustedBrandMark--home .trustedBrandMarkImg {
-  width: 80%;
-  height: 80%;
+  width: 63px;
+  height: 63px;
 }
 .card.action.welcomeActionCard--uniform .welcomeActionHint {
   width: 100%;
