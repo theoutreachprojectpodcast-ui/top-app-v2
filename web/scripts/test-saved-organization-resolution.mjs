@@ -187,6 +187,18 @@ function filterRows(rows, filters) {
   assert.ok(String(rows[0].orgName).length > 0);
 }
 
+// --- resolve + exists: unpadded directory EIN (numeric storage dropped leading zero) ---
+{
+  const sb = mockSupabase({
+    directory: [{ ein: "10303581", org_name: "DEL LAGO ESTATES UTILITY COMPANY", state: "TX" }],
+  });
+  const rows = await resolveSavedOrganizationDirectoryRows(sb, ["010303581"]);
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].savedResolutionStatus, "resolved");
+  assert.match(String(rows[0].orgName), /DEL LAGO/i);
+  assert.equal(await nonprofitExistsForSave(sb, "010303581"), true);
+}
+
 // --- mapper no longer uses "Saved organization" for saved source ---
 {
   const card = mapNonprofitCardRow({ ein: "000000000", orgName: "" }, "saved");

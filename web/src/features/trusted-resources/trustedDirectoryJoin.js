@@ -104,7 +104,7 @@ export async function attachDirectoryAndEnrichmentToTrustedRows(supabase, rows =
 
   const einQueryList = [];
   for (const e of eins) {
-    einQueryList.push(e, `${e.slice(0, 2)}-${e.slice(2)}`);
+    einQueryList.push(e, stripLeadingZeros(e), `${e.slice(0, 2)}-${e.slice(2)}`);
   }
 
   const dirResult = await runQuery(() =>

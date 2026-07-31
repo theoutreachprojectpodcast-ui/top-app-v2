@@ -1,9 +1,9 @@
-/**
- * Unit tests for saved-organization existence + list helpers (no network).
- * Run: node --import ./scripts/register-at-alias.mjs scripts/test-saved-org-toggle-contract.mjs
- */
 import assert from "node:assert/strict";
-import { normalizeEinDigits } from "../src/features/nonprofits/lib/einUtils.js";
+import {
+  einLookupVariants,
+  expandEinLookupList,
+  normalizeEinDigits,
+} from "../src/features/nonprofits/lib/einUtils.js";
 
 function orderSavedEins(eins) {
   return [...new Set((eins || []).map((e) => normalizeEinDigits(e)).filter((e) => e.length === 9))];
@@ -17,7 +17,17 @@ function collapseToggles(batch) {
 
 // Normalize
 assert.equal(normalizeEinDigits("12-3456789"), "123456789");
+assert.equal(normalizeEinDigits("10303581"), "010303581");
 assert.equal(orderSavedEins(["12-3456789", "123456789", "bad"]).join(","), "123456789");
+
+// Lookup variants include padded, unpadded, and dashed forms
+{
+  const variants = einLookupVariants("010303581");
+  assert.ok(variants.includes("010303581"));
+  assert.ok(variants.includes("10303581"));
+  assert.ok(variants.includes("01-0303581"));
+  assert.deepEqual(expandEinLookupList(["010303581"]), variants);
+}
 
 // Toggle collapse: last action wins per EIN
 const collapsed = collapseToggles([

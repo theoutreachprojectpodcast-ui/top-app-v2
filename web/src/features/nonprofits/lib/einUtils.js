@@ -13,6 +13,23 @@ export function formatEinDashed(digits) {
   return `${d.slice(0, 2)}-${d.slice(2)}`;
 }
 
+/**
+ * All EIN string forms we may need to match in Postgres / PostgREST filters.
+ * Directory / legacy tables sometimes store unpadded digits (`10303581`) or dashed
+ * (`01-0303581`) while the app always prefers the canonical 9-digit form.
+ */
+export function einLookupVariants(value) {
+  const e = normalizeEinDigits(value);
+  if (e.length !== 9) return [];
+  const unpadded = e.replace(/^0+/, "") || "0";
+  return [...new Set([e, unpadded, formatEinDashed(e)])];
+}
+
+/** Expand many normalized EINs into a deduped lookup list for `.in("ein", …)`. */
+export function expandEinLookupList(values = []) {
+  return [...new Set((values || []).flatMap((v) => einLookupVariants(v)))];
+}
+
 export function isValidEinDigits(digits) {
   return normalizeEinDigits(digits).length === 9;
 }

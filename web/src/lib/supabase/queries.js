@@ -1,4 +1,4 @@
-import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
+import { einLookupVariants, expandEinLookupList, normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
 
 const DIRECTORY_SOURCE = "nonprofits_search_app_v1";
 const TRUSTED_PROFILES_SOURCE = "nonprofit_profiles";
@@ -86,18 +86,18 @@ export async function queryTrustedOrgsByEin(supabase, eins) {
 export async function queryLegacyOrgsByEins(supabase, normalizedEins = []) {
   const uniq = [...new Set(normalizedEins.map((e) => normalizeEinDigits(e)).filter((e) => e.length === 9))];
   if (!uniq.length) return { data: [], byEin: new Map(), error: null };
-  const variants = [...new Set(uniq.flatMap((e) => [e, `${e.slice(0, 2)}-${e.slice(2)}`]))];
+  const variants = expandEinLookupList(uniq);
   const res = await supabase
     .from(TRUSTED_ORGS_SOURCE)
     .select("ein,name,org_name,city,state,ntee_code,logo_url,website,directory_status")
     .in("ein", variants);
   if (res.error) {
-    // Older schemas may lack org_name / directory_status — retry minimal columns.
+    // Older schemas may lack optional columns — retry with a minimal select.
     const msg = String(res.error.message || "").toLowerCase();
-    if (/org_name|directory_status|schema cache|could not find/i.test(msg)) {
+    if (/org_name|directory_status|logo_url|website|schema cache|could not find/i.test(msg)) {
       const retry = await supabase
         .from(TRUSTED_ORGS_SOURCE)
-        .select("ein,name,city,state,ntee_code,logo_url,website")
+        .select("ein,name,city,state,ntee_code")
         .in("ein", variants);
       if (retry.error) return { data: [], byEin: new Map(), error: retry.error };
       const byEin = new Map();
@@ -133,32 +133,40 @@ export async function queryLegacyOrgsByEins(supabase, normalizedEins = []) {
 export async function queryDirectoryEnrichmentByEins(supabase, normalizedEins = []) {
   const uniq = [...new Set(normalizedEins.map((e) => normalizeEinDigits(e)).filter((e) => e.length === 9))];
   if (!uniq.length) return { data: [], error: null };
-  const variants = [...new Set(uniq.flatMap((e) => [e, `${e.slice(0, 2)}-${e.slice(2)}`]))];
+  const variants = expandEinLookupList(uniq);
   return supabase.from(DIRECTORY_ENRICHMENT_SOURCE).select("*").in("ein", variants);
 }
 
 export async function queryDirectoryEnrichmentByEin(supabase, normalizedEin) {
-  if (!normalizedEin) return { data: null, error: null };
-  return supabase.from(DIRECTORY_ENRICHMENT_SOURCE).select("*").eq("ein", normalizedEin).maybeSingle();
+  const digits = normalizeEinDigits(normalizedEin);
+  if (digits.length !== 9) return { data: null, error: null };
+  for (const variant of einLookupVariants(digits)) {
+    const res = await supabase.from(DIRECTORY_ENRICHMENT_SOURCE).select("*").eq("ein", variant).maybeSingle();
+    if (res.error) return res;
+    if (res.data) return res;
+  }
+  return { data: null, error: null };
 }
 
 /**
  * Resolve a directory row by EIN from URL param (9 digits or dashed).
  */
 export async function queryDirectoryOrgByEin(supabase, einRaw) {
-  const digits = String(einRaw ?? "").replace(/\D/g, "");
+  const digits = normalizeEinDigits(einRaw);
   if (digits.length !== 9) return { data: null, error: null };
-  const dashed = `${digits.slice(0, 2)}-${digits.slice(2)}`;
-  const res = await supabase.from(DIRECTORY_SOURCE).select("*").eq("ein", digits).maybeSingle();
-  if (res.data) return res;
-  return supabase.from(DIRECTORY_SOURCE).select("*").eq("ein", dashed).maybeSingle();
+  for (const variant of einLookupVariants(digits)) {
+    const res = await supabase.from(DIRECTORY_SOURCE).select("*").eq("ein", variant).maybeSingle();
+    if (res.error) return res;
+    if (res.data) return res;
+  }
+  return { data: null, error: null };
 }
 
-/** Batch fetch directory rows by normalized 9-digit EIN (handles dashed or plain ein column values). */
+/** Batch fetch directory rows by normalized 9-digit EIN (handles dashed, plain, or unpadded ein values). */
 export async function queryDirectoryOrgsByEins(supabase, normalizedEins = []) {
   const uniq = [...new Set(normalizedEins.map((e) => normalizeEinDigits(e)).filter((e) => e.length === 9))];
   if (!uniq.length) return { data: [], byEin: new Map(), error: null };
-  const variants = [...new Set(uniq.flatMap((e) => [e, `${e.slice(0, 2)}-${e.slice(2)}`]))];
+  const variants = expandEinLookupList(uniq);
   const res = await supabase.from(DIRECTORY_SOURCE).select("*").in("ein", variants);
   if (res.error) return { data: [], byEin: new Map(), error: res.error };
   const byEin = new Map();

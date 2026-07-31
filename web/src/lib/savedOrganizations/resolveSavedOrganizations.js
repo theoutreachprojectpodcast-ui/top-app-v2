@@ -1,4 +1,4 @@
-import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
+import { expandEinLookupList, normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
 import { mergeDirectoryRowWithEnrichment, enrichmentRowsByEin } from "@/lib/supabase/enrichmentMerge";
 import { mapDirectoryRow } from "@/lib/supabase/mappers";
 import {
@@ -35,7 +35,7 @@ function firstNonEmpty(...vals) {
 }
 
 function einVariants(normalizedEins = []) {
-  return [...new Set(normalizedEins.flatMap((e) => [e, `${e.slice(0, 2)}-${e.slice(2)}`]))];
+  return expandEinLookupList(normalizedEins);
 }
 
 /** Fill sparse directory rows from nonprofit_profiles (name, website, logo, socials). */
