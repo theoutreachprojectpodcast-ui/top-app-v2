@@ -5,8 +5,14 @@ const TRUSTED_PROFILES_SOURCE = "nonprofit_profiles";
 const TRUSTED_ORGS_SOURCE = "nonprofits";
 const DIRECTORY_ENRICHMENT_SOURCE = "nonprofit_directory_enrichment";
 
-export function applyDirectoryFilters(query, filters) {
+export function applyDirectoryFilters(query, filters, { includePublicStatus = true } = {}) {
   let q = query.eq("state", filters.state);
+
+  // Public directory: approved rows, or legacy rows with NULL status.
+  // Pending / hidden / rejected IRS imports stay out of member search.
+  if (includePublicStatus) {
+    q = q.or("directory_status.eq.approved,directory_status.is.null");
+  }
 
   if ((filters.q || "").trim()) {
     const term = String(filters.q).replace(/,/g, " ").trim();
@@ -16,20 +22,38 @@ export function applyDirectoryFilters(query, filters) {
   if (filters.service) q = q.ilike("ntee_code", `${filters.service}%`);
   if (filters.audience === "veteran") q = q.eq("serves_veterans", true);
   if (filters.audience === "first_responder") q = q.eq("serves_first_responders", true);
+  if (filters.irsSubsection) q = q.eq("irs_subsection", String(filters.irsSubsection));
 
   return q;
 }
 
+function isMissingDirectoryStatusColumn(error) {
+  const msg = String(error?.message || "");
+  return /directory_status/i.test(msg) && (/does not exist|schema cache|Could not find/i.test(msg));
+}
+
 export async function queryDirectoryPage(supabase, filters, from, to) {
   let query = supabase.from(DIRECTORY_SOURCE).select("*").range(from, to);
-  query = applyDirectoryFilters(query, filters);
-  return query;
+  query = applyDirectoryFilters(query, filters, { includePublicStatus: true });
+  let result = await query;
+  if (result.error && isMissingDirectoryStatusColumn(result.error)) {
+    query = supabase.from(DIRECTORY_SOURCE).select("*").range(from, to);
+    query = applyDirectoryFilters(query, filters, { includePublicStatus: false });
+    result = await query;
+  }
+  return result;
 }
 
 export async function queryDirectoryCount(supabase, filters) {
   let query = supabase.from(DIRECTORY_SOURCE).select("*", { count: "exact", head: true });
-  query = applyDirectoryFilters(query, filters);
-  return query;
+  query = applyDirectoryFilters(query, filters, { includePublicStatus: true });
+  let result = await query;
+  if (result.error && isMissingDirectoryStatusColumn(result.error)) {
+    query = supabase.from(DIRECTORY_SOURCE).select("*", { count: "exact", head: true });
+    query = applyDirectoryFilters(query, filters, { includePublicStatus: false });
+    result = await query;
+  }
+  return result;
 }
 
 export async function queryProfilesByEin(supabase, eins) {

@@ -162,4 +162,13 @@ If you want the shortest path to a working app shell + profiles + admin bootstra
 10. `community.sql` → `community_v03_data_model.sql`  
 11. `admin_platform_rbac_v04.sql`  
 
+**Optional — IRS EO BMF import (501(c)(19) veterans orgs):**
+
+| Order | File | Notes |
+|------:|------|--------|
+| — | `irs_nonprofit_import_2026_07.sql` | Import tables + directory IRS columns |
+| — | `qa_irs_nonprofit_import_seed_2026_07.sql` | **QA only** sample rows |
+
+See `docs/IRS_NONPROFIT_IMPORT.md` for dry-run / apply CLI and admin review.
+
 Then add **`nonprofits_search_app_v1`** in Supabase when you are ready for directory search data.

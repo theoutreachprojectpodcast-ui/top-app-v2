@@ -11,9 +11,19 @@ import {
 } from "@/lib/supabase/queries";
 import { mapNonprofitCardRow } from "@/features/nonprofits/mappers/nonprofitCardMapper";
 
+function applyLegacyPublicVisibility(query) {
+  // Best-effort: ignore if column missing on legacy table.
+  try {
+    return query.or("directory_status.eq.approved,directory_status.is.null");
+  } catch {
+    return query;
+  }
+}
+
 async function fetchLegacyDirectoryPage(supabase, filters, from, to) {
   let query = supabase.from("nonprofits").select("*").range(from, to);
   if ((filters.state || "").trim()) query = query.eq("state", filters.state);
+  query = applyLegacyPublicVisibility(query);
   if ((filters.q || "").trim()) {
     const term = String(filters.q).replace(/,/g, " ").trim();
     query = query.or(`name.ilike.%${term}%,city.ilike.%${term}%`);
@@ -21,12 +31,14 @@ async function fetchLegacyDirectoryPage(supabase, filters, from, to) {
   if (filters.service) query = query.ilike("ntee_code", `${filters.service}%`);
   if (filters.audience === "veteran") query = query.eq("serves_veterans", true);
   if (filters.audience === "first_responder") query = query.eq("serves_first_responders", true);
+  if (filters.irsSubsection) query = query.eq("irs_subsection", String(filters.irsSubsection));
   return query;
 }
 
 async function fetchLegacyDirectoryCount(supabase, filters) {
   let query = supabase.from("nonprofits").select("*", { count: "exact", head: true });
   if ((filters.state || "").trim()) query = query.eq("state", filters.state);
+  query = applyLegacyPublicVisibility(query);
   if ((filters.q || "").trim()) {
     const term = String(filters.q).replace(/,/g, " ").trim();
     query = query.or(`name.ilike.%${term}%,city.ilike.%${term}%`);
@@ -34,6 +46,7 @@ async function fetchLegacyDirectoryCount(supabase, filters) {
   if (filters.service) query = query.ilike("ntee_code", `${filters.service}%`);
   if (filters.audience === "veteran") query = query.eq("serves_veterans", true);
   if (filters.audience === "first_responder") query = query.eq("serves_first_responders", true);
+  if (filters.irsSubsection) query = query.eq("irs_subsection", String(filters.irsSubsection));
   return query;
 }
 
@@ -136,6 +149,12 @@ export async function fetchNonprofitProfileDetail(supabase, einParam) {
   const merged = mergeDirectoryRowWithEnrichment(org, enrichment);
   if (merged.ein_identity_verified === false) {
     return { error: null, card: null, mergeBase: null, identityRejected: true };
+  }
+
+  const status = merged.directory_status != null ? String(merged.directory_status) : null;
+  if (status && status !== "approved") {
+    // Pending / hidden / rejected IRS imports are not public until approved.
+    return { error: null, card: null, mergeBase: null, identityRejected: false, notPublic: true };
   }
 
   const mapped = mapDirectoryRow(merged);

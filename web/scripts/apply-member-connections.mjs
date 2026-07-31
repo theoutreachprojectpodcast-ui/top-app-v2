@@ -1,9 +1,8 @@
 /**
- * Apply member_connections + community posting-mode defaults.
+ * Apply member_connections (+ optional follows backfill migration).
  *
  *   node scripts/apply-member-connections.mjs --apply
- *
- * Prefers SUPABASE_ACCESS_TOKEN (Management API), then DATABASE_URL / pooler.
+ *   node scripts/apply-member-connections.mjs --apply --migrate
  */
 import fs from "node:fs";
 import path from "node:path";
@@ -12,7 +11,9 @@ import { createClient } from "@supabase/supabase-js";
 
 const webRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const sqlPath = path.join(webRoot, "supabase/member_connections_2026_07.sql");
+const migrateSqlPath = path.join(webRoot, "supabase/member_connections_migrate_follows_2026_07.sql");
 const apply = process.argv.includes("--apply");
+const includeMigrate = process.argv.includes("--migrate") || process.argv.includes("--with-migrate");
 const PROJECT_REF = "xbtfoundwmhrqrbcuqcw";
 
 function load(rel) {
@@ -45,6 +46,8 @@ load(".env.production.local");
 load(".env.local");
 
 const sql = fs.readFileSync(sqlPath, "utf8");
+const migrateSql = fs.existsSync(migrateSqlPath) ? fs.readFileSync(migrateSqlPath, "utf8") : "";
+const combinedSql = includeMigrate && migrateSql ? `${sql}\n\n${migrateSql}` : sql;
 const url = clean("NEXT_PUBLIC_SUPABASE_URL");
 const service = clean("SUPABASE_SERVICE_ROLE_KEY");
 const accessToken = clean("SUPABASE_ACCESS_TOKEN");
@@ -53,6 +56,7 @@ const ref = (url.match(/https:\/\/([^.]+)\.supabase\.co/) || [])[1] || clean("SU
 const dbPass = clean("SUPABASE_DB_PASSWORD") || clean("POSTGRES_PASSWORD");
 
 console.log("SQL:", sqlPath);
+if (includeMigrate) console.log("Migrate SQL:", migrateSqlPath);
 console.log("Project ref:", ref || "(unknown)");
 
 async function verifyViaServiceRole() {
@@ -64,8 +68,10 @@ async function verifyViaServiceRole() {
     .select("setting_key,setting_value")
     .eq("setting_key", "community_posting_mode")
     .maybeSingle();
+  const denied = table.error && /permission denied/i.test(String(table.error.message || ""));
   return {
     tableOk: !table.error,
+    tableExistsButDenied: !!denied,
     tableError: table.error ? `${table.error.code}: ${table.error.message}` : null,
     postingMode: mode.error ? null : mode.data?.setting_value || null,
   };
@@ -79,7 +85,7 @@ async function applyViaManagementApi() {
       Authorization: `Bearer ${accessToken}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ query: sql }),
+    body: JSON.stringify({ query: combinedSql }),
   });
   const bodyText = await res.text();
   let body;
@@ -120,7 +126,7 @@ async function applyViaPostgresCandidates() {
     const client = postgres(conn, { max: 1, connect_timeout: 10, idle_timeout: 5, prepare: false });
     try {
       await client`select 1`;
-      await client.unsafe(sql);
+      await client.unsafe(combinedSql);
       await client.end({ timeout: 5 });
       console.log("SQL APPLIED via postgres");
       return { ok: true };

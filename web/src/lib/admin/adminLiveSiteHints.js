@@ -31,7 +31,7 @@ export const ADMIN_LIVE_SITE_HINTS = {
   },
   nonprofits: {
     title: "Nonprofit Directory",
-    description: "Enrich organization details and header images for the public directory.",
+    description: "Enrich organization details, review IRS EO BMF imports (501(c)(19)), and manage directory visibility.",
     liveHint: "Directory and profiles at /nonprofit/[ein]",
     readiness: "partial",
   },

@@ -5093,7 +5093,29 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 .communityConnectionsBody {
   margin-top: 0;
   display: grid;
-  gap: 10px;
+  gap: 14px;
+}
+.communityIncomingRequests,
+.communityFriendsList,
+.communityOutgoingRequests {
+  display: grid;
+  gap: 8px;
+}
+.communityConnectionsEmpty {
+  display: grid;
+  gap: 8px;
+}
+.communityConnectionActions {
+  flex-shrink: 0;
+  justify-content: flex-end;
+}
+.communityRequestPill--friends {
+  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+  color: var(--color-accent);
+  font-weight: 700;
+}
+.communityMemberProfileActions {
+  align-items: center;
 }
 .communitySearchBar input {
   width: 100%;
@@ -7731,8 +7753,18 @@ html.dark .communityPostBodyGuideSteps li {
     align-items: flex-start;
     flex-direction: column;
   }
-  .communitySearchResultRow .btnSoft {
+  .communitySearchResultRow .btnSoft,
+  .communitySearchResultRow .btnPrimary,
+  .communityConnectionActions {
     width: 100%;
+  }
+  .communityConnectionActions {
+    justify-content: stretch;
+  }
+  .communityConnectionActions .btnSoft,
+  .communityConnectionActions .btnPrimary {
+    flex: 1;
+    min-width: 0;
   }
   .communityMemberProfileHeader {
     grid-template-columns: 1fr;

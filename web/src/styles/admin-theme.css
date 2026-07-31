@@ -703,7 +703,10 @@ main.topApp.appShell--admin.adminConsole {
 }
 
 .adminStatusBadge--live,
-.adminStatusBadge--published {
+.adminStatusBadge--published,
+.adminStatusBadge--approved,
+.adminStatusBadge--ok,
+.adminStatusBadge--moderator {
   background: color-mix(in srgb, var(--color-success, #2f9e44) 16%, transparent);
   color: var(--color-text-primary);
   border-color: color-mix(in srgb, var(--color-success, #2f9e44) 30%, var(--color-border-subtle));
@@ -711,15 +714,31 @@ main.topApp.appShell--admin.adminConsole {
 
 .adminStatusBadge--draft,
 .adminStatusBadge--partial,
-.adminStatusBadge--beta {
+.adminStatusBadge--beta,
+.adminStatusBadge--pending,
+.adminStatusBadge--submitted {
   background: color-mix(in srgb, var(--color-warning, #c9842a) 16%, transparent);
   color: var(--color-text-primary);
+}
+
+.adminStatusBadge--preview {
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  border-color: var(--color-border-subtle);
+}
+
+.adminStatusBadge--review,
+.adminStatusBadge--under_review {
+  background: color-mix(in srgb, var(--color-info, #2c7be5) 12%, transparent);
+  color: var(--color-text-primary);
+  border-color: color-mix(in srgb, var(--color-info, #2c7be5) 28%, var(--color-border-subtle));
 }
 
 .adminStatusBadge--attention,
 .adminStatusBadge--disabled {
   background: color-mix(in srgb, var(--color-danger, #c92a2a) 12%, transparent);
   color: var(--color-text-primary);
+  border-color: color-mix(in srgb, var(--color-danger, #c92a2a) 28%, var(--color-border-subtle));
 }
 
 .adminPanelShell__liveHint {
@@ -743,8 +762,22 @@ main.topApp.appShell--admin.adminConsole {
 }
 
 .adminSectionCard__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--ds-space-3, 12px);
+}
+
+.adminSectionCard__headerMain {
   display: grid;
   gap: var(--ds-space-1, 4px);
+  min-width: 0;
+  flex: 1 1 12rem;
+}
+
+.adminSectionCard__badge {
+  flex: 0 0 auto;
 }
 
 .adminSectionCard__title {
@@ -759,6 +792,23 @@ main.topApp.appShell--admin.adminConsole {
   font-size: 0.8125rem;
   line-height: 1.45;
   color: var(--color-text-secondary);
+  max-width: 70ch;
+}
+
+.adminOrgHeaderPreview {
+  display: grid;
+  gap: var(--ds-space-2, 8px);
+}
+
+.adminOrgHeaderPreview__media {
+  display: block;
+  width: 100%;
+  max-width: 480px;
+  height: 88px;
+  object-fit: cover;
+  border-radius: var(--radius-input, 12px);
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-surface-muted);
 }
 
 .adminSectionCard__body {

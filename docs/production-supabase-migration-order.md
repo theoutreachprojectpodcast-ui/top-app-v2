@@ -119,6 +119,9 @@ where platform_role is null
 | 38 | `platform_future_hooks.sql` | Future hooks (optional) |
 | 39 | `safe_alignment_extension_2026_04.sql` | Safe alignment patch |
 | **40** | `supabase_public_rls_hardening_2026_06.sql` | **Required** — RLS on all public tables + `security_invoker` on all views (fixes Supabase linter 0013 + 0010) |
+| 41 | `irs_nonprofit_import_2026_07.sql` | IRS EO BMF import tables + directory IRS metadata columns (501(c)(19)) |
+
+**QA only (do not run on production):** `qa_irs_nonprofit_import_seed_2026_07.sql` — sample IRS import rows for admin review UI. See `docs/IRS_NONPROFIT_IMPORT.md`.
 
 ## Sponsor display / branding (apply after catalog exists)
 

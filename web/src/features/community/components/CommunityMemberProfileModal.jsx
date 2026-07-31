@@ -8,9 +8,12 @@ import CommunityPostCard from "@/features/community/components/CommunityPostCard
 import {
   fetchApprovedPostsByMember,
   fetchCommunityMemberById,
+  fetchConnectionsBundle,
   fetchMemberFavoriteRows,
   getRelativeTime,
   isAuthorProfileLookupKey,
+  mutateConnectionApi,
+  connectionStateMapFromBundle,
 } from "@/features/community/api/communityApi";
 import { mapCommunityMemberProfile } from "@/features/community/mappers/memberProfileMapper";
 import { emptyProfileAvatarUrl } from "@/lib/avatarFallback";
@@ -31,12 +34,26 @@ function buildSyntheticMemberFromPosts(memberId, posts) {
   };
 }
 
-export default function CommunityMemberProfileModal({ supabase, memberId, onClose, sessionKind, onToggleLike }) {
+export default function CommunityMemberProfileModal({
+  supabase,
+  memberId,
+  onClose,
+  sessionKind,
+  onToggleLike,
+  viewerProfileId = "",
+  onConnectionChange,
+}) {
   const [member, setMember] = useState(null);
   const [favoriteRows, setFavoriteRows] = useState([]);
   const [approvedPosts, setApprovedPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [connectionState, setConnectionState] = useState("connect");
+  const [busy, setBusy] = useState(false);
+  const [actionMessage, setActionMessage] = useState("");
   const uuidAuthor = useMemo(() => isAuthorProfileLookupKey(memberId), [memberId]);
+  const isSelf =
+    String(viewerProfileId || "").trim() &&
+    String(memberId || "").trim() === String(viewerProfileId || "").trim();
 
   const displayMember = useMemo(() => {
     if (member) return member;
@@ -67,14 +84,22 @@ export default function CommunityMemberProfileModal({ supabase, memberId, onClos
       setMember(null);
       setFavoriteRows([]);
       setApprovedPosts([]);
+      setActionMessage("");
       try {
-        const [resolvedMember, posts] = await Promise.all([
+        const [resolvedMember, posts, connections] = await Promise.all([
           fetchCommunityMemberById(memberId),
           fetchApprovedPostsByMember(supabase, memberId),
+          sessionKind === "workos" ? fetchConnectionsBundle() : Promise.resolve({ ok: false }),
         ]);
         if (!alive) return;
         setMember(resolvedMember);
         setApprovedPosts(posts);
+        if (connections.ok) {
+          const map = connectionStateMapFromBundle(connections);
+          setConnectionState(map[String(memberId)] || "connect");
+        } else {
+          setConnectionState("connect");
+        }
         if (resolvedMember) {
           const favorites = await fetchMemberFavoriteRows(supabase, resolvedMember);
           if (!alive) return;
@@ -89,7 +114,26 @@ export default function CommunityMemberProfileModal({ supabase, memberId, onClos
     return () => {
       alive = false;
     };
-  }, [supabase, memberId]);
+  }, [supabase, memberId, sessionKind]);
+
+  async function runAction(action) {
+    setBusy(true);
+    setActionMessage("");
+    const result = await mutateConnectionApi({ action, targetProfileId: memberId });
+    setBusy(false);
+    if (!result.ok) {
+      setActionMessage(result.message || "Could not update connection.");
+      return;
+    }
+    setActionMessage(result.message || "Updated.");
+    if (result.uiState) setConnectionState(result.uiState);
+    else if (action === "remove" || action === "decline" || action === "cancel") setConnectionState("connect");
+    else if (action === "accept" || (action === "request" && result.state === "connected")) {
+      setConnectionState("connected");
+    } else if (action === "request") setConnectionState("requested");
+    else if (action === "block") setConnectionState("blocked");
+    onConnectionChange?.();
+  }
 
   if (!memberId) return null;
 
@@ -123,6 +167,57 @@ export default function CommunityMemberProfileModal({ supabase, memberId, onClos
                     Profile details stay minimal here; published stories below are verified community contributions.
                   </p>
                 ) : null}
+                {sessionKind === "workos" && !isSelf ? (
+                  <div className="row wrap communityMemberProfileActions" style={{ marginTop: 12 }}>
+                    {connectionState === "connected" ? (
+                      <>
+                        <span className="communityRequestPill communityRequestPill--friends">Friends</span>
+                        <button
+                          type="button"
+                          className="btnSoft"
+                          disabled={busy}
+                          onClick={() => {
+                            if (window.confirm(`Remove your connection with ${profile.name}?`)) {
+                              void runAction("remove");
+                            }
+                          }}
+                        >
+                          Remove
+                        </button>
+                        <button
+                          type="button"
+                          className="btnSoft"
+                          disabled={busy}
+                          onClick={() => {
+                            if (window.confirm(`Block ${profile.name}?`)) void runAction("block");
+                          }}
+                        >
+                          Block
+                        </button>
+                      </>
+                    ) : connectionState === "requested" ? (
+                      <button type="button" className="btnSoft" disabled={busy} onClick={() => void runAction("cancel")}>
+                        Request Sent · Cancel
+                      </button>
+                    ) : connectionState === "incoming" ? (
+                      <>
+                        <button type="button" className="btnPrimary" disabled={busy} onClick={() => void runAction("accept")}>
+                          Accept Request
+                        </button>
+                        <button type="button" className="btnSoft" disabled={busy} onClick={() => void runAction("decline")}>
+                          Decline
+                        </button>
+                      </>
+                    ) : connectionState === "blocked" ? (
+                      <span className="communityRequestPill">Blocked</span>
+                    ) : (
+                      <button type="button" className="btnPrimary" disabled={busy} onClick={() => void runAction("request")}>
+                        Connect
+                      </button>
+                    )}
+                  </div>
+                ) : null}
+                {actionMessage ? <p className="applyStatus">{actionMessage}</p> : null}
               </div>
             </section>
 

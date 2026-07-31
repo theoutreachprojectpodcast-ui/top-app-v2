@@ -47,6 +47,7 @@ export default function CommunityPage({
   const [composerOpen, setComposerOpen] = useState(false);
   const [editingPost, setEditingPost] = useState(null);
   const [feedSort, setFeedSort] = useState("connections_first");
+  const [connectionsRefreshKey, setConnectionsRefreshKey] = useState(0);
 
   const { posts, loading, error, refresh, onToggleLike } = useCommunityFeed(supabase, userId, {
     feedScope: "public",
@@ -246,6 +247,7 @@ export default function CommunityPage({
         <CommunityConnectionsPanel
           userId={userId}
           viewerProfileId={profile?.profileRecordId || ""}
+          refreshKey={connectionsRefreshKey}
           onOpenMember={setSelectedMemberId}
         />
       ) : (
@@ -342,8 +344,13 @@ export default function CommunityPage({
           supabase={supabase}
           memberId={selectedMemberId}
           sessionKind={sessionKind}
+          viewerProfileId={viewerProfileId}
           onToggleLike={isAuthenticated && sessionKind === "workos" ? onToggleLike : undefined}
           onClose={() => setSelectedMemberId("")}
+          onConnectionChange={() => {
+            setConnectionsRefreshKey((k) => k + 1);
+            refresh();
+          }}
         />
       ) : null}
     </div>

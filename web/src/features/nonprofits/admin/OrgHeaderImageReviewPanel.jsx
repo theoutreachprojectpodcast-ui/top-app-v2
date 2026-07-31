@@ -1,6 +1,10 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import AdminSectionCard from "@/components/admin/AdminSectionCard";
+import AdminActionBar from "@/components/admin/AdminActionBar";
+import AdminHelpText from "@/components/admin/AdminHelpText";
+import AdminStatusBadge from "@/components/admin/AdminStatusBadge";
 
 function digitsOnlyEin(value) {
   const d = String(value || "").replace(/\D/g, "");
@@ -167,113 +171,110 @@ export default function OrgHeaderImageReviewPanel({ canModerate }) {
   const headerUrl = String(en?.header_image_url || "").trim();
 
   return (
-    <section className="communityAdminSection" aria-labelledby="org-header-admin-title">
-      <header className="communityAdminSection__header">
-        <div>
-          <h3 id="org-header-admin-title">Organization header images</h3>
-          <p className="communityAdminSection__subtitle">
-            Research official site imagery once, store it in Supabase, and approve or replace matches. Directory and Trusted
-            Resource cards read these fields only—no live scraping on each page view.
-          </p>
-        </div>
-        <span className="communityAdminRolePill">Moderator</span>
-      </header>
-
-      <div className="communityAdminCard communityAdminCard--active">
-        <div className="communityModToolbar" style={{ flexWrap: "wrap", gap: "0.5rem" }}>
-          <label className="communityModHint" style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-            <span>EIN (9 digits)</span>
-            <input
-              value={einInput}
-              onChange={(e) => setEinInput(e.target.value)}
-              placeholder="12-3456789"
-              autoComplete="off"
-              style={{ minWidth: 200, padding: "0.45rem 0.6rem", borderRadius: 8, border: "1px solid var(--color-border-subtle)" }}
-            />
-          </label>
-          <button type="button" className="btnSoft" disabled={loading} onClick={loadDetail}>
+    <AdminSectionCard
+      title="Organization header images"
+      description="Research official site imagery once, store it in Supabase, and approve or replace matches. Directory and Trusted Resource cards read these fields only—no live scraping on each page view."
+      badge={<AdminStatusBadge status="moderator" />}
+    >
+      <div className="adminFieldStack">
+        <label className="fieldLabel" htmlFor="org-header-ein">
+          EIN (9 digits)
+          <input
+            id="org-header-ein"
+            className="adminConsoleInput"
+            value={einInput}
+            onChange={(e) => setEinInput(e.target.value)}
+            placeholder="12-3456789"
+            autoComplete="off"
+            inputMode="numeric"
+          />
+        </label>
+        <AdminActionBar>
+          <button type="button" className="btnSoft" disabled={loading} onClick={() => void loadDetail()}>
             Load
           </button>
-          <button type="button" className="btnPrimary" disabled={loading || ein.length !== 9} onClick={onEnrich}>
+          <button
+            type="button"
+            className="btnPrimary"
+            disabled={loading || ein.length !== 9}
+            onClick={() => void onEnrich()}
+          >
             Run enrichment
           </button>
-          <button type="button" className="btnSoft" disabled={loading} onClick={onBatch}>
+          <button type="button" className="btnSoft" disabled={loading} onClick={() => void onBatch()}>
             Batch (8)
           </button>
-        </div>
+        </AdminActionBar>
 
-        {message ? <p className="communityModHint">{message}</p> : null}
+        {message ? <p className="adminMuted">{message}</p> : null}
 
         {en ? (
-          <div className="communityModHint" style={{ marginTop: "0.75rem" }}>
-            <p>
-              <strong>Status:</strong> {String(en.header_image_status || "—")} ·{" "}
-              <strong>Review:</strong> {String(en.header_image_review_status || "—")}
+          <div className="adminFieldStack">
+            <p className="adminMuted">
+              <strong>Status:</strong> {String(en.header_image_status || "—")} · <strong>Review:</strong>{" "}
+              {String(en.header_image_review_status || "—")}
             </p>
             {en.header_image_notes ? (
-              <p>
+              <p className="adminMuted">
                 <strong>Notes:</strong> {String(en.header_image_notes)}
               </p>
             ) : null}
             {headerUrl ? (
-              <div style={{ marginTop: "0.5rem" }}>
-                <p>
-                  <strong>Current header</strong> ({String(en.header_image_source_type || "unknown")})
+              <div className="adminOrgHeaderPreview">
+                <p className="adminMuted adminMuted--sm">
+                  Current header ({String(en.header_image_source_type || "unknown")})
                 </p>
-                <div
-                  style={{
-                    marginTop: "0.35rem",
-                    height: 88,
-                    borderRadius: 12,
-                    background: `linear-gradient(180deg, rgba(0,0,0,0.2), rgba(0,0,0,0.45)), url(${JSON.stringify(headerUrl)}) center/cover`,
-                    border: "1px solid color-mix(in srgb, var(--color-border-subtle) 80%, transparent)",
-                  }}
-                />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={headerUrl} alt="" className="adminOrgHeaderPreview__media" />
               </div>
             ) : (
-              <p>No header image URL on file yet.</p>
+              <AdminHelpText>No header image URL on file yet.</AdminHelpText>
             )}
 
-            <label className="communityModHint" style={{ display: "flex", flexDirection: "column", gap: "0.25rem", marginTop: "0.75rem" }}>
-              <span>Moderator notes (optional)</span>
+            <label className="fieldLabel" htmlFor="org-header-notes">
+              Moderator notes (optional)
               <input
+                id="org-header-notes"
+                className="adminConsoleInput"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Context for approve/reject"
-                style={{ maxWidth: 480, padding: "0.45rem 0.6rem", borderRadius: 8, border: "1px solid var(--color-border-subtle)" }}
               />
             </label>
 
-            <div className="communityModToolbar" style={{ marginTop: "0.5rem" }}>
-              <button type="button" className="btnSoft" disabled={loading || !headerUrl} onClick={onApprove}>
+            <AdminActionBar>
+              <button type="button" className="btnSoft" disabled={loading || !headerUrl} onClick={() => void onApprove()}>
                 Approve
               </button>
-              <button type="button" className="btnSoft" disabled={loading} onClick={onReject}>
+              <button type="button" className="btnSoft" disabled={loading} onClick={() => void onReject()}>
                 Reject
               </button>
-            </div>
+            </AdminActionBar>
 
-            <label className="communityModHint" style={{ display: "flex", flexDirection: "column", gap: "0.25rem", marginTop: "0.75rem" }}>
-              <span>Manual image URL (curate)</span>
+            <label className="fieldLabel" htmlFor="org-header-manual-url">
+              Manual image URL (curate)
               <input
+                id="org-header-manual-url"
+                className="adminConsoleInput"
                 value={manualUrl}
                 onChange={(e) => setManualUrl(e.target.value)}
                 placeholder="https://…"
-                style={{ maxWidth: 480, padding: "0.45rem 0.6rem", borderRadius: 8, border: "1px solid var(--color-border-subtle)" }}
               />
             </label>
-            <button type="button" className="btnSoft" disabled={loading} onClick={onCurate}>
-              Save curated URL
-            </button>
+            <AdminActionBar>
+              <button type="button" className="btnSoft" disabled={loading} onClick={() => void onCurate()}>
+                Save curated URL
+              </button>
+            </AdminActionBar>
           </div>
         ) : null}
 
         {!en && detail?.directory && ein.length === 9 ? (
-          <p className="communityModEmpty" style={{ marginTop: "0.5rem" }}>
+          <AdminHelpText>
             No enrichment row yet—running enrichment will create one from the directory website when available.
-          </p>
+          </AdminHelpText>
         ) : null}
       </div>
-    </section>
+    </AdminSectionCard>
   );
 }

@@ -21,8 +21,12 @@ create table if not exists public.member_connections (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   responded_at timestamptz,
+  blocked_by_profile_id uuid references public.top_profiles (id) on delete set null,
   constraint member_connections_no_self check (requester_profile_id <> recipient_profile_id)
 );
+
+alter table public.member_connections
+  add column if not exists blocked_by_profile_id uuid references public.top_profiles (id) on delete set null;
 
 create unique index if not exists member_connections_pair_active_uidx
   on public.member_connections (
@@ -41,6 +45,10 @@ comment on table public.member_connections is
   'Friend / member connection requests and accepted relationships between top_profiles rows.';
 
 alter table public.member_connections enable row level security;
+
+-- Ensure API service role can manage rows (RLS still blocks anon/authenticated).
+grant select, insert, update, delete on table public.member_connections to service_role;
+grant all on table public.member_connections to postgres;
 
 -- Deny browser roles; app uses /api/community/connections + service role.
 do $$

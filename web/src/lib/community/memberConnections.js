@@ -1,15 +1,15 @@
 /**
  * Server helpers for persistent member friend connections (top_profiles UUIDs).
  *
- * Prefers `member_connections` when present.
- * Falls back to `community_follows` (already in production) with:
- *   - accepted: follower_id / following_id = profile UUIDs (undirected)
- *   - pending:  following_id = `pending:<recipientProfileId>`
- *   - blocked:  following_id = `blocked:<otherProfileId>`
+ * Canonical store: `member_connections`.
+ * Legacy fallback: `community_follows` with pending:/blocked: encodings.
+ * When the primary table exists, legacy rows are migrated into it once per process.
  */
 
 const PRIMARY_TABLE = "member_connections";
 const FALLBACK_TABLE = "community_follows";
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function isMissingRelationError(error) {
   const msg = String(error?.message || error || "").toLowerCase();
@@ -21,6 +21,22 @@ function isMissingRelationError(error) {
     msg.includes("could not find the table") ||
     msg.includes("schema cache")
   );
+}
+
+function isPrimaryUnavailableError(error) {
+  if (isMissingRelationError(error)) return true;
+  const msg = String(error?.message || error || "").toLowerCase();
+  const code = String(error?.code || "");
+  return (
+    code === "42501" ||
+    msg.includes("permission denied") ||
+    msg.includes("row-level security") ||
+    msg.includes("rls")
+  );
+}
+
+function isUuid(value) {
+  return UUID_RE.test(String(value || "").trim());
 }
 
 function pendingTarget(profileId) {
@@ -113,6 +129,7 @@ export function normalizeConnectionRow(row) {
       created_at: row.created_at,
       updated_at: row.updated_at || row.created_at,
       responded_at: row.responded_at || null,
+      blocked_by_profile_id: row.blocked_by_profile_id ? String(row.blocked_by_profile_id) : null,
       _backend: "member_connections",
     };
   }
@@ -131,6 +148,7 @@ export function normalizeConnectionRow(row) {
       created_at: row.created_at,
       updated_at: row.created_at,
       responded_at: row.created_at,
+      blocked_by_profile_id: follower,
       _backend: "community_follows",
     };
   }
@@ -144,6 +162,7 @@ export function normalizeConnectionRow(row) {
       created_at: row.created_at,
       updated_at: row.created_at,
       responded_at: null,
+      blocked_by_profile_id: null,
       _backend: "community_follows",
     };
   }
@@ -156,11 +175,154 @@ export function normalizeConnectionRow(row) {
     created_at: row.created_at,
     updated_at: row.created_at,
     responded_at: row.created_at,
+    blocked_by_profile_id: null,
     _backend: "community_follows",
   };
 }
 
 let backendCache = null;
+let migratePromise = null;
+
+/** @internal test helper */
+export function resetConnectionsBackendCache() {
+  backendCache = null;
+  migratePromise = null;
+}
+
+/**
+ * Copy legacy community_follows friend encodings into member_connections (idempotent).
+ * @param {import('@supabase/supabase-js').SupabaseClient} admin
+ */
+export async function migrateCommunityFollowsToMemberConnections(admin) {
+  if (!admin) return { ok: false, migrated: 0, reason: "no_admin" };
+
+  const { error: primaryErr } = await admin.from(PRIMARY_TABLE).select("id").limit(1);
+  if (primaryErr) {
+    if (isPrimaryUnavailableError(primaryErr)) return { ok: false, migrated: 0, reason: "primary_unavailable" };
+    return { ok: false, migrated: 0, reason: primaryErr.message };
+  }
+
+  const { data: followRows, error: followErr } = await admin.from(FALLBACK_TABLE).select("*").limit(2000);
+  if (followErr) {
+    if (isMissingRelationError(followErr)) return { ok: true, migrated: 0, reason: "fallback_missing" };
+    return { ok: false, migrated: 0, reason: followErr.message };
+  }
+
+  const rows = Array.isArray(followRows) ? followRows : [];
+  if (!rows.length) return { ok: true, migrated: 0 };
+
+  const { data: existing } = await admin
+    .from(PRIMARY_TABLE)
+    .select("requester_profile_id,recipient_profile_id,status")
+    .in("status", ["pending", "accepted", "blocked"])
+    .limit(2000);
+
+  const activePairs = new Set();
+  for (const row of existing || []) {
+    activePairs.add(connectionPairKey(row.requester_profile_id, row.recipient_profile_id));
+  }
+
+  /** @type {Map<string, { requester: string, recipient: string, status: string, created_at: string, blocked_by?: string }>} */
+  const toInsert = new Map();
+  /** @type {Map<string, { a: string, b: string, created_at: string }>} */
+  const acceptedEdges = new Map();
+
+  for (const raw of rows) {
+    const follower = String(raw.follower_id || "").trim();
+    const following = String(raw.following_id || "").trim();
+    const createdAt = raw.created_at || new Date().toISOString();
+    const pendingFor = parsePendingTarget(following);
+    const blockedFor = parseBlockedTarget(following);
+
+    if (pendingFor) {
+      if (!isUuid(follower) || !isUuid(pendingFor) || follower === pendingFor) continue;
+      const key = connectionPairKey(follower, pendingFor);
+      if (activePairs.has(key) || toInsert.has(key)) continue;
+      toInsert.set(key, {
+        requester: follower,
+        recipient: pendingFor,
+        status: "pending",
+        created_at: createdAt,
+      });
+      continue;
+    }
+
+    if (blockedFor) {
+      if (!isUuid(follower) || !isUuid(blockedFor) || follower === blockedFor) continue;
+      const key = connectionPairKey(follower, blockedFor);
+      if (activePairs.has(key) || toInsert.has(key)) continue;
+      toInsert.set(key, {
+        requester: follower,
+        recipient: blockedFor,
+        status: "blocked",
+        created_at: createdAt,
+        blocked_by: follower,
+      });
+      continue;
+    }
+
+    if (isUuid(follower) && isUuid(following) && follower !== following) {
+      const edgeKey = connectionPairKey(follower, following);
+      const prev = acceptedEdges.get(edgeKey);
+      if (!prev) {
+        acceptedEdges.set(edgeKey, { a: follower, b: following, created_at: createdAt, count: 1 });
+      } else {
+        prev.count += 1;
+        if (createdAt < prev.created_at) prev.created_at = createdAt;
+      }
+    }
+  }
+
+  for (const [key, edge] of acceptedEdges) {
+    // Prefer mutual pairs; also repair one-sided accepted edges into a single canonical row.
+    if (!edge.count) continue;
+    if (activePairs.has(key) || toInsert.has(key)) continue;
+    const left = edge.a < edge.b ? edge.a : edge.b;
+    const right = edge.a < edge.b ? edge.b : edge.a;
+    toInsert.set(key, {
+      requester: left,
+      recipient: right,
+      status: "accepted",
+      created_at: edge.created_at,
+    });
+  }
+
+  let migrated = 0;
+  for (const item of toInsert.values()) {
+    const now = item.created_at || new Date().toISOString();
+    const payload = {
+      requester_profile_id: item.requester,
+      recipient_profile_id: item.recipient,
+      status: item.status,
+      created_at: now,
+      updated_at: now,
+      responded_at: item.status === "pending" ? null : now,
+      blocked_by_profile_id: item.blocked_by || null,
+    };
+    const { error } = await admin.from(PRIMARY_TABLE).insert(payload);
+    if (error) {
+      if (String(error.code) === "23505" || /duplicate/i.test(String(error.message || ""))) continue;
+      // Missing FK / invalid profile — skip orphan
+      if (String(error.code) === "23503") continue;
+      console.warn("[memberConnections] migrate insert failed:", error.message || error);
+      continue;
+    }
+    migrated += 1;
+    activePairs.add(connectionPairKey(item.requester, item.recipient));
+  }
+
+  return { ok: true, migrated, candidates: toInsert.size };
+}
+
+async function ensureMigrated(admin) {
+  if (migratePromise) return migratePromise;
+  migratePromise = migrateCommunityFollowsToMemberConnections(admin).catch((err) => {
+    migratePromise = null;
+    console.warn("[memberConnections] migrate failed:", err?.message || err);
+    return { ok: false, migrated: 0, reason: String(err?.message || err) };
+  });
+  return migratePromise;
+}
 
 /**
  * @param {import('@supabase/supabase-js').SupabaseClient} admin
@@ -171,15 +333,48 @@ export async function resolveConnectionsBackend(admin) {
   const { error } = await admin.from(PRIMARY_TABLE).select("id").limit(1);
   if (!error) {
     backendCache = "member_connections";
+    await ensureMigrated(admin);
     return backendCache;
   }
-  if (isMissingRelationError(error)) {
+  if (isPrimaryUnavailableError(error)) {
+    console.warn(
+      "[memberConnections] primary unavailable, using community_follows fallback:",
+      error.message || error.code,
+    );
     backendCache = "community_follows";
     return backendCache;
   }
   // Unexpected error — still try primary and let callers surface it
   backendCache = "member_connections";
   return backendCache;
+}
+
+async function findConnectionById(admin, viewerProfileId, connectionId) {
+  const id = String(connectionId || "").trim();
+  const viewer = String(viewerProfileId || "").trim();
+  if (!id || !viewer) return null;
+
+  const backend = await resolveConnectionsBackend(admin);
+  if (backend === "member_connections" && isUuid(id)) {
+    const { data, error } = await admin.from(PRIMARY_TABLE).select("*").eq("id", id).maybeSingle();
+    if (error) throw error;
+    if (!data) return null;
+    const normalized = normalizeConnectionRow(data);
+    if (
+      String(normalized.requester_profile_id) !== viewer &&
+      String(normalized.recipient_profile_id) !== viewer
+    ) {
+      return null;
+    }
+    return normalized;
+  }
+
+  const lists = await listConnectionsForViewer(admin, viewer);
+  return (
+    [...lists.incoming, ...lists.outgoing, ...lists.connected, ...lists.blocked].find(
+      (r) => String(r.id) === id,
+    ) || null
+  );
 }
 
 export async function findActiveConnectionBetween(admin, profileA, profileB) {
@@ -246,7 +441,6 @@ export async function listConnectionsForViewer(admin, viewerProfileId) {
     rows = (data || [])
       .map(normalizeConnectionRow)
       .filter(Boolean)
-      // Only rows involving the viewer in a meaningful way
       .filter((row) => {
         const state = viewerConnectionState(row, viewer);
         return state !== "none";
@@ -311,6 +505,9 @@ export async function sendConnectionRequest(admin, { viewerProfileId, targetProf
   const target = String(targetProfileId || "").trim();
   if (!viewer || !target) return { ok: false, message: "Missing profile." };
   if (viewer === target) return { ok: false, message: "You can’t connect with yourself." };
+  if (!isUuid(viewer) || !isUuid(target)) {
+    return { ok: false, message: "Invalid member profile." };
+  }
 
   const existing = await findActiveConnectionBetween(admin, viewer, target);
   if (existing) {
@@ -319,7 +516,11 @@ export async function sendConnectionRequest(admin, { viewerProfileId, targetProf
     if (state === "blocked") return { ok: false, message: "This connection isn’t available.", state, row: existing };
     if (state === "request_sent") return { ok: true, message: "Request already sent.", state, row: existing };
     if (state === "request_received") {
-      return acceptConnectionRequest(admin, { viewerProfileId: viewer, connectionId: existing.id, otherProfileId: target });
+      return acceptConnectionRequest(admin, {
+        viewerProfileId: viewer,
+        connectionId: existing.id,
+        otherProfileId: target,
+      });
     }
   }
 
@@ -332,7 +533,8 @@ export async function sendConnectionRequest(admin, { viewerProfileId, targetProf
       .maybeSingle();
     if (error) {
       if (String(error.code) === "23505" || /duplicate/i.test(String(error.message || ""))) {
-        return { ok: true, message: "Request already sent.", state: "request_sent" };
+        const again = await findActiveConnectionBetween(admin, viewer, target);
+        return { ok: true, message: "Request already sent.", state: "request_sent", row: again };
       }
       return { ok: false, message: error.message || "Could not send request." };
     }
@@ -359,6 +561,18 @@ export async function sendConnectionRequest(admin, { viewerProfileId, targetProf
 
   if (error) {
     if (String(error.message || "").toLowerCase().includes("duplicate") || error.code === "23505") {
+      const again = await findActiveConnectionBetween(admin, viewer, target);
+      if (again) {
+        const state = viewerConnectionState(again, viewer);
+        if (state === "request_received") {
+          return acceptConnectionRequest(admin, {
+            viewerProfileId: viewer,
+            connectionId: again.id,
+            otherProfileId: target,
+          });
+        }
+        return { ok: true, message: "Request already sent.", state: "request_sent", row: again };
+      }
       return { ok: false, message: "A connection request already exists.", state: "request_sent" };
     }
     return { ok: false, message: error.message || "Could not send request." };
@@ -374,8 +588,7 @@ export async function acceptConnectionRequest(admin, { viewerProfileId, connecti
   if (otherProfileId) {
     row = await findActiveConnectionBetween(admin, viewer, otherProfileId);
   } else if (connectionId) {
-    const lists = await listConnectionsForViewer(admin, viewer);
-    row = [...lists.incoming, ...lists.outgoing, ...lists.connected].find((r) => String(r.id) === String(connectionId)) || null;
+    row = await findConnectionById(admin, viewer, connectionId);
   }
 
   if (!row || String(row.status) !== "pending") {
@@ -399,13 +612,18 @@ export async function acceptConnectionRequest(admin, { viewerProfileId, connecti
   }
 
   const now = new Date().toISOString();
-  const { data, error } = await admin
+  const query = admin
     .from(PRIMARY_TABLE)
     .update({ status: "accepted", updated_at: now, responded_at: now })
-    .eq("id", row.id)
-    .eq("status", "pending")
-    .select("*")
-    .maybeSingle();
+    .eq("status", "pending");
+
+  const { data, error } = isUuid(row.id)
+    ? await query.eq("id", row.id).select("*").maybeSingle()
+    : await query
+        .eq("requester_profile_id", requester)
+        .eq("recipient_profile_id", viewer)
+        .select("*")
+        .maybeSingle();
 
   if (error) return { ok: false, message: error.message || "Could not accept." };
   if (!data) return { ok: false, message: "Request was already handled." };
@@ -417,15 +635,58 @@ export async function mutateConnectionStatus(admin, { viewerProfileId, connectio
   const viewer = String(viewerProfileId || "").trim();
   const action = String(as || "").toLowerCase();
   let row = null;
+  const targetOther = String(otherProfileId || "").trim();
 
-  if (otherProfileId) {
-    row = await findActiveConnectionBetween(admin, viewer, otherProfileId);
+  if (targetOther) {
+    row = await findActiveConnectionBetween(admin, viewer, targetOther);
   } else if (connectionId) {
-    const lists = await listConnectionsForViewer(admin, viewer);
-    row =
-      [...lists.incoming, ...lists.outgoing, ...lists.connected, ...lists.blocked].find(
-        (r) => String(r.id) === String(connectionId),
-      ) || null;
+    row = await findConnectionById(admin, viewer, connectionId);
+  }
+
+  // Block may create a new relationship when none exists.
+  if (!row && action === "block" && targetOther && isUuid(targetOther) && targetOther !== viewer) {
+    const backend = await resolveConnectionsBackend(admin);
+    const now = new Date().toISOString();
+    if (backend === "community_follows") {
+      await admin.from(FALLBACK_TABLE).delete().eq("follower_id", viewer).eq("following_id", targetOther);
+      await admin.from(FALLBACK_TABLE).delete().eq("follower_id", targetOther).eq("following_id", viewer);
+      await admin.from(FALLBACK_TABLE).delete().eq("follower_id", viewer).eq("following_id", pendingTarget(targetOther));
+      await admin.from(FALLBACK_TABLE).delete().eq("follower_id", targetOther).eq("following_id", pendingTarget(viewer));
+      const { data, error } = await admin
+        .from(FALLBACK_TABLE)
+        .upsert({ follower_id: viewer, following_id: blockedTarget(targetOther) })
+        .select("*")
+        .maybeSingle();
+      if (error) return { ok: false, message: error.message || "Could not block." };
+      return { ok: true, message: "User blocked.", state: "blocked", row: normalizeConnectionRow(data) };
+    }
+    const { data, error } = await admin
+      .from(PRIMARY_TABLE)
+      .insert({
+        requester_profile_id: viewer,
+        recipient_profile_id: targetOther,
+        status: "blocked",
+        blocked_by_profile_id: viewer,
+        created_at: now,
+        updated_at: now,
+        responded_at: now,
+      })
+      .select("*")
+      .maybeSingle();
+    if (error) {
+      if (String(error.code) === "23505") {
+        const existing = await findActiveConnectionBetween(admin, viewer, targetOther);
+        if (existing) {
+          return mutateConnectionStatus(admin, {
+            viewerProfileId: viewer,
+            otherProfileId: targetOther,
+            as: "block",
+          });
+        }
+      }
+      return { ok: false, message: error.message || "Could not block." };
+    }
+    return { ok: true, message: "User blocked.", state: "blocked", row: normalizeConnectionRow(data) };
   }
 
   if (!row) return { ok: false, message: "Connection not found." };
@@ -438,6 +699,34 @@ export async function mutateConnectionStatus(admin, { viewerProfileId, connectio
 
   const backend = await resolveConnectionsBackend(admin);
   const other = viewer === requester ? recipient : requester;
+
+  if (action === "unblock") {
+    if (String(row.status) !== "blocked") {
+      return { ok: false, message: "No block to remove." };
+    }
+    const blockedBy = row.blocked_by_profile_id ? String(row.blocked_by_profile_id) : requester;
+    if (blockedBy && blockedBy !== viewer) {
+      return { ok: false, message: "Only the member who blocked can unblock." };
+    }
+    if (backend === "community_follows") {
+      await admin.from(FALLBACK_TABLE).delete().eq("follower_id", viewer).eq("following_id", blockedTarget(other));
+      return { ok: true, message: "User unblocked.", state: "none", row: null };
+    }
+    const now = new Date().toISOString();
+    const { data, error } = await admin
+      .from(PRIMARY_TABLE)
+      .update({ status: "removed", updated_at: now, responded_at: now, blocked_by_profile_id: null })
+      .eq("id", row.id)
+      .select("*")
+      .maybeSingle();
+    if (error) return { ok: false, message: error.message || "Could not unblock." };
+    return {
+      ok: true,
+      message: "User unblocked.",
+      state: "none",
+      row: normalizeConnectionRow(data),
+    };
+  }
 
   if (backend === "community_follows") {
     if (action === "decline") {
@@ -480,6 +769,7 @@ export async function mutateConnectionStatus(admin, { viewerProfileId, connectio
 
   const now = new Date().toISOString();
   let nextStatus = null;
+  let blockedBy = null;
   if (action === "decline") {
     if (String(row.status) !== "pending" || viewer !== recipient) {
       return { ok: false, message: "Only the recipient can decline a pending request." };
@@ -497,13 +787,18 @@ export async function mutateConnectionStatus(admin, { viewerProfileId, connectio
     nextStatus = "removed";
   } else if (action === "block") {
     nextStatus = "blocked";
+    blockedBy = viewer;
   } else {
     return { ok: false, message: "Invalid action." };
   }
 
+  const update = { status: nextStatus, updated_at: now, responded_at: now };
+  if (action === "block") update.blocked_by_profile_id = blockedBy;
+  if (action !== "block") update.blocked_by_profile_id = null;
+
   const { data, error } = await admin
     .from(PRIMARY_TABLE)
-    .update({ status: nextStatus, updated_at: now, responded_at: now })
+    .update(update)
     .eq("id", row.id)
     .select("*")
     .maybeSingle();
@@ -523,6 +818,39 @@ export async function mutateConnectionStatus(admin, { viewerProfileId, connectio
     state: viewerConnectionState(normalizeConnectionRow(data), viewer),
     row: normalizeConnectionRow(data),
   };
+}
+
+/**
+ * Admin listing helper — returns raw normalized rows with optional status filter.
+ * @param {import('@supabase/supabase-js').SupabaseClient} admin
+ */
+export async function adminListConnections(admin, { status = "", q = "", limit = 100 } = {}) {
+  const backend = await resolveConnectionsBackend(admin);
+  const cap = Math.min(Math.max(Number(limit) || 100, 1), 500);
+
+  if (backend === "community_follows") {
+    const { data, error } = await admin.from(FALLBACK_TABLE).select("*").limit(cap);
+    if (error) throw error;
+    let rows = (data || []).map(normalizeConnectionRow).filter(Boolean);
+    if (status) rows = rows.filter((r) => String(r.status) === String(status));
+    return rows;
+  }
+
+  let query = admin.from(PRIMARY_TABLE).select("*").order("updated_at", { ascending: false }).limit(cap);
+  if (status) query = query.eq("status", status);
+  const { data, error } = await query;
+  if (error) throw error;
+  let rows = (data || []).map(normalizeConnectionRow).filter(Boolean);
+  const needle = String(q || "").trim().toLowerCase();
+  if (needle) {
+    rows = rows.filter(
+      (r) =>
+        String(r.id).toLowerCase().includes(needle) ||
+        String(r.requester_profile_id).toLowerCase().includes(needle) ||
+        String(r.recipient_profile_id).toLowerCase().includes(needle),
+    );
+  }
+  return rows;
 }
 
 export { PRIMARY_TABLE as MEMBER_CONNECTIONS_TABLE, FALLBACK_TABLE as COMMUNITY_FOLLOWS_TABLE };
