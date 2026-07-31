@@ -35,9 +35,35 @@
 
 .ds-page-intro h2 .trustedBrandMark,
 .ds-page-intro > h3 .trustedBrandMark {
-  width: 108px;
-  height: 108px;
+  width: 162px;
+  height: 162px;
   flex-shrink: 0;
+}
+
+.ds-page-intro--withTrustedBadge {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: var(--ds-space-4, 16px);
+  row-gap: var(--ds-space-2, 8px);
+  align-items: start;
+}
+
+.ds-page-intro--withTrustedBadge > .trustedBrandMark {
+  width: 162px;
+  height: 162px;
+  grid-row: 1 / -1;
+  align-self: start;
+}
+
+.ds-page-intro--withTrustedBadge .ds-page-intro__copy {
+  display: grid;
+  gap: var(--ds-space-2, 8px);
+  min-width: 0;
+}
+
+.ds-page-intro--withTrustedBadge h2,
+.ds-page-intro--withTrustedBadge > h3 {
+  display: block;
 }
 
 .ds-page-intro h2 .iconStroke,

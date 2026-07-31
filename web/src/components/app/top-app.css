@@ -2441,6 +2441,14 @@ span.headerBrandMarkFallback {
   border: 1px solid color-mix(in srgb, #ffffff 42%, transparent);
   box-shadow: 0 6px 14px color-mix(in srgb, #000000 36%, transparent);
 }
+.welcomeActionCard .trustedBrandMark--home {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+  border-radius: 0;
+  overflow: visible;
+}
 .welcomeActionCard .iconStroke {
   stroke: #f8fcff;
 }
@@ -2500,6 +2508,11 @@ span.headerBrandMarkFallback {
 }
 /* Home main action buttons: icon plate + glyph (~1.5× prior uniform size). */
 .card.action.welcomeActionCard--uniform .iconWrap {
+  width: 99px;
+  height: 99px;
+  flex-shrink: 0;
+}
+.card.action.welcomeActionCard--uniform .trustedBrandMark--home {
   width: 99px;
   height: 99px;
   flex-shrink: 0;

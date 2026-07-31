@@ -3,8 +3,10 @@
 import { Handshake, Mail, Mic, Search, UserRound, Users } from "lucide-react";
 
 const DEFAULT_SIZE = 21;
-/** Official curated badge asset (transparent PNG under /public/brand). */
+/** Color badge for Trusted Resources pages (transparent PNG). */
 const TRUSTED_BADGE_SRC = "/brand/trusted-resource-badge.png";
+/** Mono badge for home feature card (transparent PNG). */
+const TRUSTED_HOME_ICON_SRC = "/brand/trusted-resource-home-icon.png";
 /** Default display size — 50% larger than the prior 72px mark. */
 const TRUSTED_BADGE_DEFAULT_SIZE = 108;
 
@@ -16,12 +18,12 @@ function AppIconShell({ children, className = "" }) {
   );
 }
 
-/** Official Trusted Resource badge — standalone mark, no icon frame. */
-function TrustedBrandMark({ size = TRUSTED_BADGE_DEFAULT_SIZE }) {
+/** Standalone Trusted Resource mark — no circular frame. */
+function TrustedBrandMark({ src, size = TRUSTED_BADGE_DEFAULT_SIZE, className = "trustedBrandMark" }) {
   return (
-    <span className="trustedBrandMark" aria-hidden="true" style={{ width: size, height: size }}>
+    <span className={className} aria-hidden="true" style={{ width: size, height: size }}>
       <img
-        src={TRUSTED_BADGE_SRC}
+        src={src}
         alt=""
         width={size}
         height={size}
@@ -50,7 +52,20 @@ export default function AppIcon({ name, size = DEFAULT_SIZE }) {
         </AppIconShell>
       );
     case "trusted":
-      return <TrustedBrandMark size={size === DEFAULT_SIZE ? TRUSTED_BADGE_DEFAULT_SIZE : size} />;
+      return (
+        <TrustedBrandMark
+          src={TRUSTED_BADGE_SRC}
+          size={size === DEFAULT_SIZE ? TRUSTED_BADGE_DEFAULT_SIZE : size}
+        />
+      );
+    case "trustedHome":
+      return (
+        <TrustedBrandMark
+          src={TRUSTED_HOME_ICON_SRC}
+          size={size === DEFAULT_SIZE ? 99 : size}
+          className="trustedBrandMark trustedBrandMark--home"
+        />
+      );
     case "community":
       return (
         <AppIconShell>
