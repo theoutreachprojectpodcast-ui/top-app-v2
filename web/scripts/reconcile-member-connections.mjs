@@ -87,8 +87,15 @@ if (follows.error) {
 
 const before = await admin.from("member_connections").select("id,status").limit(5000);
 if (before.error) {
-  console.error("member_connections missing or unreadable:", before.error.message);
-  console.error(`Apply SQL first: ${sqlPath}`);
+  const denied = /permission denied/i.test(String(before.error.message || ""));
+  console.error("member_connections unreadable:", before.error.message);
+  if (denied) {
+    console.error("Apply grant SQL first:");
+    console.error("  web/supabase/member_connections_grant_service_role_2026_07.sql");
+    console.error(`  https://supabase.com/dashboard/project/${(clean("NEXT_PUBLIC_SUPABASE_URL").match(/https:\/\/([^.]+)/) || [])[1] || "xbtfoundwmhrqrbcuqcw"}/sql/new`);
+  } else {
+    console.error(`Apply SQL first: ${sqlPath}`);
+  }
   process.exit(1);
 }
 report.memberConnectionsBefore = (before.data || []).length;
