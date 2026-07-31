@@ -106,6 +106,12 @@ export async function PATCH(request, context) {
     const wasApproved = st === "approved";
     const postingMode = await resolveCommunityPostingMode(admin);
     const needsReapproval = wasApproved && authorEditRequiresReapproval(postingMode);
+    const requestedVisibility = String(json.visibility || existingPost.visibility || "community")
+      .trim()
+      .toLowerCase();
+    const visibility = ["community", "public", "friends", "private"].includes(requestedVisibility)
+      ? requestedVisibility
+      : "community";
     const editPatch = {
       title,
       body: text,
@@ -116,6 +122,7 @@ export async function PATCH(request, context) {
       show_author_name: json.show_author_name !== false,
       link_url: String(json.link_url || "").trim().slice(0, 500),
       photo_url: sanitizeCommunityStoryPhotoUrl(json.photo_url),
+      visibility,
       is_edited: true,
       updated_at: now,
     };

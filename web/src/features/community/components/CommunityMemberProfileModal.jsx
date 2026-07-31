@@ -51,9 +51,12 @@ export default function CommunityMemberProfileModal({
   const [busy, setBusy] = useState(false);
   const [actionMessage, setActionMessage] = useState("");
   const uuidAuthor = useMemo(() => isAuthorProfileLookupKey(memberId), [memberId]);
+  /** Canonical top_profiles.id once resolved — always use this for connection mutations. */
+  const connectionTargetId = String(member?.id || (uuidAuthor ? memberId : "") || "").trim();
   const isSelf =
     String(viewerProfileId || "").trim() &&
-    String(memberId || "").trim() === String(viewerProfileId || "").trim();
+    connectionTargetId &&
+    connectionTargetId === String(viewerProfileId || "").trim();
 
   const displayMember = useMemo(() => {
     if (member) return member;
@@ -96,7 +99,8 @@ export default function CommunityMemberProfileModal({
         setApprovedPosts(posts);
         if (connections.ok) {
           const map = connectionStateMapFromBundle(connections);
-          setConnectionState(map[String(memberId)] || "connect");
+          const resolvedId = String(resolvedMember?.id || memberId || "").trim();
+          setConnectionState(map[resolvedId] || map[String(memberId)] || "connect");
         } else {
           setConnectionState("connect");
         }
@@ -117,9 +121,14 @@ export default function CommunityMemberProfileModal({
   }, [supabase, memberId, sessionKind]);
 
   async function runAction(action) {
+    const targetProfileId = connectionTargetId || String(memberId || "").trim();
+    if (!targetProfileId) {
+      setActionMessage("Could not resolve this member’s profile.");
+      return;
+    }
     setBusy(true);
     setActionMessage("");
-    const result = await mutateConnectionApi({ action, targetProfileId: memberId });
+    const result = await mutateConnectionApi({ action, targetProfileId });
     setBusy(false);
     if (!result.ok) {
       setActionMessage(result.message || "Could not update connection.");

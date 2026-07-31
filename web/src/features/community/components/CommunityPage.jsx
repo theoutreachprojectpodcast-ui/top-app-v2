@@ -58,6 +58,11 @@ export default function CommunityPage({
   const focusConnections =
     String(searchParams.get("connections") || "").trim() === "1" ||
     String(searchParams.get("tab") || "").trim().toLowerCase() === "connections";
+  const deepLinkMemberId = String(searchParams.get("member") || "").trim();
+
+  useEffect(() => {
+    if (deepLinkMemberId) setSelectedMemberId(deepLinkMemberId);
+  }, [deepLinkMemberId]);
 
   useVisualViewportOverlay(composerOpen);
   useScrollFocusedFieldIntoView(composerOpen, composerScrollRef);

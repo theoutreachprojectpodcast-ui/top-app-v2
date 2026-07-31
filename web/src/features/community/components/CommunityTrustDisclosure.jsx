@@ -6,7 +6,7 @@ const SHIELD_PATH = "M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6z";
 
 export default function CommunityTrustDisclosure() {
   return (
-    <details className="communityTrustDisclosure card communityTrustCard">
+    <details className="communityTrustDisclosure communityDisclosure card">
       <summary className="communityTrustDisclosureSummary">
         <span className="communityTrustDisclosureIcon" aria-hidden="true">
           <IconWrap path={SHIELD_PATH} />

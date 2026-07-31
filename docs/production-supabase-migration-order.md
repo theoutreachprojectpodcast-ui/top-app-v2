@@ -128,8 +128,9 @@ where platform_role is null
 | **42.1** | `member_connections_grant_service_role_2026_07.sql` | **Required if API gets `permission denied for table member_connections`** — restores `service_role` GRANTs |
 | **42.2** | `member_connections_migrate_follows_2026_07.sql` | Backfill pending/accepted/blocked from legacy `community_follows` encodings |
 | **42.3** | `member_connections_ONE_PASTE_grant_and_migrate_2026_07.sql` | **Preferred Production paste** — grant + migrate in one run |
+| **42.4** | `member_connections_workflow_2026_07.sql` | Status timestamps (`accepted_at` / `declined_at` / …) + `friends` post visibility |
 
-**Friend connections fix (run on Production when Community Connect is broken):** paste **42.3** (or **42.1** then **42.2**) in the SQL editor (or `pnpm --dir web run apply:member-connections:full:apply` with `SUPABASE_ACCESS_TOKEN` / `DATABASE_URL`). Until grants are applied, app code falls back to `community_follows`.
+**Friend connections fix (run on Production when Community Connect is broken):** paste **42.3** (or **42.1** then **42.2**) in the SQL editor (or `pnpm --dir web run apply:member-connections:full:apply` with `SUPABASE_ACCESS_TOKEN` / `DATABASE_URL`). Until grants are applied, app code falls back to `community_follows`. After that, run **42.4** for explicit status timestamps and friends-only posts.
 
 **QA only (do not run on production):** `qa_irs_nonprofit_import_seed_2026_07.sql` — sample IRS import rows for admin review UI. See `docs/IRS_NONPROFIT_IMPORT.md`.
 

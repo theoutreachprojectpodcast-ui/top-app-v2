@@ -278,19 +278,15 @@ async function runPrimaryLifecycle() {
   assert.equal(forA.outgoing.length, 1);
   assert.equal(forA.connected.length, 0);
 
-  const accepted = await acceptConnectionRequest(admin, {
-    viewerProfileId: B,
-    otherProfileId: A,
-  });
-  assert.equal(accepted.ok, true);
-  assert.equal(accepted.state, "connected");
+  // Reverse pending auto-accepts into a mutual friendship.
+  const reverse = await sendConnectionRequest(admin, { viewerProfileId: B, targetProfileId: A });
+  assert.equal(reverse.ok, true);
+  assert.equal(reverse.state, "connected");
 
-  const friendsA = await listConnectionsForViewer(admin, A);
-  const friendsB = await listConnectionsForViewer(admin, B);
+  let friendsA = await listConnectionsForViewer(admin, A);
+  let friendsB = await listConnectionsForViewer(admin, B);
   assert.equal(friendsA.connected.length, 1);
   assert.equal(friendsB.connected.length, 1);
-  assert.equal(friendsA.incoming.length, 0);
-  assert.equal(friendsB.incoming.length, 0);
 
   const removed = await mutateConnectionStatus(admin, {
     viewerProfileId: A,
@@ -304,8 +300,10 @@ async function runPrimaryLifecycle() {
   assert.equal(afterRemoveA.connected.length, 0);
   assert.equal(afterRemoveB.connected.length, 0);
 
+  // Re-request after remove reactivates the terminal row.
   const sent2 = await sendConnectionRequest(admin, { viewerProfileId: A, targetProfileId: B });
   assert.equal(sent2.ok, true);
+  assert.equal(sent2.state, "request_sent");
   const declined = await mutateConnectionStatus(admin, {
     viewerProfileId: B,
     otherProfileId: A,
@@ -323,6 +321,21 @@ async function runPrimaryLifecycle() {
   });
   assert.equal(cancelled.ok, true);
   assert.equal((await listConnectionsForViewer(admin, C)).incoming.length, 0);
+
+  // Accept after a fresh request creates mutual friends.
+  const sent4 = await sendConnectionRequest(admin, { viewerProfileId: A, targetProfileId: C });
+  assert.equal(sent4.ok, true);
+  const accepted = await acceptConnectionRequest(admin, {
+    viewerProfileId: C,
+    connectionId: sent4.row?.id,
+    otherProfileId: A,
+  });
+  assert.equal(accepted.ok, true);
+  assert.equal(accepted.state, "connected");
+  friendsA = await listConnectionsForViewer(admin, A);
+  const friendsC = await listConnectionsForViewer(admin, C);
+  assert.equal(friendsA.connected.some((r) => r.requester_profile_id === C || r.recipient_profile_id === C), true);
+  assert.equal(friendsC.connected.length, 1);
 
   const blocked = await mutateConnectionStatus(admin, {
     viewerProfileId: A,

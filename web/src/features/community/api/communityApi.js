@@ -235,6 +235,20 @@ export async function fetchApprovedPostsByMember(supabase, memberId) {
   const id = String(memberId || "").trim();
   if (!id) return [];
 
+  try {
+    const params = new URLSearchParams({ scope: "member", author: id });
+    const res = await fetch(`/api/community/posts?${params.toString()}`, {
+      credentials: "include",
+      cache: "no-store",
+    });
+    const json = await res.json().catch(() => ({}));
+    if (res.ok && Array.isArray(json.posts)) {
+      return json.posts.map(mapCommunityPostRow).filter(Boolean);
+    }
+  } catch {
+    /* fall through to client supabase */
+  }
+
   if (!supabase) {
     return [];
   }
@@ -332,6 +346,7 @@ export async function submitCommunityStory(supabase, payload, { useWorkOSApi = f
           show_author_name: payload.show_author_name,
           link_url: payload.link_url,
           photo_url: payload.photo_url,
+          visibility: payload.visibility || "community",
         }),
       });
       const json = await res.json().catch(() => ({}));
@@ -363,7 +378,7 @@ export async function submitCommunityStory(supabase, payload, { useWorkOSApi = f
     link_url: payload.link_url || "",
     photo_url: payload.photo_url || "",
     status: "pending_review",
-    visibility: "community",
+    visibility: payload.visibility || "community",
     like_count: 0,
     share_count: 0,
   };
@@ -552,6 +567,7 @@ export async function updateAuthorCommunityPost(postId, payload) {
         show_author_name: payload.show_author_name,
         link_url: payload.link_url,
         photo_url: payload.photo_url,
+        visibility: payload.visibility,
       }),
     });
     const json = await res.json().catch(() => ({}));

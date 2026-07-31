@@ -276,7 +276,7 @@ export default function CommunityConnectionsPanel({
       ) : null}
 
       <details
-        className="card communitySection communityConnectionsPanel communityConnectionsDisclosure"
+        className="card communitySection communityConnectionsPanel communityConnectionsDisclosure communityDisclosure"
         open={panelOpen}
         onToggle={(e) => setPanelOpen(e.currentTarget.open)}
       >
@@ -295,10 +295,18 @@ export default function CommunityConnectionsPanel({
                     />
                   ))}
                 </span>
-                <span className="communityConnectionsPreviewText">{summary}</span>
+                <span
+                  className={`communityConnectionsPreviewText${connectionsError ? " communityConnectionsPreviewText--error" : ""}`}
+                >
+                  {summary}
+                </span>
               </span>
             ) : (
-              <span className="communityConnectionsPreview communityConnectionsPreview--solo">{summary}</span>
+              <span
+                className={`communityConnectionsPreview communityConnectionsPreview--solo${connectionsError ? " communityConnectionsPreview--error" : ""}`}
+              >
+                {summary}
+              </span>
             )}
           </span>
           <span className="communityConnectionsChevron" aria-hidden="true">

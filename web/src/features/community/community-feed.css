@@ -545,13 +545,18 @@ html[data-color-scheme="light"] .communityPostResource,
     justify-content: center;
   }
 
-  .communityTrustDisclosureSummary {
+  .communityTrustDisclosureSummary,
+  .communityConnectionsSummary {
     padding: var(--ds-space-3, 12px) var(--ds-space-4, 16px);
   }
 
   .communityTrustList {
-    padding-inline: var(--ds-space-4, 16px) var(--ds-space-4, 16px);
-    padding-bottom: var(--ds-space-4, 16px);
+    padding: var(--ds-space-3, 12px) var(--ds-space-4, 16px);
+    padding-left: calc(40px + var(--ds-space-4, 16px) + var(--ds-space-3, 12px));
+  }
+
+  .communityConnectionsDisclosure > .communityConnectionsBody {
+    padding: 0 var(--ds-space-3, 12px) var(--ds-space-3, 12px);
   }
 }
 

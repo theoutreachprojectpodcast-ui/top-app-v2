@@ -129,6 +129,10 @@ export function normalizeConnectionRow(row) {
       created_at: row.created_at,
       updated_at: row.updated_at || row.created_at,
       responded_at: row.responded_at || null,
+      accepted_at: row.accepted_at || null,
+      declined_at: row.declined_at || null,
+      cancelled_at: row.cancelled_at || null,
+      removed_at: row.removed_at || null,
       blocked_by_profile_id: row.blocked_by_profile_id ? String(row.blocked_by_profile_id) : null,
       _backend: "member_connections",
     };
@@ -422,6 +426,51 @@ export async function findActiveConnectionBetween(admin, profileA, profileB) {
   return Array.isArray(data) && data[0] ? normalizeConnectionRow(data[0]) : null;
 }
 
+/**
+ * Latest row for a pair including terminal statuses (declined/cancelled/removed).
+ * Used to reactivate a prior relationship instead of inserting a duplicate.
+ */
+export async function findLatestConnectionBetween(admin, profileA, profileB) {
+  const a = String(profileA || "").trim();
+  const b = String(profileB || "").trim();
+  if (!a || !b || a === b) return null;
+
+  const backend = await resolveConnectionsBackend(admin);
+  if (backend === "community_follows") {
+    return findActiveConnectionBetween(admin, a, b);
+  }
+
+  const { data, error } = await admin
+    .from(PRIMARY_TABLE)
+    .select("*")
+    .or(
+      `and(requester_profile_id.eq.${a},recipient_profile_id.eq.${b}),and(requester_profile_id.eq.${b},recipient_profile_id.eq.${a})`,
+    )
+    .order("updated_at", { ascending: false })
+    .limit(1);
+
+  if (error) throw error;
+  return Array.isArray(data) && data[0] ? normalizeConnectionRow(data[0]) : null;
+}
+
+/**
+ * Resolve a Connect target to a top_profiles UUID.
+ * Accepts profile UUID or WorkOS user id.
+ */
+export async function resolveConnectionTargetProfileId(admin, rawTarget) {
+  const target = String(rawTarget || "").trim();
+  if (!target || !admin) return "";
+  if (isUuid(target)) return target;
+
+  const { data, error } = await admin
+    .from("top_profiles")
+    .select("id")
+    .eq("workos_user_id", target)
+    .maybeSingle();
+  if (error || !data?.id) return "";
+  return String(data.id);
+}
+
 export async function listConnectionsForViewer(admin, viewerProfileId) {
   const viewer = String(viewerProfileId || "").trim();
   if (!viewer) {
@@ -502,12 +551,18 @@ export async function loadAcceptedFriendProfileIds(admin, viewerProfileId) {
 
 export async function sendConnectionRequest(admin, { viewerProfileId, targetProfileId }) {
   const viewer = String(viewerProfileId || "").trim();
-  const target = String(targetProfileId || "").trim();
+  let target = String(targetProfileId || "").trim();
   if (!viewer || !target) return { ok: false, message: "Missing profile." };
-  if (viewer === target) return { ok: false, message: "You can’t connect with yourself." };
-  if (!isUuid(viewer) || !isUuid(target)) {
+  if (!isUuid(viewer)) {
     return { ok: false, message: "Invalid member profile." };
   }
+  if (!isUuid(target)) {
+    target = await resolveConnectionTargetProfileId(admin, target);
+  }
+  if (!isUuid(target)) {
+    return { ok: false, message: "Invalid member profile." };
+  }
+  if (viewer === target) return { ok: false, message: "You can’t connect with yourself." };
 
   const existing = await findActiveConnectionBetween(admin, viewer, target);
   if (existing) {
@@ -547,6 +602,37 @@ export async function sendConnectionRequest(admin, { viewerProfileId, targetProf
   }
 
   const now = new Date().toISOString();
+
+  // Reactivate the most recent terminal row for this pair (no duplicate A↔B rows).
+  const latest = await findLatestConnectionBetween(admin, viewer, target);
+  if (latest && ["declined", "cancelled", "removed"].includes(String(latest.status || "").toLowerCase()) && isUuid(latest.id)) {
+    const { data, error } = await admin
+      .from(PRIMARY_TABLE)
+      .update({
+        requester_profile_id: viewer,
+        recipient_profile_id: target,
+        status: "pending",
+        updated_at: now,
+        responded_at: null,
+        accepted_at: null,
+        declined_at: null,
+        cancelled_at: null,
+        removed_at: null,
+        blocked_by_profile_id: null,
+      })
+      .eq("id", latest.id)
+      .select("*")
+      .maybeSingle();
+    if (!error && data) {
+      return {
+        ok: true,
+        message: "Connection request sent.",
+        state: "request_sent",
+        row: normalizeConnectionRow(data),
+      };
+    }
+  }
+
   const { data, error } = await admin
     .from(PRIMARY_TABLE)
     .insert({
@@ -575,6 +661,7 @@ export async function sendConnectionRequest(admin, { viewerProfileId, targetProf
       }
       return { ok: false, message: "A connection request already exists.", state: "request_sent" };
     }
+    // Older DBs without the new timestamp columns still accept the insert payload above.
     return { ok: false, message: error.message || "Could not send request." };
   }
 
@@ -614,18 +701,40 @@ export async function acceptConnectionRequest(admin, { viewerProfileId, connecti
   }
 
   const now = new Date().toISOString();
-  const query = admin
-    .from(PRIMARY_TABLE)
-    .update({ status: "accepted", updated_at: now, responded_at: now })
-    .eq("status", "pending");
+  const acceptedPatch = {
+    status: "accepted",
+    updated_at: now,
+    responded_at: now,
+    accepted_at: now,
+    declined_at: null,
+    cancelled_at: null,
+    removed_at: null,
+    blocked_by_profile_id: null,
+  };
+  const query = admin.from(PRIMARY_TABLE).update(acceptedPatch).eq("status", "pending");
 
-  const { data, error } = isUuid(row.id)
+  let { data, error } = isUuid(row.id)
     ? await query.eq("id", row.id).select("*").maybeSingle()
     : await query
         .eq("requester_profile_id", requester)
         .eq("recipient_profile_id", viewer)
         .select("*")
         .maybeSingle();
+
+  // Older DBs may not have accepted_at yet — retry with the legacy columns only.
+  if (error && /accepted_at|declined_at|cancelled_at|removed_at/i.test(String(error.message || ""))) {
+    const legacy = admin
+      .from(PRIMARY_TABLE)
+      .update({ status: "accepted", updated_at: now, responded_at: now })
+      .eq("status", "pending");
+    ({ data, error } = isUuid(row.id)
+      ? await legacy.eq("id", row.id).select("*").maybeSingle()
+      : await legacy
+          .eq("requester_profile_id", requester)
+          .eq("recipient_profile_id", viewer)
+          .select("*")
+          .maybeSingle());
+  }
 
   if (error) return { ok: false, message: error.message || "Could not accept." };
   if (!data) return { ok: false, message: "Request was already handled." };
@@ -795,16 +904,33 @@ export async function mutateConnectionStatus(admin, { viewerProfileId, connectio
     return { ok: false, message: "Invalid action." };
   }
 
-  const update = { status: nextStatus, updated_at: now, responded_at: now };
-  if (action === "block") update.blocked_by_profile_id = blockedBy;
-  if (action !== "block") update.blocked_by_profile_id = null;
+  const update = {
+    status: nextStatus,
+    updated_at: now,
+    responded_at: now,
+    accepted_at: null,
+    declined_at: action === "decline" ? now : null,
+    cancelled_at: action === "cancel" ? now : null,
+    removed_at: action === "remove" ? now : null,
+    blocked_by_profile_id: action === "block" ? blockedBy : null,
+  };
 
-  const { data, error } = await admin
+  let { data, error } = await admin
     .from(PRIMARY_TABLE)
     .update(update)
     .eq("id", row.id)
     .select("*")
     .maybeSingle();
+
+  if (error && /accepted_at|declined_at|cancelled_at|removed_at/i.test(String(error.message || ""))) {
+    const legacy = {
+      status: nextStatus,
+      updated_at: now,
+      responded_at: now,
+      blocked_by_profile_id: action === "block" ? blockedBy : null,
+    };
+    ({ data, error } = await admin.from(PRIMARY_TABLE).update(legacy).eq("id", row.id).select("*").maybeSingle());
+  }
 
   if (error) return { ok: false, message: error.message || "Could not update connection." };
 

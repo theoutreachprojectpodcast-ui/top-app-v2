@@ -6,6 +6,9 @@ import { useRouter } from "next/navigation";
 import { useAuthSession } from "@/components/auth/AuthSessionProvider";
 import IconWrap from "@/components/shared/IconWrap";
 import HeaderDropdownLayer from "@/components/layout/HeaderDropdownLayer";
+import ConnectionRequestNotificationActions, {
+  isConnectionRequestNotification,
+} from "@/components/notifications/ConnectionRequestNotificationActions";
 import { useMobileShell } from "@/hooks/useMobileShell";
 
 const BELL_PATH =
@@ -106,11 +109,22 @@ export default function HeaderNotificationBell({ variant = "topbar", skipSession
   }
 
   async function onItemActivate(n) {
+    if (isConnectionRequestNotification(n)) return;
     if (n.status === "unread" && n.id) await markRead([n.id]);
     const path = n.link_path ? String(n.link_path) : "";
     setOpen(false);
     if (path.startsWith("/")) router.push(path);
     else if (path) window.location.assign(path);
+  }
+
+  function onConnectionResolved({ notification }) {
+    if (notification?.id) {
+      setItems((prev) =>
+        prev.map((x) => (x.id === notification.id ? { ...x, status: "read" } : x)),
+      );
+      void markRead([notification.id]);
+    }
+    void refreshSummary();
   }
 
   if (!skipSessionGate && (session.loading || !session.authenticated)) return null;
@@ -165,20 +179,44 @@ export default function HeaderNotificationBell({ variant = "topbar", skipSession
                 <p className="headerNotificationEmpty">You are all caught up.</p>
               ) : null}
               {!loading && !listError
-                ? items.map((n) => (
-                    <button
-                      key={n.id}
-                      type="button"
-                      className={`headerNotificationItem ${n.status === "unread" ? "isUnread" : ""}`}
-                      onClick={() => void onItemActivate(n)}
-                    >
-                      <span className="headerNotificationItem__title">{n.title}</span>
-                      {n.message ? <span className="headerNotificationItem__msg">{n.message}</span> : null}
-                      <span className="headerNotificationItem__meta">
-                        {n.created_at ? new Date(n.created_at).toLocaleString() : ""}
-                      </span>
-                    </button>
-                  ))
+                ? items.map((n) => {
+                    const isConn = isConnectionRequestNotification(n);
+                    return (
+                      <div
+                        key={n.id}
+                        className={`headerNotificationItem ${n.status === "unread" ? "isUnread" : ""}${
+                          isConn ? " headerNotificationItem--connection" : ""
+                        }`}
+                      >
+                        <button
+                          type="button"
+                          className="headerNotificationItem__hit"
+                          onClick={() => {
+                            if (isConn) {
+                              const path = n.link_path ? String(n.link_path) : "/community?connections=1";
+                              setOpen(false);
+                              if (path.startsWith("/")) router.push(path);
+                              return;
+                            }
+                            void onItemActivate(n);
+                          }}
+                        >
+                          <span className="headerNotificationItem__title">{n.title}</span>
+                          {n.message ? <span className="headerNotificationItem__msg">{n.message}</span> : null}
+                          <span className="headerNotificationItem__meta">
+                            {n.created_at ? new Date(n.created_at).toLocaleString() : ""}
+                          </span>
+                        </button>
+                        {isConn ? (
+                          <ConnectionRequestNotificationActions
+                            notification={n}
+                            compact
+                            onResolved={onConnectionResolved}
+                          />
+                        ) : null}
+                      </div>
+                    );
+                  })
                 : null}
             </div>
             <div className="headerNotificationDropdown__foot">

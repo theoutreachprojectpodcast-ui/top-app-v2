@@ -16,6 +16,7 @@ const INITIAL = {
   show_author_name: true,
   link_url: "",
   photo_url: "",
+  visibility: "community",
 };
 
 export default function CommunitySubmissionForm({
@@ -77,6 +78,7 @@ export default function CommunitySubmissionForm({
       show_author_name: editPost.showAuthorName !== false,
       link_url: editPost.linkUrl || "",
       photo_url: editPost.photoUrl || "",
+      visibility: editPost.visibility || "community",
     });
   }, [editPost]);
 
@@ -126,6 +128,7 @@ export default function CommunitySubmissionForm({
           show_author_name: form.show_author_name,
           link_url: form.link_url.trim(),
           photo_url: photoUrl,
+          visibility: form.visibility,
         });
         if (!result.ok) {
           setError(result.message || "Could not save.");
@@ -151,6 +154,7 @@ export default function CommunitySubmissionForm({
           show_author_name: form.show_author_name,
           link_url: form.link_url.trim(),
           photo_url: photoUrl,
+          visibility: form.visibility,
         },
         { useWorkOSApi },
       );
@@ -236,6 +240,18 @@ export default function CommunitySubmissionForm({
                   {label}
                 </option>
               ))}
+            </select>
+          </label>
+          <label className="fieldLabel">
+            Who can see this
+            <select
+              className="communitySubmitInput"
+              value={form.visibility}
+              onChange={(e) => setForm((f) => ({ ...f, visibility: e.target.value }))}
+            >
+              <option value="community">Community members</option>
+              <option value="friends">Friends only</option>
+              <option value="public">Public</option>
             </select>
           </label>
           <label className="fieldLabel">
