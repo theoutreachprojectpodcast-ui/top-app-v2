@@ -43,37 +43,37 @@
 .ds-page-intro--withTrustedBadge {
   --trusted-intro-badge-size: 162px;
   --trusted-intro-badge-gap: var(--ds-space-4, 16px);
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: var(--ds-space-2, 8px);
+  display: grid;
+  grid-template-columns: var(--trusted-intro-badge-size) minmax(0, 1fr);
+  column-gap: var(--trusted-intro-badge-gap);
+  row-gap: var(--ds-space-2, 8px);
+  align-items: start;
 }
 
-.ds-page-intro--withTrustedBadge .ds-page-intro__headline {
-  display: flex;
-  align-items: center;
-  gap: var(--trusted-intro-badge-gap);
-  min-width: 0;
-}
-
-.ds-page-intro--withTrustedBadge .ds-page-intro__headline > .trustedBrandMark {
-  /* Beat TrustedBrandMark inline width/height so margin-left stays aligned. */
+.ds-page-intro--withTrustedBadge > .trustedBrandMark {
   width: var(--trusted-intro-badge-size) !important;
   height: var(--trusted-intro-badge-size) !important;
+  grid-column: 1;
+  grid-row: 1 / -1;
+  align-self: start;
   flex-shrink: 0;
 }
 
-.ds-page-intro--withTrustedBadge .ds-page-intro__headline h2,
-.ds-page-intro--withTrustedBadge .ds-page-intro__headline > h3 {
-  display: block;
-  margin: 0;
+.ds-page-intro--withTrustedBadge .ds-page-intro__copy {
+  grid-column: 2;
+  display: grid;
+  gap: var(--ds-space-2, 8px);
   min-width: 0;
-  flex: 1 1 auto;
+  align-content: start;
 }
 
-/* Keep the lead aligned with the title (never flush under the badge). */
-.ds-page-intro--withTrustedBadge > .ds-page-intro__lead {
-  margin-left: calc(var(--trusted-intro-badge-size) + var(--trusted-intro-badge-gap));
+.ds-page-intro--withTrustedBadge h2,
+.ds-page-intro--withTrustedBadge > h3 {
+  display: block;
+  margin: 0;
+}
+
+.ds-page-intro--withTrustedBadge .ds-page-intro__lead {
   max-width: none;
 }
 
