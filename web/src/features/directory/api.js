@@ -2,6 +2,7 @@ import { PAGE_SIZE } from "@/lib/constants";
 import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
 import { mergeDirectoryRowWithEnrichment, enrichmentRowsByEin } from "@/lib/supabase/enrichmentMerge";
 import { mapDirectoryRow } from "@/lib/supabase/mappers";
+import { shouldRetryDirectoryWithoutStatus } from "@/lib/supabase/directoryFilters";
 import {
   queryDirectoryCount,
   queryDirectoryEnrichmentByEin,
@@ -21,7 +22,7 @@ function applyLegacyPublicVisibility(query) {
 }
 
 async function fetchLegacyDirectoryPage(supabase, filters, from, to) {
-  let query = supabase.from("nonprofits").select("*").range(from, to);
+  let query = supabase.from("nonprofits").select("*", { count: "exact" }).range(from, to);
   if ((filters.state || "").trim()) query = query.eq("state", filters.state);
   query = applyLegacyPublicVisibility(query);
   if ((filters.q || "").trim()) {
@@ -36,18 +37,25 @@ async function fetchLegacyDirectoryPage(supabase, filters, from, to) {
 }
 
 async function fetchLegacyDirectoryCount(supabase, filters) {
-  let query = supabase.from("nonprofits").select("*", { count: "exact", head: true });
-  if ((filters.state || "").trim()) query = query.eq("state", filters.state);
-  query = applyLegacyPublicVisibility(query);
-  if ((filters.q || "").trim()) {
-    const term = String(filters.q).replace(/,/g, " ").trim();
-    query = query.or(`name.ilike.%${term}%,city.ilike.%${term}%`);
+  async function run(withStatus) {
+    let query = supabase.from("nonprofits").select("ein", { count: "exact", head: true });
+    if ((filters.state || "").trim()) query = query.eq("state", filters.state);
+    if (withStatus) query = applyLegacyPublicVisibility(query);
+    if ((filters.q || "").trim()) {
+      const term = String(filters.q).replace(/,/g, " ").trim();
+      query = query.or(`name.ilike.%${term}%,city.ilike.%${term}%`);
+    }
+    if (filters.service) query = query.ilike("ntee_code", `${filters.service}%`);
+    if (filters.audience === "veteran") query = query.eq("serves_veterans", true);
+    if (filters.audience === "first_responder") query = query.eq("serves_first_responders", true);
+    if (filters.irsSubsection) query = query.eq("irs_subsection", String(filters.irsSubsection));
+    return query;
   }
-  if (filters.service) query = query.ilike("ntee_code", `${filters.service}%`);
-  if (filters.audience === "veteran") query = query.eq("serves_veterans", true);
-  if (filters.audience === "first_responder") query = query.eq("serves_first_responders", true);
-  if (filters.irsSubsection) query = query.eq("irs_subsection", String(filters.irsSubsection));
-  return query;
+  let result = await run(true);
+  if (shouldRetryDirectoryWithoutStatus(result, { attemptedWithStatus: true })) {
+    result = await run(false);
+  }
+  return result;
 }
 
 export async function fetchDirectorySearchWithSupabase(supabase, filters, page = 1) {
@@ -82,12 +90,24 @@ export async function fetchDirectorySearchWithSupabase(supabase, filters, page =
     })
     .filter((mapped) => mapped.einIdentityVerified);
 
-  let countResult = await queryDirectoryCount(supabase, filters);
-  if (countResult.error) {
-    const legacyCount = await fetchLegacyDirectoryCount(supabase, filters);
-    if (!legacyCount.error) countResult = legacyCount;
+  // Prefer the exact count from the page query (same filters, one round-trip).
+  // Fall back to a dedicated HEAD count, then legacy table — never invent a page-size total.
+  let count = typeof pageResult.count === "number" ? pageResult.count : null;
+  if (count === null) {
+    let countResult = await queryDirectoryCount(supabase, filters);
+    if (countResult.error || typeof countResult.count !== "number") {
+      const legacyCount = await fetchLegacyDirectoryCount(supabase, filters);
+      if (!legacyCount.error && typeof legacyCount.count === "number") {
+        countResult = legacyCount;
+      } else if (typeof console !== "undefined" && console.warn) {
+        console.warn(
+          "[directory] count unavailable:",
+          countResult.error?.message || `status ${countResult.status || "?"}`
+        );
+      }
+    }
+    count = typeof countResult.count === "number" ? countResult.count : null;
   }
-  const count = countResult.error ? null : countResult.count;
 
   return {
     rows,
