@@ -10,7 +10,7 @@ const FEATURES = [
     cardClass: "welcomeActionCard--sponsors",
     icon: "sponsors",
     title: "Sponsors",
-    hint: "Partner page — open packages from there",
+    hint: "Strong partners. Shared mission.",
     proOnly: false,
   },
   {
