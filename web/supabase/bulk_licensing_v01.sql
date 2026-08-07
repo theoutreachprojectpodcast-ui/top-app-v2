@@ -32,7 +32,8 @@ create index if not exists bulk_organizations_admin_idx
 create index if not exists bulk_organizations_purchaser_email_idx
   on public.bulk_organizations (lower(purchaser_email));
 
-comment on table public.bulk_organizations is 'B2B bulk license purchasers; business_code is display prefix, not a shared redeem credential.';
+comment on table public.bulk_organizations is
+  'B2B bulk license purchasers (UUID id + business_code). Not a WorkOS Organization — WorkOS is IdP-only. business_code is display prefix, not a shared redeem credential.';
 
 -- ---------------------------------------------------------------------------
 -- Organization members (admins)
@@ -106,6 +107,9 @@ create table if not exists public.bulk_subscriptions (
 
 create index if not exists bulk_subscriptions_org_idx
   on public.bulk_subscriptions (organization_id, created_at desc);
+
+comment on table public.bulk_subscriptions is
+  'Stripe subscription for the org package. Profile.stripe_subscription_id remains individual-only.';
 create index if not exists bulk_subscriptions_customer_idx
   on public.bulk_subscriptions (stripe_customer_id);
 
@@ -227,6 +231,8 @@ create index if not exists bulk_stripe_webhook_events_status_idx
 
 -- ---------------------------------------------------------------------------
 -- Profile columns for bulk entitlement linkage
+-- membership_source=bulk_org is app-written (redeem). Profile.stripe_subscription_id
+-- stays individual-only; org Stripe IDs live on bulk_subscriptions.
 -- ---------------------------------------------------------------------------
 do $$
 begin
@@ -234,13 +240,19 @@ begin
     alter table public.top_profiles
       add column if not exists bulk_organization_id uuid,
       add column if not exists bulk_license_id uuid;
-    comment on column public.top_profiles.bulk_organization_id is 'Active bulk org affiliation when membership_source=bulk_org.';
-    comment on column public.top_profiles.bulk_license_id is 'Redeemed bulk_individual_licenses.id when membership_source=bulk_org.';
+    comment on column public.top_profiles.bulk_organization_id is
+      'Active bulk org affiliation when membership_source=bulk_org (app-set; not WorkOS org id).';
+    comment on column public.top_profiles.bulk_license_id is
+      'Redeemed bulk_individual_licenses.id when membership_source=bulk_org.';
   end if;
   if to_regclass('public.top_qa_profiles') is not null then
     alter table public.top_qa_profiles
       add column if not exists bulk_organization_id uuid,
       add column if not exists bulk_license_id uuid;
+    comment on column public.top_qa_profiles.bulk_organization_id is
+      'Active bulk org affiliation when membership_source=bulk_org (app-set; not WorkOS org id).';
+    comment on column public.top_qa_profiles.bulk_license_id is
+      'Redeemed bulk_individual_licenses.id when membership_source=bulk_org.';
   end if;
 end $$;
 

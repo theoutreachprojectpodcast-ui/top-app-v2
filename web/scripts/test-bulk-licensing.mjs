@@ -20,6 +20,7 @@ import { canManageBilling, canManageLicenses, roleAtLeast } from "../src/lib/bul
 import { evaluateBulkRedemptionEligibility } from "../src/lib/bulkLicensing/membershipRules.js";
 import { parseEmailCsv, sanitizeCsvCell, buildCsv } from "../src/lib/bulkLicensing/csv.js";
 import { requirePro } from "../src/lib/membership/membershipAccess.js";
+import { isBulkCheckoutMetadata } from "../src/lib/bulkLicensing/bulkCheckoutMetadata.js";
 
 const failures = [];
 function check(cond, msg) {
@@ -29,6 +30,16 @@ function check(cond, msg) {
     failures.push(e.message || msg);
   }
 }
+
+// Architecture markers — bulk checkout metadata (never conflate with WorkOS org / sponsor promos)
+check(isBulkCheckoutMetadata({ checkout_kind: "bulk_licensing" }), "bulk checkout_kind");
+check(isBulkCheckoutMetadata({ bulk_organization_id: "org_1" }), "bulk org metadata");
+check(isBulkCheckoutMetadata({ bulk_purchase_id: "p_1" }), "bulk purchase metadata");
+check(!isBulkCheckoutMetadata({ checkout_kind: "podcast_sponsor" }), "sponsor checkout not bulk");
+check(!isBulkCheckoutMetadata({ workos_organization_id: "org_x" }), "WorkOS org id is not bulk");
+check(!isBulkCheckoutMetadata({}), "empty metadata not bulk");
+check(!isBulkCheckoutMetadata(null), "null metadata not bulk");
+check(RESERVED_BUSINESS_CODES.has("WORKOS") && RESERVED_BUSINESS_CODES.has("SPONSOR"), "WORKOS/SPONSOR reserved business codes");
 
 // Packages
 check(isValidBulkPackageSize(25) && isValidBulkPackageSize(200), "valid package sizes");

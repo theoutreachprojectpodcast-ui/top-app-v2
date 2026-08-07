@@ -6,11 +6,13 @@ Organization packages of **25 / 50 / 100 / 200** annual Outreach memberships, bi
 
 | Layer | Implementation |
 |-------|----------------|
-| Identity | WorkOS (purchaser must be signed in) |
-| Data | Supabase tables `bulk_*` (deny-all RLS; service role APIs) |
-| Billing | Stripe Checkout + Customer Portal; price IDs via env |
-| Entitlement | Profile `membership_source=bulk_org` + `bulk_license_id` |
-| Webhooks | Same `/api/billing/webhook`; bulk branch + event ledger |
+| Identity | WorkOS user sign-in only (IdP). **Do not** use WorkOS Organization ID as the billing org |
+| Data | New Supabase tables `bulk_*` — see [`bulk_licensing_v01.sql`](../supabase/bulk_licensing_v01.sql) |
+| Billing | Stripe Checkout + Customer Portal; price IDs via env; rows in `bulk_subscriptions` |
+| Entitlement | Profile `membership_source=bulk_org` + `bulk_license_id` / `bulk_organization_id` |
+| Individual Stripe | Profile `stripe_subscription_id` stays **individual-only** — never written from bulk checkouts |
+| Promo codes | Sponsor / marketing promo codes are **not** used; seats use unique hashed license codes |
+| Webhooks | Same `/api/billing/webhook`; bulk branch + event ledger; invoice race guarded via subscription metadata |
 
 Migration: [`web/supabase/bulk_licensing_v01.sql`](../supabase/bulk_licensing_v01.sql)
 
