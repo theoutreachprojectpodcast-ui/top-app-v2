@@ -9,6 +9,11 @@ import {
   navigateToStripeSetupUrl,
 } from "@/lib/capacitor/billingNavigation";
 import {
+  googlePlayExternalContentLinkErrorMessage,
+  prepareGooglePlayExternalContentLink,
+  requiresGooglePlayExternalContentLink,
+} from "@/lib/capacitor/googlePlayExternalContentLinks";
+import {
   MEMBERSHIP_TIER_KEYS,
   getMembershipTierDefinition,
   normalizeMembershipTierKey,
@@ -128,17 +133,33 @@ export default function MembershipBillingCenter({
   async function startCheckout(tier, sponsorPackageId) {
     setError("");
     setBusy(tier + (sponsorPackageId || ""));
+    let googlePlayExternalTransactionToken = "";
     try {
+      if (requiresGooglePlayExternalContentLink()) {
+        const prepared = await prepareGooglePlayExternalContentLink();
+        googlePlayExternalTransactionToken = prepared.externalTransactionToken;
+      }
+
       const res = await fetch("/api/billing/checkout", {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tier, returnPath: checkoutReturnPath, sponsorPackageId }),
+        body: JSON.stringify({
+          tier,
+          returnPath: checkoutReturnPath,
+          sponsorPackageId,
+          ...(googlePlayExternalTransactionToken
+            ? { googlePlayExternalTransactionToken }
+            : {}),
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (data.url) {
         onCheckoutNavigate?.();
-        await navigateToStripeCheckout(data.url);
+        await navigateToStripeCheckout(data.url, {
+          googlePlayExternalLinkUrl: data.googlePlayExternalLinkUrl,
+          externalTransactionToken: googlePlayExternalTransactionToken,
+        });
         return;
       }
       if (data.error === "use_billing_portal") {
@@ -150,11 +171,20 @@ export default function MembershipBillingCenter({
           method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ podcastTierId: data.podcastTierId, returnPath: checkoutReturnPath }),
+          body: JSON.stringify({
+            podcastTierId: data.podcastTierId,
+            returnPath: checkoutReturnPath,
+            ...(googlePlayExternalTransactionToken
+              ? { googlePlayExternalTransactionToken }
+              : {}),
+          }),
         });
         const pd = await pr.json().catch(() => ({}));
         if (pd.url) {
-          await navigateToStripeCheckout(pd.url);
+          await navigateToStripeCheckout(pd.url, {
+            googlePlayExternalLinkUrl: pd.googlePlayExternalLinkUrl,
+            externalTransactionToken: googlePlayExternalTransactionToken,
+          });
           return;
         }
       }
@@ -164,8 +194,12 @@ export default function MembershipBillingCenter({
         return;
       }
       setError(data.message || data.error || "Checkout could not start.");
-    } catch {
-      setError("Network error starting checkout.");
+    } catch (checkoutError) {
+      if (String(checkoutError?.code || "").startsWith("GOOGLE_PLAY_ECL_")) {
+        setError(googlePlayExternalContentLinkErrorMessage(checkoutError));
+      } else {
+        setError("Network error starting checkout.");
+      }
     } finally {
       setBusy("");
     }
@@ -461,6 +495,9 @@ export default function MembershipBillingCenter({
         />
         <Link className="btnSoft" href="/settings#account-membership">
           Settings
+        </Link>
+        <Link className="btnSoft" href="/bulk-licenses">
+          Need licenses for your organization?
         </Link>
       </div>
         </div>

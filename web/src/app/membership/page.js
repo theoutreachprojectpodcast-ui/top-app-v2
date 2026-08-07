@@ -21,7 +21,7 @@ function MembershipHubInner() {
     if (!isAuthenticated) {
       return "Sign in or create an account to activate Pro Membership ($5.99/yr). The public directory stays available without a membership.";
     }
-    return "Manage your Pro Membership. All billing is handled securely through Stripe in the app.";
+    return "Manage your Pro Membership. Stripe securely handles checkout; on Android, Google Play shows its required information screen before opening checkout in your browser.";
   }, [isAuthenticated]);
 
   return (
@@ -29,6 +29,10 @@ function MembershipHubInner() {
       <section className="panel legalPage">
         <h1>Membership</h1>
         <p>{lead}</p>
+        <p className="sponsorSectionLead">
+          Need licenses for your organization?{" "}
+          <a href="/bulk-licenses">View Bulk Licensing</a>
+        </p>
         {tierHint ? (
           <p className="sponsorSectionLead">
             Selected tier: <strong>{tierHint}</strong>

@@ -10,6 +10,11 @@ import "@/components/home/home-mobile.css";
 
 export default function HomeScreen({
   isAuthenticated,
+  loadingAccount = false,
+  currentTierKey = "none",
+  accountEmail = "",
+  membershipLabel = "",
+  membershipBillingStatus = "none",
   onActivateMembership,
   onCreateAccount,
   onSignIn,
@@ -24,6 +29,8 @@ export default function HomeScreen({
   favoriteEinSet,
   onToggleFavorite,
   onRequestSignIn,
+  onGoToProfile,
+  showMembershipSection = true,
 }) {
   return (
     <>

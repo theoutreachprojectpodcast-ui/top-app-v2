@@ -1064,6 +1064,12 @@ function TopAppInner({ initialNav = "home" }) {
           {nav === "home" && (
             <HomeScreen
               isAuthenticated={isAuthenticated}
+              loadingAccount={loadingProfile && isAuthenticated}
+              currentTierKey={profile.membershipStatus}
+              accountEmail={profile.email || workOSAccountEmail}
+              membershipLabel={membership.label}
+              membershipBillingStatus={profile.membershipBillingStatus}
+              onGoToProfile={() => router.push("/profile")}
               onActivateMembership={openMembershipJourney}
               onCreateAccount={openCreateAccountFlow}
               onSignIn={openSignInOverlay}
@@ -1108,6 +1114,7 @@ function TopAppInner({ initialNav = "home" }) {
               favoriteEinSet={favoriteEinSet}
               onToggleFavorite={toggleFavoriteEin}
               onRequestSignIn={!isAuthenticated ? openSignInOverlay : undefined}
+              showMembershipSection={showMembershipOnHome}
             />
           )}
 

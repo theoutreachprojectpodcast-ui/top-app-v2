@@ -31,6 +31,7 @@ export const SITE_HAMBURGER_NAV_ITEMS = [
   { key: "settings", href: "/settings", label: "Settings", linkTitle: "Settings" },
   { key: "notifications", href: "/notifications", label: "Notifications", linkTitle: "Notifications" },
   { key: "membership", href: "/membership", label: "Membership", linkTitle: "Membership" },
+  { key: "bulk-licenses", href: "/bulk-licenses", label: "For Teams", linkTitle: "Bulk licenses for organizations" },
   { key: "billing", href: "/billing", label: "Billing", linkTitle: "Billing" },
   { key: "contact", href: "/contact", label: "Contact", linkTitle: "Contact" },
   { key: "onboarding", href: "/onboarding", label: "Onboarding", linkTitle: "Onboarding" },

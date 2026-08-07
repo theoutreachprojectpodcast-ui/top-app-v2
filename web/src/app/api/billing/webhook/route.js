@@ -13,6 +13,10 @@ import {
 } from "@/lib/billing/stripeProfileSync";
 import { stripeWebhookSecret } from "@/lib/billing/stripeConfig";
 import { headers } from "next/headers";
+import {
+  handleBulkStripeWebhookEvent,
+  isBulkCheckoutMetadata,
+} from "@/lib/bulkLicensing/webhookHandler";
 
 export const runtime = "nodejs";
 
@@ -77,9 +81,19 @@ export async function POST(request) {
 
   try {
     console.info("[top] Stripe webhook received", { type: event.type, id: event.id });
+
+    // Bulk licensing branch — do not sync individual profile membership for org checkouts
+    const bulkResult = await handleBulkStripeWebhookEvent(admin, stripe, event);
+    if (bulkResult?.handled) {
+      return Response.json({ received: true, bulk: true, skipped: !!bulkResult.skipped });
+    }
+
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object;
+        if (isBulkCheckoutMetadata(session.metadata)) {
+          break;
+        }
         const workos = session.metadata?.workos_user_id;
         const cust = typeof session.customer === "string" ? session.customer : session.customer?.id;
         const profileId = session.metadata?.top_profile_id || session.metadata?.torp_profile_id;
