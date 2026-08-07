@@ -107,8 +107,38 @@ export async function POST(request) {
     .maybeSingle();
 
   if (orgErr || !org) {
-    console.error("[bulk] org create failed", orgErr?.message);
-    return Response.json({ error: "organization_create_failed" }, { status: 500 });
+    console.error("[bulk] org create failed", orgErr?.message, orgErr?.code, orgErr?.details);
+    const msg = String(orgErr?.message || "");
+    if (/permission denied|42501/i.test(msg)) {
+      return Response.json(
+        {
+          error: "organization_create_failed",
+          message:
+            "Bulk licensing tables are missing service_role grants. Run web/supabase/bulk_licensing_grant_service_role_v01.sql in Supabase.",
+          code: orgErr?.code || "42501",
+        },
+        { status: 500 },
+      );
+    }
+    if (/does not exist|PGRST205|Could not find the table/i.test(msg)) {
+      return Response.json(
+        {
+          error: "organization_create_failed",
+          message:
+            "Bulk licensing schema is not applied. Run web/supabase/bulk_licensing_v01.sql in Supabase.",
+          code: orgErr?.code || "schema_missing",
+        },
+        { status: 500 },
+      );
+    }
+    return Response.json(
+      {
+        error: "organization_create_failed",
+        message: msg || "Could not create the organization. Try again or contact support.",
+        code: orgErr?.code || null,
+      },
+      { status: 500 },
+    );
   }
 
   await admin.from("bulk_organization_members").insert({

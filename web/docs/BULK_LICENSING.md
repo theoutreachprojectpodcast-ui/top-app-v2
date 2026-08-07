@@ -16,6 +16,9 @@ Organization packages of **25 / 50 / 100 / 200** annual Outreach memberships, bi
 
 Migration: [`web/supabase/bulk_licensing_v01.sql`](../supabase/bulk_licensing_v01.sql)
 
+If checkout fails with `organization_create_failed` / permission denied, run the grant patch:
+[`web/supabase/bulk_licensing_grant_service_role_v01.sql`](../supabase/bulk_licensing_grant_service_role_v01.sql)
+
 ## Customer flow
 
 1. `/bulk-licenses` — select package + business form  
