@@ -50,7 +50,8 @@ async function verifyLocalLogic() {
     return isPro(p);
   }
   function canSaveOrganizations(p) {
-    return isPro(p);
+    // Legacy active Support retains save access until Support→Pro migration completes.
+    return isPro(p) || (tierOf(p) === "support" && hasActiveMembership(p));
   }
   function canViewCommunity(p) {
     return isPro(p);
@@ -67,8 +68,9 @@ async function verifyLocalLogic() {
   const none = { membershipTier: "free", membershipBillingStatus: "none" };
   const suspended = { membershipTier: "member", membershipBillingStatus: "active", userStatus: "suspended" };
 
-  if (!canViewDirectory(support) && !canSaveOrganizations(support)) pass("Support: no full Pro surfaces");
-  else fail("Support: must not access Pro-only surfaces when Support is retired");
+  if (!canViewDirectory(support) && canSaveOrganizations(support)) {
+    pass("Support: no directory, but may save orgs (legacy grace)");
+  } else fail("Support: directory denied; save orgs allowed for active Support");
 
   if (!canViewCommunity(support) && !canAccessFullPlatform(support)) {
     pass("Support: no community/full platform");

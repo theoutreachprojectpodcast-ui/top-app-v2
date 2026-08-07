@@ -87,6 +87,10 @@ function filterSavedOrgCards(cards, eins) {
   });
 }
 
+function cardHasRealOrgName(card) {
+  return Boolean(String(card?.name || card?.orgName || "").trim()) && !card?.organizationUnavailable;
+}
+
 function mergeSavedOrgCardRows(existingCards, rowInputs, eins) {
   const order = orderSavedEins(eins);
   const allowed = new Set(order);
@@ -103,6 +107,9 @@ function mergeSavedOrgCardRows(existingCards, rowInputs, eins) {
       String(row?.orgName || row?.canonicalDisplayName || row?.name || "").trim(),
     );
     const unresolved = row?.savedResolutionStatus === "unavailable" || !hasRealName;
+    const prev = byEin.get(key);
+    // Don't replace a known good name with a transient unavailable stub (cards fetch can race POST).
+    if (unresolved && prev && cardHasRealOrgName(prev)) continue;
     byEin.set(key, {
       ...card,
       savedResolutionStatus: unresolved ? "unavailable" : row?.savedResolutionStatus || "resolved",
@@ -544,21 +551,53 @@ export function useProfileDataState(supabase) {
       }
       const targetEins = orderSavedEins(favoriteEins);
       const requestKey = savedEinsKey(targetEins);
-      if (!targetEins.length) {
-        setSavedOrganizations([]);
-        return;
-      }
+      const entityKeySnapshot = [...(favoriteEntityKeysRef.current || [])].join(",");
       try {
         if (workosRef.current) {
-          const res = await fetch("/api/me/saved-orgs/cards", { credentials: "include" });
-          if (cancelled || savedEinsKey(favoriteEinsRef.current) !== requestKey) return;
+          const res = await fetch("/api/me/saved-orgs/cards", { credentials: "include", cache: "no-store" });
+          if (cancelled) return;
           const j = await res.json().catch(() => ({}));
+          if (savedEinsKey(favoriteEinsRef.current) !== requestKey) return;
+          if ([...(favoriteEntityKeysRef.current || [])].join(",") !== entityKeySnapshot) {
+            /* entity keys changed mid-flight — still apply EIN rows; entity effect will refresh */
+          }
           const rows = Array.isArray(j.rows) ? j.rows : [];
-          setSavedOrganizations((prev) => mergeSavedOrgCardRows(prev, rows, targetEins));
+          const trustedCards = Array.isArray(j.trustedCards) ? j.trustedCards : [];
+          setSavedOrganizations((prev) => {
+            const einCards = mergeSavedOrgCardRows(prev, rows, targetEins);
+            const withoutStaleTrusted = (einCards || []).filter((c) => !c?.entityKey);
+            const mergedTrusted = trustedCards.map((card) => ({
+              ...mapNonprofitCardRow(
+                {
+                  ein: card.einNormalized || card.ein || "",
+                  orgName: card.orgName || card.name || "",
+                  city: card.city || "",
+                  state: card.state || "",
+                  logoUrl: card.logoUrl || "",
+                  website: card.website || "",
+                  shortDescription: card.shortDescription || "",
+                },
+                "saved",
+              ),
+              ...card,
+              name: card.name || card.orgName || "",
+              organizationUnavailable: card.organizationUnavailable === true,
+              savedResolutionStatus: card.savedResolutionStatus || "resolved",
+              entityKey: card.entityKey,
+              entityType: "trusted_resource",
+              detailPath: card.detailPath,
+              trustedResourceSlug: card.trustedResourceSlug,
+            }));
+            return [...withoutStaleTrusted, ...mergedTrusted];
+          });
           return;
         }
         if (!supabase) {
           setSavedOrganizations((prev) => filterSavedOrgCards(prev, targetEins));
+          return;
+        }
+        if (!targetEins.length) {
+          setSavedOrganizations([]);
           return;
         }
         const rows = await fetchSavedOrganizationsByEin(supabase, targetEins);
@@ -573,7 +612,7 @@ export function useProfileDataState(supabase) {
     return () => {
       cancelled = true;
     };
-  }, [supabase, favoriteEins, isAuthenticated]);
+  }, [supabase, favoriteEins, favoriteEntityKeys, isAuthenticated]);
 
   /**
    * @returns {Promise<{ ok: true, profile?: Record<string, unknown>, localOnly?: boolean } | { ok: false, message: string }>}
@@ -826,6 +865,14 @@ export function useProfileDataState(supabase) {
         entityFavoritesDirtyRef.current = false;
       } else {
         pendingEntityFlushRef.current = true;
+      }
+      // Slug→EIN promotion: merge newly saved EINs into the favorite EIN list.
+      const promoted = orderSavedEins(payload.promotedEins || []);
+      if (promoted.length) {
+        const merged = orderSavedEins([...favoriteEinsRef.current, ...promoted]);
+        einBaselineRef.current = merged;
+        favoriteEinsRef.current = merged;
+        setFavoriteEins(merged);
       }
     } catch {
       setProfileError("Saved favorites could not sync to the server. Check your connection and try again.");
@@ -1126,7 +1173,7 @@ export function useProfileDataState(supabase) {
     }
   }
 
-  function toggleFavoriteEin(ein) {
+  function toggleFavoriteEin(ein, sourceRow = null) {
     const id = normalizeEinDigits(ein);
     if (id.length !== 9) return;
     if (
@@ -1137,7 +1184,34 @@ export function useProfileDataState(supabase) {
     ) {
       return;
     }
-    const next = favoriteEins.includes(id) ? favoriteEins.filter((x) => x !== id) : [id, ...favoriteEins];
+    const adding = !favoriteEins.includes(id);
+    const next = adding ? [id, ...favoriteEins] : favoriteEins.filter((x) => x !== id);
+    // Seed a named card immediately so Profile never flashes "Saved organization" / unavailable
+    // while the save POST and cards GET race.
+    if (adding && sourceRow && typeof sourceRow === "object") {
+      const seedName = String(
+        sourceRow.orgName || sourceRow.name || sourceRow.canonicalDisplayName || "",
+      ).trim();
+      if (seedName) {
+        setSavedOrganizations((prev) =>
+          mergeSavedOrgCardRows(
+            prev,
+            [
+              {
+                ...sourceRow,
+                ein: id,
+                einNormalized: id,
+                orgName: seedName,
+                nonprofitId: id,
+                savedResolutionStatus: "resolved",
+                einIdentityVerified: true,
+              },
+            ],
+            next,
+          ),
+        );
+      }
+    }
     setFavoriteEinList(next);
   }
 

@@ -29,6 +29,10 @@ function MembershipHubInner() {
       <section className="panel legalPage">
         <h1>Membership</h1>
         <p>{lead}</p>
+        <p className="sponsorSectionLead">
+          Need licenses for your organization?{" "}
+          <a href="/bulk-licenses">View Bulk Licensing</a>
+        </p>
         {tierHint ? (
           <p className="sponsorSectionLead">
             Selected tier: <strong>{tierHint}</strong>

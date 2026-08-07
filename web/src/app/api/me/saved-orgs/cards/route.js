@@ -2,6 +2,10 @@ import { authFailureJson, resolveWorkOSRouteUser } from "@/lib/auth/workosRouteA
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { normalizeEinDigits } from "@/features/nonprofits/lib/einUtils";
 import { resolveSavedOrganizationDirectoryRows } from "@/lib/savedOrganizations/resolveSavedOrganizations";
+import {
+  listTrustedFavoriteKeysForUser,
+  resolveTrustedEntityKeyCards,
+} from "@/lib/savedOrganizations/savedOrganizationsService";
 import { requireMembershipApi } from "@/lib/membership/membershipRouteGuard";
 
 const SAVED_TABLE = process.env.NEXT_PUBLIC_SAVED_ORG_TABLE || "top_app_saved_org_eins";
@@ -24,7 +28,7 @@ export async function GET() {
   const user = auth.user;
   const admin = createSupabaseAdminClient();
   if (!admin) {
-    return Response.json({ rows: [], items: [], meta: { resolved: 0, unavailable: 0, total: 0 } });
+    return Response.json({ rows: [], items: [], trustedCards: [], meta: { resolved: 0, unavailable: 0, total: 0 } });
   }
   const membership = await requireMembershipApi(admin, "save_organizations");
   if (!membership.ok) return membership.response;
@@ -36,7 +40,7 @@ export async function GET() {
     .order("sort_order", { ascending: true });
 
   if (error || !Array.isArray(data)) {
-    return Response.json({ rows: [], items: [], meta: { resolved: 0, unavailable: 0, total: 0 } });
+    return Response.json({ rows: [], items: [], trustedCards: [], meta: { resolved: 0, unavailable: 0, total: 0 } });
   }
 
   const savedAtByEin = new Map();
@@ -59,6 +63,7 @@ export async function GET() {
       id: `${user.id}:${nonprofitId}`,
       userId: user.id,
       nonprofitId,
+      entityType: "nonprofit_ein",
       savedAt: savedAtByEin.get(nonprofitId) || null,
       nonprofit:
         status === "resolved"
@@ -78,9 +83,24 @@ export async function GET() {
     };
   });
 
+  const trustedListed = await listTrustedFavoriteKeysForUser(admin, user.id);
+  const trustedCards = resolveTrustedEntityKeyCards(trustedListed.keys || []);
+  for (const card of trustedCards) {
+    if (card.savedResolutionStatus === "resolved") resolved += 1;
+    else unavailable += 1;
+  }
+
   return Response.json({
     rows,
     items,
-    meta: { resolved, unavailable, total: ordered.length },
+    trustedCards,
+    favoriteEntityKeys: trustedListed.keys || [],
+    meta: {
+      resolved,
+      unavailable,
+      total: ordered.length + trustedCards.length,
+      einCount: ordered.length,
+      trustedKeyCount: trustedCards.length,
+    },
   });
 }

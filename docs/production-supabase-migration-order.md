@@ -87,6 +87,8 @@ where platform_role is null
 | 8 | `community_v03_data_model.sql` | Community v3 extensions |
 | 9 | `top_app_saved_org_eins.sql` | Saved organizations |
 | 9.1 | `saved_org_name_resolution_2026_07.sql` | Saved-org EIN index + normalize + RLS confirm |
+| 9.2 | `saved_orgs_profile_id_2026_07.sql` | Optional profile_id for reconciliation |
+| 9.3 | `saved_orgs_incident_repair_2026_07.sql` | Incident repair: profile_id backfill + Support report + MV refresh |
 | 10 | `top_platform_notifications.sql` | Notifications |
 | 11 | `trusted_resources.sql` | Trusted resources catalog |
 | 12 | `trusted_resource_applications.sql` | Trusted resource applications |
@@ -126,8 +128,9 @@ where platform_role is null
 | **42.1** | `member_connections_grant_service_role_2026_07.sql` | **Required if API gets `permission denied for table member_connections`** — restores `service_role` GRANTs |
 | **42.2** | `member_connections_migrate_follows_2026_07.sql` | Backfill pending/accepted/blocked from legacy `community_follows` encodings |
 | **42.3** | `member_connections_ONE_PASTE_grant_and_migrate_2026_07.sql` | **Preferred Production paste** — grant + migrate in one run |
+| **42.4** | `member_connections_workflow_2026_07.sql` | Status timestamps + `friends` visibility + service_role GRANTs (**plain ALTER only** — avoids DO $$ parser failures in SQL editor) |
 
-**Friend connections fix (run on Production when Community Connect is broken):** paste **42.3** (or **42.1** then **42.2**) in the SQL editor (or `pnpm --dir web run apply:member-connections:full:apply` with `SUPABASE_ACCESS_TOKEN` / `DATABASE_URL`). Until grants are applied, app code falls back to `community_follows`.
+**Friend connections fix (run on Production when Community Connect is broken):** paste **42.3** (or **42.1** then **42.2**) in the SQL editor (or `pnpm --dir web run apply:member-connections:full:apply` with `SUPABASE_ACCESS_TOKEN` / `DATABASE_URL`). Until grants are applied, app code falls back to `community_follows`. After that, run **42.4** for explicit status timestamps and friends-only posts.
 
 **QA only (do not run on production):** `qa_irs_nonprofit_import_seed_2026_07.sql` — sample IRS import rows for admin review UI. See `docs/IRS_NONPROFIT_IMPORT.md`.
 

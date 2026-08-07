@@ -63,7 +63,28 @@ export async function searchCommunityMembers(admin, { q = "", limit = 24, profil
   const id = String(profileId || "").trim();
 
   if (id) {
-    const { data, error } = await admin.from(profileTableName()).select(MEMBER_SELECT).eq("id", id).maybeSingle();
+    const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    let data = null;
+    let error = null;
+
+    if (uuidRe.test(id)) {
+      ({ data, error } = await admin.from(profileTableName()).select(MEMBER_SELECT).eq("id", id).maybeSingle());
+    }
+
+    if (!data) {
+      const byWorkos = await admin
+        .from(profileTableName())
+        .select(MEMBER_SELECT)
+        .eq("workos_user_id", id)
+        .maybeSingle();
+      if (byWorkos.data) {
+        data = byWorkos.data;
+        error = null;
+      } else if (!error) {
+        error = byWorkos.error;
+      }
+    }
+
     if (error || !data || data.user_status === "suspended" || !data.workos_user_id) {
       return { ok: false, members: [], total: 0, error: error?.message || "not_found" };
     }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { FormCheckbox } from "@/components/forms/FormChoice";
 import { STORY_CATEGORIES, SUBMISSION_TYPES } from "@/features/community/data/communitySeed";
 import { submitCommunityStory, updateAuthorCommunityPost } from "@/features/community/api/communityApi";
@@ -16,6 +16,7 @@ const INITIAL = {
   show_author_name: true,
   link_url: "",
   photo_url: "",
+  visibility: "community",
 };
 
 export default function CommunitySubmissionForm({
@@ -28,7 +29,9 @@ export default function CommunitySubmissionForm({
   useWorkOSApi = false,
   /** When set, form PATCHes this post (`mapCommunityPostRow` shape) instead of creating. */
   editPost = null,
+  scrollRef = null,
 }) {
+  const formId = useId();
   const [form, setForm] = useState(INITIAL);
   const [busy, setBusy] = useState(false);
   const [photoBusy, setPhotoBusy] = useState(false);
@@ -75,6 +78,7 @@ export default function CommunitySubmissionForm({
       show_author_name: editPost.showAuthorName !== false,
       link_url: editPost.linkUrl || "",
       photo_url: editPost.photoUrl || "",
+      visibility: editPost.visibility || "community",
     });
   }, [editPost]);
 
@@ -124,6 +128,7 @@ export default function CommunitySubmissionForm({
           show_author_name: form.show_author_name,
           link_url: form.link_url.trim(),
           photo_url: photoUrl,
+          visibility: form.visibility,
         });
         if (!result.ok) {
           setError(result.message || "Could not save.");
@@ -149,6 +154,7 @@ export default function CommunitySubmissionForm({
           show_author_name: form.show_author_name,
           link_url: form.link_url.trim(),
           photo_url: photoUrl,
+          visibility: form.visibility,
         },
         { useWorkOSApi },
       );
@@ -170,98 +176,150 @@ export default function CommunitySubmissionForm({
 
   return (
     <div className="communitySubmitModal">
-      <p className="communitySubmitLead">
-        {isEdit
-          ? "Update your post below. Changes save to your story right away unless pre-approval moderation is turned on."
-          : "Share a story, photo, or link with the community. Posts publish immediately unless an admin has enabled pre-approval review."}
-      </p>
-      <form className="communitySubmitForm communitySubmitForm--ds" onSubmit={onSubmit}>
-        <label className="fieldLabel">Title <span className="fieldOptional">(optional)</span></label>
-        <input
-          placeholder="Give your story a short headline"
-          value={form.title}
-          onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-        />
-        <label className="fieldLabel">Submission type</label>
-        <select value={form.post_type} onChange={(e) => setForm((f) => ({ ...f, post_type: e.target.value }))}>
-          {SUBMISSION_TYPES.map(([value, label]) => (
-            <option key={value} value={value}>{label}</option>
-          ))}
-        </select>
-        <label className="fieldLabel">Your story</label>
-        <textarea
-          rows={5}
-          required
-          placeholder="Your experience, in your own words…"
-          value={form.body}
-          onChange={(e) => setForm((f) => ({ ...f, body: e.target.value }))}
-        />
-        <label className="fieldLabel">Nonprofit or resource <span className="fieldOptional">(optional)</span></label>
-        <input
-          placeholder="Organization you want to mention"
-          value={form.nonprofit_name}
-          onChange={(e) => setForm((f) => ({ ...f, nonprofit_name: e.target.value }))}
-        />
-        <label className="fieldLabel">Story category</label>
-        <select value={form.category} onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}>
-          {STORY_CATEGORIES.map(([value, label]) => (
-            <option key={value} value={value}>{label}</option>
-          ))}
-        </select>
-        <label className="fieldLabel">Related link <span className="fieldOptional">(optional)</span></label>
-        <input
-          placeholder="https://…"
-          value={form.link_url}
-          onChange={(e) => setForm((f) => ({ ...f, link_url: e.target.value }))}
-        />
-        <label className="fieldLabel">Cover image <span className="fieldOptional">(optional)</span></label>
-        <label className="profilePhotoUploadLabel communityStoryPhotoLabel">
-          <span className="profilePhotoUploadHint">
-            Add a photo with your story (JPEG, PNG, WebP, or GIF — up to 5 MB).
-          </span>
-          <span className="btnSoft communityStoryPhotoTrigger">{photoBusy ? "Uploading…" : "Choose image"}</span>
-          <input
-            type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif"
-            className="profileFileInput communityStoryPhotoInput"
-            disabled={photoBusy || busy}
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              e.target.value = "";
-              void onPhotoSelected(file);
-            }}
-          />
-        </label>
-        {form.photo_url ? (
-          <div className="communityUploadPreview">
-            <img src={form.photo_url} alt="Selected upload preview" />
-            <button
-              type="button"
-              className="btnSoft communityStoryPhotoRemove"
-              disabled={photoBusy || busy}
-              onClick={() => setForm((f) => ({ ...f, photo_url: "" }))}
+      <div className="communitySubmitModalScroll" ref={scrollRef}>
+        <p className="communitySubmitLead">
+          {isEdit
+            ? "Update your post below. Changes save to your story right away unless pre-approval moderation is turned on."
+            : "Share a story, photo, or link with the community. Posts publish immediately unless an admin has enabled pre-approval review."}
+        </p>
+        <form id={formId} className="communitySubmitForm communitySubmitForm--ds" onSubmit={onSubmit}>
+          <label className="fieldLabel">
+            Title <span className="fieldOptional">(optional)</span>
+            <input
+              className="communitySubmitInput"
+              placeholder="Give your story a short headline"
+              value={form.title}
+              autoComplete="off"
+              onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+            />
+          </label>
+          <label className="fieldLabel">
+            Submission type
+            <select
+              className="communitySubmitInput"
+              value={form.post_type}
+              onChange={(e) => setForm((f) => ({ ...f, post_type: e.target.value }))}
             >
-              Remove image
-            </button>
+              {SUBMISSION_TYPES.map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="fieldLabel">
+            Your story
+            <textarea
+              className="communitySubmitInput communitySubmitInput--body"
+              rows={5}
+              required
+              placeholder="Your experience, in your own words…"
+              value={form.body}
+              onChange={(e) => setForm((f) => ({ ...f, body: e.target.value }))}
+            />
+          </label>
+          <label className="fieldLabel">
+            Nonprofit or resource <span className="fieldOptional">(optional)</span>
+            <input
+              className="communitySubmitInput"
+              placeholder="Organization you want to mention"
+              value={form.nonprofit_name}
+              autoComplete="organization"
+              onChange={(e) => setForm((f) => ({ ...f, nonprofit_name: e.target.value }))}
+            />
+          </label>
+          <label className="fieldLabel">
+            Story category
+            <select
+              className="communitySubmitInput"
+              value={form.category}
+              onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+            >
+              {STORY_CATEGORIES.map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="fieldLabel">
+            Who can see this
+            <select
+              className="communitySubmitInput"
+              value={form.visibility}
+              onChange={(e) => setForm((f) => ({ ...f, visibility: e.target.value }))}
+            >
+              <option value="community">Community members</option>
+              <option value="friends">Friends only</option>
+              <option value="public">Public</option>
+            </select>
+          </label>
+          <label className="fieldLabel">
+            Related link <span className="fieldOptional">(optional)</span>
+            <input
+              className="communitySubmitInput"
+              placeholder="https://…"
+              inputMode="url"
+              autoCapitalize="off"
+              autoCorrect="off"
+              value={form.link_url}
+              onChange={(e) => setForm((f) => ({ ...f, link_url: e.target.value }))}
+            />
+          </label>
+          <div className="communityStoryPhotoField">
+            <span className="fieldLabel">
+              Cover image <span className="fieldOptional">(optional)</span>
+            </span>
+            <p className="communityStoryPhotoHint">JPEG, PNG, WebP, or GIF — up to 5 MB.</p>
+            <label className="btnSoft communityStoryPhotoTrigger">
+              {photoBusy ? "Uploading…" : "Choose image"}
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                className="communityStoryPhotoInput"
+                disabled={photoBusy || busy}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  e.target.value = "";
+                  void onPhotoSelected(file);
+                }}
+              />
+            </label>
           </div>
-        ) : null}
-        <div className="dsChoiceGroup">
-          <FormCheckbox
-            checked={form.show_author_name}
-            onChange={(e) => setForm((f) => ({ ...f, show_author_name: e.target.checked }))}
-          >
-            Show my name if this story is published
-          </FormCheckbox>
-        </div>
-        {error ? <p className="applyError">{error}</p> : null}
-        {status ? <p className="applyStatus">{status}</p> : null}
-        <div className="row wrap communitySubmitActions">
-          <button type="button" className="btnSoft" onClick={onClose}>Close</button>
-          <button type="submit" className="btnPrimary" disabled={busy}>
-            {busy ? (isEdit ? "Saving…" : "Publishing…") : isEdit ? "Save changes" : "Publish post"}
-          </button>
-        </div>
-      </form>
+          {form.photo_url ? (
+            <div className="communityUploadPreview">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={form.photo_url} alt="Selected upload preview" />
+              <button
+                type="button"
+                className="btnSoft communityStoryPhotoRemove"
+                disabled={photoBusy || busy}
+                onClick={() => setForm((f) => ({ ...f, photo_url: "" }))}
+              >
+                Remove image
+              </button>
+            </div>
+          ) : null}
+          <div className="dsChoiceGroup">
+            <FormCheckbox
+              checked={form.show_author_name}
+              onChange={(e) => setForm((f) => ({ ...f, show_author_name: e.target.checked }))}
+            >
+              Show my name if this story is published
+            </FormCheckbox>
+          </div>
+          {error ? <p className="applyError">{error}</p> : null}
+          {status ? <p className="applyStatus">{status}</p> : null}
+        </form>
+      </div>
+      <div className="communitySubmitModalFoot">
+        <button type="button" className="btnSoft" onClick={onClose} disabled={busy}>
+          Cancel
+        </button>
+        <button type="submit" form={formId} className="btnPrimary" disabled={busy || photoBusy}>
+          {busy ? (isEdit ? "Saving…" : "Publishing…") : isEdit ? "Save changes" : "Publish post"}
+        </button>
+      </div>
     </div>
   );
 }

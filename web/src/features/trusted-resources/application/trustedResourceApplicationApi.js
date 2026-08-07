@@ -52,7 +52,7 @@ function applicationInsertRow(payload) {
     references_or_links: String(payload.references_or_links || "").trim() || null,
     agreed_to_values: !!payload.agreed_to_values,
     agreed_info_accuracy: !!payload.agreed_info_accuracy,
-    application_fee_status: payload.application_fee_status || "unpaid",
+    application_fee_status: payload.application_fee_status || "not_required",
     payment_demo_status: payload.payment_demo_status || "unpaid",
     review_status: payload.review_status || "submitted",
     notes_internal: payload.notes_internal || null,

@@ -130,7 +130,14 @@ export function requirePro(profile, opts = {}) {
   if (!hasActiveMemberBilling(status)) return false;
 
   const source = String(profile.membershipSource ?? profile.membership_source ?? "").toLowerCase();
-  if (source === "manual" || source === "support_to_pro_migration") {
+  if (source === "manual" || source === "support_to_pro_migration" || source === "bulk_org") {
+    if (source === "bulk_org") {
+      const renewal = profile.renewalDate ?? profile.renewal_date;
+      if (renewal) {
+        const end = new Date(String(renewal)).getTime();
+        if (Number.isFinite(end) && end < Date.now()) return false;
+      }
+    }
     return APP_ACCESS_TIERS.has(tier);
   }
 
@@ -142,9 +149,12 @@ export function canViewDirectory(profile, opts = {}) {
   return requirePro(profile, opts);
 }
 
-/** Save nonprofit directory favorites (Pro + sponsor / staff). */
+/**
+ * Save nonprofit / trusted favorites.
+ * Pro + sponsor + staff, and active legacy Support (until Support→Pro migration completes).
+ */
 export function canSaveOrganizations(profile, opts = {}) {
-  return requirePro(profile, opts);
+  return requireSupportOrPro(profile, opts);
 }
 
 /** Public podcast hub — Pro Membership. */

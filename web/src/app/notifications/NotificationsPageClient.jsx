@@ -4,6 +4,9 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuthSession } from "@/components/auth/AuthSessionProvider";
+import ConnectionRequestNotificationActions, {
+  isConnectionRequestNotification,
+} from "@/components/notifications/ConnectionRequestNotificationActions";
 import { readRememberDevicePref } from "@/lib/auth/lastUsedEmail";
 import { workosSignInLink } from "@/lib/auth/workosReturnTo";
 
@@ -76,6 +79,7 @@ export default function NotificationsPageClient() {
   }
 
   async function onRowClick(n) {
+    if (isConnectionRequestNotification(n)) return;
     if (n.status === "unread" && n.id) {
       await fetchJson("/api/me/notifications", {
         method: "PATCH",
@@ -87,6 +91,11 @@ export default function NotificationsPageClient() {
     const path = n.link_path ? String(n.link_path) : "";
     if (path.startsWith("/")) router.push(path);
     else if (path) window.location.assign(path);
+  }
+
+  function onConnectionResolved({ notification }) {
+    if (!notification?.id) return;
+    setItems((prev) => prev.map((x) => (x.id === notification.id ? { ...x, status: "read" } : x)));
   }
 
   if (session.loading) {
@@ -133,21 +142,33 @@ export default function NotificationsPageClient() {
       {err ? <p className="applyError">{err}</p> : null}
       {!loading && !err && !items.length ? <p className="sponsorSectionLead">You are all caught up.</p> : null}
       <div className="notificationsPage__list">
-        {items.map((n) => (
-          <button
-            key={n.id}
-            type="button"
-            className={`headerNotificationItem ${n.status === "unread" ? "isUnread" : ""}`}
-            onClick={() => void onRowClick(n)}
-          >
-            <span className="headerNotificationItem__title">{n.title}</span>
-            {n.message ? <span className="headerNotificationItem__msg">{n.message}</span> : null}
-            <span className="headerNotificationItem__meta">
-              {n.created_at ? new Date(n.created_at).toLocaleString() : ""}
-              {n.audience_scope === "staff" ? " · Team" : ""}
-            </span>
-          </button>
-        ))}
+        {items.map((n) => {
+          const isConn = isConnectionRequestNotification(n);
+          return (
+            <div
+              key={n.id}
+              className={`headerNotificationItem ${n.status === "unread" ? "isUnread" : ""}${
+                isConn ? " headerNotificationItem--connection" : ""
+              }`}
+            >
+              <button
+                type="button"
+                className="headerNotificationItem__hit"
+                onClick={() => void onRowClick(isConn ? { ...n, notification_type: "other" } : n)}
+              >
+                <span className="headerNotificationItem__title">{n.title}</span>
+                {n.message ? <span className="headerNotificationItem__msg">{n.message}</span> : null}
+                <span className="headerNotificationItem__meta">
+                  {n.created_at ? new Date(n.created_at).toLocaleString() : ""}
+                  {n.audience_scope === "staff" ? " · Team" : ""}
+                </span>
+              </button>
+              {isConn ? (
+                <ConnectionRequestNotificationActions notification={n} onResolved={onConnectionResolved} />
+              ) : null}
+            </div>
+          );
+        })}
       </div>
       {nextCursor ? (
         <div className="row" style={{ marginTop: 16 }}>

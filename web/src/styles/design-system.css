@@ -26,16 +26,89 @@
 
 .ds-page-intro h2 .iconWrap,
 .ds-page-intro > h3 .iconWrap {
-  width: 40px;
-  height: 40px;
+  width: 60px;
+  height: 60px;
   flex-shrink: 0;
   border-color: color-mix(in srgb, var(--color-accent) 32%, var(--color-border));
   background: var(--color-accent-soft);
 }
 
+.ds-page-intro h2 .trustedBrandMark,
+.ds-page-intro > h3 .trustedBrandMark {
+  width: 162px;
+  height: 162px;
+  flex-shrink: 0;
+}
+
+.ds-page-intro--withTrustedBadge {
+  --trusted-intro-badge-size: 162px;
+  --trusted-intro-badge-gap: var(--ds-space-4, 16px);
+  display: grid;
+  grid-template-columns: var(--trusted-intro-badge-size) minmax(0, 1fr);
+  grid-template-areas:
+    "badge title"
+    "badge lead";
+  column-gap: var(--trusted-intro-badge-gap);
+  row-gap: var(--ds-space-2, 8px);
+  align-items: start;
+}
+
+.ds-page-intro--withTrustedBadge > .trustedBrandMark {
+  grid-area: badge;
+  width: var(--trusted-intro-badge-size) !important;
+  height: var(--trusted-intro-badge-size) !important;
+  align-self: start;
+  flex-shrink: 0;
+}
+
+.ds-page-intro--withTrustedBadge > h2,
+.ds-page-intro--withTrustedBadge > h3 {
+  grid-area: title;
+  display: block;
+  margin: 0;
+  min-width: 0;
+  align-self: start;
+}
+
+.ds-page-intro--withTrustedBadge > .ds-page-intro__lead {
+  grid-area: lead;
+  margin: 0;
+  max-width: none;
+  min-width: 0;
+}
+
+/* Mobile: badge + title one row; description full width on the next line. */
+@media (max-width: 760px) {
+  .ds-page-intro--withTrustedBadge {
+    --trusted-intro-badge-size: 96px;
+    --trusted-intro-badge-gap: var(--ds-space-3, 12px);
+    grid-template-columns: var(--trusted-intro-badge-size) minmax(0, 1fr);
+    grid-template-areas:
+      "badge title"
+      "lead lead";
+    align-items: center;
+  }
+
+  .ds-page-intro--withTrustedBadge > .trustedBrandMark {
+    align-self: center;
+  }
+
+  .ds-page-intro--withTrustedBadge > h2,
+  .ds-page-intro--withTrustedBadge > h3 {
+    align-self: center;
+  }
+
+  .ds-page-intro--withTrustedBadge > .ds-page-intro__lead {
+    align-self: start;
+    width: 100%;
+  }
+}
+
 .ds-page-intro h2 .iconStroke,
 .ds-page-intro > h3 .iconStroke {
   stroke: var(--color-accent);
+  width: 21px;
+  height: 21px;
 }
 
 .ds-page-intro__lead {
@@ -43,7 +116,7 @@
   font-size: var(--text-body-lg);
   line-height: var(--line-body, 1.47);
   color: var(--color-text-secondary);
-  max-width: 62ch;
+  max-width: 72ch;
 }
 
 .ds-section-label {

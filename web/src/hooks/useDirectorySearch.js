@@ -3,6 +3,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PAGE_SIZE } from "@/lib/constants";
 import { fetchDirectorySearch } from "@/features/directory/api";
+import {
+  formatDirectoryCountUnavailableStatus,
+  formatDirectoryFoundStatus,
+  formatDirectorySearchingStatus,
+} from "@/features/directory/formatDirectoryStatus";
 import { resolveStateFilterCode, stateLabel } from "@/lib/utils";
 
 const DIR_STORAGE = "top-directory-session-v1";
@@ -61,49 +66,57 @@ export function useDirectorySearch(supabase, { preferredState = "" } = {}) {
     async (nextPage = 1, overrideFilters = null) => {
       const f = overrideFilters && typeof overrideFilters === "object" ? overrideFilters : filters;
       const gen = ++searchGenRef.current;
+      const label = stateLabel(f.state);
 
       if (!f.state) {
         setStatus("Please select a state.");
         setMeta("");
         setResults([]);
+        setTotal(null);
         return;
       }
 
-      setStatus("Searching...");
+      setStatus(formatDirectorySearchingStatus(label));
       setMeta("");
       setPage(nextPage);
+      setTotal(null);
 
       try {
         const { rows, count, from } = await fetchDirectorySearch(supabase, f, nextPage);
         if (gen !== searchGenRef.current) return;
 
         setResults(rows);
-        setTotal(count);
+        setTotal(typeof count === "number" ? count : null);
+
+        const found = formatDirectoryFoundStatus(count, { stateLabel: label });
+        if (found) {
+          setStatus(found);
+        } else {
+          // Search finished but count failed — never leave "calculating…" stuck.
+          setStatus(formatDirectoryCountUnavailableStatus(label));
+          if (typeof console !== "undefined" && console.warn) {
+            console.warn("[directory] search returned without a usable total count");
+          }
+        }
 
         if (!rows.length) {
-          setStatus(
-            !supabase
-              ? `No organizations found in ${stateLabel(f.state)}. If this persists, set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY, or add SUPABASE_SERVICE_ROLE_KEY for /api/directory/search.`
-              : `No organizations found in ${stateLabel(f.state)}.`
-          );
           setMeta("");
           return;
         }
 
         const start = from + 1;
         const end = from + rows.length;
-        setStatus(
-          typeof count === "number"
-            ? `${stateLabel(f.state)} — ${count.toLocaleString()} organizations found`
-            : `${stateLabel(f.state)} — calculating total...`
-        );
         setMeta(`Displaying ${start.toLocaleString()}-${end.toLocaleString()} • Page ${nextPage}`);
         writeDirSession(f, nextPage);
-      } catch {
+      } catch (err) {
         if (gen !== searchGenRef.current) return;
+        if (typeof console !== "undefined" && console.warn) {
+          console.warn("[directory] search failed:", err?.message || err);
+        }
         setStatus("Search temporarily unavailable. Please try again.");
         setMeta("");
         setResults([]);
+        setTotal(null);
       }
     },
     [supabase, filters]

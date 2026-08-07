@@ -26,7 +26,7 @@ function loadEnvFile(rel) {
     if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
       v = v.slice(1, -1);
     }
-    v = v.replace(/[\r\n]+/g, "").trim();
+    v = v.replace(/\\r\\n/g, "").replace(/[\r\n]+/g, "").trim();
     if (!process.env[k]) process.env[k] = v;
   }
   return true;

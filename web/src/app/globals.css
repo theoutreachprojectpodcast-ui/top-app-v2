@@ -32,6 +32,8 @@ a {
 
 .appShell {
   min-height: 100vh;
+  min-height: 100dvh;
+  min-height: 100svh;
   padding-bottom: var(--top-bottom-nav-reserve, calc(96px + env(safe-area-inset-bottom, 0px)));
 }
 
@@ -57,12 +59,15 @@ a {
   );
   border-bottom: 1px solid var(--color-border);
   padding: 14px 0 18px;
+  -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
   pointer-events: none;
 }
 
 .appShell--subpage {
   min-height: 100vh;
+  min-height: 100dvh;
+  min-height: 100svh;
   padding-bottom: var(--top-bottom-nav-reserve, calc(96px + env(safe-area-inset-bottom, 0px)));
 }
 

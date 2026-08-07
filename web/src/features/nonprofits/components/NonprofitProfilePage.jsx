@@ -260,7 +260,7 @@ export default function NonprofitProfilePage({ ein: einParam }) {
                           <button
                             className={`favBtn${isFavorite ? " favBtn--on" : ""}`}
                             type="button"
-                            onClick={() => toggleFavoriteEin(einDigits)}
+                            onClick={() => toggleFavoriteEin(einDigits, card)}
                             aria-pressed={isFavorite}
                             aria-label={isFavorite ? "Remove from saved" : "Save organization"}
                           >

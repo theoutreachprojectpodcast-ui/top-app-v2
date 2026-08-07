@@ -308,6 +308,32 @@ export async function notifyMembershipFromStripeInvoice(admin, profileRow, inv, 
   return { ok: false, reason: "unknown_event" };
 }
 
+/**
+ * Mark connection_request notifications as read after accept/decline/cancel.
+ * @param {import("@supabase/supabase-js").SupabaseClient} admin
+ * @param {{ connectionId?: string, recipientProfileId?: string }} opts
+ */
+export async function markConnectionRequestNotificationsActed(admin, opts = {}) {
+  if (!admin) return { ok: false };
+  const connectionId = String(opts.connectionId || "").trim();
+  const recipientProfileId = String(opts.recipientProfileId || "").trim();
+  if (!connectionId && !recipientProfileId) return { ok: false, reason: "missing" };
+
+  const now = new Date().toISOString();
+  let q = admin
+    .from(NOTIFICATIONS_TABLE)
+    .update({ status: "read", read_at: now, updated_at: now })
+    .eq("notification_type", "connection_request")
+    .eq("status", "unread");
+
+  if (connectionId) q = q.eq("entity_id", connectionId);
+  if (recipientProfileId) q = q.eq("recipient_profile_id", recipientProfileId);
+
+  const { error } = await q;
+  if (error) return { ok: false, reason: error.message };
+  return { ok: true };
+}
+
 /** Stub for future Resend/SendGrid — do not block in-app delivery. */
 export function scheduleOutboundEmailNotification(_payload) {
   /* extension: queue job, set delivered_email_at when sent */

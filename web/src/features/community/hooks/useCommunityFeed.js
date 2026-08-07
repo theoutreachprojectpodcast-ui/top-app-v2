@@ -14,13 +14,14 @@ import { sortCommunityFeedRows } from "@/lib/community/communityFeedSort";
 /**
  * @param {import('@supabase/supabase-js').SupabaseClient | null} supabase
  * @param {string} userId
- * @param {{ feedScope?: 'public' | 'mine', sessionKind?: string, isAuthenticated?: boolean }} [options]
+ * @param {{ feedScope?: 'public' | 'mine', sessionKind?: string, isAuthenticated?: boolean, authLoading?: boolean, sort?: string }} [options]
  */
 export function useCommunityFeed(supabase, userId, options = {}) {
   const {
     feedScope = "public",
     sessionKind = "none",
     isAuthenticated = false,
+    authLoading = false,
     sort = "connections_first",
   } = options;
   const [posts, setPosts] = useState([]);
@@ -29,11 +30,25 @@ export function useCommunityFeed(supabase, userId, options = {}) {
   const [likeUi, setLikeUi] = useState({});
 
   const refresh = useCallback(async () => {
+    // Public feed is membership-gated (401 when signed out). Wait for session,
+    // then skip the request for guests so browsers don't log resource errors.
+    if (authLoading) {
+      setLoading(true);
+      return;
+    }
+    if (!isAuthenticated) {
+      setPosts([]);
+      setLikeUi({});
+      setError("");
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError("");
     try {
       let rows = [];
-      if (feedScope === "mine" && isAuthenticated && sessionKind === "workos") {
+      if (feedScope === "mine" && sessionKind === "workos") {
         rows = await fetchMyPostsFromApi();
       } else {
         rows = await fetchPublicCommunityFeed(supabase, { sort });
@@ -54,7 +69,7 @@ export function useCommunityFeed(supabase, userId, options = {}) {
     } finally {
       setLoading(false);
     }
-  }, [supabase, userId, feedScope, isAuthenticated, sessionKind, sort]);
+  }, [supabase, userId, feedScope, isAuthenticated, authLoading, sessionKind, sort]);
 
   useEffect(() => {
     refresh();

@@ -1,6 +1,6 @@
 /**
- * Payment provider integration boundary — Trusted Resource application fee.
- * Replace startTrustedResourceApplicationPayment with Stripe (or other) client/server flow when ready.
+ * Payment provider integration boundary — previously used for Trusted Resource application fees.
+ * Fees are no longer charged; keep this module only if/when a paid product path is reintroduced.
  */
 
 /** @typedef {'idle'|'pending'|'demo_completed'|'provider_ready'|'error'} TrustedResourcePaymentUiState */
@@ -10,31 +10,25 @@
  * @returns {Promise<{ ok: boolean, uiState: TrustedResourcePaymentUiState, clientSecret?: string, providerSessionId?: string, message?: string }>}
  */
 export async function startTrustedResourceApplicationPayment(ctx) {
-  const amountUsd = Number(ctx?.amountUsd);
-  if (!Number.isFinite(amountUsd) || amountUsd <= 0) {
-    return { ok: false, uiState: "error", message: "Invalid payment amount." };
-  }
-
-  // FUTURE: create PaymentIntent / Checkout Session on your backend and return clientSecret.
-  // const res = await fetch('/api/payments/trusted-resource-intent', { method: 'POST', body: JSON.stringify({...}) });
+  void ctx;
   return {
-    ok: true,
-    uiState: "provider_ready",
-    message:
-      "Payment provider not connected. Use demo completion until Stripe (or equivalent) is configured.",
+    ok: false,
+    uiState: "idle",
+    message: "Trusted Resource applications do not require a fee.",
   };
 }
 
 /**
- * Demo-only: marks fee satisfied locally until real payments ship.
+ * @deprecated Application fees are not required.
  * @param {{ amountUsd: number }} ctx
  */
 export async function completeTrustedResourceApplicationFeeDemo(ctx) {
+  void ctx;
   return {
     ok: true,
     uiState: "demo_completed",
-    application_fee_status: "demo_paid",
-    payment_demo_status: "demo_paid",
-    amountUsd: ctx.amountUsd,
+    application_fee_status: "not_required",
+    payment_demo_status: "not_required",
+    amountUsd: 0,
   };
 }

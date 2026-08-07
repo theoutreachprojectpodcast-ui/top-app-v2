@@ -1,0 +1,12 @@
+# Browserslist — supported production targets for The Outreach Project web app.
+# Android Capacitor WebView requires Chromium 111+ (see capacitor.config.js).
+
+defaults
+fully supports es6-module
+not dead
+Chrome >= 111
+Firefox >= 115
+Safari >= 16.4
+iOS >= 16.4
+Edge >= 111
+not op_mini all

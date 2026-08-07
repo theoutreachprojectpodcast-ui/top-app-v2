@@ -301,6 +301,7 @@ export const TRUSTED_RESOURCE_CANONICAL_RECORDS = [
     registryLogoUrl: "/trusted/hometown-hero-outdoors-org-logo.png",
   },
   {
+    eins: ["845036165"],
     nameKeys: ["veterans creed outdoors", "veteranscreedoutdoors", "veterans creed", "vcousa"],
     slug: "veterans-creed-outdoors",
     displayName: "Veterans Creed Outdoors",
@@ -320,6 +321,7 @@ export const TRUSTED_RESOURCE_CANONICAL_RECORDS = [
     },
   },
   {
+    eins: ["833787674"],
     nameKeys: ["the warriors refuge", "warriors refuge", "warriorsrefuge", "warrior's refuge"],
     slug: "warriors-refuge",
     displayName: "Warrior's Refuge",
@@ -340,6 +342,7 @@ export const TRUSTED_RESOURCE_CANONICAL_RECORDS = [
     },
   },
   {
+    eins: ["392443681"],
     nameKeys: ["hoof to heart", "hooftoheart", "hoof to heart veterans", "hooftoheartvets"],
     slug: "hoof-to-heart-veterans",
     displayName: "Hoof to Heart Veterans",
@@ -361,7 +364,7 @@ export const TRUSTED_RESOURCE_CANONICAL_RECORDS = [
     },
   },
   {
-    nameKeys: ["mos veteran adventures", "mosveteranadventures", "m o s veteran adventures"],
+    nameKeys: ["mos veteran adventures", "mosveteranadventures", "m o s veteran adventures", "m-o-s veteran adventures"],
     slug: "mos-veteran-adventures",
     displayName: "M.O.S. Veteran Adventures",
     trustedResourceCategoryKey: "veteransMilitary",

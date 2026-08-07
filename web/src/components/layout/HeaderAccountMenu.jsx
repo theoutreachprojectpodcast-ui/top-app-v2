@@ -87,7 +87,12 @@ export default function HeaderAccountMenu({
       >
         <Avatar src={avatarSrc} alt="Account" className="headerAccountAvatar" sizes="40px" />
       </button>
-      <HeaderDropdownLayer open={open} onClose={() => setOpen(false)} ariaLabel="Close account menu">
+      <HeaderDropdownLayer
+        open={open}
+        onClose={() => setOpen(false)}
+        ariaLabel="Close account menu"
+        anchorRef={wrapRef}
+      >
         {open ? (
           <div
             className={`headerAccountDropdown${mobileShell ? " headerAccountDropdown--mobileSheet" : ""}`}

@@ -170,7 +170,7 @@
 }
 
 :root[data-color-scheme="light"] .communityRequestPill {
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--color-surface-muted);
 }
 
 

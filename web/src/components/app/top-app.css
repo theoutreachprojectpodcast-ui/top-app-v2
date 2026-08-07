@@ -287,7 +287,7 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]) .topba
   grid-column: 3;
   grid-row: 1;
   position: relative;
-  z-index: 2;
+  z-index: 5;
   display: flex;
   align-items: flex-start;
   justify-content: flex-end;
@@ -1000,17 +1000,88 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]),
   padding: 8px;
   border-radius: 16px;
   border: 1px solid var(--color-border-subtle);
-  background: linear-gradient(
+  /* Opaque surface — avoid translucent mixes that let page content bleed through */
+  background-color: var(--color-bg-elevated, var(--color-bg-card));
+  background-image: linear-gradient(
     165deg,
-    color-mix(in srgb, var(--color-surface-card) 92%, var(--color-accent) 8%) 0%,
-    var(--color-surface-card-deep) 55%,
-    var(--color-surface-card) 100%
+    color-mix(in srgb, var(--color-bg-elevated, var(--color-bg-card)) 94%, var(--color-accent) 6%) 0%,
+    var(--color-bg-elevated, var(--color-bg-card)) 100%
   );
   box-shadow:
     var(--shadow-card),
     0 12px 40px color-mix(in srgb, var(--color-text-primary) 8%, transparent);
   z-index: 120;
   overflow: hidden;
+}
+
+/* Portaled account/notification menus — above home sponsor transforms / isolation. */
+.headerDropdownLayer {
+  position: fixed;
+  inset: 0;
+  z-index: 520;
+  pointer-events: none;
+}
+.headerDropdownLayer .headerDropdownBackdrop {
+  pointer-events: auto;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  cursor: default;
+  -webkit-tap-highlight-color: transparent;
+  background: transparent;
+}
+.headerDropdownLayer--mobile .headerDropdownBackdrop {
+  background: rgba(0, 0, 0, 0.58);
+}
+.headerDropdownLayer .headerDropdownLayer__panel {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+.headerDropdownLayer--anchored .headerAccountDropdown,
+.headerDropdownLayer--anchored .headerNotificationDropdown {
+  pointer-events: auto;
+  position: fixed;
+  top: var(--header-dropdown-top, 72px);
+  right: var(--header-dropdown-right, 16px);
+  left: auto;
+  z-index: 2;
+  isolation: isolate;
+  /* Solid opaque panel — sponsor card text must not composite through */
+  background-color: var(--color-bg-elevated, var(--color-bg-card));
+  background-image: none;
+}
+.headerDropdownLayer--mobile .headerNotificationDropdown--mobileSheet,
+.headerDropdownLayer--mobile .headerAccountDropdown--mobileSheet {
+  pointer-events: auto;
+  position: fixed;
+  top: calc(
+    env(safe-area-inset-top, 0px) + var(--mobile-site-header-control-pad-top, 4px) +
+      var(--mobile-site-header-control-size, 44px) + 8px
+  );
+  left: max(var(--mobile-shell-pad-x, 16px), env(safe-area-inset-left, 0px));
+  right: max(var(--mobile-shell-pad-x, 16px), env(safe-area-inset-right, 0px));
+  width: auto;
+  min-width: 0;
+  max-width: none;
+  max-height: min(58vh, 400px);
+  z-index: 2;
+  isolation: isolate;
+  background-color: var(--color-bg-elevated, var(--color-bg-card));
+  background-image: none;
+  box-shadow:
+    var(--shadow-card),
+    0 16px 48px rgba(0, 0, 0, 0.35);
+}
+.headerDropdownLayer--mobile .headerAccountDropdown--mobileSheet {
+  max-height: min(70vh, 520px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .headerAccountDropdownHeader {
   display: flex;
@@ -1200,6 +1271,8 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]),
   border-radius: 14px;
   border: 1px solid var(--color-border-subtle);
   overflow: hidden;
+  background-color: var(--color-bg-elevated, var(--color-bg-card));
+  background-image: none;
 }
 .headerNotificationDropdown__head {
   display: flex;
@@ -1270,15 +1343,85 @@ main.topApp:not(.appShell--podcast):not([data-page-atmosphere="podcast"]),
   border-radius: 10px;
   background: transparent;
   color: var(--color-text-primary);
+}
+.headerNotificationItem__hit {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+  text-align: left;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
   cursor: pointer;
 }
 .headerNotificationItem.isUnread {
   background: color-mix(in srgb, var(--color-accent) 10%, transparent);
 }
 .headerNotificationItem:hover,
-.headerNotificationItem:focus-visible {
+.headerNotificationItem:focus-within {
   background: color-mix(in srgb, var(--color-accent) 14%, transparent);
   outline: none;
+}
+.headerNotificationItem--connection {
+  gap: 8px;
+}
+.connectionNotifActions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 4px;
+}
+.connectionNotifActions--compact {
+  gap: 6px;
+}
+.connectionNotifActions__person {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.connectionNotifActions__avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.connectionNotifActions__person p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+.connectionNotifActions__profileLink {
+  color: var(--color-accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+.connectionNotifActions__profileLink:hover {
+  text-decoration: underline;
+}
+.connectionNotifActions__buttons {
+  gap: 8px;
+}
+.connectionNotifActions__buttons .btnPrimary,
+.connectionNotifActions__buttons .btnSoft {
+  min-height: 34px;
+  padding: 6px 12px;
+  font-size: 13px;
+}
+.connectionNotifActions__status {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+.connectionNotifActions__error {
+  margin: 0;
+  font-size: 12px;
+  color: var(--color-danger, #b42318);
 }
 .headerNotificationItem__title {
   font-size: 14px;
@@ -2368,6 +2511,14 @@ span.headerBrandMarkFallback {
   border: 1px solid color-mix(in srgb, #ffffff 42%, transparent);
   box-shadow: 0 6px 14px color-mix(in srgb, #000000 36%, transparent);
 }
+.welcomeActionCard .trustedBrandMark--home {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+  border-radius: 0;
+  overflow: visible;
+}
 .welcomeActionCard .iconStroke {
   stroke: #f8fcff;
 }
@@ -2425,15 +2576,21 @@ span.headerBrandMarkFallback {
   display: block;
   width: 100%;
 }
-/* Home main action buttons: icon plate + glyph at 200% of prior size (33→66, 21→42). */
+/* Home main action buttons: icon plate + glyph (~1.5× prior uniform size). */
 .card.action.welcomeActionCard--uniform .iconWrap {
-  width: 66px;
-  height: 66px;
+  width: 99px;
+  height: 99px;
+  flex-shrink: 0;
+}
+/* No shell on Trusted — size the bare mark to the other icons' full plate. */
+.card.action.welcomeActionCard--uniform .trustedBrandMark--home {
+  width: 99px !important;
+  height: 99px !important;
   flex-shrink: 0;
 }
 .card.action.welcomeActionCard--uniform .iconStroke {
-  width: 42px;
-  height: 42px;
+  width: 63px;
+  height: 63px;
 }
 .card.action.welcomeActionCard--uniform .welcomeActionHint {
   width: 100%;
@@ -2882,8 +3039,8 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   border-color: color-mix(in srgb, var(--color-accent) 28%, var(--color-border) 72%);
 }
 .iconWrap {
-  width: 22px;
-  height: 22px;
+  width: 33px;
+  height: 33px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2891,9 +3048,30 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   border-radius: var(--radius-pill);
   background: var(--color-accent-soft);
 }
+.trustedBrandMark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
+  border-radius: 0;
+  overflow: visible;
+  line-height: 0;
+}
+.trustedBrandMarkImg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  background: transparent;
+}
 .iconStroke {
-  width: 14px;
-  height: 14px;
+  width: 21px;
+  height: 21px;
   fill: none;
   stroke: var(--color-accent);
   stroke-width: 2;
@@ -3869,6 +4047,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   position: fixed;
   inset: 0;
   background: var(--color-overlay-backdrop);
+  -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
   display: grid;
   place-items: center;
@@ -5011,6 +5190,12 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   box-shadow: var(--shadow-card);
   background: linear-gradient(180deg, var(--color-bg-card) 0%, var(--color-bg-card-hover) 100%);
 }
+/* Disclosure cards use the standard elevated card surface (not the deeper section wash). */
+.card.communitySection.communityDisclosure,
+.card.communityTrustDisclosure {
+  border-color: var(--color-border-subtle);
+  background: linear-gradient(180deg, var(--color-surface-card) 0%, var(--color-surface-card-deep) 100%);
+}
 .communityAdminDivider {
   border: 0;
   border-top: 1px dashed var(--color-border-strong);
@@ -5035,50 +5220,78 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   font-size: var(--text-section-title);
   font-weight: 800;
 }
+.communityConnectionsStack {
+  display: grid;
+  gap: var(--ds-space-3, 12px);
+}
+.communityConnectionsRequestsCard {
+  border-color: color-mix(in srgb, var(--color-accent) 28%, var(--color-border));
+}
+.communityConnectionsRequestsCard .communitySectionHead {
+  margin-bottom: var(--ds-space-2, 8px);
+}
 .communityConnectionsPanel {
   padding: 0;
   overflow: hidden;
 }
 .communityConnectionsDisclosure > .communityConnectionsBody {
-  padding: 0 16px 14px;
+  padding: 0 var(--ds-space-4, 16px) var(--ds-space-4, 16px);
+  border-top: 1px solid var(--color-border-subtle);
 }
-.communityConnectionsSummary {
+.communityConnectionsSummary,
+.communityTrustDisclosureSummary {
   list-style: none;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 14px 16px;
+  gap: var(--ds-space-3, 12px);
+  padding: var(--ds-space-4, 16px);
   cursor: pointer;
-  transition: background 160ms ease;
+  transition: background-color 160ms ease;
 }
-.communityConnectionsSummary::-webkit-details-marker {
+.communityConnectionsSummary::-webkit-details-marker,
+.communityTrustDisclosureSummary::-webkit-details-marker {
   display: none;
 }
-.communityConnectionsSummary:hover {
-  background: var(--color-surface-muted);
+.communityConnectionsSummary:hover,
+.communityTrustDisclosureSummary:hover {
+  background: color-mix(in srgb, var(--color-surface-muted) 72%, transparent);
+}
+.communityConnectionsSummary:focus-visible,
+.communityTrustDisclosureSummary:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: -2px;
 }
 .communityConnectionsSummaryMain {
   flex: 1;
   min-width: 0;
   display: grid;
-  gap: 8px;
+  gap: var(--ds-space-2, 8px);
+}
+.communityConnectionsSummaryTitle,
+.communityTrustDisclosureTitle {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-card-section);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1.3;
 }
 .communityConnectionsSummaryTitle {
-  margin: 0;
-  font-size: var(--text-section-title);
-  font-weight: 800;
-  color: var(--color-text-primary);
+  flex: none;
+  display: block;
 }
-.communityConnectionsChevron {
+.communityConnectionsChevron,
+.communityTrustDisclosureChevron {
   flex-shrink: 0;
   color: var(--color-accent);
-  font-size: 17.5px;
+  font-size: 1rem;
   line-height: 1;
-  margin-top: 4px;
   transition: transform 180ms ease;
 }
-.communityConnectionsDisclosure[open] .communityConnectionsChevron {
+.communityConnectionsDisclosure[open] .communityConnectionsChevron,
+.communityTrustDisclosure[open] .communityTrustDisclosureChevron {
   transform: rotate(180deg);
 }
 .communityCollapseBtn {
@@ -5088,13 +5301,19 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--ds-space-3, 12px);
 }
 .communityConnectionsPreviewText,
 .communityConnectionsPreview p {
   margin: 0;
   color: var(--color-text-secondary);
-  font-size: 13px;
+  font-size: var(--text-body-sm);
+  line-height: 1.4;
+}
+.communityConnectionsPreviewText--error,
+.communityConnectionsPreview--solo.communityConnectionsPreview--error {
+  color: var(--color-danger-text, #b42318);
+  font-weight: 600;
 }
 .communityConnectionsPreviewAvatars {
   display: inline-flex;
@@ -5102,21 +5321,26 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   flex-shrink: 0;
 }
 .communityConnectionsPreviewAvatars .communityMemberAvatarImg {
-  width: 48px;
-  height: 48px;
-  margin-right: -12px;
-  border: 2px solid var(--color-bg-secondary);
+  width: 40px;
+  height: 40px;
+  margin-right: -10px;
+  border: 2px solid var(--color-surface-card);
+  box-shadow: 0 0 0 1px var(--color-border-subtle);
+}
+.communityConnectionsPreviewAvatars .communityMemberAvatarImg:last-child {
+  margin-right: 0;
 }
 .communityConnectionsPreview--solo {
   margin: 0;
   color: var(--color-text-secondary);
-  font-size: 13px;
+  font-size: var(--text-body-sm);
+  line-height: 1.4;
 }
 
 .communityConnectionsBody {
   margin-top: 0;
   display: grid;
-  gap: 14px;
+  gap: var(--ds-space-4, 16px);
 }
 .communityIncomingRequests,
 .communityFriendsList,
@@ -5131,11 +5355,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 .communityConnectionActions {
   flex-shrink: 0;
   justify-content: flex-end;
-}
-.communityRequestPill--friends {
-  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
-  color: var(--color-accent);
-  font-weight: 700;
+  gap: var(--ds-space-2, 8px);
 }
 .communityMemberProfileActions {
   align-items: center;
@@ -5145,23 +5365,32 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 }
 .communitySearchResults {
   display: grid;
-  gap: 8px;
+  gap: var(--ds-space-3, 12px);
 }
 .communitySearchResultRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-input);
-  padding: 12px 14px;
-  background: var(--color-surface-muted);
+  gap: var(--ds-space-3, 12px);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-card);
+  padding: var(--ds-space-3, 12px) var(--ds-space-4, 16px);
+  background: linear-gradient(180deg, var(--color-surface-card) 0%, var(--color-surface-card-deep) 100%);
+  box-shadow: var(--shadow-card);
+}
+.communitySearchResultRow > .btnSoft,
+.communitySearchResultRow > .btnPrimary {
+  flex-shrink: 0;
+  min-height: 40px;
+  padding: 8px 14px;
+  font-size: var(--text-body-sm);
 }
 .communityMemberMini {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--ds-space-3, 12px);
   min-width: 0;
+  flex: 1 1 auto;
 }
 .communityMemberMiniBtn {
   width: 100%;
@@ -5176,46 +5405,56 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   color: var(--color-accent);
 }
 .communityMemberMiniBtn:focus-visible {
-  outline: 2px solid var(--color-accent-interactive);
+  outline: 2px solid var(--color-focus-ring);
   outline-offset: 2px;
-  border-radius: 8px;
+  border-radius: var(--radius-input);
 }
 .communityMemberMini .communityMemberAvatarImg {
   width: 52px;
   height: 52px;
+  flex-shrink: 0;
 }
 .communityMemberMini .profileAvatarShell {
   width: 52px;
   height: 52px;
+  flex-shrink: 0;
 }
 .communityMemberMini strong {
   display: block;
   color: var(--color-text-primary);
   font-size: var(--text-body-sm);
   font-weight: 700;
+  line-height: 1.25;
 }
 .communityMemberMini p {
-  margin: 4px 0 0;
+  margin: var(--ds-space-1, 4px) 0 0;
   color: var(--color-text-secondary);
   font-size: var(--text-caption);
   line-height: 1.4;
 }
 .communityRequestPill {
   display: inline-flex;
-  border-radius: 999px;
-  border: 1px solid var(--color-border-subtle);
-  padding: 4px 10px;
-  font-size: 11px;
+  align-items: center;
+  flex-shrink: 0;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-border);
+  padding: 6px 12px;
+  font-size: var(--text-caption);
+  font-weight: 600;
+  letter-spacing: 0.02em;
   color: var(--color-text-secondary);
-  background: var(--color-bg-card-hover);
+  background: var(--color-surface-muted);
 }
-.communityRequestPill.isRequested {
-  color: var(--color-accent);
-  border-color: color-mix(in srgb, var(--color-accent) 42%, transparent);
+.communityRequestPill.isRequested,
+.communityRequestPill.communityRequestPill--friends {
+  border-color: color-mix(in srgb, var(--color-accent) 38%, var(--color-border));
+  background: var(--color-accent-soft);
+  color: var(--color-text-primary);
 }
 .communityRequestPill.isConnected {
-  color: var(--color-accent);
-  border-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
+  border-color: color-mix(in srgb, var(--color-accent) 38%, var(--color-border));
+  background: var(--color-accent-soft);
+  color: var(--color-text-primary);
 }
 .communityPostTypeBadge {
   display: inline-flex;
@@ -5489,7 +5728,7 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
 }
 
 .communitySubmitModalCard {
-  width: min(760px, 96vw);
+  width: min(760px, calc(100vw - 24px));
   max-height: min(92dvh, 900px);
   padding: 0;
   gap: 0;
@@ -5497,23 +5736,123 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   display: flex;
   flex-direction: column;
   align-items: stretch;
+  min-width: 0;
+  box-sizing: border-box;
 }
 .communitySubmitModalHead {
   flex-shrink: 0;
-  padding: var(--ds-space-5, 20px) var(--ds-space-5, 20px) var(--ds-space-3, 12px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ds-space-3, 12px);
+  padding: var(--ds-space-4, 16px) var(--ds-space-5, 20px);
   border-bottom: 1px solid var(--color-border-subtle);
+}
+.communitySubmitModalHead h3 {
+  margin: 0;
+  font-size: var(--text-section-title, 1.125rem);
+  font-weight: 800;
+  min-width: 0;
 }
 .communitySubmitModalBody {
   flex: 1 1 auto;
   min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-  padding: var(--ds-space-4, 16px) var(--ds-space-5, 20px) var(--ds-space-5, 20px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
 }
 .modalOverlay--communitySubmit {
   overflow: hidden;
   overscroll-behavior: none;
+  z-index: 140;
+  /* Prefer visual viewport so soft keyboards do not cover the sheet */
+  inset: auto;
+  top: var(--vv-top, 0px);
+  left: var(--vv-left, 0px);
+  width: var(--vv-width, 100%);
+  height: var(--vv-height, 100dvh);
+  max-height: var(--vv-height, 100dvh);
+  box-sizing: border-box;
+}
+.communitySubmitModal {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+  height: 100%;
+}
+.communitySubmitModalScroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: var(--ds-space-4, 16px) var(--ds-space-5, 20px);
+  display: grid;
+  gap: var(--ds-space-3, 12px);
+  align-content: start;
+}
+.communitySubmitLead {
+  margin: 0;
+  font-size: var(--text-body-sm);
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+.communitySubmitForm--ds {
+  display: grid;
+  gap: var(--ds-space-3, 12px);
+  min-width: 0;
+}
+.communitySubmitForm--ds .fieldLabel {
+  display: grid;
+  gap: var(--ds-space-1, 4px);
+  margin: 0;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+.communitySubmitForm--ds .dsChoiceGroup {
+  margin-top: 4px;
+}
+/* 16px+ prevents iOS Safari focus zoom */
+.communitySubmitForm--ds .communitySubmitInput,
+.communitySubmitForm--ds input.communitySubmitInput,
+.communitySubmitForm--ds select.communitySubmitInput,
+.communitySubmitForm--ds textarea.communitySubmitInput {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  min-height: 44px;
+  font-size: 16px;
+  line-height: 1.4;
+  border-radius: var(--radius-input, 12px);
+  border: 1px solid var(--color-input-border, var(--color-border-subtle));
+  background: var(--color-input, var(--color-bg-card));
+  color: var(--color-text-primary);
+  padding: 11px 14px;
+}
+.communitySubmitForm--ds textarea.communitySubmitInput--body {
+  min-height: 132px;
+  resize: vertical;
+  /* Keep focused field from expanding the sheet while typing */
+  max-height: min(40vh, 280px);
+}
+.communityStoryPhotoField {
+  display: grid;
+  gap: var(--ds-space-2, 8px);
+  min-width: 0;
+}
+.communityStoryPhotoHint {
+  margin: 0;
+  font-size: var(--text-caption, 12px);
+  line-height: 1.45;
+  color: var(--color-text-muted);
 }
 .communityStoryPhotoLabel {
   margin-top: 4px;
@@ -5531,11 +5870,31 @@ a.btnSoft, a.btnPrimary, a.btnBlack {
   border: 0;
 }
 .communityStoryPhotoTrigger {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   justify-self: start;
-  margin-top: 2px;
+  cursor: pointer;
+  margin: 0;
 }
 .communityStoryPhotoRemove {
   justify-self: start;
+}
+.communitySubmitModalFoot {
+  flex-shrink: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-space-2, 8px);
+  justify-content: flex-end;
+  padding: var(--ds-space-3, 12px) var(--ds-space-5, 20px)
+    max(var(--ds-space-3, 12px), env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--color-border-subtle);
+  background: var(--color-bg-card);
+}
+.communitySubmitModalFoot .btnPrimary,
+.communitySubmitModalFoot .btnSoft {
+  min-height: 44px;
 }
 .communityPostCard {
   border: 1px solid var(--color-border);
@@ -5862,45 +6221,29 @@ html.dark .communityPostBodyGuideSteps li {
   overflow: hidden;
 }
 .communityTrustDisclosureSummary {
-  list-style: none;
-  display: flex;
-  align-items: center;
-  gap: var(--ds-space-3, 12px);
-  padding: var(--ds-space-4, 16px) var(--ds-space-5, 20px);
-  cursor: pointer;
   font-weight: 700;
-  font-size: var(--text-card-section);
-  color: var(--color-text-primary);
-  transition: background 160ms ease;
 }
-.communityTrustDisclosureSummary::-webkit-details-marker {
-  display: none;
-}
-.communityTrustDisclosureSummary:hover {
-  background: var(--color-surface-muted);
+.communityTrustDisclosureIcon {
+  flex-shrink: 0;
+  display: inline-flex;
 }
 .communityTrustDisclosureIcon .iconWrap {
   width: 40px;
   height: 40px;
+  border-color: color-mix(in srgb, var(--color-accent) 32%, var(--color-border));
+  background: var(--color-accent-soft);
 }
-.communityTrustDisclosureTitle {
-  flex: 1;
-}
-.communityTrustDisclosureChevron {
-  color: var(--color-accent);
-  font-size: 17.5px;
-  line-height: 1;
-  transition: transform 180ms ease;
-}
-.communityTrustDisclosure[open] .communityTrustDisclosureChevron {
-  transform: rotate(180deg);
+.communityTrustDisclosureIcon .iconStroke {
+  stroke: var(--color-accent);
 }
 .communityTrustList {
   margin: 0;
-  padding: 0 var(--ds-space-5, 20px) var(--ds-space-5, 20px) calc(40px + var(--ds-space-5, 20px) + var(--ds-space-3, 12px));
+  padding: var(--ds-space-4, 16px);
+  padding-left: calc(40px + var(--ds-space-4, 16px) + var(--ds-space-3, 12px));
   list-style: none;
   display: grid;
   gap: var(--ds-space-3, 12px);
+  border-top: 1px solid var(--color-border-subtle);
   color: var(--color-text-secondary);
   font-size: var(--text-body-sm);
   line-height: 1.55;
@@ -5928,9 +6271,12 @@ html.dark .communityPostBodyGuideSteps li {
   border-radius: 12px;
   overflow: hidden;
   padding: 10px;
+  min-width: 0;
+  max-width: 100%;
 }
 .communityUploadPreview img {
   width: 100%;
+  max-width: 100%;
   height: auto;
   display: block;
   max-height: 200px;
@@ -7772,16 +8118,18 @@ html.dark .communityPostBodyGuideSteps li {
     width: 100%;
     min-width: 0;
   }
+  /* Keep avatar + name + primary action on one row (design-system identity row). */
   .communitySearchResultRow {
-    align-items: flex-start;
-    flex-direction: column;
+    align-items: center;
+    flex-direction: row;
+    flex-wrap: wrap;
   }
-  .communitySearchResultRow .btnSoft,
-  .communitySearchResultRow .btnPrimary,
+  .communitySearchResultRow > .btnSoft,
+  .communitySearchResultRow > .btnPrimary {
+    width: auto;
+  }
   .communityConnectionActions {
     width: 100%;
-  }
-  .communityConnectionActions {
     justify-content: stretch;
   }
   .communityConnectionActions .btnSoft,
@@ -7793,12 +8141,53 @@ html.dark .communityPostBodyGuideSteps li {
     grid-template-columns: 1fr;
   }
   .communitySubmitModalCard {
-    width: min(100%, 100%);
-    max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 20px);
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    max-height: 100%;
+    border-radius: 0;
+    margin: 0;
   }
   .modalOverlay--communitySubmit {
+    display: flex;
+    align-items: stretch;
+    justify-content: stretch;
+    place-items: unset;
+    padding: 0;
     overflow: hidden;
-    place-items: center;
+    inset: auto;
+    top: var(--vv-top, 0px);
+    left: var(--vv-left, 0px);
+    width: var(--vv-width, 100%);
+    height: var(--vv-height, 100dvh);
+    max-height: var(--vv-height, 100dvh);
+  }
+  .communitySubmitModalHead {
+    padding: max(12px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 12px
+      max(16px, env(safe-area-inset-left, 0px));
+  }
+  html[data-keyboard-open="1"] .communitySubmitModalHead {
+    padding-top: 12px;
+  }
+  .communitySubmitModalScroll {
+    padding: 12px max(16px, env(safe-area-inset-right, 0px)) 12px max(16px, env(safe-area-inset-left, 0px));
+  }
+  .communitySubmitModalFoot {
+    padding: 12px max(16px, env(safe-area-inset-right, 0px)) max(12px, env(safe-area-inset-bottom, 0px))
+      max(16px, env(safe-area-inset-left, 0px));
+  }
+  html[data-keyboard-open="1"] .communitySubmitModalFoot {
+    /* Keyboard already insets the visual viewport — avoid double bottom gap */
+    padding-bottom: 12px;
+  }
+  html[data-keyboard-open="1"] .communitySubmitForm--ds textarea.communitySubmitInput--body {
+    max-height: min(28vh, 180px);
+    resize: none;
+  }
+  .communitySubmitModalFoot .btnPrimary,
+  .communitySubmitModalFoot .btnSoft {
+    flex: 1 1 calc(50% - 4px);
+    justify-content: center;
   }
   .communitySectionHead {
     align-items: flex-start;
@@ -8053,6 +8442,8 @@ html.dark .communityPostBodyGuideSteps li {
 }
 .nonprofitProfileShell {
   min-height: 100vh;
+  min-height: 100dvh;
+  min-height: 100svh;
   padding-bottom: var(--ds-space-10, 40px);
 }
 .nonprofitProfileTopbarInner.topbarInner {

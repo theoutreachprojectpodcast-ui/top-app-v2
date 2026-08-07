@@ -177,3 +177,13 @@ If you want the shortest path to a working app shell + profiles + admin bootstra
 See `docs/IRS_NONPROFIT_IMPORT.md` for dry-run / apply CLI and admin review.
 
 Then add **`nonprofits_search_app_v1`** in Supabase when you are ready for directory search data.
+
+---
+
+## Bulk annual licensing (optional / B2B)
+
+| Order | File | Notes |
+|------:|------|--------|
+| — | `bulk_licensing_v01.sql` | Orgs, seats, webhook ledger, profile `bulk_*` columns |
+
+See `docs/BULK_LICENSING.md` for Stripe env vars, QA plan, and production checklist.

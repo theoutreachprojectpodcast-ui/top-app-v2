@@ -6,23 +6,30 @@ import {
   connectionStateForUi,
   listConnectionsForViewer,
   mutateConnectionStatus,
+  resolveConnectionTargetProfileId,
   sendConnectionRequest,
   viewerConnectionState,
 } from "@/lib/community/memberConnections";
-import { createNotificationDeduped } from "@/server/notifications/notificationService";
+import {
+  createNotificationDeduped,
+  markConnectionRequestNotificationsActed,
+} from "@/server/notifications/notificationService";
 
 function profileSummary(row) {
   if (!row) return null;
+  const meta = row.metadata && typeof row.metadata === "object" ? row.metadata : {};
   const name =
     [row.first_name, row.last_name].filter(Boolean).join(" ").trim() ||
     String(row.display_name || "").trim() ||
     "Member";
+  const role = String(row.job_title || meta.identityRole || meta.role || "").trim();
+  const location = [meta.city || row.city, meta.state || row.state].filter(Boolean).join(", ");
   return {
     id: row.id,
     name,
     avatar_url: row.profile_photo_url || "",
-    role: row.role_title || row.occupation || "",
-    location: [row.city, row.state].filter(Boolean).join(", "),
+    role,
+    location,
   };
 }
 
@@ -40,7 +47,7 @@ async function loadProfilesByIds(admin, ids) {
   if (!unique.length) return new Map();
   const { data, error } = await admin
     .from("top_profiles")
-    .select("id,first_name,last_name,display_name,profile_photo_url,role_title,occupation,city,state")
+    .select("id,first_name,last_name,display_name,profile_photo_url,job_title,metadata")
     .in("id", unique);
   if (error) throw error;
   const map = new Map();
@@ -64,6 +71,10 @@ function serializeConnection(row, viewerProfileId, profiles) {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     respondedAt: row.responded_at,
+    acceptedAt: row.accepted_at || null,
+    declinedAt: row.declined_at || null,
+    cancelledAt: row.cancelled_at || null,
+    removedAt: row.removed_at || null,
   };
 }
 
@@ -72,6 +83,57 @@ function logConnectionFailure(action, err, meta = {}) {
     action,
     message: err instanceof Error ? err.message : String(err || "unknown"),
     ...meta,
+  });
+}
+
+function connectionRequestLink(requesterProfileId, connectionId) {
+  const params = new URLSearchParams({ connections: "1" });
+  if (requesterProfileId) params.set("member", String(requesterProfileId));
+  if (connectionId) params.set("connectionId", String(connectionId));
+  return `/community?${params.toString()}`;
+}
+
+async function notifyConnectionRequest(admin, { recipientProfileId, requesterProfile, connectionId }) {
+  const senderName = displayNameFromProfile(requesterProfile);
+  const avatarUrl = String(requesterProfile?.profile_photo_url || "").trim();
+  return createNotificationDeduped(admin, {
+    recipientProfileId,
+    audienceScope: "user",
+    type: "connection_request",
+    title: "New connection request",
+    message: `${senderName} wants to connect with you in the Outreach Project community.`,
+    linkPath: connectionRequestLink(requesterProfile?.id, connectionId),
+    entityType: "member_connection",
+    entityId: String(connectionId),
+    metadata: {
+      requester_profile_id: requesterProfile?.id || null,
+      requester_name: senderName,
+      requester_avatar_url: avatarUrl,
+      connection_id: String(connectionId),
+      actions: ["accept", "decline"],
+    },
+    dedupeHours: 24,
+  });
+}
+
+async function notifyConnectionAccepted(admin, { recipientProfileId, acceptorProfile, connectionId }) {
+  const acceptorName = displayNameFromProfile(acceptorProfile);
+  return createNotificationDeduped(admin, {
+    recipientProfileId,
+    audienceScope: "user",
+    type: "connection_accepted",
+    title: "Connection accepted",
+    message: `${acceptorName} accepted your connection request.`,
+    linkPath: `/community?connections=1&member=${encodeURIComponent(String(acceptorProfile?.id || ""))}`,
+    entityType: "member_connection",
+    entityId: String(connectionId),
+    metadata: {
+      acceptor_profile_id: acceptorProfile?.id || null,
+      acceptor_name: acceptorName,
+      acceptor_avatar_url: String(acceptorProfile?.profile_photo_url || "").trim(),
+      connection_id: String(connectionId),
+    },
+    dedupeHours: 24,
   });
 }
 
@@ -135,10 +197,14 @@ export async function POST(request) {
   }
 
   const action = String(body.action || "request").toLowerCase();
-  const targetProfileId = String(body.targetProfileId || body.otherProfileId || "").trim();
+  let targetProfileId = String(body.targetProfileId || body.otherProfileId || "").trim();
   const connectionId = String(body.connectionId || "").trim();
 
   try {
+    if (targetProfileId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(targetProfileId)) {
+      targetProfileId = await resolveConnectionTargetProfileId(admin, targetProfileId);
+    }
+
     let result;
     if (action === "request" || action === "send") {
       if (!targetProfileId) {
@@ -149,18 +215,10 @@ export async function POST(request) {
         targetProfileId,
       });
       if (result.ok && result.state === "request_sent" && result.row) {
-        const senderName = displayNameFromProfile(profileRow);
-        const notif = await createNotificationDeduped(admin, {
+        const notif = await notifyConnectionRequest(admin, {
           recipientProfileId: targetProfileId,
-          audienceScope: "user",
-          type: "connection_request",
-          title: "New connection request",
-          message: `${senderName} wants to connect with you in the Outreach Project community.`,
-          linkPath: "/community",
-          entityType: "member_connection",
-          entityId: String(result.row.id),
-          metadata: { requester_profile_id: profileRow.id },
-          dedupeHours: 24,
+          requesterProfile: profileRow,
+          connectionId: result.row.id,
         });
         if (!notif?.ok && !notif?.skipped) {
           console.warn("[community/connections] notification failed:", notif?.reason || "unknown");
@@ -171,17 +229,14 @@ export async function POST(request) {
           String(result.row.requester_profile_id) === String(profileRow.id)
             ? result.row.recipient_profile_id
             : result.row.requester_profile_id;
-        const acceptorName = displayNameFromProfile(profileRow);
-        await createNotificationDeduped(admin, {
+        await notifyConnectionAccepted(admin, {
           recipientProfileId: otherId,
-          audienceScope: "user",
-          type: "connection_accepted",
-          title: "Connection accepted",
-          message: `${acceptorName} accepted your connection request.`,
-          linkPath: "/community",
-          entityType: "member_connection",
-          entityId: String(result.row.id),
-          dedupeHours: 24,
+          acceptorProfile: profileRow,
+          connectionId: result.row.id,
+        });
+        await markConnectionRequestNotificationsActed(admin, {
+          connectionId: result.row.id,
+          recipientProfileId: profileRow.id,
         });
       }
     } else if (action === "accept") {
@@ -195,17 +250,14 @@ export async function POST(request) {
           String(result.row.requester_profile_id) === String(profileRow.id)
             ? result.row.recipient_profile_id
             : result.row.requester_profile_id;
-        const acceptorName = displayNameFromProfile(profileRow);
-        await createNotificationDeduped(admin, {
+        await notifyConnectionAccepted(admin, {
           recipientProfileId: otherId,
-          audienceScope: "user",
-          type: "connection_accepted",
-          title: "Connection accepted",
-          message: `${acceptorName} accepted your connection request.`,
-          linkPath: "/community",
-          entityType: "member_connection",
-          entityId: String(result.row.id),
-          dedupeHours: 24,
+          acceptorProfile: profileRow,
+          connectionId: result.row.id,
+        });
+        await markConnectionRequestNotificationsActed(admin, {
+          connectionId: result.row.id,
+          recipientProfileId: profileRow.id,
         });
       }
     } else if (
@@ -221,6 +273,12 @@ export async function POST(request) {
         otherProfileId: targetProfileId || undefined,
         as: action,
       });
+      if (result.ok && (action === "decline" || action === "cancel") && result.row?.id) {
+        await markConnectionRequestNotificationsActed(admin, {
+          connectionId: result.row.id,
+          recipientProfileId: action === "decline" ? profileRow.id : undefined,
+        });
+      }
     } else {
       return Response.json({ ok: false, message: "Invalid action." }, { status: 400 });
     }
@@ -235,6 +293,11 @@ export async function POST(request) {
       state: result.state,
       uiState: connectionStateForUi(result.state),
       connectionId: result.row?.id || null,
+      otherProfileId:
+        result.row &&
+        (String(result.row.requester_profile_id) === String(profileRow.id)
+          ? result.row.recipient_profile_id
+          : result.row.requester_profile_id),
     });
   } catch (err) {
     logConnectionFailure(action, err, {

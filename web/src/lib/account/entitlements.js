@@ -30,12 +30,14 @@ function isPrivilegedStaff(row) {
 
 function profileShapeFromRow(row) {
   if (!row) return null;
+  const billingStatus = row.billing_status ?? row.membership_status ?? "none";
   return {
     membershipTier: row.membership_tier,
     membership_tier: row.membership_tier,
-    membershipBillingStatus: row.billing_status ?? row.membership_status,
+    membershipBillingStatus: billingStatus,
     membership_status: row.membership_status,
-    billing_status: row.membership_status,
+    // Prefer Stripe billing_status; never overwrite it with membership_status (tier-like values).
+    billing_status: row.billing_status ?? row.membership_status ?? "none",
     membershipSource: row.membership_source,
     membership_source: row.membership_source,
     stripeSubscriptionId: row.stripe_subscription_id,

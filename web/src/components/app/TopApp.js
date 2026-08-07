@@ -35,7 +35,6 @@ import HeaderAccountMenu from "@/components/layout/HeaderAccountMenu";
 import AdminConsoleLink from "@/components/admin/AdminConsoleLink";
 import HeaderNotificationBell from "@/components/layout/HeaderNotificationBell";
 import { useDirectorySearch } from "@/hooks/useDirectorySearch";
-import { useMobileShell } from "@/hooks/useMobileShell";
 import { useProfileData } from "@/features/profile/ProfileDataProvider";
 import { useAuthSession } from "@/components/auth/AuthSessionProvider";
 import { useTrustedResources } from "@/hooks/useTrustedResources";
@@ -124,7 +123,6 @@ function TopAppInner({ initialNav = "home" }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const isMobileShell = useMobileShell();
   const { authed: isLoggedIn } = useNavAuthState();
   const sb = useMemo(() => getSupabaseClient(), []);
   const [nav, setNav] = useState(initialNav);
@@ -692,8 +690,8 @@ function TopAppInner({ initialNav = "home" }) {
     });
   }, [favoriteEins, results, trusted]);
   const savedOrgsToRender = useMemo(() => {
-    if (!favoriteEins.length) return [];
     const byEin = new Map();
+    const trustedOnly = [];
     for (const raw of fallbackSavedOrganizations) {
       const card = mapNonprofitCardRow(raw, "saved");
       const key = card.einNormalized || normalizeEinDigits(card.ein);
@@ -709,10 +707,26 @@ function TopAppInner({ initialNav = "home" }) {
       }
     }
     for (const card of savedOrganizations) {
+      if (card?.entityKey && !normalizeEinDigits(card.ein || card.einNormalized || "").length) {
+        trustedOnly.push(card);
+        continue;
+      }
       const key = card.einNormalized || normalizeEinDigits(card.ein);
-      if (key.length === 9) byEin.set(key, card);
+      if (key.length !== 9) continue;
+      const existing = byEin.get(key);
+      const incomingUnavailable =
+        card.organizationUnavailable === true ||
+        card.savedResolutionStatus === "unavailable" ||
+        !String(card.name || "").trim();
+      const existingNamed =
+        existing &&
+        existing.organizationUnavailable !== true &&
+        existing.savedResolutionStatus !== "unavailable" &&
+        String(existing.name || "").trim();
+      if (incomingUnavailable && existingNamed) continue;
+      byEin.set(key, card);
     }
-    return favoriteEins
+    const einCards = favoriteEins
       .map((ein) => {
         const key = normalizeEinDigits(ein);
         if (key.length !== 9) return null;
@@ -726,6 +740,7 @@ function TopAppInner({ initialNav = "home" }) {
         };
       })
       .filter(Boolean);
+    return [...einCards, ...trustedOnly];
   }, [savedOrganizations, fallbackSavedOrganizations, favoriteEins]);
   const favoriteEinSet = useMemo(
     () => new Set((favoriteEins || []).map((e) => normalizeEinDigits(e)).filter((e) => e.length === 9)),
@@ -939,17 +954,27 @@ function TopAppInner({ initialNav = "home" }) {
                     shellClass="siteMobileNavMore--phoneOnly"
                     onItemClick={handleHamburgerNav}
                   />
-                  {pageAtmosphere === "home" && !isMobileShell ? <DownloadMobileAppButton /> : null}
+                  {pageAtmosphere === "home" ? (
+                    <span className="topbarDownloadSlot topbarDownloadSlot--desktopOnly">
+                      <DownloadMobileAppButton />
+                    </span>
+                  ) : null}
                   {pageAtmosphere !== "podcast" ? <ColorSchemeToggle /> : null}
                 </div>
               </div>
               <div className="topbarZone topbarCenter" aria-hidden="true" />
               <div className="topbarZone topbarRight">
               <div className="topbarActionsCluster">
-                {pageAtmosphere === "home" && isMobileShell ? <DownloadMobileAppButton /> : null}
+                {pageAtmosphere === "home" ? (
+                  <span className="topbarDownloadSlot topbarDownloadSlot--phoneOnly">
+                    <DownloadMobileAppButton />
+                  </span>
+                ) : null}
                 {isLoggedIn ? (
                   <>
-                    {!isMobileShell ? <AdminConsoleLink /> : null}
+                    <span className="topbarAdminSlot topbarAdminSlot--desktopOnly">
+                      <AdminConsoleLink />
+                    </span>
                     <HeaderNotificationBell skipSessionGate />
                     <HeaderAccountMenu
                       avatarSrc={profile.avatarUrl || emptyProfileAvatarUrl()}
@@ -1121,18 +1146,20 @@ function TopAppInner({ initialNav = "home" }) {
       {nav === "trusted" && hasProAccess ? (
         <section className="shell">
           <div className="card trustedRouteCard">
-            <div className="ds-page-intro" style={{ borderBottom: "none", marginBottom: 0, paddingBottom: 0 }}>
-              <h2>
-                <AppIcon name="trusted" />
-                Trusted Resources
-              </h2>
+            <div
+              className="ds-page-intro ds-page-intro--withTrustedBadge"
+              style={{ borderBottom: "none", marginBottom: 0, paddingBottom: 0 }}
+            >
+              <AppIcon name="trusted" size={162} />
+              <h2>Trusted Resources</h2>
               <p className="ds-page-intro__lead">
-                Curated organizations with trusted alignment and mission-driven support.
+                Our Trusted Resource vetting process uses structured research, human review, and service validation to
+                evaluate nonprofits that serve veterans, first responders, and their families. The result is clear Trust
+                Scores and evidence-based reports that help families, donors, sponsors, and community partners identify
+                credible organizations with confidence.
               </p>
             </div>
             <div className="row">
-              <button className="btnPrimary" onClick={() => loadTrusted(true)} type="button">Refresh</button>
-              <button className="btnSoft" onClick={() => loadTrusted(false)} type="button">Load More</button>
               <button className="btnSoft" onClick={() => setOverlay("applyTrustedResource")} type="button">Apply to Become a Trusted Resource</button>
             </div>
             <p className="trustedRouteStatus">{trustedStatus}</p>
@@ -1142,7 +1169,7 @@ function TopAppInner({ initialNav = "home" }) {
                   <AppIcon name="trusted" />
                   <div>
                     <strong>No trusted resources loaded yet</strong>
-                    <p>Press Refresh to pull the latest verified organizations.</p>
+                    <p>Check back soon for verified organizations.</p>
                   </div>
                 </div>
               )}
@@ -1166,10 +1193,10 @@ function TopAppInner({ initialNav = "home" }) {
                     actionMode="trustedResource"
                     favoritesEnabled={isAuthenticated && canSaveOrganizations}
                     isFavorite={trustedIsFavorite}
-                    onToggleFavorite={(key) => {
+                    onToggleFavorite={(key, sourceCard) => {
                       const normalizedEin = normalizeEinDigits(key);
                       if (normalizedEin.length === 9) {
-                        toggleFavoriteEin(normalizedEin);
+                        toggleFavoriteEin(normalizedEin, sourceCard || card);
                         return;
                       }
                       if (trustedFavoriteKey) toggleFavoriteEntityKey(trustedFavoriteKey);
@@ -1280,8 +1307,15 @@ function TopAppInner({ initialNav = "home" }) {
           {canSaveOrganizations ? (
             <SavedOrganizationsList
               organizations={savedOrgsToRender}
-              savedEinCount={favoriteEins.length}
-              onToggleFavorite={toggleFavoriteEin}
+              savedEinCount={favoriteEins.length + favoriteEntityKeys.length}
+              onToggleFavorite={(key, sourceCard) => {
+                const entityKey = String(sourceCard?.entityKey || key || "").trim().toLowerCase();
+                if (entityKey.startsWith("trusted:")) {
+                  toggleFavoriteEntityKey(entityKey);
+                  return;
+                }
+                toggleFavoriteEin(key, sourceCard);
+              }}
             />
           ) : null}
           {showMembershipOnProfile ? (

@@ -49,26 +49,8 @@ export async function GET(request) {
       return membershipDeniedResponse("community_view");
     }
 
-    const { data, error } = await admin
-      .from(TABLE)
-      .select("*")
-      .eq("status", "approved")
-      .is("deleted_at", null)
-      .in("visibility", ["community", "public"])
-      .order("published_at", { ascending: false, nullsFirst: false })
-      .order("created_at", { ascending: false })
-      .limit(80);
-
-    if (error) {
-      return Response.json({ posts: [], error: error.message }, { status: 500 });
-    }
-
-    let rows = data || [];
-    if (shouldHideDemoCommunitySeeds()) {
-      rows = rows.filter((r) => !r?.is_demo_seed);
-    }
+    const friendIds = new Set();
     let likedIds = new Set();
-    let friendIds = new Set();
     if (profileRow?.id) {
       const { data: likes } = await admin
         .from(REACTIONS)
@@ -77,10 +59,50 @@ export async function GET(request) {
         .eq("reaction_type", "like");
       likedIds = new Set((likes || []).map((r) => r.post_id));
       try {
-        friendIds = await loadAcceptedFriendProfileIds(admin, profileRow.id);
+        const loaded = await loadAcceptedFriendProfileIds(admin, profileRow.id);
+        for (const id of loaded) friendIds.add(id);
       } catch {
-        friendIds = new Set();
+        /* ignore */
       }
+    }
+
+    const friendAuthorIds = [...friendIds, String(profileRow.id)].filter(Boolean);
+    let friendsQuery = admin
+      .from(TABLE)
+      .select("*")
+      .eq("status", "approved")
+      .is("deleted_at", null)
+      .eq("visibility", "friends")
+      .in("author_profile_id", friendAuthorIds.length ? friendAuthorIds : ["00000000-0000-0000-0000-000000000000"])
+      .order("published_at", { ascending: false, nullsFirst: false })
+      .order("created_at", { ascending: false })
+      .limit(80);
+
+    const [{ data, error }, friendsResult] = await Promise.all([
+      admin
+        .from(TABLE)
+        .select("*")
+        .eq("status", "approved")
+        .is("deleted_at", null)
+        .in("visibility", ["community", "public"])
+        .order("published_at", { ascending: false, nullsFirst: false })
+        .order("created_at", { ascending: false })
+        .limit(80),
+      friendAuthorIds.length ? friendsQuery : Promise.resolve({ data: [], error: null }),
+    ]);
+
+    if (error) {
+      return Response.json({ posts: [], error: error.message }, { status: 500 });
+    }
+
+    const friendsRows = friendsResult?.error ? [] : friendsResult?.data || [];
+    const byId = new Map();
+    for (const row of [...(data || []), ...friendsRows]) {
+      if (row?.id) byId.set(String(row.id), row);
+    }
+    let rows = [...byId.values()];
+    if (shouldHideDemoCommunitySeeds()) {
+      rows = rows.filter((r) => !r?.is_demo_seed);
     }
 
     const chronological = url.searchParams.get("sort") === "chronological";
@@ -145,6 +167,66 @@ export async function GET(request) {
       return Response.json({ posts: [], error: error.message }, { status: 500 });
     }
     return Response.json({ posts: data || [] });
+  }
+
+  if (scope === "member") {
+    if (!profilePassesMembershipScope(profileRow, "community_view")) {
+      return membershipDeniedResponse("community_view");
+    }
+    const authorId = String(url.searchParams.get("author") || url.searchParams.get("memberId") || "").trim();
+    if (!authorId) {
+      return Response.json({ posts: [], error: "author_required" }, { status: 400 });
+    }
+
+    let authorProfileId = authorId;
+    const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRe.test(authorId)) {
+      const { data: byWorkos } = await admin
+        .from("top_profiles")
+        .select("id")
+        .eq("workos_user_id", authorId)
+        .maybeSingle();
+      authorProfileId = byWorkos?.id ? String(byWorkos.id) : "";
+    }
+    if (!authorProfileId) {
+      return Response.json({ posts: [] });
+    }
+
+    let friendIds = new Set();
+    try {
+      friendIds = await loadAcceptedFriendProfileIds(admin, profileRow.id);
+    } catch {
+      friendIds = new Set();
+    }
+    const isSelf = authorProfileId === String(profileRow.id);
+    const isFriend = friendIds.has(authorProfileId);
+    const visibilities = isSelf || isFriend ? ["community", "public", "friends"] : ["community", "public"];
+
+    const { data, error } = await admin
+      .from(TABLE)
+      .select("*")
+      .eq("status", "approved")
+      .is("deleted_at", null)
+      .eq("author_profile_id", authorProfileId)
+      .in("visibility", visibilities)
+      .order("created_at", { ascending: false })
+      .limit(30);
+
+    if (error) {
+      return Response.json({ posts: [], error: error.message }, { status: 500 });
+    }
+
+    let rows = data || [];
+    if (shouldHideDemoCommunitySeeds()) {
+      rows = rows.filter((r) => !r?.is_demo_seed);
+    }
+
+    return Response.json({
+      posts: rows.map((row) => ({
+        ...row,
+        from_connection: isFriend && !isSelf,
+      })),
+    });
   }
 
   if (scope === "bookmarked") {
@@ -275,6 +357,10 @@ export async function POST(request) {
   const taggedProfileIds = Array.isArray(body.tagged_profile_ids)
     ? body.tagged_profile_ids.map((id) => String(id || "").trim()).filter(Boolean).slice(0, 20)
     : [];
+  const requestedVisibility = String(body.visibility || "community").trim().toLowerCase();
+  const visibility = ["community", "public", "friends", "private"].includes(requestedVisibility)
+    ? requestedVisibility
+    : "community";
 
   const record = {
     author_profile_id: profileRow.id,
@@ -293,7 +379,7 @@ export async function POST(request) {
     status: createFields.status,
     published_at: createFields.published_at || null,
     reviewed_at: createFields.reviewed_at || null,
-    visibility: "community",
+    visibility,
     like_count: 0,
     share_count: 0,
     tagged_profile_ids: taggedProfileIds,
@@ -307,6 +393,16 @@ export async function POST(request) {
     .select("id,status,created_at,published_at")
     .maybeSingle();
   data = inserted;
+
+  if (error && /visibility|friends/i.test(String(error.message || "")) && record.visibility === "friends") {
+    record.visibility = "community";
+    ({ data: inserted, error } = await admin
+      .from(TABLE)
+      .insert(record)
+      .select("id,status,created_at,published_at")
+      .maybeSingle());
+    data = inserted;
+  }
 
   if (error && /tagged_profile_ids/i.test(String(error.message || ""))) {
     delete record.tagged_profile_ids;

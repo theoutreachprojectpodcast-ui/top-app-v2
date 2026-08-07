@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import AppIcon from "@/components/shared/AppIcon";
 import TrustedResourceCard from "@/features/trusted-resources/components/TrustedResourceCard";
 import { buildTrustedResourceViewModel } from "@/features/trusted-resources/domain/trustedResourceViewModel";
 import {
@@ -11,8 +12,6 @@ import { fetchTrustedResources } from "@/features/trusted-resources/api";
 import { useProfileData } from "@/features/profile/ProfileDataProvider";
 import { workosSignInLink } from "@/lib/auth/workosReturnTo";
 import { getSupabaseClient } from "@/lib/supabase/client";
-
-const SHIELD = "M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6z";
 
 /**
  * Shell chrome (header, bottom nav, footer) comes from `trusted/layout.js` only.
@@ -96,25 +95,18 @@ export default function TrustedPage() {
 
   return (
     <section className="card trustedRouteCard">
-      <div className="ds-page-intro" style={{ borderBottom: "none", marginBottom: 0, paddingBottom: 0 }}>
-        <h2 style={{ margin: 0, display: "flex", alignItems: "center", gap: "12px" }}>
-          <span className="iconWrap" aria-hidden="true">
-            <svg className="iconStroke" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-              <path d={SHIELD} />
-            </svg>
-          </span>
-          Trusted Resources
-        </h2>
+      <div
+        className="ds-page-intro ds-page-intro--withTrustedBadge"
+        style={{ borderBottom: "none", marginBottom: 0, paddingBottom: 0 }}
+      >
+        <AppIcon name="trusted" size={162} />
+        <h2>Trusted Resources</h2>
         <p className="ds-page-intro__lead">
-          Curated organizations The Outreach Project can connect veterans, first responders, and families with. Open a
-          resource profile for mission, programs, and official links — or the nonprofit directory when an IRS EIN is
-          available.
+          Our Trusted Resource vetting process uses structured research, human review, and service validation to evaluate
+          nonprofits that serve veterans, first responders, and their families. The result is clear Trust Scores and
+          evidence-based reports that help families, donors, sponsors, and community partners identify credible
+          organizations with confidence.
         </p>
-      </div>
-      <div className="row">
-        <button className="btnPrimary" type="button" onClick={loadTrusted}>
-          Refresh
-        </button>
       </div>
       {status ? <p className="trustedRouteStatus">{status}</p> : null}
       <div className="results results--trustedBranded">

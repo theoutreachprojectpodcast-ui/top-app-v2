@@ -27,11 +27,12 @@ The progress notice and welcome card sit in a shared **`.homeHeroBackdrop__conte
 
 ## Saved organizations data
 
+- **Architecture**: see `web/docs/SAVED_ORGANIZATIONS_ARCHITECTURE.md` (Option B: WorkOS user id + EIN, with `trusted:{slug}` fallback).
 - **Root cause (2026-07)**: `resolveSavedOrganizationDirectoryRows` **skipped** EINs with no `nonprofits_search_app_v1` row or with `ein_identity_verified === false`. Profile UI then filled the intentional placeholder **"Saved organization"**. Accounts whose favorites were still in the session search cache looked fine; accounts loading profile cold with unverified/missing search-view rows looked broken.
-- **Fix**: Always return one row per saved EIN. Resolve names from directory → enrichment → `nonprofit_profiles.display_name_override`. Unverified identity no longer hides saved names. True misses use **"Organization unavailable"** with remove action.
-- **WorkOS**: `GET /api/me/saved-orgs/cards` (admin client) returns joined `rows` + typed `items`; `PUT /api/me/saved-orgs` validates new EINs and returns resolved rows for immediate UI update.
-- **Repair**: `pnpm --dir web run repair:saved-org-names` (optional `--apply-normalize`); SQL `saved_org_name_resolution_2026_07.sql`.
-- **Cards**: `SavedOrganizationCard` shows canonical name or unavailable state; **NonprofitCard** for resolved rows.
+- **Follow-on regression (2026-07-30)**: existence validation on save rejected orgs visible in Directory/Trusted UI; Pro-only gate blocked active Support; trusted slug favorites never appeared in Profile.
+- **Fix**: Shared `savedOrganizationsService`; existence includes registry + legacy sources; active Support can save; slug→EIN promotion; profile cards include trusted entity keys with real names.
+- **Repair**: `pnpm --dir web run repair:saved-org-names`; `pnpm --dir web run repair:trusted-favorite-keys:apply`; SQL `saved_orgs_incident_repair_2026_07.sql`.
+- **Cards**: `SavedOrganizationCard` shows canonical name or unavailable state; trusted slug cards link to `/trusted/{slug}`.
 
 ## Membership card on profile
 
