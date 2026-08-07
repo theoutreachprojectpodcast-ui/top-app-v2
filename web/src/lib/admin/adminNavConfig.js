@@ -182,6 +182,15 @@ export const ADMIN_SECTIONS = [
         description: "Billing operations, invoices, and revenue tools.",
       },
       {
+        id: "bulk-licensing",
+        label: "Bulk licensing",
+        href: "/admin/bulk-licensing",
+        readiness: "partial",
+        matchPrefix: "/admin/bulk-licensing",
+        keywords: ["bulk", "seats", "organization", "business code", "licenses"],
+        description: "Organization packages, seat utilization, and support tools.",
+      },
+      {
         id: "applications",
         label: "Partner activity",
         href: "/admin/applications",

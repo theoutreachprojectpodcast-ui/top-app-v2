@@ -136,6 +136,16 @@ export function podcastSponsorMissingPriceEnvKeys() {
     .map(([, envKey]) => envKey);
 }
 
+/** Bulk annual license package price IDs (25 / 50 / 100 / 200). */
+export {
+  BULK_PACKAGE_SIZES,
+  bulkCheckoutConfigured,
+  bulkMissingPriceEnvKeys,
+  bulkPriceIdForPackageSize,
+  isValidBulkPackageSize,
+  normalizeBulkPackageSize,
+} from "@/lib/bulkLicensing/packages";
+
 /**
  * Same-origin path only for Stripe success/cancel URLs (blocks open redirects like `//evil.com`).
  * @param {string} raw

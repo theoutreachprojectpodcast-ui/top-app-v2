@@ -336,6 +336,10 @@ export default function AppAccessPaywall({
           <p className="mobileSplashPage__legal">
             Membership renews annually. You can manage billing from your profile after access is active.
           </p>
+          <p className="mobileSplashPage__legal">
+            Need licenses for your organization?{" "}
+            <a href="/bulk-licenses">View Bulk Licensing</a>
+          </p>
         </div>
       </div>
     </div>

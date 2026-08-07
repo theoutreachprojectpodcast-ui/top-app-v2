@@ -462,6 +462,9 @@ export default function MembershipBillingCenter({
         <Link className="btnSoft" href="/settings#account-membership">
           Settings
         </Link>
+        <Link className="btnSoft" href="/bulk-licenses">
+          Need licenses for your organization?
+        </Link>
       </div>
         </div>
       ) : null}

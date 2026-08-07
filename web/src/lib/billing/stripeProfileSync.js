@@ -113,6 +113,35 @@ export async function syncProfileFromSubscription(admin, stripe, workosUserId, s
     return;
   }
 
+  // Active bulk org seat: never wipe Pro entitlement from an unrelated individual Stripe cancel.
+  // Still allow linking/updating personal stripe_customer_id / stripe_subscription_id on the profile.
+  const bulkOrgActive =
+    String(existing?.membership_source || "").toLowerCase() === "bulk_org" &&
+    !!existing?.bulk_license_id &&
+    isPeriodStillActive(existing?.renewal_date);
+
+  if (bulkOrgActive) {
+    const patch = {
+      membership_tier: "member",
+      membership_status: "active",
+      billing_status: "active",
+      membership_source: "bulk_org",
+      renewal_date: existing.renewal_date,
+      bulk_organization_id: existing.bulk_organization_id,
+      bulk_license_id: existing.bulk_license_id,
+      payment_method_summary: pmSummary || existing?.payment_method_summary || {},
+      updated_at: new Date().toISOString(),
+    };
+    if (cust) patch.stripe_customer_id = cust;
+    if (ended) {
+      patch.stripe_subscription_id = null;
+    } else if (sub?.id) {
+      patch.stripe_subscription_id = sub.id;
+    }
+    await admin.from(table).update(patch).eq("workos_user_id", workosUserId);
+    return;
+  }
+
   if (ended) {
     const patch = {
       membership_tier: "free",
