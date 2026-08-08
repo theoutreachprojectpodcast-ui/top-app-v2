@@ -16,18 +16,9 @@ import {
 } from "@/lib/bulkLicensing/emails";
 import { appBaseUrl } from "@/lib/billing/stripeConfig";
 import { normalizeBulkPackageSize } from "@/lib/bulkLicensing/packages";
+import { isBulkCheckoutMetadata } from "@/lib/bulkLicensing/bulkCheckoutMetadata";
 
-/**
- * @param {Record<string, string | undefined> | null | undefined} metadata
- */
-export function isBulkCheckoutMetadata(metadata) {
-  if (!metadata) return false;
-  return (
-    String(metadata.checkout_kind || "") === "bulk_licensing" ||
-    !!metadata.bulk_organization_id ||
-    !!metadata.bulk_purchase_id
-  );
-}
+export { isBulkCheckoutMetadata } from "@/lib/bulkLicensing/bulkCheckoutMetadata";
 
 /**
  * @param {import('@supabase/supabase-js').SupabaseClient} admin
@@ -35,7 +26,7 @@ export function isBulkCheckoutMetadata(metadata) {
  * @param {import('stripe').Stripe.Event} event
  */
 export async function handleBulkStripeWebhookEvent(admin, stripe, event) {
-  const maybeBulk = await eventLooksLikeBulk(admin, event);
+  const maybeBulk = await eventLooksLikeBulk(admin, stripe, event);
   if (!maybeBulk) {
     return { handled: false };
   }
@@ -97,16 +88,40 @@ export async function handleBulkStripeWebhookEvent(admin, stripe, event) {
           typeof invoice.subscription === "string"
             ? invoice.subscription
             : invoice.subscription?.id;
-        const { data: known } = await admin
+        if (!subId) {
+          await finishBulkWebhookEvent(admin, event.id, { status: "ignored" });
+          return { handled: true, reason: "bulk_invoice_missing_subscription" };
+        }
+        let { data: known } = await admin
           .from("bulk_subscriptions")
           .select("id, organization_id, package_size")
           .eq("stripe_subscription_id", subId)
           .maybeSingle();
+        const sub = await stripe.subscriptions.retrieve(subId);
+        // Invoice may arrive before checkout.session.completed creates bulk_subscriptions.
+        // Never fall through to individual profile sync for bulk metadata.
+        if (!known && isBulkCheckoutMetadata(sub.metadata)) {
+          const orgId = String(sub.metadata?.bulk_organization_id || "").trim();
+          const size = normalizeBulkPackageSize(sub.metadata?.package_size);
+          if (orgId && size) {
+            result = await activateBulkSubscriptionAndLicenses(admin, {
+              organizationId: orgId,
+              packageSize: size,
+              stripeCustomerId: typeof sub.customer === "string" ? sub.customer : null,
+              stripeSubscription: sub,
+              activationSource: "invoice.paid",
+              stripeInvoiceId: invoice.id,
+              pendingPurchaseId: sub.metadata?.bulk_purchase_id || null,
+            });
+            break;
+          }
+          await finishBulkWebhookEvent(admin, event.id, { status: "ignored" });
+          return { handled: true, reason: "bulk_invoice_pending_activation" };
+        }
         if (!known) {
           await finishBulkWebhookEvent(admin, event.id, { status: "ignored" });
           return { handled: false };
         }
-        const sub = await stripe.subscriptions.retrieve(subId);
         const { count: batchCount } = await admin
           .from("bulk_license_batches")
           .select("id", { count: "exact", head: true })
@@ -135,16 +150,25 @@ export async function handleBulkStripeWebhookEvent(admin, stripe, event) {
           typeof invoice.subscription === "string"
             ? invoice.subscription
             : invoice.subscription?.id;
+        if (!subId) {
+          await finishBulkWebhookEvent(admin, event.id, { status: "ignored" });
+          return { handled: true, reason: "bulk_invoice_missing_subscription" };
+        }
         const { data: known } = await admin
           .from("bulk_subscriptions")
           .select("id, organization_id")
           .eq("stripe_subscription_id", subId)
           .maybeSingle();
+        const sub = await stripe.subscriptions.retrieve(subId);
         if (!known) {
+          // Still claim bulk invoices so individual sync never writes org sub onto profile.
+          if (isBulkCheckoutMetadata(sub.metadata)) {
+            await finishBulkWebhookEvent(admin, event.id, { status: "ignored" });
+            return { handled: true, reason: "bulk_invoice_failed_pending_row" };
+          }
           await finishBulkWebhookEvent(admin, event.id, { status: "ignored" });
           return { handled: false };
         }
-        const sub = await stripe.subscriptions.retrieve(subId);
         result = await syncBulkSubscriptionStatus(admin, sub);
         const { data: org } = await admin
           .from("bulk_organizations")
@@ -187,9 +211,10 @@ export async function handleBulkStripeWebhookEvent(admin, stripe, event) {
 
 /**
  * @param {import('@supabase/supabase-js').SupabaseClient} admin
+ * @param {import('stripe').Stripe} stripe
  * @param {import('stripe').Stripe.Event} event
  */
-async function eventLooksLikeBulk(admin, event) {
+async function eventLooksLikeBulk(admin, stripe, event) {
   const obj = event.data?.object || {};
   const meta = obj.metadata || {};
   if (isBulkCheckoutMetadata(meta)) return true;
@@ -200,7 +225,9 @@ async function eventLooksLikeBulk(admin, event) {
       .select("id")
       .eq("stripe_subscription_id", obj.id)
       .maybeSingle();
-    return !!data;
+    if (data) return true;
+    // Subscription object metadata already checked above; nothing else to do.
+    return false;
   }
 
   if (event.type.startsWith("invoice.") && obj.subscription) {
@@ -212,7 +239,21 @@ async function eventLooksLikeBulk(admin, event) {
       .select("id")
       .eq("stripe_subscription_id", subId)
       .maybeSingle();
-    return !!data;
+    if (data) return true;
+    // Race: invoice may arrive before bulk_subscriptions row exists.
+    // Check Stripe subscription metadata so we never fall through to individual sync.
+    if (stripe) {
+      try {
+        const sub = await stripe.subscriptions.retrieve(subId);
+        if (isBulkCheckoutMetadata(sub.metadata)) return true;
+      } catch (err) {
+        console.warn("[bulk] invoice eventLooksLikeBulk retrieve failed", {
+          subId,
+          message: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
+    return false;
   }
 
   return false;
