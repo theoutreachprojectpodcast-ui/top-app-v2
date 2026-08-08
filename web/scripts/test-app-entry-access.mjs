@@ -33,6 +33,25 @@ assert.equal(isDefaultApprovedAdminEmail("jonathan@theoutreach-project.com"), tr
 assert.equal(isDefaultApprovedAdminEmail("andy@volentelabs.com"), false);
 assert.equal(isDefaultApprovedAdminEmail("andy@valentelabs.io"), false);
 
+const originalPlatformAdminEmails = process.env.PLATFORM_ADMIN_EMAILS;
+try {
+  process.env.PLATFORM_ADMIN_EMAILS = [
+    originalPlatformAdminEmails,
+    "andy@volentelabs.com",
+    "andy@valentelabs.io",
+  ]
+    .filter(Boolean)
+    .join(",");
+  assert.equal(isDefaultApprovedAdminEmail("andy@volentelabs.com"), false);
+  assert.equal(isDefaultApprovedAdminEmail("andy@valentelabs.io"), false);
+} finally {
+  if (originalPlatformAdminEmails == null) {
+    delete process.env.PLATFORM_ADMIN_EMAILS;
+  } else {
+    process.env.PLATFORM_ADMIN_EMAILS = originalPlatformAdminEmails;
+  }
+}
+
 assert.equal(resolveAppAccessState({ authLoading: true }), "loading");
 assert.equal(resolveAppAccessState({ isAuthenticated: false }), "unauthenticated");
 
