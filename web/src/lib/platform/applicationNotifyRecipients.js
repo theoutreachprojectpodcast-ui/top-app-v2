@@ -2,7 +2,7 @@
 export const DEFAULT_APPLICATION_NOTIFY_RECIPIENTS = [
   "jmelching1@gmail.com",
   "hodge5403@gmail.com",
-  "andy@volentelabs.com",
+  "theoutreachprojectpodcast@gmail.com",
 ];
 
 function parseRecipientList(raw) {

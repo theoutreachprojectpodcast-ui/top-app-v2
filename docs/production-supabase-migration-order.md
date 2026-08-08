@@ -129,10 +129,15 @@ where platform_role is null
 | **42.2** | `member_connections_migrate_follows_2026_07.sql` | Backfill pending/accepted/blocked from legacy `community_follows` encodings |
 | **42.3** | `member_connections_ONE_PASTE_grant_and_migrate_2026_07.sql` | **Preferred Production paste** — grant + migrate in one run |
 | **42.4** | `member_connections_workflow_2026_07.sql` | Status timestamps + `friends` visibility + service_role GRANTs (**plain ALTER only** — avoids DO $$ parser failures in SQL editor) |
+| **43** | `benefits_v01_schema.sql` | Benefits catalog, evidence, ZIP/location, review, saved/share, and savings foundation |
+| **43.1** | `benefits_v01_seed.sql` | Draft Benefits #000001 and #000002 plus their pending human-review items |
+| **43.2** | `benefits_v02_agent_review.sql` | Guarded agent proposal intake and human-only draft acceptance; still no automatic publication |
 
 **Friend connections fix (run on Production when Community Connect is broken):** paste **42.3** (or **42.1** then **42.2**) in the SQL editor (or `pnpm --dir web run apply:member-connections:full:apply` with `SUPABASE_ACCESS_TOKEN` / `DATABASE_URL`). Until grants are applied, app code falls back to `community_follows`. After that, run **42.4** for explicit status timestamps and friends-only posts.
 
-**QA only (do not run on production):** `qa_irs_nonprofit_import_seed_2026_07.sql` — sample IRS import rows for admin review UI. See `docs/IRS_NONPROFIT_IMPORT.md`.
+**QA only (do not run on production):** `qa_irs_nonprofit_import_seed_2026_07.sql` adds sample IRS import rows. `benefits_qa_runtime_guard.sql` registers the dedicated QA Benefits project with agent writes disabled. See `docs/IRS_NONPROFIT_IMPORT.md` and `docs/benefits-agents.md`.
+
+Benefits seed note: `benefits_v01_seed.sql` is safe for Production after QA because it creates catalog drafts only, never overwrites a matching record, and publishes nothing automatically. See `docs/benefits.md`.
 
 ## Sponsor display / branding (apply after catalog exists)
 
@@ -152,6 +157,16 @@ select count(*) from public.sponsors_catalog;
 
 -- Admin columns present
 select platform_role, admin_access_enabled from public.top_profiles limit 1;
+
+-- Benefits bootstrap (expect two drafts + two pending review items after step 43.1)
+select public_id, title, publication_status, verification_status
+from public.top_benefits
+order by benefit_number;
+
+select status, count(*)
+from public.top_benefit_review_items
+group by status
+order by status;
 ```
 
 Confirm **RLS enabled** on user-facing tables in Supabase Dashboard → Database → Tables.

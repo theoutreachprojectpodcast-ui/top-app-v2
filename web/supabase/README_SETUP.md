@@ -107,7 +107,23 @@ Run at least one base enrichment definition; both are safe together if both use 
 
 ---
 
-## 9. Security hardening (required on every environment)
+## 9. Benefits
+
+Run after `top_v03_profiles.sql`; the saved-list, review, and savings tables reference profile IDs.
+
+| Order | File | Purpose |
+|------:|------|---------|
+| 25 | `benefits_v01_schema.sql` | Benefits catalog, sources, ZIP locations, review queue, saved/share lists, and savings events |
+| 26 | `benefits_v01_seed.sql` | Draft review fixtures #000001 and #000002; never overwrites existing records |
+| 27 | `benefits_v02_agent_review.sql` | Draft-only agent intake RPC, human draft acceptance, and second publication review |
+
+QA only: run `benefits_qa_runtime_guard.sql` after step 27. It registers the dedicated QA project with agent writes disabled. Use `benefits_qa_verify.sql` for the read-only verification report.
+
+See `docs/benefits.md` for the product constitution, evidence labels, and verification queries.
+
+---
+
+## 10. Security hardening (required on every environment)
 
 | Order | File | Purpose |
 |------:|------|---------|
@@ -122,7 +138,7 @@ select * from public._top_rls_security_audit() where status <> 'OK' order by 1, 
 
 Supabase Dashboard → Database → Linter → **Refresh**.
 
-## 10. Diagnostics / optional
+## 11. Diagnostics / optional
 
 | File | Purpose |
 |------|---------|
@@ -166,6 +182,7 @@ If you want the shortest path to a working app shell + profiles + admin bootstra
 9. `sponsors_catalog.sql` + `sponsor_applications.sql` + checkout/invite columns + `sponsor_logo_enrichment.sql` + `safe_alignment_extension_2026_04.sql` (as needed)  
 10. `community.sql` → `community_v03_data_model.sql`  
 11. `admin_platform_rbac_v04.sql`  
+12. `benefits_v01_schema.sql` → `benefits_v01_seed.sql`
 
 **Optional — IRS EO BMF import (501(c)(19) veterans orgs):**
 

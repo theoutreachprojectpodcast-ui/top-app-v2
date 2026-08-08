@@ -5,6 +5,7 @@ import {
   SUPPORT_TO_PRO_MEMBERSHIP_SOURCE,
   isPeriodStillActive,
 } from "@/lib/membership/supportToProMigrationShared";
+import { isBulkCheckoutMetadata } from "@/lib/bulkLicensing/bulkCheckoutMetadata";
 
 export function mapStripeSubStatus(status) {
   const statusMap = {
@@ -76,6 +77,12 @@ function hasActiveMigratedPro(existing) {
  * @param {{ forceEnded?: boolean, sponsorTierId?: string }} opts
  */
 export async function syncProfileFromSubscription(admin, stripe, workosUserId, sub, opts = {}) {
+  // Bulk org subscriptions live on bulk_subscriptions — never write them onto
+  // profile.stripe_subscription_id (individual Stripe only).
+  if (isBulkCheckoutMetadata(sub?.metadata)) {
+    return;
+  }
+
   const table = profileTableName();
   const cust = typeof sub.customer === "string" ? sub.customer : sub.customer?.id || "";
   const ended = opts.forceEnded || sub.status === "canceled" || sub.status === "incomplete_expired";

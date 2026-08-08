@@ -114,7 +114,7 @@ function AdminLoginForm() {
               autoComplete="email"
               value={email}
               onChange={(ev) => setEmail(ev.target.value)}
-              placeholder="andy@volentelabs.com"
+              placeholder="theoutreachprojectpodcast@gmail.com"
               required
             />
           </label>

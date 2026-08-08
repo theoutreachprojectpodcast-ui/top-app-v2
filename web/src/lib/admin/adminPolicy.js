@@ -1,10 +1,18 @@
 import { isQaDeploymentContext } from "@/lib/runtime/qaDeploymentContext";
 
 const DEFAULT_APPROVED_ADMIN_EMAILS = Object.freeze([
-  "andy@volentelabs.com",
-  "andy@valentelabs.io",
+  "theoutreachprojectpodcast@gmail.com",
+  "jonathan@theoutreach-project.com",
   "jmelching1@gmail.com",
   "hodge5403@gmail.com",
+]);
+
+// Former contractor identities stay revoked even if a stale Vercel environment
+// variable still lists them. Environment allowlists may add owners, but they
+// must never be able to restore an explicitly removed account.
+const REVOKED_ADMIN_EMAILS = Object.freeze([
+  "andy@volentelabs.com",
+  "andy@valentelabs.io",
 ]);
 
 function normalizeEmail(email) {
@@ -27,6 +35,9 @@ function buildApprovedAdminEmailSet() {
     for (const email of emailsFromEnv("QA_PLATFORM_ADMIN_EMAILS")) {
       set.add(email);
     }
+  }
+  for (const email of REVOKED_ADMIN_EMAILS) {
+    set.delete(email);
   }
   return set;
 }

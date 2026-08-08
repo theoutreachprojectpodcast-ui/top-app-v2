@@ -167,6 +167,9 @@ export async function POST(request) {
       case "customer.subscription.created":
       case "customer.subscription.updated": {
         const sub = event.data.object;
+        if (isBulkCheckoutMetadata(sub.metadata)) {
+          break;
+        }
         const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer?.id;
         const workosUserId = await resolveWorkosUserId(admin, sub, customerId);
         if (workosUserId) {
@@ -178,6 +181,9 @@ export async function POST(request) {
       }
       case "customer.subscription.deleted": {
         const sub = event.data.object;
+        if (isBulkCheckoutMetadata(sub.metadata)) {
+          break;
+        }
         const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer?.id;
         const workosUserId = await resolveWorkosUserId(admin, sub, customerId);
         if (workosUserId) {
@@ -192,10 +198,13 @@ export async function POST(request) {
         const subId = typeof inv.subscription === "string" ? inv.subscription : inv.subscription?.id;
         if (!subId) break;
         const customerId = typeof inv.customer === "string" ? inv.customer : inv.customer?.id;
+        const sub = await stripe.subscriptions.retrieve(subId);
+        if (isBulkCheckoutMetadata(sub.metadata)) {
+          break;
+        }
         const profileForNotify = customerId ? await getProfileRowByStripeCustomerId(admin, customerId) : null;
 
         if (event.type !== "invoice.upcoming") {
-          const sub = await stripe.subscriptions.retrieve(subId);
           const workosUserId =
             profileForNotify?.workos_user_id || (await resolveWorkosUserId(admin, sub, customerId));
           if (workosUserId) {

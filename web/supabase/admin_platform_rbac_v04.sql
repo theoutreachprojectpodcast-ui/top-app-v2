@@ -26,9 +26,8 @@ set
   platform_role = 'admin',
   updated_at = now()
 where lower(trim(coalesce(email, ''))) in (
-    lower(trim('andy@volentelabs.com')),
-    lower(trim('andy@valentelabs.com')),
-    lower(trim('andy@valentelabs.io')),
+    lower(trim('theoutreachprojectpodcast@gmail.com')),
+    lower(trim('jonathan@theoutreach-project.com')),
     lower(trim('jmelching1@gmail.com')),
     lower(trim('hodge5403@gmail.com'))
   )
