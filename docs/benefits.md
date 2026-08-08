@@ -49,12 +49,12 @@ When the user searches a ZIP code, the API should return three clearly labeled g
 2. **Verified near you:** matching verified rows from `top_benefit_locations`.
 3. **Worth asking locally:** participating-location records with no verified nearby row. These must display the location warning and cannot show a guaranteed percentage or dollar value.
 
-The initial Chick-fil-A fixture belongs in the third group until a specific restaurant is verified and added to `top_benefit_locations`.
+Location-dependent restaurant reports belong in the third group until a specific location is verified and added to `top_benefit_locations`. The initial Chick-fil-A fixture is different: it documents the official Chick-fil-A One Community Helper ID.me path and makes no fixed discount promise.
 
 ## First two records
 
 - **Benefit #000001 — VA Funding Fee Exemption:** national, official, fee-waiver logic with eligibility and refund timing.
-- **Benefit #000002 — Chick-fil-A Military Discounts (Location Dependent):** participating-location, variable-value logic with an explicit no-chain-wide-guarantee warning.
+- **Benefit #000002 — Chick-fil-A Community Helper Recognition via ID.me:** official online verification program for supported Community Helper groups, with an explicit no-guaranteed-reward warning.
 
 Both are seeded as `draft` + `in_review`. The seed also creates one pending review item per record. The first admin UI pass should approve, reject, or request more information; publishing must be an explicit human action.
 

@@ -3,7 +3,7 @@
 --
 -- These records remain draft/in_review until a TOP admin approves them in the review flow.
 -- Benefit #000001 tests a national official government benefit.
--- Benefit #000002 tests a participating-location commercial discount with no chain-wide promise.
+-- Benefit #000002 tests an official provider program with variable, non-guaranteed recognition/rewards.
 --
 -- ROLLBACK: archive the two benefits instead of deleting them once referenced by saves or events.
 
@@ -96,7 +96,7 @@ begin
   end if;
 
   if not exists (
-    select 1 from public.top_benefits where slug = 'chick-fil-a-military-discounts-location-dependent'
+    select 1 from public.top_benefits where slug = 'chick-fil-a-community-helper-id-me'
   ) then
     if exists (select 1 from public.top_benefits where benefit_number = 2) then
       raise exception 'Benefit #000002 is already assigned to another record; seed stopped without renumbering.';
@@ -133,39 +133,40 @@ begin
       next_review_at
     ) values (
       2,
-      'chick-fil-a-military-discounts-location-dependent',
-      'Chick-fil-A Military Discounts (Location Dependent)',
+      'chick-fil-a-community-helper-id-me',
+      'Chick-fil-A Community Helper Recognition via ID.me',
       'Chick-fil-A',
-      'https://www.chick-fil-a.com/customer-support/events-and-promotions/local-events/does-chick-fil-a-offer-discounts-for-veterans-senior-citizens-students-and-other-special-groups',
-      'discount',
-      array['food', 'restaurant', 'everyday_discount', 'local_offer'],
-      array['veteran', 'active_duty'],
-      'Some locally operated Chick-fil-A restaurants may offer a military discount or military-appreciation promotion, but there is no guaranteed chain-wide offer.',
-      'Chick-fil-A states that discounts are controlled by each local Owner-Operator. An offer may be an everyday discount, a free item, or a holiday promotion, and the amount and timing can differ by restaurant.',
-      'Eligibility, accepted proof of service, offer value, and redemption timing are set by each participating restaurant.',
+      'https://www.chick-fil-a.com/customer-support/chick-fil-a-one-membership-program/creating-and-managing-your-account/what-is-id-me-and-how-is-it-used',
+      'program',
+      array['food', 'restaurant', 'hidden_gem', 'loyalty'],
+      array['veteran', 'active_duty', 'first_responder'],
+      'Eligible Chick-fil-A One members can verify a Community Helper affiliation through ID.me for possible recognition or rewards.',
+      'Chick-fil-A uses ID.me to identify Community Helper groups such as members of the military, teachers, first responders, and nurses. Verified Chick-fil-A One members may have opportunities to be recognized or rewarded, but Chick-fil-A does not promise a fixed nationwide discount or guaranteed reward.',
+      'A Chick-fil-A One member must qualify for a supported Community Helper group and complete the applicable ID.me verification.',
       jsonb_build_object(
-        'chainwide_guarantee', false,
-        'local_operator_discretion', true,
-        'confirmation_required', true
+        'community_helper_groups', jsonb_build_array('military', 'teachers', 'first responders', 'nurses'),
+        'id_me_verification', true,
+        'reward_guaranteed', false
       ),
-      'participating_locations',
+      'online',
       'US',
-      'Do not assume every Chick-fil-A participates. Check the restaurant in the Chick-fil-A app, its social page, or contact it directly. ZIP results must distinguish verified locations from ask-locally leads.',
-      'in_person',
+      'Verification creates an opportunity for recognition or rewards; it does not guarantee a discount, free item, or reward.',
+      'online',
       array[
-        'Find the intended restaurant by address or ZIP code.',
-        'Check that restaurant''s app listing or social page, or contact the restaurant directly.',
-        'Confirm the current offer and required proof before ordering.'
+        'Sign in to or create a Chick-fil-A One account.',
+        'Open Chick-fil-A''s Community Helper verification path.',
+        'Complete the supported group verification through ID.me.',
+        'Watch the Chick-fil-A One account for any recognition or reward opportunity.'
       ],
-      array['Varies by participating restaurant; ask the location what proof it accepts'],
+      array['Documentation accepted by ID.me for the selected Community Helper group'],
       'variable',
       jsonb_build_object(
-        'chainwide_rate', null,
-        'possible_offer_forms', jsonb_build_array('discount', 'free item', 'holiday promotion'),
-        'must_confirm_locally', true
+        'fixed_discount', null,
+        'possible_outcome', 'recognition or reward opportunity',
+        'reward_guaranteed', false
       ),
-      'Savings vary by restaurant and promotion. TOP must not present a reported 10% rate as a chain-wide guarantee.',
-      'Availability is at the discretion of the local Owner-Operator and may be limited to a holiday or event. Confirm before visiting.',
+      'No fixed savings amount is promised. Any recognition or reward can vary by member and timing.',
+      'ID.me verification does not guarantee a discount or reward. Chick-fil-A describes recognition and rewards as possible opportunities for verified Community Helpers.',
       'draft',
       'in_review',
       'official',
@@ -219,16 +220,16 @@ insert into public.top_benefit_sources (
 select
   b.id,
   'provider_policy',
-  'https://www.chick-fil-a.com/customer-support/events-and-promotions/local-events/does-chick-fil-a-offer-discounts-for-veterans-senior-citizens-students-and-other-special-groups',
-  'Does Chick-fil-A offer discounts for veterans and other special groups?',
+  'https://www.chick-fil-a.com/customer-support/chick-fil-a-one-membership-program/creating-and-managing-your-account/what-is-id-me-and-how-is-it-used',
+  'What is ID.me and how is it used?',
   'Chick-fil-A',
-  'Confirms that discounts are optional, controlled by local Owner-Operators, and not guaranteed at all restaurants.',
+  'Confirms that Chick-fil-A One members in supported Community Helper groups can verify through ID.me for possible recognition or rewards.',
   'supports',
   true,
   now(),
-  jsonb_build_object('official', true, 'chainwide_guarantee', false)
+  jsonb_build_object('official', true, 'id_me_verification', true, 'reward_guaranteed', false)
 from public.top_benefits b
-where b.slug = 'chick-fil-a-military-discounts-location-dependent'
+where b.slug = 'chick-fil-a-community-helper-id-me'
 on conflict (benefit_id, source_url) do nothing;
 
 insert into public.top_benefit_review_items (
@@ -283,13 +284,13 @@ select
   1.0,
   jsonb_build_object('publication_status', 'published', 'verification_status', 'verified'),
   jsonb_build_array(jsonb_build_object(
-    'url', 'https://www.chick-fil-a.com/customer-support/events-and-promotions/local-events/does-chick-fil-a-offer-discounts-for-veterans-senior-citizens-students-and-other-special-groups',
+    'url', 'https://www.chick-fil-a.com/customer-support/chick-fil-a-one-membership-program/creating-and-managing-your-account/what-is-id-me-and-how-is-it-used',
     'source_type', 'provider_policy',
-    'chainwide_guarantee', false
+    'reward_guaranteed', false
   )),
-  'Human review must preserve the participating-location warning and must not invent a chain-wide rate.'
+  'Human review must preserve the no-guaranteed-reward warning and must not invent a fixed discount.'
 from public.top_benefits b
-where b.slug = 'chick-fil-a-military-discounts-location-dependent'
+where b.slug = 'chick-fil-a-community-helper-id-me'
 on conflict (dedupe_key) do nothing;
 
 select setval(

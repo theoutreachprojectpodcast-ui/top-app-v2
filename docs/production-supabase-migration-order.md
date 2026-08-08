@@ -131,10 +131,11 @@ where platform_role is null
 | **42.4** | `member_connections_workflow_2026_07.sql` | Status timestamps + `friends` visibility + service_role GRANTs (**plain ALTER only** — avoids DO $$ parser failures in SQL editor) |
 | **43** | `benefits_v01_schema.sql` | Benefits catalog, evidence, ZIP/location, review, saved/share, and savings foundation |
 | **43.1** | `benefits_v01_seed.sql` | Draft Benefits #000001 and #000002 plus their pending human-review items |
+| **43.2** | `benefits_v02_agent_review.sql` | Guarded agent proposal intake and human-only draft acceptance; still no automatic publication |
 
 **Friend connections fix (run on Production when Community Connect is broken):** paste **42.3** (or **42.1** then **42.2**) in the SQL editor (or `pnpm --dir web run apply:member-connections:full:apply` with `SUPABASE_ACCESS_TOKEN` / `DATABASE_URL`). Until grants are applied, app code falls back to `community_follows`. After that, run **42.4** for explicit status timestamps and friends-only posts.
 
-**QA only (do not run on production):** `qa_irs_nonprofit_import_seed_2026_07.sql` — sample IRS import rows for admin review UI. See `docs/IRS_NONPROFIT_IMPORT.md`.
+**QA only (do not run on production):** `qa_irs_nonprofit_import_seed_2026_07.sql` adds sample IRS import rows. `benefits_qa_runtime_guard.sql` registers the dedicated QA Benefits project with agent writes disabled. See `docs/IRS_NONPROFIT_IMPORT.md` and `docs/benefits-agents.md`.
 
 Benefits seed note: `benefits_v01_seed.sql` is safe for Production after QA because it creates catalog drafts only, never overwrites a matching record, and publishes nothing automatically. See `docs/benefits.md`.
 

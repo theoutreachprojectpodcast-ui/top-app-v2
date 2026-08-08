@@ -105,6 +105,15 @@ export const ADMIN_SECTIONS = [
         description: "Directory enrichment, IRS EO BMF import review, and import logs.",
       },
       {
+        id: "benefits",
+        label: "Benefits",
+        href: "/admin/benefits",
+        readiness: "partial",
+        matchPrefix: "/admin/benefits",
+        keywords: ["benefits", "discounts", "agents", "research", "review", "savings"],
+        description: "Benefits research agents, evidence review, and unpublished catalog drafts.",
+      },
+      {
         id: "content-blocks",
         label: "Page blocks",
         href: "/admin/content/blocks",
