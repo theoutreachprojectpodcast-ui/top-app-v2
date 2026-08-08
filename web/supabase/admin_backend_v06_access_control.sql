@@ -64,10 +64,10 @@ set
   admin_access_granted_at = coalesce(admin_access_granted_at, now()),
   updated_at = now()
 where lower(trim(coalesce(email, ''))) in (
-  'andy@volentelabs.com',
+  'theoutreachprojectpodcast@gmail.com',
+  'jonathan@theoutreach-project.com',
   'jmelching1@gmail.com',
   'hodge5403@gmail.com'
 );
 
 commit;
-

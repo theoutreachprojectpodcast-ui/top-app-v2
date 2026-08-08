@@ -15,6 +15,7 @@ import {
   requiresProMembershipPath,
   WELCOME_PATH,
 } from "../src/lib/membership/protectedRoutes.js";
+import { isDefaultApprovedAdminEmail } from "../src/lib/admin/adminPolicy.js";
 
 assert.equal(WELCOME_PATH, "/");
 assert.equal(isMembershipExemptPath("/"), true);
@@ -25,6 +26,12 @@ assert.equal(requiresProMembershipPath("/community"), true);
 assert.equal(requiresProMembershipPath("/nonprofit"), true);
 assert.equal(requiresProMembershipPath("/sponsors"), true);
 assert.equal(requiresProMembershipPath("/"), false);
+
+// Owner bootstrap access must use TOP-controlled accounts, never a former contractor default.
+assert.equal(isDefaultApprovedAdminEmail("theoutreachprojectpodcast@gmail.com"), true);
+assert.equal(isDefaultApprovedAdminEmail("jonathan@theoutreach-project.com"), true);
+assert.equal(isDefaultApprovedAdminEmail("andy@volentelabs.com"), false);
+assert.equal(isDefaultApprovedAdminEmail("andy@valentelabs.io"), false);
 
 assert.equal(resolveAppAccessState({ authLoading: true }), "loading");
 assert.equal(resolveAppAccessState({ isAuthenticated: false }), "unauthenticated");

@@ -1,8 +1,8 @@
 import { isQaDeploymentContext } from "@/lib/runtime/qaDeploymentContext";
 
 const DEFAULT_APPROVED_ADMIN_EMAILS = Object.freeze([
-  "andy@volentelabs.com",
-  "andy@valentelabs.io",
+  "theoutreachprojectpodcast@gmail.com",
+  "jonathan@theoutreach-project.com",
   "jmelching1@gmail.com",
   "hodge5403@gmail.com",
 ]);
